@@ -153,16 +153,17 @@ sync_worker(gpointer user_data) {
         g_idle_add(update_ui_handler, clear);
     }
 
-    snprintf(
-        cmd, sizeof(cmd),
-        "rsync --verbose --update --recursive --partial --links --hard-links "
-        "--itemize-changes --perms --times --owner --group --delete "
-        "--delete-after "
-        "--delete-excluded --stats %s %s %s '%s/' '%s/' 2>&1",
-        tdata->is_preview ? "--dry-run" : "--info=progress2",
-        access(EXCLUDE_FILE, F_OK) != -1 ? "--exclude-from=" EXCLUDE_FILE : "",
-        tdata->is_preview ? "" : "| tee /tmp/rsyncfiles", tdata->src_path,
-        tdata->dest_path);
+    snprintf(cmd, sizeof(cmd),
+             "rsync --verbose --update --recursive --partial"
+             " --links --hard-links"
+             " --itemize-changes --perms --times --owner --group --delete"
+             " --delete-after"
+             " --delete-excluded --stats %s %s %s '%s/' '%s/' 2>&1",
+             tdata->is_preview ? "--dry-run" : "--info=progress2",
+             access(EXCLUDE_FILE, F_OK) != -1 ? "--exclude-from=" EXCLUDE_FILE
+                                              : "",
+             tdata->is_preview ? "" : "| tee /tmp/rsyncfiles", tdata->src_path,
+             tdata->dest_path);
 
     fp = popen(cmd, "r");
     if (fp) {
