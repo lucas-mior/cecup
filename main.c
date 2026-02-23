@@ -215,8 +215,9 @@ update_ui_handler(gpointer user_data) {
         break;
     }
     case DATA_TYPE_TREE_ROW: {
-        GtkListStore *target = (data->side == 0) ? data->widgets->src_store
-                                                 : data->widgets->dst_store;
+        GtkListStore *gtk_list_store = (data->side == 0)
+                                           ? data->widgets->src_store
+                                           : data->widgets->dst_store;
         GtkTreeIter iter;
         char *size_str = bytes_pretty(data->size);
         const char *bg_color = "#FFFFFF";
@@ -231,9 +232,9 @@ update_ui_handler(gpointer user_data) {
             bg_color = "#F8D7DA";
         }
 
-        gtk_list_store_append(target, &iter);
-        gtk_list_store_set(target, &iter, COL_ACTION, data->action, COL_PATH,
-                           data->filepath, COL_SIZE_TEXT, size_str,
+        gtk_list_store_append(gtk_list_store, &iter);
+        gtk_list_store_set(gtk_list_store, &iter, COL_ACTION, data->action,
+                           COL_PATH, data->filepath, COL_SIZE_TEXT, size_str,
                            COL_SIZE_RAW, data->size, COL_COLOR, bg_color,
                            COL_REASON, data->reason, -1);
         g_free(size_str);
