@@ -239,8 +239,6 @@ sync_worker(gpointer user_data) {
     return NULL;
 }
 
-// ... [on_preview_clicked, on_sync_clicked, on_browse_src/dest remain same] ...
-
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
