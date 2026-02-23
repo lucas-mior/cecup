@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "util.c"
 
@@ -225,12 +226,14 @@ update_ui_handler(gpointer user_data) {
 
         if (g_strcmp0(data->action, "New") == 0) {
             bg_color = "#D4EDDA";
-        }
-        if (g_strcmp0(data->action, "Update") == 0) {
+        } else if (g_strcmp0(data->action, "Update") == 0) {
             bg_color = "#CCE5FF";
-        }
-        if (g_strcmp0(data->action, "Delete") == 0) {
-            bg_color = "#F8D7DA";
+        } else if (g_strcmp0(data->action, "Delete") == 0) {
+            if (data->reason && g_strrstr(data->reason, "excluded")) {
+                bg_color = "#FFF3CD";
+            } else {
+                bg_color = "#F8D7DA";
+            }
         }
 
         gtk_list_store_append(gtk_list_store, &gtk_tree_iter);
@@ -250,7 +253,7 @@ update_ui_handler(gpointer user_data) {
         gtk_list_store_clear(data->widgets->dst_store);
         break;
     default:
-        error("Invalid date->type: %d.\n", (int)data->type);
+        error("Invalid data->type: %d.\n", (int)data->type);
         exit(EXIT_FAILURE);
     }
 
@@ -358,6 +361,7 @@ sync_worker(gpointer user_data) {
     char cmd[4096];
     char buffer[2048];
     FILE *rsync_pipe;
+    char *exclude_flag;
 
     if (thread_data->is_preview) {
         UIUpdateData *clear = g_new0(UIUpdateData, 1);
@@ -366,6 +370,11 @@ sync_worker(gpointer user_data) {
         g_idle_add(update_ui_handler, clear);
     }
 
+    exclude_flag = (access(thread_data->widgets->exclude_path, F_OK) != -1)
+                       ? g_strdup_printf("--exclude-from='%s'",
+                                         thread_data->widgets->exclude_path)
+                       : g_strdup("");
+
     snprintf(cmd, sizeof(cmd),
              "rsync --verbose --update --recursive --partial"
              " --links --hard-links"
@@ -373,12 +382,11 @@ sync_worker(gpointer user_data) {
              " --delete-after"
              " --delete-excluded --stats %s %s %s '%s/' '%s/' 2>&1",
              thread_data->is_preview ? "--dry-run" : "--info=progress2",
-             access(thread_data->widgets->exclude_path, F_OK) != -1
-                 ? g_strdup_printf("--exclude-from='%s'",
-                                   thread_data->widgets->exclude_path)
-                 : "",
+             exclude_flag,
              thread_data->is_preview ? "" : "| tee /tmp/rsyncfiles",
              thread_data->src_path, thread_data->dst_path);
+
+    g_free(exclude_flag);
 
     rsync_pipe = popen(cmd, "r");
     if (!rsync_pipe) {
@@ -389,14 +397,35 @@ sync_worker(gpointer user_data) {
             buffer[strcspn(buffer, "\n")] = 0;
             if (thread_data->is_preview) {
                 if (strncmp(buffer, "*deleting", 9) == 0) {
-                    char full_path[2048];
-                    struct stat st;
-                    snprintf(full_path, sizeof(full_path), "%s/%s",
-                             thread_data->dst_path, buffer + 10);
-                    int64 sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
-                    dispatch_tree(thread_data->widgets, 1, "Delete",
-                                  buffer + 10, sz,
-                                  "File removed from source directory");
+                    char full_dst_path[2048];
+                    char full_src_path[2048];
+                    struct stat st_dst;
+                    char *rel_path;
+                    int64 sz;
+
+                    /* Skip "*deleting" then skip variable spaces */
+                    rel_path = buffer + 9;
+                    while (isspace((unsigned char)*rel_path)) {
+                        rel_path++;
+                    }
+
+                    snprintf(full_dst_path, sizeof(full_dst_path), "%s/%s",
+                             thread_data->dst_path, rel_path);
+                    sz = (stat(full_dst_path, &st_dst) == 0) ? st_dst.st_size
+                                                             : 0;
+
+                    snprintf(full_src_path, sizeof(full_src_path), "%s/%s",
+                             thread_data->src_path, rel_path);
+
+                    if (access(full_src_path, F_OK) == 0) {
+                        dispatch_tree(thread_data->widgets, 1, "Delete",
+                                      rel_path, sz,
+                                      "File is excluded by configuration");
+                    } else {
+                        dispatch_tree(thread_data->widgets, 1, "Delete",
+                                      rel_path, sz,
+                                      "File removed from source directory");
+                    }
                 } else if (strncmp(buffer, ">f", 2) == 0
                            || strncmp(buffer, ">c", 2) == 0) {
                     char *space = strchr(buffer, ' ');
@@ -461,6 +490,7 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
     char *dest = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+    ThreadData *thread_data;
 
     (void)b;
     if (strlen64(src) < 1 || strlen64(dest) < 1) {
@@ -468,7 +498,7 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     }
     gtk_widget_set_sensitive(w->preview_button, FALSE);
     gtk_widget_set_sensitive(w->sync_button, FALSE);
-    ThreadData *thread_data = g_new0(ThreadData, 1);
+    thread_data = g_new0(ThreadData, 1);
     thread_data->widgets = w;
     thread_data->is_preview = 1;
     strncpy(thread_data->src_path, src, 1023);
@@ -483,6 +513,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
     char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
     char *dest = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
     GtkWidget *dialog;
+    ThreadData *thread_data;
 
     (void)b;
     dialog = gtk_message_dialog_new(GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL,
@@ -491,7 +522,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         gtk_widget_set_sensitive(w->preview_button, FALSE);
         gtk_widget_set_sensitive(w->sync_button, FALSE);
-        ThreadData *thread_data = g_new0(ThreadData, 1);
+        thread_data = g_new0(ThreadData, 1);
         thread_data->widgets = w;
         thread_data->is_preview = 0;
         strncpy(thread_data->src_path, src, 1023);
