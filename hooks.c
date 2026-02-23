@@ -22,6 +22,8 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     thread_data = g_new0(ThreadData, 1);
     thread_data->widgets = w;
     thread_data->is_preview = 1;
+    thread_data->check_different_fs
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->check_fs_toggle));
     strncpy(thread_data->src_path, path_src, 1023);
     strncpy(thread_data->dst_path, path_dst, 1023);
     g_thread_new("worker", sync_worker, thread_data);
@@ -68,6 +70,8 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
         thread_data = g_new0(ThreadData, 1);
         thread_data->widgets = w;
         thread_data->is_preview = 0;
+        thread_data->check_different_fs = gtk_toggle_button_get_active(
+            GTK_TOGGLE_BUTTON(w->check_fs_toggle));
         strncpy(thread_data->src_path, path_src, 1023);
         strncpy(thread_data->dst_path, path_dst, 1023);
         g_thread_new("worker", sync_worker, thread_data);

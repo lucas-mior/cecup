@@ -39,8 +39,29 @@ sync_worker(gpointer user_data) {
     char buffer[2048];
     FILE *rsync_pipe;
     char *exclude_flag;
+    struct stat st_src;
+    struct stat st_dst;
 
     thread_data = (ThreadData *)user_data;
+
+    if (thread_data->check_different_fs) {
+        if (stat(thread_data->src_path, &st_src) == 0
+            && stat(thread_data->dst_path, &st_dst) == 0) {
+            if (st_src.st_dev == st_dst.st_dev) {
+                dispatch_log(thread_data->widgets,
+                             "ERROR: Source and Destination are on the same "
+                             "filesystem.");
+                UIUpdateData *ready;
+                ready = g_new0(UIUpdateData, 1);
+                ready->widgets = thread_data->widgets;
+                ready->type = DATA_TYPE_ENABLE_BUTTONS;
+                g_idle_add(update_ui_handler, ready);
+                g_free(thread_data);
+                return NULL;
+            }
+        }
+    }
+
     if (thread_data->is_preview) {
         UIUpdateData *clear;
         clear = g_new0(UIUpdateData, 1);
@@ -48,10 +69,12 @@ sync_worker(gpointer user_data) {
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
     }
+
     exclude_flag = (access(thread_data->widgets->exclude_path, F_OK) != -1)
                        ? g_strdup_printf("--exclude-from='%s'",
                                          thread_data->widgets->exclude_path)
                        : g_strdup("");
+
     snprintf(cmd, sizeof(cmd),
              "rsync --verbose --update --recursive --partial"
              " --links --hard-links"
@@ -62,7 +85,9 @@ sync_worker(gpointer user_data) {
              exclude_flag,
              thread_data->is_preview ? "" : "| tee /tmp/rsyncfiles",
              thread_data->src_path, thread_data->dst_path);
+
     g_free(exclude_flag);
+
     rsync_pipe = popen(cmd, "r");
     if (!rsync_pipe) {
         dispatch_log(thread_data->widgets,
@@ -74,7 +99,7 @@ sync_worker(gpointer user_data) {
                 if (strncmp(buffer, "*deleting", 9) == 0) {
                     char full_dst_path[2048];
                     char full_src_path[2048];
-                    struct stat st_dst;
+                    struct stat st_dst_file;
                     char *rel_path;
                     int64 sz;
 
@@ -84,10 +109,12 @@ sync_worker(gpointer user_data) {
                     }
                     snprintf(full_dst_path, sizeof(full_dst_path), "%s/%s",
                              thread_data->dst_path, rel_path);
-                    sz = (stat(full_dst_path, &st_dst) == 0) ? st_dst.st_size
-                                                             : 0;
+                    sz = (stat(full_dst_path, &st_dst_file) == 0)
+                             ? st_dst_file.st_size
+                             : 0;
                     snprintf(full_src_path, sizeof(full_src_path), "%s/%s",
                              thread_data->src_path, rel_path);
+
                     if (access(full_src_path, F_OK) == 0) {
                         dispatch_tree(thread_data->widgets, 1, "Delete",
                                       rel_path, sz,
@@ -104,7 +131,7 @@ sync_worker(gpointer user_data) {
                     if (space) {
                         char *act;
                         char full_path[2048];
-                        struct stat st;
+                        struct stat st_file;
                         int64 sz;
                         char *reason;
 
@@ -112,7 +139,8 @@ sync_worker(gpointer user_data) {
                                                                    : "Update";
                         snprintf(full_path, sizeof(full_path), "%s/%s",
                                  thread_data->src_path, space + 1);
-                        sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
+                        sz = (stat(full_path, &st_file) == 0) ? st_file.st_size
+                                                              : 0;
                         reason = (strncmp(buffer, ">f+++++", 7) == 0)
                                      ? "New file in source directory"
                                      : "File updated in source directory";
@@ -126,6 +154,7 @@ sync_worker(gpointer user_data) {
         }
         pclose(rsync_pipe);
     }
+
     if (!thread_data->is_preview) {
         dispatch_log(thread_data->widgets,
                      ">>> Starting Checksum Verification...");
@@ -147,6 +176,7 @@ sync_worker(gpointer user_data) {
             pclose(rsync_pipe);
         }
     }
+
     dispatch_log(thread_data->widgets, ">>> Finished.");
     UIUpdateData *ready;
     ready = g_new0(UIUpdateData, 1);

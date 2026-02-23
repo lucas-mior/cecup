@@ -21,6 +21,7 @@ typedef struct AppWidgets {
     GtkWidget *preview_button;
     GtkWidget *sync_button;
     GtkWidget *exclude_button;
+    GtkWidget *check_fs_toggle;
     GtkListStore *src_store;
     GtkListStore *dst_store;
     GtkTextBuffer *log_buffer;
@@ -32,6 +33,7 @@ typedef struct ThreadData {
     char src_path[1024];
     char dst_path[1024];
     int32 is_preview;
+    int32 check_different_fs;
 } ThreadData;
 
 enum DataType {
