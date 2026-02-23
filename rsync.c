@@ -41,6 +41,7 @@ sync_worker(gpointer user_data) {
     char *exclude_flag;
     struct stat st_src;
     struct stat st_dst;
+    char log_msg[5120];
 
     thread_data = (ThreadData *)user_data;
 
@@ -87,6 +88,9 @@ sync_worker(gpointer user_data) {
              thread_data->src_path, thread_data->dst_path);
 
     g_free(exclude_flag);
+
+    snprintf(log_msg, sizeof(log_msg), "RUNNING: %s", cmd);
+    dispatch_log(thread_data->widgets, log_msg);
 
     rsync_pipe = popen(cmd, "r");
     if (!rsync_pipe) {
@@ -164,6 +168,10 @@ sync_worker(gpointer user_data) {
                  "rsync --verbose --checksum --files-from=/tmp/sync.files "
                  "'%s/' '%s/' 2>&1",
                  thread_data->src_path, thread_data->dst_path);
+
+        snprintf(log_msg, sizeof(log_msg), "RUNNING: %s", cmd);
+        dispatch_log(thread_data->widgets, log_msg);
+
         rsync_pipe = popen(cmd, "r");
         if (!rsync_pipe) {
             dispatch_log(thread_data->widgets,
