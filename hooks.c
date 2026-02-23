@@ -4,23 +4,6 @@
 #include "rsync.c"
 
 static void
-on_invert_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
-    char *path_src;
-    char *path_dst;
-
-    (void)b;
-    w = (AppWidgets *)data;
-    path_src = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->src_entry)));
-    path_dst = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->dst_entry)));
-    gtk_entry_set_text(GTK_ENTRY(w->src_entry), path_dst);
-    gtk_entry_set_text(GTK_ENTRY(w->dst_entry), path_src);
-    g_free(path_src);
-    g_free(path_dst);
-    return;
-}
-
-static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w;
     char *path_src;
@@ -42,6 +25,25 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     strncpy(thread_data->src_path, path_src, 1023);
     strncpy(thread_data->dst_path, path_dst, 1023);
     g_thread_new("worker", sync_worker, thread_data);
+    return;
+}
+
+static void
+on_invert_clicked(GtkWidget *b, gpointer data) {
+    AppWidgets *w;
+    char *path_src;
+    char *path_dst;
+
+    (void)b;
+    w = (AppWidgets *)data;
+    path_src = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->src_entry)));
+    path_dst = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->dst_entry)));
+    gtk_entry_set_text(GTK_ENTRY(w->src_entry), path_dst);
+    gtk_entry_set_text(GTK_ENTRY(w->dst_entry), path_src);
+    g_free(path_src);
+    g_free(path_dst);
+
+    on_preview_clicked(NULL, w);
     return;
 }
 
