@@ -233,8 +233,6 @@ on_browse(GtkWidget *b, gpointer data) {
     return;
 }
 
-/* --- UI Setup --- */
-
 static void
 setup_tree_columns(GtkWidget *tree) {
     GtkCellRenderer *r = gtk_cell_renderer_text_new();
