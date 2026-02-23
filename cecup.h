@@ -2,6 +2,7 @@
 #define CECUP_H
 
 #include <gtk/gtk.h>
+#include "generic.c"
 
 enum {
     COL_ACTION = 0,
