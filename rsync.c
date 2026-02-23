@@ -139,15 +139,17 @@ sync_worker(gpointer user_data) {
                         int64 sz;
                         char *reason;
 
-                        act = (strncmp(buffer, ">f+++++", 7) == 0) ? "New"
-                                                                   : "Update";
+                        if (strncmp(buffer, ">f+++++", 7) == 0) {
+                            act = "New";
+                            reason = "File changed in source directory";
+                        } else {
+                            act = "Update";
+                            reason = "New file created in source directory";
+                        }
                         snprintf(full_path, sizeof(full_path), "%s/%s",
                                  thread_data->src_path, space + 1);
                         sz = (stat(full_path, &st_file) == 0) ? st_file.st_size
                                                               : 0;
-                        reason = (strncmp(buffer, ">f+++++", 7) == 0)
-                                     ? "New file in source directory"
-                                     : "File updated in source directory";
                         dispatch_tree(thread_data->widgets, 0, act, space + 1,
                                       sz, reason);
                     }
