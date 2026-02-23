@@ -25,6 +25,7 @@ typedef struct AppWidgets {
     GtkWidget *dest_entry;
     GtkWidget *preview_btn;
     GtkWidget *sync_btn;
+    GtkWidget *exclude_btn;
     GtkListStore *src_store;
     GtkListStore *dest_store;
     GtkTextBuffer *log_buffer;
@@ -67,13 +68,13 @@ update_ui_handler(gpointer user_data) {
         gtk_text_buffer_insert(data->widgets->log_buffer, &end, "\n", -1);
         break;
     }
-    case DATA_TYPE_TREE_ROW:
+    case DATA_TYPE_TREE_ROW: {
         GtkListStore *target = (data->side == 0) ? data->widgets->src_store
                                                  : data->widgets->dest_store;
         GtkTreeIter iter;
         char *size_str = bytes_pretty(data->size);
-
         const char *bg_color = "#FFFFFF";  // Default White
+
         if (g_strcmp0(data->action, "New") == 0) {
             bg_color = "#D4EDDA";  // Light Green
         }
@@ -92,6 +93,7 @@ update_ui_handler(gpointer user_data) {
                            -1);
         g_free(size_str);
         break;
+    }
     case DATA_TYPE_ENABLE_BUTTONS:
         gtk_widget_set_sensitive(data->widgets->sync_btn, TRUE);
         gtk_widget_set_sensitive(data->widgets->preview_btn, TRUE);
@@ -230,8 +232,9 @@ sync_worker(gpointer user_data) {
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
-    char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
+    const char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
+    const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
+
     (void)b;
     if (strlen64(src) < 1 || strlen64(dest) < 1) {
         return;
@@ -252,10 +255,12 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     const char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
     const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
+    GtkWidget *dialog;
+
     (void)b;
-    GtkWidget *dialog = gtk_message_dialog_new(
-        GTK_WINDOW(w->window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
-        GTK_BUTTONS_YES_NO, "Confirm sync from %s to %s?", src, dest);
+    dialog = gtk_message_dialog_new(GTK_WINDOW(w->window), GTK_DIALOG_MODAL,
+                                    GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
+                                    "Confirm sync from %s to %s?", src, dest);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         gtk_widget_set_sensitive(w->preview_btn, FALSE);
         gtk_widget_set_sensitive(w->sync_btn, FALSE);
@@ -271,12 +276,68 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
+on_save_exclude(GtkWidget *b, gpointer data) {
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(data);
+    GtkTextIter start;
+    GtkTextIter end;
+    char *text;
+    FILE *fp;
+
+    (void)b;
+    gtk_text_buffer_get_start_iter(buffer, &start);
+    gtk_text_buffer_get_end_iter(buffer, &end);
+    text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+    fp = fopen(EXCLUDE_FILE, "w");
+    if (fp) {
+        fputs(text, fp);
+        fclose(fp);
+    }
+    g_free(text);
+    return;
+}
+
+static void
+on_exclude_clicked(GtkWidget *b, gpointer data) {
+    AppWidgets *w = (AppWidgets *)data;
+    GtkWidget *dialog;
+    GtkWidget *scroll;
+    GtkWidget *view;
+    GtkTextBuffer *buffer;
+    char *content;
+    gsize length;
+
+    (void)b;
+    dialog = gtk_dialog_new_with_buttons(
+        "Edit Exclusions", GTK_WINDOW(w->window),
+        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT, "_Save",
+        GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 500);
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    view = gtk_text_view_new();
+    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+    if (g_file_get_contents(EXCLUDE_FILE, &content, &length, NULL)) {
+        gtk_text_buffer_set_text(buffer, content, -1);
+        g_free(content);
+    }
+    gtk_container_add(GTK_CONTAINER(scroll), view);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
+                       scroll, TRUE, TRUE, 5);
+    gtk_widget_show_all(dialog);
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+        on_save_exclude(NULL, buffer);
+    }
+    gtk_widget_destroy(dialog);
+    return;
+}
+
+static void
 on_browse_src(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     GtkWidget *dlg = gtk_file_chooser_dialog_new(
         "Select Source Directory", GTK_WINDOW(w->window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
         "_Select", GTK_RESPONSE_ACCEPT, NULL);
+
     (void)b;
     if (gtk_dialog_run(GTK_DIALOG(dlg)) == GTK_RESPONSE_ACCEPT) {
         char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
@@ -294,6 +355,7 @@ on_browse_dest(GtkWidget *b, gpointer data) {
         "Select Destination Directory", GTK_WINDOW(w->window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
         "_Select", GTK_RESPONSE_ACCEPT, NULL);
+
     (void)b;
     if (gtk_dialog_run(GTK_DIALOG(dlg)) == GTK_RESPONSE_ACCEPT) {
         char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
@@ -330,40 +392,61 @@ setup_tree_columns(GtkWidget *tree) {
 
 int32
 main(int32 argc, char *argv[]) {
+    AppWidgets *w;
+    GtkWidget *main_vbox;
+    GtkWidget *header_vbox;
+    GtkWidget *src_hbox;
+    GtkWidget *browse_src;
+    GtkWidget *dest_hbox;
+    GtkWidget *browse_dest;
+    GtkWidget *btn_hbox;
+    GtkWidget *paned;
+    GtkWidget *l_vbox;
+    GtkWidget *l_scroll;
+    GtkWidget *l_tree;
+    GtkWidget *r_vbox;
+    GtkWidget *r_scroll;
+    GtkWidget *r_tree;
+    GtkWidget *log_scroll;
+    GtkWidget *log_view;
+    char *cwd;
+    char *default_src;
+    char *default_dest;
+
     gtk_init(&argc, &argv);
 
-    AppWidgets *w = g_new0(AppWidgets, 1);
+    w = g_new0(AppWidgets, 1);
     w->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(w->window), "Btrfs Rsync Sync GUI");
     gtk_window_set_default_size(GTK_WINDOW(w->window), 1100, 800);
     g_signal_connect(w->window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-    GtkWidget *main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_container_add(GTK_CONTAINER(w->window), main_vbox);
 
-    GtkWidget *header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_set_border_width(GTK_CONTAINER(header_vbox), 10);
 
-    char *cwd = g_get_current_dir();
-    char *default_src = g_strdup_printf("%s/a/", cwd);
-    char *default_dest = g_strdup_printf("%s/b/", cwd);
+    cwd = g_get_current_dir();
+    default_src = g_strdup_printf("%s/a/", cwd);
+    default_dest = g_strdup_printf("%s/b/", cwd);
 
-    GtkWidget *src_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(src_hbox), gtk_label_new("Source:     "), FALSE,
+    src_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_box_pack_start(GTK_BOX(src_hbox), gtk_label_new("Source:      "), FALSE,
                        FALSE, 5);
     w->src_entry = gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(w->src_entry), default_src);
-    GtkWidget *browse_src = gtk_button_new_with_label("Browse");
+    browse_src = gtk_button_new_with_label("Browse");
     gtk_box_pack_start(GTK_BOX(src_hbox), w->src_entry, TRUE, TRUE, 5);
     gtk_box_pack_start(GTK_BOX(src_hbox), browse_src, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), src_hbox, FALSE, FALSE, 0);
 
-    GtkWidget *dest_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    dest_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_start(GTK_BOX(dest_hbox), gtk_label_new("Destination:"), FALSE,
                        FALSE, 5);
     w->dest_entry = gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(w->dest_entry), default_dest);
-    GtkWidget *browse_dest = gtk_button_new_with_label("Browse");
+    browse_dest = gtk_button_new_with_label("Browse");
     gtk_box_pack_start(GTK_BOX(dest_hbox), w->dest_entry, TRUE, TRUE, 5);
     gtk_box_pack_start(GTK_BOX(dest_hbox), browse_dest, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), dest_hbox, FALSE, FALSE, 0);
@@ -372,54 +455,54 @@ main(int32 argc, char *argv[]) {
     g_free(default_src);
     g_free(default_dest);
 
-    GtkWidget *btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     w->preview_btn = gtk_button_new_with_label("1. Preview");
+    w->exclude_btn = gtk_button_new_with_label("Edit Exclusions");
     w->sync_btn = gtk_button_new_with_label("2. Sync");
     gtk_widget_set_sensitive(w->sync_btn, FALSE);
+    gtk_box_pack_start(GTK_BOX(btn_hbox), w->exclude_btn, FALSE, FALSE, 5);
     gtk_box_pack_end(GTK_BOX(btn_hbox), w->sync_btn, FALSE, FALSE, 5);
     gtk_box_pack_end(GTK_BOX(btn_hbox), w->preview_btn, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), btn_hbox, FALSE, FALSE, 5);
 
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
-    GtkWidget *paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start(GTK_BOX(main_vbox), paned, TRUE, TRUE, 0);
 
-    GtkWidget *l_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    l_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_box_pack_start(GTK_BOX(l_vbox),
                        gtk_label_new("Origin: To be Transferred"), FALSE, FALSE,
                        0);
-    GtkWidget *l_scroll = gtk_scrolled_window_new(NULL, NULL);
+    l_scroll = gtk_scrolled_window_new(NULL, NULL);
     // Updated Store with 5 columns
     w->src_store
         = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
                              G_TYPE_STRING, G_TYPE_INT64, G_TYPE_STRING);
-    GtkWidget *l_tree
-        = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->src_store));
+    l_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->src_store));
     setup_tree_columns(l_tree);
     gtk_container_add(GTK_CONTAINER(l_scroll), l_tree);
     gtk_box_pack_start(GTK_BOX(l_vbox), l_scroll, TRUE, TRUE, 0);
     gtk_paned_pack1(GTK_PANED(paned), l_vbox, TRUE, FALSE);
 
-    GtkWidget *r_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    r_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_box_pack_start(GTK_BOX(r_vbox),
                        gtk_label_new("Destination: To be Deleted"), FALSE,
                        FALSE, 0);
-    GtkWidget *r_scroll = gtk_scrolled_window_new(NULL, NULL);
+    r_scroll = gtk_scrolled_window_new(NULL, NULL);
     // Updated Store with 5 columns
     w->dest_store
         = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
                              G_TYPE_STRING, G_TYPE_INT64, G_TYPE_STRING);
-    GtkWidget *r_tree
-        = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->dest_store));
+    r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->dest_store));
     setup_tree_columns(r_tree);
     gtk_container_add(GTK_CONTAINER(r_scroll), r_tree);
     gtk_box_pack_start(GTK_BOX(r_vbox), r_scroll, TRUE, TRUE, 0);
     gtk_paned_pack2(GTK_PANED(paned), r_vbox, TRUE, FALSE);
 
-    GtkWidget *log_scroll = gtk_scrolled_window_new(NULL, NULL);
+    log_scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(log_scroll, -1, 150);
-    GtkWidget *log_view = gtk_text_view_new();
+    log_view = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(log_view), FALSE);
     w->log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(log_view));
     gtk_container_add(GTK_CONTAINER(log_scroll), log_view);
@@ -430,6 +513,8 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(w->preview_btn, "clicked", G_CALLBACK(on_preview_clicked),
                      w);
     g_signal_connect(w->sync_btn, "clicked", G_CALLBACK(on_sync_clicked), w);
+    g_signal_connect(w->exclude_btn, "clicked", G_CALLBACK(on_exclude_clicked),
+                     w);
 
     gtk_widget_show_all(w->window);
     gtk_main();
