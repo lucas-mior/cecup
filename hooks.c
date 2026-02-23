@@ -241,7 +241,6 @@ static gboolean
 on_tree_tooltip(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode,
                 GtkTooltip *tooltip, gpointer user_data) {
     GtkTreePath *gtk_tree_path;
-    GtkTreeViewColumn *gtk_tree_view_column;
     GtkTreeModel *model;
     GtkTreeIter iter;
     char *reason;
@@ -249,16 +248,14 @@ on_tree_tooltip(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode,
     (void)keyboard_mode;
     (void)user_data;
     if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), x, y,
-                                      &gtk_tree_path, &gtk_tree_view_column,
-                                      NULL, NULL)) {
+                                      &gtk_tree_path, NULL, NULL, NULL)) {
         model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
-        reason = NULL;
         if (gtk_tree_model_get_iter(model, &iter, gtk_tree_path)) {
             gtk_tree_model_get(model, &iter, COL_REASON, &reason, -1);
             if (reason && strlen(reason) > 0) {
                 gtk_tooltip_set_text(tooltip, reason);
-                gtk_tree_path_free(gtk_tree_path);
                 g_free(reason);
+                gtk_tree_path_free(gtk_tree_path);
                 return TRUE;
             }
             g_free(reason);
