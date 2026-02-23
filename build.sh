@@ -1,4 +1,39 @@
 #!/bin/sh
 
-gcc main.c -o cecup $(pkg-config --cflags --libs gtk+-3.0) -lpthread
+program="cecup"
+
+alias trace_on='set -x'
+alias trace_off='{ set +x; } 2>/dev/null'
+
+CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
+CFLAGS="$CFLAGS -std=c11"
+CFLAGS="$CFLAGS -Wextra -Wall"
+CFLAGS="$CFLAGS -Wno-format-pedantic"
+CFLAGS="$CFLAGS -Wno-unknown-warning-option"
+CFLAGS="$CFLAGS -Wfatal-errors"
+CFLAGS="$CFLAGS -Wno-gnu-union-cast"
+CFLAGS="$CFLAGS -Wno-unused-macros"
+CFLAGS="$CFLAGS -Wno-unused-function"
+CFLAGS="$CFLAGS -Wno-constant-logical-operand"
+CFLAGS="$CFLAGS -Wno-float-equal"
+CFLAGS="$CFLAGS -Wno-undefined-internal"
+
+LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk+-3.0) -lpthread"
+
+if [ "$CC" = "clang" ]; then
+    CFLAGS="$CFLAGS -Weverything"
+    CFLAGS="$CFLAGS -Wno-unsafe-buffer-usage"
+    CFLAGS="$CFLAGS -Wno-format-nonliteral"
+    CFLAGS="$CFLAGS -Wno-disabled-macro-expansion"
+    CFLAGS="$CFLAGS -Wno-c++-keyword"
+    CFLAGS="$CFLAGS -Wno-pre-c11-compat"
+    CFLAGS="$CFLAGS -Wno-implicit-void-ptr-cast"
+    CFLAGS="$CFLAGS -Wno-ignored-attributes"
+    CFLAGS="$CFLAGS -Wno-covered-switch-default"
+fi
+
+trace_on
+# shellcheck disable=SC2086
+gcc $CPPFLAGS $CFLAGS main.c -o $program "$LDFLAGS"
 ./cecup
+trace_off

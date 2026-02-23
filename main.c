@@ -272,11 +272,9 @@ int main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(header), w->sync_btn, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(main_vbox), header, FALSE, FALSE, 0);
 
-    // Preview Panes
     GtkWidget *paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start(GTK_BOX(main_vbox), paned, TRUE, TRUE, 0);
 
-    // Left (Origin)
     GtkWidget *l_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_box_pack_start(GTK_BOX(l_vbox), gtk_label_new("Origin: To be Transferred"), FALSE, FALSE, 0);
     GtkWidget *l_scroll = gtk_scrolled_window_new(NULL, NULL);
@@ -287,7 +285,6 @@ int main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(l_vbox), l_scroll, TRUE, TRUE, 0);
     gtk_paned_pack1(GTK_PANED(paned), l_vbox, TRUE, FALSE);
 
-    // Right (Dest)
     GtkWidget *r_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_box_pack_start(GTK_BOX(r_vbox), gtk_label_new("Destination: To be Deleted"), FALSE, FALSE, 0);
     GtkWidget *r_scroll = gtk_scrolled_window_new(NULL, NULL);
@@ -298,7 +295,6 @@ int main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(r_vbox), r_scroll, TRUE, TRUE, 0);
     gtk_paned_pack2(GTK_PANED(paned), r_vbox, TRUE, FALSE);
 
-    // Log Area
     GtkWidget *log_scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(log_scroll, -1, 150);
     GtkWidget *log_view = gtk_text_view_new();
@@ -307,7 +303,6 @@ int main(int argc, char *argv[]) {
     gtk_container_add(GTK_CONTAINER(log_scroll), log_view);
     gtk_box_pack_start(GTK_BOX(main_vbox), log_scroll, FALSE, FALSE, 5);
 
-    // Signals
     g_signal_connect(browse, "clicked", G_CALLBACK(on_browse), w);
     g_signal_connect(w->preview_btn, "clicked", G_CALLBACK(on_preview_clicked), w);
     g_signal_connect(w->sync_btn, "clicked", G_CALLBACK(on_sync_clicked), w);
