@@ -327,14 +327,14 @@ dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
 
 static gpointer
 sync_worker(gpointer user_data) {
-    ThreadData *tdata = (ThreadData *)user_data;
+    ThreadData *thread_data = (ThreadData *)user_data;
     char cmd[4096];
     char buffer[2048];
     FILE *rsync_pipe;
 
-    if (tdata->is_preview) {
+    if (thread_data->is_preview) {
         UIUpdateData *clear = g_new0(UIUpdateData, 1);
-        clear->widgets = tdata->widgets;
+        clear->widgets = thread_data->widgets;
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
     }
@@ -345,28 +345,30 @@ sync_worker(gpointer user_data) {
              " --itemize-changes --perms --times --owner --group --delete"
              " --delete-after"
              " --delete-excluded --stats %s %s %s '%s/' '%s/' 2>&1",
-             tdata->is_preview ? "--dry-run" : "--info=progress2",
-             access(tdata->widgets->exclude_path, F_OK) != -1
+             thread_data->is_preview ? "--dry-run" : "--info=progress2",
+             access(thread_data->widgets->exclude_path, F_OK) != -1
                  ? g_strdup_printf("--exclude-from='%s'",
-                                   tdata->widgets->exclude_path)
+                                   thread_data->widgets->exclude_path)
                  : "",
-             tdata->is_preview ? "" : "| tee /tmp/rsyncfiles", tdata->src_path,
-             tdata->dst_path);
+             thread_data->is_preview ? "" : "| tee /tmp/rsyncfiles",
+             thread_data->src_path, thread_data->dst_path);
 
     rsync_pipe = popen(cmd, "r");
     if (!rsync_pipe) {
-        dispatch_log(tdata->widgets, "ERROR: Failed to start rsync process.");
+        dispatch_log(thread_data->widgets,
+                     "ERROR: Failed to start rsync process.");
     } else {
         while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
             buffer[strcspn(buffer, "\n")] = 0;
-            if (tdata->is_preview) {
+            if (thread_data->is_preview) {
                 if (strncmp(buffer, "*deleting", 9) == 0) {
                     char full_path[2048];
                     struct stat st;
                     snprintf(full_path, sizeof(full_path), "%s/%s",
-                             tdata->dst_path, buffer + 10);
+                             thread_data->dst_path, buffer + 10);
                     int64 sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
-                    dispatch_tree(tdata->widgets, 1, "Delete", buffer + 10, sz,
+                    dispatch_tree(thread_data->widgets, 1, "Delete",
+                                  buffer + 10, sz,
                                   "File removed from source directory");
                 } else if (strncmp(buffer, ">f", 2) == 0
                            || strncmp(buffer, ">c", 2) == 0) {
@@ -378,51 +380,52 @@ sync_worker(gpointer user_data) {
                         char full_path[2048];
                         struct stat st;
                         snprintf(full_path, sizeof(full_path), "%s/%s",
-                                 tdata->src_path, space + 1);
+                                 thread_data->src_path, space + 1);
                         int64 sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
                         char *reason = (strncmp(buffer, ">f+++++", 7) == 0)
                                            ? "New file in source directory"
                                            : "File updated in source directory";
-                        dispatch_tree(tdata->widgets, 0, act, space + 1, sz,
-                                      reason);
+                        dispatch_tree(thread_data->widgets, 0, act, space + 1,
+                                      sz, reason);
                     }
                 }
             } else {
-                dispatch_log(tdata->widgets, buffer);
+                dispatch_log(thread_data->widgets, buffer);
             }
         }
         pclose(rsync_pipe);
     }
 
-    if (!tdata->is_preview) {
-        dispatch_log(tdata->widgets, ">>> Starting Checksum Verification...");
+    if (!thread_data->is_preview) {
+        dispatch_log(thread_data->widgets,
+                     ">>> Starting Checksum Verification...");
         system("sed -nE '/^[>ch]f/{s/^[^ ]+ //; p}' /tmp/rsyncfiles > "
                "/tmp/sync.files");
         snprintf(cmd, sizeof(cmd),
                  "rsync --verbose --checksum --files-from=/tmp/sync.files "
                  "'%s/' '%s/' 2>&1",
-                 tdata->src_path, tdata->dst_path);
+                 thread_data->src_path, thread_data->dst_path);
 
         rsync_pipe = popen(cmd, "r");
         if (!rsync_pipe) {
-            dispatch_log(tdata->widgets,
+            dispatch_log(thread_data->widgets,
                          "ERROR: Failed to start checksum verification rsync.");
         } else {
             while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
                 buffer[strcspn(buffer, "\n")] = 0;
-                dispatch_log(tdata->widgets, buffer);
+                dispatch_log(thread_data->widgets, buffer);
             }
             pclose(rsync_pipe);
         }
     }
 
-    dispatch_log(tdata->widgets, ">>> Finished.");
+    dispatch_log(thread_data->widgets, ">>> Finished.");
     UIUpdateData *ready = g_new0(UIUpdateData, 1);
-    ready->widgets = tdata->widgets;
+    ready->widgets = thread_data->widgets;
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, ready);
 
-    g_free(tdata);
+    g_free(thread_data);
     return NULL;
 }
 
