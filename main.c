@@ -10,138 +10,6 @@
 
 static void setup_tree_columns(GtkWidget *tree);
 
-static gboolean
-update_ui_handler(gpointer user_data) {
-    UIUpdateData *data;
-    GtkListStore *src_store;
-    GtkListStore *dst_store;
-    GtkTreeIter iter_src;
-    GtkTreeIter iter_dst;
-    char *size_str;
-    char *bg_src;
-    char *bg_dst;
-    char *path_src;
-    char *path_dst;
-    char *a_src;
-    char *a_dst;
-
-    data = (UIUpdateData *)user_data;
-    src_store = data->widgets->src_store;
-    dst_store = data->widgets->dst_store;
-
-    switch (data->type) {
-    case DATA_TYPE_LOG: {
-        GtkTextIter end;
-        gtk_text_buffer_get_end_iter(data->widgets->log_buffer, &end);
-        gtk_text_buffer_insert(data->widgets->log_buffer, &end, data->message,
-                               -1);
-        gtk_text_buffer_insert(data->widgets->log_buffer, &end, "\n", -1);
-        break;
-    }
-    case DATA_TYPE_TREE_ROW: {
-        size_str = bytes_pretty(data->size);
-        bg_src = "#FFFFFF";
-        bg_dst = "#FFFFFF";
-        path_src = data->filepath;
-        path_dst = data->filepath;
-        a_src = data->action;
-        a_dst = data->action;
-
-        if (g_strcmp0(data->action, "New") == 0) {
-            bg_src = "#D4EDDA";
-            bg_dst = "#FFFFFF";
-            path_dst = "-";
-        } else if (g_strcmp0(data->action, "Update") == 0) {
-            bg_src = "#CCE5FF";
-            bg_dst = "#CCE5FF";
-        } else if (g_strcmp0(data->action, "Delete") == 0) {
-            if (data->reason && g_strrstr(data->reason, "excluded")) {
-                bg_src = "#FFF3CD";
-                bg_dst = "#FFF3CD";
-                a_src = "Ignore";
-                a_dst = "Delete";
-            } else {
-                bg_src = "#FFFFFF";
-                bg_dst = "#F8D7DA";
-                a_src = "Deleted";
-                a_dst = "Delete";
-                path_src = "-";
-            }
-        }
-        gtk_list_store_append(src_store, &iter_src);
-        gtk_list_store_append(dst_store, &iter_dst);
-        gtk_list_store_set(src_store, &iter_src, COL_ACTION, a_src, COL_PATH,
-                           path_src, COL_SIZE_TEXT, size_str, COL_SIZE_RAW,
-                           data->size, COL_COLOR, bg_src, COL_REASON,
-                           data->reason, -1);
-        gtk_list_store_set(dst_store, &iter_dst, COL_ACTION, a_dst, COL_PATH,
-                           path_dst, COL_SIZE_TEXT, size_str, COL_SIZE_RAW,
-                           data->size, COL_COLOR, bg_dst, COL_REASON,
-                           data->reason, -1);
-        g_free(size_str);
-        break;
-    }
-    case DATA_TYPE_ENABLE_BUTTONS:
-        gtk_widget_set_sensitive(data->widgets->sync_button, TRUE);
-        gtk_widget_set_sensitive(data->widgets->preview_button, TRUE);
-        break;
-    case DATA_TYPE_CLEAR_TREES:
-        gtk_list_store_clear(data->widgets->src_store);
-        gtk_list_store_clear(data->widgets->dst_store);
-        break;
-    default:
-        error("Invalid data->type: %d.\n", (int)data->type);
-        exit(EXIT_FAILURE);
-    }
-
-    if (data->message) {
-        g_free(data->message);
-    }
-    if (data->action) {
-        g_free(data->action);
-    }
-    if (data->filepath) {
-        g_free(data->filepath);
-    }
-    if (data->reason) {
-        g_free(data->reason);
-    }
-    g_free(data);
-    return G_SOURCE_REMOVE;
-}
-
-static void
-setup_tree_columns(GtkWidget *gtk_tree) {
-    GtkCellRenderer *gtk_cell_renderer;
-    GtkTreeViewColumn *gtk_tree_view_column;
-
-    gtk_cell_renderer = gtk_cell_renderer_text_new();
-    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
-        "Action", gtk_cell_renderer, "text", COL_ACTION, "cell-background",
-        COL_COLOR, NULL);
-    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_ACTION);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(gtk_tree), gtk_tree_view_column);
-
-    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
-        "File Path", gtk_cell_renderer, "text", COL_PATH, "cell-background",
-        COL_COLOR, NULL);
-    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_PATH);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(gtk_tree), gtk_tree_view_column);
-
-    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
-        "Size", gtk_cell_renderer, "text", COL_SIZE_TEXT, "cell-background",
-        COL_COLOR, NULL);
-    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_SIZE_RAW);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(gtk_tree), gtk_tree_view_column);
-
-    gtk_widget_set_has_tooltip(gtk_tree, TRUE);
-    g_signal_connect(gtk_tree, "query-tooltip", G_CALLBACK(on_tree_tooltip),
-                     NULL);
-    g_signal_connect(gtk_tree, "button-press-event",
-                     G_CALLBACK(on_tree_button_press), NULL);
-    return;
-}
-
 int32
 main(int32 argc, char *argv[]) {
     AppWidgets *w;
@@ -309,4 +177,136 @@ main(int32 argc, char *argv[]) {
     g_free(w->exclude_path);
     g_free(w);
     exit(EXIT_SUCCESS);
+}
+
+static gboolean
+update_ui_handler(gpointer user_data) {
+    UIUpdateData *data;
+    GtkListStore *src_store;
+    GtkListStore *dst_store;
+    GtkTreeIter iter_src;
+    GtkTreeIter iter_dst;
+    char *size_str;
+    char *bg_src;
+    char *bg_dst;
+    char *path_src;
+    char *path_dst;
+    char *a_src;
+    char *a_dst;
+
+    data = (UIUpdateData *)user_data;
+    src_store = data->widgets->src_store;
+    dst_store = data->widgets->dst_store;
+
+    switch (data->type) {
+    case DATA_TYPE_LOG: {
+        GtkTextIter end;
+        gtk_text_buffer_get_end_iter(data->widgets->log_buffer, &end);
+        gtk_text_buffer_insert(data->widgets->log_buffer, &end, data->message,
+                               -1);
+        gtk_text_buffer_insert(data->widgets->log_buffer, &end, "\n", -1);
+        break;
+    }
+    case DATA_TYPE_TREE_ROW: {
+        size_str = bytes_pretty(data->size);
+        bg_src = "#FFFFFF";
+        bg_dst = "#FFFFFF";
+        path_src = data->filepath;
+        path_dst = data->filepath;
+        a_src = data->action;
+        a_dst = data->action;
+
+        if (g_strcmp0(data->action, "New") == 0) {
+            bg_src = "#D4EDDA";
+            bg_dst = "#FFFFFF";
+            path_dst = "-";
+        } else if (g_strcmp0(data->action, "Update") == 0) {
+            bg_src = "#CCE5FF";
+            bg_dst = "#CCE5FF";
+        } else if (g_strcmp0(data->action, "Delete") == 0) {
+            if (data->reason && g_strrstr(data->reason, "excluded")) {
+                bg_src = "#FFF3CD";
+                bg_dst = "#FFF3CD";
+                a_src = "Ignore";
+                a_dst = "Delete";
+            } else {
+                bg_src = "#FFFFFF";
+                bg_dst = "#F8D7DA";
+                a_src = "Deleted";
+                a_dst = "Delete";
+                path_src = "-";
+            }
+        }
+        gtk_list_store_append(src_store, &iter_src);
+        gtk_list_store_append(dst_store, &iter_dst);
+        gtk_list_store_set(src_store, &iter_src, COL_ACTION, a_src, COL_PATH,
+                           path_src, COL_SIZE_TEXT, size_str, COL_SIZE_RAW,
+                           data->size, COL_COLOR, bg_src, COL_REASON,
+                           data->reason, -1);
+        gtk_list_store_set(dst_store, &iter_dst, COL_ACTION, a_dst, COL_PATH,
+                           path_dst, COL_SIZE_TEXT, size_str, COL_SIZE_RAW,
+                           data->size, COL_COLOR, bg_dst, COL_REASON,
+                           data->reason, -1);
+        g_free(size_str);
+        break;
+    }
+    case DATA_TYPE_ENABLE_BUTTONS:
+        gtk_widget_set_sensitive(data->widgets->sync_button, TRUE);
+        gtk_widget_set_sensitive(data->widgets->preview_button, TRUE);
+        break;
+    case DATA_TYPE_CLEAR_TREES:
+        gtk_list_store_clear(data->widgets->src_store);
+        gtk_list_store_clear(data->widgets->dst_store);
+        break;
+    default:
+        error("Invalid data->type: %d.\n", (int)data->type);
+        exit(EXIT_FAILURE);
+    }
+
+    if (data->message) {
+        g_free(data->message);
+    }
+    if (data->action) {
+        g_free(data->action);
+    }
+    if (data->filepath) {
+        g_free(data->filepath);
+    }
+    if (data->reason) {
+        g_free(data->reason);
+    }
+    g_free(data);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+setup_tree_columns(GtkWidget *gtk_tree) {
+    GtkCellRenderer *gtk_cell_renderer;
+    GtkTreeViewColumn *gtk_tree_view_column;
+
+    gtk_cell_renderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
+        "Action", gtk_cell_renderer, "text", COL_ACTION, "cell-background",
+        COL_COLOR, NULL);
+    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_ACTION);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(gtk_tree), gtk_tree_view_column);
+
+    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
+        "File Path", gtk_cell_renderer, "text", COL_PATH, "cell-background",
+        COL_COLOR, NULL);
+    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_PATH);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(gtk_tree), gtk_tree_view_column);
+
+    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
+        "Size", gtk_cell_renderer, "text", COL_SIZE_TEXT, "cell-background",
+        COL_COLOR, NULL);
+    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_SIZE_RAW);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(gtk_tree), gtk_tree_view_column);
+
+    gtk_widget_set_has_tooltip(gtk_tree, TRUE);
+    g_signal_connect(gtk_tree, "query-tooltip", G_CALLBACK(on_tree_tooltip),
+                     NULL);
+    g_signal_connect(gtk_tree, "button-press-event",
+                     G_CALLBACK(on_tree_button_press), NULL);
+    return;
 }
