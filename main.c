@@ -49,13 +49,13 @@ typedef struct UIUpdateData {
     char *message;
     char *action;
     char *filepath;
-    long long size;
+    int64 size;
     int32 side;
     enum DataType type;
 } UIUpdateData;
 
 static char *
-format_size(long long bytes) {
+format_size(int64 bytes) {
     const char *units[] = {"B", "KB", "MB", "GB", "TB"};
     int32 i = 0;
     double d_bytes = (double)bytes;
@@ -139,7 +139,7 @@ dispatch_log(AppWidgets *w, const char *msg) {
 
 static void
 dispatch_tree(AppWidgets *w, int32 side, const char *act, const char *path,
-              long long size) {
+              int64 size) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
     data->widgets = w;
     data->type = DATA_TYPE_TREE_ROW;
@@ -186,7 +186,7 @@ sync_worker(gpointer user_data) {
                     struct stat st;
                     snprintf(full_path, sizeof(full_path), "%s/%s",
                              tdata->dest_path, buffer + 10);
-                    long long sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
+                    int64 sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
                     dispatch_tree(tdata->widgets, 1, "Delete", buffer + 10, sz);
                 } else if (strncmp(buffer, ">f", 2) == 0
                            || strncmp(buffer, ">c", 2) == 0) {
@@ -199,8 +199,7 @@ sync_worker(gpointer user_data) {
                         struct stat st;
                         snprintf(full_path, sizeof(full_path), "%s/%s",
                                  tdata->src_path, space + 1);
-                        long long sz
-                            = (stat(full_path, &st) == 0) ? st.st_size : 0;
+                        int64 sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
                         dispatch_tree(tdata->widgets, 0, act, space + 1, sz);
                     }
                 }
