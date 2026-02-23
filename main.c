@@ -21,12 +21,12 @@ enum {
 typedef struct AppWidgets {
     GtkWidget *gtk_window;
     GtkWidget *src_entry;
-    GtkWidget *dest_entry;
+    GtkWidget *dst_entry;
     GtkWidget *preview_button;
     GtkWidget *sync_button;
     GtkWidget *exclude_button;
     GtkListStore *src_store;
-    GtkListStore *dest_store;
+    GtkListStore *dst_store;
     GtkTextBuffer *log_buffer;
     char *exclude_path;
 } AppWidgets;
@@ -34,7 +34,7 @@ typedef struct AppWidgets {
 typedef struct ThreadData {
     AppWidgets *widgets;
     char src_path[1024];
-    char dest_path[1024];
+    char dst_path[1024];
     int32 is_preview;
 } ThreadData;
 
@@ -70,7 +70,7 @@ main(int32 argc, char *argv[]) {
     GtkWidget *header_vbox;
     GtkWidget *src_hbox;
     GtkWidget *browse_src;
-    GtkWidget *dest_hbox;
+    GtkWidget *dst_hbox;
     GtkWidget *browse_dest;
     GtkWidget *btn_hbox;
     GtkWidget *paned;
@@ -120,15 +120,15 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(src_hbox), browse_src, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), src_hbox, FALSE, FALSE, 0);
 
-    dest_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(dest_hbox), gtk_label_new("Destination:"), FALSE,
+    dst_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_box_pack_start(GTK_BOX(dst_hbox), gtk_label_new("Destination:"), FALSE,
                        FALSE, 5);
-    w->dest_entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(w->dest_entry), default_dest);
+    w->dst_entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(w->dst_entry), default_dest);
     browse_dest = gtk_button_new_with_label("Browse");
-    gtk_box_pack_start(GTK_BOX(dest_hbox), w->dest_entry, TRUE, TRUE, 5);
-    gtk_box_pack_start(GTK_BOX(dest_hbox), browse_dest, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(header_vbox), dest_hbox, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(dst_hbox), w->dst_entry, TRUE, TRUE, 5);
+    gtk_box_pack_start(GTK_BOX(dst_hbox), browse_dest, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(header_vbox), dst_hbox, FALSE, FALSE, 0);
 
     g_free(cwd);
     g_free(default_src);
@@ -168,10 +168,10 @@ main(int32 argc, char *argv[]) {
                        gtk_label_new("Destination: To be Deleted"), FALSE,
                        FALSE, 0);
     r_scroll = gtk_scrolled_window_new(NULL, NULL);
-    w->dest_store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
-                                       G_TYPE_STRING, G_TYPE_INT64,
-                                       G_TYPE_STRING, G_TYPE_STRING);
-    r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->dest_store));
+    w->dst_store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
+                                      G_TYPE_STRING, G_TYPE_INT64,
+                                      G_TYPE_STRING, G_TYPE_STRING);
+    r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->dst_store));
     setup_tree_columns(r_tree);
     gtk_container_add(GTK_CONTAINER(r_scroll), r_tree);
     gtk_box_pack_start(GTK_BOX(r_vbox), r_scroll, TRUE, TRUE, 0);
@@ -216,7 +216,7 @@ update_ui_handler(gpointer user_data) {
     }
     case DATA_TYPE_TREE_ROW: {
         GtkListStore *target = (data->side == 0) ? data->widgets->src_store
-                                                 : data->widgets->dest_store;
+                                                 : data->widgets->dst_store;
         GtkTreeIter iter;
         char *size_str = bytes_pretty(data->size);
         const char *bg_color = "#FFFFFF";
@@ -245,7 +245,7 @@ update_ui_handler(gpointer user_data) {
         break;
     case DATA_TYPE_CLEAR_TREES:
         gtk_list_store_clear(data->widgets->src_store);
-        gtk_list_store_clear(data->widgets->dest_store);
+        gtk_list_store_clear(data->widgets->dst_store);
         break;
     }
 
@@ -348,7 +348,7 @@ sync_worker(gpointer user_data) {
                                    tdata->widgets->exclude_path)
                  : "",
              tdata->is_preview ? "" : "| tee /tmp/rsyncfiles", tdata->src_path,
-             tdata->dest_path);
+             tdata->dst_path);
 
     rsync_pipe = popen(cmd, "r");
     if (!rsync_pipe) {
@@ -361,7 +361,7 @@ sync_worker(gpointer user_data) {
                     char full_path[2048];
                     struct stat st;
                     snprintf(full_path, sizeof(full_path), "%s/%s",
-                             tdata->dest_path, buffer + 10);
+                             tdata->dst_path, buffer + 10);
                     int64 sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
                     dispatch_tree(tdata->widgets, 1, "Delete", buffer + 10, sz,
                                   "File removed from source directory");
@@ -399,7 +399,7 @@ sync_worker(gpointer user_data) {
         snprintf(cmd, sizeof(cmd),
                  "rsync --verbose --checksum --files-from=/tmp/sync.files "
                  "'%s/' '%s/' 2>&1",
-                 tdata->src_path, tdata->dest_path);
+                 tdata->src_path, tdata->dst_path);
 
         rsync_pipe = popen(cmd, "r");
         if (!rsync_pipe) {
@@ -428,7 +428,7 @@ static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     const char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
+    const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
 
     (void)b;
     if (strlen64(src) < 1 || strlen64(dest) < 1) {
@@ -440,7 +440,7 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     thread_data->widgets = w;
     thread_data->is_preview = 1;
     strncpy(thread_data->src_path, src, 1023);
-    strncpy(thread_data->dest_path, dest, 1023);
+    strncpy(thread_data->dst_path, dest, 1023);
     g_thread_new("worker", sync_worker, thread_data);
     return;
 }
@@ -449,7 +449,7 @@ static void
 on_sync_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     const char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
+    const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
     GtkWidget *dialog;
 
     (void)b;
@@ -463,7 +463,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
         thread_data->widgets = w;
         thread_data->is_preview = 0;
         strncpy(thread_data->src_path, src, 1023);
-        strncpy(thread_data->dest_path, dest, 1023);
+        strncpy(thread_data->dst_path, dest, 1023);
         g_thread_new("worker", sync_worker, thread_data);
     }
     gtk_widget_destroy(dialog);
@@ -552,7 +552,7 @@ on_browse_dest(GtkWidget *b, gpointer data) {
     (void)b;
     if (gtk_dialog_run(GTK_DIALOG(dlg)) == GTK_RESPONSE_ACCEPT) {
         char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
-        gtk_entry_set_text(GTK_ENTRY(w->dest_entry), path);
+        gtk_entry_set_text(GTK_ENTRY(w->dst_entry), path);
         g_free(path);
     }
     gtk_widget_destroy(dlg);
