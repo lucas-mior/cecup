@@ -8,8 +8,6 @@
 
 #include "util.c"
 
-#define EXCLUDE_FILE "sync_gui.exclude"
-
 enum {
     COL_ACTION = 0,
     COL_PATH,
@@ -29,6 +27,7 @@ typedef struct AppWidgets {
     GtkListStore *src_store;
     GtkListStore *dest_store;
     GtkTextBuffer *log_buffer;
+    char *exclude_path;
 } AppWidgets;
 
 typedef struct ThreadData {
@@ -162,8 +161,10 @@ sync_worker(gpointer user_data) {
              " --delete-after"
              " --delete-excluded --stats %s %s %s '%s/' '%s/' 2>&1",
              tdata->is_preview ? "--dry-run" : "--info=progress2",
-             access(EXCLUDE_FILE, F_OK) != -1 ? "--exclude-from=" EXCLUDE_FILE
-                                              : "",
+             access(tdata->widgets->exclude_path, F_OK) != -1
+                 ? g_strdup_printf("--exclude-from='%s'",
+                                   tdata->widgets->exclude_path)
+                 : "",
              tdata->is_preview ? "" : "| tee /tmp/rsyncfiles", tdata->src_path,
              tdata->dest_path);
 
@@ -276,18 +277,16 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_save_exclude(GtkWidget *b, gpointer data) {
-    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(data);
+on_save_exclude(AppWidgets *w, GtkTextBuffer *buffer) {
     GtkTextIter start;
     GtkTextIter end;
     char *text;
     FILE *fp;
 
-    (void)b;
     gtk_text_buffer_get_start_iter(buffer, &start);
     gtk_text_buffer_get_end_iter(buffer, &end);
     text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
-    fp = fopen(EXCLUDE_FILE, "w");
+    fp = fopen(w->exclude_path, "w");
     if (fp) {
         fputs(text, fp);
         fclose(fp);
@@ -315,7 +314,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
     scroll = gtk_scrolled_window_new(NULL, NULL);
     view = gtk_text_view_new();
     buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
-    if (g_file_get_contents(EXCLUDE_FILE, &content, &length, NULL)) {
+    if (g_file_get_contents(w->exclude_path, &content, &length, NULL)) {
         gtk_text_buffer_set_text(buffer, content, -1);
         g_free(content);
     }
@@ -324,7 +323,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
                        scroll, TRUE, TRUE, 5);
     gtk_widget_show_all(dialog);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        on_save_exclude(NULL, buffer);
+        on_save_exclude(w, buffer);
     }
     gtk_widget_destroy(dialog);
     return;
@@ -412,10 +411,16 @@ main(int32 argc, char *argv[]) {
     char *cwd;
     char *default_src;
     char *default_dest;
+    const char *config_dir;
 
     gtk_init(&argc, &argv);
 
     w = g_new0(AppWidgets, 1);
+
+    config_dir = g_get_user_config_dir();
+    w->exclude_path
+        = g_build_filename(config_dir, "cecup_exclude_patterns.conf", NULL);
+
     w->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(w->window), "Btrfs Rsync Sync GUI");
     gtk_window_set_default_size(GTK_WINDOW(w->window), 1100, 800);
@@ -519,6 +524,7 @@ main(int32 argc, char *argv[]) {
     gtk_widget_show_all(w->window);
     gtk_main();
 
+    g_free(w->exclude_path);
     g_free(w);
     return 0;
 }
