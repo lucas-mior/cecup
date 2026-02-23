@@ -61,6 +61,8 @@ static void on_browse_dst(GtkWidget *b, gpointer data);
 static void on_preview_clicked(GtkWidget *b, gpointer data);
 static void on_sync_clicked(GtkWidget *b, gpointer data);
 static void on_exclude_clicked(GtkWidget *b, gpointer data);
+static gboolean on_tree_button_press(GtkWidget *widget, GdkEventButton *event,
+                                     gpointer data);
 
 int32
 main(int32 argc, char *argv[]) {
@@ -266,6 +268,31 @@ update_ui_handler(gpointer user_data) {
     }
     g_free(data);
     return G_SOURCE_REMOVE;
+}
+
+static gboolean
+on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
+    GtkTreePath *gtk_tree_path;
+    GtkTreeSelection *gtk_tree_selection;
+
+    (void)data;
+    if (event->type == GDK_BUTTON_PRESS && event->button == 1) {
+        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
+                                          (gint)event->y, &gtk_tree_path, NULL,
+                                          NULL, NULL)) {
+            gtk_tree_selection
+                = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+            if (gtk_tree_selection_path_is_selected(gtk_tree_selection,
+                                                    gtk_tree_path)) {
+                gtk_tree_selection_unselect_path(gtk_tree_selection,
+                                                 gtk_tree_path);
+                gtk_tree_path_free(gtk_tree_path);
+                return TRUE;
+            }
+            gtk_tree_path_free(gtk_tree_path);
+        }
+    }
+    return FALSE;
 }
 
 static gboolean
@@ -594,6 +621,8 @@ setup_tree_columns(GtkWidget *gtk_tree) {
     gtk_widget_set_has_tooltip(gtk_tree, TRUE);
     g_signal_connect(gtk_tree, "query-tooltip", G_CALLBACK(on_tree_tooltip),
                      NULL);
+    g_signal_connect(gtk_tree, "button-press-event",
+                     G_CALLBACK(on_tree_button_press), NULL);
 
     return;
 }
