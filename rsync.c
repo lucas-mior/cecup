@@ -79,9 +79,9 @@ sync_worker(gpointer user_data) {
     snprintf(cmd, sizeof(cmd),
              "rsync --verbose --update --recursive --partial"
              " --links --hard-links"
-             " --itemize-changes --perms --times --owner --group --delete"
-             " --delete-after"
-             " --delete-excluded --stats %s %s %s '%s/' '%s/' 2>&1",
+             " --itemize-changes --perms --times --owner --group"
+             " --delete --delete-after --delete-excluded"
+             " --stats %s %s %s '%s/' '%s/' 2>&1",
              thread_data->is_preview ? "--dry-run" : "--info=progress2",
              exclude_flag,
              thread_data->is_preview ? "" : "| tee /tmp/rsyncfiles",
