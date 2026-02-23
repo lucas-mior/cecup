@@ -155,7 +155,8 @@ dispatch_tree(AppWidgets *w, int32 side, const char *act, const char *path,
 gpointer
 sync_worker(gpointer user_data) {
     ThreadData *tdata = (ThreadData *)user_data;
-    char cmd[4096], buffer[2048];
+    char cmd[4096];
+    char buffer[2048];
     FILE *fp;
 
     if (tdata->is_preview) {
