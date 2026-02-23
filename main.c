@@ -58,7 +58,7 @@ typedef struct UIUpdateData {
 
 static void setup_tree_columns(GtkWidget *tree);
 static void on_browse_src(GtkWidget *b, gpointer data);
-static void on_browse_dest(GtkWidget *b, gpointer data);
+static void on_browse_dst(GtkWidget *b, gpointer data);
 static void on_preview_clicked(GtkWidget *b, gpointer data);
 static void on_sync_clicked(GtkWidget *b, gpointer data);
 static void on_exclude_clicked(GtkWidget *b, gpointer data);
@@ -71,7 +71,7 @@ main(int32 argc, char *argv[]) {
     GtkWidget *src_hbox;
     GtkWidget *browse_src;
     GtkWidget *dst_hbox;
-    GtkWidget *browse_dest;
+    GtkWidget *browse_dst;
     GtkWidget *btn_hbox;
     GtkWidget *paned;
     GtkWidget *l_vbox;
@@ -84,7 +84,7 @@ main(int32 argc, char *argv[]) {
     GtkWidget *log_view;
     char *cwd;
     char *default_src;
-    char *default_dest;
+    char *default_dst;
     const char *config_dir;
 
     gtk_init(&argc, &argv);
@@ -108,7 +108,7 @@ main(int32 argc, char *argv[]) {
 
     cwd = g_get_current_dir();
     default_src = g_strdup_printf("%s/a/", cwd);
-    default_dest = g_strdup_printf("%s/b/", cwd);
+    default_dst = g_strdup_printf("%s/b/", cwd);
 
     src_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_start(GTK_BOX(src_hbox), gtk_label_new("Source:      "), FALSE,
@@ -124,15 +124,15 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(dst_hbox), gtk_label_new("Destination:"), FALSE,
                        FALSE, 5);
     w->dst_entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(w->dst_entry), default_dest);
-    browse_dest = gtk_button_new_with_label("Browse");
+    gtk_entry_set_text(GTK_ENTRY(w->dst_entry), default_dst);
+    browse_dst = gtk_button_new_with_label("Browse");
     gtk_box_pack_start(GTK_BOX(dst_hbox), w->dst_entry, TRUE, TRUE, 5);
-    gtk_box_pack_start(GTK_BOX(dst_hbox), browse_dest, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(dst_hbox), browse_dst, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), dst_hbox, FALSE, FALSE, 0);
 
     g_free(cwd);
     g_free(default_src);
-    g_free(default_dest);
+    g_free(default_dst);
 
     btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     w->preview_button = gtk_button_new_with_label("1. Preview");
@@ -186,7 +186,7 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(main_vbox), log_scroll, FALSE, FALSE, 5);
 
     g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), w);
-    g_signal_connect(browse_dest, "clicked", G_CALLBACK(on_browse_dest), w);
+    g_signal_connect(browse_dst, "clicked", G_CALLBACK(on_browse_dst), w);
     g_signal_connect(w->preview_button, "clicked",
                      G_CALLBACK(on_preview_clicked), w);
     g_signal_connect(w->sync_button, "clicked", G_CALLBACK(on_sync_clicked), w);
@@ -542,7 +542,7 @@ on_browse_src(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_browse_dest(GtkWidget *b, gpointer data) {
+on_browse_dst(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     GtkWidget *dlg = gtk_file_chooser_dialog_new(
         "Select Destination Directory", GTK_WINDOW(w->gtk_window),
