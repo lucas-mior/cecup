@@ -181,7 +181,7 @@ sync_worker(gpointer user_data) {
     ThreadData *tdata = (ThreadData *)user_data;
     char cmd[4096];
     char buffer[2048];
-    FILE *fp;
+    FILE *rsync_pipe;
 
     if (tdata->is_preview) {
         UIUpdateData *clear = g_new0(UIUpdateData, 1);
@@ -204,9 +204,9 @@ sync_worker(gpointer user_data) {
              tdata->is_preview ? "" : "| tee /tmp/rsyncfiles", tdata->src_path,
              tdata->dest_path);
 
-    fp = popen(cmd, "r");
-    if (fp) {
-        while (fgets(buffer, sizeof(buffer), fp)) {
+    rsync_pipe = popen(cmd, "r");
+    if (rsync_pipe) {
+        while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
             buffer[strcspn(buffer, "\n")] = 0;
             if (tdata->is_preview) {
                 if (strncmp(buffer, "*deleting", 9) == 0) {
@@ -241,7 +241,7 @@ sync_worker(gpointer user_data) {
                 dispatch_log(tdata->widgets, buffer);
             }
         }
-        pclose(fp);
+        pclose(rsync_pipe);
     }
 
     if (!tdata->is_preview) {
@@ -252,13 +252,13 @@ sync_worker(gpointer user_data) {
                  "rsync --verbose --checksum --files-from=/tmp/sync.files "
                  "'%s/' '%s/' 2>&1",
                  tdata->src_path, tdata->dest_path);
-        fp = popen(cmd, "r");
-        if (fp) {
-            while (fgets(buffer, sizeof(buffer), fp)) {
+        rsync_pipe = popen(cmd, "r");
+        if (rsync_pipe) {
+            while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
                 buffer[strcspn(buffer, "\n")] = 0;
                 dispatch_log(tdata->widgets, buffer);
             }
-            pclose(fp);
+            pclose(rsync_pipe);
         }
     }
 
