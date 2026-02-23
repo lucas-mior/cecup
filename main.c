@@ -121,8 +121,6 @@ update_ui_handler(gpointer user_data) {
     return G_SOURCE_REMOVE;
 }
 
-// ... [dispatch_log, dispatch_tree, and sync_worker remain same] ...
-
 static void
 dispatch_log(AppWidgets *w, const char *msg) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
