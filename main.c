@@ -214,7 +214,7 @@ update_ui_handler(gpointer user_data) {
             if (isspace((unsigned char)ptr[i])) {
                 last_space_idx = w_idx - 1;
             }
-            if (current_len >= 80) {
+            if (current_len >= 160) {
                 if (last_space_idx != -1) {
                     wrapped[last_space_idx] = '\n';
                     memmove(&wrapped[last_space_idx + 5],
