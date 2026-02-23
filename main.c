@@ -6,11 +6,11 @@
 #include <unistd.h>
 #include <time.h>
 
-#define SOURCE_DIR "/home/lucas/"
 #define EXCLUDE_FILE "sync_gui.exclude"
 
 typedef struct AppWidgets {
     GtkWidget *window;
+    GtkWidget *src_entry;
     GtkWidget *dest_entry;
     GtkWidget *preview_btn;
     GtkWidget *sync_btn;
@@ -21,6 +21,7 @@ typedef struct AppWidgets {
 
 typedef struct ThreadData {
     AppWidgets *widgets;
+    char src_path[1024];
     char dest_path[1024];
     int is_preview;
 } ThreadData;
@@ -30,8 +31,8 @@ typedef struct UIUpdateData {
     char *message;
     char *action;
     char *filepath;
-    int side;  // 0 = Origin (Left), 1 = Destination (Right)
-    int type;  // 0 = log, 1 = tree row, 2 = enable buttons, 3 = clear trees
+    int side;
+    int type;
 } UIUpdateData;
 
 static void
@@ -78,8 +79,6 @@ update_ui_handler(gpointer user_data) {
     return G_SOURCE_REMOVE;
 }
 
-/* --- Dispatchers from Worker Thread --- */
-
 static void
 dispatch_log(AppWidgets *w, const char *msg) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
@@ -102,8 +101,6 @@ dispatch_tree(AppWidgets *w, int side, const char *act, const char *path) {
     return;
 }
 
-/* --- Worker Thread Logic --- */
-
 gpointer
 sync_worker(gpointer user_data) {
     ThreadData *tdata = (ThreadData *)user_data;
@@ -117,30 +114,15 @@ sync_worker(gpointer user_data) {
         g_idle_add(update_ui_handler, clear);
     }
 
-    // Handle Ownership and Snapshotting if real Sync
-    /* if (!tdata->is_preview) { */
-    /*     dispatch_log(tdata->widgets, ">>> Initiating Pre-sync (Ownership &
-     * Snapshot)..."); */
-    /*     // Using pkexec for privileged operations */
-    /*     snprintf(cmd, sizeof(cmd), */
-    /*         "pkexec sh -c \"chown -R lucas:lucas %s %s && " */
-    /*         "mkdir -p %s/../snapshots && " */
-    /*         "btrfs subvolume snapshot %s/.. %s/../snapshots/$(date
-     * +%%Y%%m%%d_%%H%%M%%S)\"", */
-    /*         SOURCE_DIR, tdata->dest_path, tdata->dest_path, tdata->dest_path,
-     * tdata->dest_path); */
-    /*     system(cmd); */
-    /* } */
-
     snprintf(
         cmd, sizeof(cmd),
         "rsync --verbose --update --recursive --partial --links --hard-links "
         "--itemize-changes --perms --times --owner --group --delete "
         "--delete-after "
-        "--delete-excluded --stats %s %s %s '%s' '%s/' 2>&1",
+        "--delete-excluded --stats %s %s %s '%s/' '%s/' 2>&1",
         tdata->is_preview ? "--dry-run" : "--info=progress2",
         access(EXCLUDE_FILE, F_OK) != -1 ? "--exclude-from=" EXCLUDE_FILE : "",
-        tdata->is_preview ? "" : "| tee /tmp/rsyncfiles", SOURCE_DIR,
+        tdata->is_preview ? "" : "| tee /tmp/rsyncfiles", tdata->src_path,
         tdata->dest_path);
 
     fp = popen(cmd, "r");
@@ -171,10 +153,11 @@ sync_worker(gpointer user_data) {
         dispatch_log(tdata->widgets, ">>> Starting Checksum Verification...");
         system("sed -nE '/^[>ch]f/{s/^[^ ]+ //; p}' /tmp/rsyncfiles > "
                "/tmp/sync.files");
-        snprintf(cmd, sizeof(cmd),
-                 "rsync --verbose --checksum --files-from=/tmp/sync.files %s "
-                 "%s/ 2>&1",
-                 SOURCE_DIR, tdata->dest_path);
+        snprintf(
+            cmd, sizeof(cmd),
+            "rsync --verbose --checksum --files-from=/tmp/sync.files '%s/' "
+            "'%s/' 2>&1",
+            tdata->src_path, tdata->dest_path);
         fp = popen(cmd, "r");
         if (fp) {
             while (fgets(buffer, sizeof(buffer), fp)) {
@@ -199,10 +182,11 @@ sync_worker(gpointer user_data) {
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
+    const char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
     const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
     (void)b;
 
-    if (strlen(dest) < 1) {
+    if (strlen(src) < 1 || strlen(dest) < 1) {
         return;
     }
 
@@ -212,6 +196,7 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     ThreadData *td = g_new0(ThreadData, 1);
     td->widgets = w;
     td->is_preview = 1;
+    strncpy(td->src_path, src, 1023);
     strncpy(td->dest_path, dest, 1023);
 
     g_thread_new("worker", sync_worker, td);
@@ -221,12 +206,13 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
 static void
 on_sync_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
+    const char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
     const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
     (void)b;
 
     GtkWidget *dialog = gtk_message_dialog_new(
         GTK_WINDOW(w->window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
-        GTK_BUTTONS_YES_NO, "Confirm write to: %s?", dest);
+        GTK_BUTTONS_YES_NO, "Confirm sync from %s to %s?", src, dest);
 
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         gtk_widget_set_sensitive(w->preview_btn, FALSE);
@@ -234,6 +220,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
         ThreadData *td = g_new0(ThreadData, 1);
         td->widgets = w;
         td->is_preview = 0;
+        strncpy(td->src_path, src, 1023);
         strncpy(td->dest_path, dest, 1023);
         g_thread_new("worker", sync_worker, td);
     }
@@ -242,10 +229,27 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_browse(GtkWidget *b, gpointer data) {
+on_browse_src(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     GtkWidget *dlg = gtk_file_chooser_dialog_new(
-        "Select Destination", GTK_WINDOW(w->window),
+        "Select Source Directory", GTK_WINDOW(w->window),
+        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
+        "_Select", GTK_RESPONSE_ACCEPT, NULL);
+    (void)b;
+    if (gtk_dialog_run(GTK_DIALOG(dlg)) == GTK_RESPONSE_ACCEPT) {
+        char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
+        gtk_entry_set_text(GTK_ENTRY(w->src_entry), path);
+        g_free(path);
+    }
+    gtk_widget_destroy(dlg);
+    return;
+}
+
+static void
+on_browse_dest(GtkWidget *b, gpointer data) {
+    AppWidgets *w = (AppWidgets *)data;
+    GtkWidget *dlg = gtk_file_chooser_dialog_new(
+        "Select Destination Directory", GTK_WINDOW(w->window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
         "_Select", GTK_RESPONSE_ACCEPT, NULL);
     (void)b;
@@ -277,30 +281,48 @@ main(int argc, char *argv[]) {
     AppWidgets *w = g_new0(AppWidgets, 1);
     w->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(w->window), "Btrfs Rsync Sync GUI");
-    gtk_window_set_default_size(GTK_WINDOW(w->window), 1100, 750);
+    gtk_window_set_default_size(GTK_WINDOW(w->window), 1100, 800);
     g_signal_connect(w->window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
     GtkWidget *main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_container_add(GTK_CONTAINER(w->window), main_vbox);
 
-    // Header Area
-    GtkWidget *header = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    gtk_container_set_border_width(GTK_CONTAINER(header), 10);
+    GtkWidget *header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    gtk_container_set_border_width(GTK_CONTAINER(header_vbox), 10);
+
+    // Source Row
+    GtkWidget *src_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_box_pack_start(GTK_BOX(src_hbox), gtk_label_new("Source:     "), FALSE,
+                       FALSE, 5);
+    w->src_entry = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(w->src_entry), "Select Source...");
+    GtkWidget *browse_src = gtk_button_new_with_label("Browse");
+    gtk_box_pack_start(GTK_BOX(src_hbox), w->src_entry, TRUE, TRUE, 5);
+    gtk_box_pack_start(GTK_BOX(src_hbox), browse_src, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(header_vbox), src_hbox, FALSE, FALSE, 0);
+
+    // Dest Row
+    GtkWidget *dest_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_box_pack_start(GTK_BOX(dest_hbox), gtk_label_new("Destination:"), FALSE,
+                       FALSE, 5);
     w->dest_entry = gtk_entry_new();
     gtk_entry_set_placeholder_text(GTK_ENTRY(w->dest_entry),
                                    "Select Destination...");
-    GtkWidget *browse = gtk_button_new_with_label("Browse");
+    GtkWidget *browse_dest = gtk_button_new_with_label("Browse");
+    gtk_box_pack_start(GTK_BOX(dest_hbox), w->dest_entry, TRUE, TRUE, 5);
+    gtk_box_pack_start(GTK_BOX(dest_hbox), browse_dest, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(header_vbox), dest_hbox, FALSE, FALSE, 0);
+
+    // Buttons Row
+    GtkWidget *btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     w->preview_btn = gtk_button_new_with_label("1. Preview");
     w->sync_btn = gtk_button_new_with_label("2. Sync");
     gtk_widget_set_sensitive(w->sync_btn, FALSE);
+    gtk_box_pack_end(GTK_BOX(btn_hbox), w->sync_btn, FALSE, FALSE, 5);
+    gtk_box_pack_end(GTK_BOX(btn_hbox), w->preview_btn, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(header_vbox), btn_hbox, FALSE, FALSE, 5);
 
-    gtk_box_pack_start(GTK_BOX(header), gtk_label_new("Source: " SOURCE_DIR),
-                       FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(header), w->dest_entry, TRUE, TRUE, 5);
-    gtk_box_pack_start(GTK_BOX(header), browse, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(header), w->preview_btn, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(header), w->sync_btn, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(main_vbox), header, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
     GtkWidget *paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start(GTK_BOX(main_vbox), paned, TRUE, TRUE, 0);
@@ -339,7 +361,8 @@ main(int argc, char *argv[]) {
     gtk_container_add(GTK_CONTAINER(log_scroll), log_view);
     gtk_box_pack_start(GTK_BOX(main_vbox), log_scroll, FALSE, FALSE, 5);
 
-    g_signal_connect(browse, "clicked", G_CALLBACK(on_browse), w);
+    g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), w);
+    g_signal_connect(browse_dest, "clicked", G_CALLBACK(on_browse_dest), w);
     g_signal_connect(w->preview_btn, "clicked", G_CALLBACK(on_preview_clicked),
                      w);
     g_signal_connect(w->sync_btn, "clicked", G_CALLBACK(on_sync_clicked), w);
