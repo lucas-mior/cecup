@@ -1511,7 +1511,7 @@ bytes_pretty(int64 raw) {
     int32 n;
     char *string;
 
-    aux_pretty = raw;
+    aux_pretty = (double)raw;
     i = 0;
     while ((aux_pretty >= 1024) && (i < LENGTH(suffixes))) {
         aux_pretty /= 1024;
