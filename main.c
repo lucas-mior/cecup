@@ -25,6 +25,30 @@ on_scroll_sync(GtkAdjustment *src, gpointer data) {
     return;
 }
 
+static void
+on_sort_changed(GtkTreeSortable *sortable, gpointer data) {
+    GtkTreeSortable *target;
+    int sort_column_id;
+    GtkSortType order;
+    int target_id;
+    GtkSortType target_order;
+
+    target = GTK_TREE_SORTABLE(data);
+
+    if (gtk_tree_sortable_get_sort_column_id(sortable, &sort_column_id,
+                                             &order)) {
+        /* Check current state of target to prevent infinite recursion loop */
+        if (gtk_tree_sortable_get_sort_column_id(target, &target_id,
+                                                 &target_order)) {
+            if (target_id == sort_column_id && target_order == order) {
+                return;
+            }
+        }
+        gtk_tree_sortable_set_sort_column_id(target, sort_column_id, order);
+    }
+    return;
+}
+
 static gboolean
 update_ui_handler(gpointer user_data) {
     UIUpdateData *data;
@@ -332,6 +356,12 @@ main(int32 argc, char *argv[]) {
     r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(r_scroll));
     g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
     g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
+
+    /* Setup Sort Sync */
+    g_signal_connect(w->src_store, "sort-column-changed",
+                     G_CALLBACK(on_sort_changed), w->dst_store);
+    g_signal_connect(w->dst_store, "sort-column-changed",
+                     G_CALLBACK(on_sort_changed), w->src_store);
 
     log_scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(log_scroll, -1, 150);
