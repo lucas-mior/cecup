@@ -34,6 +34,7 @@ fi
 
 trace_on
 # shellcheck disable=SC2086
-gcc $CPPFLAGS $CFLAGS main.c -o $program "$LDFLAGS"
-./cecup
+rm ./$program
+$CC $CPPFLAGS $CFLAGS main.c -o ./$program $LDFLAGS
+./$program
 trace_off
