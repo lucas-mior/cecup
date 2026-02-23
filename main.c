@@ -205,7 +205,9 @@ sync_worker(gpointer user_data) {
              tdata->dest_path);
 
     rsync_pipe = popen(cmd, "r");
-    if (rsync_pipe) {
+    if (!rsync_pipe) {
+        dispatch_log(tdata->widgets, "ERROR: Failed to start rsync process.");
+    } else {
         while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
             buffer[strcspn(buffer, "\n")] = 0;
             if (tdata->is_preview) {
@@ -252,8 +254,12 @@ sync_worker(gpointer user_data) {
                  "rsync --verbose --checksum --files-from=/tmp/sync.files "
                  "'%s/' '%s/' 2>&1",
                  tdata->src_path, tdata->dest_path);
+
         rsync_pipe = popen(cmd, "r");
-        if (rsync_pipe) {
+        if (!rsync_pipe) {
+            dispatch_log(tdata->widgets,
+                         "ERROR: Failed to start checksum verification rsync.");
+        } else {
             while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
                 buffer[strcspn(buffer, "\n")] = 0;
                 dispatch_log(tdata->widgets, buffer);
@@ -284,12 +290,12 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     }
     gtk_widget_set_sensitive(w->preview_btn, FALSE);
     gtk_widget_set_sensitive(w->sync_btn, FALSE);
-    ThreadData *td = g_new0(ThreadData, 1);
-    td->widgets = w;
-    td->is_preview = 1;
-    strncpy(td->src_path, src, 1023);
-    strncpy(td->dest_path, dest, 1023);
-    g_thread_new("worker", sync_worker, td);
+    ThreadData *thread_data = g_new0(ThreadData, 1);
+    thread_data->widgets = w;
+    thread_data->is_preview = 1;
+    strncpy(thread_data->src_path, src, 1023);
+    strncpy(thread_data->dest_path, dest, 1023);
+    g_thread_new("worker", sync_worker, thread_data);
     return;
 }
 
@@ -307,12 +313,12 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         gtk_widget_set_sensitive(w->preview_btn, FALSE);
         gtk_widget_set_sensitive(w->sync_btn, FALSE);
-        ThreadData *td = g_new0(ThreadData, 1);
-        td->widgets = w;
-        td->is_preview = 0;
-        strncpy(td->src_path, src, 1023);
-        strncpy(td->dest_path, dest, 1023);
-        g_thread_new("worker", sync_worker, td);
+        ThreadData *thread_data = g_new0(ThreadData, 1);
+        thread_data->widgets = w;
+        thread_data->is_preview = 0;
+        strncpy(thread_data->src_path, src, 1023);
+        strncpy(thread_data->dest_path, dest, 1023);
+        g_thread_new("worker", sync_worker, thread_data);
     }
     gtk_widget_destroy(dialog);
     return;
