@@ -241,10 +241,10 @@ sync_worker(gpointer user_data) {
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
-    const char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
+    char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
+    char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
     (void)b;
-    if (strlen(src) < 1 || strlen(dest) < 1) {
+    if (strlen64(src) < 1 || strlen64(dest) < 1) {
         return;
     }
     gtk_widget_set_sensitive(w->preview_btn, FALSE);
