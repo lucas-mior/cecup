@@ -38,6 +38,8 @@ fi
 trace_on
 # shellcheck disable=SC2086
 rm ./$program || true
+ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
+vtags.sed tags | sort | uniq > .tags.vim       2> /dev/null || true
 $CC $CPPFLAGS $CFLAGS main.c -o ./$program $LDFLAGS
 ./$program
 trace_off

@@ -37,6 +37,13 @@ typedef struct ThreadData {
     int32 is_preview;
 } ThreadData;
 
+enum DataType {
+    DATA_TYPE_LOG,
+    DATA_TYPE_TREE_ROW,
+    DATA_TYPE_ENABLE_BUTTONS,
+    DATA_TYPE_CLEAR_TREES,
+};
+
 typedef struct UIUpdateData {
     AppWidgets *widgets;
     char *message;
@@ -44,7 +51,7 @@ typedef struct UIUpdateData {
     char *filepath;
     long long size;
     int32 side;
-    int32 type;
+    enum DataType type;
 } UIUpdateData;
 
 static char *
@@ -63,13 +70,16 @@ gboolean
 update_ui_handler(gpointer user_data) {
     UIUpdateData *data = (UIUpdateData *)user_data;
 
-    if (data->type == 0) {
+    switch (data->type) {
+    case DATA_TYPE_LOG: {
         GtkTextIter end;
         gtk_text_buffer_get_end_iter(data->widgets->log_buffer, &end);
         gtk_text_buffer_insert(data->widgets->log_buffer, &end, data->message,
                                -1);
         gtk_text_buffer_insert(data->widgets->log_buffer, &end, "\n", -1);
-    } else if (data->type == 1) {
+        break;
+    }
+    case DATA_TYPE_TREE_ROW:
         GtkListStore *target = (data->side == 0) ? data->widgets->src_store
                                                  : data->widgets->dest_store;
         GtkTreeIter iter;
@@ -94,12 +104,15 @@ update_ui_handler(gpointer user_data) {
                            bg_color,  // Set the color column
                            -1);
         g_free(size_str);
-    } else if (data->type == 2) {
+        break;
+    case DATA_TYPE_ENABLE_BUTTONS:
         gtk_widget_set_sensitive(data->widgets->sync_btn, TRUE);
         gtk_widget_set_sensitive(data->widgets->preview_btn, TRUE);
-    } else if (data->type == 3) {
+        break;
+    case DATA_TYPE_CLEAR_TREES:
         gtk_list_store_clear(data->widgets->src_store);
         gtk_list_store_clear(data->widgets->dest_store);
+        break;
     }
 
     if (data->message) {
@@ -119,7 +132,7 @@ static void
 dispatch_log(AppWidgets *w, const char *msg) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
     data->widgets = w;
-    data->type = 0;
+    data->type = DATA_TYPE_LOG;
     data->message = g_strdup(msg);
     g_idle_add(update_ui_handler, data);
     return;
@@ -130,7 +143,7 @@ dispatch_tree(AppWidgets *w, int32 side, const char *act, const char *path,
               long long size) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
     data->widgets = w;
-    data->type = 1;
+    data->type = DATA_TYPE_TREE_ROW;
     data->side = side;
     data->action = g_strdup(act);
     data->filepath = g_strdup(path);
@@ -148,7 +161,7 @@ sync_worker(gpointer user_data) {
     if (tdata->is_preview) {
         UIUpdateData *clear = g_new0(UIUpdateData, 1);
         clear->widgets = tdata->widgets;
-        clear->type = 3;
+        clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
     }
 
@@ -219,7 +232,7 @@ sync_worker(gpointer user_data) {
     dispatch_log(tdata->widgets, ">>> Finished.");
     UIUpdateData *ready = g_new0(UIUpdateData, 1);
     ready->widgets = tdata->widgets;
-    ready->type = 2;
+    ready->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, ready);
 
     g_free(tdata);

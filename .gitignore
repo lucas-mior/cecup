@@ -2,3 +2,5 @@
 /cecup
 /.cache/
 compile_commands.json
+tags
+.tags.vim
