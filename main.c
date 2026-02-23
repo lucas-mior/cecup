@@ -527,36 +527,40 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
 static void
 on_browse_src(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
-    GtkWidget *dlg = gtk_file_chooser_dialog_new(
+    GtkWidget *gtk_file_chooser_dialog = gtk_file_chooser_dialog_new(
         "Select Source Directory", GTK_WINDOW(w->gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
         "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
     (void)b;
-    if (gtk_dialog_run(GTK_DIALOG(dlg)) == GTK_RESPONSE_ACCEPT) {
-        char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
+    if (gtk_dialog_run(GTK_DIALOG(gtk_file_chooser_dialog))
+        == GTK_RESPONSE_ACCEPT) {
+        char *path = gtk_file_chooser_get_filename(
+            GTK_FILE_CHOOSER(gtk_file_chooser_dialog));
         gtk_entry_set_text(GTK_ENTRY(w->src_entry), path);
         g_free(path);
     }
-    gtk_widget_destroy(dlg);
+    gtk_widget_destroy(gtk_file_chooser_dialog);
     return;
 }
 
 static void
 on_browse_dst(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
-    GtkWidget *dlg = gtk_file_chooser_dialog_new(
+    GtkWidget *gtk_file_chooser_dialog = gtk_file_chooser_dialog_new(
         "Select Destination Directory", GTK_WINDOW(w->gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
         "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
     (void)b;
-    if (gtk_dialog_run(GTK_DIALOG(dlg)) == GTK_RESPONSE_ACCEPT) {
-        char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
+    if (gtk_dialog_run(GTK_DIALOG(gtk_file_chooser_dialog))
+        == GTK_RESPONSE_ACCEPT) {
+        char *path = gtk_file_chooser_get_filename(
+            GTK_FILE_CHOOSER(gtk_file_chooser_dialog));
         gtk_entry_set_text(GTK_ENTRY(w->dst_entry), path);
         g_free(path);
     }
-    gtk_widget_destroy(dlg);
+    gtk_widget_destroy(gtk_file_chooser_dialog);
     return;
 }
 
