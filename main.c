@@ -22,9 +22,9 @@ typedef struct AppWidgets {
     GtkWidget *window;
     GtkWidget *src_entry;
     GtkWidget *dest_entry;
-    GtkWidget *preview_btn;
-    GtkWidget *sync_btn;
-    GtkWidget *exclude_btn;
+    GtkWidget *preview_button;
+    GtkWidget *sync_button;
+    GtkWidget *exclude_button;
     GtkListStore *src_store;
     GtkListStore *dest_store;
     GtkTextBuffer *log_buffer;
@@ -95,8 +95,8 @@ update_ui_handler(gpointer user_data) {
         break;
     }
     case DATA_TYPE_ENABLE_BUTTONS:
-        gtk_widget_set_sensitive(data->widgets->sync_btn, TRUE);
-        gtk_widget_set_sensitive(data->widgets->preview_btn, TRUE);
+        gtk_widget_set_sensitive(data->widgets->sync_button, TRUE);
+        gtk_widget_set_sensitive(data->widgets->preview_button, TRUE);
         break;
     case DATA_TYPE_CLEAR_TREES:
         gtk_list_store_clear(data->widgets->src_store);
@@ -288,8 +288,8 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     if (strlen64(src) < 1 || strlen64(dest) < 1) {
         return;
     }
-    gtk_widget_set_sensitive(w->preview_btn, FALSE);
-    gtk_widget_set_sensitive(w->sync_btn, FALSE);
+    gtk_widget_set_sensitive(w->preview_button, FALSE);
+    gtk_widget_set_sensitive(w->sync_button, FALSE);
     ThreadData *thread_data = g_new0(ThreadData, 1);
     thread_data->widgets = w;
     thread_data->is_preview = 1;
@@ -311,8 +311,8 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
                                     GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
                                     "Confirm sync from %s to %s?", src, dest);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
-        gtk_widget_set_sensitive(w->preview_btn, FALSE);
-        gtk_widget_set_sensitive(w->sync_btn, FALSE);
+        gtk_widget_set_sensitive(w->preview_button, FALSE);
+        gtk_widget_set_sensitive(w->sync_button, FALSE);
         ThreadData *thread_data = g_new0(ThreadData, 1);
         thread_data->widgets = w;
         thread_data->is_preview = 0;
@@ -511,13 +511,13 @@ main(int32 argc, char *argv[]) {
     g_free(default_dest);
 
     btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    w->preview_btn = gtk_button_new_with_label("1. Preview");
-    w->exclude_btn = gtk_button_new_with_label("Edit Exclusions");
-    w->sync_btn = gtk_button_new_with_label("2. Sync");
-    gtk_widget_set_sensitive(w->sync_btn, FALSE);
-    gtk_box_pack_start(GTK_BOX(btn_hbox), w->exclude_btn, FALSE, FALSE, 5);
-    gtk_box_pack_end(GTK_BOX(btn_hbox), w->sync_btn, FALSE, FALSE, 5);
-    gtk_box_pack_end(GTK_BOX(btn_hbox), w->preview_btn, FALSE, FALSE, 5);
+    w->preview_button = gtk_button_new_with_label("1. Preview");
+    w->exclude_button = gtk_button_new_with_label("Edit Exclusions");
+    w->sync_button = gtk_button_new_with_label("2. Sync");
+    gtk_widget_set_sensitive(w->sync_button, FALSE);
+    gtk_box_pack_start(GTK_BOX(btn_hbox), w->exclude_button, FALSE, FALSE, 5);
+    gtk_box_pack_end(GTK_BOX(btn_hbox), w->sync_button, FALSE, FALSE, 5);
+    gtk_box_pack_end(GTK_BOX(btn_hbox), w->preview_button, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), btn_hbox, FALSE, FALSE, 5);
 
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
@@ -563,11 +563,11 @@ main(int32 argc, char *argv[]) {
 
     g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), w);
     g_signal_connect(browse_dest, "clicked", G_CALLBACK(on_browse_dest), w);
-    g_signal_connect(w->preview_btn, "clicked", G_CALLBACK(on_preview_clicked),
-                     w);
-    g_signal_connect(w->sync_btn, "clicked", G_CALLBACK(on_sync_clicked), w);
-    g_signal_connect(w->exclude_btn, "clicked", G_CALLBACK(on_exclude_clicked),
-                     w);
+    g_signal_connect(w->preview_button, "clicked",
+                     G_CALLBACK(on_preview_clicked), w);
+    g_signal_connect(w->sync_button, "clicked", G_CALLBACK(on_sync_clicked), w);
+    g_signal_connect(w->exclude_button, "clicked",
+                     G_CALLBACK(on_exclude_clicked), w);
 
     gtk_widget_show_all(w->window);
     gtk_main();
