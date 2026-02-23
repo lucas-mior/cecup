@@ -34,7 +34,7 @@ typedef struct ThreadData {
     AppWidgets *widgets;
     char src_path[1024];
     char dest_path[1024];
-    int is_preview;
+    int32 is_preview;
 } ThreadData;
 
 typedef struct UIUpdateData {
@@ -43,14 +43,14 @@ typedef struct UIUpdateData {
     char *action;
     char *filepath;
     long long size;
-    int side;
-    int type;
+    int32 side;
+    int32 type;
 } UIUpdateData;
 
 static char *
 format_size(long long bytes) {
     const char *units[] = {"B", "KB", "MB", "GB", "TB"};
-    int i = 0;
+    int32 i = 0;
     double d_bytes = (double)bytes;
     while (d_bytes >= 1024 && i < LENGTH(units)) {
         d_bytes /= 1024;
@@ -126,7 +126,7 @@ dispatch_log(AppWidgets *w, const char *msg) {
 }
 
 static void
-dispatch_tree(AppWidgets *w, int side, const char *act, const char *path,
+dispatch_tree(AppWidgets *w, int32 side, const char *act, const char *path,
               long long size) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
     data->widgets = w;
@@ -329,8 +329,8 @@ setup_tree_columns(GtkWidget *tree) {
     return;
 }
 
-int
-main(int argc, char *argv[]) {
+int32
+main(int32 argc, char *argv[]) {
     gtk_init(&argc, &argv);
 
     AppWidgets *w = g_new0(AppWidgets, 1);
