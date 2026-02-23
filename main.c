@@ -147,18 +147,18 @@ main(int32 argc, char *argv[]) {
     AppWidgets *w;
     GtkWidget *main_vbox;
     GtkWidget *header_vbox;
-    GtkWidget *src_hbox;
-    GtkWidget *browse_src;
     GtkWidget *invert_hbox;
     GtkWidget *invert_btn;
-    GtkWidget *dst_hbox;
-    GtkWidget *browse_dst;
     GtkWidget *btn_hbox;
     GtkWidget *paned;
     GtkWidget *l_vbox;
+    GtkWidget *l_entry_hbox;
+    GtkWidget *browse_src;
     GtkWidget *l_scroll;
     GtkWidget *l_tree;
     GtkWidget *r_vbox;
+    GtkWidget *r_entry_hbox;
+    GtkWidget *browse_dst;
     GtkWidget *r_scroll;
     GtkWidget *r_tree;
     GtkWidget *log_scroll;
@@ -179,43 +179,22 @@ main(int32 argc, char *argv[]) {
     gtk_window_set_title(GTK_WINDOW(w->gtk_window), "Btrfs Rsync Sync GUI");
     gtk_window_set_default_size(GTK_WINDOW(w->gtk_window), 1100, 800);
     g_signal_connect(w->gtk_window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+
     main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_container_add(GTK_CONTAINER(w->gtk_window), main_vbox);
+
     header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_set_border_width(GTK_CONTAINER(header_vbox), 10);
-    cwd = g_get_current_dir();
-    default_src = g_strdup_printf("%s/a/", cwd);
-    default_dst = g_strdup_printf("%s/b/", cwd);
+    gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
-    src_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(src_hbox), gtk_label_new("Source:      "), FALSE,
-                       FALSE, 5);
-    w->src_entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(w->src_entry), default_src);
-    browse_src = gtk_button_new_with_label("Browse");
-    gtk_box_pack_start(GTK_BOX(src_hbox), w->src_entry, TRUE, TRUE, 5);
-    gtk_box_pack_start(GTK_BOX(src_hbox), browse_src, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(header_vbox), src_hbox, FALSE, FALSE, 0);
-
+    /* Invert Button at the very top */
     invert_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     invert_btn = gtk_button_new_with_label("<--->");
     gtk_widget_set_size_request(invert_btn, 80, -1);
     gtk_box_pack_start(GTK_BOX(invert_hbox), invert_btn, TRUE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), invert_hbox, FALSE, FALSE, 0);
 
-    dst_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(dst_hbox), gtk_label_new("Destination:"), FALSE,
-                       FALSE, 5);
-    w->dst_entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(w->dst_entry), default_dst);
-    browse_dst = gtk_button_new_with_label("Browse");
-    gtk_box_pack_start(GTK_BOX(dst_hbox), w->dst_entry, TRUE, TRUE, 5);
-    gtk_box_pack_start(GTK_BOX(dst_hbox), browse_dst, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(header_vbox), dst_hbox, FALSE, FALSE, 0);
-    g_free(cwd);
-    g_free(default_src);
-    g_free(default_dst);
-
+    /* Action Buttons */
     btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     w->preview_button = gtk_button_new_with_label("1. Preview");
     w->exclude_button = gtk_button_new_with_label("Edit Exclusions");
@@ -225,13 +204,32 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_end(GTK_BOX(btn_hbox), w->sync_button, FALSE, FALSE, 5);
     gtk_box_pack_end(GTK_BOX(btn_hbox), w->preview_button, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), btn_hbox, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
+
+    /* Main Paned Area */
     paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start(GTK_BOX(main_vbox), paned, TRUE, TRUE, 0);
+
+    cwd = g_get_current_dir();
+    default_src = g_strdup_printf("%s/a/", cwd);
+    default_dst = g_strdup_printf("%s/b/", cwd);
+
+    /* Left Side (Source) */
     l_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    gtk_container_set_border_width(GTK_CONTAINER(l_vbox), 5);
+
+    l_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    w->src_entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(w->src_entry), default_src);
+    browse_src = gtk_button_new_with_label("Browse");
+    gtk_box_pack_start(GTK_BOX(l_entry_hbox), gtk_label_new("Source:"), FALSE,
+                       FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(l_entry_hbox), w->src_entry, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(l_entry_hbox), browse_src, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(l_vbox), l_entry_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(l_vbox),
                        gtk_label_new("Origin: To be Transferred"), FALSE, FALSE,
                        0);
+
     l_scroll = gtk_scrolled_window_new(NULL, NULL);
     w->src_store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
                                       G_TYPE_STRING, G_TYPE_INT64,
@@ -241,10 +239,24 @@ main(int32 argc, char *argv[]) {
     gtk_container_add(GTK_CONTAINER(l_scroll), l_tree);
     gtk_box_pack_start(GTK_BOX(l_vbox), l_scroll, TRUE, TRUE, 0);
     gtk_paned_pack1(GTK_PANED(paned), l_vbox, TRUE, FALSE);
+
+    /* Right Side (Destination) */
     r_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    gtk_container_set_border_width(GTK_CONTAINER(r_vbox), 5);
+
+    r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    w->dst_entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(w->dst_entry), default_dst);
+    browse_dst = gtk_button_new_with_label("Browse");
+    gtk_box_pack_start(GTK_BOX(r_entry_hbox), gtk_label_new("Dest:"), FALSE,
+                       FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(r_entry_hbox), w->dst_entry, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(r_entry_hbox), browse_dst, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(r_vbox), r_entry_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(r_vbox),
                        gtk_label_new("Destination: To be Deleted"), FALSE,
                        FALSE, 0);
+
     r_scroll = gtk_scrolled_window_new(NULL, NULL);
     w->dst_store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
                                       G_TYPE_STRING, G_TYPE_INT64,
@@ -254,6 +266,12 @@ main(int32 argc, char *argv[]) {
     gtk_container_add(GTK_CONTAINER(r_scroll), r_tree);
     gtk_box_pack_start(GTK_BOX(r_vbox), r_scroll, TRUE, TRUE, 0);
     gtk_paned_pack2(GTK_PANED(paned), r_vbox, TRUE, FALSE);
+
+    g_free(cwd);
+    g_free(default_src);
+    g_free(default_dst);
+
+    /* Scroll and Sort Sync */
     l_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(l_scroll));
     r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(r_scroll));
     g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
@@ -262,6 +280,8 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_sort_changed), w->dst_store);
     g_signal_connect(w->dst_store, "sort-column-changed",
                      G_CALLBACK(on_sort_changed), w->src_store);
+
+    /* Log Area */
     log_scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(log_scroll, -1, 150);
     log_view = gtk_text_view_new();
@@ -269,6 +289,8 @@ main(int32 argc, char *argv[]) {
     w->log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(log_view));
     gtk_container_add(GTK_CONTAINER(log_scroll), log_view);
     gtk_box_pack_start(GTK_BOX(main_vbox), log_scroll, FALSE, FALSE, 5);
+
+    /* Signal Connections */
     g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), w);
     g_signal_connect(browse_dst, "clicked", G_CALLBACK(on_browse_dst), w);
     g_signal_connect(invert_btn, "clicked", G_CALLBACK(on_invert_clicked), w);
@@ -277,6 +299,7 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(w->sync_button, "clicked", G_CALLBACK(on_sync_clicked), w);
     g_signal_connect(w->exclude_button, "clicked",
                      G_CALLBACK(on_exclude_clicked), w);
+
     gtk_widget_show_all(w->gtk_window);
     gtk_main();
     g_free(w->exclude_path);
