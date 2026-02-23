@@ -1,5 +1,6 @@
 #!/bin/sh
 
+set -e
 program="cecup"
 
 alias trace_on='set -x'
@@ -7,7 +8,7 @@ alias trace_off='{ set +x; } 2>/dev/null'
 
 CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
 CFLAGS="$CFLAGS -std=c11"
-CFLAGS="$CFLAGS -Wextra -Wall -Werror -Wfatal"
+CFLAGS="$CFLAGS -Wextra -Wall -Werror -Wfatal-errors"
 CFLAGS="$CFLAGS -Wno-format-pedantic"
 CFLAGS="$CFLAGS -Wno-unknown-warning-option"
 CFLAGS="$CFLAGS -Wfatal-errors"
@@ -36,7 +37,7 @@ fi
 
 trace_on
 # shellcheck disable=SC2086
-rm ./$program
+rm ./$program || true
 $CC $CPPFLAGS $CFLAGS main.c -o ./$program $LDFLAGS
 ./$program
 trace_off

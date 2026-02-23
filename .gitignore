@@ -1,3 +1,4 @@
 *.o
 /cecup
+/.cache/
 compile_commands.json

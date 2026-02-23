@@ -30,15 +30,21 @@ typedef struct UIUpdateData {
     char *message;
     char *action;
     char *filepath;
-    int side; // 0 = Origin (Left), 1 = Destination (Right)
-    int type; // 0 = log, 1 = tree row, 2 = enable buttons, 3 = clear trees
+    int side;  // 0 = Origin (Left), 1 = Destination (Right)
+    int type;  // 0 = log, 1 = tree row, 2 = enable buttons, 3 = clear trees
 } UIUpdateData;
 
 static void
 free_ui_update(UIUpdateData *data) {
-    if (data->message) g_free(data->message);
-    if (data->action) g_free(data->action);
-    if (data->filepath) g_free(data->filepath);
+    if (data->message) {
+        g_free(data->message);
+    }
+    if (data->action) {
+        g_free(data->action);
+    }
+    if (data->filepath) {
+        g_free(data->filepath);
+    }
     g_free(data);
     return;
 }
@@ -50,20 +56,20 @@ update_ui_handler(gpointer user_data) {
     if (data->type == 0) {
         GtkTextIter end;
         gtk_text_buffer_get_end_iter(data->widgets->log_buffer, &end);
-        gtk_text_buffer_insert(data->widgets->log_buffer, &end, data->message, -1);
+        gtk_text_buffer_insert(data->widgets->log_buffer, &end, data->message,
+                               -1);
         gtk_text_buffer_insert(data->widgets->log_buffer, &end, "\n", -1);
-    }
-    else if (data->type == 1) {
-        GtkListStore *target = (data->side == 0) ? data->widgets->src_store : data->widgets->dest_store;
+    } else if (data->type == 1) {
+        GtkListStore *target = (data->side == 0) ? data->widgets->src_store
+                                                 : data->widgets->dest_store;
         GtkTreeIter iter;
         gtk_list_store_append(target, &iter);
-        gtk_list_store_set(target, &iter, 0, data->action, 1, data->filepath, -1);
-    }
-    else if (data->type == 2) {
+        gtk_list_store_set(target, &iter, 0, data->action, 1, data->filepath,
+                           -1);
+    } else if (data->type == 2) {
         gtk_widget_set_sensitive(data->widgets->sync_btn, TRUE);
         gtk_widget_set_sensitive(data->widgets->preview_btn, TRUE);
-    }
-    else if (data->type == 3) {
+    } else if (data->type == 3) {
         gtk_list_store_clear(data->widgets->src_store);
         gtk_list_store_clear(data->widgets->dest_store);
     }
@@ -98,7 +104,8 @@ dispatch_tree(AppWidgets *w, int side, const char *act, const char *path) {
 
 /* --- Worker Thread Logic --- */
 
-gpointer sync_worker(gpointer user_data) {
+gpointer
+sync_worker(gpointer user_data) {
     ThreadData *tdata = (ThreadData *)user_data;
     char cmd[4096], buffer[2048];
     FILE *fp;
@@ -111,26 +118,31 @@ gpointer sync_worker(gpointer user_data) {
     }
 
     // Handle Ownership and Snapshotting if real Sync
-    if (!tdata->is_preview) {
-        dispatch_log(tdata->widgets, ">>> Initiating Pre-sync (Ownership & Snapshot)...");
-        // Using pkexec for privileged operations
-        snprintf(cmd, sizeof(cmd),
-            "pkexec sh -c \"chown -R lucas:lucas %s %s && "
-            "mkdir -p %s/../snapshots && "
-            "btrfs subvolume snapshot %s/.. %s/../snapshots/$(date +%%Y%%m%%d_%%H%%M%%S)\"",
-            SOURCE_DIR, tdata->dest_path, tdata->dest_path, tdata->dest_path, tdata->dest_path);
-        system(cmd);
-    }
+    /* if (!tdata->is_preview) { */
+    /*     dispatch_log(tdata->widgets, ">>> Initiating Pre-sync (Ownership &
+     * Snapshot)..."); */
+    /*     // Using pkexec for privileged operations */
+    /*     snprintf(cmd, sizeof(cmd), */
+    /*         "pkexec sh -c \"chown -R lucas:lucas %s %s && " */
+    /*         "mkdir -p %s/../snapshots && " */
+    /*         "btrfs subvolume snapshot %s/.. %s/../snapshots/$(date
+     * +%%Y%%m%%d_%%H%%M%%S)\"", */
+    /*         SOURCE_DIR, tdata->dest_path, tdata->dest_path, tdata->dest_path,
+     * tdata->dest_path); */
+    /*     system(cmd); */
+    /* } */
 
     // Main Rsync execution
-    snprintf(cmd, sizeof(cmd),
+    snprintf(
+        cmd, sizeof(cmd),
         "rsync --verbose --update --recursive --partial --links --hard-links "
-        "--itemize-changes --perms --times --owner --group --delete --delete-after "
+        "--itemize-changes --perms --times --owner --group --delete "
+        "--delete-after "
         "--delete-excluded --stats %s %s %s '%s' '%s/' 2>&1",
         tdata->is_preview ? "--dry-run" : "--info=progress2",
         access(EXCLUDE_FILE, F_OK) != -1 ? "--exclude-from=" EXCLUDE_FILE : "",
-        tdata->is_preview ? "" : "| tee /tmp/rsyncfiles",
-        SOURCE_DIR, tdata->dest_path);
+        tdata->is_preview ? "" : "| tee /tmp/rsyncfiles", SOURCE_DIR,
+        tdata->dest_path);
 
     fp = popen(cmd, "r");
     if (fp) {
@@ -139,10 +151,13 @@ gpointer sync_worker(gpointer user_data) {
             if (tdata->is_preview) {
                 if (strncmp(buffer, "*deleting", 9) == 0) {
                     dispatch_tree(tdata->widgets, 1, "Delete", buffer + 10);
-                } else if (strncmp(buffer, ">f", 2) == 0 || strncmp(buffer, ">c", 2) == 0) {
+                } else if (strncmp(buffer, ">f", 2) == 0
+                           || strncmp(buffer, ">c", 2) == 0) {
                     char *space = strchr(buffer, ' ');
                     if (space) {
-                        const char *act = (strncmp(buffer, ">f+++++", 7) == 0) ? "New" : "Update";
+                        const char *act = (strncmp(buffer, ">f+++++", 7) == 0)
+                                              ? "New"
+                                              : "Update";
                         dispatch_tree(tdata->widgets, 0, act, space + 1);
                     }
                 }
@@ -156,8 +171,12 @@ gpointer sync_worker(gpointer user_data) {
     // Checksum verification phase
     if (!tdata->is_preview) {
         dispatch_log(tdata->widgets, ">>> Starting Checksum Verification...");
-        system("sed -nE '/^[>ch]f/{s/^[^ ]+ //; p}' /tmp/rsyncfiles > /tmp/sync.files");
-        snprintf(cmd, sizeof(cmd), "rsync --verbose --checksum --files-from=/tmp/sync.files %s %s/ 2>&1", SOURCE_DIR, tdata->dest_path);
+        system("sed -nE '/^[>ch]f/{s/^[^ ]+ //; p}' /tmp/rsyncfiles > "
+               "/tmp/sync.files");
+        snprintf(cmd, sizeof(cmd),
+                 "rsync --verbose --checksum --files-from=/tmp/sync.files %s "
+                 "%s/ 2>&1",
+                 SOURCE_DIR, tdata->dest_path);
         fp = popen(cmd, "r");
         if (fp) {
             while (fgets(buffer, sizeof(buffer), fp)) {
@@ -183,8 +202,11 @@ static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
+    (void)b;
 
-    if (strlen(dest) < 1) return;
+    if (strlen(dest) < 1) {
+        return;
+    }
 
     gtk_widget_set_sensitive(w->preview_btn, FALSE);
     gtk_widget_set_sensitive(w->sync_btn, FALSE);
@@ -202,9 +224,11 @@ static void
 on_sync_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
+    (void)b;
 
-    GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(w->window), GTK_DIALOG_MODAL,
-        GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO, "Confirm write to: %s?", dest);
+    GtkWidget *dialog = gtk_message_dialog_new(
+        GTK_WINDOW(w->window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
+        GTK_BUTTONS_YES_NO, "Confirm write to: %s?", dest);
 
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         gtk_widget_set_sensitive(w->preview_btn, FALSE);
@@ -222,8 +246,11 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
 static void
 on_browse(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
-    GtkWidget *dlg = gtk_file_chooser_dialog_new("Select Destination", GTK_WINDOW(w->window),
-        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
+    GtkWidget *dlg = gtk_file_chooser_dialog_new(
+        "Select Destination", GTK_WINDOW(w->window),
+        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
+        "_Select", GTK_RESPONSE_ACCEPT, NULL);
+    (void)b;
     if (gtk_dialog_run(GTK_DIALOG(dlg)) == GTK_RESPONSE_ACCEPT) {
         char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
         gtk_entry_set_text(GTK_ENTRY(w->dest_entry), path);
@@ -236,14 +263,17 @@ on_browse(GtkWidget *b, gpointer data) {
 static void
 setup_tree_columns(GtkWidget *tree) {
     GtkCellRenderer *r = gtk_cell_renderer_text_new();
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree),
+    gtk_tree_view_append_column(
+        GTK_TREE_VIEW(tree),
         gtk_tree_view_column_new_with_attributes("Action", r, "text", 0, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree),
-        gtk_tree_view_column_new_with_attributes("File Path", r, "text", 1, NULL));
+                                gtk_tree_view_column_new_with_attributes(
+                                    "File Path", r, "text", 1, NULL));
     return;
 }
 
-int main(int argc, char *argv[]) {
+int
+main(int argc, char *argv[]) {
     gtk_init(&argc, &argv);
 
     AppWidgets *w = g_new0(AppWidgets, 1);
@@ -259,13 +289,15 @@ int main(int argc, char *argv[]) {
     GtkWidget *header = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_container_set_border_width(GTK_CONTAINER(header), 10);
     w->dest_entry = gtk_entry_new();
-    gtk_entry_set_placeholder_text(GTK_ENTRY(w->dest_entry), "Select Destination...");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(w->dest_entry),
+                                   "Select Destination...");
     GtkWidget *browse = gtk_button_new_with_label("Browse");
     w->preview_btn = gtk_button_new_with_label("1. Preview");
     w->sync_btn = gtk_button_new_with_label("2. Sync");
     gtk_widget_set_sensitive(w->sync_btn, FALSE);
 
-    gtk_box_pack_start(GTK_BOX(header), gtk_label_new("Source: " SOURCE_DIR), FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(header), gtk_label_new("Source: " SOURCE_DIR),
+                       FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header), w->dest_entry, TRUE, TRUE, 5);
     gtk_box_pack_start(GTK_BOX(header), browse, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header), w->preview_btn, FALSE, FALSE, 5);
@@ -276,20 +308,26 @@ int main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(main_vbox), paned, TRUE, TRUE, 0);
 
     GtkWidget *l_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    gtk_box_pack_start(GTK_BOX(l_vbox), gtk_label_new("Origin: To be Transferred"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(l_vbox),
+                       gtk_label_new("Origin: To be Transferred"), FALSE, FALSE,
+                       0);
     GtkWidget *l_scroll = gtk_scrolled_window_new(NULL, NULL);
     w->src_store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
-    GtkWidget *l_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->src_store));
+    GtkWidget *l_tree
+        = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->src_store));
     setup_tree_columns(l_tree);
     gtk_container_add(GTK_CONTAINER(l_scroll), l_tree);
     gtk_box_pack_start(GTK_BOX(l_vbox), l_scroll, TRUE, TRUE, 0);
     gtk_paned_pack1(GTK_PANED(paned), l_vbox, TRUE, FALSE);
 
     GtkWidget *r_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    gtk_box_pack_start(GTK_BOX(r_vbox), gtk_label_new("Destination: To be Deleted"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(r_vbox),
+                       gtk_label_new("Destination: To be Deleted"), FALSE,
+                       FALSE, 0);
     GtkWidget *r_scroll = gtk_scrolled_window_new(NULL, NULL);
     w->dest_store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
-    GtkWidget *r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->dest_store));
+    GtkWidget *r_tree
+        = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->dest_store));
     setup_tree_columns(r_tree);
     gtk_container_add(GTK_CONTAINER(r_scroll), r_tree);
     gtk_box_pack_start(GTK_BOX(r_vbox), r_scroll, TRUE, TRUE, 0);
@@ -304,7 +342,8 @@ int main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(main_vbox), log_scroll, FALSE, FALSE, 5);
 
     g_signal_connect(browse, "clicked", G_CALLBACK(on_browse), w);
-    g_signal_connect(w->preview_btn, "clicked", G_CALLBACK(on_preview_clicked), w);
+    g_signal_connect(w->preview_btn, "clicked", G_CALLBACK(on_preview_clicked),
+                     w);
     g_signal_connect(w->sync_btn, "clicked", G_CALLBACK(on_sync_clicked), w);
 
     gtk_widget_show_all(w->window);
