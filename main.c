@@ -9,7 +9,7 @@
 #define SOURCE_DIR "/home/lucas/"
 #define EXCLUDE_FILE "sync_gui.exclude"
 
-typedef struct {
+typedef struct AppWidgets {
     GtkWidget *window;
     GtkWidget *dest_entry;
     GtkWidget *preview_btn;
@@ -19,13 +19,13 @@ typedef struct {
     GtkTextBuffer *log_buffer;
 } AppWidgets;
 
-typedef struct {
+typedef struct ThreadData {
     AppWidgets *widgets;
     char dest_path[1024];
     int is_preview;
 } ThreadData;
 
-typedef struct {
+typedef struct UIUpdateData {
     AppWidgets *widgets;
     char *message;
     char *action;
@@ -34,9 +34,8 @@ typedef struct {
     int type; // 0 = log, 1 = tree row, 2 = enable buttons, 3 = clear trees
 } UIUpdateData;
 
-/* --- UI Memory Cleanup --- */
-
-void free_ui_update(UIUpdateData *data) {
+static void
+free_ui_update(UIUpdateData *data) {
     if (data->message) g_free(data->message);
     if (data->action) g_free(data->action);
     if (data->filepath) g_free(data->filepath);
@@ -44,9 +43,8 @@ void free_ui_update(UIUpdateData *data) {
     return;
 }
 
-/* --- UI Thread Updaters (GSourceFuncs) --- */
-
-gboolean update_ui_handler(gpointer user_data) {
+gboolean
+update_ui_handler(gpointer user_data) {
     UIUpdateData *data = (UIUpdateData *)user_data;
 
     if (data->type == 0) {
@@ -76,7 +74,8 @@ gboolean update_ui_handler(gpointer user_data) {
 
 /* --- Dispatchers from Worker Thread --- */
 
-void dispatch_log(AppWidgets *w, const char *msg) {
+static void
+dispatch_log(AppWidgets *w, const char *msg) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
     data->widgets = w;
     data->type = 0;
@@ -85,7 +84,8 @@ void dispatch_log(AppWidgets *w, const char *msg) {
     return;
 }
 
-void dispatch_tree(AppWidgets *w, int side, const char *act, const char *path) {
+static void
+dispatch_tree(AppWidgets *w, int side, const char *act, const char *path) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
     data->widgets = w;
     data->type = 1;
@@ -179,9 +179,8 @@ gpointer sync_worker(gpointer user_data) {
     return NULL;
 }
 
-/* --- Callbacks --- */
-
-void on_preview_clicked(GtkWidget *b, gpointer data) {
+static void
+on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
 
@@ -199,7 +198,8 @@ void on_preview_clicked(GtkWidget *b, gpointer data) {
     return;
 }
 
-void on_sync_clicked(GtkWidget *b, gpointer data) {
+static void
+on_sync_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dest_entry));
 
@@ -219,7 +219,8 @@ void on_sync_clicked(GtkWidget *b, gpointer data) {
     return;
 }
 
-void on_browse(GtkWidget *b, gpointer data) {
+static void
+on_browse(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     GtkWidget *dlg = gtk_file_chooser_dialog_new("Select Destination", GTK_WINDOW(w->window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
@@ -234,7 +235,8 @@ void on_browse(GtkWidget *b, gpointer data) {
 
 /* --- UI Setup --- */
 
-void setup_tree_columns(GtkWidget *tree) {
+static void
+setup_tree_columns(GtkWidget *tree) {
     GtkCellRenderer *r = gtk_cell_renderer_text_new();
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree),
         gtk_tree_view_column_new_with_attributes("Action", r, "text", 0, NULL));
