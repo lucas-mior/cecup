@@ -19,6 +19,7 @@ main(int32 argc, char *argv[]) {
     GtkWidget *invert_btn;
     GtkWidget *btn_hbox;
     GtkWidget *options_hbox;
+    GtkWidget *v_paned;
     GtkWidget *paned;
     GtkWidget *l_vbox;
     GtkWidget *l_entry_hbox;
@@ -56,14 +57,12 @@ main(int32 argc, char *argv[]) {
     gtk_container_set_border_width(GTK_CONTAINER(header_vbox), 10);
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
-    /* Invert Button */
     invert_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     invert_btn = gtk_button_new_with_label("<--->");
     gtk_widget_set_size_request(invert_btn, 80, -1);
     gtk_box_pack_start(GTK_BOX(invert_hbox), invert_btn, TRUE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), invert_hbox, FALSE, FALSE, 0);
 
-    /* Options and Action Buttons */
     btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     w->preview_button = gtk_button_new_with_label("1. Preview");
     w->exclude_button = gtk_button_new_with_label("Edit Exclusions");
@@ -82,14 +81,16 @@ main(int32 argc, char *argv[]) {
                        5);
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
+    v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
+    gtk_box_pack_start(GTK_BOX(main_vbox), v_paned, TRUE, TRUE, 0);
+
     paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
-    gtk_box_pack_start(GTK_BOX(main_vbox), paned, TRUE, TRUE, 0);
+    gtk_paned_pack1(GTK_PANED(v_paned), paned, TRUE, FALSE);
 
     cwd = g_get_current_dir();
     default_src = g_strdup_printf("%s/a/", cwd);
     default_dst = g_strdup_printf("%s/b/", cwd);
 
-    /* Source Pane */
     l_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_set_border_width(GTK_CONTAINER(l_vbox), 5);
     l_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -114,7 +115,6 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(l_vbox), l_scroll, TRUE, TRUE, 0);
     gtk_paned_pack1(GTK_PANED(paned), l_vbox, TRUE, FALSE);
 
-    /* Dest Pane */
     r_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_set_border_width(GTK_CONTAINER(r_vbox), 5);
     r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -143,7 +143,6 @@ main(int32 argc, char *argv[]) {
     g_free(default_src);
     g_free(default_dst);
 
-    /* Sync Scroll and Sort */
     l_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(l_scroll));
     r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(r_scroll));
     g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
@@ -153,16 +152,14 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(w->dst_store, "sort-column-changed",
                      G_CALLBACK(on_sort_changed), w->src_store);
 
-    /* Log */
     log_scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(log_scroll, -1, 150);
     log_view = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(log_view), FALSE);
     w->log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(log_view));
     gtk_container_add(GTK_CONTAINER(log_scroll), log_view);
-    gtk_box_pack_start(GTK_BOX(main_vbox), log_scroll, FALSE, FALSE, 5);
+    gtk_paned_pack2(GTK_PANED(v_paned), log_scroll, FALSE, FALSE);
 
-    /* Hooks */
     g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), w);
     g_signal_connect(browse_dst, "clicked", G_CALLBACK(on_browse_dst), w);
     g_signal_connect(invert_btn, "clicked", G_CALLBACK(on_invert_clicked), w);
@@ -173,6 +170,7 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_exclude_clicked), w);
 
     gtk_widget_show_all(w->gtk_window);
+    gtk_paned_set_position(GTK_PANED(v_paned), 550);
     gtk_main();
     g_free(w->exclude_path);
     g_free(w);
