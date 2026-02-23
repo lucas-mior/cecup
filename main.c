@@ -31,6 +31,7 @@ typedef struct UIUpdateData {
     char *message;
     char *action;
     char *filepath;
+    long long size;
     int side;
     int type;
 } UIUpdateData;
@@ -50,6 +51,18 @@ free_ui_update(UIUpdateData *data) {
     return;
 }
 
+static char *
+format_size(long long bytes) {
+    const char *units[] = {"B", "KB", "MB", "GB", "TB"};
+    int i = 0;
+    double d_bytes = (double)bytes;
+    while (d_bytes >= 1024 && i < 4) {
+        d_bytes /= 1024;
+        i++;
+    }
+    return g_strdup_printf("%.2f %s", d_bytes, units[i]);
+}
+
 gboolean
 update_ui_handler(gpointer user_data) {
     UIUpdateData *data = (UIUpdateData *)user_data;
@@ -64,9 +77,11 @@ update_ui_handler(gpointer user_data) {
         GtkListStore *target = (data->side == 0) ? data->widgets->src_store
                                                  : data->widgets->dest_store;
         GtkTreeIter iter;
+        char *size_str = format_size(data->size);
         gtk_list_store_append(target, &iter);
-        gtk_list_store_set(target, &iter, 0, data->action, 1, data->filepath,
-                           -1);
+        gtk_list_store_set(target, &iter, 0, data->action, 1, data->filepath, 2,
+                           size_str, 3, data->size, -1);
+        g_free(size_str);
     } else if (data->type == 2) {
         gtk_widget_set_sensitive(data->widgets->sync_btn, TRUE);
         gtk_widget_set_sensitive(data->widgets->preview_btn, TRUE);
@@ -90,13 +105,15 @@ dispatch_log(AppWidgets *w, const char *msg) {
 }
 
 static void
-dispatch_tree(AppWidgets *w, int side, const char *act, const char *path) {
+dispatch_tree(AppWidgets *w, int side, const char *act, const char *path,
+              long long size) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
     data->widgets = w;
     data->type = 1;
     data->side = side;
     data->action = g_strdup(act);
     data->filepath = g_strdup(path);
+    data->size = size;
     g_idle_add(update_ui_handler, data);
     return;
 }
@@ -131,7 +148,12 @@ sync_worker(gpointer user_data) {
             buffer[strcspn(buffer, "\n")] = 0;
             if (tdata->is_preview) {
                 if (strncmp(buffer, "*deleting", 9) == 0) {
-                    dispatch_tree(tdata->widgets, 1, "Delete", buffer + 10);
+                    char full_path[2048];
+                    struct stat st;
+                    snprintf(full_path, sizeof(full_path), "%s/%s",
+                             tdata->dest_path, buffer + 10);
+                    long long sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
+                    dispatch_tree(tdata->widgets, 1, "Delete", buffer + 10, sz);
                 } else if (strncmp(buffer, ">f", 2) == 0
                            || strncmp(buffer, ">c", 2) == 0) {
                     char *space = strchr(buffer, ' ');
@@ -139,7 +161,13 @@ sync_worker(gpointer user_data) {
                         const char *act = (strncmp(buffer, ">f+++++", 7) == 0)
                                               ? "New"
                                               : "Update";
-                        dispatch_tree(tdata->widgets, 0, act, space + 1);
+                        char full_path[2048];
+                        struct stat st;
+                        snprintf(full_path, sizeof(full_path), "%s/%s",
+                                 tdata->src_path, space + 1);
+                        long long sz
+                            = (stat(full_path, &st) == 0) ? st.st_size : 0;
+                        dispatch_tree(tdata->widgets, 0, act, space + 1, sz);
                     }
                 }
             } else {
@@ -265,12 +293,22 @@ on_browse_dest(GtkWidget *b, gpointer data) {
 static void
 setup_tree_columns(GtkWidget *tree) {
     GtkCellRenderer *r = gtk_cell_renderer_text_new();
-    gtk_tree_view_append_column(
-        GTK_TREE_VIEW(tree),
-        gtk_tree_view_column_new_with_attributes("Action", r, "text", 0, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree),
-                                gtk_tree_view_column_new_with_attributes(
-                                    "File Path", r, "text", 1, NULL));
+    GtkTreeViewColumn *col;
+
+    col = gtk_tree_view_column_new_with_attributes("Action", r, "text", 0,
+                                                   NULL);
+    gtk_tree_view_column_set_sort_column_id(col, 0);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), col);
+
+    col = gtk_tree_view_column_new_with_attributes("File Path", r, "text", 1,
+                                                   NULL);
+    gtk_tree_view_column_set_sort_column_id(col, 1);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), col);
+
+    col = gtk_tree_view_column_new_with_attributes("Size", r, "text", 2, NULL);
+    gtk_tree_view_column_set_sort_column_id(col, 3);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), col);
+
     return;
 }
 
@@ -290,7 +328,6 @@ main(int argc, char *argv[]) {
     GtkWidget *header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_set_border_width(GTK_CONTAINER(header_vbox), 10);
 
-    // Source Row
     GtkWidget *src_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_start(GTK_BOX(src_hbox), gtk_label_new("Source:     "), FALSE,
                        FALSE, 5);
@@ -301,7 +338,6 @@ main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(src_hbox), browse_src, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), src_hbox, FALSE, FALSE, 0);
 
-    // Dest Row
     GtkWidget *dest_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_start(GTK_BOX(dest_hbox), gtk_label_new("Destination:"), FALSE,
                        FALSE, 5);
@@ -313,7 +349,6 @@ main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(dest_hbox), browse_dest, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), dest_hbox, FALSE, FALSE, 0);
 
-    // Buttons Row
     GtkWidget *btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     w->preview_btn = gtk_button_new_with_label("1. Preview");
     w->sync_btn = gtk_button_new_with_label("2. Sync");
@@ -332,7 +367,8 @@ main(int argc, char *argv[]) {
                        gtk_label_new("Origin: To be Transferred"), FALSE, FALSE,
                        0);
     GtkWidget *l_scroll = gtk_scrolled_window_new(NULL, NULL);
-    w->src_store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+    w->src_store = gtk_list_store_new(4, G_TYPE_STRING, G_TYPE_STRING,
+                                      G_TYPE_STRING, G_TYPE_INT64);
     GtkWidget *l_tree
         = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->src_store));
     setup_tree_columns(l_tree);
@@ -345,7 +381,8 @@ main(int argc, char *argv[]) {
                        gtk_label_new("Destination: To be Deleted"), FALSE,
                        FALSE, 0);
     GtkWidget *r_scroll = gtk_scrolled_window_new(NULL, NULL);
-    w->dest_store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+    w->dest_store = gtk_list_store_new(4, G_TYPE_STRING, G_TYPE_STRING,
+                                       G_TYPE_STRING, G_TYPE_INT64);
     GtkWidget *r_tree
         = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->dest_store));
     setup_tree_columns(r_tree);
