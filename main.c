@@ -561,25 +561,25 @@ on_browse_dest(GtkWidget *b, gpointer data) {
 static void
 setup_tree_columns(GtkWidget *tree) {
     GtkCellRenderer *gtk_cell_renderer = gtk_cell_renderer_text_new();
-    GtkTreeViewColumn *col;
+    GtkTreeViewColumn *gtk_tree_view_column;
 
-    col = gtk_tree_view_column_new_with_attributes(
+    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
         "Action", gtk_cell_renderer, "text", COL_ACTION, "cell-background",
         COL_COLOR, NULL);
-    gtk_tree_view_column_set_sort_column_id(col, COL_ACTION);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), col);
+    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_ACTION);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), gtk_tree_view_column);
 
-    col = gtk_tree_view_column_new_with_attributes(
+    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
         "File Path", gtk_cell_renderer, "text", COL_PATH, "cell-background",
         COL_COLOR, NULL);
-    gtk_tree_view_column_set_sort_column_id(col, COL_PATH);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), col);
+    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_PATH);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), gtk_tree_view_column);
 
-    col = gtk_tree_view_column_new_with_attributes(
+    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
         "Size", gtk_cell_renderer, "text", COL_SIZE_TEXT, "cell-background",
         COL_COLOR, NULL);
-    gtk_tree_view_column_set_sort_column_id(col, COL_SIZE_RAW);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), col);
+    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_SIZE_RAW);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), gtk_tree_view_column);
 
     gtk_widget_set_has_tooltip(tree, TRUE);
     g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
