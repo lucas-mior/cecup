@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <time.h>
 
+#include "util.c"
+
 #define EXCLUDE_FILE "sync_gui.exclude"
 
 typedef struct AppWidgets {
@@ -56,7 +58,7 @@ format_size(long long bytes) {
     const char *units[] = {"B", "KB", "MB", "GB", "TB"};
     int i = 0;
     double d_bytes = (double)bytes;
-    while (d_bytes >= 1024 && i < 4) {
+    while (d_bytes >= 1024 && i < LENGTH(units)) {
         d_bytes /= 1024;
         i++;
     }
@@ -121,8 +123,7 @@ dispatch_tree(AppWidgets *w, int side, const char *act, const char *path,
 gpointer
 sync_worker(gpointer user_data) {
     ThreadData *tdata = (ThreadData *)user_data;
-    char cmd[4096];
-    char buffer[2048];
+    char cmd[4096], buffer[2048];
     FILE *fp;
 
     if (tdata->is_preview) {
@@ -329,11 +330,16 @@ main(int argc, char *argv[]) {
     GtkWidget *header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_set_border_width(GTK_CONTAINER(header_vbox), 10);
 
+    // Create default paths based on PWD
+    char *cwd = g_get_current_dir();
+    char *default_src = g_strdup_printf("%s/a/", cwd);
+    char *default_dest = g_strdup_printf("%s/b/", cwd);
+
     GtkWidget *src_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_start(GTK_BOX(src_hbox), gtk_label_new("Source:     "), FALSE,
                        FALSE, 5);
     w->src_entry = gtk_entry_new();
-    gtk_entry_set_placeholder_text(GTK_ENTRY(w->src_entry), "Select Source...");
+    gtk_entry_set_text(GTK_ENTRY(w->src_entry), default_src);
     GtkWidget *browse_src = gtk_button_new_with_label("Browse");
     gtk_box_pack_start(GTK_BOX(src_hbox), w->src_entry, TRUE, TRUE, 5);
     gtk_box_pack_start(GTK_BOX(src_hbox), browse_src, FALSE, FALSE, 5);
@@ -343,12 +349,15 @@ main(int argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(dest_hbox), gtk_label_new("Destination:"), FALSE,
                        FALSE, 5);
     w->dest_entry = gtk_entry_new();
-    gtk_entry_set_placeholder_text(GTK_ENTRY(w->dest_entry),
-                                   "Select Destination...");
+    gtk_entry_set_text(GTK_ENTRY(w->dest_entry), default_dest);
     GtkWidget *browse_dest = gtk_button_new_with_label("Browse");
     gtk_box_pack_start(GTK_BOX(dest_hbox), w->dest_entry, TRUE, TRUE, 5);
     gtk_box_pack_start(GTK_BOX(dest_hbox), browse_dest, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), dest_hbox, FALSE, FALSE, 0);
+
+    g_free(cwd);
+    g_free(default_src);
+    g_free(default_dest);
 
     GtkWidget *btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     w->preview_btn = gtk_button_new_with_label("1. Preview");
