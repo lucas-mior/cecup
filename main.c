@@ -102,9 +102,7 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), w->src_entry, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), browse_src, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(l_vbox), l_entry_hbox, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(l_vbox),
-                       gtk_label_new("Origin: To be Transferred"), FALSE, FALSE,
-                       0);
+
     l_scroll = gtk_scrolled_window_new(NULL, NULL);
     w->src_store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
                                       G_TYPE_STRING, G_TYPE_INT64,
@@ -126,9 +124,7 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(r_entry_hbox), w->dst_entry, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(r_entry_hbox), browse_dst, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(r_vbox), r_entry_hbox, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(r_vbox),
-                       gtk_label_new("Destination: To be Deleted"), FALSE,
-                       FALSE, 0);
+
     r_scroll = gtk_scrolled_window_new(NULL, NULL);
     w->dst_store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
                                       G_TYPE_STRING, G_TYPE_INT64,
