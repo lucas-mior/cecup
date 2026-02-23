@@ -19,7 +19,7 @@ enum {
 };
 
 typedef struct AppWidgets {
-    GtkWidget *window;
+    GtkWidget *gtk_window;
     GtkWidget *src_entry;
     GtkWidget *dest_entry;
     GtkWidget *preview_button;
@@ -95,13 +95,13 @@ main(int32 argc, char *argv[]) {
     w->exclude_path
         = g_build_filename(config_dir, "cecup_exclude_patterns.conf", NULL);
 
-    w->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(w->window), "Btrfs Rsync Sync GUI");
-    gtk_window_set_default_size(GTK_WINDOW(w->window), 1100, 800);
-    g_signal_connect(w->window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    w->gtk_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(w->gtk_window), "Btrfs Rsync Sync GUI");
+    gtk_window_set_default_size(GTK_WINDOW(w->gtk_window), 1100, 800);
+    g_signal_connect(w->gtk_window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
     main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-    gtk_container_add(GTK_CONTAINER(w->window), main_vbox);
+    gtk_container_add(GTK_CONTAINER(w->gtk_window), main_vbox);
 
     header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_set_border_width(GTK_CONTAINER(header_vbox), 10);
@@ -193,7 +193,7 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(w->exclude_button, "clicked",
                      G_CALLBACK(on_exclude_clicked), w);
 
-    gtk_widget_show_all(w->window);
+    gtk_widget_show_all(w->gtk_window);
     gtk_main();
 
     g_free(w->exclude_path);
@@ -453,7 +453,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
     GtkWidget *dialog;
 
     (void)b;
-    dialog = gtk_message_dialog_new(GTK_WINDOW(w->window), GTK_DIALOG_MODAL,
+    dialog = gtk_message_dialog_new(GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL,
                                     GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
                                     "Confirm sync from %s to %s?", src, dest);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
@@ -501,7 +501,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
 
     (void)b;
     dialog = gtk_dialog_new_with_buttons(
-        "Edit Exclusions", GTK_WINDOW(w->window),
+        "Edit Exclusions", GTK_WINDOW(w->gtk_window),
         GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT, "_Save",
         GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 500);
@@ -527,7 +527,7 @@ static void
 on_browse_src(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     GtkWidget *dlg = gtk_file_chooser_dialog_new(
-        "Select Source Directory", GTK_WINDOW(w->window),
+        "Select Source Directory", GTK_WINDOW(w->gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
         "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
@@ -545,7 +545,7 @@ static void
 on_browse_dest(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     GtkWidget *dlg = gtk_file_chooser_dialog_new(
-        "Select Destination Directory", GTK_WINDOW(w->window),
+        "Select Destination Directory", GTK_WINDOW(w->gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
         "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
