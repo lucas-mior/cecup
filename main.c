@@ -268,29 +268,30 @@ update_ui_handler(gpointer user_data) {
 static gboolean
 on_tree_tooltip(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode,
                 GtkTooltip *tooltip, gpointer user_data) {
-    GtkTreePath *path;
-    GtkTreeViewColumn *column;
+    GtkTreePath *gtk_tree_path;
+    GtkTreeViewColumn *gtk_tree_view_column;
 
     (void)keyboard_mode;
     (void)user_data;
 
-    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), x, y, &path,
-                                      &column, NULL, NULL)) {
+    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), x, y,
+                                      &gtk_tree_path, &gtk_tree_view_column,
+                                      NULL, NULL)) {
         GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
         GtkTreeIter iter;
 
-        if (gtk_tree_model_get_iter(model, &iter, path)) {
+        if (gtk_tree_model_get_iter(model, &iter, gtk_tree_path)) {
             gchar *reason = NULL;
             gtk_tree_model_get(model, &iter, COL_REASON, &reason, -1);
             if (reason && strlen(reason) > 0) {
                 gtk_tooltip_set_text(tooltip, reason);
-                gtk_tree_path_free(path);
+                gtk_tree_path_free(gtk_tree_path);
                 g_free(reason);
                 return TRUE;
             }
             g_free(reason);
         }
-        gtk_tree_path_free(path);
+        gtk_tree_path_free(gtk_tree_path);
     }
 
     return FALSE;
