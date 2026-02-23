@@ -85,7 +85,7 @@ main(int32 argc, char *argv[]) {
     char *cwd;
     char *default_src;
     char *default_dst;
-    const char *config_dir;
+    char *config_dir;
 
     gtk_init(&argc, &argv);
 
@@ -220,7 +220,7 @@ update_ui_handler(gpointer user_data) {
                                            : data->widgets->dst_store;
         GtkTreeIter gtk_tree_iter;
         char *size_str = bytes_pretty(data->size);
-        const char *bg_color = "#FFFFFF";
+        char *bg_color = "#FFFFFF";
 
         if (g_strcmp0(data->action, "New") == 0) {
             bg_color = "#D4EDDA";
@@ -299,7 +299,7 @@ on_tree_tooltip(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode,
 }
 
 static void
-dispatch_log(AppWidgets *w, const char *msg) {
+dispatch_log(AppWidgets *w, char *msg) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
     data->widgets = w;
     data->type = DATA_TYPE_LOG;
@@ -309,8 +309,8 @@ dispatch_log(AppWidgets *w, const char *msg) {
 }
 
 static void
-dispatch_tree(AppWidgets *w, int32 side, const char *act, const char *path,
-              int64 size, const char *reason) {
+dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
+              char *reason) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
     data->widgets = w;
     data->type = DATA_TYPE_TREE_ROW;
@@ -370,18 +370,17 @@ sync_worker(gpointer user_data) {
                            || strncmp(buffer, ">c", 2) == 0) {
                     char *space = strchr(buffer, ' ');
                     if (space) {
-                        const char *act = (strncmp(buffer, ">f+++++", 7) == 0)
-                                              ? "New"
-                                              : "Update";
+                        char *act = (strncmp(buffer, ">f+++++", 7) == 0)
+                                        ? "New"
+                                        : "Update";
                         char full_path[2048];
                         struct stat st;
                         snprintf(full_path, sizeof(full_path), "%s/%s",
                                  tdata->src_path, space + 1);
                         int64 sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
-                        const char *reason
-                            = (strncmp(buffer, ">f+++++", 7) == 0)
-                                  ? "New file in source directory"
-                                  : "File updated in source directory";
+                        char *reason = (strncmp(buffer, ">f+++++", 7) == 0)
+                                           ? "New file in source directory"
+                                           : "File updated in source directory";
                         dispatch_tree(tdata->widgets, 0, act, space + 1, sz,
                                       reason);
                     }
@@ -428,8 +427,8 @@ sync_worker(gpointer user_data) {
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
-    const char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+    char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
+    char *dest = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
 
     (void)b;
     if (strlen64(src) < 1 || strlen64(dest) < 1) {
@@ -449,8 +448,8 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
 static void
 on_sync_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
-    const char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    const char *dest = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+    char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
+    char *dest = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
     GtkWidget *dialog;
 
     (void)b;
