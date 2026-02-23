@@ -489,11 +489,11 @@ static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    char *dest = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+    char *dst = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
     ThreadData *thread_data;
 
     (void)b;
-    if (strlen64(src) < 1 || strlen64(dest) < 1) {
+    if (strlen64(src) < 1 || strlen64(dst) < 1) {
         return;
     }
     gtk_widget_set_sensitive(w->preview_button, FALSE);
@@ -502,7 +502,7 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     thread_data->widgets = w;
     thread_data->is_preview = 1;
     strncpy(thread_data->src_path, src, 1023);
-    strncpy(thread_data->dst_path, dest, 1023);
+    strncpy(thread_data->dst_path, dst, 1023);
     g_thread_new("worker", sync_worker, thread_data);
     return;
 }
@@ -511,14 +511,14 @@ static void
 on_sync_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w = (AppWidgets *)data;
     char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    char *dest = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+    char *dst = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
     GtkWidget *dialog;
     ThreadData *thread_data;
 
     (void)b;
     dialog = gtk_message_dialog_new(GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL,
                                     GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-                                    "Confirm sync from %s to %s?", src, dest);
+                                    "Confirm sync from %s to %s?", src, dst);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         gtk_widget_set_sensitive(w->preview_button, FALSE);
         gtk_widget_set_sensitive(w->sync_button, FALSE);
@@ -526,7 +526,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
         thread_data->widgets = w;
         thread_data->is_preview = 0;
         strncpy(thread_data->src_path, src, 1023);
-        strncpy(thread_data->dst_path, dest, 1023);
+        strncpy(thread_data->dst_path, dst, 1023);
         g_thread_new("worker", sync_worker, thread_data);
     }
     gtk_widget_destroy(dialog);
