@@ -4,7 +4,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <time.h>
 
 #include "util.c"
 
@@ -201,7 +200,7 @@ main(int32 argc, char *argv[]) {
     exit(EXIT_SUCCESS);
 }
 
-gboolean
+static gboolean
 update_ui_handler(gpointer user_data) {
     UIUpdateData *data = (UIUpdateData *)user_data;
 
@@ -248,6 +247,9 @@ update_ui_handler(gpointer user_data) {
         gtk_list_store_clear(data->widgets->src_store);
         gtk_list_store_clear(data->widgets->dst_store);
         break;
+    default:
+        error("Invalid date->type: %d.\n", (int)data->type);
+        exit(EXIT_FAILURE);
     }
 
     if (data->message) {
@@ -323,7 +325,7 @@ dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
     return;
 }
 
-gpointer
+static gpointer
 sync_worker(gpointer user_data) {
     ThreadData *tdata = (ThreadData *)user_data;
     char cmd[4096];
