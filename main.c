@@ -14,6 +14,7 @@ enum {
     COL_SIZE_TEXT,
     COL_SIZE_RAW,
     COL_COLOR,
+    COL_REASON,
     NUM_COLS
 };
 
@@ -49,6 +50,7 @@ typedef struct UIUpdateData {
     char *message;
     char *action;
     char *filepath;
+    char *reason;
     int64 size;
     int32 side;
     enum DataType type;
@@ -72,24 +74,23 @@ update_ui_handler(gpointer user_data) {
                                                  : data->widgets->dest_store;
         GtkTreeIter iter;
         char *size_str = bytes_pretty(data->size);
-        const char *bg_color = "#FFFFFF";  // Default White
+        const char *bg_color = "#FFFFFF";
 
         if (g_strcmp0(data->action, "New") == 0) {
-            bg_color = "#D4EDDA";  // Light Green
+            bg_color = "#D4EDDA";
         }
         if (g_strcmp0(data->action, "Update") == 0) {
-            bg_color = "#CCE5FF";  // Light Blue
+            bg_color = "#CCE5FF";
         }
         if (g_strcmp0(data->action, "Delete") == 0) {
-            bg_color = "#F8D7DA";  // Light Red
+            bg_color = "#F8D7DA";
         }
 
         gtk_list_store_append(target, &iter);
         gtk_list_store_set(target, &iter, COL_ACTION, data->action, COL_PATH,
                            data->filepath, COL_SIZE_TEXT, size_str,
-                           COL_SIZE_RAW, data->size, COL_COLOR,
-                           bg_color,  // Set the color column
-                           -1);
+                           COL_SIZE_RAW, data->size, COL_COLOR, bg_color,
+                           COL_REASON, data->reason, -1);
         g_free(size_str);
         break;
     }
@@ -112,8 +113,42 @@ update_ui_handler(gpointer user_data) {
     if (data->filepath) {
         g_free(data->filepath);
     }
+    if (data->reason) {
+        g_free(data->reason);
+    }
     g_free(data);
     return G_SOURCE_REMOVE;
+}
+
+static gboolean
+on_tree_tooltip(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode,
+                GtkTooltip *tooltip, gpointer user_data) {
+    GtkTreePath *path;
+    GtkTreeViewColumn *column;
+
+    (void)keyboard_mode;
+    (void)user_data;
+
+    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), x, y, &path,
+                                      &column, NULL, NULL)) {
+        GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
+        GtkTreeIter iter;
+
+        if (gtk_tree_model_get_iter(model, &iter, path)) {
+            gchar *reason = NULL;
+            gtk_tree_model_get(model, &iter, COL_REASON, &reason, -1);
+            if (reason && strlen(reason) > 0) {
+                gtk_tooltip_set_text(tooltip, reason);
+                gtk_tree_path_free(path);
+                g_free(reason);
+                return TRUE;
+            }
+            g_free(reason);
+        }
+        gtk_tree_path_free(path);
+    }
+
+    return FALSE;
 }
 
 static void
@@ -128,13 +163,14 @@ dispatch_log(AppWidgets *w, const char *msg) {
 
 static void
 dispatch_tree(AppWidgets *w, int32 side, const char *act, const char *path,
-              int64 size) {
+              int64 size, const char *reason) {
     UIUpdateData *data = g_new0(UIUpdateData, 1);
     data->widgets = w;
     data->type = DATA_TYPE_TREE_ROW;
     data->side = side;
     data->action = g_strdup(act);
     data->filepath = g_strdup(path);
+    data->reason = g_strdup(reason);
     data->size = size;
     g_idle_add(update_ui_handler, data);
     return;
@@ -179,7 +215,8 @@ sync_worker(gpointer user_data) {
                     snprintf(full_path, sizeof(full_path), "%s/%s",
                              tdata->dest_path, buffer + 10);
                     int64 sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
-                    dispatch_tree(tdata->widgets, 1, "Delete", buffer + 10, sz);
+                    dispatch_tree(tdata->widgets, 1, "Delete", buffer + 10, sz,
+                                  "File removed from source directory");
                 } else if (strncmp(buffer, ">f", 2) == 0
                            || strncmp(buffer, ">c", 2) == 0) {
                     char *space = strchr(buffer, ' ');
@@ -192,7 +229,12 @@ sync_worker(gpointer user_data) {
                         snprintf(full_path, sizeof(full_path), "%s/%s",
                                  tdata->src_path, space + 1);
                         int64 sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
-                        dispatch_tree(tdata->widgets, 0, act, space + 1, sz);
+                        const char *reason
+                            = (strncmp(buffer, ">f+++++", 7) == 0)
+                                  ? "New file in source directory"
+                                  : "File updated in source directory";
+                        dispatch_tree(tdata->widgets, 0, act, space + 1, sz,
+                                      reason);
                     }
                 }
             } else {
@@ -370,7 +412,6 @@ setup_tree_columns(GtkWidget *tree) {
     GtkCellRenderer *r = gtk_cell_renderer_text_new();
     GtkTreeViewColumn *col;
 
-    // Link "cell-background" property of the renderer to COL_COLOR (Index 4)
     col = gtk_tree_view_column_new_with_attributes(
         "Action", r, "text", COL_ACTION, "cell-background", COL_COLOR, NULL);
     gtk_tree_view_column_set_sort_column_id(col, COL_ACTION);
@@ -385,6 +426,9 @@ setup_tree_columns(GtkWidget *tree) {
         "Size", r, "text", COL_SIZE_TEXT, "cell-background", COL_COLOR, NULL);
     gtk_tree_view_column_set_sort_column_id(col, COL_SIZE_RAW);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), col);
+
+    gtk_widget_set_has_tooltip(tree, TRUE);
+    g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
 
     return;
 }
@@ -480,10 +524,9 @@ main(int32 argc, char *argv[]) {
                        gtk_label_new("Origin: To be Transferred"), FALSE, FALSE,
                        0);
     l_scroll = gtk_scrolled_window_new(NULL, NULL);
-    // Updated Store with 5 columns
-    w->src_store
-        = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
-                             G_TYPE_STRING, G_TYPE_INT64, G_TYPE_STRING);
+    w->src_store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
+                                      G_TYPE_STRING, G_TYPE_INT64,
+                                      G_TYPE_STRING, G_TYPE_STRING);
     l_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->src_store));
     setup_tree_columns(l_tree);
     gtk_container_add(GTK_CONTAINER(l_scroll), l_tree);
@@ -495,10 +538,9 @@ main(int32 argc, char *argv[]) {
                        gtk_label_new("Destination: To be Deleted"), FALSE,
                        FALSE, 0);
     r_scroll = gtk_scrolled_window_new(NULL, NULL);
-    // Updated Store with 5 columns
-    w->dest_store
-        = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
-                             G_TYPE_STRING, G_TYPE_INT64, G_TYPE_STRING);
+    w->dest_store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
+                                       G_TYPE_STRING, G_TYPE_INT64,
+                                       G_TYPE_STRING, G_TYPE_STRING);
     r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->dest_store));
     setup_tree_columns(r_tree);
     gtk_container_add(GTK_CONTAINER(r_scroll), r_tree);
