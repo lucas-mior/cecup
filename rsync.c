@@ -4,7 +4,9 @@
 
 static void
 dispatch_log(AppWidgets *w, char *msg) {
-    UIUpdateData *data = g_new0(UIUpdateData, 1);
+    UIUpdateData *data;
+
+    data = g_new0(UIUpdateData, 1);
     data->widgets = w;
     data->type = DATA_TYPE_LOG;
     data->message = g_strdup(msg);
@@ -15,7 +17,9 @@ dispatch_log(AppWidgets *w, char *msg) {
 static void
 dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
               char *reason) {
-    UIUpdateData *data = g_new0(UIUpdateData, 1);
+    UIUpdateData *data;
+
+    data = g_new0(UIUpdateData, 1);
     data->widgets = w;
     data->type = DATA_TYPE_TREE_ROW;
     data->side = side;
@@ -29,14 +33,17 @@ dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
 
 static gpointer
 sync_worker(gpointer user_data) {
-    ThreadData *thread_data = (ThreadData *)user_data;
+    ThreadData *thread_data;
     char cmd[4096];
     char buffer[2048];
     FILE *rsync_pipe;
     char *exclude_flag;
 
+    thread_data = (ThreadData *)user_data;
+
     if (thread_data->is_preview) {
-        UIUpdateData *clear = g_new0(UIUpdateData, 1);
+        UIUpdateData *clear;
+        clear = g_new0(UIUpdateData, 1);
         clear->widgets = thread_data->widgets;
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
@@ -75,7 +82,6 @@ sync_worker(gpointer user_data) {
                     char *rel_path;
                     int64 sz;
 
-                    /* Skip "*deleting" then skip variable spaces */
                     rel_path = buffer + 9;
                     while (isspace((unsigned char)*rel_path)) {
                         rel_path++;
@@ -100,19 +106,23 @@ sync_worker(gpointer user_data) {
                     }
                 } else if (strncmp(buffer, ">f", 2) == 0
                            || strncmp(buffer, ">c", 2) == 0) {
-                    char *space = strchr(buffer, ' ');
+                    char *space;
+                    space = strchr(buffer, ' ');
                     if (space) {
-                        char *act = (strncmp(buffer, ">f+++++", 7) == 0)
-                                        ? "New"
-                                        : "Update";
+                        char *act;
                         char full_path[2048];
                         struct stat st;
+                        int64 sz;
+                        char *reason;
+
+                        act = (strncmp(buffer, ">f+++++", 7) == 0) ? "New"
+                                                                   : "Update";
                         snprintf(full_path, sizeof(full_path), "%s/%s",
                                  thread_data->src_path, space + 1);
-                        int64 sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
-                        char *reason = (strncmp(buffer, ">f+++++", 7) == 0)
-                                           ? "New file in source directory"
-                                           : "File updated in source directory";
+                        sz = (stat(full_path, &st) == 0) ? st.st_size : 0;
+                        reason = (strncmp(buffer, ">f+++++", 7) == 0)
+                                     ? "New file in source directory"
+                                     : "File updated in source directory";
                         dispatch_tree(thread_data->widgets, 0, act, space + 1,
                                       sz, reason);
                     }
@@ -148,7 +158,8 @@ sync_worker(gpointer user_data) {
     }
 
     dispatch_log(thread_data->widgets, ">>> Finished.");
-    UIUpdateData *ready = g_new0(UIUpdateData, 1);
+    UIUpdateData *ready;
+    ready = g_new0(UIUpdateData, 1);
     ready->widgets = thread_data->widgets;
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, ready);

@@ -5,13 +5,17 @@
 
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w = (AppWidgets *)data;
-    char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    char *dst = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+    AppWidgets *w;
+    char *path_src;
+    char *path_dst;
     ThreadData *thread_data;
 
+    w = (AppWidgets *)data;
+    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
+    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+
     (void)b;
-    if (strlen64(src) < 1 || strlen64(dst) < 1) {
+    if (strlen64(path_src) < 1 || strlen64(path_dst) < 1) {
         return;
     }
     gtk_widget_set_sensitive(w->preview_button, FALSE);
@@ -19,32 +23,36 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     thread_data = g_new0(ThreadData, 1);
     thread_data->widgets = w;
     thread_data->is_preview = 1;
-    strncpy(thread_data->src_path, src, 1023);
-    strncpy(thread_data->dst_path, dst, 1023);
+    strncpy(thread_data->src_path, path_src, 1023);
+    strncpy(thread_data->dst_path, path_dst, 1023);
     g_thread_new("worker", sync_worker, thread_data);
     return;
 }
 
 static void
 on_sync_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w = (AppWidgets *)data;
-    char *src = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    char *dst = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+    AppWidgets *w;
+    char *path_src;
+    char *path_dst;
     GtkWidget *dialog;
     ThreadData *thread_data;
 
+    w = (AppWidgets *)data;
+    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
+    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+
     (void)b;
-    dialog = gtk_message_dialog_new(GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL,
-                                    GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-                                    "Confirm sync from %s to %s?", src, dst);
+    dialog = gtk_message_dialog_new(
+        GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
+        GTK_BUTTONS_YES_NO, "Confirm sync from %s to %s?", path_src, path_dst);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         gtk_widget_set_sensitive(w->preview_button, FALSE);
         gtk_widget_set_sensitive(w->sync_button, FALSE);
         thread_data = g_new0(ThreadData, 1);
         thread_data->widgets = w;
         thread_data->is_preview = 0;
-        strncpy(thread_data->src_path, src, 1023);
-        strncpy(thread_data->dst_path, dst, 1023);
+        strncpy(thread_data->src_path, path_src, 1023);
+        strncpy(thread_data->dst_path, path_dst, 1023);
         g_thread_new("worker", sync_worker, thread_data);
     }
     gtk_widget_destroy(dialog);
@@ -72,7 +80,7 @@ on_save_exclude(AppWidgets *w, GtkTextBuffer *buffer) {
 
 static void
 on_exclude_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w = (AppWidgets *)data;
+    AppWidgets *w;
     GtkWidget *dialog;
     GtkWidget *scroll;
     GtkWidget *view;
@@ -80,6 +88,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
     char *content;
     gsize length;
 
+    w = (AppWidgets *)data;
     (void)b;
     dialog = gtk_dialog_new_with_buttons(
         "Edit Exclusions", GTK_WINDOW(w->gtk_window),
@@ -106,8 +115,12 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
 
 static void
 on_browse_src(GtkWidget *b, gpointer data) {
-    AppWidgets *w = (AppWidgets *)data;
-    GtkWidget *gtk_file_chooser_dialog = gtk_file_chooser_dialog_new(
+    AppWidgets *w;
+    GtkWidget *gtk_file_chooser_dialog;
+    char *path_src;
+
+    w = (AppWidgets *)data;
+    gtk_file_chooser_dialog = gtk_file_chooser_dialog_new(
         "Select Source Directory", GTK_WINDOW(w->gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
         "_Select", GTK_RESPONSE_ACCEPT, NULL);
@@ -115,10 +128,10 @@ on_browse_src(GtkWidget *b, gpointer data) {
     (void)b;
     if (gtk_dialog_run(GTK_DIALOG(gtk_file_chooser_dialog))
         == GTK_RESPONSE_ACCEPT) {
-        char *path = gtk_file_chooser_get_filename(
+        path_src = gtk_file_chooser_get_filename(
             GTK_FILE_CHOOSER(gtk_file_chooser_dialog));
-        gtk_entry_set_text(GTK_ENTRY(w->src_entry), path);
-        g_free(path);
+        gtk_entry_set_text(GTK_ENTRY(w->src_entry), path_src);
+        g_free(path_src);
     }
     gtk_widget_destroy(gtk_file_chooser_dialog);
     return;
@@ -126,8 +139,12 @@ on_browse_src(GtkWidget *b, gpointer data) {
 
 static void
 on_browse_dst(GtkWidget *b, gpointer data) {
-    AppWidgets *w = (AppWidgets *)data;
-    GtkWidget *gtk_file_chooser_dialog = gtk_file_chooser_dialog_new(
+    AppWidgets *w;
+    GtkWidget *gtk_file_chooser_dialog;
+    char *path_dst;
+
+    w = (AppWidgets *)data;
+    gtk_file_chooser_dialog = gtk_file_chooser_dialog_new(
         "Select Destination Directory", GTK_WINDOW(w->gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
         "_Select", GTK_RESPONSE_ACCEPT, NULL);
@@ -135,10 +152,10 @@ on_browse_dst(GtkWidget *b, gpointer data) {
     (void)b;
     if (gtk_dialog_run(GTK_DIALOG(gtk_file_chooser_dialog))
         == GTK_RESPONSE_ACCEPT) {
-        char *path = gtk_file_chooser_get_filename(
+        path_dst = gtk_file_chooser_get_filename(
             GTK_FILE_CHOOSER(gtk_file_chooser_dialog));
-        gtk_entry_set_text(GTK_ENTRY(w->dst_entry), path);
-        g_free(path);
+        gtk_entry_set_text(GTK_ENTRY(w->dst_entry), path_dst);
+        g_free(path_dst);
     }
     gtk_widget_destroy(gtk_file_chooser_dialog);
     return;

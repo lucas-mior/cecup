@@ -21,8 +21,8 @@ update_ui_handler(gpointer user_data) {
     char *size_str;
     char *bg_src;
     char *bg_dst;
-    char *p_src;
-    char *p_dst;
+    char *path_src;
+    char *path_dst;
     char *a_src;
     char *a_dst;
 
@@ -43,31 +43,30 @@ update_ui_handler(gpointer user_data) {
         size_str = bytes_pretty(data->size);
         bg_src = "#FFFFFF";
         bg_dst = "#FFFFFF";
-        p_src = data->filepath;
-        p_dst = data->filepath;
+        path_src = data->filepath;
+        path_dst = data->filepath;
         a_src = data->action;
         a_dst = data->action;
 
         if (g_strcmp0(data->action, "New") == 0) {
             bg_src = "#D4EDDA";
             bg_dst = "#FFFFFF";
-            p_dst = "-";
+            path_dst = "-";
         } else if (g_strcmp0(data->action, "Update") == 0) {
             bg_src = "#CCE5FF";
             bg_dst = "#CCE5FF";
         } else if (g_strcmp0(data->action, "Delete") == 0) {
             if (data->reason && g_strrstr(data->reason, "excluded")) {
-                /* Excluded: Keep on source (Ignore), remove from dest (Delete)
-                 */
                 bg_src = "#FFF3CD";
                 bg_dst = "#FFF3CD";
                 a_src = "Ignore";
                 a_dst = "Delete";
             } else {
-                /* Actual deletion: Not in source, exists in dest */
                 bg_src = "#FFFFFF";
                 bg_dst = "#F8D7DA";
-                p_src = "-";
+                a_src = "Deleted";
+                a_dst = "Delete";
+                path_src = "-";
             }
         }
 
@@ -75,12 +74,12 @@ update_ui_handler(gpointer user_data) {
         gtk_list_store_append(dst_store, &iter_dst);
 
         gtk_list_store_set(src_store, &iter_src, COL_ACTION, a_src, COL_PATH,
-                           p_src, COL_SIZE_TEXT, size_str, COL_SIZE_RAW,
+                           path_src, COL_SIZE_TEXT, size_str, COL_SIZE_RAW,
                            data->size, COL_COLOR, bg_src, COL_REASON,
                            data->reason, -1);
 
         gtk_list_store_set(dst_store, &iter_dst, COL_ACTION, a_dst, COL_PATH,
-                           p_dst, COL_SIZE_TEXT, size_str, COL_SIZE_RAW,
+                           path_dst, COL_SIZE_TEXT, size_str, COL_SIZE_RAW,
                            data->size, COL_COLOR, bg_dst, COL_REASON,
                            data->reason, -1);
 
