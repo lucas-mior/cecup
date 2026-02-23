@@ -47,21 +47,6 @@ typedef struct UIUpdateData {
     int type;
 } UIUpdateData;
 
-static void
-free_ui_update(UIUpdateData *data) {
-    if (data->message) {
-        g_free(data->message);
-    }
-    if (data->action) {
-        g_free(data->action);
-    }
-    if (data->filepath) {
-        g_free(data->filepath);
-    }
-    g_free(data);
-    return;
-}
-
 static char *
 format_size(long long bytes) {
     const char *units[] = {"B", "KB", "MB", "GB", "TB"};
@@ -117,7 +102,16 @@ update_ui_handler(gpointer user_data) {
         gtk_list_store_clear(data->widgets->dest_store);
     }
 
-    free_ui_update(data);
+    if (data->message) {
+        g_free(data->message);
+    }
+    if (data->action) {
+        g_free(data->action);
+    }
+    if (data->filepath) {
+        g_free(data->filepath);
+    }
+    g_free(data);
     return G_SOURCE_REMOVE;
 }
 
