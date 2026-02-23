@@ -5,11 +5,14 @@
 #include "generic.c"
 
 enum {
-    COL_ACTION = 0,
-    COL_PATH,
+    COL_SRC_ACTION = 0,
+    COL_DST_ACTION,
+    COL_SRC_PATH,
+    COL_DST_PATH,
     COL_SIZE_TEXT,
     COL_SIZE_RAW,
-    COL_COLOR,
+    COL_SRC_COLOR,
+    COL_DST_COLOR,
     COL_REASON,
     NUM_COLS
 };
@@ -22,8 +25,7 @@ typedef struct AppWidgets {
     GtkWidget *sync_button;
     GtkWidget *exclude_button;
     GtkWidget *check_fs_toggle;
-    GtkListStore *src_store;
-    GtkListStore *dst_store;
+    GtkListStore *store;
     GtkTextBuffer *log_buffer;
     char *exclude_path;
 } AppWidgets;

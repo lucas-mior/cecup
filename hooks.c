@@ -195,22 +195,19 @@ on_scroll_sync(GtkAdjustment *src, gpointer data) {
 
 static void
 on_sort_changed(GtkTreeSortable *sortable, gpointer data) {
-    GtkTreeSortable *target;
-    int sort_column_id;
+    GtkTreeView *target_view;
+    GtkTreeViewColumn *col;
+    int32 sort_column_id;
     GtkSortType order;
-    int target_id;
-    GtkSortType target_order;
 
-    target = GTK_TREE_SORTABLE(data);
+    target_view = GTK_TREE_VIEW(data);
     if (gtk_tree_sortable_get_sort_column_id(sortable, &sort_column_id,
                                              &order)) {
-        if (gtk_tree_sortable_get_sort_column_id(target, &target_id,
-                                                 &target_order)) {
-            if (target_id == sort_column_id && target_order == order) {
-                return;
-            }
+        col = gtk_tree_view_get_column(target_view, 1);
+        if (col) {
+            gtk_tree_view_column_set_sort_indicator(col, TRUE);
+            gtk_tree_view_column_set_sort_order(col, order);
         }
-        gtk_tree_sortable_set_sort_column_id(target, sort_column_id, order);
     }
     return;
 }

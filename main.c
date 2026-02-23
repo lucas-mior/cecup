@@ -8,7 +8,8 @@
 #include "util.c"
 #include "hooks.c"
 
-static void setup_tree_columns(GtkWidget *tree);
+static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path,
+                               int32 col_color);
 
 int32
 main(int32 argc, char *argv[]) {
@@ -91,6 +92,11 @@ main(int32 argc, char *argv[]) {
     default_src = g_strdup_printf("%s/a/", cwd);
     default_dst = g_strdup_printf("%s/b/", cwd);
 
+    w->store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
+                                  G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
+                                  G_TYPE_INT64, G_TYPE_STRING, G_TYPE_STRING,
+                                  G_TYPE_STRING);
+
     l_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_set_border_width(GTK_CONTAINER(l_vbox), 5);
     l_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -104,11 +110,8 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(l_vbox), l_entry_hbox, FALSE, FALSE, 0);
 
     l_scroll = gtk_scrolled_window_new(NULL, NULL);
-    w->src_store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
-                                      G_TYPE_STRING, G_TYPE_INT64,
-                                      G_TYPE_STRING, G_TYPE_STRING);
-    l_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->src_store));
-    setup_tree_columns(l_tree);
+    l_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->store));
+    setup_tree_columns(l_tree, COL_SRC_ACTION, COL_SRC_PATH, COL_SRC_COLOR);
     gtk_container_add(GTK_CONTAINER(l_scroll), l_tree);
     gtk_box_pack_start(GTK_BOX(l_vbox), l_scroll, TRUE, TRUE, 0);
     gtk_paned_pack1(GTK_PANED(paned), l_vbox, TRUE, FALSE);
@@ -126,11 +129,8 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(r_vbox), r_entry_hbox, FALSE, FALSE, 0);
 
     r_scroll = gtk_scrolled_window_new(NULL, NULL);
-    w->dst_store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
-                                      G_TYPE_STRING, G_TYPE_INT64,
-                                      G_TYPE_STRING, G_TYPE_STRING);
-    r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->dst_store));
-    setup_tree_columns(r_tree);
+    r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->store));
+    setup_tree_columns(r_tree, COL_DST_ACTION, COL_DST_PATH, COL_DST_COLOR);
     gtk_container_add(GTK_CONTAINER(r_scroll), r_tree);
     gtk_box_pack_start(GTK_BOX(r_vbox), r_scroll, TRUE, TRUE, 0);
     gtk_paned_pack2(GTK_PANED(paned), r_vbox, TRUE, FALSE);
@@ -143,10 +143,10 @@ main(int32 argc, char *argv[]) {
     r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(r_scroll));
     g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
     g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
-    g_signal_connect(w->src_store, "sort-column-changed",
-                     G_CALLBACK(on_sort_changed), w->dst_store);
-    g_signal_connect(w->dst_store, "sort-column-changed",
-                     G_CALLBACK(on_sort_changed), w->src_store);
+    g_signal_connect(w->store, "sort-column-changed",
+                     G_CALLBACK(on_sort_changed), l_tree);
+    g_signal_connect(w->store, "sort-column-changed",
+                     G_CALLBACK(on_sort_changed), r_tree);
 
     log_scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(log_scroll, -1, 150);
@@ -176,10 +176,8 @@ main(int32 argc, char *argv[]) {
 static gboolean
 update_ui_handler(gpointer user_data) {
     UIUpdateData *data;
-    GtkListStore *src_store;
-    GtkListStore *dst_store;
-    GtkTreeIter iter_src;
-    GtkTreeIter iter_dst;
+    GtkListStore *store;
+    GtkTreeIter iter;
     char *size_str;
     char *bg_src;
     char *bg_dst;
@@ -189,8 +187,7 @@ update_ui_handler(gpointer user_data) {
     char *action_dst;
 
     data = (UIUpdateData *)user_data;
-    src_store = data->widgets->src_store;
-    dst_store = data->widgets->dst_store;
+    store = data->widgets->store;
 
     switch (data->type) {
     case DATA_TYPE_LOG: {
@@ -266,16 +263,12 @@ update_ui_handler(gpointer user_data) {
                 path_src = "-";
             }
         }
-        gtk_list_store_append(src_store, &iter_src);
-        gtk_list_store_append(dst_store, &iter_dst);
-        gtk_list_store_set(src_store, &iter_src, COL_ACTION, action_src,
-                           COL_PATH, path_src, COL_SIZE_TEXT, size_str,
-                           COL_SIZE_RAW, data->size, COL_COLOR, bg_src,
-                           COL_REASON, data->reason, -1);
-        gtk_list_store_set(dst_store, &iter_dst, COL_ACTION, action_dst,
-                           COL_PATH, path_dst, COL_SIZE_TEXT, size_str,
-                           COL_SIZE_RAW, data->size, COL_COLOR, bg_dst,
-                           COL_REASON, data->reason, -1);
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, COL_SRC_ACTION, action_src,
+                           COL_DST_ACTION, action_dst, COL_SRC_PATH, path_src,
+                           COL_DST_PATH, path_dst, COL_SIZE_TEXT, size_str,
+                           COL_SIZE_RAW, data->size, COL_SRC_COLOR, bg_src,
+                           COL_DST_COLOR, bg_dst, COL_REASON, data->reason, -1);
         g_free(size_str);
         break;
     }
@@ -284,8 +277,7 @@ update_ui_handler(gpointer user_data) {
         gtk_widget_set_sensitive(data->widgets->preview_button, TRUE);
         break;
     case DATA_TYPE_CLEAR_TREES:
-        gtk_list_store_clear(data->widgets->src_store);
-        gtk_list_store_clear(data->widgets->dst_store);
+        gtk_list_store_clear(data->widgets->store);
         break;
     default:
         error("Invalid data->type: %d.\n", (int)data->type);
@@ -309,26 +301,27 @@ update_ui_handler(gpointer user_data) {
 }
 
 static void
-setup_tree_columns(GtkWidget *gtk_tree) {
+setup_tree_columns(GtkWidget *gtk_tree, int32 col_act, int32 col_path,
+                   int32 col_color) {
     GtkCellRenderer *gtk_cell_renderer;
     GtkTreeViewColumn *gtk_tree_view_column;
 
     gtk_cell_renderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
-        "Action", gtk_cell_renderer, "text", COL_ACTION, "cell-background",
-        COL_COLOR, NULL);
-    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_ACTION);
+        "Action", gtk_cell_renderer, "text", col_act, "cell-background",
+        col_color, NULL);
+    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, col_act);
     gtk_tree_view_append_column(GTK_TREE_VIEW(gtk_tree), gtk_tree_view_column);
 
     gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
-        "File Path", gtk_cell_renderer, "text", COL_PATH, "cell-background",
-        COL_COLOR, NULL);
-    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_PATH);
+        "File Path", gtk_cell_renderer, "text", col_path, "cell-background",
+        col_color, NULL);
+    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, col_path);
     gtk_tree_view_append_column(GTK_TREE_VIEW(gtk_tree), gtk_tree_view_column);
 
     gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
         "Size", gtk_cell_renderer, "text", COL_SIZE_TEXT, "cell-background",
-        COL_COLOR, NULL);
+        col_color, NULL);
     gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_SIZE_RAW);
     gtk_tree_view_append_column(GTK_TREE_VIEW(gtk_tree), gtk_tree_view_column);
 
