@@ -7,7 +7,7 @@ alias trace_off='{ set +x; } 2>/dev/null'
 
 CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
 CFLAGS="$CFLAGS -std=c11"
-CFLAGS="$CFLAGS -Wextra -Wall"
+CFLAGS="$CFLAGS -Wextra -Wall -Werror -Wfatal"
 CFLAGS="$CFLAGS -Wno-format-pedantic"
 CFLAGS="$CFLAGS -Wno-unknown-warning-option"
 CFLAGS="$CFLAGS -Wfatal-errors"
@@ -19,6 +19,8 @@ CFLAGS="$CFLAGS -Wno-float-equal"
 CFLAGS="$CFLAGS -Wno-undefined-internal"
 
 LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk+-3.0) -lpthread"
+
+CC="${CC:-cc}"
 
 if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Weverything"
