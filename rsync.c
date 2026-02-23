@@ -41,7 +41,6 @@ sync_worker(gpointer user_data) {
     char *exclude_flag;
 
     thread_data = (ThreadData *)user_data;
-
     if (thread_data->is_preview) {
         UIUpdateData *clear;
         clear = g_new0(UIUpdateData, 1);
@@ -49,12 +48,10 @@ sync_worker(gpointer user_data) {
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
     }
-
     exclude_flag = (access(thread_data->widgets->exclude_path, F_OK) != -1)
                        ? g_strdup_printf("--exclude-from='%s'",
                                          thread_data->widgets->exclude_path)
                        : g_strdup("");
-
     snprintf(cmd, sizeof(cmd),
              "rsync --verbose --update --recursive --partial"
              " --links --hard-links"
@@ -65,9 +62,7 @@ sync_worker(gpointer user_data) {
              exclude_flag,
              thread_data->is_preview ? "" : "| tee /tmp/rsyncfiles",
              thread_data->src_path, thread_data->dst_path);
-
     g_free(exclude_flag);
-
     rsync_pipe = popen(cmd, "r");
     if (!rsync_pipe) {
         dispatch_log(thread_data->widgets,
@@ -87,15 +82,12 @@ sync_worker(gpointer user_data) {
                     while (isspace((unsigned char)*rel_path)) {
                         rel_path++;
                     }
-
                     snprintf(full_dst_path, sizeof(full_dst_path), "%s/%s",
                              thread_data->dst_path, rel_path);
                     sz = (stat(full_dst_path, &st_dst) == 0) ? st_dst.st_size
                                                              : 0;
-
                     snprintf(full_src_path, sizeof(full_src_path), "%s/%s",
                              thread_data->src_path, rel_path);
-
                     if (access(full_src_path, F_OK) == 0) {
                         dispatch_tree(thread_data->widgets, 1, "Delete",
                                       rel_path, sz,
@@ -134,7 +126,6 @@ sync_worker(gpointer user_data) {
         }
         pclose(rsync_pipe);
     }
-
     if (!thread_data->is_preview) {
         dispatch_log(thread_data->widgets,
                      ">>> Starting Checksum Verification...");
@@ -144,11 +135,10 @@ sync_worker(gpointer user_data) {
                  "rsync --verbose --checksum --files-from=/tmp/sync.files "
                  "'%s/' '%s/' 2>&1",
                  thread_data->src_path, thread_data->dst_path);
-
         rsync_pipe = popen(cmd, "r");
         if (!rsync_pipe) {
             dispatch_log(thread_data->widgets,
-                         "ERROR: Failed to start checksum verification rsync.");
+                         "ERROR: Failed to start checksum verification.");
         } else {
             while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
                 buffer[strcspn(buffer, "\n")] = 0;
@@ -157,14 +147,12 @@ sync_worker(gpointer user_data) {
             pclose(rsync_pipe);
         }
     }
-
     dispatch_log(thread_data->widgets, ">>> Finished.");
     UIUpdateData *ready;
     ready = g_new0(UIUpdateData, 1);
     ready->widgets = thread_data->widgets;
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, ready);
-
     g_free(thread_data);
     return NULL;
 }

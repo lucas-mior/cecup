@@ -4,6 +4,23 @@
 #include "rsync.c"
 
 static void
+on_invert_clicked(GtkWidget *b, gpointer data) {
+    AppWidgets *w;
+    char *path_src;
+    char *path_dst;
+
+    (void)b;
+    w = (AppWidgets *)data;
+    path_src = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->src_entry)));
+    path_dst = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->dst_entry)));
+    gtk_entry_set_text(GTK_ENTRY(w->src_entry), path_dst);
+    gtk_entry_set_text(GTK_ENTRY(w->dst_entry), path_src);
+    g_free(path_src);
+    g_free(path_dst);
+    return;
+}
+
+static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w;
     char *path_src;
@@ -13,7 +30,6 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     w = (AppWidgets *)data;
     path_src = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
     path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
-
     (void)b;
     if (strlen64(path_src) < 1 || strlen64(path_dst) < 1) {
         return;
@@ -40,7 +56,6 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
     w = (AppWidgets *)data;
     path_src = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
     path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
-
     (void)b;
     dialog = gtk_message_dialog_new(
         GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
@@ -124,7 +139,6 @@ on_browse_src(GtkWidget *b, gpointer data) {
         "Select Source Directory", GTK_WINDOW(w->gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
         "_Select", GTK_RESPONSE_ACCEPT, NULL);
-
     (void)b;
     if (gtk_dialog_run(GTK_DIALOG(gtk_file_chooser_dialog))
         == GTK_RESPONSE_ACCEPT) {
@@ -148,7 +162,6 @@ on_browse_dst(GtkWidget *b, gpointer data) {
         "Select Destination Directory", GTK_WINDOW(w->gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
         "_Select", GTK_RESPONSE_ACCEPT, NULL);
-
     (void)b;
     if (gtk_dialog_run(GTK_DIALOG(gtk_file_chooser_dialog))
         == GTK_RESPONSE_ACCEPT) {
@@ -168,7 +181,6 @@ on_scroll_sync(GtkAdjustment *src, gpointer data) {
 
     target = GTK_ADJUSTMENT(data);
     val = gtk_adjustment_get_value(src);
-
     if (gtk_adjustment_get_value(target) != val) {
         gtk_adjustment_set_value(target, val);
     }
@@ -184,7 +196,6 @@ on_sort_changed(GtkTreeSortable *sortable, gpointer data) {
     GtkSortType target_order;
 
     target = GTK_TREE_SORTABLE(data);
-
     if (gtk_tree_sortable_get_sort_column_id(sortable, &sort_column_id,
                                              &order)) {
         if (gtk_tree_sortable_get_sort_column_id(target, &target_id,
@@ -234,13 +245,11 @@ on_tree_tooltip(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode,
 
     (void)keyboard_mode;
     (void)user_data;
-
     if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), x, y,
                                       &gtk_tree_path, &gtk_tree_view_column,
                                       NULL, NULL)) {
         model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
         reason = NULL;
-
         if (gtk_tree_model_get_iter(model, &iter, gtk_tree_path)) {
             gtk_tree_model_get(model, &iter, COL_REASON, &reason, -1);
             if (reason && strlen(reason) > 0) {
