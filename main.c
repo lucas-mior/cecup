@@ -142,6 +142,7 @@ main(int32 argc, char *argv[]) {
     l_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(l_scroll));
     r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(r_scroll));
     g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
+    r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(r_scroll));
     g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
     g_signal_connect(w->src_store, "sort-column-changed",
                      G_CALLBACK(on_sort_changed), w->dst_store);
@@ -195,9 +196,44 @@ update_ui_handler(gpointer user_data) {
     switch (data->type) {
     case DATA_TYPE_LOG: {
         GtkTextIter end;
+        char *ptr;
+        int32 current_len;
+        int32 last_space_idx;
+        int32 i;
+        char wrapped[8192];
+        int32 w_idx;
+
+        ptr = data->message;
+        w_idx = 0;
+        current_len = 0;
+        last_space_idx = -1;
+
+        for (i = 0; ptr[i] != '\0'; i++) {
+            wrapped[w_idx++] = ptr[i];
+            current_len++;
+            if (isspace((unsigned char)ptr[i])) {
+                last_space_idx = w_idx - 1;
+            }
+            if (current_len >= 80) {
+                if (last_space_idx != -1) {
+                    wrapped[last_space_idx] = '\n';
+                    memmove(&wrapped[last_space_idx + 5],
+                            &wrapped[last_space_idx + 1],
+                            w_idx - (last_space_idx + 1));
+                    wrapped[last_space_idx + 1] = ' ';
+                    wrapped[last_space_idx + 2] = ' ';
+                    wrapped[last_space_idx + 3] = ' ';
+                    wrapped[last_space_idx + 4] = ' ';
+                    w_idx += 4;
+                    current_len = (w_idx - 1) - last_space_idx;
+                    last_space_idx = -1;
+                }
+            }
+        }
+        wrapped[w_idx] = '\0';
+
         gtk_text_buffer_get_end_iter(data->widgets->log_buffer, &end);
-        gtk_text_buffer_insert(data->widgets->log_buffer, &end, data->message,
-                               -1);
+        gtk_text_buffer_insert(data->widgets->log_buffer, &end, wrapped, -1);
         gtk_text_buffer_insert(data->widgets->log_buffer, &end, "\n", -1);
         break;
     }

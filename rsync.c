@@ -89,7 +89,7 @@ sync_worker(gpointer user_data) {
 
     g_free(exclude_flag);
 
-    snprintf(log_msg, sizeof(log_msg), "RUNNING: %s", cmd);
+    snprintf(log_msg, sizeof(log_msg), "+ %s", cmd);
     dispatch_log(thread_data->widgets, log_msg);
 
     rsync_pipe = popen(cmd, "r");
@@ -169,7 +169,7 @@ sync_worker(gpointer user_data) {
                  "'%s/' '%s/' 2>&1",
                  thread_data->src_path, thread_data->dst_path);
 
-        snprintf(log_msg, sizeof(log_msg), "RUNNING: %s", cmd);
+        snprintf(log_msg, sizeof(log_msg), "+ %s", cmd);
         dispatch_log(thread_data->widgets, log_msg);
 
         rsync_pipe = popen(cmd, "r");
