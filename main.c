@@ -85,7 +85,6 @@ update_ui_handler(gpointer user_data) {
         GtkTreeIter iter;
         char *size_str = format_size(data->size);
 
-        // Determine Color
         const char *bg_color = "#FFFFFF";  // Default White
         if (g_strcmp0(data->action, "New") == 0) {
             bg_color = "#D4EDDA";  // Light Green
