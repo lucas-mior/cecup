@@ -54,18 +54,6 @@ typedef struct UIUpdateData {
     enum DataType type;
 } UIUpdateData;
 
-static char *
-format_size(int64 bytes) {
-    const char *units[] = {"B", "KB", "MB", "GB", "TB"};
-    int32 i = 0;
-    double d_bytes = (double)bytes;
-    while (d_bytes >= 1024 && i < LENGTH(units)) {
-        d_bytes /= 1024;
-        i++;
-    }
-    return g_strdup_printf("%.2f %s", d_bytes, units[i]);
-}
-
 gboolean
 update_ui_handler(gpointer user_data) {
     UIUpdateData *data = (UIUpdateData *)user_data;
@@ -83,7 +71,7 @@ update_ui_handler(gpointer user_data) {
         GtkListStore *target = (data->side == 0) ? data->widgets->src_store
                                                  : data->widgets->dest_store;
         GtkTreeIter iter;
-        char *size_str = format_size(data->size);
+        char *size_str = bytes_pretty(data->size);
 
         const char *bg_color = "#FFFFFF";  // Default White
         if (g_strcmp0(data->action, "New") == 0) {

@@ -1502,6 +1502,37 @@ deg2rad(double degrees) {
     return degrees*DEG2RAD;
 }
 
+char *
+bytes_pretty(int64 raw) {
+    char *suffixes[] = {"B", "kB", "MB", "GB", "TB", "PB"};
+    char buffer[32];
+    double aux_pretty;
+    int i;
+    int32 n;
+    char *string;
+
+    aux_pretty = raw;
+    i = 0;
+    while ((aux_pretty >= 1024) && (i < LENGTH(suffixes))) {
+        aux_pretty /= 1024;
+        i += 1;
+    }
+
+    if (aux_pretty >= 1000) {
+        n = SNPRINTF(buffer, "%.1f%s", aux_pretty, suffixes[i]);
+    } else if (aux_pretty >= 100) {
+        n = SNPRINTF(buffer, "%.2f%s", aux_pretty, suffixes[i]);
+    } else if (aux_pretty >= 10) {
+        n = SNPRINTF(buffer, "%.3f%s", aux_pretty, suffixes[i]);
+    } else {
+        n = SNPRINTF(buffer, "%.4f%s", aux_pretty, suffixes[i]);
+    }
+
+    string = xmalloc(n + 1);
+    memcpy64(string, buffer, n + 1);
+    return string;
+}
+
 #if TESTING_util
 
 static void
