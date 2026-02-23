@@ -526,5 +526,5 @@ main(int32 argc, char *argv[]) {
 
     g_free(w->exclude_path);
     g_free(w);
-    return 0;
+    exit(EXIT_SUCCESS);
 }
