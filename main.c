@@ -132,7 +132,6 @@ sync_worker(gpointer user_data) {
     /*     system(cmd); */
     /* } */
 
-    // Main Rsync execution
     snprintf(
         cmd, sizeof(cmd),
         "rsync --verbose --update --recursive --partial --links --hard-links "
@@ -168,7 +167,6 @@ sync_worker(gpointer user_data) {
         pclose(fp);
     }
 
-    // Checksum verification phase
     if (!tdata->is_preview) {
         dispatch_log(tdata->widgets, ">>> Starting Checksum Verification...");
         system("sed -nE '/^[>ch]f/{s/^[^ ]+ //; p}' /tmp/rsyncfiles > "
