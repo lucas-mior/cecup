@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <ctype.h>
 #include "util.c"
 #include "cecup.h"
 
