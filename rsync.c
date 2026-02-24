@@ -72,7 +72,9 @@ single_sync_worker(gpointer user_data) {
                 buffer[strcspn(buffer, "\n")] = 0;
                 dispatch_log(ud->widgets, buffer);
             }
-            pclose(rsync_pipe);
+            if (pclose(rsync_pipe) < 0) {
+                error("Error closing rsync pipe: %s.\n", strerror(errno));
+            }
             break;
         }
     } while (0);
