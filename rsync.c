@@ -146,9 +146,12 @@ static gpointer
 sync_worker(gpointer user_data) {
     ThreadData *thread_data;
     char cmd[4096];
+    char log_cmd[4096];
     char buffer[2048];
     FILE *pipe;
     char *ex;
+    int32 line_len;
+    int32 last_space;
 
     thread_data = (ThreadData *)user_data;
 
@@ -174,7 +177,22 @@ sync_worker(gpointer user_data) {
              thread_data->src_path, thread_data->dst_path);
     g_free(ex);
 
-    dispatch_log(thread_data->widgets, cmd);
+    snprintf(log_cmd, sizeof(log_cmd), "%s", cmd);
+    line_len = 0;
+    last_space = -1;
+    for (int32 i = 0; log_cmd[i] != '\0'; i += 1) {
+        line_len += 1;
+        if (log_cmd[i] == ' ') {
+            last_space = i;
+        }
+        if (line_len > 120 && last_space != -1) {
+            log_cmd[last_space] = '\n';
+            line_len = i - last_space;
+            last_space = -1;
+        }
+    }
+
+    dispatch_log(thread_data->widgets, log_cmd);
 
     if ((pipe = popen(cmd, "r")) != NULL) {
         while (fgets(buffer, sizeof(buffer), pipe)) {
