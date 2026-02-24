@@ -82,7 +82,7 @@ main(int32 argc, char *argv[]) {
 
     diff_lbl = gtk_label_new("Diff Tool:");
     w->diff_entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(w->diff_entry), "diffoscope");
+    gtk_entry_set_text(GTK_ENTRY(w->diff_entry), "unidiff.bash");
     gtk_widget_set_tooltip_text(
         w->diff_entry,
         "Command for comparing files (e.g., diffoscope, meld, diffuse)");
