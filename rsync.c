@@ -41,17 +41,27 @@ single_sync_worker(gpointer user_data) {
     char log_msg[5120];
     char *path_src;
     char *path_dst;
+    char *full_dst;
     UIUpdateData *remove_data;
 
     ud = (UIUpdateData *)user_data;
     path_src = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry));
     path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry));
 
-    snprintf(cmd, sizeof(cmd),
-             "rsync --verbose --update --recursive --links --hard-links "
-             "--perms --times --owner --group --include='%s' --exclude='*' "
-             "'%s/' '%s/' 2>&1",
-             ud->filepath, path_src, path_dst);
+    if (g_strcmp0(ud->action, "Delete") == 0) {
+        /* If the file was removed from source, we must delete it from
+         * destination */
+        full_dst = g_build_filename(path_dst, ud->filepath, NULL);
+        snprintf(cmd, sizeof(cmd), "rm -rfv '%s' 2>&1", full_dst);
+        g_free(full_dst);
+    } else {
+        /* Standard update/new sync */
+        snprintf(cmd, sizeof(cmd),
+                 "rsync --verbose --update --recursive --links --hard-links "
+                 "--perms --times --owner --group --include='%s' --exclude='*' "
+                 "'%s/' '%s/' 2>&1",
+                 ud->filepath, path_src, path_dst);
+    }
 
     snprintf(log_msg, sizeof(log_msg), "+ %s", cmd);
     dispatch_log(ud->widgets, log_msg);
@@ -66,7 +76,7 @@ single_sync_worker(gpointer user_data) {
     }
 
     dispatch_log(ud->widgets,
-                 ">>> Single file sync finished. Updating list...");
+                 ">>> Single file operation finished. Updating list...");
 
     remove_data = g_new0(UIUpdateData, 1);
     remove_data->widgets = ud->widgets;
