@@ -42,7 +42,7 @@ main(int32 argc, char *argv[]) {
 
     gtk_init(&argc, &argv);
     w = g_new0(AppWidgets, 1);
-    w->rows = NULL;
+    w->rows = g_ptr_array_new_with_free_func(free_cecup_row);
     w->sort_col = COL_SRC_PATH;
     w->sort_order = GTK_SORT_ASCENDING;
     w->refresh_id = 0;
@@ -367,7 +367,7 @@ update_ui_handler(gpointer user_data) {
         row->dst_color = bg_dst;
         row->reason = data->reason;
 
-        data->widgets->rows = g_list_append(data->widgets->rows, row);
+        g_ptr_array_add(data->widgets->rows, row);
 
         if (data->widgets->refresh_id == 0) {
             data->widgets->refresh_id = g_timeout_add(
@@ -378,14 +378,12 @@ update_ui_handler(gpointer user_data) {
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
-        for (GList *l = data->widgets->rows; l != NULL; l = l->next) {
+        for (int32 i = 0; i < (int32)data->widgets->rows->len; i += 1) {
             CecupRow *row;
-            row = (CecupRow *)l->data;
+            row = (CecupRow *)g_ptr_array_index(data->widgets->rows, i);
             if (g_strcmp0(row->src_path, data->filepath) == 0
                 || g_strcmp0(row->dst_path, data->filepath) == 0) {
-                free_cecup_row(row);
-                data->widgets->rows
-                    = g_list_delete_link(data->widgets->rows, l);
+                g_ptr_array_remove_index(data->widgets->rows, (guint)i);
                 break;
             }
         }
@@ -412,8 +410,7 @@ update_ui_handler(gpointer user_data) {
             g_source_remove(data->widgets->refresh_id);
             data->widgets->refresh_id = 0;
         }
-        g_list_free_full(data->widgets->rows, (GDestroyNotify)free_cecup_row);
-        data->widgets->rows = NULL;
+        g_ptr_array_set_size(data->widgets->rows, 0);
         gtk_list_store_clear(data->widgets->store);
         break;
     default:

@@ -133,14 +133,14 @@ find_equal_files(AppWidgets *w, char *src_base, char *dst_base,
 
 static gpointer
 bulk_sync_worker(gpointer user_data) {
-    GList *tasks;
+    GPtrArray *tasks;
     AppWidgets *w;
     UIUpdateData *ready;
 
-    tasks = (GList *)user_data;
+    tasks = (GPtrArray *)user_data;
     w = NULL;
 
-    for (GList *l = tasks; l != NULL; l = l->next) {
+    for (uint32 i = 0; i < tasks->len; i += 1) {
         UIUpdateData *ud;
         char cmd[4096];
         int32 pipe_output[2];
@@ -158,7 +158,7 @@ bulk_sync_worker(gpointer user_data) {
         int32 poll_return;
         UIUpdateData *remove_data;
 
-        ud = (UIUpdateData *)l->data;
+        ud = (UIUpdateData *)g_ptr_array_index(tasks, i);
         if (w == NULL) {
             w = ud->widgets;
         }
@@ -354,7 +354,7 @@ bulk_sync_worker(gpointer user_data) {
         g_idle_add(update_ui_handler, ready);
     }
 
-    g_list_free(tasks);
+    g_ptr_array_unref(tasks);
     return NULL;
 }
 

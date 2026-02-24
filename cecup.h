@@ -58,10 +58,10 @@ typedef struct AppWidgets {
     GtkWidget *l_tree;
     GtkWidget *r_tree;
 
-    GList *rows;
+    GPtrArray *rows;
     int32 sort_col;
     GtkSortType sort_order;
-    guint refresh_id;
+    uint32 refresh_id;
 } AppWidgets;
 
 typedef struct ThreadData {

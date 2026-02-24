@@ -4,7 +4,10 @@
 #include "rsync.c"
 
 static void
-free_cecup_row(CecupRow *row) {
+free_cecup_row(gpointer data) {
+    CecupRow *row;
+
+    row = (CecupRow *)data;
     g_free(row->src_path);
     g_free(row->dst_path);
     g_free(row->size_text);
@@ -13,17 +16,17 @@ free_cecup_row(CecupRow *row) {
 }
 
 static void
-free_task_list(GList *tasks) {
+free_task_list(GPtrArray *tasks) {
     char *shared_src;
     char *shared_dst;
 
     shared_src = NULL;
     shared_dst = NULL;
 
-    for (GList *l = tasks; l != NULL; l = l->next) {
+    for (int32 i = 0; i < (int32)tasks->len; i += 1) {
         UIUpdateData *t;
 
-        t = (UIUpdateData *)l->data;
+        t = (UIUpdateData *)g_ptr_array_index(tasks, i);
         if (shared_src == NULL) {
             shared_src = t->src_base;
         }
@@ -39,25 +42,25 @@ free_task_list(GList *tasks) {
 
     g_free(shared_src);
     g_free(shared_dst);
-    g_list_free(tasks);
+    g_ptr_array_unref(tasks);
     return;
 }
 
-static GList *
+static GPtrArray *
 get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
                  char *clicked_action) {
-    GList *tasks;
+    GPtrArray *tasks;
     char *shared_src;
     char *shared_dst;
 
-    tasks = NULL;
+    tasks = g_ptr_array_new();
     shared_src = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->src_entry)));
     shared_dst = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->dst_entry)));
 
-    for (GList *l = w->rows; l != NULL; l = l->next) {
+    for (int32 i = 0; i < (int32)w->rows->len; i += 1) {
         CecupRow *row;
 
-        row = (CecupRow *)l->data;
+        row = (CecupRow *)g_ptr_array_index(w->rows, i);
         if (row->selected) {
             char *f_path;
             char *action;
@@ -74,12 +77,12 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
                 task->side = side;
                 task->src_base = shared_src;
                 task->dst_base = shared_dst;
-                tasks = g_list_prepend(tasks, task);
+                g_ptr_array_add(tasks, task);
             }
         }
     }
 
-    if (tasks == NULL && g_strcmp0(clicked_path, "-") != 0) {
+    if (tasks->len == 0 && g_strcmp0(clicked_path, "-") != 0) {
         UIUpdateData *task;
 
         task = g_new0(UIUpdateData, 1);
@@ -89,15 +92,17 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
         task->side = side;
         task->src_base = shared_src;
         task->dst_base = shared_dst;
-        tasks = g_list_prepend(tasks, task);
+        g_ptr_array_add(tasks, task);
     }
 
-    if (tasks == NULL) {
+    if (tasks->len == 0) {
         g_free(shared_src);
         g_free(shared_dst);
+        g_ptr_array_unref(tasks);
+        return NULL;
     }
 
-    return g_list_reverse(tasks);
+    return tasks;
 }
 
 static gint
@@ -108,8 +113,8 @@ cecup_row_compare(gconstpointer a, gconstpointer b, gpointer user_data) {
     int32 result;
 
     w = (AppWidgets *)user_data;
-    ra = (CecupRow *)a;
-    rb = (CecupRow *)b;
+    ra = *(CecupRow **)a;
+    rb = *(CecupRow **)b;
     result = 0;
 
     switch (w->sort_col) {
@@ -155,13 +160,13 @@ refresh_ui_list(AppWidgets *w) {
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_ignore));
 
     gtk_list_store_clear(w->store);
-    w->rows = g_list_sort_with_data(w->rows, cecup_row_compare, w);
+    g_ptr_array_sort_with_data(w->rows, cecup_row_compare, w);
 
-    for (GList *l = w->rows; l != NULL; l = l->next) {
+    for (int32 i = 0; i < (int32)w->rows->len; i += 1) {
         CecupRow *row;
         gboolean visible;
 
-        row = (CecupRow *)l->data;
+        row = (CecupRow *)g_ptr_array_index(w->rows, i);
         visible = FALSE;
 
         if (g_strcmp0(row->src_action, "New") == 0) {
@@ -206,7 +211,7 @@ refresh_ui_timeout_callback(gpointer data) {
 static void
 on_menu_apply(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-    GList *tasks;
+    GPtrArray *tasks;
 
     (void)m;
     ud = (UIUpdateData *)data;
@@ -228,26 +233,28 @@ on_menu_apply(GtkWidget *m, gpointer data) {
 static void
 on_menu_open(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-    GList *tasks;
+    GPtrArray *tasks;
     char cmd[4096];
 
     (void)m;
     ud = (UIUpdateData *)data;
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
 
-    for (GList *l = tasks; l != NULL; l = l->next) {
-        UIUpdateData *t;
-        char *full;
+    if (tasks != NULL) {
+        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+            UIUpdateData *t;
+            char *full;
 
-        t = (UIUpdateData *)l->data;
-        full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
-                                t->filepath, NULL);
-        snprintf(cmd, sizeof(cmd), "xdg-open '%s' &", full);
-        system(cmd);
-        g_free(full);
+            t = (UIUpdateData *)g_ptr_array_index(tasks, i);
+            full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
+                                    t->filepath, NULL);
+            snprintf(cmd, sizeof(cmd), "xdg-open '%s' &", full);
+            system(cmd);
+            g_free(full);
+        }
+        free_task_list(tasks);
     }
 
-    free_task_list(tasks);
     g_free(ud->filepath);
     g_free(ud);
     return;
@@ -256,30 +263,32 @@ on_menu_open(GtkWidget *m, gpointer data) {
 static void
 on_menu_open_dir(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-    GList *tasks;
+    GPtrArray *tasks;
     char cmd[4096];
 
     (void)m;
     ud = (UIUpdateData *)data;
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
 
-    for (GList *l = tasks; l != NULL; l = l->next) {
-        UIUpdateData *t;
-        char *full;
-        char *dir;
+    if (tasks != NULL) {
+        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+            UIUpdateData *t;
+            char *full;
+            char *dir;
 
-        t = (UIUpdateData *)l->data;
-        full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
-                                t->filepath, NULL);
-        if ((dir = g_path_get_dirname(full)) != NULL) {
-            snprintf(cmd, sizeof(cmd), "xdg-open '%s' &", dir);
-            system(cmd);
-            g_free(dir);
+            t = (UIUpdateData *)g_ptr_array_index(tasks, i);
+            full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
+                                    t->filepath, NULL);
+            if ((dir = g_path_get_dirname(full)) != NULL) {
+                snprintf(cmd, sizeof(cmd), "xdg-open '%s' &", dir);
+                system(cmd);
+                g_free(dir);
+            }
+            g_free(full);
         }
-        g_free(full);
+        free_task_list(tasks);
     }
 
-    free_task_list(tasks);
     g_free(ud->filepath);
     g_free(ud);
     return;
@@ -288,21 +297,21 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
 static void
 on_menu_delete(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-    GList *tasks;
+    GPtrArray *tasks;
     GtkWidget *dialog;
     int32 count;
 
     (void)m;
     ud = (UIUpdateData *)data;
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, "Delete");
-    count = (int32)g_list_length(tasks);
 
-    if (count == 0) {
+    if (tasks == NULL) {
         g_free(ud->filepath);
         g_free(ud);
         return;
     }
 
+    count = (int32)tasks->len;
     dialog = gtk_message_dialog_new(GTK_WINDOW(ud->widgets->gtk_window),
                                     GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
                                     GTK_BUTTONS_YES_NO,
@@ -327,7 +336,7 @@ on_menu_delete(GtkWidget *m, gpointer data) {
 static void
 on_menu_diff(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-    GList *tasks;
+    GPtrArray *tasks;
     char *diff_tool;
     char *term_cmd;
 
@@ -337,16 +346,18 @@ on_menu_diff(GtkWidget *m, gpointer data) {
     term_cmd = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->term_entry));
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
 
-    for (GList *l = tasks; l != NULL; l = l->next) {
-        UIUpdateData *t;
+    if (tasks != NULL) {
+        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+            UIUpdateData *t;
 
-        t = (UIUpdateData *)l->data;
-        t->diff_tool = g_strdup(diff_tool);
-        t->term_cmd = g_strdup(term_cmd);
-        g_thread_new("diff_worker", diff_worker, t);
+            t = (UIUpdateData *)g_ptr_array_index(tasks, i);
+            t->diff_tool = g_strdup(diff_tool);
+            t->term_cmd = g_strdup(term_cmd);
+            g_thread_new("diff_worker", diff_worker, t);
+        }
+        g_ptr_array_unref(tasks);
     }
 
-    g_list_free(tasks);
     g_free(ud->filepath);
     g_free(ud);
     return;
@@ -355,28 +366,30 @@ on_menu_diff(GtkWidget *m, gpointer data) {
 static void
 on_menu_exclude_ext(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-    GList *tasks;
+    GPtrArray *tasks;
     FILE *fp;
 
     (void)m;
     ud = (UIUpdateData *)data;
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
 
-    if ((fp = fopen(ud->widgets->exclude_path, "a")) != NULL) {
-        for (GList *l = tasks; l != NULL; l = l->next) {
-            UIUpdateData *t;
-            char *ext;
+    if (tasks != NULL) {
+        if ((fp = fopen(ud->widgets->exclude_path, "a")) != NULL) {
+            for (uint32 i = 0; i < tasks->len; i += 1) {
+                UIUpdateData *t;
+                char *ext;
 
-            t = (UIUpdateData *)l->data;
-            if ((ext = strrchr(t->filepath, '.')) != NULL) {
-                fprintf(fp, "\n*%s", ext);
+                t = (UIUpdateData *)g_ptr_array_index(tasks, i);
+                if ((ext = strrchr(t->filepath, '.')) != NULL) {
+                    fprintf(fp, "\n*%s", ext);
+                }
             }
+            fclose(fp);
+            on_preview_clicked(NULL, ud->widgets);
         }
-        fclose(fp);
-        on_preview_clicked(NULL, ud->widgets);
+        free_task_list(tasks);
     }
 
-    free_task_list(tasks);
     g_free(ud->filepath);
     g_free(ud);
     return;
@@ -385,31 +398,33 @@ on_menu_exclude_ext(GtkWidget *m, gpointer data) {
 static void
 on_menu_exclude_dir(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-    GList *tasks;
+    GPtrArray *tasks;
     FILE *fp;
 
     (void)m;
     ud = (UIUpdateData *)data;
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
 
-    if ((fp = fopen(ud->widgets->exclude_path, "a")) != NULL) {
-        for (GList *l = tasks; l != NULL; l = l->next) {
-            UIUpdateData *t;
-            char *dir;
+    if (tasks != NULL) {
+        if ((fp = fopen(ud->widgets->exclude_path, "a")) != NULL) {
+            for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+                UIUpdateData *t;
+                char *dir;
 
-            t = (UIUpdateData *)l->data;
-            if ((dir = g_path_get_dirname(t->filepath)) != NULL) {
-                if (g_strcmp0(dir, ".") != 0) {
-                    fprintf(fp, "\n/%s/", dir);
+                t = (UIUpdateData *)g_ptr_array_index(tasks, i);
+                if ((dir = g_path_get_dirname(t->filepath)) != NULL) {
+                    if (g_strcmp0(dir, ".") != 0) {
+                        fprintf(fp, "\n/%s/", dir);
+                    }
+                    g_free(dir);
                 }
-                g_free(dir);
             }
+            fclose(fp);
+            on_preview_clicked(NULL, ud->widgets);
         }
-        fclose(fp);
-        on_preview_clicked(NULL, ud->widgets);
+        free_task_list(tasks);
     }
 
-    free_task_list(tasks);
     g_free(ud->filepath);
     g_free(ud);
     return;
@@ -572,9 +587,9 @@ on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
         gtk_tree_model_get(GTK_TREE_MODEL(w->store), &i, COL_SRC_PATH, &f_path,
                            -1);
 
-        for (GList *l = w->rows; l != NULL; l = l->next) {
+        for (int32 k = 0; k < (int32)w->rows->len; k += 1) {
             CecupRow *row;
-            row = (CecupRow *)l->data;
+            row = (CecupRow *)g_ptr_array_index(w->rows, k);
             if (g_strcmp0(row->src_path, f_path) == 0
                 || g_strcmp0(row->dst_path, f_path) == 0) {
                 row->selected = !row->selected;
