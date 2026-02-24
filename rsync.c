@@ -172,18 +172,18 @@ bulk_sync_worker(gpointer user_data) {
         child_pid = fork();
 
         if (child_pid == 0) {
-            close(pipe_output[0]);
-            close(pipe_error[0]);
+            XCLOSE(&pipe_output[0]);
+            XCLOSE(&pipe_error[0]);
             dup2(pipe_output[1], STDOUT_FILENO);
             dup2(pipe_error[1], STDERR_FILENO);
-            close(pipe_output[1]);
-            close(pipe_error[1]);
+            XCLOSE(&pipe_output[1]);
+            XCLOSE(&pipe_error[1]);
             execl("/bin/sh", "sh", "-c", cmd, NULL);
             exit(1);
         }
 
-        close(pipe_output[1]);
-        close(pipe_error[1]);
+        XCLOSE(&pipe_output[1]);
+        XCLOSE(&pipe_error[1]);
 
         poll_descriptors[0].fd = pipe_output[0];
         poll_descriptors[0].events = POLLIN;
@@ -248,8 +248,8 @@ bulk_sync_worker(gpointer user_data) {
             }
         }
 
-        close(pipe_output[0]);
-        close(pipe_error[0]);
+        XCLOSE(&pipe_output[0]);
+        XCLOSE(&pipe_error[0]);
         waitpid(child_pid, NULL, 0);
 
         if (output_position > 0) {
@@ -367,18 +367,18 @@ sync_worker(gpointer user_data) {
     child_pid = fork();
 
     if (child_pid == 0) {
-        close(pipe_output[0]);
-        close(pipe_error[0]);
+        XCLOSE(&pipe_output[0]);
+        XCLOSE(&pipe_error[0]);
         dup2(pipe_output[1], STDOUT_FILENO);
         dup2(pipe_error[1], STDERR_FILENO);
-        close(pipe_output[1]);
-        close(pipe_error[1]);
+        XCLOSE(&pipe_output[1]);
+        XCLOSE(&pipe_error[1]);
         execl("/bin/sh", "sh", "-c", cmd, NULL);
         exit(1);
     }
 
-    close(pipe_output[1]);
-    close(pipe_error[1]);
+    XCLOSE(&pipe_output[1]);
+    XCLOSE(&pipe_error[1]);
 
     poll_descriptors[0].fd = pipe_output[0];
     poll_descriptors[0].events = POLLIN;
@@ -506,8 +506,8 @@ sync_worker(gpointer user_data) {
         }
     }
 
-    close(pipe_output[0]);
-    close(pipe_error[0]);
+    XCLOSE(&pipe_output[0]);
+    XCLOSE(&pipe_error[0]);
     waitpid(child_pid, NULL, 0);
 
     if (output_position > 0) {
