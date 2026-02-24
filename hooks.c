@@ -28,14 +28,14 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
     GtkTreeModel *model;
     GtkTreeIter iter;
     gboolean valid;
-    char *s_base;
-    char *d_base;
+    char *src_base;
+    char *dst_base;
 
     tasks = NULL;
     model = GTK_TREE_MODEL(w->store);
     valid = gtk_tree_model_get_iter_first(model, &iter);
-    s_base = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    d_base = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+    src_base = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
+    dst_base = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
 
     while (valid) {
         gboolean selected;
@@ -56,8 +56,8 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
                 task->filepath = g_strdup(f_path);
                 task->action = g_strdup(action);
                 task->side = side;
-                task->src_base = g_strdup(s_base);
-                task->dst_base = g_strdup(d_base);
+                task->src_base = g_strdup(src_base);
+                task->dst_base = g_strdup(dst_base);
                 tasks = g_list_append(tasks, task);
             }
             g_free(f_path);
@@ -74,8 +74,8 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
         task->filepath = g_strdup(clicked_path);
         task->action = g_strdup(clicked_action);
         task->side = side;
-        task->src_base = g_strdup(s_base);
-        task->dst_base = g_strdup(d_base);
+        task->src_base = g_strdup(src_base);
+        task->dst_base = g_strdup(dst_base);
         tasks = g_list_append(tasks, task);
     }
 
