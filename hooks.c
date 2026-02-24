@@ -27,6 +27,67 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
+on_filter_toggled(GtkToggleButton *b, gpointer data) {
+    AppWidgets *w;
+
+    w = (AppWidgets *)data;
+    (void)b;
+    gtk_tree_model_filter_refilter(w->filter_model);
+    return;
+}
+
+static void
+on_sort_changed(GtkTreeSortable *s, gpointer d) {
+    int32 id;
+    GtkSortType o;
+
+    if (gtk_tree_sortable_get_sort_column_id(s, &id, &o)) {
+        GtkTreeViewColumn *c;
+
+        if ((c = gtk_tree_view_get_column(GTK_TREE_VIEW(d), 1)) != NULL) {
+            gtk_tree_view_column_set_sort_indicator(c, TRUE);
+            gtk_tree_view_column_set_sort_order(c, o);
+        }
+    }
+    return;
+}
+
+static void
+on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
+    AppWidgets *w;
+    GtkTreePath *filter_path;
+    GtkTreePath *sort_path;
+    GtkTreePath *child_path;
+    GtkTreeIter iter;
+    gboolean val;
+    (void)cell;
+
+    w = (AppWidgets *)data;
+    sort_path = gtk_tree_path_new_from_string(path_str);
+
+    /* Convert Sort Model Path -> Filter Model Path */
+    filter_path = gtk_tree_model_sort_convert_path_to_child_path(
+        GTK_TREE_MODEL_SORT(gtk_tree_view_get_model(GTK_TREE_VIEW(
+            g_object_get_data(G_OBJECT(w->gtk_window), "last_tree")))),
+        sort_path);
+
+    /* Convert Filter Model Path -> Store Path */
+    child_path = gtk_tree_model_filter_convert_path_to_child_path(
+        w->filter_model, filter_path);
+
+    if (gtk_tree_model_get_iter(GTK_TREE_MODEL(w->store), &iter, child_path)) {
+        gtk_tree_model_get(GTK_TREE_MODEL(w->store), &iter, COL_SELECTED, &val,
+                           -1);
+        gtk_list_store_set(w->store, &iter, COL_SELECTED, !val, -1);
+    }
+
+    gtk_tree_path_free(sort_path);
+    gtk_tree_path_free(filter_path);
+    gtk_tree_path_free(child_path);
+    return;
+}
+
+static void
 on_menu_apply(GtkWidget *m, gpointer data) {
     UIUpdateData *ud = (UIUpdateData *)data;
     GtkTreeModel *model = GTK_TREE_MODEL(ud->widgets->store);
@@ -317,22 +378,6 @@ on_scroll_sync(GtkAdjustment *s, gpointer d) {
     v = gtk_adjustment_get_value(s);
     if (gtk_adjustment_get_value(GTK_ADJUSTMENT(d)) != v) {
         gtk_adjustment_set_value(GTK_ADJUSTMENT(d), v);
-    }
-    return;
-}
-
-static void
-on_sort_changed(GtkTreeSortable *s, gpointer d) {
-    int32 id;
-    GtkSortType o;
-
-    if (gtk_tree_sortable_get_sort_column_id(s, &id, &o)) {
-        GtkTreeViewColumn *c;
-
-        if ((c = gtk_tree_view_get_column(GTK_TREE_VIEW(d), 1)) != NULL) {
-            gtk_tree_view_column_set_sort_indicator(c, TRUE);
-            gtk_tree_view_column_set_sort_order(c, o);
-        }
     }
     return;
 }
