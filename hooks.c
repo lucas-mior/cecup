@@ -354,11 +354,18 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
     GtkWidget *menu;
     GtkWidget *item;
     GtkWidget *sub;
+    GtkWidget *sub_ext;
+    GtkWidget *sub_dir;
     UIUpdateData *ud;
     char *f_path;
     char *action;
+    char *other_path;
     AppWidgets *w;
     int32 side;
+    int32 path_col;
+    int32 act_col;
+    int32 other_col;
+    int32 is_disabled;
 
     w = (AppWidgets *)data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
@@ -371,11 +378,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
 
             if (gtk_tree_model_get_iter(model, &iter, path)) {
-                int32 path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
-                int32 act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;
+                path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
+                act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;
+                other_col = (side == 0) ? COL_DST_PATH : COL_SRC_PATH;
 
                 gtk_tree_model_get(model, &iter, path_col, &f_path, act_col,
-                                   &action, -1);
+                                   &action, other_col, &other_path, -1);
 
                 ud = g_new0(UIUpdateData, 1);
                 ud->widgets = w;
@@ -404,42 +412,42 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 sub = gtk_menu_new();
                 gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
 
-                GtkWidget *sub_ext
-                    = gtk_menu_item_new_with_label("By Extension");
+                sub_ext = gtk_menu_item_new_with_label("By Extension");
                 g_signal_connect(sub_ext, "activate",
                                  G_CALLBACK(on_menu_exclude_ext), ud);
                 gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
 
-                GtkWidget *sub_dir
-                    = gtk_menu_item_new_with_label("By Directory");
+                sub_dir = gtk_menu_item_new_with_label("By Directory");
                 g_signal_connect(sub_dir, "activate",
                                  G_CALLBACK(on_menu_exclude_dir), ud);
                 gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-                /* Diff logic with sensitivity check */
                 item = gtk_menu_item_new_with_label("Diff");
+                is_disabled = 0;
 
-                char *other_path = NULL;
-                int32 other_col = (side == 0) ? COL_DST_PATH : COL_SRC_PATH;
-                gtk_tree_model_get(model, &iter, other_col, &other_path, -1);
-
-                /* Disable if either side is marked as missing with "-" */
+                /* Disable if missing on one side OR if it's explicitly a
+                 * hardlink action */
                 if (g_strcmp0(f_path, "-") == 0
                     || g_strcmp0(other_path, "-") == 0) {
+                    is_disabled = 1;
+                } else if (g_strcmp0(action, "Hardlink") == 0) {
+                    is_disabled = 1;
+                }
+
+                if (is_disabled) {
                     gtk_widget_set_sensitive(item, FALSE);
                 } else {
                     g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
                                      ud);
                 }
-
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-                g_free(other_path);
 
                 gtk_widget_show_all(menu);
                 gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
 
                 g_free(f_path);
+                g_free(other_path);
                 g_free(action);
             }
             gtk_tree_path_free(path);
@@ -449,8 +457,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
         if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
                                           (gint)event->y, &path, NULL, NULL,
                                           NULL)) {
-            GtkTreeSelection *sel
-                = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+            GtkTreeSelection *sel;
+            sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
             if (gtk_tree_selection_path_is_selected(sel, path)) {
                 gtk_tree_selection_unselect_path(sel, path);
                 gtk_tree_path_free(path);
