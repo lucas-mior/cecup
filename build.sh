@@ -8,6 +8,7 @@ alias trace_off='{ set +x; } 2>/dev/null'
 
 CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
 CFLAGS="$CFLAGS -std=c11"
+CFLAGS="$CFLAGS -O2 -flto -g"
 CFLAGS="$CFLAGS -Wextra -Wall -Werror -Wfatal-errors"
 CFLAGS="$CFLAGS -Wno-format-pedantic"
 CFLAGS="$CFLAGS -Wno-unknown-warning-option"
