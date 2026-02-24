@@ -363,8 +363,8 @@ update_ui_handler(gpointer user_data) {
         row->dst_path = g_strdup(path_dst);
         row->size_text = g_strdup(sz_str);
         row->size_raw = data->size;
-        row->src_color = g_strdup(bg_src);
-        row->dst_color = g_strdup(bg_dst);
+        row->src_color = bg_src;
+        row->dst_color = bg_dst;
         row->reason = data->reason;
 
         data->widgets->rows = g_list_append(data->widgets->rows, row);

@@ -8,8 +8,6 @@ free_cecup_row(CecupRow *row) {
     g_free(row->src_path);
     g_free(row->dst_path);
     g_free(row->size_text);
-    g_free(row->src_color);
-    g_free(row->dst_color);
     g_free(row);
     return;
 }
