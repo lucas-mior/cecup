@@ -5,7 +5,8 @@
 #include "generic.c"
 
 enum {
-    COL_SRC_ACTION = 0,
+    COL_SELECTED = 0,
+    COL_SRC_ACTION,
     COL_DST_ACTION,
     COL_SRC_PATH,
     COL_DST_PATH,

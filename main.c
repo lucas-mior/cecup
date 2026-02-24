@@ -171,10 +171,10 @@ main(int32 argc, char *argv[]) {
     default_src = g_strdup_printf("%s/a/", cwd);
     default_dst = g_strdup_printf("%s/b/", cwd);
 
-    w->store = gtk_list_store_new(NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
+    w->store = gtk_list_store_new(NUM_COLS, G_TYPE_BOOLEAN, G_TYPE_STRING,
                                   G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
-                                  G_TYPE_INT64, G_TYPE_STRING, G_TYPE_STRING,
-                                  G_TYPE_STRING);
+                                  G_TYPE_STRING, G_TYPE_INT64, G_TYPE_STRING,
+                                  G_TYPE_STRING, G_TYPE_STRING);
 
     l_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_set_border_width(GTK_CONTAINER(l_vbox), 5);
@@ -368,11 +368,12 @@ update_ui_handler(gpointer user_data) {
             g_free(reason_lower);
         }
         gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, COL_SRC_ACTION, action_src,
-                           COL_DST_ACTION, action_dst, COL_SRC_PATH, path_src,
-                           COL_DST_PATH, path_dst, COL_SIZE_TEXT, size_str,
-                           COL_SIZE_RAW, data->size, COL_SRC_COLOR, bg_src,
-                           COL_DST_COLOR, bg_dst, COL_REASON, data->reason, -1);
+        gtk_list_store_set(store, &iter, COL_SELECTED, FALSE, COL_SRC_ACTION,
+                           action_src, COL_DST_ACTION, action_dst, COL_SRC_PATH,
+                           path_src, COL_DST_PATH, path_dst, COL_SIZE_TEXT,
+                           size_str, COL_SIZE_RAW, data->size, COL_SRC_COLOR,
+                           bg_src, COL_DST_COLOR, bg_dst, COL_REASON,
+                           data->reason, -1);
         g_free(size_str);
         break;
     }
@@ -429,33 +430,60 @@ update_ui_handler(gpointer user_data) {
 }
 
 static void
+on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    gboolean fixed;
+
+    (void)cell;
+
+    model = (GtkTreeModel *)data;
+    path = gtk_tree_path_new_from_string(path_str);
+    if (gtk_tree_model_get_iter(model, &iter, path)) {
+        gtk_tree_model_get(model, &iter, COL_SELECTED, &fixed, -1);
+        fixed ^= 1;
+        gtk_list_store_set(GTK_LIST_STORE(model), &iter, COL_SELECTED, fixed,
+                           -1);
+    }
+    gtk_tree_path_free(path);
+    return;
+}
+
+static void
 setup_tree_columns(GtkWidget *tree, AppWidgets *w, int32 col_act,
                    int32 col_path, int32 col_color) {
-    GtkCellRenderer *gtk_cell_renderer;
-    GtkTreeViewColumn *gtk_tree_view_column;
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
 
-    gtk_cell_renderer = gtk_cell_renderer_text_new();
-    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
-        "Action", gtk_cell_renderer, "text", col_act, "cell-background",
-        col_color, NULL);
-    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, col_act);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), gtk_tree_view_column);
+    renderer = gtk_cell_renderer_toggle_new();
+    column = gtk_tree_view_column_new_with_attributes("", renderer, "active",
+                                                      COL_SELECTED, NULL);
+    g_signal_connect(renderer, "toggled", G_CALLBACK(on_cell_toggled),
+                     w->store);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
-    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
-        "File Path", gtk_cell_renderer, "text", col_path, "cell-background",
-        col_color, NULL);
-    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, col_path);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), gtk_tree_view_column);
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+        "Action", renderer, "text", col_act, "cell-background", col_color,
+        NULL);
+    gtk_tree_view_column_set_sort_column_id(column, col_act);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
-    gtk_tree_view_column = gtk_tree_view_column_new_with_attributes(
-        "Size", gtk_cell_renderer, "text", COL_SIZE_TEXT, "cell-background",
-        col_color, NULL);
-    gtk_tree_view_column_set_sort_column_id(gtk_tree_view_column, COL_SIZE_RAW);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), gtk_tree_view_column);
+    column = gtk_tree_view_column_new_with_attributes(
+        "File Path", renderer, "text", col_path, "cell-background", col_color,
+        NULL);
+    gtk_tree_view_column_set_sort_column_id(column, col_path);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    column = gtk_tree_view_column_new_with_attributes(
+        "Size", renderer, "text", COL_SIZE_TEXT, "cell-background", col_color,
+        NULL);
+    gtk_tree_view_column_set_sort_column_id(column, COL_SIZE_RAW);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     gtk_widget_set_has_tooltip(tree, TRUE);
     g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
-
     g_signal_connect(tree, "button-press-event",
                      G_CALLBACK(on_tree_button_press), w);
     return;

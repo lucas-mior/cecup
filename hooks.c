@@ -99,23 +99,22 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
 static void
 on_menu_apply(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-    GtkTreeView *tree;
-    GtkTreeSelection *sel;
     GtkTreeModel *model;
-    GList *paths;
-    GList *l;
+    GtkTreeIter iter;
     int32 side;
+    gboolean valid;
+    (void)m;
 
     ud = (UIUpdateData *)data;
-    tree = GTK_TREE_VIEW(g_object_get_data(G_OBJECT(m), "target_tree"));
-    sel = gtk_tree_view_get_selection(tree);
-    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
-    paths = gtk_tree_selection_get_selected_rows(sel, &model);
+    model = GTK_TREE_MODEL(ud->widgets->store);
+    side = ud->side;
 
-    for (l = paths; l != NULL; l = l->next) {
-        GtkTreeIter iter;
+    valid = gtk_tree_model_get_iter_first(model, &iter);
+    while (valid) {
+        gboolean is_selected;
 
-        if (gtk_tree_model_get_iter(model, &iter, (GtkTreePath *)l->data)) {
+        gtk_tree_model_get(model, &iter, COL_SELECTED, &is_selected, -1);
+        if (is_selected) {
             int32 path_col;
             int32 act_col;
             char *f_path;
@@ -123,6 +122,7 @@ on_menu_apply(GtkWidget *m, gpointer data) {
 
             path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
             act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;
+
             gtk_tree_model_get(model, &iter, path_col, &f_path, act_col,
                                &action, -1);
 
@@ -139,8 +139,9 @@ on_menu_apply(GtkWidget *m, gpointer data) {
             g_free(f_path);
             g_free(action);
         }
+        valid = gtk_tree_model_iter_next(model, &iter);
     }
-    g_list_free_full(paths, (GDestroyNotify)gtk_tree_path_free);
+
     g_free(ud->filepath);
     g_free(ud->action);
     g_free(ud);
