@@ -111,15 +111,21 @@ on_menu_diff(GtkWidget *m, gpointer data) {
     char *base_d;
     char *full_s;
     char *full_d;
+    char *diff_tool;
     char *cmd;
 
     (void)m;
     ud = (UIUpdateData *)data;
     base_s = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry));
     base_d = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry));
+    diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->diff_entry));
+
     full_s = g_build_filename(base_s, ud->filepath, NULL);
     full_d = g_build_filename(base_d, ud->filepath, NULL);
-    cmd = g_strdup_printf("meld '%s' '%s' &", full_s, full_d);
+
+    /* Use the tool defined in the text box */
+    cmd = g_strdup_printf("%s '%s' '%s' &", diff_tool, full_s, full_d);
+
     system(cmd);
     g_free(cmd);
     g_free(full_s);

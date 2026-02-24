@@ -36,6 +36,7 @@ main(int32 argc, char *argv[]) {
     GtkWidget *log_view;
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
+    GtkWidget *diff_lbl;
     char *cwd;
     char *default_src;
     char *default_dst;
@@ -78,8 +79,18 @@ main(int32 argc, char *argv[]) {
     w->check_fs_toggle
         = gtk_check_button_new_with_label("Require different filesystems");
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->check_fs_toggle), TRUE);
+
+    diff_lbl = gtk_label_new("Diff Tool:");
+    w->diff_entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(w->diff_entry), "diffoscope");
+    gtk_widget_set_tooltip_text(
+        w->diff_entry,
+        "Command for comparing files (e.g., diffoscope, meld, diffuse)");
+
     gtk_box_pack_start(GTK_BOX(options_hbox), w->check_fs_toggle, FALSE, FALSE,
                        5);
+    gtk_box_pack_start(GTK_BOX(options_hbox), diff_lbl, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(options_hbox), w->diff_entry, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
     v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
