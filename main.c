@@ -240,9 +240,9 @@ update_ui_handler(gpointer user_data) {
             if (current_len >= 160) {
                 if (last_space_idx != -1) {
                     wrapped[last_space_idx] = '\n';
-                    memmove(&wrapped[last_space_idx + 5],
-                            &wrapped[last_space_idx + 1],
-                            w_idx - (last_space_idx + 1));
+                    memmove64(&wrapped[last_space_idx + 5],
+                              &wrapped[last_space_idx + 1],
+                              w_idx - (last_space_idx + 1));
                     wrapped[last_space_idx + 1] = ' ';
                     wrapped[last_space_idx + 2] = ' ';
                     wrapped[last_space_idx + 3] = ' ';
