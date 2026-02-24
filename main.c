@@ -45,6 +45,7 @@ main(int32 argc, char *argv[]) {
     w->rows = NULL;
     w->sort_col = COL_SRC_PATH;
     w->sort_order = GTK_SORT_ASCENDING;
+    w->refresh_id = 0;
 
     config_base = g_build_filename(g_get_user_config_dir(), "cecup", NULL);
     g_mkdir_with_parents(config_base, 0755);
@@ -367,7 +368,12 @@ update_ui_handler(gpointer user_data) {
         row->reason = g_strdup(data->reason);
 
         data->widgets->rows = g_list_append(data->widgets->rows, row);
-        refresh_ui_list(data->widgets);
+
+        if (data->widgets->refresh_id == 0) {
+            data->widgets->refresh_id = g_timeout_add(
+                100, refresh_ui_timeout_callback, data->widgets);
+        }
+
         g_free(sz_str);
         break;
     }
@@ -383,15 +389,29 @@ update_ui_handler(gpointer user_data) {
                 break;
             }
         }
-        refresh_ui_list(data->widgets);
+
+        if (data->widgets->refresh_id == 0) {
+            data->widgets->refresh_id = g_timeout_add(
+                100, refresh_ui_timeout_callback, data->widgets);
+        }
         break;
     }
     case DATA_TYPE_ENABLE_BUTTONS:
+        if (data->widgets->refresh_id != 0) {
+            g_source_remove(data->widgets->refresh_id);
+            data->widgets->refresh_id = 0;
+        }
+        refresh_ui_list(data->widgets);
+
         gtk_widget_set_sensitive(data->widgets->sync_button, TRUE);
         gtk_widget_set_sensitive(data->widgets->preview_button, TRUE);
         gtk_widget_set_sensitive(data->widgets->stop_button, FALSE);
         break;
     case DATA_TYPE_CLEAR_TREES:
+        if (data->widgets->refresh_id != 0) {
+            g_source_remove(data->widgets->refresh_id);
+            data->widgets->refresh_id = 0;
+        }
         g_list_free_full(data->widgets->rows, (GDestroyNotify)free_cecup_row);
         data->widgets->rows = NULL;
         gtk_list_store_clear(data->widgets->store);

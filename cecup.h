@@ -61,6 +61,7 @@ typedef struct AppWidgets {
     GList *rows;
     int32 sort_col;
     GtkSortType sort_order;
+    guint refresh_id;
 } AppWidgets;
 
 typedef struct ThreadData {
@@ -98,5 +99,6 @@ typedef struct UIUpdateData {
 static gboolean update_ui_handler(gpointer user_data);
 static void on_preview_clicked(GtkWidget *b, gpointer data);
 static void refresh_ui_list(AppWidgets *w);
+static gboolean refresh_ui_timeout_callback(gpointer data);
 
 #endif /* CECUP_H */

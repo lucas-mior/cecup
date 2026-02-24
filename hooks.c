@@ -199,6 +199,16 @@ refresh_ui_list(AppWidgets *w) {
     return;
 }
 
+static gboolean
+refresh_ui_timeout_callback(gpointer data) {
+    AppWidgets *w;
+
+    w = (AppWidgets *)data;
+    refresh_ui_list(w);
+    w->refresh_id = 0;
+    return G_SOURCE_REMOVE;
+}
+
 static void
 on_menu_apply(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
