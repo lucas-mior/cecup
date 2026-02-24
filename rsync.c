@@ -2,6 +2,8 @@
 #include <ctype.h>
 #include <sys/wait.h>
 #include <dirent.h>
+#include <poll.h>
+#include <unistd.h>
 #include "util.c"
 #include "cecup.h"
 
@@ -129,8 +131,20 @@ bulk_sync_worker(gpointer user_data) {
     for (GList *l = tasks; l != NULL; l = l->next) {
         UIUpdateData *ud;
         char cmd[4096];
-        char buffer[2048];
-        FILE *rsync_pipe;
+        int32 pipe_output[2];
+        int32 pipe_error[2];
+        pid_t child_pid;
+        struct pollfd poll_descriptors[2];
+        char output_buffer[8192];
+        char error_buffer[8192];
+        char temp_output[2048];
+        char temp_error[2048];
+        int32 output_position;
+        int32 error_position;
+        ssize_t output_bytes;
+        ssize_t error_bytes;
+        int32 poll_return;
+        UIUpdateData *remove_data;
 
         ud = (UIUpdateData *)l->data;
 
@@ -138,7 +152,7 @@ bulk_sync_worker(gpointer user_data) {
             char *full_dst;
 
             full_dst = g_build_filename(ud->dst_base, ud->filepath, NULL);
-            snprintf(cmd, sizeof(cmd), "rm -rfv '%s' 2>&1", full_dst);
+            snprintf(cmd, sizeof(cmd), "rm -rfv '%s'", full_dst);
             g_free(full_dst);
         } else {
             snprintf(cmd, sizeof(cmd),
@@ -147,34 +161,105 @@ bulk_sync_worker(gpointer user_data) {
                      "--links --hard-links --itemize-changes "
                      "--perms --times --owner --group "
                      "--include='%s' --include='%s/**' --exclude='*' '%s/' "
-                     "'%s/' 2>&1",
+                     "'%s/'",
                      ud->filepath, ud->filepath, ud->src_base, ud->dst_base);
         }
 
         dispatch_log(ud->widgets, cmd);
-        if ((rsync_pipe = popen(cmd, "r")) != NULL) {
-            while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
-                int32 is_err;
 
-                buffer[strcspn(buffer, "\n")] = 0;
-                is_err = 0;
+        pipe(pipe_output);
+        pipe(pipe_error);
+        child_pid = fork();
 
-                if (strncmp(buffer, "rsync: ", 7) == 0
-                    || strncmp(buffer, "rsync error: ", 13) == 0
-                    || strncmp(buffer, "rsync warning: ", 15) == 0) {
-                    is_err = 1;
-                }
-
-                if (is_err) {
-                    dispatch_log_error(ud->widgets, buffer);
-                } else {
-                    dispatch_log(ud->widgets, buffer);
-                }
-            }
-            pclose(rsync_pipe);
+        if (child_pid == 0) {
+            close(pipe_output[0]);
+            close(pipe_error[0]);
+            dup2(pipe_output[1], STDOUT_FILENO);
+            dup2(pipe_error[1], STDERR_FILENO);
+            close(pipe_output[1]);
+            close(pipe_error[1]);
+            execl("/bin/sh", "sh", "-c", cmd, NULL);
+            exit(1);
         }
 
-        UIUpdateData *remove_data;
+        close(pipe_output[1]);
+        close(pipe_error[1]);
+
+        poll_descriptors[0].fd = pipe_output[0];
+        poll_descriptors[0].events = POLLIN;
+        poll_descriptors[1].fd = pipe_error[0];
+        poll_descriptors[1].events = POLLIN;
+
+        output_position = 0;
+        error_position = 0;
+
+        while (1) {
+            poll_return = poll(poll_descriptors, 2, -1);
+            if (poll_return < 0) {
+                break;
+            }
+
+            if (poll_descriptors[0].revents & POLLIN) {
+                output_bytes
+                    = read(pipe_output[0], temp_output, sizeof(temp_output));
+                if (output_bytes > 0) {
+                    for (ssize_t k = 0; k < output_bytes; k += 1) {
+                        if (temp_output[k] == '\n'
+                            || output_position == sizeof(output_buffer) - 1) {
+                            output_buffer[output_position] = '\0';
+                            dispatch_log(ud->widgets, output_buffer);
+                            output_position = 0;
+                        } else {
+                            output_buffer[output_position] = temp_output[k];
+                            output_position += 1;
+                        }
+                    }
+                } else {
+                    poll_descriptors[0].fd = -1;
+                }
+            } else if (poll_descriptors[0].revents & (POLLHUP | POLLERR)) {
+                poll_descriptors[0].fd = -1;
+            }
+
+            if (poll_descriptors[1].revents & POLLIN) {
+                error_bytes
+                    = read(pipe_error[0], temp_error, sizeof(temp_error));
+                if (error_bytes > 0) {
+                    for (ssize_t k = 0; k < error_bytes; k += 1) {
+                        if (temp_error[k] == '\n'
+                            || error_position == sizeof(error_buffer) - 1) {
+                            error_buffer[error_position] = '\0';
+                            dispatch_log_error(ud->widgets, error_buffer);
+                            error_position = 0;
+                        } else {
+                            error_buffer[error_position] = temp_error[k];
+                            error_position += 1;
+                        }
+                    }
+                } else {
+                    poll_descriptors[1].fd = -1;
+                }
+            } else if (poll_descriptors[1].revents & (POLLHUP | POLLERR)) {
+                poll_descriptors[1].fd = -1;
+            }
+
+            if (poll_descriptors[0].fd == -1 && poll_descriptors[1].fd == -1) {
+                break;
+            }
+        }
+
+        close(pipe_output[0]);
+        close(pipe_error[0]);
+        waitpid(child_pid, NULL, 0);
+
+        if (output_position > 0) {
+            output_buffer[output_position] = '\0';
+            dispatch_log(ud->widgets, output_buffer);
+        }
+        if (error_position > 0) {
+            error_buffer[error_position] = '\0';
+            dispatch_log_error(ud->widgets, error_buffer);
+        }
 
         remove_data = g_new0(UIUpdateData, 1);
         remove_data->widgets = ud->widgets;
@@ -197,14 +282,26 @@ sync_worker(gpointer user_data) {
     ThreadData *thread_data;
     char cmd[4096];
     char log_cmd[8192];
-    char buffer[2048];
-    FILE *pipe;
     char *ex;
     int32 i;
     int32 j;
     int32 line_len;
     int32 last_space_index;
     int32 word_len;
+    int32 pipe_output[2];
+    int32 pipe_error[2];
+    pid_t child_pid;
+    struct pollfd poll_descriptors[2];
+    char output_buffer[8192];
+    char error_buffer[8192];
+    char temp_output[2048];
+    char temp_error[2048];
+    int32 output_position;
+    int32 error_position;
+    ssize_t output_bytes;
+    ssize_t error_bytes;
+    int32 poll_return;
+    UIUpdateData *ready;
 
     thread_data = (ThreadData *)user_data;
 
@@ -228,7 +325,7 @@ sync_worker(gpointer user_data) {
              " --links --hard-links --itemize-changes"
              " --perms --times --owner --group"
              " --delete-excluded %s %s "
-             "'%s/' '%s/' 2>&1",
+             "'%s/' '%s/'",
              thread_data->is_preview ? "--dry-run" : "", ex,
              thread_data->src_path, thread_data->dst_path);
     g_free(ex);
@@ -265,93 +362,170 @@ sync_worker(gpointer user_data) {
 
     dispatch_log(thread_data->widgets, log_cmd);
 
-    if ((pipe = popen(cmd, "r")) != NULL) {
-        while (fgets(buffer, sizeof(buffer), pipe)) {
-            buffer[strcspn(buffer, "\n")] = 0;
-            if (thread_data->is_preview) {
-                if (strncmp(buffer, "*deleting", 9) == 0) {
-                    char *relative_path;
-                    char *full_src;
-                    char *full_dst;
-                    struct stat st_s;
-                    struct stat st_d;
-                    int64 sz;
-                    char *reason;
+    pipe(pipe_output);
+    pipe(pipe_error);
+    child_pid = fork();
 
-                    relative_path = buffer + 10;
-                    while (isspace(*relative_path)) {
-                        relative_path++;
+    if (child_pid == 0) {
+        close(pipe_output[0]);
+        close(pipe_error[0]);
+        dup2(pipe_output[1], STDOUT_FILENO);
+        dup2(pipe_error[1], STDERR_FILENO);
+        close(pipe_output[1]);
+        close(pipe_error[1]);
+        execl("/bin/sh", "sh", "-c", cmd, NULL);
+        exit(1);
+    }
+
+    close(pipe_output[1]);
+    close(pipe_error[1]);
+
+    poll_descriptors[0].fd = pipe_output[0];
+    poll_descriptors[0].events = POLLIN;
+    poll_descriptors[1].fd = pipe_error[0];
+    poll_descriptors[1].events = POLLIN;
+
+    output_position = 0;
+    error_position = 0;
+
+    while (1) {
+        poll_return = poll(poll_descriptors, 2, -1);
+        if (poll_return < 0) {
+            break;
+        }
+
+        if (poll_descriptors[0].revents & POLLIN) {
+            output_bytes
+                = read(pipe_output[0], temp_output, sizeof(temp_output));
+            if (output_bytes > 0) {
+                for (ssize_t k = 0; k < output_bytes; k += 1) {
+                    if (temp_output[k] == '\n'
+                        || output_position == sizeof(output_buffer) - 1) {
+                        output_buffer[output_position] = '\0';
+
+                        if (thread_data->is_preview) {
+                            if (strncmp(output_buffer, "*deleting", 9) == 0) {
+                                char *relative_path;
+                                char *full_src;
+                                char *full_dst;
+                                struct stat st_s;
+                                struct stat st_d;
+                                int64 sz;
+                                char *reason;
+
+                                relative_path = output_buffer + 10;
+                                while (isspace(*relative_path)) {
+                                    relative_path++;
+                                }
+
+                                full_src = g_build_filename(
+                                    thread_data->src_path, relative_path, NULL);
+                                full_dst = g_build_filename(
+                                    thread_data->dst_path, relative_path, NULL);
+                                sz = (stat(full_dst, &st_d) == 0) ? st_d.st_size
+                                                                  : 0;
+                                reason = (stat(full_src, &st_s) == 0)
+                                             ? "Excluded by pattern"
+                                             : "Missing in source";
+
+                                dispatch_tree(thread_data->widgets, 1, "Delete",
+                                              relative_path, sz, reason);
+                                g_free(full_src);
+                                g_free(full_dst);
+                            } else if (strchr(output_buffer, ' ')
+                                       && (output_buffer[0] == '>'
+                                           || output_buffer[0] == '.'
+                                           || output_buffer[0] == 'h'
+                                           || output_buffer[0] == 'c')) {
+                                char *relative_path;
+                                char *act;
+                                char *full_src;
+                                struct stat st;
+                                int64 sz;
+
+                                relative_path = strchr(output_buffer, ' ') + 1;
+                                act = "Update";
+
+                                if (strncmp(output_buffer, "hf", 2) == 0) {
+                                    act = "Hardlink";
+                                } else if (strncmp(output_buffer, "cd", 2) == 0
+                                           || strncmp(output_buffer, ">f+++++",
+                                                      7)
+                                                  == 0) {
+                                    act = "New";
+                                }
+
+                                full_src = g_build_filename(
+                                    thread_data->src_path, relative_path, NULL);
+                                sz = (stat(full_src, &st) == 0) ? st.st_size
+                                                                : 0;
+                                dispatch_tree(thread_data->widgets, 0, act,
+                                              relative_path, sz, act);
+                                g_free(full_src);
+                            }
+                        } else {
+                            dispatch_log(thread_data->widgets, output_buffer);
+                        }
+
+                        output_position = 0;
+                    } else {
+                        output_buffer[output_position] = temp_output[k];
+                        output_position += 1;
                     }
-
-                    full_src = g_build_filename(thread_data->src_path,
-                                                relative_path, NULL);
-                    full_dst = g_build_filename(thread_data->dst_path,
-                                                relative_path, NULL);
-                    sz = (stat(full_dst, &st_d) == 0) ? st_d.st_size : 0;
-                    reason = (stat(full_src, &st_s) == 0)
-                                 ? "Excluded by pattern"
-                                 : "Missing in source";
-
-                    dispatch_tree(thread_data->widgets, 1, "Delete",
-                                  relative_path, sz, reason);
-                    g_free(full_src);
-                    g_free(full_dst);
-                } else if (strchr(buffer, ' ')
-                           && (buffer[0] == '>' || buffer[0] == '.'
-                               || buffer[0] == 'h' || buffer[0] == 'c')) {
-                    char *relative_path;
-                    char *act;
-                    char *full_src;
-                    struct stat st;
-                    int64 sz;
-
-                    relative_path = strchr(buffer, ' ') + 1;
-                    act = "Update";
-
-                    if (strncmp(buffer, "hf", 2) == 0) {
-                        act = "Hardlink";
-                    } else if (strncmp(buffer, "cd", 2) == 0
-                               || strncmp(buffer, ">f+++++", 7) == 0) {
-                        act = "New";
-                    }
-
-                    full_src = g_build_filename(thread_data->src_path,
-                                                relative_path, NULL);
-                    sz = (stat(full_src, &st) == 0) ? st.st_size : 0;
-                    dispatch_tree(thread_data->widgets, 0, act, relative_path,
-                                  sz, act);
-                    g_free(full_src);
-                } else if (strncmp(buffer, "rsync: ", 7) == 0
-                           || strncmp(buffer, "rsync error: ", 13) == 0
-                           || strncmp(buffer, "rsync warning: ", 15) == 0) {
-                    dispatch_log_error(thread_data->widgets, buffer);
                 }
             } else {
-                int32 is_err;
-
-                is_err = 0;
-                if (strncmp(buffer, "rsync: ", 7) == 0
-                    || strncmp(buffer, "rsync error: ", 13) == 0
-                    || strncmp(buffer, "rsync warning: ", 15) == 0) {
-                    is_err = 1;
-                }
-
-                if (is_err) {
-                    dispatch_log_error(thread_data->widgets, buffer);
-                } else {
-                    dispatch_log(thread_data->widgets, buffer);
-                }
+                poll_descriptors[0].fd = -1;
             }
+        } else if (poll_descriptors[0].revents & (POLLHUP | POLLERR)) {
+            poll_descriptors[0].fd = -1;
         }
-        pclose(pipe);
+
+        if (poll_descriptors[1].revents & POLLIN) {
+            error_bytes = read(pipe_error[0], temp_error, sizeof(temp_error));
+            if (error_bytes > 0) {
+                for (ssize_t k = 0; k < error_bytes; k += 1) {
+                    if (temp_error[k] == '\n'
+                        || error_position == sizeof(error_buffer) - 1) {
+                        error_buffer[error_position] = '\0';
+                        dispatch_log_error(thread_data->widgets, error_buffer);
+                        error_position = 0;
+                    } else {
+                        error_buffer[error_position] = temp_error[k];
+                        error_position += 1;
+                    }
+                }
+            } else {
+                poll_descriptors[1].fd = -1;
+            }
+        } else if (poll_descriptors[1].revents & (POLLHUP | POLLERR)) {
+            poll_descriptors[1].fd = -1;
+        }
+
+        if (poll_descriptors[0].fd == -1 && poll_descriptors[1].fd == -1) {
+            break;
+        }
+    }
+
+    close(pipe_output[0]);
+    close(pipe_error[0]);
+    waitpid(child_pid, NULL, 0);
+
+    if (output_position > 0) {
+        output_buffer[output_position] = '\0';
+        if (!thread_data->is_preview) {
+            dispatch_log(thread_data->widgets, output_buffer);
+        }
+    }
+
+    if (error_position > 0) {
+        error_buffer[error_position] = '\0';
+        dispatch_log_error(thread_data->widgets, error_buffer);
     }
 
     if (thread_data->is_preview && thread_data->show_equal) {
         find_equal_files(thread_data->widgets, thread_data->src_path,
                          thread_data->dst_path, "");
     }
-
-    UIUpdateData *ready;
 
     ready = g_new0(UIUpdateData, 1);
     ready->widgets = thread_data->widgets;
