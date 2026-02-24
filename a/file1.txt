@@ -1,2 +1,2 @@
 file1 content
-some new content
+some new content!
