@@ -1,35 +1,100 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
-
 #include "cecup.h"
 #include "rsync.c"
 
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
-    char *path_src;
-    char *path_dst;
-    ThreadData *thread_data;
-
-    w = (AppWidgets *)data;
-    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+    AppWidgets *w = (AppWidgets *)data;
+    const char *s = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
+    const char *d = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
     (void)b;
 
-    if (strlen64(path_src) < 1 || strlen64(path_dst) < 1) {
+    if (strlen(s) < 1 || strlen(d) < 1) {
         return;
     }
 
     gtk_widget_set_sensitive(w->preview_button, FALSE);
     gtk_widget_set_sensitive(w->sync_button, FALSE);
-    thread_data = g_new0(ThreadData, 1);
-    thread_data->widgets = w;
-    thread_data->is_preview = 1;
-    thread_data->check_different_fs
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->check_fs_toggle));
-    strncpy(thread_data->src_path, path_src, 1023);
-    strncpy(thread_data->dst_path, path_dst, 1023);
-    g_thread_new("worker", sync_worker, thread_data);
+
+    ThreadData *td = g_new0(ThreadData, 1);
+    td->widgets = w;
+    td->is_preview = 1;
+    strncpy(td->src_path, s, 1023);
+    strncpy(td->dst_path, d, 1023);
+    g_thread_new("worker", sync_worker, td);
+    return;
+}
+
+static void
+on_menu_apply(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud = (UIUpdateData *)data;
+    GtkTreeModel *model = GTK_TREE_MODEL(ud->widgets->store);
+    GtkTreeIter iter;
+    gboolean valid = gtk_tree_model_get_iter_first(model, &iter);
+    (void)m;
+
+    while (valid) {
+        gboolean selected;
+        gtk_tree_model_get(model, &iter, COL_SELECTED, &selected, -1);
+        if (selected) {
+            char *f_path, *action;
+            gtk_tree_model_get(
+                model, &iter, ud->side == 0 ? COL_SRC_PATH : COL_DST_PATH,
+                &f_path, ud->side == 0 ? COL_SRC_ACTION : COL_DST_ACTION,
+                &action, -1);
+            if (g_strcmp0(f_path, "-") != 0) {
+                UIUpdateData *task = g_new0(UIUpdateData, 1);
+                task->widgets = ud->widgets;
+                task->filepath = g_strdup(f_path);
+                task->action = g_strdup(action);
+                task->side = ud->side;
+                g_thread_new("single", single_sync_worker, task);
+            }
+            g_free(f_path);
+            g_free(action);
+        }
+        valid = gtk_tree_model_iter_next(model, &iter);
+    }
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return;
+}
+
+static void
+on_exclude_clicked(GtkWidget *b, gpointer data) {
+    AppWidgets *w = (AppWidgets *)data;
+    GtkWidget *dialog = gtk_dialog_new_with_buttons(
+        "Exclusions", GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL, "_Save",
+        GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
+    (void)b;
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
+    GtkWidget *scroll = gtk_scrolled_window_new(NULL, NULL);
+    GtkWidget *view = gtk_text_view_new();
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+
+    char *text;
+    gsize len;
+    if (g_file_get_contents(w->exclude_path, &text, &len, NULL)) {
+        gtk_text_buffer_set_text(buffer, text, -1);
+        g_free(text);
+    }
+
+    gtk_container_add(GTK_CONTAINER(scroll), view);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
+                       scroll, TRUE, TRUE, 5);
+    gtk_widget_show_all(dialog);
+
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+        GtkTextIter s, e;
+        gtk_text_buffer_get_bounds(buffer, &s, &e);
+        char *content = gtk_text_buffer_get_text(buffer, &s, &e, FALSE);
+        g_file_set_contents(w->exclude_path, content, -1, NULL);
+        g_free(content);
+        on_preview_clicked(NULL, w);
+    }
+    gtk_widget_destroy(dialog);
     return;
 }
 
@@ -93,58 +158,6 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
         g_free(ud->action);
         g_free(ud);
     }
-    return;
-}
-
-static void
-on_menu_apply(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    int32 side;
-    gboolean valid;
-    (void)m;
-
-    ud = (UIUpdateData *)data;
-    model = GTK_TREE_MODEL(ud->widgets->store);
-    side = ud->side;
-
-    valid = gtk_tree_model_get_iter_first(model, &iter);
-    while (valid) {
-        gboolean is_selected;
-
-        gtk_tree_model_get(model, &iter, COL_SELECTED, &is_selected, -1);
-        if (is_selected) {
-            int32 path_col;
-            int32 act_col;
-            char *f_path;
-            char *action;
-
-            path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
-            act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;
-
-            gtk_tree_model_get(model, &iter, path_col, &f_path, act_col,
-                               &action, -1);
-
-            if (g_strcmp0(f_path, "-") != 0) {
-                UIUpdateData *task;
-
-                task = g_new0(UIUpdateData, 1);
-                task->widgets = ud->widgets;
-                task->filepath = g_strdup(f_path);
-                task->action = g_strdup(action);
-                task->side = side;
-                g_thread_new("single_worker", single_sync_worker, task);
-            }
-            g_free(f_path);
-            g_free(action);
-        }
-        valid = gtk_tree_model_iter_next(model, &iter);
-    }
-
-    g_free(ud->filepath);
-    g_free(ud->action);
-    g_free(ud);
     return;
 }
 
@@ -251,65 +264,6 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
         strncpy(thread_data->dst_path, path_dst, 1023);
         g_thread_new("worker", sync_worker, thread_data);
     }
-    gtk_widget_destroy(dialog);
-    return;
-}
-
-static void
-on_exclude_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
-    GtkWidget *dialog;
-    GtkWidget *scroll;
-    GtkWidget *view;
-    GtkTextBuffer *buffer;
-    char *content;
-    gsize length;
-
-    (void)b;
-    w = (AppWidgets *)data;
-    dialog = gtk_dialog_new_with_buttons(
-        "Exclusions", GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL, "_Save",
-        GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
-
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
-
-    scroll = gtk_scrolled_window_new(NULL, NULL);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
-                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-
-    view = gtk_text_view_new();
-    gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 5);
-    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
-
-    if (g_file_get_contents(w->exclude_path, &content, &length, NULL)) {
-        gtk_text_buffer_set_text(buffer, content, -1);
-        g_free(content);
-    }
-
-    gtk_container_add(GTK_CONTAINER(scroll), view);
-    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
-                       scroll, TRUE, TRUE, 5);
-
-    gtk_widget_show_all(dialog);
-
-    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        GtkTextIter start;
-        GtkTextIter end;
-        char *text;
-        FILE *fp;
-
-        gtk_text_buffer_get_start_iter(buffer, &start);
-        gtk_text_buffer_get_end_iter(buffer, &end);
-        text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
-
-        if ((fp = fopen(w->exclude_path, "w")) != NULL) {
-            fputs(text, fp);
-            fclose(fp);
-        }
-        g_free(text);
-        on_preview_clicked(NULL, w);
-    }
-
     gtk_widget_destroy(dialog);
     return;
 }

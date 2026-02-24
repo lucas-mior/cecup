@@ -28,7 +28,15 @@ typedef struct AppWidgets {
     GtkWidget *sync_button;
     GtkWidget *exclude_button;
     GtkWidget *check_fs_toggle;
+    
+    GtkWidget *filter_new;
+    GtkWidget *filter_hard;
+    GtkWidget *filter_equal;
+    GtkWidget *filter_delete;
+    GtkWidget *filter_ignore;
+
     GtkListStore *store;
+    GtkTreeModelFilter *filter_model;
     GtkTextBuffer *log_buffer;
     char *exclude_path;
     char *config_path;
