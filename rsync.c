@@ -32,6 +32,77 @@ dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
     return;
 }
 
+static char *
+rsync_errors(int32 status) {
+    char *message;
+    switch (status) {
+    case 0:
+        message = "Success";
+        break;
+    case 1:
+        message = "Syntax or usage error";
+        break;
+    case 2:
+        message = "Protocol incompatibility";
+        break;
+    case 3:
+        message = "Errors selecting input/output files, dirs";
+        break;
+    case 4:
+        message = "Requested action not supported";
+        break;
+    case 5:
+        message = "Error starting client-server protocol";
+        break;
+    case 6:
+        message = "Daemon unable to append to log-file";
+        break;
+    case 10:
+        message = "Error in socket I/O";
+        break;
+    case 11:
+        message = "Error in file I/O";
+        break;
+    case 12:
+        message = "Error in rsync protocol data stream";
+        break;
+    case 13:
+        message = "Errors with program diagnostics";
+        break;
+    case 14:
+        message = "Error in IPC code";
+        break;
+    case 20:
+        message = "Received SIGUSR1 or SIGINT";
+        break;
+    case 21:
+        message = "Some error returned by waitpid()";
+        break;
+    case 22:
+        message = "Error allocating core memory buffers";
+        break;
+    case 23:
+        message = "Partial transfer due to error";
+        break;
+    case 24:
+        message = "Partial transfer due to vanished source files";
+        break;
+    case 25:
+        message = "The --max-delete limit stopped deletions";
+        break;
+    case 30:
+        message = "Timeout in data send/receive";
+        break;
+    case 35:
+        message = "Timeout waiting for daemon connection";
+        break;
+    default:
+        message = "Invalid rsync exit code";
+        break;
+    }
+    return message;
+}
+
 static gpointer
 single_sync_worker(gpointer user_data) {
     UIUpdateData *ud;
@@ -66,23 +137,31 @@ single_sync_worker(gpointer user_data) {
     snprintf(log_msg, sizeof(log_msg), "+ %s", cmd);
     dispatch_log(ud->widgets, log_msg);
 
-    do {
-        if ((rsync_pipe = popen(cmd, "r"))) {
-            errno = 0;
-            while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
-                buffer[strcspn(buffer, "\n")] = 0;
-                dispatch_log(ud->widgets, buffer);
-            }
-            if (errno) {
-                error("Error reading line from rsync pipe: %s.\n",
-                      strerror(errno));
-            }
-            if (pclose(rsync_pipe) < 0) {
-                error("Error closing rsync pipe: %s.\n", strerror(errno));
-            }
-            break;
+    if ((rsync_pipe = popen(cmd, "r")) == NULL) {
+        error("Error opening rsync pipe: %s.\n", strerror(errno));
+        return NULL;
+    }
+
+    {
+        int32 rsync_exit;
+        errno = 0;
+        while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            dispatch_log(ud->widgets, buffer);
         }
-    } while (0);
+        if (errno) {
+            error("Error reading line from rsync pipe: %s.\n", strerror(errno));
+            return NULL;
+        }
+        if ((rsync_exit = pclose(rsync_pipe)) < 0) {
+            error("Error closing rsync pipe: %s.\n", strerror(errno));
+            return NULL;
+        }
+        if (rsync_exit) {
+            error("Error in rsync: %s.\n", rsync_errors(rsync_exit));
+            return NULL;
+        }
+    }
 
     dispatch_log(ud->widgets,
                  ">>> Single file operation finished. Updating list...");
