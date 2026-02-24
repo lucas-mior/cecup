@@ -58,7 +58,7 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
                 task->side = side;
                 task->src_base = g_strdup(src_base);
                 task->dst_base = g_strdup(dst_base);
-                tasks = g_list_append(tasks, task);
+                tasks = g_list_prepend(tasks, task);
             }
             g_free(f_path);
             g_free(action);
@@ -76,10 +76,10 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
         task->side = side;
         task->src_base = g_strdup(src_base);
         task->dst_base = g_strdup(dst_base);
-        tasks = g_list_append(tasks, task);
+        tasks = g_list_prepend(tasks, task);
     }
 
-    return tasks;
+    return g_list_reverse(tasks);
 }
 
 static void
@@ -109,6 +109,7 @@ static void
 on_menu_open(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GList *tasks;
+    char cmd[4096];
 
     (void)m;
     ud = (UIUpdateData *)data;
@@ -117,14 +118,12 @@ on_menu_open(GtkWidget *m, gpointer data) {
     for (GList *l = tasks; l != NULL; l = l->next) {
         UIUpdateData *t;
         char *full;
-        char *cmd;
 
         t = (UIUpdateData *)l->data;
         full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
                                 t->filepath, NULL);
-        cmd = g_strdup_printf("xdg-open '%s' &", full);
+        snprintf(cmd, sizeof(cmd), "xdg-open '%s' &", full);
         system(cmd);
-        g_free(cmd);
         g_free(full);
     }
 
@@ -139,6 +138,7 @@ static void
 on_menu_open_dir(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GList *tasks;
+    char cmd[4096];
 
     (void)m;
     ud = (UIUpdateData *)data;
@@ -153,11 +153,8 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
         full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
                                 t->filepath, NULL);
         if ((dir = g_path_get_dirname(full)) != NULL) {
-            char *cmd;
-
-            cmd = g_strdup_printf("xdg-open '%s' &", dir);
+            snprintf(cmd, sizeof(cmd), "xdg-open '%s' &", dir);
             system(cmd);
-            g_free(cmd);
             g_free(dir);
         }
         g_free(full);
