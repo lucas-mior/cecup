@@ -20,6 +20,7 @@ CFLAGS="$CFLAGS -Wno-float-equal"
 CFLAGS="$CFLAGS -Wno-undefined-internal"
 CFLAGS="$CFLAGS -Wno-discarded-qualifiers"
 CFLAGS="$CFLAGS -Wno-cast-qual"
+CFLAGS="$CFLAGS -Wno-deprecated-declarations"
 
 LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk+-3.0) -lpthread"
 
