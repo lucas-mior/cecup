@@ -315,16 +315,16 @@ update_ui_handler(gpointer user_data) {
         char *bg_dst;
         char *path_src;
         char *path_dst;
-        char *act_src;
-        char *act_dst;
+        char *action_src;
+        char *action_dst;
 
         sz_str = bytes_pretty(data->size);
         bg_src = "#FFFFFF";
         bg_dst = "#FFFFFF";
         path_src = data->filepath;
         path_dst = data->filepath;
-        act_src = data->action;
-        act_dst = data->action;
+        action_src = data->action;
+        action_dst = data->action;
 
         if (g_strcmp0(data->action, "New") == 0) {
             bg_src = "#D4EDDA";
@@ -344,12 +344,12 @@ update_ui_handler(gpointer user_data) {
             if (g_strrstr(rl, "exclude")) {
                 bg_src = "#FFF3CD";
                 bg_dst = "#FFF3CD";
-                act_src = "Ignore";
-                act_dst = "Delete";
+                action_src = "Ignore";
+                action_dst = "Delete";
             } else {
                 bg_dst = "#F8D7DA";
-                act_src = "Deleted";
-                act_dst = "Delete";
+                action_src = "Deleted";
+                action_dst = "Delete";
                 path_src = "-";
             }
             g_free(rl);
@@ -357,8 +357,8 @@ update_ui_handler(gpointer user_data) {
 
         row = g_new0(CecupRow, 1);
         row->selected = FALSE;
-        row->src_action = act_src;
-        row->dst_action = act_dst;
+        row->src_action = action_src;
+        row->dst_action = action_dst;
         row->src_path = g_strdup(path_src);
         row->dst_path = g_strdup(path_dst);
         row->size_text = g_strdup(sz_str);
