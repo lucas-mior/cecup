@@ -48,7 +48,6 @@ main(int32 argc, char *argv[]) {
     GKeyFile *kf;
     char *conf_term;
     char *conf_diff;
-    FILE *fp;
 
     gtk_init(&argc, &argv);
     w = g_new0(AppWidgets, 1);
@@ -60,6 +59,7 @@ main(int32 argc, char *argv[]) {
     w->config_path = g_build_filename(config_base, "cecup.conf", NULL);
 
     if (access(w->exclude_path, F_OK) == -1) {
+        FILE *fp;
         if ((fp = fopen(w->exclude_path, "w")) != NULL) {
             fprintf(fp, "# cecup rsync exclusion patterns\n");
             fprintf(fp, "# ------------------------------\n");
