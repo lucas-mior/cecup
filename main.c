@@ -134,6 +134,15 @@ main(int32 argc, char *argv[]) {
     w->term_entry = gtk_entry_new();
     gtk_box_pack_start(GTK_BOX(options_hbox), w->check_fs_toggle, FALSE, FALSE,
                        5);
+    gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Diff Tool:"),
+                       FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(options_hbox), w->diff_entry, FALSE, FALSE, 0);
+    gtk_entry_set_text(GTK_ENTRY(w->diff_entry), "unidiff.bash");
+    gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Terminal:"), FALSE,
+                       FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(options_hbox), w->term_entry, FALSE, FALSE, 0);
+    gtk_entry_set_text(GTK_ENTRY(w->term_entry), "xterm");
+
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
     w->store = gtk_list_store_new(NUM_COLS, G_TYPE_BOOLEAN, G_TYPE_STRING,
@@ -148,6 +157,7 @@ main(int32 argc, char *argv[]) {
 
     sort_model
         = gtk_tree_model_sort_new_with_model(GTK_TREE_MODEL(w->filter_model));
+    w->sort_model = GTK_TREE_MODEL_SORT(sort_model);
 
     g_signal_connect(w->filter_new, "toggled", G_CALLBACK(on_filter_toggled),
                      w);
@@ -180,7 +190,6 @@ main(int32 argc, char *argv[]) {
     l_scroll = gtk_scrolled_window_new(NULL, NULL);
     l_tree = gtk_tree_view_new_with_model(sort_model);
     g_object_set_data(G_OBJECT(l_tree), "side", GINT_TO_POINTER(0));
-    g_object_set_data(G_OBJECT(w->gtk_window), "last_tree", l_tree);
     setup_tree_columns(l_tree, w, COL_SRC_ACTION, COL_SRC_PATH, COL_SRC_COLOR);
     gtk_container_add(GTK_CONTAINER(l_scroll), l_tree);
     gtk_box_pack_start(GTK_BOX(l_vbox), l_scroll, TRUE, TRUE, 0);
@@ -244,6 +253,7 @@ update_ui_handler(gpointer user_data) {
     switch (data->type) {
     case DATA_TYPE_LOG: {
         GtkTextIter end;
+
         gtk_text_buffer_get_end_iter(data->widgets->log_buffer, &end);
         gtk_text_buffer_insert(data->widgets->log_buffer, &end, data->message,
                                -1);
@@ -281,7 +291,9 @@ update_ui_handler(gpointer user_data) {
             bg_src = "#F0F0F0";
             bg_dst = "#F0F0F0";
         } else if (g_strcmp0(data->action, "Delete") == 0) {
-            char *rl = g_utf8_strdown(data->reason ? data->reason : "", -1);
+            char *rl;
+
+            rl = g_utf8_strdown(data->reason ? data->reason : "", -1);
             if (g_strrstr(rl, "exclude")) {
                 bg_src = "#FFF3CD";
                 bg_dst = "#FFF3CD";
@@ -308,10 +320,13 @@ update_ui_handler(gpointer user_data) {
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
         GtkTreeIter iter;
-        gboolean valid
-            = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter);
+        gboolean valid;
+
+        valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter);
         while (valid) {
-            char *ps, *pd;
+            char *ps;
+            char *pd;
+
             gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, COL_SRC_PATH, &ps,
                                COL_DST_PATH, &pd, -1);
             if (g_strcmp0(ps, data->filepath) == 0

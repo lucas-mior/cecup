@@ -5,9 +5,14 @@
 
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w = (AppWidgets *)data;
-    const char *s = gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    const char *d = gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+    AppWidgets *w;
+    char *s;
+    char *d;
+    ThreadData *td;
+
+    w = (AppWidgets *)data;
+    s = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
+    d = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
     (void)b;
 
     if (strlen(s) < 1 || strlen(d) < 1) {
@@ -17,9 +22,11 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     gtk_widget_set_sensitive(w->preview_button, FALSE);
     gtk_widget_set_sensitive(w->sync_button, FALSE);
 
-    ThreadData *td = g_new0(ThreadData, 1);
+    td = g_new0(ThreadData, 1);
     td->widgets = w;
     td->is_preview = 1;
+    td->show_equal
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_equal));
     strncpy(td->src_path, s, 1023);
     strncpy(td->dst_path, d, 1023);
     g_thread_new("worker", sync_worker, td);
@@ -60,18 +67,14 @@ on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
     GtkTreePath *child_path;
     GtkTreeIter iter;
     gboolean val;
-    (void)cell;
 
+    (void)cell;
     w = (AppWidgets *)data;
     sort_path = gtk_tree_path_new_from_string(path_str);
 
-    /* Convert Sort Model Path -> Filter Model Path */
-    filter_path = gtk_tree_model_sort_convert_path_to_child_path(
-        GTK_TREE_MODEL_SORT(gtk_tree_view_get_model(GTK_TREE_VIEW(
-            g_object_get_data(G_OBJECT(w->gtk_window), "last_tree")))),
-        sort_path);
+    filter_path = gtk_tree_model_sort_convert_path_to_child_path(w->sort_model,
+                                                                 sort_path);
 
-    /* Convert Filter Model Path -> Store Path */
     child_path = gtk_tree_model_filter_convert_path_to_child_path(
         w->filter_model, filter_path);
 
@@ -89,34 +92,60 @@ on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
 
 static void
 on_menu_apply(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud = (UIUpdateData *)data;
-    GtkTreeModel *model = GTK_TREE_MODEL(ud->widgets->store);
+    UIUpdateData *ud;
+    GtkTreeModel *model;
     GtkTreeIter iter;
-    gboolean valid = gtk_tree_model_get_iter_first(model, &iter);
+    gboolean valid;
+    GList *tasks;
+    char *s_base;
+    char *d_base;
+
+    ud = (UIUpdateData *)data;
+    model = GTK_TREE_MODEL(ud->widgets->store);
+    valid = gtk_tree_model_get_iter_first(model, &iter);
+    tasks = NULL;
     (void)m;
+
+    s_base = g_strdup(gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry)));
+    d_base = g_strdup(gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry)));
 
     while (valid) {
         gboolean selected;
+
         gtk_tree_model_get(model, &iter, COL_SELECTED, &selected, -1);
         if (selected) {
-            char *f_path, *action;
+            char *f_path;
+            char *action;
+
             gtk_tree_model_get(
                 model, &iter, ud->side == 0 ? COL_SRC_PATH : COL_DST_PATH,
                 &f_path, ud->side == 0 ? COL_SRC_ACTION : COL_DST_ACTION,
                 &action, -1);
+
             if (g_strcmp0(f_path, "-") != 0) {
-                UIUpdateData *task = g_new0(UIUpdateData, 1);
+                UIUpdateData *task;
+
+                task = g_new0(UIUpdateData, 1);
                 task->widgets = ud->widgets;
                 task->filepath = g_strdup(f_path);
                 task->action = g_strdup(action);
                 task->side = ud->side;
-                g_thread_new("single", single_sync_worker, task);
+                task->src_base = g_strdup(s_base);
+                task->dst_base = g_strdup(d_base);
+                tasks = g_list_append(tasks, task);
             }
             g_free(f_path);
             g_free(action);
         }
         valid = gtk_tree_model_iter_next(model, &iter);
     }
+
+    if (tasks != NULL) {
+        g_thread_new("bulk_sync", bulk_sync_worker, tasks);
+    }
+
+    g_free(s_base);
+    g_free(d_base);
     g_free(ud->filepath);
     g_free(ud->action);
     g_free(ud);
@@ -125,18 +154,24 @@ on_menu_apply(GtkWidget *m, gpointer data) {
 
 static void
 on_exclude_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w = (AppWidgets *)data;
-    GtkWidget *dialog = gtk_dialog_new_with_buttons(
+    AppWidgets *w;
+    GtkWidget *dialog;
+    GtkWidget *scroll;
+    GtkWidget *view;
+    GtkTextBuffer *buffer;
+    char *text;
+    gsize len;
+
+    w = (AppWidgets *)data;
+    dialog = gtk_dialog_new_with_buttons(
         "Exclusions", GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL, "_Save",
         GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
     (void)b;
     gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
-    GtkWidget *scroll = gtk_scrolled_window_new(NULL, NULL);
-    GtkWidget *view = gtk_text_view_new();
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    view = gtk_text_view_new();
+    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 
-    char *text;
-    gsize len;
     if (g_file_get_contents(w->exclude_path, &text, &len, NULL)) {
         gtk_text_buffer_set_text(buffer, text, -1);
         g_free(text);
@@ -148,9 +183,12 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
     gtk_widget_show_all(dialog);
 
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        GtkTextIter s, e;
+        GtkTextIter s;
+        GtkTextIter e;
+        char *content;
+
         gtk_text_buffer_get_bounds(buffer, &s, &e);
-        char *content = gtk_text_buffer_get_text(buffer, &s, &e, FALSE);
+        content = gtk_text_buffer_get_text(buffer, &s, &e, FALSE);
         g_file_set_contents(w->exclude_path, content, -1, NULL);
         g_free(content);
         on_preview_clicked(NULL, w);
@@ -225,9 +263,24 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
 static void
 on_menu_diff(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
+    char *src_path;
+    char *dst_path;
+    char *diff_tool;
+    char *term_cmd;
 
     (void)m;
     ud = (UIUpdateData *)data;
+
+    src_path = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry));
+    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry));
+    diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->diff_entry));
+    term_cmd = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->term_entry));
+
+    ud->src_base = g_strdup(src_path);
+    ud->dst_base = g_strdup(dst_path);
+    ud->diff_tool = g_strdup(diff_tool);
+    ud->term_cmd = g_strdup(term_cmd);
+
     g_thread_new("diff_worker", diff_worker, ud);
     return;
 }
@@ -319,6 +372,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
         thread_data = g_new0(ThreadData, 1);
         thread_data->widgets = w;
         thread_data->is_preview = 0;
+        thread_data->show_equal = 0;
         thread_data->check_different_fs = gtk_toggle_button_get_active(
             GTK_TOGGLE_BUTTON(w->check_fs_toggle));
         strncpy(thread_data->src_path, path_src, 1023);

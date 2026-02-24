@@ -37,6 +37,7 @@ typedef struct AppWidgets {
 
     GtkListStore *store;
     GtkTreeModelFilter *filter_model;
+    GtkTreeModelSort *sort_model;
     GtkTextBuffer *log_buffer;
     char *exclude_path;
     char *config_path;
@@ -48,6 +49,7 @@ typedef struct ThreadData {
     char dst_path[1024];
     int32 is_preview;
     int32 check_different_fs;
+    int32 show_equal;
 } ThreadData;
 
 enum DataType {
@@ -64,6 +66,10 @@ typedef struct UIUpdateData {
     char *action;
     char *filepath;
     char *reason;
+    char *src_base;
+    char *dst_base;
+    char *diff_tool;
+    char *term_cmd;
     int64 size;
     int32 side;
     enum DataType type;

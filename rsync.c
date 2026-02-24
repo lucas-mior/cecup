@@ -8,6 +8,7 @@
 static void
 dispatch_log(AppWidgets *w, char *msg) {
     UIUpdateData *data;
+
     data = g_new0(UIUpdateData, 1);
     data->widgets = w;
     data->type = DATA_TYPE_LOG;
@@ -20,6 +21,7 @@ static void
 dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
               char *reason) {
     UIUpdateData *data;
+
     data = g_new0(UIUpdateData, 1);
     data->widgets = w;
     data->type = DATA_TYPE_TREE_ROW;
@@ -33,8 +35,7 @@ dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
 }
 
 static void
-find_equal_files(AppWidgets *w, const char *src_base, const char *dst_base,
-                 const char *rel) {
+find_equal_files(AppWidgets *w, char *src_base, char *dst_base, char *rel) {
     DIR *dir;
     struct dirent *entry;
     char *full_src;
@@ -46,15 +47,21 @@ find_equal_files(AppWidgets *w, const char *src_base, const char *dst_base,
     }
 
     while ((entry = readdir(dir))) {
-        char *name = entry->d_name;
+        char *name;
+        char *sub_rel;
+        char *s_path;
+        char *d_path;
+        struct stat st_s;
+        struct stat st_d;
+
+        name = entry->d_name;
         if (g_strcmp0(name, ".") == 0 || g_strcmp0(name, "..") == 0) {
             continue;
         }
 
-        char *sub_rel = g_build_filename(rel, name, NULL);
-        char *s_path = g_build_filename(src_base, sub_rel, NULL);
-        char *d_path = g_build_filename(dst_base, sub_rel, NULL);
-        struct stat st_s, st_d;
+        sub_rel = g_build_filename(rel, name, NULL);
+        s_path = g_build_filename(src_base, sub_rel, NULL);
+        d_path = g_build_filename(dst_base, sub_rel, NULL);
 
         if (stat(s_path, &st_s) == 0 && stat(d_path, &st_d) == 0) {
             if (S_ISDIR(st_s.st_mode)) {
@@ -77,68 +84,82 @@ find_equal_files(AppWidgets *w, const char *src_base, const char *dst_base,
 }
 
 static gpointer
-single_sync_worker(gpointer user_data) {
-    UIUpdateData *ud;
-    char cmd[4096];
-    char buffer[2048];
-    FILE *rsync_pipe;
-    char *path_src;
-    char *path_dst;
+bulk_sync_worker(gpointer user_data) {
+    GList *tasks;
+    GList *l;
 
-    ud = (UIUpdateData *)user_data;
-    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry));
-    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry));
+    tasks = (GList *)user_data;
 
-    if (g_strcmp0(ud->action, "Delete") == 0) {
-        char *full_dst = g_build_filename(path_dst, ud->filepath, NULL);
-        snprintf(cmd, sizeof(cmd), "rm -rfv '%s' 2>&1", full_dst);
-        g_free(full_dst);
-    } else {
-        snprintf(cmd, sizeof(cmd),
-                 "rsync -av --update --hard-links --include='%s' "
-                 "--include='%s/**' --exclude='*' '%s/' '%s/' 2>&1",
-                 ud->filepath, ud->filepath, path_src, path_dst);
-    }
+    for (l = tasks; l != NULL; l = l->next) {
+        UIUpdateData *ud;
+        char cmd[4096];
+        char buffer[2048];
+        FILE *rsync_pipe;
 
-    dispatch_log(ud->widgets, cmd);
-    if ((rsync_pipe = popen(cmd, "r"))) {
-        while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
-            buffer[strcspn(buffer, "\n")] = 0;
-            dispatch_log(ud->widgets, buffer);
+        ud = (UIUpdateData *)l->data;
+
+        if (g_strcmp0(ud->action, "Delete") == 0) {
+            char *full_dst;
+
+            full_dst = g_build_filename(ud->dst_base, ud->filepath, NULL);
+            snprintf(cmd, sizeof(cmd), "rm -rfv '%s' 2>&1", full_dst);
+            g_free(full_dst);
+        } else {
+            snprintf(cmd, sizeof(cmd),
+                     "rsync -av --update --hard-links --include='%s' "
+                     "--include='%s/**' --exclude='*' '%s/' '%s/' 2>&1",
+                     ud->filepath, ud->filepath, ud->src_base, ud->dst_base);
         }
-        pclose(rsync_pipe);
+
+        dispatch_log(ud->widgets, cmd);
+        if ((rsync_pipe = popen(cmd, "r")) != NULL) {
+            while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
+                buffer[strcspn(buffer, "\n")] = 0;
+                dispatch_log(ud->widgets, buffer);
+            }
+            pclose(rsync_pipe);
+        }
+
+        UIUpdateData *remove_data;
+
+        remove_data = g_new0(UIUpdateData, 1);
+        remove_data->widgets = ud->widgets;
+        remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
+        remove_data->filepath = g_strdup(ud->filepath);
+        g_idle_add(update_ui_handler, remove_data);
+
+        g_free(ud->filepath);
+        g_free(ud->action);
+        g_free(ud->src_base);
+        g_free(ud->dst_base);
+        g_free(ud);
     }
-
-    UIUpdateData *remove_data = g_new0(UIUpdateData, 1);
-    remove_data->widgets = ud->widgets;
-    remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
-    remove_data->filepath = g_strdup(ud->filepath);
-    g_idle_add(update_ui_handler, remove_data);
-
-    g_free(ud->filepath);
-    g_free(ud->action);
-    g_free(ud);
+    g_list_free(tasks);
     return NULL;
 }
 
 static gpointer
 sync_worker(gpointer user_data) {
-    ThreadData *td = (ThreadData *)user_data;
+    ThreadData *td;
     char cmd[4096];
     char buffer[2048];
     FILE *pipe;
+    char *ex;
+
+    td = (ThreadData *)user_data;
 
     if (td->is_preview) {
-        UIUpdateData *clear = g_new0(UIUpdateData, 1);
+        UIUpdateData *clear;
+
+        clear = g_new0(UIUpdateData, 1);
         clear->widgets = td->widgets;
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
     }
 
-    char *ex = (access(td->widgets->exclude_path, F_OK) != -1)
-                   ? g_strdup_printf("--exclude-from='%s'",
-                                     td->widgets->exclude_path)
-                   : g_strdup("");
+    ex = (access(td->widgets->exclude_path, F_OK) != -1)
+             ? g_strdup_printf("--exclude-from='%s'", td->widgets->exclude_path)
+             : g_strdup("");
 
     snprintf(cmd, sizeof(cmd),
              "rsync -av --itemize-changes --delete --delete-excluded %s %s "
@@ -146,30 +167,45 @@ sync_worker(gpointer user_data) {
              td->is_preview ? "--dry-run" : "", ex, td->src_path, td->dst_path);
     g_free(ex);
 
-    if ((pipe = popen(cmd, "r"))) {
+    if ((pipe = popen(cmd, "r")) != NULL) {
         while (fgets(buffer, sizeof(buffer), pipe)) {
             buffer[strcspn(buffer, "\n")] = 0;
             if (td->is_preview) {
                 if (strncmp(buffer, "*deleting", 9) == 0) {
-                    char *rel = buffer + 10;
+                    char *rel;
+                    char *full_s;
+                    char *full_d;
+                    struct stat st_s;
+                    struct stat st_d;
+                    int64 sz;
+                    char *reason;
+
+                    rel = buffer + 10;
                     while (isspace(*rel)) {
                         rel++;
                     }
-                    char *full_s = g_build_filename(td->src_path, rel, NULL);
-                    char *full_d = g_build_filename(td->dst_path, rel, NULL);
-                    struct stat st_s, st_d;
-                    int64 sz = (stat(full_d, &st_d) == 0) ? st_d.st_size : 0;
-                    char *reason = (stat(full_s, &st_s) == 0)
-                                       ? "Excluded by pattern"
-                                       : "Missing in source";
+
+                    full_s = g_build_filename(td->src_path, rel, NULL);
+                    full_d = g_build_filename(td->dst_path, rel, NULL);
+                    sz = (stat(full_d, &st_d) == 0) ? st_d.st_size : 0;
+                    reason = (stat(full_s, &st_s) == 0) ? "Excluded by pattern"
+                                                        : "Missing in source";
+
                     dispatch_tree(td->widgets, 1, "Delete", rel, sz, reason);
                     g_free(full_s);
                     g_free(full_d);
                 } else if (strchr(buffer, ' ')
                            && (buffer[0] == '>' || buffer[0] == '.'
                                || buffer[0] == 'h' || buffer[0] == 'c')) {
-                    char *rel = strchr(buffer, ' ') + 1;
-                    char *act = "Update";
+                    char *rel;
+                    char *act;
+                    char *full_s;
+                    struct stat st;
+                    int64 sz;
+
+                    rel = strchr(buffer, ' ') + 1;
+                    act = "Update";
+
                     if (strncmp(buffer, "hf", 2) == 0) {
                         act = "Hardlink";
                     } else if (strncmp(buffer, "cd", 2) == 0
@@ -177,9 +213,8 @@ sync_worker(gpointer user_data) {
                         act = "New";
                     }
 
-                    char *full_s = g_build_filename(td->src_path, rel, NULL);
-                    struct stat st;
-                    int64 sz = (stat(full_s, &st) == 0) ? st.st_size : 0;
+                    full_s = g_build_filename(td->src_path, rel, NULL);
+                    sz = (stat(full_s, &st) == 0) ? st.st_size : 0;
                     dispatch_tree(td->widgets, 0, act, rel, sz, act);
                     g_free(full_s);
                 }
@@ -190,11 +225,13 @@ sync_worker(gpointer user_data) {
         pclose(pipe);
     }
 
-    if (td->is_preview) {
+    if (td->is_preview && td->show_equal) {
         find_equal_files(td->widgets, td->src_path, td->dst_path, "");
     }
 
-    UIUpdateData *ready = g_new0(UIUpdateData, 1);
+    UIUpdateData *ready;
+
+    ready = g_new0(UIUpdateData, 1);
     ready->widgets = td->widgets;
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, ready);
@@ -202,29 +239,24 @@ sync_worker(gpointer user_data) {
     return NULL;
 }
 
-static char *
-find_terminal(void) {
-    if (g_find_program_in_path("xterm")) {
-        return "xterm";
-    }
-    return "xterm";
-}
-
 static gpointer
 diff_worker(gpointer user_data) {
-    UIUpdateData *ud = (UIUpdateData *)user_data;
+    UIUpdateData *ud;
     char cmd[8192];
+
+    ud = (UIUpdateData *)user_data;
     snprintf(cmd, sizeof(cmd),
              "%s -e bash -c \"%s '%s/%s' '%s/%s'; read -p 'Press Enter...'\" &",
-             (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->term_entry)),
-             (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->diff_entry)),
-             (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry)),
-             ud->filepath,
-             (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry)),
-             ud->filepath);
+             ud->term_cmd, ud->diff_tool, ud->src_base, ud->filepath,
+             ud->dst_base, ud->filepath);
     system(cmd);
+
     g_free(ud->filepath);
     g_free(ud->action);
+    g_free(ud->src_base);
+    g_free(ud->dst_base);
+    g_free(ud->term_cmd);
+    g_free(ud->diff_tool);
     g_free(ud);
     return NULL;
 }
