@@ -47,7 +47,7 @@ free_task_list(GPtrArray *tasks) {
 }
 
 static GPtrArray *
-get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
+get_target_tasks(CecupState *w, int32 side, char *clicked_path,
                  char *clicked_action) {
     GPtrArray *tasks;
     char *shared_src;
@@ -107,12 +107,12 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
 
 static gint
 cecup_row_compare(gconstpointer a, gconstpointer b, gpointer user_data) {
-    AppWidgets *w;
+    CecupState *w;
     CecupRow *ra;
     CecupRow *rb;
     int32 result;
 
-    w = (AppWidgets *)user_data;
+    w = (CecupState *)user_data;
     ra = *(CecupRow **)a;
     rb = *(CecupRow **)b;
     result = 0;
@@ -140,7 +140,7 @@ cecup_row_compare(gconstpointer a, gconstpointer b, gpointer user_data) {
 }
 
 static void
-refresh_ui_list(AppWidgets *w) {
+refresh_ui_list(CecupState *w) {
     gboolean show_new;
     gboolean show_hard;
     gboolean show_update;
@@ -200,9 +200,9 @@ refresh_ui_list(AppWidgets *w) {
 
 static gboolean
 refresh_ui_timeout_callback(gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
 
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     refresh_ui_list(w);
     w->refresh_id = 0;
     return G_SOURCE_REMOVE;
@@ -431,7 +431,7 @@ on_menu_exclude_dir(GtkWidget *m, gpointer data) {
 }
 
 static void
-save_config(AppWidgets *w) {
+save_config(CecupState *w) {
     GKeyFile *key;
     char *out;
     gsize len;
@@ -477,20 +477,20 @@ save_config(AppWidgets *w) {
 
 static void
 on_config_changed(GtkWidget *widget, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
 
     (void)widget;
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     save_config(w);
     return;
 }
 
 static void
 on_reset_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
 
     (void)b;
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_new), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_hard), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_update), TRUE);
@@ -506,22 +506,22 @@ on_reset_clicked(GtkWidget *b, gpointer data) {
 
 static void
 on_stop_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
 
     (void)b;
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     w->cancel_sync = 1;
     return;
 }
 
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
     char *s;
     char *d;
     ThreadData *td;
 
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     s = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
     d = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
     (void)b;
@@ -548,9 +548,9 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
 
 static void
 on_filter_toggled(GtkToggleButton *b, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
 
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     (void)b;
     refresh_ui_list(w);
     save_config(w);
@@ -559,11 +559,11 @@ on_filter_toggled(GtkToggleButton *b, gpointer data) {
 
 static void
 on_sort_changed(GtkTreeSortable *s, gpointer d) {
-    AppWidgets *w;
+    CecupState *w;
     int32 id;
     GtkSortType o;
 
-    w = (AppWidgets *)d;
+    w = (CecupState *)d;
     if (gtk_tree_sortable_get_sort_column_id(s, &id, &o)) {
         w->sort_col = id;
         w->sort_order = o;
@@ -574,13 +574,13 @@ on_sort_changed(GtkTreeSortable *s, gpointer d) {
 
 static void
 on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
     GtkTreePath *p;
     GtkTreeIter i;
     char *f_path;
 
     (void)cell;
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     p = gtk_tree_path_new_from_string(path_str);
 
     if (gtk_tree_model_get_iter(GTK_TREE_MODEL(w->store), &i, p)) {
@@ -606,7 +606,7 @@ on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
 
 static void
 on_exclude_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
     GtkWidget *dialog;
     GtkWidget *scroll;
     GtkWidget *view;
@@ -614,7 +614,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
     char *text;
     gsize len;
 
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     dialog = gtk_dialog_new_with_buttons(
         "Exclusions", GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL, "_Save",
         GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
@@ -651,12 +651,12 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
 
 static void
 on_invert_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
     char *path_src;
     char *path_dst;
 
     (void)b;
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     path_src = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->src_entry)));
     path_dst = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->dst_entry)));
     gtk_entry_set_text(GTK_ENTRY(w->src_entry), path_dst);
@@ -669,12 +669,12 @@ on_invert_clicked(GtkWidget *b, gpointer data) {
 
 static void
 on_sync_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
     char *path_src;
     char *path_dst;
     GtkWidget *dialog;
 
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     path_src = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
     path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
     (void)b;
@@ -704,10 +704,10 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
 
 static void
 on_browse_src(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
     GtkWidget *dialog;
 
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     (void)b;
     dialog = gtk_file_chooser_dialog_new(
         "Src", GTK_WINDOW(w->gtk_window), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
@@ -725,10 +725,10 @@ on_browse_src(GtkWidget *b, gpointer data) {
 
 static void
 on_browse_dst(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
     GtkWidget *dialog;
 
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     (void)b;
     dialog = gtk_file_chooser_dialog_new(
         "Dst", GTK_WINDOW(w->gtk_window), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
@@ -757,10 +757,10 @@ on_scroll_sync(GtkAdjustment *s, gpointer d) {
 
 static gboolean
 on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
-    AppWidgets *w;
+    CecupState *w;
     int32 side;
 
-    w = (AppWidgets *)data;
+    w = (CecupState *)data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
 
     if (event->type == GDK_BUTTON_PRESS && event->button == 3) {

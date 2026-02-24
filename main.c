@@ -6,12 +6,12 @@
 #include "util.c"
 #include "hooks.c"
 
-static void setup_tree_columns(GtkWidget *tree, AppWidgets *w, int32 col_act,
+static void setup_tree_columns(GtkWidget *tree, CecupState *w, int32 col_act,
                                int32 col_path, int32 col_color);
 
 int32
 main(int32 argc, char *argv[]) {
-    AppWidgets *w;
+    CecupState *w;
     GtkWidget *main_vbox;
     GtkWidget *header_vbox;
     GtkWidget *invert_btn;
@@ -41,7 +41,7 @@ main(int32 argc, char *argv[]) {
     char *config_base;
 
     gtk_init(&argc, &argv);
-    w = g_new0(AppWidgets, 1);
+    w = g_new0(CecupState, 1);
     w->rows = g_ptr_array_new_with_free_func(free_cecup_row);
     w->sort_col = COL_SRC_PATH;
     w->sort_order = GTK_SORT_ASCENDING;
@@ -424,7 +424,7 @@ update_ui_handler(gpointer user_data) {
 }
 
 static void
-setup_tree_columns(GtkWidget *tree, AppWidgets *w, int32 col_act,
+setup_tree_columns(GtkWidget *tree, CecupState *w, int32 col_act,
                    int32 col_path, int32 col_color) {
     GtkCellRenderer *r;
     GtkTreeViewColumn *c;

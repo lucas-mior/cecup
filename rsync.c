@@ -10,7 +10,7 @@
 #include "cecup.h"
 
 static void
-dispatch_log(AppWidgets *w, char *msg) {
+dispatch_log(CecupState *w, char *msg) {
     UIUpdateData *data;
 
     data = g_new0(UIUpdateData, 1);
@@ -47,7 +47,7 @@ log_error_handler(gpointer user_data) {
 }
 
 static void
-dispatch_log_error(AppWidgets *w, char *format, ...) {
+dispatch_log_error(CecupState *w, char *format, ...) {
     UIUpdateData *data;
     va_list variable_arguments;
     char message_buffer[8192];
@@ -65,7 +65,7 @@ dispatch_log_error(AppWidgets *w, char *format, ...) {
 }
 
 static void
-dispatch_tree(AppWidgets *w, int32 side, char *action, char *path, int64 size,
+dispatch_tree(CecupState *w, int32 side, char *action, char *path, int64 size,
               char *reason) {
     UIUpdateData *data;
 
@@ -82,7 +82,7 @@ dispatch_tree(AppWidgets *w, int32 side, char *action, char *path, int64 size,
 }
 
 static void
-find_equal_files(AppWidgets *w, char *src_base, char *dst_base,
+find_equal_files(CecupState *w, char *src_base, char *dst_base,
                  char *relative_path) {
     DIR *dir;
     struct dirent *entry;
@@ -134,7 +134,7 @@ find_equal_files(AppWidgets *w, char *src_base, char *dst_base,
 static gpointer
 bulk_sync_worker(gpointer user_data) {
     GPtrArray *tasks;
-    AppWidgets *w;
+    CecupState *w;
     UIUpdateData *ready;
 
     tasks = (GPtrArray *)user_data;
