@@ -310,7 +310,7 @@ update_ui_handler(gpointer user_data) {
     }
     case DATA_TYPE_TREE_ROW: {
         CecupRow *row;
-        char *sz_str;
+        char *size_string;
         char *bg_src;
         char *bg_dst;
         char *path_src;
@@ -318,7 +318,7 @@ update_ui_handler(gpointer user_data) {
         char *action_src;
         char *action_dst;
 
-        sz_str = bytes_pretty(data->size);
+        size_string = bytes_pretty(data->size);
         bg_src = "#FFFFFF";
         bg_dst = "#FFFFFF";
         path_src = data->filepath;
@@ -361,7 +361,7 @@ update_ui_handler(gpointer user_data) {
         row->dst_action = action_dst;
         row->src_path = g_strdup(path_src);
         row->dst_path = g_strdup(path_dst);
-        row->size_text = g_strdup(sz_str);
+        row->size_text = g_strdup(size_string);
         row->size_raw = data->size;
         row->src_color = bg_src;
         row->dst_color = bg_dst;
@@ -374,7 +374,7 @@ update_ui_handler(gpointer user_data) {
                 100, refresh_ui_timeout_callback, data->widgets);
         }
 
-        g_free(sz_str);
+        g_free(size_string);
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
