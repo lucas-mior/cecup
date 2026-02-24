@@ -5,6 +5,7 @@
 #include <poll.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <signal.h>
 #include "util.c"
 #include "cecup.h"
 
@@ -133,8 +134,11 @@ find_equal_files(AppWidgets *w, char *src_base, char *dst_base,
 static gpointer
 bulk_sync_worker(gpointer user_data) {
     GList *tasks;
+    AppWidgets *w;
+    UIUpdateData *ready;
 
     tasks = (GList *)user_data;
+    w = NULL;
 
     for (GList *l = tasks; l != NULL; l = l->next) {
         UIUpdateData *ud;
@@ -155,6 +159,20 @@ bulk_sync_worker(gpointer user_data) {
         UIUpdateData *remove_data;
 
         ud = (UIUpdateData *)l->data;
+        if (w == NULL) {
+            w = ud->widgets;
+        }
+
+        if (ud->widgets->cancel_sync) {
+            g_free(ud->filepath);
+            g_free(ud->action);
+            g_free(ud->src_base);
+            g_free(ud->dst_base);
+            g_free(ud->term_cmd);
+            g_free(ud->diff_tool);
+            g_free(ud);
+            continue;
+        }
 
         if (g_strcmp0(ud->action, "Delete") == 0) {
             char *full_dst;
@@ -228,10 +246,20 @@ bulk_sync_worker(gpointer user_data) {
         error_position = 0;
 
         while (1) {
-            poll_return = poll(poll_descriptors, 2, -1);
+            if (ud->widgets->cancel_sync) {
+                kill(child_pid, SIGTERM);
+                dispatch_log_error(ud->widgets, "Process cancelled by user.");
+                break;
+            }
+
+            poll_return = poll(poll_descriptors, 2, 200);
             if (poll_return < 0) {
                 dispatch_log_error(ud->widgets, "Error: poll failed");
                 break;
+            }
+
+            if (poll_return == 0) {
+                continue;
             }
 
             if (poll_descriptors[0].revents & POLLIN) {
@@ -304,18 +332,30 @@ bulk_sync_worker(gpointer user_data) {
             dispatch_log_error(ud->widgets, error_buffer);
         }
 
-        remove_data = g_new0(UIUpdateData, 1);
-        remove_data->widgets = ud->widgets;
-        remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
-        remove_data->filepath = g_strdup(ud->filepath);
-        g_idle_add(update_ui_handler, remove_data);
+        if (!ud->widgets->cancel_sync) {
+            remove_data = g_new0(UIUpdateData, 1);
+            remove_data->widgets = ud->widgets;
+            remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
+            remove_data->filepath = g_strdup(ud->filepath);
+            g_idle_add(update_ui_handler, remove_data);
+        }
 
         g_free(ud->filepath);
         g_free(ud->action);
         g_free(ud->src_base);
         g_free(ud->dst_base);
+        g_free(ud->term_cmd);
+        g_free(ud->diff_tool);
         g_free(ud);
     }
+
+    if (w != NULL) {
+        ready = g_new0(UIUpdateData, 1);
+        ready->widgets = w;
+        ready->type = DATA_TYPE_ENABLE_BUTTONS;
+        g_idle_add(update_ui_handler, ready);
+    }
+
     g_list_free(tasks);
     return NULL;
 }
@@ -458,10 +498,21 @@ sync_worker(gpointer user_data) {
     error_position = 0;
 
     while (1) {
-        poll_return = poll(poll_descriptors, 2, -1);
+        if (thread_data->widgets->cancel_sync) {
+            kill(child_pid, SIGTERM);
+            dispatch_log_error(thread_data->widgets,
+                               "Process cancelled by user.");
+            break;
+        }
+
+        poll_return = poll(poll_descriptors, 2, 200);
         if (poll_return < 0) {
             dispatch_log_error(thread_data->widgets, "Error: poll failed");
             break;
+        }
+
+        if (poll_return == 0) {
+            continue;
         }
 
         if (poll_descriptors[0].revents & POLLIN) {
@@ -601,7 +652,8 @@ sync_worker(gpointer user_data) {
     }
 
 clean_exit:
-    if (thread_data->is_preview && thread_data->show_equal) {
+    if (thread_data->is_preview && thread_data->show_equal
+        && !thread_data->widgets->cancel_sync) {
         find_equal_files(thread_data->widgets, thread_data->src_path,
                          thread_data->dst_path, "");
     }

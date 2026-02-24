@@ -26,6 +26,7 @@ typedef struct AppWidgets {
     GtkWidget *term_entry;
     GtkWidget *preview_button;
     GtkWidget *sync_button;
+    GtkWidget *stop_button;
     GtkWidget *exclude_button;
     GtkWidget *check_fs_toggle;
     
@@ -42,6 +43,7 @@ typedef struct AppWidgets {
     GtkTextBuffer *log_buffer;
     char *exclude_path;
     char *config_path;
+    volatile int32 cancel_sync;
 } AppWidgets;
 
 typedef struct ThreadData {

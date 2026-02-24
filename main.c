@@ -102,9 +102,14 @@ main(int32 argc, char *argv[]) {
     btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     w->preview_button = gtk_button_new_with_label("1. Preview");
     w->exclude_button = gtk_button_new_with_label("Edit Exclusions");
+    w->stop_button = gtk_button_new_with_label("Stop");
     w->sync_button = gtk_button_new_with_label("2. Sync");
+
+    gtk_widget_set_sensitive(w->stop_button, FALSE);
+
     gtk_box_pack_start(GTK_BOX(btn_hbox), w->exclude_button, FALSE, FALSE, 5);
     gtk_box_pack_end(GTK_BOX(btn_hbox), w->sync_button, FALSE, FALSE, 5);
+    gtk_box_pack_end(GTK_BOX(btn_hbox), w->stop_button, FALSE, FALSE, 5);
     gtk_box_pack_end(GTK_BOX(btn_hbox), w->preview_button, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), btn_hbox, FALSE, FALSE, 5);
 
@@ -308,6 +313,7 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(invert_btn, "clicked", G_CALLBACK(on_invert_clicked), w);
     g_signal_connect(w->preview_button, "clicked",
                      G_CALLBACK(on_preview_clicked), w);
+    g_signal_connect(w->stop_button, "clicked", G_CALLBACK(on_stop_clicked), w);
     g_signal_connect(w->sync_button, "clicked", G_CALLBACK(on_sync_clicked), w);
     g_signal_connect(w->exclude_button, "clicked",
                      G_CALLBACK(on_exclude_clicked), w);
@@ -430,6 +436,7 @@ update_ui_handler(gpointer user_data) {
     case DATA_TYPE_ENABLE_BUTTONS:
         gtk_widget_set_sensitive(data->widgets->sync_button, TRUE);
         gtk_widget_set_sensitive(data->widgets->preview_button, TRUE);
+        gtk_widget_set_sensitive(data->widgets->stop_button, FALSE);
         break;
     case DATA_TYPE_CLEAR_TREES:
         gtk_list_store_clear(data->widgets->store);

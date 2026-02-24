@@ -92,6 +92,10 @@ on_menu_apply(GtkWidget *m, gpointer data) {
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
 
     if (tasks != NULL) {
+        ud->widgets->cancel_sync = 0;
+        gtk_widget_set_sensitive(ud->widgets->preview_button, FALSE);
+        gtk_widget_set_sensitive(ud->widgets->sync_button, FALSE);
+        gtk_widget_set_sensitive(ud->widgets->stop_button, TRUE);
         g_thread_new("bulk_sync", bulk_sync_worker, tasks);
     }
 
@@ -191,6 +195,10 @@ on_menu_delete(GtkWidget *m, gpointer data) {
                                     "Permanently delete %d item(s)?", count);
 
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
+        ud->widgets->cancel_sync = 0;
+        gtk_widget_set_sensitive(ud->widgets->preview_button, FALSE);
+        gtk_widget_set_sensitive(ud->widgets->sync_button, FALSE);
+        gtk_widget_set_sensitive(ud->widgets->stop_button, TRUE);
         g_thread_new("bulk_delete", bulk_sync_worker, tasks);
     } else {
         free_task_list(tasks);
@@ -372,6 +380,16 @@ on_reset_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
+on_stop_clicked(GtkWidget *b, gpointer data) {
+    AppWidgets *w;
+
+    (void)b;
+    w = (AppWidgets *)data;
+    w->cancel_sync = 1;
+    return;
+}
+
+static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w;
     char *s;
@@ -387,8 +405,10 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
         return;
     }
 
+    w->cancel_sync = 0;
     gtk_widget_set_sensitive(w->preview_button, FALSE);
     gtk_widget_set_sensitive(w->sync_button, FALSE);
+    gtk_widget_set_sensitive(w->stop_button, TRUE);
 
     td = g_new0(ThreadData, 1);
     td->widgets = w;
@@ -539,8 +559,10 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         ThreadData *thread_data;
 
+        w->cancel_sync = 0;
         gtk_widget_set_sensitive(w->preview_button, FALSE);
         gtk_widget_set_sensitive(w->sync_button, FALSE);
+        gtk_widget_set_sensitive(w->stop_button, TRUE);
         thread_data = g_new0(ThreadData, 1);
         thread_data->widgets = w;
         thread_data->is_preview = 0;
