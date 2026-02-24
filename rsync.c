@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include <ctype.h>
+#include <sys/wait.h>
 #include "util.c"
 #include "cecup.h"
 
@@ -43,6 +44,7 @@ single_sync_worker(gpointer user_data) {
     char *path_dst;
     char *full_dst;
     UIUpdateData *remove_data;
+    int32 status;
 
     ud = (UIUpdateData *)user_data;
     path_src = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry));
@@ -63,12 +65,21 @@ single_sync_worker(gpointer user_data) {
     dispatch_log(ud->widgets, log_msg);
 
     rsync_pipe = popen(cmd, "r");
-    if (rsync_pipe) {
+    if (!rsync_pipe) {
+        dispatch_log(ud->widgets,
+                     "ERROR: Failed to open pipe for single sync.");
+    } else {
         while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
             buffer[strcspn(buffer, "\n")] = 0;
             dispatch_log(ud->widgets, buffer);
         }
-        pclose(rsync_pipe);
+        status = pclose(rsync_pipe);
+        if (status != 0) {
+            snprintf(log_msg, sizeof(log_msg),
+                     "ERROR: Command failed with exit code %d",
+                     WEXITSTATUS(status));
+            dispatch_log(ud->widgets, log_msg);
+        }
     }
 
     remove_data = g_new0(UIUpdateData, 1);
@@ -92,6 +103,8 @@ sync_worker(gpointer user_data) {
     char *exclude_flag;
     struct stat st_src;
     struct stat st_dst;
+    char log_msg[5120];
+    int32 status;
 
     thread_data = (ThreadData *)user_data;
 
@@ -134,10 +147,13 @@ sync_worker(gpointer user_data) {
         thread_data->src_path, thread_data->dst_path);
 
     g_free(exclude_flag);
-    dispatch_log(thread_data->widgets, cmd);
+    snprintf(log_msg, sizeof(log_msg), "+ %s", cmd);
+    dispatch_log(thread_data->widgets, log_msg);
 
     rsync_pipe = popen(cmd, "r");
-    if (rsync_pipe) {
+    if (!rsync_pipe) {
+        dispatch_log(thread_data->widgets, "ERROR: Failed to open rsync pipe.");
+    } else {
         while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
             buffer[strcspn(buffer, "\n")] = 0;
             if (thread_data->is_preview) {
@@ -202,7 +218,13 @@ sync_worker(gpointer user_data) {
                 dispatch_log(thread_data->widgets, buffer);
             }
         }
-        pclose(rsync_pipe);
+        status = pclose(rsync_pipe);
+        if (status != 0) {
+            snprintf(log_msg, sizeof(log_msg),
+                     "ERROR: rsync failed with exit code %d",
+                     WEXITSTATUS(status));
+            dispatch_log(thread_data->widgets, log_msg);
+        }
     }
 
     UIUpdateData *ready;
