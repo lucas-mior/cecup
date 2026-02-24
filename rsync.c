@@ -66,14 +66,16 @@ single_sync_worker(gpointer user_data) {
     snprintf(log_msg, sizeof(log_msg), "+ %s", cmd);
     dispatch_log(ud->widgets, log_msg);
 
-    rsync_pipe = popen(cmd, "r");
-    if (rsync_pipe) {
-        while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
-            buffer[strcspn(buffer, "\n")] = 0;
-            dispatch_log(ud->widgets, buffer);
+    do {
+        if ((rsync_pipe = popen(cmd, "r"))) {
+            while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
+                buffer[strcspn(buffer, "\n")] = 0;
+                dispatch_log(ud->widgets, buffer);
+            }
+            pclose(rsync_pipe);
+            break;
         }
-        pclose(rsync_pipe);
-    }
+    } while (0);
 
     dispatch_log(ud->widgets,
                  ">>> Single file operation finished. Updating list...");
