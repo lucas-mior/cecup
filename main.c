@@ -76,7 +76,7 @@ main(int32 argc, char *argv[]) {
             fprintf(fp, "#  'path/to/file'  excludes specific relative path\n");
             fprintf(fp,
                     "#  '# comment'     lines starting with # are ignored\n\n");
-            fprintf(fp, ".git/\n");
+            fprintf(fp, "*.ignore\n");
             fprintf(fp, "node_modules/\n");
             fprintf(fp, "*.o\n");
             fclose(fp);
