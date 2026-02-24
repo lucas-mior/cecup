@@ -160,12 +160,12 @@ sync_worker(gpointer user_data) {
             buffer[strcspn(buffer, "\n")] = 0;
             if (thread_data->is_preview) {
                 if (strncmp(buffer, "*deleting", 9) == 0) {
+                    char full_src_path[2048];
                     char full_dst_path[2048];
+                    struct stat st_src_check;
                     struct stat st_dst_file;
                     char *rel_path;
                     char *reason;
-                    char *ex_content;
-                    gsize ex_len;
                     int64 sz;
 
                     rel_path = buffer + 9;
@@ -173,26 +173,13 @@ sync_worker(gpointer user_data) {
                         rel_path++;
                     }
 
-                    reason = "Missing in source";
-                    if (g_file_get_contents(thread_data->widgets->exclude_path,
-                                            &ex_content, &ex_len, NULL)) {
-                        char *line;
-                        char *saveptr;
-                        char *ext;
+                    snprintf(full_src_path, sizeof(full_src_path), "%s/%s",
+                             thread_data->src_path, rel_path);
 
-                        ext = strrchr(rel_path, '.');
-                        line = strtok_r(ex_content, "\n", &saveptr);
-                        while (line) {
-                            if (line[0] != '#' && strlen(line) > 0) {
-                                if (strstr(rel_path, line)
-                                    || (ext && strstr(line, ext))) {
-                                    reason = "Excluded by pattern";
-                                    break;
-                                }
-                            }
-                            line = strtok_r(NULL, "\n", &saveptr);
-                        }
-                        g_free(ex_content);
+                    if (stat(full_src_path, &st_src_check) == 0) {
+                        reason = "Excluded by pattern";
+                    } else {
+                        reason = "Missing in source";
                     }
 
                     snprintf(full_dst_path, sizeof(full_dst_path), "%s/%s",
