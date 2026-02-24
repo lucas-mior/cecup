@@ -268,15 +268,16 @@ sync_worker(gpointer user_data) {
                     if (access(full_src_path, F_OK) == 0) {
                         dispatch_tree(thread_data->widgets, 1, "Delete",
                                       rel_path, sz,
-                                      "File is excluded by configuration");
+                                      "Excluded by configuration");
                     } else {
-                        dispatch_tree(
-                            thread_data->widgets, 1, "Delete", rel_path, sz,
-                            "File does not exist in source directory");
+                        dispatch_tree(thread_data->widgets, 1, "Delete",
+                                      rel_path, sz, "Does not exist in source");
                     }
                 } else if (strncmp(buffer, ">f", 2) == 0
                            || strncmp(buffer, ">c", 2) == 0
-                           || strncmp(buffer, "hf", 2) == 0) {
+                           || strncmp(buffer, "hf", 2) == 0
+                           || strncmp(buffer, "cd", 2) == 0
+                           || strncmp(buffer, ".d", 2) == 0) {
                     char *space;
                     space = strchr(buffer, ' ');
                     if (space) {
@@ -288,14 +289,21 @@ sync_worker(gpointer user_data) {
 
                         if (strncmp(buffer, "hf", 2) == 0) {
                             act = "Hardlink";
-                            reason = "File is a hardlink to another file";
+                            reason = "Hardlink to another file";
+                        } else if (strncmp(buffer, "cd", 2) == 0) {
+                            act = "New";
+                            reason = "New directory in source";
+                        } else if (strncmp(buffer, ".d", 2) == 0) {
+                            act = "Update";
+                            reason = "Directory attributes changed";
                         } else if (strncmp(buffer, ">f+++++", 7) == 0) {
                             act = "New";
-                            reason = "New file created in source directory";
+                            reason = "New file in source";
                         } else {
                             act = "Update";
-                            reason = "File changed in source directory";
+                            reason = "File changed in source";
                         }
+
                         snprintf(full_path, sizeof(full_path), "%s/%s",
                                  thread_data->src_path, space + 1);
                         sz = (stat(full_path, &st_file) == 0) ? st_file.st_size
