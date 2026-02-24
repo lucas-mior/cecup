@@ -163,19 +163,45 @@ sync_worker(gpointer user_data) {
                     char full_dst_path[2048];
                     struct stat st_dst_file;
                     char *rel_path;
+                    char *reason;
+                    char *ex_content;
+                    gsize ex_len;
                     int64 sz;
 
                     rel_path = buffer + 9;
                     while (isspace((unsigned char)*rel_path)) {
                         rel_path++;
                     }
+
+                    reason = "Missing in source";
+                    if (g_file_get_contents(thread_data->widgets->exclude_path,
+                                            &ex_content, &ex_len, NULL)) {
+                        char *line;
+                        char *saveptr;
+                        char *ext;
+
+                        ext = strrchr(rel_path, '.');
+                        line = strtok_r(ex_content, "\n", &saveptr);
+                        while (line) {
+                            if (line[0] != '#' && strlen(line) > 0) {
+                                if (strstr(rel_path, line)
+                                    || (ext && strstr(line, ext))) {
+                                    reason = "Excluded by pattern";
+                                    break;
+                                }
+                            }
+                            line = strtok_r(NULL, "\n", &saveptr);
+                        }
+                        g_free(ex_content);
+                    }
+
                     snprintf(full_dst_path, sizeof(full_dst_path), "%s/%s",
                              thread_data->dst_path, rel_path);
                     sz = (stat(full_dst_path, &st_dst_file) == 0)
                              ? st_dst_file.st_size
                              : 0;
                     dispatch_tree(thread_data->widgets, 1, "Delete", rel_path,
-                                  sz, "Missing in source");
+                                  sz, reason);
                 } else if (strncmp(buffer, ">f", 2) == 0
                            || strncmp(buffer, ">c", 2) == 0
                            || strncmp(buffer, "hf", 2) == 0
