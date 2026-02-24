@@ -88,8 +88,8 @@ find_equal_files(AppWidgets *w, char *src_base, char *dst_base,
     while ((entry = readdir(dir))) {
         char *name;
         char *sub_rel;
-        char *s_path;
-        char *d_path;
+        char *src_path;
+        char *dst_path;
         struct stat st_s;
         struct stat st_d;
 
@@ -99,10 +99,10 @@ find_equal_files(AppWidgets *w, char *src_base, char *dst_base,
         }
 
         sub_rel = g_build_filename(relative_path, name, NULL);
-        s_path = g_build_filename(src_base, sub_rel, NULL);
-        d_path = g_build_filename(dst_base, sub_rel, NULL);
+        src_path = g_build_filename(src_base, sub_rel, NULL);
+        dst_path = g_build_filename(dst_base, sub_rel, NULL);
 
-        if (stat(s_path, &st_s) == 0 && stat(d_path, &st_d) == 0) {
+        if (stat(src_path, &st_s) == 0 && stat(dst_path, &st_d) == 0) {
             if (S_ISDIR(st_s.st_mode)) {
                 find_equal_files(w, src_base, dst_base, sub_rel);
             } else if (S_ISREG(st_s.st_mode)) {
@@ -114,8 +114,8 @@ find_equal_files(AppWidgets *w, char *src_base, char *dst_base,
             }
         }
         g_free(sub_rel);
-        g_free(s_path);
-        g_free(d_path);
+        g_free(src_path);
+        g_free(dst_path);
     }
     closedir(dir);
     g_free(full_src);
