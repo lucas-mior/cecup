@@ -82,32 +82,47 @@ static void
 find_equal_files(char *src_base, char *dst_base, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
-    char *full_src;
+    char path_src[MAX_PATH_LENGTH];
+    char path_dst[MAX_PATH_LENGTH];
+    int32 rel_len;
+    char *name;
 
-    full_src = g_build_filename(src_base, relative_path, NULL);
-    if (!(dir = opendir(full_src))) {
-        g_free(full_src);
+    snprintf(path_src, sizeof(path_src), "%s/%s", src_base, relative_path);
+    if (!(dir = opendir(path_src))) {
         return;
     }
 
+    rel_len = (int32)strlen(relative_path);
+
     while ((entry = readdir(dir))) {
-        char *name;
-        char *sub_rel;
-        char *src_path;
-        char *dst_path;
         struct stat st_s;
         struct stat st_d;
+        int32 name_len;
 
         name = entry->d_name;
-        if (g_strcmp0(name, ".") == 0 || g_strcmp0(name, "..") == 0) {
+        if (name[0] == '.'
+            && (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'))) {
             continue;
         }
 
-        sub_rel = g_build_filename(relative_path, name, NULL);
-        src_path = g_build_filename(src_base, sub_rel, NULL);
-        dst_path = g_build_filename(dst_base, sub_rel, NULL);
+        name_len = (int32)strlen(name);
 
-        if (stat(src_path, &st_s) == 0 && stat(dst_path, &st_d) == 0) {
+        if (rel_len + name_len + 2 > MAX_PATH_LENGTH) {
+            continue;
+        }
+
+        SNPRINTF(path_src, "%s/%s/%s", src_base, relative_path, name);
+        SNPRINTF(path_dst, "%s/%s/%s", dst_base, relative_path, name);
+
+        if (stat(path_src, &st_s) == 0 && stat(path_dst, &st_d) == 0) {
+            char sub_rel[MAX_PATH_LENGTH];
+            if (rel_len > 0) {
+                snprintf(sub_rel, sizeof(sub_rel), "%s/%s", relative_path,
+                         name);
+            } else {
+                snprintf(sub_rel, sizeof(sub_rel), "%s", name);
+            }
+
             if (S_ISDIR(st_s.st_mode)) {
                 find_equal_files(src_base, dst_base, sub_rel);
             } else if (S_ISREG(st_s.st_mode)) {
@@ -118,12 +133,9 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
                 }
             }
         }
-        g_free(sub_rel);
-        g_free(src_path);
-        g_free(dst_path);
     }
+
     closedir(dir);
-    g_free(full_src);
     return;
 }
 
