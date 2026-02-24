@@ -276,6 +276,9 @@ update_ui_handler(gpointer user_data) {
         } else if (g_strcmp0(data->action, "Update") == 0) {
             bg_src = "#CCE5FF";
             bg_dst = "#CCE5FF";
+        } else if (g_strcmp0(data->action, "Hardlink") == 0) {
+            bg_src = "#E2D1F9";
+            bg_dst = "#E2D1F9";
         } else if (g_strcmp0(data->action, "Delete") == 0) {
             if (data->reason && g_strrstr(data->reason, "excluded")) {
                 bg_src = "#FFF3CD";

@@ -187,7 +187,8 @@ sync_worker(gpointer user_data) {
                             "File does not exist in source directory");
                     }
                 } else if (strncmp(buffer, ">f", 2) == 0
-                           || strncmp(buffer, ">c", 2) == 0) {
+                           || strncmp(buffer, ">c", 2) == 0
+                           || strncmp(buffer, "hf", 2) == 0) {
                     char *space;
                     space = strchr(buffer, ' ');
                     if (space) {
@@ -197,7 +198,10 @@ sync_worker(gpointer user_data) {
                         int64 sz;
                         char *reason;
 
-                        if (strncmp(buffer, ">f+++++", 7) == 0) {
+                        if (strncmp(buffer, "hf", 2) == 0) {
+                            act = "Hardlink";
+                            reason = "File is a hardlink to another file";
+                        } else if (strncmp(buffer, ">f+++++", 7) == 0) {
                             act = "New";
                             reason = "New file created in source directory";
                         } else {
