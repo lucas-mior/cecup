@@ -395,7 +395,7 @@ update_ui_handler(gpointer user_data) {
 
         if (cecup_state.refresh_id == 0) {
             cecup_state.refresh_id
-                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
+                = g_timeout_add(1000, refresh_ui_timeout_callback, NULL);
         }
 
         g_free(size_string);
@@ -414,7 +414,7 @@ update_ui_handler(gpointer user_data) {
 
         if (cecup_state.refresh_id == 0) {
             cecup_state.refresh_id
-                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
+                = g_timeout_add(1000, refresh_ui_timeout_callback, NULL);
         }
         break;
     }
