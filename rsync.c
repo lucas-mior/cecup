@@ -167,18 +167,44 @@ bulk_sync_worker(gpointer user_data) {
 
         dispatch_log(ud->widgets, cmd);
 
-        pipe(pipe_output);
-        pipe(pipe_error);
+        if (pipe(pipe_output) == -1) {
+            dispatch_log_error(ud->widgets,
+                               "Error: pipe creation for stdout failed");
+            continue;
+        }
+
+        if (pipe(pipe_error) == -1) {
+            dispatch_log_error(ud->widgets,
+                               "Error: pipe creation for stderr failed");
+            XCLOSE(&pipe_output[0]);
+            XCLOSE(&pipe_output[1]);
+            continue;
+        }
+
         child_pid = fork();
+
+        if (child_pid < 0) {
+            dispatch_log_error(ud->widgets, "Error: fork failed");
+            XCLOSE(&pipe_output[0]);
+            XCLOSE(&pipe_output[1]);
+            XCLOSE(&pipe_error[0]);
+            XCLOSE(&pipe_error[1]);
+            continue;
+        }
 
         if (child_pid == 0) {
             XCLOSE(&pipe_output[0]);
             XCLOSE(&pipe_error[0]);
-            dup2(pipe_output[1], STDOUT_FILENO);
-            dup2(pipe_error[1], STDERR_FILENO);
+            if (dup2(pipe_output[1], STDOUT_FILENO) == -1) {
+                exit(1);
+            }
+            if (dup2(pipe_error[1], STDERR_FILENO) == -1) {
+                exit(1);
+            }
             XCLOSE(&pipe_output[1]);
             XCLOSE(&pipe_error[1]);
             execl("/bin/sh", "sh", "-c", cmd, NULL);
+            fprintf(stderr, "Error: execl failed\n");
             exit(1);
         }
 
@@ -196,13 +222,18 @@ bulk_sync_worker(gpointer user_data) {
         while (1) {
             poll_return = poll(poll_descriptors, 2, -1);
             if (poll_return < 0) {
+                dispatch_log_error(ud->widgets, "Error: poll failed");
                 break;
             }
 
             if (poll_descriptors[0].revents & POLLIN) {
                 output_bytes
                     = read(pipe_output[0], temp_output, sizeof(temp_output));
-                if (output_bytes > 0) {
+                if (output_bytes < 0) {
+                    dispatch_log_error(ud->widgets,
+                                       "Error: read from stdout failed");
+                    poll_descriptors[0].fd = -1;
+                } else if (output_bytes > 0) {
                     for (ssize_t k = 0; k < output_bytes; k += 1) {
                         if (temp_output[k] == '\n'
                             || output_position == sizeof(output_buffer) - 1) {
@@ -224,7 +255,11 @@ bulk_sync_worker(gpointer user_data) {
             if (poll_descriptors[1].revents & POLLIN) {
                 error_bytes
                     = read(pipe_error[0], temp_error, sizeof(temp_error));
-                if (error_bytes > 0) {
+                if (error_bytes < 0) {
+                    dispatch_log_error(ud->widgets,
+                                       "Error: read from stderr failed");
+                    poll_descriptors[1].fd = -1;
+                } else if (error_bytes > 0) {
                     for (ssize_t k = 0; k < error_bytes; k += 1) {
                         if (temp_error[k] == '\n'
                             || error_position == sizeof(error_buffer) - 1) {
@@ -362,18 +397,44 @@ sync_worker(gpointer user_data) {
 
     dispatch_log(thread_data->widgets, log_cmd);
 
-    pipe(pipe_output);
-    pipe(pipe_error);
+    if (pipe(pipe_output) == -1) {
+        dispatch_log_error(thread_data->widgets,
+                           "Error: pipe creation for stdout failed");
+        goto clean_exit;
+    }
+
+    if (pipe(pipe_error) == -1) {
+        dispatch_log_error(thread_data->widgets,
+                           "Error: pipe creation for stderr failed");
+        XCLOSE(&pipe_output[0]);
+        XCLOSE(&pipe_output[1]);
+        goto clean_exit;
+    }
+
     child_pid = fork();
+
+    if (child_pid < 0) {
+        dispatch_log_error(thread_data->widgets, "Error: fork failed");
+        XCLOSE(&pipe_output[0]);
+        XCLOSE(&pipe_output[1]);
+        XCLOSE(&pipe_error[0]);
+        XCLOSE(&pipe_error[1]);
+        goto clean_exit;
+    }
 
     if (child_pid == 0) {
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_error[0]);
-        dup2(pipe_output[1], STDOUT_FILENO);
-        dup2(pipe_error[1], STDERR_FILENO);
+        if (dup2(pipe_output[1], STDOUT_FILENO) == -1) {
+            exit(1);
+        }
+        if (dup2(pipe_error[1], STDERR_FILENO) == -1) {
+            exit(1);
+        }
         XCLOSE(&pipe_output[1]);
         XCLOSE(&pipe_error[1]);
         execl("/bin/sh", "sh", "-c", cmd, NULL);
+        fprintf(stderr, "Error: execl failed\n");
         exit(1);
     }
 
@@ -391,13 +452,18 @@ sync_worker(gpointer user_data) {
     while (1) {
         poll_return = poll(poll_descriptors, 2, -1);
         if (poll_return < 0) {
+            dispatch_log_error(thread_data->widgets, "Error: poll failed");
             break;
         }
 
         if (poll_descriptors[0].revents & POLLIN) {
             output_bytes
                 = read(pipe_output[0], temp_output, sizeof(temp_output));
-            if (output_bytes > 0) {
+            if (output_bytes < 0) {
+                dispatch_log_error(thread_data->widgets,
+                                   "Error: read from stdout failed");
+                poll_descriptors[0].fd = -1;
+            } else if (output_bytes > 0) {
                 for (ssize_t k = 0; k < output_bytes; k += 1) {
                     if (temp_output[k] == '\n'
                         || output_position == sizeof(output_buffer) - 1) {
@@ -482,7 +548,11 @@ sync_worker(gpointer user_data) {
 
         if (poll_descriptors[1].revents & POLLIN) {
             error_bytes = read(pipe_error[0], temp_error, sizeof(temp_error));
-            if (error_bytes > 0) {
+            if (error_bytes < 0) {
+                dispatch_log_error(thread_data->widgets,
+                                   "Error: read from stderr failed");
+                poll_descriptors[1].fd = -1;
+            } else if (error_bytes > 0) {
                 for (ssize_t k = 0; k < error_bytes; k += 1) {
                     if (temp_error[k] == '\n'
                         || error_position == sizeof(error_buffer) - 1) {
@@ -522,6 +592,7 @@ sync_worker(gpointer user_data) {
         dispatch_log_error(thread_data->widgets, error_buffer);
     }
 
+clean_exit:
     if (thread_data->is_preview && thread_data->show_equal) {
         find_equal_files(thread_data->widgets, thread_data->src_path,
                          thread_data->dst_path, "");
