@@ -202,6 +202,7 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(l_vbox), l_entry_hbox, FALSE, FALSE, 0);
     l_scroll = gtk_scrolled_window_new(NULL, NULL);
     l_tree = gtk_tree_view_new_with_model(sort_model);
+    w->l_tree = l_tree;
     g_object_set_data(G_OBJECT(l_tree), "side", GINT_TO_POINTER(0));
     setup_tree_columns(l_tree, w, COL_SRC_ACTION, COL_SRC_PATH, COL_SRC_COLOR);
     gtk_container_add(GTK_CONTAINER(l_scroll), l_tree);
@@ -218,6 +219,7 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(r_vbox), r_entry_hbox, FALSE, FALSE, 0);
     r_scroll = gtk_scrolled_window_new(NULL, NULL);
     r_tree = gtk_tree_view_new_with_model(sort_model);
+    w->r_tree = r_tree;
     g_object_set_data(G_OBJECT(r_tree), "side", GINT_TO_POINTER(1));
     setup_tree_columns(r_tree, w, COL_DST_ACTION, COL_DST_PATH, COL_DST_COLOR);
     gtk_container_add(GTK_CONTAINER(r_scroll), r_tree);
@@ -434,11 +436,17 @@ update_ui_handler(gpointer user_data) {
         break;
     }
     case DATA_TYPE_ENABLE_BUTTONS:
+        gtk_tree_view_set_model(GTK_TREE_VIEW(data->widgets->l_tree),
+                                GTK_TREE_MODEL(data->widgets->sort_model));
+        gtk_tree_view_set_model(GTK_TREE_VIEW(data->widgets->r_tree),
+                                GTK_TREE_MODEL(data->widgets->sort_model));
         gtk_widget_set_sensitive(data->widgets->sync_button, TRUE);
         gtk_widget_set_sensitive(data->widgets->preview_button, TRUE);
         gtk_widget_set_sensitive(data->widgets->stop_button, FALSE);
         break;
     case DATA_TYPE_CLEAR_TREES:
+        gtk_tree_view_set_model(GTK_TREE_VIEW(data->widgets->l_tree), NULL);
+        gtk_tree_view_set_model(GTK_TREE_VIEW(data->widgets->r_tree), NULL);
         gtk_list_store_clear(data->widgets->store);
         break;
     default:

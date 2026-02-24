@@ -44,6 +44,8 @@ typedef struct AppWidgets {
     char *exclude_path;
     char *config_path;
     volatile int32 cancel_sync;
+    GtkWidget *l_tree;
+    GtkWidget *r_tree;
 } AppWidgets;
 
 typedef struct ThreadData {
