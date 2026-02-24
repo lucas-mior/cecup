@@ -349,7 +349,10 @@ update_ui_handler(gpointer user_data) {
             bg_src = "#E2D1F9";
             bg_dst = "#E2D1F9";
         } else if (g_strcmp0(data->action, "Delete") == 0) {
-            if (data->reason && g_strrstr(data->reason, "excluded")) {
+            char *reason_lower;
+
+            reason_lower = g_utf8_strdown(data->reason ? data->reason : "", -1);
+            if (g_strrstr(reason_lower, "exclude")) {
                 bg_src = "#FFF3CD";
                 bg_dst = "#FFF3CD";
                 action_src = "Ignore";
@@ -361,6 +364,7 @@ update_ui_handler(gpointer user_data) {
                 action_dst = "Delete";
                 path_src = "-";
             }
+            g_free(reason_lower);
         }
         gtk_list_store_append(store, &iter);
         gtk_list_store_set(store, &iter, COL_SRC_ACTION, action_src,
