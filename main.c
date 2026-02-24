@@ -8,8 +8,8 @@
 #include "util.c"
 #include "hooks.c"
 
-static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path,
-                               int32 col_color);
+static void setup_tree_columns(GtkWidget *tree, AppWidgets *w, int32 col_act,
+                               int32 col_path, int32 col_color);
 
 int32
 main(int32 argc, char *argv[]) {
@@ -112,7 +112,7 @@ main(int32 argc, char *argv[]) {
     l_scroll = gtk_scrolled_window_new(NULL, NULL);
     l_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->store));
     g_object_set_data(G_OBJECT(l_tree), "side", GINT_TO_POINTER(0));
-    setup_tree_columns(l_tree, COL_SRC_ACTION, COL_SRC_PATH, COL_SRC_COLOR);
+    setup_tree_columns(l_tree, w, COL_SRC_ACTION, COL_SRC_PATH, COL_SRC_COLOR);
     gtk_container_add(GTK_CONTAINER(l_scroll), l_tree);
     gtk_box_pack_start(GTK_BOX(l_vbox), l_scroll, TRUE, TRUE, 0);
     gtk_paned_pack1(GTK_PANED(paned), l_vbox, TRUE, FALSE);
@@ -132,7 +132,7 @@ main(int32 argc, char *argv[]) {
     r_scroll = gtk_scrolled_window_new(NULL, NULL);
     r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->store));
     g_object_set_data(G_OBJECT(r_tree), "side", GINT_TO_POINTER(1));
-    setup_tree_columns(r_tree, COL_DST_ACTION, COL_DST_PATH, COL_DST_COLOR);
+    setup_tree_columns(r_tree, w, COL_DST_ACTION, COL_DST_PATH, COL_DST_COLOR);
     gtk_container_add(GTK_CONTAINER(r_scroll), r_tree);
     gtk_box_pack_start(GTK_BOX(r_vbox), r_scroll, TRUE, TRUE, 0);
     gtk_paned_pack2(GTK_PANED(paned), r_vbox, TRUE, FALSE);
@@ -303,8 +303,8 @@ update_ui_handler(gpointer user_data) {
 }
 
 static void
-setup_tree_columns(GtkWidget *gtk_tree, int32 col_act, int32 col_path,
-                   int32 col_color) {
+setup_tree_columns(GtkWidget *gtk_tree, AppWidgets *w, int32 col_act,
+                   int32 col_path, int32 col_color) {
     GtkCellRenderer *gtk_cell_renderer;
     GtkTreeViewColumn *gtk_tree_view_column;
 
@@ -331,7 +331,6 @@ setup_tree_columns(GtkWidget *gtk_tree, int32 col_act, int32 col_path,
     g_signal_connect(gtk_tree, "query-tooltip", G_CALLBACK(on_tree_tooltip),
                      NULL);
     g_signal_connect(gtk_tree, "button-press-event",
-                     G_CALLBACK(on_tree_button_press),
-                     g_object_get_data(G_OBJECT(gtk_tree), "app_widgets"));
+                     G_CALLBACK(on_tree_button_press), w);
     return;
 }

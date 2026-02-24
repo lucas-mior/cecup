@@ -361,6 +361,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
 
     w = (AppWidgets *)data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
+
     gtk_tree_view_convert_widget_to_bin_window_coords(
         GTK_TREE_VIEW(widget), (gint)event->x, (gint)event->y, &bin_x, &bin_y);
 
