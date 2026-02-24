@@ -174,6 +174,8 @@ sync_worker(gpointer user_data) {
              thread_data->src_path, thread_data->dst_path);
     g_free(ex);
 
+    dispatch_log(thread_data->widgets, cmd);
+
     if ((pipe = popen(cmd, "r")) != NULL) {
         while (fgets(buffer, sizeof(buffer), pipe)) {
             buffer[strcspn(buffer, "\n")] = 0;
