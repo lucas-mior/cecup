@@ -144,38 +144,40 @@ bulk_sync_worker(gpointer user_data) {
 
 static gpointer
 sync_worker(gpointer user_data) {
-    ThreadData *td;
+    ThreadData *thread_data;
     char cmd[4096];
     char buffer[2048];
     FILE *pipe;
     char *ex;
 
-    td = (ThreadData *)user_data;
+    thread_data = (ThreadData *)user_data;
 
-    if (td->is_preview) {
+    if (thread_data->is_preview) {
         UIUpdateData *clear;
 
         clear = g_new0(UIUpdateData, 1);
-        clear->widgets = td->widgets;
+        clear->widgets = thread_data->widgets;
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
     }
 
-    ex = (access(td->widgets->exclude_path, F_OK) != -1)
-             ? g_strdup_printf("--exclude-from='%s'", td->widgets->exclude_path)
+    ex = (access(thread_data->widgets->exclude_path, F_OK) != -1)
+             ? g_strdup_printf("--exclude-from='%s'",
+                               thread_data->widgets->exclude_path)
              : g_strdup("");
 
     snprintf(cmd, sizeof(cmd),
              "rsync -av --hard-links --itemize-changes --delete "
              "--delete-excluded %s %s "
              "'%s/' '%s/' 2>&1",
-             td->is_preview ? "--dry-run" : "", ex, td->src_path, td->dst_path);
+             thread_data->is_preview ? "--dry-run" : "", ex,
+             thread_data->src_path, thread_data->dst_path);
     g_free(ex);
 
     if ((pipe = popen(cmd, "r")) != NULL) {
         while (fgets(buffer, sizeof(buffer), pipe)) {
             buffer[strcspn(buffer, "\n")] = 0;
-            if (td->is_preview) {
+            if (thread_data->is_preview) {
                 if (strncmp(buffer, "*deleting", 9) == 0) {
                     char *relative_path;
                     char *full_src;
@@ -190,17 +192,17 @@ sync_worker(gpointer user_data) {
                         relative_path++;
                     }
 
-                    full_src
-                        = g_build_filename(td->src_path, relative_path, NULL);
-                    full_dst
-                        = g_build_filename(td->dst_path, relative_path, NULL);
+                    full_src = g_build_filename(thread_data->src_path,
+                                                relative_path, NULL);
+                    full_dst = g_build_filename(thread_data->dst_path,
+                                                relative_path, NULL);
                     sz = (stat(full_dst, &st_d) == 0) ? st_d.st_size : 0;
                     reason = (stat(full_src, &st_s) == 0)
                                  ? "Excluded by pattern"
                                  : "Missing in source";
 
-                    dispatch_tree(td->widgets, 1, "Delete", relative_path, sz,
-                                  reason);
+                    dispatch_tree(thread_data->widgets, 1, "Delete",
+                                  relative_path, sz, reason);
                     g_free(full_src);
                     g_free(full_dst);
                 } else if (strchr(buffer, ' ')
@@ -222,30 +224,32 @@ sync_worker(gpointer user_data) {
                         act = "New";
                     }
 
-                    full_src
-                        = g_build_filename(td->src_path, relative_path, NULL);
+                    full_src = g_build_filename(thread_data->src_path,
+                                                relative_path, NULL);
                     sz = (stat(full_src, &st) == 0) ? st.st_size : 0;
-                    dispatch_tree(td->widgets, 0, act, relative_path, sz, act);
+                    dispatch_tree(thread_data->widgets, 0, act, relative_path,
+                                  sz, act);
                     g_free(full_src);
                 }
             } else {
-                dispatch_log(td->widgets, buffer);
+                dispatch_log(thread_data->widgets, buffer);
             }
         }
         pclose(pipe);
     }
 
-    if (td->is_preview && td->show_equal) {
-        find_equal_files(td->widgets, td->src_path, td->dst_path, "");
+    if (thread_data->is_preview && thread_data->show_equal) {
+        find_equal_files(thread_data->widgets, thread_data->src_path,
+                         thread_data->dst_path, "");
     }
 
     UIUpdateData *ready;
 
     ready = g_new0(UIUpdateData, 1);
-    ready->widgets = td->widgets;
+    ready->widgets = thread_data->widgets;
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, ready);
-    g_free(td);
+    g_free(thread_data);
     return NULL;
 }
 
