@@ -10,11 +10,10 @@
 #include "cecup.h"
 
 static void
-dispatch_log(CecupState *w, char *msg) {
+dispatch_log(char *msg) {
     UIUpdateData *data;
 
     data = g_new0(UIUpdateData, 1);
-    data->widgets = w;
     data->type = DATA_TYPE_LOG;
     data->message = g_strdup(msg);
     g_idle_add(update_ui_handler, data);
@@ -29,17 +28,17 @@ log_error_handler(gpointer user_data) {
     GtkTextTag *tag;
 
     data = (UIUpdateData *)user_data;
-    table = gtk_text_buffer_get_tag_table(data->widgets->log_buffer);
+    table = gtk_text_buffer_get_tag_table(cecup_state.log_buffer);
     tag = gtk_text_tag_table_lookup(table, "err_red");
     if (tag == NULL) {
-        gtk_text_buffer_create_tag(data->widgets->log_buffer, "err_red",
+        gtk_text_buffer_create_tag(cecup_state.log_buffer, "err_red",
                                    "foreground", "red", NULL);
     }
 
-    gtk_text_buffer_get_end_iter(data->widgets->log_buffer, &end);
+    gtk_text_buffer_get_end_iter(cecup_state.log_buffer, &end);
     gtk_text_buffer_insert_with_tags_by_name(
-        data->widgets->log_buffer, &end, data->message, -1, "err_red", NULL);
-    gtk_text_buffer_insert(data->widgets->log_buffer, &end, "\n", -1);
+        cecup_state.log_buffer, &end, data->message, -1, "err_red", NULL);
+    gtk_text_buffer_insert(cecup_state.log_buffer, &end, "\n", -1);
 
     g_free(data->message);
     g_free(data);
@@ -47,7 +46,7 @@ log_error_handler(gpointer user_data) {
 }
 
 static void
-dispatch_log_error(CecupState *w, char *format, ...) {
+dispatch_log_error(char *format, ...) {
     UIUpdateData *data;
     va_list variable_arguments;
     char message_buffer[8192];
@@ -58,19 +57,16 @@ dispatch_log_error(CecupState *w, char *format, ...) {
     va_end(variable_arguments);
 
     data = g_new0(UIUpdateData, 1);
-    data->widgets = w;
     data->message = g_strdup(message_buffer);
     g_idle_add(log_error_handler, data);
     return;
 }
 
 static void
-dispatch_tree(CecupState *w, int32 side, char *action, char *path, int64 size,
-              char *reason) {
+dispatch_tree(int32 side, char *action, char *path, int64 size, char *reason) {
     UIUpdateData *data;
 
     data = g_new0(UIUpdateData, 1);
-    data->widgets = w;
     data->type = DATA_TYPE_TREE_ROW;
     data->side = side;
     data->action = action;
@@ -82,8 +78,7 @@ dispatch_tree(CecupState *w, int32 side, char *action, char *path, int64 size,
 }
 
 static void
-find_equal_files(CecupState *w, char *src_base, char *dst_base,
-                 char *relative_path) {
+find_equal_files(char *src_base, char *dst_base, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
     char *full_src;
@@ -113,11 +108,11 @@ find_equal_files(CecupState *w, char *src_base, char *dst_base,
 
         if (stat(src_path, &st_s) == 0 && stat(dst_path, &st_d) == 0) {
             if (S_ISDIR(st_s.st_mode)) {
-                find_equal_files(w, src_base, dst_base, sub_rel);
+                find_equal_files(src_base, dst_base, sub_rel);
             } else if (S_ISREG(st_s.st_mode)) {
                 if (st_s.st_size == st_d.st_size
                     && st_s.st_mtime == st_d.st_mtime) {
-                    dispatch_tree(w, 0, "Equal", sub_rel, st_s.st_size,
+                    dispatch_tree(0, "Equal", sub_rel, st_s.st_size,
                                   "Identical");
                 }
             }
@@ -134,11 +129,9 @@ find_equal_files(CecupState *w, char *src_base, char *dst_base,
 static gpointer
 bulk_sync_worker(gpointer user_data) {
     GPtrArray *tasks;
-    CecupState *w;
     UIUpdateData *ready;
 
     tasks = (GPtrArray *)user_data;
-    w = NULL;
 
     for (uint32 i = 0; i < tasks->len; i += 1) {
         UIUpdateData *ud;
@@ -159,11 +152,8 @@ bulk_sync_worker(gpointer user_data) {
         UIUpdateData *remove_data;
 
         ud = (UIUpdateData *)g_ptr_array_index(tasks, i);
-        if (w == NULL) {
-            w = ud->widgets;
-        }
 
-        if (ud->widgets->cancel_sync) {
+        if (cecup_state.cancel_sync) {
             g_free(ud->filepath);
             g_free(ud->src_base);
             g_free(ud->dst_base);
@@ -190,17 +180,15 @@ bulk_sync_worker(gpointer user_data) {
                      ud->filepath, ud->filepath, ud->src_base, ud->dst_base);
         }
 
-        dispatch_log(ud->widgets, cmd);
+        dispatch_log(cmd);
 
         if (pipe(pipe_output) == -1) {
-            dispatch_log_error(ud->widgets,
-                               "Error: pipe creation for stdout failed");
+            dispatch_log_error("Error: pipe creation for stdout failed");
             continue;
         }
 
         if (pipe(pipe_error) == -1) {
-            dispatch_log_error(ud->widgets,
-                               "Error: pipe creation for stderr failed");
+            dispatch_log_error("Error: pipe creation for stderr failed");
             XCLOSE(&pipe_output[0]);
             XCLOSE(&pipe_output[1]);
             continue;
@@ -209,7 +197,7 @@ bulk_sync_worker(gpointer user_data) {
         child_pid = fork();
 
         if (child_pid < 0) {
-            dispatch_log_error(ud->widgets, "Error: fork failed");
+            dispatch_log_error("Error: fork failed");
             XCLOSE(&pipe_output[0]);
             XCLOSE(&pipe_output[1]);
             XCLOSE(&pipe_error[0]);
@@ -245,15 +233,15 @@ bulk_sync_worker(gpointer user_data) {
         error_position = 0;
 
         while (1) {
-            if (ud->widgets->cancel_sync) {
+            if (cecup_state.cancel_sync) {
                 kill(child_pid, SIGTERM);
-                dispatch_log_error(ud->widgets, "Process cancelled by user.");
+                dispatch_log_error("Process cancelled by user.");
                 break;
             }
 
             poll_return = poll(poll_descriptors, 2, 200);
             if (poll_return < 0) {
-                dispatch_log_error(ud->widgets, "Error: poll failed");
+                dispatch_log_error("Error: poll failed");
                 break;
             }
 
@@ -265,15 +253,14 @@ bulk_sync_worker(gpointer user_data) {
                 output_bytes
                     = read(pipe_output[0], temp_output, sizeof(temp_output));
                 if (output_bytes < 0) {
-                    dispatch_log_error(ud->widgets,
-                                       "Error: read from stdout failed");
+                    dispatch_log_error("Error: read from stdout failed");
                     poll_descriptors[0].fd = -1;
                 } else if (output_bytes > 0) {
                     for (ssize_t k = 0; k < output_bytes; k += 1) {
                         if (temp_output[k] == '\n'
                             || output_position == sizeof(output_buffer) - 1) {
                             output_buffer[output_position] = '\0';
-                            dispatch_log(ud->widgets, output_buffer);
+                            dispatch_log(output_buffer);
                             output_position = 0;
                         } else {
                             output_buffer[output_position] = temp_output[k];
@@ -291,15 +278,14 @@ bulk_sync_worker(gpointer user_data) {
                 error_bytes
                     = read(pipe_error[0], temp_error, sizeof(temp_error));
                 if (error_bytes < 0) {
-                    dispatch_log_error(ud->widgets,
-                                       "Error: read from stderr failed");
+                    dispatch_log_error("Error: read from stderr failed");
                     poll_descriptors[1].fd = -1;
                 } else if (error_bytes > 0) {
                     for (ssize_t k = 0; k < error_bytes; k += 1) {
                         if (temp_error[k] == '\n'
                             || error_position == sizeof(error_buffer) - 1) {
                             error_buffer[error_position] = '\0';
-                            dispatch_log_error(ud->widgets, error_buffer);
+                            dispatch_log_error(error_buffer);
                             error_position = 0;
                         } else {
                             error_buffer[error_position] = temp_error[k];
@@ -324,16 +310,15 @@ bulk_sync_worker(gpointer user_data) {
 
         if (output_position > 0) {
             output_buffer[output_position] = '\0';
-            dispatch_log(ud->widgets, output_buffer);
+            dispatch_log(output_buffer);
         }
         if (error_position > 0) {
             error_buffer[error_position] = '\0';
-            dispatch_log_error(ud->widgets, error_buffer);
+            dispatch_log_error(error_buffer);
         }
 
-        if (!ud->widgets->cancel_sync) {
+        if (!cecup_state.cancel_sync) {
             remove_data = g_new0(UIUpdateData, 1);
-            remove_data->widgets = ud->widgets;
             remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
             remove_data->filepath = g_strdup(ud->filepath);
             g_idle_add(update_ui_handler, remove_data);
@@ -347,12 +332,9 @@ bulk_sync_worker(gpointer user_data) {
         g_free(ud);
     }
 
-    if (w != NULL) {
-        ready = g_new0(UIUpdateData, 1);
-        ready->widgets = w;
-        ready->type = DATA_TYPE_ENABLE_BUTTONS;
-        g_idle_add(update_ui_handler, ready);
-    }
+    ready = g_new0(UIUpdateData, 1);
+    ready->type = DATA_TYPE_ENABLE_BUTTONS;
+    g_idle_add(update_ui_handler, ready);
 
     g_ptr_array_unref(tasks);
     return NULL;
@@ -390,14 +372,12 @@ sync_worker(gpointer user_data) {
         UIUpdateData *clear;
 
         clear = g_new0(UIUpdateData, 1);
-        clear->widgets = thread_data->widgets;
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
     }
 
-    ex = (access(thread_data->widgets->exclude_path, F_OK) != -1)
-             ? g_strdup_printf("--exclude-from='%s'",
-                               thread_data->widgets->exclude_path)
+    ex = (access(cecup_state.exclude_path, F_OK) != -1)
+             ? g_strdup_printf("--exclude-from='%s'", cecup_state.exclude_path)
              : g_strdup("");
 
     snprintf(cmd, sizeof(cmd),
@@ -441,17 +421,15 @@ sync_worker(gpointer user_data) {
     }
     log_cmd[j] = '\0';
 
-    dispatch_log(thread_data->widgets, log_cmd);
+    dispatch_log(log_cmd);
 
     if (pipe(pipe_output) == -1) {
-        dispatch_log_error(thread_data->widgets,
-                           "Error: pipe creation for stdout failed");
+        dispatch_log_error("Error: pipe creation for stdout failed");
         goto clean_exit;
     }
 
     if (pipe(pipe_error) == -1) {
-        dispatch_log_error(thread_data->widgets,
-                           "Error: pipe creation for stderr failed");
+        dispatch_log_error("Error: pipe creation for stderr failed");
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_output[1]);
         goto clean_exit;
@@ -460,7 +438,7 @@ sync_worker(gpointer user_data) {
     child_pid = fork();
 
     if (child_pid < 0) {
-        dispatch_log_error(thread_data->widgets, "Error: fork failed");
+        dispatch_log_error("Error: fork failed");
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_output[1]);
         XCLOSE(&pipe_error[0]);
@@ -496,16 +474,15 @@ sync_worker(gpointer user_data) {
     error_position = 0;
 
     while (1) {
-        if (thread_data->widgets->cancel_sync) {
+        if (cecup_state.cancel_sync) {
             kill(child_pid, SIGTERM);
-            dispatch_log_error(thread_data->widgets,
-                               "Process cancelled by user.");
+            dispatch_log_error("Process cancelled by user.");
             break;
         }
 
         poll_return = poll(poll_descriptors, 2, 200);
         if (poll_return < 0) {
-            dispatch_log_error(thread_data->widgets, "Error: poll failed");
+            dispatch_log_error("Error: poll failed");
             break;
         }
 
@@ -517,8 +494,7 @@ sync_worker(gpointer user_data) {
             output_bytes
                 = read(pipe_output[0], temp_output, sizeof(temp_output));
             if (output_bytes < 0) {
-                dispatch_log_error(thread_data->widgets,
-                                   "Error: read from stdout failed");
+                dispatch_log_error("Error: read from stdout failed");
                 poll_descriptors[0].fd = -1;
             } else if (output_bytes > 0) {
                 for (ssize_t k = 0; k < output_bytes; k += 1) {
@@ -551,8 +527,8 @@ sync_worker(gpointer user_data) {
                                              ? "Excluded by pattern"
                                              : "Missing in source";
 
-                                dispatch_tree(thread_data->widgets, 1, "Delete",
-                                              relative_path, sz, reason);
+                                dispatch_tree(1, "Delete", relative_path, sz,
+                                              reason);
                                 g_free(full_src);
                                 g_free(full_dst);
                             } else if (strchr(output_buffer, ' ')
@@ -582,12 +558,12 @@ sync_worker(gpointer user_data) {
                                     thread_data->src_path, relative_path, NULL);
                                 sz = (stat(full_src, &st) == 0) ? st.st_size
                                                                 : 0;
-                                dispatch_tree(thread_data->widgets, 0, action,
-                                              relative_path, sz, action);
+                                dispatch_tree(0, action, relative_path, sz,
+                                              action);
                                 g_free(full_src);
                             }
                         } else {
-                            dispatch_log(thread_data->widgets, output_buffer);
+                            dispatch_log(output_buffer);
                         }
 
                         output_position = 0;
@@ -606,15 +582,14 @@ sync_worker(gpointer user_data) {
         if (poll_descriptors[1].revents & POLLIN) {
             error_bytes = read(pipe_error[0], temp_error, sizeof(temp_error));
             if (error_bytes < 0) {
-                dispatch_log_error(thread_data->widgets,
-                                   "Error: read from stderr failed");
+                dispatch_log_error("Error: read from stderr failed");
                 poll_descriptors[1].fd = -1;
             } else if (error_bytes > 0) {
                 for (ssize_t k = 0; k < error_bytes; k += 1) {
                     if (temp_error[k] == '\n'
                         || error_position == sizeof(error_buffer) - 1) {
                         error_buffer[error_position] = '\0';
-                        dispatch_log_error(thread_data->widgets, error_buffer);
+                        dispatch_log_error(error_buffer);
                         error_position = 0;
                     } else {
                         error_buffer[error_position] = temp_error[k];
@@ -640,24 +615,22 @@ sync_worker(gpointer user_data) {
     if (output_position > 0) {
         output_buffer[output_position] = '\0';
         if (!thread_data->is_preview) {
-            dispatch_log(thread_data->widgets, output_buffer);
+            dispatch_log(output_buffer);
         }
     }
 
     if (error_position > 0) {
         error_buffer[error_position] = '\0';
-        dispatch_log_error(thread_data->widgets, error_buffer);
+        dispatch_log_error(error_buffer);
     }
 
 clean_exit:
     if (thread_data->is_preview && thread_data->show_equal
-        && !thread_data->widgets->cancel_sync) {
-        find_equal_files(thread_data->widgets, thread_data->src_path,
-                         thread_data->dst_path, "");
+        && !cecup_state.cancel_sync) {
+        find_equal_files(thread_data->src_path, thread_data->dst_path, "");
     }
 
     ready = g_new0(UIUpdateData, 1);
-    ready->widgets = thread_data->widgets;
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, ready);
     g_free(thread_data);

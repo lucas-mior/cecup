@@ -6,12 +6,11 @@
 #include "util.c"
 #include "hooks.c"
 
-static void setup_tree_columns(GtkWidget *tree, CecupState *w, int32 col_act,
-                               int32 col_path, int32 col_color);
+static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path,
+                               int32 col_color);
 
 int32
 main(int32 argc, char *argv[]) {
-    CecupState *w;
     GtkWidget *main_vbox;
     GtkWidget *header_vbox;
     GtkWidget *invert_btn;
@@ -41,25 +40,27 @@ main(int32 argc, char *argv[]) {
     char *config_base;
 
     gtk_init(&argc, &argv);
-    w = g_new0(CecupState, 1);
-    w->rows = g_ptr_array_new_with_free_func(free_cecup_row);
-    w->sort_col = COL_SRC_PATH;
-    w->sort_order = GTK_SORT_ASCENDING;
-    w->refresh_id = 0;
+    cecup_state.rows = g_ptr_array_new_with_free_func(free_cecup_row);
+    cecup_state.sort_col = COL_SRC_PATH;
+    cecup_state.sort_order = GTK_SORT_ASCENDING;
+    cecup_state.refresh_id = 0;
 
     config_base = g_build_filename(g_get_user_config_dir(), "cecup", NULL);
     g_mkdir_with_parents(config_base, 0755);
-    w->exclude_path = g_build_filename(config_base, "exclude.conf", NULL);
-    w->config_path = g_build_filename(config_base, "cecup.conf", NULL);
+    cecup_state.exclude_path
+        = g_build_filename(config_base, "exclude.conf", NULL);
+    cecup_state.config_path = g_build_filename(config_base, "cecup.conf", NULL);
 
-    w->gtk_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(w->gtk_window), "cecup");
-    gtk_window_set_wmclass(GTK_WINDOW(w->gtk_window), "cecup", "Cecup");
-    gtk_window_set_default_size(GTK_WINDOW(w->gtk_window), 1100, 800);
-    g_signal_connect(w->gtk_window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    cecup_state.gtk_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(cecup_state.gtk_window), "cecup");
+    gtk_window_set_wmclass(GTK_WINDOW(cecup_state.gtk_window), "cecup",
+                           "Cecup");
+    gtk_window_set_default_size(GTK_WINDOW(cecup_state.gtk_window), 1100, 800);
+    g_signal_connect(cecup_state.gtk_window, "destroy",
+                     G_CALLBACK(gtk_main_quit), NULL);
 
     main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-    gtk_container_add(GTK_CONTAINER(w->gtk_window), main_vbox);
+    gtk_container_add(GTK_CONTAINER(cecup_state.gtk_window), main_vbox);
 
     header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_set_border_width(GTK_CONTAINER(header_vbox), 10);
@@ -69,79 +70,99 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(header_vbox), invert_btn, FALSE, FALSE, 0);
 
     btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    w->preview_button = gtk_button_new_with_label("1. Preview");
-    w->exclude_button = gtk_button_new_with_label("Edit Exclusions");
-    w->stop_button = gtk_button_new_with_label("Stop");
-    w->sync_button = gtk_button_new_with_label("2. Sync");
+    cecup_state.preview_button = gtk_button_new_with_label("1. Preview");
+    cecup_state.exclude_button = gtk_button_new_with_label("Edit Exclusions");
+    cecup_state.stop_button = gtk_button_new_with_label("Stop");
+    cecup_state.sync_button = gtk_button_new_with_label("2. Sync");
 
-    gtk_widget_set_sensitive(w->stop_button, FALSE);
+    gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
 
-    gtk_box_pack_start(GTK_BOX(btn_hbox), w->exclude_button, FALSE, FALSE, 5);
-    gtk_box_pack_end(GTK_BOX(btn_hbox), w->sync_button, FALSE, FALSE, 5);
-    gtk_box_pack_end(GTK_BOX(btn_hbox), w->stop_button, FALSE, FALSE, 5);
-    gtk_box_pack_end(GTK_BOX(btn_hbox), w->preview_button, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(btn_hbox), cecup_state.exclude_button, FALSE,
+                       FALSE, 5);
+    gtk_box_pack_end(GTK_BOX(btn_hbox), cecup_state.sync_button, FALSE, FALSE,
+                     5);
+    gtk_box_pack_end(GTK_BOX(btn_hbox), cecup_state.stop_button, FALSE, FALSE,
+                     5);
+    gtk_box_pack_end(GTK_BOX(btn_hbox), cecup_state.preview_button, FALSE,
+                     FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), btn_hbox, FALSE, FALSE, 5);
 
     filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    w->filter_new = gtk_toggle_button_new_with_label("Show New");
-    w->filter_hard = gtk_toggle_button_new_with_label("Show Hardlink");
-    w->filter_update = gtk_toggle_button_new_with_label("Show Update");
-    w->filter_equal = gtk_toggle_button_new_with_label("Show Equal");
-    w->filter_delete = gtk_toggle_button_new_with_label("Show Deleted");
-    w->filter_ignore = gtk_toggle_button_new_with_label("Show Ignored");
+    cecup_state.filter_new = gtk_toggle_button_new_with_label("Show New");
+    cecup_state.filter_hard = gtk_toggle_button_new_with_label("Show Hardlink");
+    cecup_state.filter_update = gtk_toggle_button_new_with_label("Show Update");
+    cecup_state.filter_equal = gtk_toggle_button_new_with_label("Show Equal");
+    cecup_state.filter_delete
+        = gtk_toggle_button_new_with_label("Show Deleted");
+    cecup_state.filter_ignore
+        = gtk_toggle_button_new_with_label("Show Ignored");
 
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_new), TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_hard), TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_update), TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_equal), FALSE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_delete), TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_ignore), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_new),
+                                 TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_hard),
+                                 TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_update),
+                                 TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_equal),
+                                 FALSE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_delete),
+                                 TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_ignore),
+                                 TRUE);
 
-    gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_new, FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_hard, FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_update, FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_equal, FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_delete, FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_ignore, FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_new, FALSE,
+                       FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_hard, FALSE,
+                       FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_update, FALSE,
+                       FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_equal, FALSE,
+                       FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_delete, FALSE,
+                       FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_ignore, FALSE,
+                       FALSE, 2);
     gtk_box_pack_start(GTK_BOX(header_vbox), filter_hbox, FALSE, FALSE, 5);
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    w->check_fs_toggle
+    cecup_state.check_fs_toggle
         = gtk_check_button_new_with_label("Require different filesystems");
-    w->diff_entry = gtk_entry_new();
-    w->term_entry = gtk_entry_new();
+    cecup_state.diff_entry = gtk_entry_new();
+    cecup_state.term_entry = gtk_entry_new();
     reset_btn = gtk_button_new_with_label("Reset");
-    gtk_box_pack_start(GTK_BOX(options_hbox), w->check_fs_toggle, FALSE, FALSE,
-                       5);
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_fs_toggle,
+                       FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Diff Tool:"),
                        FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(options_hbox), w->diff_entry, FALSE, FALSE, 0);
-    gtk_entry_set_text(GTK_ENTRY(w->diff_entry), "unidiff.bash");
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.diff_entry, FALSE,
+                       FALSE, 0);
+    gtk_entry_set_text(GTK_ENTRY(cecup_state.diff_entry), "unidiff.bash");
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Terminal:"), FALSE,
                        FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(options_hbox), w->term_entry, FALSE, FALSE, 0);
-    gtk_entry_set_text(GTK_ENTRY(w->term_entry), "xterm");
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.term_entry, FALSE,
+                       FALSE, 0);
+    gtk_entry_set_text(GTK_ENTRY(cecup_state.term_entry), "xterm");
     gtk_box_pack_start(GTK_BOX(options_hbox), reset_btn, FALSE, FALSE, 0);
 
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
-    w->store = gtk_list_store_new(NUM_COLS, G_TYPE_BOOLEAN, G_TYPE_STRING,
-                                  G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
-                                  G_TYPE_STRING, G_TYPE_INT64, G_TYPE_STRING,
-                                  G_TYPE_STRING, G_TYPE_STRING);
+    cecup_state.store = gtk_list_store_new(
+        NUM_COLS, G_TYPE_BOOLEAN, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
+        G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT64, G_TYPE_STRING,
+        G_TYPE_STRING, G_TYPE_STRING);
 
-    g_signal_connect(w->filter_new, "toggled", G_CALLBACK(on_filter_toggled),
-                     w);
-    g_signal_connect(w->filter_hard, "toggled", G_CALLBACK(on_filter_toggled),
-                     w);
-    g_signal_connect(w->filter_update, "toggled", G_CALLBACK(on_filter_toggled),
-                     w);
-    g_signal_connect(w->filter_equal, "toggled", G_CALLBACK(on_filter_toggled),
-                     w);
-    g_signal_connect(w->filter_delete, "toggled", G_CALLBACK(on_filter_toggled),
-                     w);
-    g_signal_connect(w->filter_ignore, "toggled", G_CALLBACK(on_filter_toggled),
-                     w);
+    g_signal_connect(cecup_state.filter_new, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup_state.filter_hard, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup_state.filter_update, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup_state.filter_equal, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup_state.filter_delete, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup_state.filter_ignore, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
 
     v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
     gtk_box_pack_start(GTK_BOX(main_vbox), v_paned, TRUE, TRUE, 0);
@@ -153,35 +174,37 @@ main(int32 argc, char *argv[]) {
     default_dst = g_strdup_printf("%s/b/", cwd);
 
     l_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    w->src_entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(w->src_entry), default_src);
+    cecup_state.src_entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(cecup_state.src_entry), default_src);
     browse_src = gtk_button_new_with_label("Browse");
     l_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(l_entry_hbox), w->src_entry, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(l_entry_hbox), cecup_state.src_entry, TRUE, TRUE,
+                       0);
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), browse_src, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(l_vbox), l_entry_hbox, FALSE, FALSE, 0);
     l_scroll = gtk_scrolled_window_new(NULL, NULL);
-    l_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->store));
-    w->l_tree = l_tree;
+    l_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup_state.store));
+    cecup_state.l_tree = l_tree;
     g_object_set_data(G_OBJECT(l_tree), "side", GINT_TO_POINTER(0));
-    setup_tree_columns(l_tree, w, COL_SRC_ACTION, COL_SRC_PATH, COL_SRC_COLOR);
+    setup_tree_columns(l_tree, COL_SRC_ACTION, COL_SRC_PATH, COL_SRC_COLOR);
     gtk_container_add(GTK_CONTAINER(l_scroll), l_tree);
     gtk_box_pack_start(GTK_BOX(l_vbox), l_scroll, TRUE, TRUE, 0);
     gtk_paned_pack1(GTK_PANED(paned), l_vbox, TRUE, FALSE);
 
     r_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    w->dst_entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(w->dst_entry), default_dst);
+    cecup_state.dst_entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(cecup_state.dst_entry), default_dst);
     browse_dst = gtk_button_new_with_label("Browse");
     r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(r_entry_hbox), w->dst_entry, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(r_entry_hbox), cecup_state.dst_entry, TRUE, TRUE,
+                       0);
     gtk_box_pack_start(GTK_BOX(r_entry_hbox), browse_dst, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(r_vbox), r_entry_hbox, FALSE, FALSE, 0);
     r_scroll = gtk_scrolled_window_new(NULL, NULL);
-    r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->store));
-    w->r_tree = r_tree;
+    r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup_state.store));
+    cecup_state.r_tree = r_tree;
     g_object_set_data(G_OBJECT(r_tree), "side", GINT_TO_POINTER(1));
-    setup_tree_columns(r_tree, w, COL_DST_ACTION, COL_DST_PATH, COL_DST_COLOR);
+    setup_tree_columns(r_tree, COL_DST_ACTION, COL_DST_PATH, COL_DST_COLOR);
     gtk_container_add(GTK_CONTAINER(r_scroll), r_tree);
     gtk_box_pack_start(GTK_BOX(r_vbox), r_scroll, TRUE, TRUE, 0);
     gtk_paned_pack2(GTK_PANED(paned), r_vbox, TRUE, FALSE);
@@ -190,14 +213,14 @@ main(int32 argc, char *argv[]) {
     r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(r_scroll));
     g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
     g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
-    g_signal_connect(w->store, "sort-column-changed",
-                     G_CALLBACK(on_sort_changed), w);
+    g_signal_connect(cecup_state.store, "sort-column-changed",
+                     G_CALLBACK(on_sort_changed), NULL);
 
     log_scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(log_scroll, -1, 150);
     log_view = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(log_view), FALSE);
-    w->log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(log_view));
+    cecup_state.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(log_view));
     gtk_container_add(GTK_CONTAINER(log_scroll), log_view);
     gtk_paned_pack2(GTK_PANED(v_paned), log_scroll, FALSE, FALSE);
 
@@ -206,89 +229,94 @@ main(int32 argc, char *argv[]) {
         char *val;
 
         key = g_key_file_new();
-        if (g_key_file_load_from_file(key, w->config_path, G_KEY_FILE_NONE,
-                                      NULL)) {
+        if (g_key_file_load_from_file(key, cecup_state.config_path,
+                                      G_KEY_FILE_NONE, NULL)) {
             if ((val = g_key_file_get_string(key, "Paths", "src", NULL))
                 != NULL) {
-                gtk_entry_set_text(GTK_ENTRY(w->src_entry), val);
+                gtk_entry_set_text(GTK_ENTRY(cecup_state.src_entry), val);
                 g_free(val);
             }
             if ((val = g_key_file_get_string(key, "Paths", "dst", NULL))
                 != NULL) {
-                gtk_entry_set_text(GTK_ENTRY(w->dst_entry), val);
+                gtk_entry_set_text(GTK_ENTRY(cecup_state.dst_entry), val);
                 g_free(val);
             }
             if ((val = g_key_file_get_string(key, "Tools", "diff", NULL))
                 != NULL) {
-                gtk_entry_set_text(GTK_ENTRY(w->diff_entry), val);
+                gtk_entry_set_text(GTK_ENTRY(cecup_state.diff_entry), val);
                 g_free(val);
             }
             if ((val = g_key_file_get_string(key, "Tools", "term", NULL))
                 != NULL) {
-                gtk_entry_set_text(GTK_ENTRY(w->term_entry), val);
+                gtk_entry_set_text(GTK_ENTRY(cecup_state.term_entry), val);
                 g_free(val);
             }
 
             if (g_key_file_has_key(key, "Filters", "new", NULL)) {
                 gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(w->filter_new),
+                    GTK_TOGGLE_BUTTON(cecup_state.filter_new),
                     g_key_file_get_boolean(key, "Filters", "new", NULL));
             }
             if (g_key_file_has_key(key, "Filters", "hard", NULL)) {
                 gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(w->filter_hard),
+                    GTK_TOGGLE_BUTTON(cecup_state.filter_hard),
                     g_key_file_get_boolean(key, "Filters", "hard", NULL));
             }
             if (g_key_file_has_key(key, "Filters", "update", NULL)) {
                 gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(w->filter_update),
+                    GTK_TOGGLE_BUTTON(cecup_state.filter_update),
                     g_key_file_get_boolean(key, "Filters", "update", NULL));
             }
             if (g_key_file_has_key(key, "Filters", "equal", NULL)) {
                 gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(w->filter_equal),
+                    GTK_TOGGLE_BUTTON(cecup_state.filter_equal),
                     g_key_file_get_boolean(key, "Filters", "equal", NULL));
             }
             if (g_key_file_has_key(key, "Filters", "delete", NULL)) {
                 gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(w->filter_delete),
+                    GTK_TOGGLE_BUTTON(cecup_state.filter_delete),
                     g_key_file_get_boolean(key, "Filters", "delete", NULL));
             }
             if (g_key_file_has_key(key, "Filters", "ignore", NULL)) {
                 gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(w->filter_ignore),
+                    GTK_TOGGLE_BUTTON(cecup_state.filter_ignore),
                     g_key_file_get_boolean(key, "Filters", "ignore", NULL));
             }
             if (g_key_file_has_key(key, "Options", "check_fs", NULL)) {
                 gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(w->check_fs_toggle),
+                    GTK_TOGGLE_BUTTON(cecup_state.check_fs_toggle),
                     g_key_file_get_boolean(key, "Options", "check_fs", NULL));
             }
         }
         g_key_file_free(key);
     }
 
-    g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), w);
-    g_signal_connect(browse_dst, "clicked", G_CALLBACK(on_browse_dst), w);
-    g_signal_connect(invert_btn, "clicked", G_CALLBACK(on_invert_clicked), w);
-    g_signal_connect(w->preview_button, "clicked",
-                     G_CALLBACK(on_preview_clicked), w);
-    g_signal_connect(w->stop_button, "clicked", G_CALLBACK(on_stop_clicked), w);
-    g_signal_connect(w->sync_button, "clicked", G_CALLBACK(on_sync_clicked), w);
-    g_signal_connect(w->exclude_button, "clicked",
-                     G_CALLBACK(on_exclude_clicked), w);
-    g_signal_connect(reset_btn, "clicked", G_CALLBACK(on_reset_clicked), w);
+    g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), NULL);
+    g_signal_connect(browse_dst, "clicked", G_CALLBACK(on_browse_dst), NULL);
+    g_signal_connect(invert_btn, "clicked", G_CALLBACK(on_invert_clicked),
+                     NULL);
+    g_signal_connect(cecup_state.preview_button, "clicked",
+                     G_CALLBACK(on_preview_clicked), NULL);
+    g_signal_connect(cecup_state.stop_button, "clicked",
+                     G_CALLBACK(on_stop_clicked), NULL);
+    g_signal_connect(cecup_state.sync_button, "clicked",
+                     G_CALLBACK(on_sync_clicked), NULL);
+    g_signal_connect(cecup_state.exclude_button, "clicked",
+                     G_CALLBACK(on_exclude_clicked), NULL);
+    g_signal_connect(reset_btn, "clicked", G_CALLBACK(on_reset_clicked), NULL);
 
-    g_signal_connect(w->diff_entry, "changed", G_CALLBACK(on_config_changed),
-                     w);
-    g_signal_connect(w->term_entry, "changed", G_CALLBACK(on_config_changed),
-                     w);
-    g_signal_connect(w->src_entry, "changed", G_CALLBACK(on_config_changed), w);
-    g_signal_connect(w->dst_entry, "changed", G_CALLBACK(on_config_changed), w);
-    g_signal_connect(w->check_fs_toggle, "toggled",
-                     G_CALLBACK(on_config_changed), w);
+    g_signal_connect(cecup_state.diff_entry, "changed",
+                     G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup_state.term_entry, "changed",
+                     G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup_state.src_entry, "changed",
+                     G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup_state.dst_entry, "changed",
+                     G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup_state.check_fs_toggle, "toggled",
+                     G_CALLBACK(on_config_changed), NULL);
 
-    gtk_widget_show_all(w->gtk_window);
+    gtk_widget_show_all(cecup_state.gtk_window);
     gtk_main();
     return 0;
 }
@@ -302,10 +330,9 @@ update_ui_handler(gpointer user_data) {
     switch (data->type) {
     case DATA_TYPE_LOG: {
         GtkTextIter end;
-        gtk_text_buffer_get_end_iter(data->widgets->log_buffer, &end);
-        gtk_text_buffer_insert(data->widgets->log_buffer, &end, data->message,
-                               -1);
-        gtk_text_buffer_insert(data->widgets->log_buffer, &end, "\n", -1);
+        gtk_text_buffer_get_end_iter(cecup_state.log_buffer, &end);
+        gtk_text_buffer_insert(cecup_state.log_buffer, &end, data->message, -1);
+        gtk_text_buffer_insert(cecup_state.log_buffer, &end, "\n", -1);
         break;
     }
     case DATA_TYPE_TREE_ROW: {
@@ -367,51 +394,51 @@ update_ui_handler(gpointer user_data) {
         row->dst_color = bg_dst;
         row->reason = data->reason;
 
-        g_ptr_array_add(data->widgets->rows, row);
+        g_ptr_array_add(cecup_state.rows, row);
 
-        if (data->widgets->refresh_id == 0) {
-            data->widgets->refresh_id = g_timeout_add(
-                100, refresh_ui_timeout_callback, data->widgets);
+        if (cecup_state.refresh_id == 0) {
+            cecup_state.refresh_id
+                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
         }
 
         g_free(size_string);
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
-        for (int32 i = 0; i < (int32)data->widgets->rows->len; i += 1) {
+        for (int32 i = 0; i < (int32)cecup_state.rows->len; i += 1) {
             CecupRow *row;
-            row = (CecupRow *)g_ptr_array_index(data->widgets->rows, i);
+            row = (CecupRow *)g_ptr_array_index(cecup_state.rows, i);
             if (g_strcmp0(row->src_path, data->filepath) == 0
                 || g_strcmp0(row->dst_path, data->filepath) == 0) {
-                g_ptr_array_remove_index(data->widgets->rows, (guint)i);
+                g_ptr_array_remove_index(cecup_state.rows, (guint)i);
                 break;
             }
         }
 
-        if (data->widgets->refresh_id == 0) {
-            data->widgets->refresh_id = g_timeout_add(
-                100, refresh_ui_timeout_callback, data->widgets);
+        if (cecup_state.refresh_id == 0) {
+            cecup_state.refresh_id
+                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
         }
         break;
     }
     case DATA_TYPE_ENABLE_BUTTONS:
-        if (data->widgets->refresh_id != 0) {
-            g_source_remove(data->widgets->refresh_id);
-            data->widgets->refresh_id = 0;
+        if (cecup_state.refresh_id != 0) {
+            g_source_remove(cecup_state.refresh_id);
+            cecup_state.refresh_id = 0;
         }
-        refresh_ui_list(data->widgets);
+        refresh_ui_list();
 
-        gtk_widget_set_sensitive(data->widgets->sync_button, TRUE);
-        gtk_widget_set_sensitive(data->widgets->preview_button, TRUE);
-        gtk_widget_set_sensitive(data->widgets->stop_button, FALSE);
+        gtk_widget_set_sensitive(cecup_state.sync_button, TRUE);
+        gtk_widget_set_sensitive(cecup_state.preview_button, TRUE);
+        gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
         break;
     case DATA_TYPE_CLEAR_TREES:
-        if (data->widgets->refresh_id != 0) {
-            g_source_remove(data->widgets->refresh_id);
-            data->widgets->refresh_id = 0;
+        if (cecup_state.refresh_id != 0) {
+            g_source_remove(cecup_state.refresh_id);
+            cecup_state.refresh_id = 0;
         }
-        g_ptr_array_set_size(data->widgets->rows, 0);
-        gtk_list_store_clear(data->widgets->store);
+        g_ptr_array_set_size(cecup_state.rows, 0);
+        gtk_list_store_clear(cecup_state.store);
         break;
     default:
         break;
@@ -424,15 +451,15 @@ update_ui_handler(gpointer user_data) {
 }
 
 static void
-setup_tree_columns(GtkWidget *tree, CecupState *w, int32 col_act,
-                   int32 col_path, int32 col_color) {
+setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path,
+                   int32 col_color) {
     GtkCellRenderer *r;
     GtkTreeViewColumn *c;
 
     r = gtk_cell_renderer_toggle_new();
     c = gtk_tree_view_column_new_with_attributes("", r, "active", COL_SELECTED,
                                                  NULL);
-    g_signal_connect(r, "toggled", G_CALLBACK(on_cell_toggled), w);
+    g_signal_connect(r, "toggled", G_CALLBACK(on_cell_toggled), NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), c);
 
     r = gtk_cell_renderer_text_new();
@@ -454,6 +481,6 @@ setup_tree_columns(GtkWidget *tree, CecupState *w, int32 col_act,
     gtk_widget_set_has_tooltip(tree, TRUE);
     g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
     g_signal_connect(tree, "button-press-event",
-                     G_CALLBACK(on_tree_button_press), w);
+                     G_CALLBACK(on_tree_button_press), NULL);
     return;
 }

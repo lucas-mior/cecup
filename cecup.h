@@ -33,7 +33,7 @@ typedef struct CecupRow {
     char *reason;
 } CecupRow;
 
-typedef struct CecupState {
+static struct {
     GtkWidget *gtk_window;
     GtkWidget *src_entry;
     GtkWidget *dst_entry;
@@ -64,10 +64,9 @@ typedef struct CecupState {
     int32 sort_col;
     GtkSortType sort_order;
     uint32 refresh_id;
-} CecupState;
+} cecup_state;
 
 typedef struct ThreadData {
-    CecupState *widgets;
     char src_path[MAX_PATH_LENGTH];
     char dst_path[MAX_PATH_LENGTH];
     bool is_preview;
@@ -84,7 +83,6 @@ enum DataType {
 };
 
 typedef struct UIUpdateData {
-    CecupState *widgets;
     char *message;
     char *action;
     char *filepath;
@@ -100,7 +98,7 @@ typedef struct UIUpdateData {
 
 static gboolean update_ui_handler(gpointer user_data);
 static void on_preview_clicked(GtkWidget *b, gpointer data);
-static void refresh_ui_list(CecupState *w);
+static void refresh_ui_list(void);
 static gboolean refresh_ui_timeout_callback(gpointer data);
 
 #endif /* CECUP_H */
