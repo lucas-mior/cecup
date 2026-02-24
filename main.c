@@ -63,6 +63,7 @@ main(int32 argc, char *argv[]) {
         if ((fp = fopen(w->exclude_path, "w")) != NULL) {
             fprintf(fp, "# cecup rsync exclusion patterns\n");
             fprintf(fp, "# ------------------------------\n");
+            fprintf(fp, "# Lines starting with # are ignored\n");
             fprintf(fp, "# Pattern rules:\n");
             fprintf(
                 fp,
