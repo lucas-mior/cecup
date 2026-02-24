@@ -146,12 +146,15 @@ static gpointer
 sync_worker(gpointer user_data) {
     ThreadData *thread_data;
     char cmd[4096];
-    char log_cmd[4096];
+    char log_cmd[8192];
     char buffer[2048];
     FILE *pipe;
     char *ex;
+    int32 i;
+    int32 j;
     int32 line_len;
-    int32 last_space;
+    int32 last_space_index;
+    int32 word_len;
 
     thread_data = (ThreadData *)user_data;
 
@@ -170,27 +173,45 @@ sync_worker(gpointer user_data) {
              : g_strdup("");
 
     snprintf(cmd, sizeof(cmd),
-             "rsync -av --hard-links --itemize-changes --delete "
-             "--delete-excluded %s %s "
+             "rsync --verbose --update --recursive"
+             " --partial --progress --info=progress2"
+             " --links --hard-links --itemize-changes"
+             " --perms --times --owner --group"
+             " --delete-excluded %s %s "
              "'%s/' '%s/' 2>&1",
              thread_data->is_preview ? "--dry-run" : "", ex,
              thread_data->src_path, thread_data->dst_path);
     g_free(ex);
 
-    snprintf(log_cmd, sizeof(log_cmd), "%s", cmd);
+    i = 0;
+    j = 0;
     line_len = 0;
-    last_space = -1;
-    for (int32 i = 0; log_cmd[i] != '\0'; i += 1) {
+    last_space_index = -1;
+
+    while (cmd[i] != '\0') {
+        log_cmd[j] = cmd[i];
+        if (cmd[i] == ' ') {
+            last_space_index = j;
+        }
         line_len += 1;
-        if (log_cmd[i] == ' ') {
-            last_space = i;
+        if (line_len > 120 && last_space_index != -1) {
+            log_cmd[last_space_index] = '\n';
+            word_len = j - last_space_index;
+            for (int32 k = 0; k < word_len; k += 1) {
+                log_cmd[j + 4 - k] = log_cmd[j - k];
+            }
+            log_cmd[last_space_index + 1] = ' ';
+            log_cmd[last_space_index + 2] = ' ';
+            log_cmd[last_space_index + 3] = ' ';
+            log_cmd[last_space_index + 4] = ' ';
+            j += 4;
+            line_len = word_len + 4;
+            last_space_index = -1;
         }
-        if (line_len > 120 && last_space != -1) {
-            log_cmd[last_space] = '\n';
-            line_len = i - last_space;
-            last_space = -1;
-        }
+        i += 1;
+        j += 1;
     }
+    log_cmd[j] = '\0';
 
     dispatch_log(thread_data->widgets, log_cmd);
 
