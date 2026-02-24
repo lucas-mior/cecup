@@ -244,3 +244,44 @@ sync_worker(gpointer user_data) {
     g_free(thread_data);
     return NULL;
 }
+
+static gpointer
+diff_worker(gpointer user_data) {
+    UIUpdateData *ud;
+    char cmd[4096];
+    char buffer[2048];
+    FILE *pipe;
+    char log_msg[5120];
+    char *path_src;
+    char *path_dst;
+    char *diff_tool;
+
+    ud = (UIUpdateData *)user_data;
+    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry));
+    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry));
+    diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->diff_entry));
+
+    /* Construct the full command without the '&' because we want to read the
+     * output */
+    snprintf(cmd, sizeof(cmd), "%s '%s/%s' '%s/%s' 2>&1", diff_tool, path_src,
+             ud->filepath, path_dst, ud->filepath);
+
+    snprintf(log_msg, sizeof(log_msg), ">>> Running Diff: %s", cmd);
+    dispatch_log(ud->widgets, log_msg);
+
+    pipe = popen(cmd, "r");
+    if (pipe) {
+        while (fgets(buffer, sizeof(buffer), pipe)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            dispatch_log(ud->widgets, buffer);
+        }
+        pclose(pipe);
+    }
+
+    dispatch_log(ud->widgets, ">>> Diff finished.");
+
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return NULL;
+}
