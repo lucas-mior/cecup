@@ -82,7 +82,8 @@ main(int32 argc, char *argv[]) {
     }
 
     w->gtk_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(w->gtk_window), "Btrfs Rsync Sync GUI");
+    gtk_window_set_title(GTK_WINDOW(w->gtk_window), "cecup");
+    gtk_window_set_wmclass(GTK_WINDOW(w->gtk_window), "cecup", "Cecup");
     gtk_window_set_default_size(GTK_WINDOW(w->gtk_window), 1100, 800);
     g_signal_connect(w->gtk_window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
