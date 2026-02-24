@@ -68,9 +68,14 @@ single_sync_worker(gpointer user_data) {
 
     do {
         if ((rsync_pipe = popen(cmd, "r"))) {
+            errno = 0;
             while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
                 buffer[strcspn(buffer, "\n")] = 0;
                 dispatch_log(ud->widgets, buffer);
+            }
+            if (errno) {
+                error("Error reading line from rsync pipe: %s.\n",
+                      strerror(errno));
             }
             if (pclose(rsync_pipe) < 0) {
                 error("Error closing rsync pipe: %s.\n", strerror(errno));
