@@ -65,7 +65,7 @@ dispatch_log_error(AppWidgets *w, char *format, ...) {
 }
 
 static void
-dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
+dispatch_tree(AppWidgets *w, int32 side, char *action, char *path, int64 size,
               char *reason) {
     UIUpdateData *data;
 
@@ -73,7 +73,7 @@ dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
     data->widgets = w;
     data->type = DATA_TYPE_TREE_ROW;
     data->side = side;
-    data->action = act;
+    data->action = action;
     data->filepath = g_strdup(path);
     data->reason = reason;
     data->size = size;
@@ -561,29 +561,29 @@ sync_worker(gpointer user_data) {
                                            || output_buffer[0] == 'h'
                                            || output_buffer[0] == 'c')) {
                                 char *relative_path;
-                                char *act;
+                                char *action;
                                 char *full_src;
                                 struct stat st;
                                 int64 sz;
 
                                 relative_path = strchr(output_buffer, ' ') + 1;
-                                act = "Update";
+                                action = "Update";
 
                                 if (strncmp(output_buffer, "hf", 2) == 0) {
-                                    act = "Hardlink";
+                                    action = "Hardlink";
                                 } else if (strncmp(output_buffer, "cd", 2) == 0
                                            || strncmp(output_buffer, ">f+++++",
                                                       7)
                                                   == 0) {
-                                    act = "New";
+                                    action = "New";
                                 }
 
                                 full_src = g_build_filename(
                                     thread_data->src_path, relative_path, NULL);
                                 sz = (stat(full_src, &st) == 0) ? st.st_size
                                                                 : 0;
-                                dispatch_tree(thread_data->widgets, 0, act,
-                                              relative_path, sz, act);
+                                dispatch_tree(thread_data->widgets, 0, action,
+                                              relative_path, sz, action);
                                 g_free(full_src);
                             }
                         } else {
