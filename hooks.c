@@ -5,6 +5,33 @@
 #include "rsync.c"
 
 static void
+on_preview_clicked(GtkWidget *b, gpointer data) {
+    AppWidgets *w;
+    char *path_src;
+    char *path_dst;
+    ThreadData *thread_data;
+
+    w = (AppWidgets *)data;
+    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
+    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+    (void)b;
+    if (strlen64(path_src) < 1 || strlen64(path_dst) < 1) {
+        return;
+    }
+    gtk_widget_set_sensitive(w->preview_button, FALSE);
+    gtk_widget_set_sensitive(w->sync_button, FALSE);
+    thread_data = g_new0(ThreadData, 1);
+    thread_data->widgets = w;
+    thread_data->is_preview = 1;
+    thread_data->check_different_fs
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->check_fs_toggle));
+    strncpy(thread_data->src_path, path_src, 1023);
+    strncpy(thread_data->dst_path, path_dst, 1023);
+    g_thread_new("worker", sync_worker, thread_data);
+    return;
+}
+
+static void
 on_menu_open(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     char *base;
@@ -70,8 +97,9 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
 static void
 on_menu_apply(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-    ud = (UIUpdateData *)data;
+
     (void)m;
+    ud = (UIUpdateData *)data;
     g_thread_new("single_worker", single_sync_worker, ud);
     return;
 }
@@ -116,7 +144,8 @@ on_menu_exclude_ext(GtkWidget *m, gpointer data) {
         if (fp) {
             fprintf(fp, "\n*%s", ext);
             fclose(fp);
-            dispatch_log(ud->widgets, "Pattern added to exclusions.");
+            dispatch_log(ud->widgets, "Pattern added. Refreshing preview...");
+            on_preview_clicked(NULL, ud->widgets);
         }
     }
     g_free(ud->filepath);
@@ -139,40 +168,14 @@ on_menu_exclude_dir(GtkWidget *m, gpointer data) {
         if (fp) {
             fprintf(fp, "\n/%s/", dir);
             fclose(fp);
-            dispatch_log(ud->widgets, "Pattern added to exclusions.");
+            dispatch_log(ud->widgets, "Pattern added. Refreshing preview...");
+            on_preview_clicked(NULL, ud->widgets);
         }
     }
     g_free(dir);
     g_free(ud->filepath);
     g_free(ud->action);
     g_free(ud);
-    return;
-}
-
-static void
-on_preview_clicked(GtkWidget *b, gpointer data) {
-    AppWidgets *w;
-    char *path_src;
-    char *path_dst;
-    ThreadData *thread_data;
-
-    w = (AppWidgets *)data;
-    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
-    (void)b;
-    if (strlen64(path_src) < 1 || strlen64(path_dst) < 1) {
-        return;
-    }
-    gtk_widget_set_sensitive(w->preview_button, FALSE);
-    gtk_widget_set_sensitive(w->sync_button, FALSE);
-    thread_data = g_new0(ThreadData, 1);
-    thread_data->widgets = w;
-    thread_data->is_preview = 1;
-    thread_data->check_different_fs
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->check_fs_toggle));
-    strncpy(thread_data->src_path, path_src, 1023);
-    strncpy(thread_data->dst_path, path_dst, 1023);
-    g_thread_new("worker", sync_worker, thread_data);
     return;
 }
 
@@ -275,6 +278,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
     gtk_widget_show_all(dialog);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         on_save_exclude(w, buffer);
+        on_preview_clicked(NULL, w);
     }
     gtk_widget_destroy(dialog);
     return;
@@ -376,8 +380,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
 
     if (event->type == GDK_BUTTON_PRESS && event->button == 3) {
-        /* Coordinate fix: Removed conversion. (event->x, event->y) are already
-           bin-relative in GTK3 for this widget. */
         if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
                                           (gint)event->y, &path, NULL, NULL,
                                           NULL)) {
@@ -385,7 +387,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
 
             if (gtk_tree_model_get_iter(model, &iter, path)) {
-                /* Side-aware path retrieval logic */
                 int32 path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
                 int32 act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;
 
@@ -433,8 +434,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
                 item = gtk_menu_item_new_with_label("Diff");
-                /* Retrieve source path for diff if right-clicking destination
-                 */
                 char *diff_check_path = (side == 0) ? f_path : NULL;
                 if (side == 1) {
                     gtk_tree_model_get(model, &iter, COL_SRC_PATH,
@@ -493,8 +492,6 @@ on_tree_tooltip(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode,
     (void)keyboard_mode;
     (void)user_data;
 
-    /* Tooltips still require conversion because (x,y) are relative to the
-     * widget layout */
     gtk_tree_view_convert_widget_to_bin_window_coords(GTK_TREE_VIEW(widget), x,
                                                       y, &bin_x, &bin_y);
 
