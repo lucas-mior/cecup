@@ -43,14 +43,45 @@ main(int32 argc, char *argv[]) {
     char *cwd;
     char *default_src;
     char *default_dst;
-    char *config_dir;
+    char *config_base;
     char *auto_terminal;
+    GKeyFile *kf;
+    char *conf_term;
+    char *conf_diff;
+    FILE *fp;
 
     gtk_init(&argc, &argv);
     w = g_new0(AppWidgets, 1);
-    config_dir = g_get_user_config_dir();
-    w->exclude_path
-        = g_build_filename(config_dir, "cecup_exclude_patterns.conf", NULL);
+
+    config_base = g_build_filename(g_get_user_config_dir(), "cecup", NULL);
+    g_mkdir_with_parents(config_base, 0755);
+
+    w->exclude_path = g_build_filename(config_base, "exclude.conf", NULL);
+    w->config_path = g_build_filename(config_base, "cecup.conf", NULL);
+
+    if (access(w->exclude_path, F_OK) == -1) {
+        if ((fp = fopen(w->exclude_path, "w")) != NULL) {
+            fprintf(fp, "# cecup rsync exclusion patterns\n");
+            fprintf(fp, "# ------------------------------\n");
+            fprintf(fp, "# Pattern rules:\n");
+            fprintf(
+                fp,
+                "#  'filename'      excludes any file/dir named filename\n");
+            fprintf(
+                fp,
+                "#  '*.ext'         excludes all files with .ext extension\n");
+            fprintf(fp, "#  '/dir/'         excludes a specific directory at "
+                        "the root\n");
+            fprintf(fp, "#  'path/to/file'  excludes specific relative path\n");
+            fprintf(fp,
+                    "#  '# comment'     lines starting with # are ignored\n\n");
+            fprintf(fp, ".git/\n");
+            fprintf(fp, "node_modules/\n");
+            fprintf(fp, "*.o\n");
+            fclose(fp);
+        }
+    }
+
     w->gtk_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(w->gtk_window), "Btrfs Rsync Sync GUI");
     gtk_window_set_default_size(GTK_WINDOW(w->gtk_window), 1100, 800);
@@ -86,19 +117,36 @@ main(int32 argc, char *argv[]) {
 
     diff_lbl = gtk_label_new("Diff Tool:");
     w->diff_entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(w->diff_entry), "unidiff.bash");
-    gtk_widget_set_tooltip_text(
-        w->diff_entry,
-        "Command for comparing files (e.g., diffoscope, meld, diffuse)");
-
     term_lbl = gtk_label_new("Terminal:");
     w->term_entry = gtk_entry_new();
-    auto_terminal = find_terminal();
-    gtk_entry_set_text(GTK_ENTRY(w->term_entry),
-                       auto_terminal ? auto_terminal : "");
-    gtk_widget_set_tooltip_text(
-        w->term_entry,
-        "Terminal emulator to launch (e.g., xterm, kitty, konsole)");
+
+    kf = g_key_file_new();
+    if (g_key_file_load_from_file(kf, w->config_path, G_KEY_FILE_NONE, NULL)) {
+        if ((conf_term
+             = g_key_file_get_string(kf, "Settings", "terminal", NULL))
+            != NULL) {
+            gtk_entry_set_text(GTK_ENTRY(w->term_entry), conf_term);
+            g_free(conf_term);
+        }
+        if ((conf_diff
+             = g_key_file_get_string(kf, "Settings", "diff_tool", NULL))
+            != NULL) {
+            gtk_entry_set_text(GTK_ENTRY(w->diff_entry), conf_diff);
+            g_free(conf_diff);
+        }
+    } else {
+        auto_terminal = find_terminal();
+        gtk_entry_set_text(GTK_ENTRY(w->term_entry),
+                           auto_terminal ? auto_terminal : "");
+        gtk_entry_set_text(GTK_ENTRY(w->diff_entry), "unidiff.bash");
+
+        g_key_file_set_string(kf, "Settings", "terminal",
+                              gtk_entry_get_text(GTK_ENTRY(w->term_entry)));
+        g_key_file_set_string(kf, "Settings", "diff_tool",
+                              gtk_entry_get_text(GTK_ENTRY(w->diff_entry)));
+        g_key_file_save_to_file(kf, w->config_path, NULL);
+    }
+    g_key_file_free(kf);
 
     gtk_box_pack_start(GTK_BOX(options_hbox), w->check_fs_toggle, FALSE, FALSE,
                        5);
@@ -170,6 +218,7 @@ main(int32 argc, char *argv[]) {
     g_free(cwd);
     g_free(default_src);
     g_free(default_dst);
+    g_free(config_base);
 
     l_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(l_scroll));
     r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(r_scroll));
@@ -200,7 +249,17 @@ main(int32 argc, char *argv[]) {
     gtk_widget_show_all(w->gtk_window);
     gtk_paned_set_position(GTK_PANED(v_paned), 550);
     gtk_main();
+
+    kf = g_key_file_new();
+    g_key_file_set_string(kf, "Settings", "terminal",
+                          gtk_entry_get_text(GTK_ENTRY(w->term_entry)));
+    g_key_file_set_string(kf, "Settings", "diff_tool",
+                          gtk_entry_get_text(GTK_ENTRY(w->diff_entry)));
+    g_key_file_save_to_file(kf, w->config_path, NULL);
+    g_key_file_free(kf);
+
     g_free(w->exclude_path);
+    g_free(w->config_path);
     g_free(w);
     exit(EXIT_SUCCESS);
 }

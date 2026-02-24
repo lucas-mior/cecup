@@ -30,6 +30,7 @@ typedef struct AppWidgets {
     GtkListStore *store;
     GtkTextBuffer *log_buffer;
     char *exclude_path;
+    char *config_path;
 } AppWidgets;
 
 typedef struct ThreadData {
