@@ -222,7 +222,6 @@ update_ui_handler(gpointer user_data) {
         char *ptr;
         int32 current_len;
         int32 last_space_idx;
-        int32 i;
         char wrapped[8192];
         int32 w_idx;
 
@@ -231,7 +230,7 @@ update_ui_handler(gpointer user_data) {
         current_len = 0;
         last_space_idx = -1;
 
-        for (i = 0; ptr[i] != '\0'; i++) {
+        for (int32 i = 0; ptr[i] != '\0'; i++) {
             wrapped[w_idx++] = ptr[i];
             current_len++;
             if (isspace((unsigned char)ptr[i])) {
