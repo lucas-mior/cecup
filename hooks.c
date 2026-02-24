@@ -36,60 +36,63 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
 static void
 on_menu_open(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-    char *base;
-    char *full;
-    char *cmd;
 
     (void)m;
     ud = (UIUpdateData *)data;
-    base = (char *)gtk_entry_get_text(GTK_ENTRY(
-        ud->side == 0 ? ud->widgets->src_entry : ud->widgets->dst_entry));
     if (g_strcmp0(ud->filepath, "-") == 0) {
         g_free(ud->filepath);
         g_free(ud->action);
         g_free(ud);
-        return;
+    } else {
+        char *base;
+        char *full;
+        char *cmd;
+
+        base = (char *)gtk_entry_get_text(GTK_ENTRY(
+            ud->side == 0 ? ud->widgets->src_entry : ud->widgets->dst_entry));
+        full = g_build_filename(base, ud->filepath, NULL);
+        cmd = g_strdup_printf("xdg-open '%s' &", full);
+        system(cmd);
+        g_free(cmd);
+        g_free(full);
+        g_free(ud->filepath);
+        g_free(ud->action);
+        g_free(ud);
     }
-    full = g_build_filename(base, ud->filepath, NULL);
-    cmd = g_strdup_printf("xdg-open '%s' &", full);
-    system(cmd);
-    g_free(cmd);
-    g_free(full);
-    g_free(ud->filepath);
-    g_free(ud->action);
-    g_free(ud);
     return;
 }
 
 static void
 on_menu_open_dir(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-    char *base;
-    char *full;
-    char *dir;
-    char *cmd;
 
     (void)m;
     ud = (UIUpdateData *)data;
-    base = (char *)gtk_entry_get_text(GTK_ENTRY(
-        ud->side == 0 ? ud->widgets->src_entry : ud->widgets->dst_entry));
     if (g_strcmp0(ud->filepath, "-") == 0) {
         g_free(ud->filepath);
         g_free(ud->action);
         g_free(ud);
-        return;
+    } else {
+        char *base;
+        char *full;
+        char *dir;
+
+        base = (char *)gtk_entry_get_text(GTK_ENTRY(
+            ud->side == 0 ? ud->widgets->src_entry : ud->widgets->dst_entry));
+        full = g_build_filename(base, ud->filepath, NULL);
+        if ((dir = g_path_get_dirname(full)) != NULL) {
+            char *cmd;
+
+            cmd = g_strdup_printf("xdg-open '%s' &", dir);
+            system(cmd);
+            g_free(cmd);
+            g_free(dir);
+        }
+        g_free(full);
+        g_free(ud->filepath);
+        g_free(ud->action);
+        g_free(ud);
     }
-    full = g_build_filename(base, ud->filepath, NULL);
-    if ((dir = g_path_get_dirname(full)) != NULL) {
-        cmd = g_strdup_printf("xdg-open '%s' &", dir);
-        system(cmd);
-        g_free(cmd);
-        g_free(dir);
-    }
-    g_free(full);
-    g_free(ud->filepath);
-    g_free(ud->action);
-    g_free(ud);
     return;
 }
 
@@ -101,9 +104,6 @@ on_menu_apply(GtkWidget *m, gpointer data) {
     GtkTreeModel *model;
     GList *paths;
     GList *l;
-    GtkTreeIter iter;
-    char *f_path;
-    char *action;
     int32 side;
 
     ud = (UIUpdateData *)data;
@@ -113,14 +113,22 @@ on_menu_apply(GtkWidget *m, gpointer data) {
     paths = gtk_tree_selection_get_selected_rows(sel, &model);
 
     for (l = paths; l != NULL; l = l->next) {
+        GtkTreeIter iter;
+
         if (gtk_tree_model_get_iter(model, &iter, (GtkTreePath *)l->data)) {
-            int32 path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
-            int32 act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;
-            UIUpdateData *task;
+            int32 path_col;
+            int32 act_col;
+            char *f_path;
+            char *action;
+
+            path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
+            act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;
             gtk_tree_model_get(model, &iter, path_col, &f_path, act_col,
                                &action, -1);
 
             if (g_strcmp0(f_path, "-") != 0) {
+                UIUpdateData *task;
+
                 task = g_new0(UIUpdateData, 1);
                 task->widgets = ud->widgets;
                 task->filepath = g_strdup(f_path);
@@ -142,6 +150,7 @@ on_menu_apply(GtkWidget *m, gpointer data) {
 static void
 on_menu_diff(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
+
     (void)m;
     ud = (UIUpdateData *)data;
     g_thread_new("diff_worker", diff_worker, ud);
@@ -152,10 +161,12 @@ static void
 on_menu_exclude_ext(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     char *ext;
-    FILE *fp;
+
     (void)m;
     ud = (UIUpdateData *)data;
     if ((ext = strrchr(ud->filepath, '.')) != NULL) {
+        FILE *fp;
+
         if ((fp = fopen(ud->widgets->exclude_path, "a")) != NULL) {
             fprintf(fp, "\n*%s", ext);
             fclose(fp);
@@ -172,11 +183,13 @@ static void
 on_menu_exclude_dir(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     char *dir;
-    FILE *fp;
+
     (void)m;
     ud = (UIUpdateData *)data;
     if ((dir = g_path_get_dirname(ud->filepath)) != NULL) {
         if (g_strcmp0(dir, ".") != 0) {
+            FILE *fp;
+
             if ((fp = fopen(ud->widgets->exclude_path, "a")) != NULL) {
                 fprintf(fp, "\n/%s/", dir);
                 fclose(fp);
@@ -196,6 +209,7 @@ on_invert_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w;
     char *path_src;
     char *path_dst;
+
     (void)b;
     w = (AppWidgets *)data;
     path_src = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->src_entry)));
@@ -214,7 +228,6 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
     char *path_src;
     char *path_dst;
     GtkWidget *dialog;
-    ThreadData *thread_data;
 
     w = (AppWidgets *)data;
     path_src = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
@@ -224,6 +237,8 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
                                     GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
                                     "Sync %s -> %s?", path_src, path_dst);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
+        ThreadData *thread_data;
+
         gtk_widget_set_sensitive(w->preview_button, FALSE);
         gtk_widget_set_sensitive(w->sync_button, FALSE);
         thread_data = g_new0(ThreadData, 1);
@@ -248,6 +263,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
     GtkTextBuffer *buffer;
     char *content;
     gsize length;
+
     (void)b;
     w = (AppWidgets *)data;
     dialog = gtk_dialog_new_with_buttons(
@@ -265,11 +281,14 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
                        scroll, TRUE, TRUE, 5);
     gtk_widget_show_all(dialog);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        GtkTextIter start, end;
+        GtkTextIter start;
+        GtkTextIter end;
+        char *text;
+        FILE *fp;
+
         gtk_text_buffer_get_start_iter(buffer, &start);
         gtk_text_buffer_get_end_iter(buffer, &end);
-        char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
-        FILE *fp;
+        text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
         if ((fp = fopen(w->exclude_path, "w")) != NULL) {
             fputs(text, fp);
             fclose(fp);
@@ -285,13 +304,16 @@ static void
 on_browse_src(GtkWidget *b, gpointer data) {
     AppWidgets *w;
     GtkWidget *dialog;
+
     w = (AppWidgets *)data;
     (void)b;
     dialog = gtk_file_chooser_dialog_new(
         "Src", GTK_WINDOW(w->gtk_window), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
         "_Cancel", GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        char *path;
+
+        path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
         gtk_entry_set_text(GTK_ENTRY(w->src_entry), path);
         g_free(path);
     }
@@ -303,13 +325,16 @@ static void
 on_browse_dst(GtkWidget *b, gpointer data) {
     AppWidgets *w;
     GtkWidget *dialog;
+
     w = (AppWidgets *)data;
     (void)b;
     dialog = gtk_file_chooser_dialog_new(
         "Dst", GTK_WINDOW(w->gtk_window), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
         "_Cancel", GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        char *path;
+
+        path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
         gtk_entry_set_text(GTK_ENTRY(w->dst_entry), path);
         g_free(path);
     }
@@ -319,7 +344,9 @@ on_browse_dst(GtkWidget *b, gpointer data) {
 
 static void
 on_scroll_sync(GtkAdjustment *s, gpointer d) {
-    double v = gtk_adjustment_get_value(s);
+    double v;
+
+    v = gtk_adjustment_get_value(s);
     if (gtk_adjustment_get_value(GTK_ADJUSTMENT(d)) != v) {
         gtk_adjustment_set_value(GTK_ADJUSTMENT(d), v);
     }
@@ -330,9 +357,11 @@ static void
 on_sort_changed(GtkTreeSortable *s, gpointer d) {
     int32 id;
     GtkSortType o;
+
     if (gtk_tree_sortable_get_sort_column_id(s, &id, &o)) {
-        GtkTreeViewColumn *c = gtk_tree_view_get_column(GTK_TREE_VIEW(d), 1);
-        if (c) {
+        GtkTreeViewColumn *c;
+
+        if ((c = gtk_tree_view_get_column(GTK_TREE_VIEW(d), 1)) != NULL) {
             gtk_tree_view_column_set_sort_indicator(c, TRUE);
             gtk_tree_view_column_set_sort_order(c, o);
         }
@@ -342,34 +371,37 @@ on_sort_changed(GtkTreeSortable *s, gpointer d) {
 
 static gboolean
 on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
-    GtkTreePath *path;
-    GtkTreeIter iter;
-    GtkTreeModel *model;
-    GtkWidget *menu;
-    GtkWidget *item;
-    GtkWidget *sub;
-    GtkWidget *sub_ext;
-    GtkWidget *sub_dir;
-    UIUpdateData *ud;
-    char *f_path;
-    char *action;
-    char *other_path;
     AppWidgets *w;
     int32 side;
-    int32 path_col;
-    int32 act_col;
-    int32 other_col;
-    int32 is_disabled;
 
     w = (AppWidgets *)data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
 
     if (event->type == GDK_BUTTON_PRESS && event->button == 3) {
+        GtkTreePath *path;
+
         if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
                                           (gint)event->y, &path, NULL, NULL,
                                           NULL)) {
+            GtkTreeModel *model;
+            GtkTreeIter iter;
+
             model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
             if (gtk_tree_model_get_iter(model, &iter, path)) {
+                int32 path_col;
+                int32 act_col;
+                int32 other_col;
+                char *f_path;
+                char *action;
+                char *other_path;
+                UIUpdateData *ud;
+                GtkWidget *menu;
+                GtkWidget *item;
+                GtkWidget *sub;
+                GtkWidget *sub_ext;
+                GtkWidget *sub_dir;
+                int32 is_disabled;
+
                 path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
                 act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;
                 other_col = (side == 0) ? COL_DST_PATH : COL_SRC_PATH;
@@ -387,6 +419,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_open),
                                  ud);
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
                 item = gtk_menu_item_new_with_label("Open Folder");
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_open_dir),
                                  ud);
@@ -401,14 +434,17 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 item = gtk_menu_item_new_with_label("Exclude...");
                 sub = gtk_menu_new();
                 gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
+
                 sub_ext = gtk_menu_item_new_with_label("Ext");
                 g_signal_connect(sub_ext, "activate",
                                  G_CALLBACK(on_menu_exclude_ext), ud);
                 gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
+
                 sub_dir = gtk_menu_item_new_with_label("Dir");
                 g_signal_connect(sub_dir, "activate",
                                  G_CALLBACK(on_menu_exclude_dir), ud);
                 gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
+
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
                 item = gtk_menu_item_new_with_label("Diff");
@@ -433,11 +469,14 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             return TRUE;
         }
     } else if (event->type == GDK_BUTTON_PRESS && event->button == 1) {
+        GtkTreePath *path;
+
         if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
                                           (gint)event->y, &path, NULL, NULL,
                                           NULL)) {
-            GtkTreeSelection *sel
-                = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+            GtkTreeSelection *sel;
+
+            sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
             if (gtk_tree_selection_path_is_selected(sel, path)) {
                 gtk_tree_selection_unselect_path(sel, path);
                 gtk_tree_path_free(path);
@@ -453,18 +492,22 @@ static gboolean
 on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 gpointer d) {
     GtkTreePath *p;
-    GtkTreeModel *m;
-    GtkTreeIter i;
-    char *r;
-    gint bx, by;
+    gint bx;
+    gint by;
+
     (void)k;
     (void)d;
     gtk_tree_view_convert_widget_to_bin_window_coords(GTK_TREE_VIEW(w), x, y,
                                                       &bx, &by);
     if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(w), bx, by, &p, NULL, NULL,
                                       NULL)) {
+        GtkTreeModel *m;
+        GtkTreeIter i;
+
         m = gtk_tree_view_get_model(GTK_TREE_VIEW(w));
         if (gtk_tree_model_get_iter(m, &i, p)) {
+            char *r;
+
             gtk_tree_model_get(m, &i, COL_REASON, &r, -1);
             if (r && strlen(r) > 0) {
                 gtk_tooltip_set_text(t, r);

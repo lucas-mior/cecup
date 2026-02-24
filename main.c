@@ -44,10 +44,7 @@ main(int32 argc, char *argv[]) {
     char *default_src;
     char *default_dst;
     char *config_base;
-    char *auto_terminal;
     GKeyFile *kf;
-    char *conf_term;
-    char *conf_diff;
 
     gtk_init(&argc, &argv);
     w = g_new0(AppWidgets, 1);
@@ -60,6 +57,7 @@ main(int32 argc, char *argv[]) {
 
     if (access(w->exclude_path, F_OK) == -1) {
         FILE *fp;
+
         if ((fp = fopen(w->exclude_path, "w")) != NULL) {
             fprintf(fp, "# cecup rsync exclusion patterns\n");
             fprintf(fp, "# ------------------------------\n");
@@ -123,6 +121,9 @@ main(int32 argc, char *argv[]) {
 
     kf = g_key_file_new();
     if (g_key_file_load_from_file(kf, w->config_path, G_KEY_FILE_NONE, NULL)) {
+        char *conf_term;
+        char *conf_diff;
+
         if ((conf_term
              = g_key_file_get_string(kf, "Settings", "terminal", NULL))
             != NULL) {
@@ -136,6 +137,8 @@ main(int32 argc, char *argv[]) {
             g_free(conf_diff);
         }
     } else {
+        char *auto_terminal;
+
         auto_terminal = find_terminal();
         gtk_entry_set_text(GTK_ENTRY(w->term_entry),
                            auto_terminal ? auto_terminal : "");
@@ -269,15 +272,6 @@ static gboolean
 update_ui_handler(gpointer user_data) {
     UIUpdateData *data;
     GtkListStore *store;
-    GtkTreeIter iter;
-    char *size_str;
-    char *bg_src;
-    char *bg_dst;
-    char *path_src;
-    char *path_dst;
-    char *action_src;
-    char *action_dst;
-    gboolean valid;
 
     data = (UIUpdateData *)user_data;
     store = data->widgets->store;
@@ -327,6 +321,15 @@ update_ui_handler(gpointer user_data) {
         break;
     }
     case DATA_TYPE_TREE_ROW: {
+        GtkTreeIter iter;
+        char *size_str;
+        char *bg_src;
+        char *bg_dst;
+        char *path_src;
+        char *path_dst;
+        char *action_src;
+        char *action_dst;
+
         size_str = bytes_pretty(data->size);
         bg_src = "#FFFFFF";
         bg_dst = "#FFFFFF";
@@ -369,10 +372,14 @@ update_ui_handler(gpointer user_data) {
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
+        GtkTreeIter iter;
+        gboolean valid;
+
         valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter);
         while (valid) {
             char *row_path_src;
             char *row_path_dst;
+
             gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, COL_SRC_PATH,
                                &row_path_src, COL_DST_PATH, &row_path_dst, -1);
 

@@ -42,7 +42,6 @@ single_sync_worker(gpointer user_data) {
     char log_msg[5120];
     char *path_src;
     char *path_dst;
-    char *full_dst;
     UIUpdateData *remove_data;
     int32 status;
 
@@ -51,6 +50,8 @@ single_sync_worker(gpointer user_data) {
     path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry));
 
     if (g_strcmp0(ud->action, "Delete") == 0) {
+        char *full_dst;
+
         full_dst = g_build_filename(path_dst, ud->filepath, NULL);
         snprintf(cmd, sizeof(cmd), "rm -rfv '%s' 2>&1", full_dst);
         g_free(full_dst);
@@ -99,23 +100,26 @@ sync_worker(gpointer user_data) {
     char buffer[2048];
     FILE *rsync_pipe;
     char *exclude_flag;
-    struct stat st_src;
-    struct stat st_dst;
     char log_msg[5120];
     int32 status;
+    UIUpdateData *ready;
 
     thread_data = (ThreadData *)user_data;
 
     if (thread_data->check_different_fs) {
+        struct stat st_src;
+        struct stat st_dst;
+
         if (stat(thread_data->src_path, &st_src) == 0
             && stat(thread_data->dst_path, &st_dst) == 0) {
             if (st_src.st_dev == st_dst.st_dev) {
+                UIUpdateData *fail_ready;
+
                 dispatch_log(thread_data->widgets, "ERROR: Same filesystem.");
-                UIUpdateData *ready;
-                ready = g_new0(UIUpdateData, 1);
-                ready->widgets = thread_data->widgets;
-                ready->type = DATA_TYPE_ENABLE_BUTTONS;
-                g_idle_add(update_ui_handler, ready);
+                fail_ready = g_new0(UIUpdateData, 1);
+                fail_ready->widgets = thread_data->widgets;
+                fail_ready->type = DATA_TYPE_ENABLE_BUTTONS;
+                g_idle_add(update_ui_handler, fail_ready);
                 g_free(thread_data);
                 return NULL;
             }
@@ -124,6 +128,7 @@ sync_worker(gpointer user_data) {
 
     if (thread_data->is_preview) {
         UIUpdateData *clear;
+
         clear = g_new0(UIUpdateData, 1);
         clear->widgets = thread_data->widgets;
         clear->type = DATA_TYPE_CLEAR_TREES;
@@ -177,8 +182,8 @@ sync_worker(gpointer user_data) {
                            || strncmp(buffer, "cd", 2) == 0
                            || strncmp(buffer, ".d", 2) == 0) {
                     char *space;
-                    space = strchr(buffer, ' ');
-                    if (space) {
+
+                    if ((space = strchr(buffer, ' ')) != NULL) {
                         char *act;
                         char *reason;
                         struct stat st_file;
@@ -223,7 +228,6 @@ sync_worker(gpointer user_data) {
         }
     }
 
-    UIUpdateData *ready;
     ready = g_new0(UIUpdateData, 1);
     ready->widgets = thread_data->widgets;
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
@@ -237,8 +241,7 @@ find_terminal(void) {
     char *env_term;
     char *path;
 
-    env_term = getenv("TERMINAL");
-    if (env_term && strlen64(env_term) > 0) {
+    if ((env_term = getenv("TERMINAL")) != NULL && strlen64(env_term) > 0) {
         if ((path = g_find_program_in_path(env_term)) != NULL) {
             g_free(path);
             return env_term;
