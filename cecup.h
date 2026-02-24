@@ -4,6 +4,8 @@
 #include <gtk/gtk.h>
 #include "generic.c"
 
+#define MAX_FILE_LENGTH 4096
+
 enum {
     COL_SELECTED = 0,
     COL_SRC_ACTION,
@@ -66,11 +68,11 @@ typedef struct CecupState {
 
 typedef struct ThreadData {
     CecupState *widgets;
-    char src_path[1024];
-    char dst_path[1024];
+    char src_path[MAX_FILE_LENGTH];
+    char dst_path[MAX_FILE_LENGTH];
     bool is_preview;
-    int32 check_different_fs;
-    int32 show_equal;
+    bool check_different_fs;
+    bool show_equal;
 } ThreadData;
 
 enum DataType {
