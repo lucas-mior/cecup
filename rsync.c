@@ -49,8 +49,8 @@ single_sync_worker(gpointer user_data) {
     path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry));
 
     if (g_strcmp0(ud->action, "Delete") == 0) {
-        /* If the file was removed from source, we must delete it from
-         * destination */
+        /* If the file was removed from source,
+         * we must delete it from destination */
         full_dst = g_build_filename(path_dst, ud->filepath, NULL);
         snprintf(cmd, sizeof(cmd), "rm -rfv '%s' 2>&1", full_dst);
         g_free(full_dst);
