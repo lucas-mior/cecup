@@ -31,6 +31,7 @@ typedef struct AppWidgets {
     
     GtkWidget *filter_new;
     GtkWidget *filter_hard;
+    GtkWidget *filter_update;
     GtkWidget *filter_equal;
     GtkWidget *filter_delete;
     GtkWidget *filter_ignore;

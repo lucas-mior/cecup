@@ -26,7 +26,8 @@ is_row_visible(GtkTreeModel *model, GtkTreeIter *iter, gpointer data) {
         visible
             = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_hard));
     } else if (g_strcmp0(action_src, "Update") == 0) {
-        visible = TRUE;
+        visible
+            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_update));
     } else if (g_strcmp0(action_src, "Deleted") == 0) {
         visible
             = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_delete));
@@ -109,18 +110,21 @@ main(int32 argc, char *argv[]) {
     filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     w->filter_new = gtk_toggle_button_new_with_label("Show New");
     w->filter_hard = gtk_toggle_button_new_with_label("Show Hardlink");
+    w->filter_update = gtk_toggle_button_new_with_label("Show Update");
     w->filter_equal = gtk_toggle_button_new_with_label("Show Equal");
     w->filter_delete = gtk_toggle_button_new_with_label("Show Deleted");
     w->filter_ignore = gtk_toggle_button_new_with_label("Show Ignored");
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_new), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_hard), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_update), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_equal), FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_delete), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_ignore), TRUE);
 
     gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_new, FALSE, FALSE, 2);
     gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_hard, FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_update, FALSE, FALSE, 2);
     gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_equal, FALSE, FALSE, 2);
     gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_delete, FALSE, FALSE, 2);
     gtk_box_pack_start(GTK_BOX(filter_hbox), w->filter_ignore, FALSE, FALSE, 2);
@@ -161,6 +165,8 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(w->filter_new, "toggled", G_CALLBACK(on_filter_toggled),
                      w);
     g_signal_connect(w->filter_hard, "toggled", G_CALLBACK(on_filter_toggled),
+                     w);
+    g_signal_connect(w->filter_update, "toggled", G_CALLBACK(on_filter_toggled),
                      w);
     g_signal_connect(w->filter_equal, "toggled", G_CALLBACK(on_filter_toggled),
                      w);
