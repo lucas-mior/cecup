@@ -283,11 +283,11 @@ diff_worker(gpointer user_data) {
     path_src = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry));
     path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry));
     diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->diff_entry));
+    terminal = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->term_entry));
 
-    terminal = find_terminal();
-    if (!terminal) {
+    if (!terminal || strlen(terminal) == 0) {
         dispatch_log(ud->widgets,
-                     "ERROR: No suitable terminal found ($TERMINAL or xterm).");
+                     "ERROR: No terminal specified in the Terminal input box.");
         g_free(ud->filepath);
         g_free(ud->action);
         g_free(ud);

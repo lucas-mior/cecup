@@ -37,10 +37,12 @@ main(int32 argc, char *argv[]) {
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
     GtkWidget *diff_lbl;
+    GtkWidget *term_lbl;
     char *cwd;
     char *default_src;
     char *default_dst;
     char *config_dir;
+    char *auto_terminal;
 
     gtk_init(&argc, &argv);
     w = g_new0(AppWidgets, 1);
@@ -87,10 +89,21 @@ main(int32 argc, char *argv[]) {
         w->diff_entry,
         "Command for comparing files (e.g., diffoscope, meld, diffuse)");
 
+    term_lbl = gtk_label_new("Terminal:");
+    w->term_entry = gtk_entry_new();
+    auto_terminal = find_terminal();
+    gtk_entry_set_text(GTK_ENTRY(w->term_entry),
+                       auto_terminal ? auto_terminal : "");
+    gtk_widget_set_tooltip_text(
+        w->term_entry,
+        "Terminal emulator to launch (e.g., xterm, kitty, konsole)");
+
     gtk_box_pack_start(GTK_BOX(options_hbox), w->check_fs_toggle, FALSE, FALSE,
                        5);
     gtk_box_pack_start(GTK_BOX(options_hbox), diff_lbl, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(options_hbox), w->diff_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(options_hbox), term_lbl, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(options_hbox), w->term_entry, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
     v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);

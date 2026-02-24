@@ -22,6 +22,7 @@ typedef struct AppWidgets {
     GtkWidget *src_entry;
     GtkWidget *dst_entry;
     GtkWidget *diff_entry;
+    GtkWidget *term_entry;
     GtkWidget *preview_button;
     GtkWidget *sync_button;
     GtkWidget *exclude_button;
