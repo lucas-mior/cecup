@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <poll.h>
 #include <unistd.h>
+#include <stdarg.h>
 #include "util.c"
 #include "cecup.h"
 
@@ -45,12 +46,19 @@ log_error_handler(gpointer user_data) {
 }
 
 static void
-dispatch_log_error(AppWidgets *w, char *msg) {
+dispatch_log_error(AppWidgets *w, char *format, ...) {
     UIUpdateData *data;
+    va_list variable_arguments;
+    char message_buffer[8192];
+
+    va_start(variable_arguments, format);
+    vsnprintf(message_buffer, sizeof(message_buffer), format,
+              variable_arguments);
+    va_end(variable_arguments);
 
     data = g_new0(UIUpdateData, 1);
     data->widgets = w;
-    data->message = g_strdup(msg);
+    data->message = g_strdup(message_buffer);
     g_idle_add(log_error_handler, data);
     return;
 }
