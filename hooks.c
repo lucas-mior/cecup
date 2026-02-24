@@ -4,6 +4,48 @@
 #include "rsync.c"
 
 static void
+on_menu_delete(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud;
+    AppWidgets *w;
+    GtkWidget *dialog;
+    char *base;
+    char *full;
+
+    (void)m;
+    ud = (UIUpdateData *)data;
+    w = ud->widgets;
+
+    base = (char *)gtk_entry_get_text(
+        GTK_ENTRY(ud->side == 0 ? w->src_entry : w->dst_entry));
+    full = g_build_filename(base, ud->filepath, NULL);
+
+    dialog = gtk_message_dialog_new(GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL,
+                                    GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
+                                    "Permanently delete '%s'?", full);
+
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
+        UIUpdateData *task;
+
+        task = g_new0(UIUpdateData, 1);
+        task->widgets = w;
+        task->filepath = g_strdup(ud->filepath);
+        task->action = g_strdup("Delete");
+        task->side = ud->side;
+        task->dst_base = g_strdup(base);
+
+        g_thread_new("single_delete", bulk_sync_worker,
+                     g_list_append(NULL, task));
+    }
+
+    gtk_widget_destroy(dialog);
+    g_free(full);
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return;
+}
+
+static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w;
     char *s;
@@ -462,6 +504,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 char *action;
                 char *other_path;
                 UIUpdateData *ud;
+                UIUpdateData *ud_del;
                 GtkWidget *menu;
                 GtkWidget *item;
                 GtkWidget *sub;
@@ -523,6 +566,19 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 } else {
                     g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
                                      ud);
+                }
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+                item = gtk_menu_item_new_with_label("Delete");
+                if (g_strcmp0(f_path, "-") == 0) {
+                    gtk_widget_set_sensitive(item, FALSE);
+                } else {
+                    ud_del = g_new0(UIUpdateData, 1);
+                    ud_del->widgets = w;
+                    ud_del->filepath = g_strdup(f_path);
+                    ud_del->side = side;
+                    g_signal_connect(item, "activate",
+                                     G_CALLBACK(on_menu_delete), ud_del);
                 }
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
