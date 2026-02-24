@@ -105,8 +105,12 @@ bulk_sync_worker(gpointer user_data) {
             g_free(full_dst);
         } else {
             snprintf(cmd, sizeof(cmd),
-                     "rsync -av --update --hard-links --include='%s' "
-                     "--include='%s/**' --exclude='*' '%s/' '%s/' 2>&1",
+                     "rsync --verbose --update --recursive "
+                     "--partial --progress --info=progress2 "
+                     "--links --hard-links --itemize-changes "
+                     "--perms --times --owner --group "
+                     "--include='%s' --include='%s/**' --exclude='*' '%s/' "
+                     "'%s/' 2>&1",
                      ud->filepath, ud->filepath, ud->src_base, ud->dst_base);
         }
 
@@ -161,7 +165,8 @@ sync_worker(gpointer user_data) {
              : g_strdup("");
 
     snprintf(cmd, sizeof(cmd),
-             "rsync -av --itemize-changes --delete --delete-excluded %s %s "
+             "rsync -av --hard-links --itemize-changes --delete "
+             "--delete-excluded %s %s "
              "'%s/' '%s/' 2>&1",
              td->is_preview ? "--dry-run" : "", ex, td->src_path, td->dst_path);
     g_free(ex);
