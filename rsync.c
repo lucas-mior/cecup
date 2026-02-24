@@ -33,6 +33,45 @@ dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
 }
 
 static gpointer
+single_sync_worker(gpointer user_data) {
+    UIUpdateData *ud;
+    char cmd[4096];
+    char buffer[2048];
+    FILE *rsync_pipe;
+    char log_msg[5120];
+    char *path_src;
+    char *path_dst;
+
+    ud = (UIUpdateData *)user_data;
+    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry));
+    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry));
+
+    snprintf(cmd, sizeof(cmd),
+             "rsync --verbose --update --recursive --links --hard-links "
+             "--perms --times --owner --group --include='%s' --exclude='*' "
+             "'%s/' '%s/' 2>&1",
+             ud->filepath, path_src, path_dst);
+
+    snprintf(log_msg, sizeof(log_msg), "+ %s", cmd);
+    dispatch_log(ud->widgets, log_msg);
+
+    rsync_pipe = popen(cmd, "r");
+    if (rsync_pipe) {
+        while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            dispatch_log(ud->widgets, buffer);
+        }
+        pclose(rsync_pipe);
+    }
+
+    dispatch_log(ud->widgets, ">>> Single file sync finished.");
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return NULL;
+}
+
+static gpointer
 sync_worker(gpointer user_data) {
     ThreadData *thread_data;
     char cmd[4096];

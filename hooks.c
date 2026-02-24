@@ -1,7 +1,138 @@
 #include <gtk/gtk.h>
+#include <stdlib.h>
 
 #include "cecup.h"
 #include "rsync.c"
+
+static void
+on_menu_open(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud;
+    char *base;
+    char *full;
+    char *cmd;
+
+    (void)m;
+    ud = (UIUpdateData *)data;
+    base = (char *)gtk_entry_get_text(GTK_ENTRY(
+        ud->side == 0 ? ud->widgets->src_entry : ud->widgets->dst_entry));
+    full = g_build_filename(base, ud->filepath, NULL);
+    cmd = g_strdup_printf("xdg-open '%s' &", full);
+    system(cmd);
+    g_free(cmd);
+    g_free(full);
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return;
+}
+
+static void
+on_menu_open_dir(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud;
+    char *base;
+    char *full;
+    char *dir;
+    char *cmd;
+
+    (void)m;
+    ud = (UIUpdateData *)data;
+    base = (char *)gtk_entry_get_text(GTK_ENTRY(
+        ud->side == 0 ? ud->widgets->src_entry : ud->widgets->dst_entry));
+    full = g_build_filename(base, ud->filepath, NULL);
+    dir = g_path_get_dirname(full);
+    cmd = g_strdup_printf("xdg-open '%s' &", dir);
+    system(cmd);
+    g_free(cmd);
+    g_free(dir);
+    g_free(full);
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return;
+}
+
+static void
+on_menu_apply(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud;
+
+    (void)m;
+    ud = (UIUpdateData *)data;
+    g_thread_new("single_worker", single_sync_worker, ud);
+    return;
+}
+
+static void
+on_menu_diff(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud;
+    char *base_s;
+    char *base_d;
+    char *full_s;
+    char *full_d;
+    char *cmd;
+
+    (void)m;
+    ud = (UIUpdateData *)data;
+    base_s = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry));
+    base_d = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry));
+    full_s = g_build_filename(base_s, ud->filepath, NULL);
+    full_d = g_build_filename(base_d, ud->filepath, NULL);
+    cmd = g_strdup_printf("meld '%s' '%s' &", full_s, full_d);
+    system(cmd);
+    g_free(cmd);
+    g_free(full_s);
+    g_free(full_d);
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return;
+}
+
+static void
+on_menu_exclude_ext(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud;
+    char *ext;
+    FILE *fp;
+
+    (void)m;
+    ud = (UIUpdateData *)data;
+    ext = strrchr(ud->filepath, '.');
+    if (ext) {
+        fp = fopen(ud->widgets->exclude_path, "a");
+        if (fp) {
+            fprintf(fp, "\n*%s", ext);
+            fclose(fp);
+            dispatch_log(ud->widgets, "Pattern added to exclusions.");
+        }
+    }
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return;
+}
+
+static void
+on_menu_exclude_dir(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud;
+    char *dir;
+    FILE *fp;
+
+    (void)m;
+    ud = (UIUpdateData *)data;
+    dir = g_path_get_dirname(ud->filepath);
+    if (g_strcmp0(dir, ".") != 0) {
+        fp = fopen(ud->widgets->exclude_path, "a");
+        if (fp) {
+            fprintf(fp, "\n/%s/", dir);
+            fclose(fp);
+            dispatch_log(ud->widgets, "Pattern added to exclusions.");
+        }
+    }
+    g_free(dir);
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return;
+}
 
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
@@ -214,24 +345,103 @@ on_sort_changed(GtkTreeSortable *sortable, gpointer data) {
 
 static gboolean
 on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
-    GtkTreePath *gtk_tree_path;
-    GtkTreeSelection *gtk_tree_selection;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    GtkWidget *menu;
+    GtkWidget *item;
+    GtkWidget *sub;
+    UIUpdateData *ud;
+    char *f_path;
+    char *action;
+    AppWidgets *w;
+    int32 side;
+    gint bin_x;
+    gint bin_y;
 
-    (void)data;
-    if (event->type == GDK_BUTTON_PRESS && event->button == 1) {
-        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
-                                          (gint)event->y, &gtk_tree_path, NULL,
-                                          NULL, NULL)) {
-            gtk_tree_selection
+    w = (AppWidgets *)data;
+    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
+    gtk_tree_view_convert_widget_to_bin_window_coords(
+        GTK_TREE_VIEW(widget), (gint)event->x, (gint)event->y, &bin_x, &bin_y);
+
+    if (event->type == GDK_BUTTON_PRESS && event->button == 3) {
+        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), bin_x, bin_y,
+                                          &path, NULL, NULL, NULL)) {
+            model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
+            if (gtk_tree_model_get_iter(model, &iter, path)) {
+                gtk_tree_model_get(model, &iter, COL_SRC_PATH, &f_path,
+                                   COL_SRC_ACTION, &action, -1);
+
+                ud = g_new0(UIUpdateData, 1);
+                ud->widgets = w;
+                ud->filepath = g_strdup(f_path);
+                ud->action = g_strdup(action);
+                ud->side = side;
+
+                menu = gtk_menu_new();
+
+                item = gtk_menu_item_new_with_label("Open File");
+                g_signal_connect(item, "activate", G_CALLBACK(on_menu_open),
+                                 ud);
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+                item = gtk_menu_item_new_with_label("Open Folder");
+                g_signal_connect(item, "activate", G_CALLBACK(on_menu_open_dir),
+                                 ud);
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+                item = gtk_menu_item_new_with_label("Apply (This file only)");
+                g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply),
+                                 ud);
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+                item = gtk_menu_item_new_with_label("Exclude via filter...");
+                sub = gtk_menu_new();
+                gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
+
+                GtkWidget *sub_ext
+                    = gtk_menu_item_new_with_label("By Extension");
+                g_signal_connect(sub_ext, "activate",
+                                 G_CALLBACK(on_menu_exclude_ext), ud);
+                gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
+
+                GtkWidget *sub_dir
+                    = gtk_menu_item_new_with_label("By Directory");
+                g_signal_connect(sub_dir, "activate",
+                                 G_CALLBACK(on_menu_exclude_dir), ud);
+                gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+                item = gtk_menu_item_new_with_label("Diff");
+                if (g_strcmp0(f_path, "-") == 0 || g_strcmp0(action, "New") == 0
+                    || g_strcmp0(action, "Deleted") == 0) {
+                    gtk_widget_set_sensitive(item, FALSE);
+                } else {
+                    g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
+                                     ud);
+                }
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+                gtk_widget_show_all(menu);
+                gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
+
+                g_free(f_path);
+                g_free(action);
+            }
+            gtk_tree_path_free(path);
+            return TRUE;
+        }
+    } else if (event->type == GDK_BUTTON_PRESS && event->button == 1) {
+        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), bin_x, bin_y,
+                                          &path, NULL, NULL, NULL)) {
+            GtkTreeSelection *sel
                 = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
-            if (gtk_tree_selection_path_is_selected(gtk_tree_selection,
-                                                    gtk_tree_path)) {
-                gtk_tree_selection_unselect_path(gtk_tree_selection,
-                                                 gtk_tree_path);
-                gtk_tree_path_free(gtk_tree_path);
+            if (gtk_tree_selection_path_is_selected(sel, path)) {
+                gtk_tree_selection_unselect_path(sel, path);
+                gtk_tree_path_free(path);
                 return TRUE;
             }
-            gtk_tree_path_free(gtk_tree_path);
+            gtk_tree_path_free(path);
         }
     }
     return FALSE;
