@@ -35,12 +35,13 @@ dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
 }
 
 static void
-find_equal_files(AppWidgets *w, char *src_base, char *dst_base, char *rel) {
+find_equal_files(AppWidgets *w, char *src_base, char *dst_base,
+                 char *relative_path) {
     DIR *dir;
     struct dirent *entry;
     char *full_src;
 
-    full_src = g_build_filename(src_base, rel, NULL);
+    full_src = g_build_filename(src_base, relative_path, NULL);
     if (!(dir = opendir(full_src))) {
         g_free(full_src);
         return;
@@ -59,7 +60,7 @@ find_equal_files(AppWidgets *w, char *src_base, char *dst_base, char *rel) {
             continue;
         }
 
-        sub_rel = g_build_filename(rel, name, NULL);
+        sub_rel = g_build_filename(relative_path, name, NULL);
         s_path = g_build_filename(src_base, sub_rel, NULL);
         d_path = g_build_filename(dst_base, sub_rel, NULL);
 
@@ -176,7 +177,7 @@ sync_worker(gpointer user_data) {
             buffer[strcspn(buffer, "\n")] = 0;
             if (td->is_preview) {
                 if (strncmp(buffer, "*deleting", 9) == 0) {
-                    char *rel;
+                    char *relative_path;
                     char *full_s;
                     char *full_d;
                     struct stat st_s;
@@ -184,30 +185,33 @@ sync_worker(gpointer user_data) {
                     int64 sz;
                     char *reason;
 
-                    rel = buffer + 10;
-                    while (isspace(*rel)) {
-                        rel++;
+                    relative_path = buffer + 10;
+                    while (isspace(*relative_path)) {
+                        relative_path++;
                     }
 
-                    full_s = g_build_filename(td->src_path, rel, NULL);
-                    full_d = g_build_filename(td->dst_path, rel, NULL);
+                    full_s
+                        = g_build_filename(td->src_path, relative_path, NULL);
+                    full_d
+                        = g_build_filename(td->dst_path, relative_path, NULL);
                     sz = (stat(full_d, &st_d) == 0) ? st_d.st_size : 0;
                     reason = (stat(full_s, &st_s) == 0) ? "Excluded by pattern"
                                                         : "Missing in source";
 
-                    dispatch_tree(td->widgets, 1, "Delete", rel, sz, reason);
+                    dispatch_tree(td->widgets, 1, "Delete", relative_path, sz,
+                                  reason);
                     g_free(full_s);
                     g_free(full_d);
                 } else if (strchr(buffer, ' ')
                            && (buffer[0] == '>' || buffer[0] == '.'
                                || buffer[0] == 'h' || buffer[0] == 'c')) {
-                    char *rel;
+                    char *relative_path;
                     char *act;
                     char *full_s;
                     struct stat st;
                     int64 sz;
 
-                    rel = strchr(buffer, ' ') + 1;
+                    relative_path = strchr(buffer, ' ') + 1;
                     act = "Update";
 
                     if (strncmp(buffer, "hf", 2) == 0) {
@@ -217,9 +221,10 @@ sync_worker(gpointer user_data) {
                         act = "New";
                     }
 
-                    full_s = g_build_filename(td->src_path, rel, NULL);
+                    full_s
+                        = g_build_filename(td->src_path, relative_path, NULL);
                     sz = (stat(full_s, &st) == 0) ? st.st_size : 0;
-                    dispatch_tree(td->widgets, 0, act, rel, sz, act);
+                    dispatch_tree(td->widgets, 0, act, relative_path, sz, act);
                     g_free(full_s);
                 }
             } else {
