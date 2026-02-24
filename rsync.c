@@ -245,6 +245,29 @@ sync_worker(gpointer user_data) {
     return NULL;
 }
 
+static char *
+find_terminal(void) {
+    char *env_term;
+    char *path;
+
+    env_term = getenv("TERMINAL");
+    if (env_term && strlen64(env_term) > 0) {
+        path = g_find_program_in_path(env_term);
+        if (path) {
+            g_free(path);
+            return env_term;
+        }
+    }
+
+    path = g_find_program_in_path("xterm");
+    if (path) {
+        g_free(path);
+        return "xterm";
+    }
+
+    return NULL;
+}
+
 static gpointer
 diff_worker(gpointer user_data) {
     UIUpdateData *ud;
@@ -254,22 +277,33 @@ diff_worker(gpointer user_data) {
     char *path_src;
     char *path_dst;
     char *diff_tool;
+    char *terminal;
 
     ud = (UIUpdateData *)user_data;
     path_src = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry));
     path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry));
     diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->diff_entry));
 
+    terminal = find_terminal();
+    if (!terminal) {
+        dispatch_log(ud->widgets,
+                     "ERROR: No suitable terminal found ($TERMINAL or xterm).");
+        g_free(ud->filepath);
+        g_free(ud->action);
+        g_free(ud);
+        return NULL;
+    }
+
     snprintf(cmd, sizeof(cmd), "%s '%s/%s' '%s/%s'", diff_tool, path_src,
              ud->filepath, path_dst, ud->filepath);
 
     snprintf(term_cmd, sizeof(term_cmd),
-             "$TERMINAL -e bash -c \"%s; echo; echo "
+             "%s -e bash -c \"%s; echo; echo "
              "'-----------------------'; read -n 1 -s -r -p 'Press any key to "
              "close...'\" &",
-             cmd);
+             terminal, cmd);
 
-    snprintf(log_msg, sizeof(log_msg), ">>> Launching terminal: %s", cmd);
+    snprintf(log_msg, sizeof(log_msg), ">>> Launching (%s): %s", terminal, cmd);
     dispatch_log(ud->widgets, log_msg);
 
     system(term_cmd);
