@@ -5,9 +5,7 @@
 
 static void
 free_task_list(GList *tasks) {
-    GList *l;
-
-    for (l = tasks; l != NULL; l = l->next) {
+    for (GList *l = tasks; l != NULL; l = l->next) {
         UIUpdateData *t;
 
         t = (UIUpdateData *)l->data;
@@ -107,13 +105,12 @@ static void
 on_menu_open(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GList *tasks;
-    GList *l;
 
     (void)m;
     ud = (UIUpdateData *)data;
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
 
-    for (l = tasks; l != NULL; l = l->next) {
+    for (GList *l = tasks; l != NULL; l = l->next) {
         UIUpdateData *t;
         char *full;
         char *cmd;
@@ -138,13 +135,12 @@ static void
 on_menu_open_dir(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GList *tasks;
-    GList *l;
 
     (void)m;
     ud = (UIUpdateData *)data;
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
 
-    for (l = tasks; l != NULL; l = l->next) {
+    for (GList *l = tasks; l != NULL; l = l->next) {
         UIUpdateData *t;
         char *full;
         char *dir;
@@ -211,7 +207,6 @@ static void
 on_menu_diff(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GList *tasks;
-    GList *l;
     char *diff_tool;
     char *term_cmd;
 
@@ -221,7 +216,7 @@ on_menu_diff(GtkWidget *m, gpointer data) {
     term_cmd = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->term_entry));
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
 
-    for (l = tasks; l != NULL; l = l->next) {
+    for (GList *l = tasks; l != NULL; l = l->next) {
         UIUpdateData *t;
 
         t = (UIUpdateData *)l->data;
@@ -241,7 +236,6 @@ static void
 on_menu_exclude_ext(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GList *tasks;
-    GList *l;
     FILE *fp;
 
     (void)m;
@@ -249,7 +243,7 @@ on_menu_exclude_ext(GtkWidget *m, gpointer data) {
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
 
     if ((fp = fopen(ud->widgets->exclude_path, "a")) != NULL) {
-        for (l = tasks; l != NULL; l = l->next) {
+        for (GList *l = tasks; l != NULL; l = l->next) {
             UIUpdateData *t;
             char *ext;
 
@@ -273,7 +267,6 @@ static void
 on_menu_exclude_dir(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GList *tasks;
-    GList *l;
     FILE *fp;
 
     (void)m;
@@ -281,7 +274,7 @@ on_menu_exclude_dir(GtkWidget *m, gpointer data) {
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
 
     if ((fp = fopen(ud->widgets->exclude_path, "a")) != NULL) {
-        for (l = tasks; l != NULL; l = l->next) {
+        for (GList *l = tasks; l != NULL; l = l->next) {
             UIUpdateData *t;
             char *dir;
 

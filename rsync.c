@@ -86,11 +86,10 @@ find_equal_files(AppWidgets *w, char *src_base, char *dst_base, char *rel) {
 static gpointer
 bulk_sync_worker(gpointer user_data) {
     GList *tasks;
-    GList *l;
 
     tasks = (GList *)user_data;
 
-    for (l = tasks; l != NULL; l = l->next) {
+    for (GList *l = tasks; l != NULL; l = l->next) {
         UIUpdateData *ud;
         char cmd[4096];
         char buffer[2048];
