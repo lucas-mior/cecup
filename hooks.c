@@ -269,17 +269,28 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
     dialog = gtk_dialog_new_with_buttons(
         "Exclusions", GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL, "_Save",
         GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
+
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
+
     scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+
     view = gtk_text_view_new();
+    gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 5);
     buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+
     if (g_file_get_contents(w->exclude_path, &content, &length, NULL)) {
         gtk_text_buffer_set_text(buffer, content, -1);
         g_free(content);
     }
+
     gtk_container_add(GTK_CONTAINER(scroll), view);
     gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
                        scroll, TRUE, TRUE, 5);
+
     gtk_widget_show_all(dialog);
+
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         GtkTextIter start;
         GtkTextIter end;
@@ -289,6 +300,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
         gtk_text_buffer_get_start_iter(buffer, &start);
         gtk_text_buffer_get_end_iter(buffer, &end);
         text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+
         if ((fp = fopen(w->exclude_path, "w")) != NULL) {
             fputs(text, fp);
             fclose(fp);
@@ -296,6 +308,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
         g_free(text);
         on_preview_clicked(NULL, w);
     }
+
     gtk_widget_destroy(dialog);
     return;
 }
