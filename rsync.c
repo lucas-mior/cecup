@@ -73,7 +73,7 @@ dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
     data->widgets = w;
     data->type = DATA_TYPE_TREE_ROW;
     data->side = side;
-    data->action = g_strdup(act);
+    data->action = act;
     data->filepath = g_strdup(path);
     data->reason = reason;
     data->size = size;
@@ -165,7 +165,6 @@ bulk_sync_worker(gpointer user_data) {
 
         if (ud->widgets->cancel_sync) {
             g_free(ud->filepath);
-            g_free(ud->action);
             g_free(ud->src_base);
             g_free(ud->dst_base);
             g_free(ud->term_cmd);
@@ -341,7 +340,6 @@ bulk_sync_worker(gpointer user_data) {
         }
 
         g_free(ud->filepath);
-        g_free(ud->action);
         g_free(ud->src_base);
         g_free(ud->dst_base);
         g_free(ud->term_cmd);
@@ -679,7 +677,6 @@ diff_worker(gpointer user_data) {
     system(cmd);
 
     g_free(ud->filepath);
-    g_free(ud->action);
     g_free(ud->src_base);
     g_free(ud->dst_base);
     g_free(ud->term_cmd);

@@ -357,8 +357,8 @@ update_ui_handler(gpointer user_data) {
 
         row = g_new0(CecupRow, 1);
         row->selected = FALSE;
-        row->src_action = g_strdup(act_src);
-        row->dst_action = g_strdup(act_dst);
+        row->src_action = act_src;
+        row->dst_action = act_dst;
         row->src_path = g_strdup(path_src);
         row->dst_path = g_strdup(path_dst);
         row->size_text = g_strdup(sz_str);
@@ -421,7 +421,6 @@ update_ui_handler(gpointer user_data) {
     }
 
     g_free(data->message);
-    g_free(data->action);
     g_free(data->filepath);
     g_free(data);
     return G_SOURCE_REMOVE;

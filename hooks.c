@@ -5,8 +5,6 @@
 
 static void
 free_cecup_row(CecupRow *row) {
-    g_free(row->src_action);
-    g_free(row->dst_action);
     g_free(row->src_path);
     g_free(row->dst_path);
     g_free(row->size_text);
@@ -36,7 +34,6 @@ free_task_list(GList *tasks) {
         }
 
         g_free(t->filepath);
-        g_free(t->action);
         g_free(t->term_cmd);
         g_free(t->diff_tool);
         g_free(t);
@@ -75,7 +72,7 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
                 task = g_new0(UIUpdateData, 1);
                 task->widgets = w;
                 task->filepath = g_strdup(f_path);
-                task->action = g_strdup(action);
+                task->action = action;
                 task->side = side;
                 task->src_base = shared_src;
                 task->dst_base = shared_dst;
@@ -90,7 +87,7 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
         task = g_new0(UIUpdateData, 1);
         task->widgets = w;
         task->filepath = g_strdup(clicked_path);
-        task->action = g_strdup(clicked_action);
+        task->action = clicked_action;
         task->side = side;
         task->src_base = shared_src;
         task->dst_base = shared_dst;
@@ -226,7 +223,6 @@ on_menu_apply(GtkWidget *m, gpointer data) {
     }
 
     g_free(ud->filepath);
-    g_free(ud->action);
     g_free(ud);
     return;
 }
@@ -255,7 +251,6 @@ on_menu_open(GtkWidget *m, gpointer data) {
 
     free_task_list(tasks);
     g_free(ud->filepath);
-    g_free(ud->action);
     g_free(ud);
     return;
 }
@@ -288,7 +283,6 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
 
     free_task_list(tasks);
     g_free(ud->filepath);
-    g_free(ud->action);
     g_free(ud);
     return;
 }
@@ -307,7 +301,6 @@ on_menu_delete(GtkWidget *m, gpointer data) {
 
     if (count == 0) {
         g_free(ud->filepath);
-        g_free(ud->action);
         g_free(ud);
         return;
     }
@@ -329,7 +322,6 @@ on_menu_delete(GtkWidget *m, gpointer data) {
 
     gtk_widget_destroy(dialog);
     g_free(ud->filepath);
-    g_free(ud->action);
     g_free(ud);
     return;
 }
@@ -358,7 +350,6 @@ on_menu_diff(GtkWidget *m, gpointer data) {
 
     g_list_free(tasks);
     g_free(ud->filepath);
-    g_free(ud->action);
     g_free(ud);
     return;
 }
@@ -389,7 +380,6 @@ on_menu_exclude_ext(GtkWidget *m, gpointer data) {
 
     free_task_list(tasks);
     g_free(ud->filepath);
-    g_free(ud->action);
     g_free(ud);
     return;
 }
@@ -423,7 +413,6 @@ on_menu_exclude_dir(GtkWidget *m, gpointer data) {
 
     free_task_list(tasks);
     g_free(ud->filepath);
-    g_free(ud->action);
     g_free(ud);
     return;
 }
@@ -795,7 +784,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 ud = g_new0(UIUpdateData, 1);
                 ud->widgets = w;
                 ud->filepath = g_strdup(f_path);
-                ud->action = g_strdup(action);
+                ud->action = action;
                 ud->side = side;
 
                 menu = gtk_menu_new();
@@ -856,7 +845,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
                 g_free(f_path);
                 g_free(other_path);
-                g_free(action);
             }
             gtk_tree_path_free(path);
             return TRUE;
