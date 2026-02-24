@@ -141,10 +141,10 @@ sync_worker(gpointer user_data) {
 
                         if (strncmp(buffer, ">f+++++", 7) == 0) {
                             act = "New";
-                            reason = "File changed in source directory";
+                            reason = "New file created in source directory";
                         } else {
                             act = "Update";
-                            reason = "New file created in source directory";
+                            reason = "File changed in source directory";
                         }
                         snprintf(full_path, sizeof(full_path), "%s/%s",
                                  thread_data->src_path, space + 1);

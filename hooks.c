@@ -244,10 +244,16 @@ on_tree_tooltip(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode,
     GtkTreeModel *model;
     GtkTreeIter iter;
     char *reason;
+    gint bin_x;
+    gint bin_y;
 
     (void)keyboard_mode;
     (void)user_data;
-    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), x, y,
+
+    gtk_tree_view_convert_widget_to_bin_window_coords(GTK_TREE_VIEW(widget), x,
+                                                      y, &bin_x, &bin_y);
+
+    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), bin_x, bin_y,
                                       &gtk_tree_path, NULL, NULL, NULL)) {
         model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
         if (gtk_tree_model_get_iter(model, &iter, gtk_tree_path)) {
