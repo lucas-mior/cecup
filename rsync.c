@@ -117,10 +117,9 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
         if (stat(path_src, &st_s) == 0 && stat(path_dst, &st_d) == 0) {
             char sub_rel[MAX_PATH_LENGTH];
             if (rel_len > 0) {
-                snprintf(sub_rel, sizeof(sub_rel), "%s/%s", relative_path,
-                         name);
+                SNPRINTF(sub_rel, "%s/%s", relative_path, name);
             } else {
-                snprintf(sub_rel, sizeof(sub_rel), "%s", name);
+                SNPRINTF(sub_rel, "%s", name);
             }
 
             if (S_ISDIR(st_s.st_mode)) {
