@@ -77,5 +77,6 @@ typedef struct UIUpdateData {
 } UIUpdateData;
 
 static gboolean update_ui_handler(gpointer user_data);
+static void on_preview_clicked(GtkWidget *b, gpointer data);
 
 #endif /* CECUP_H */
