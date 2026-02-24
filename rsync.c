@@ -178,7 +178,7 @@ sync_worker(gpointer user_data) {
             if (td->is_preview) {
                 if (strncmp(buffer, "*deleting", 9) == 0) {
                     char *relative_path;
-                    char *full_s;
+                    char *full_src;
                     char *full_d;
                     struct stat st_s;
                     struct stat st_d;
@@ -190,24 +190,25 @@ sync_worker(gpointer user_data) {
                         relative_path++;
                     }
 
-                    full_s
+                    full_src
                         = g_build_filename(td->src_path, relative_path, NULL);
                     full_d
                         = g_build_filename(td->dst_path, relative_path, NULL);
                     sz = (stat(full_d, &st_d) == 0) ? st_d.st_size : 0;
-                    reason = (stat(full_s, &st_s) == 0) ? "Excluded by pattern"
-                                                        : "Missing in source";
+                    reason = (stat(full_src, &st_s) == 0)
+                                 ? "Excluded by pattern"
+                                 : "Missing in source";
 
                     dispatch_tree(td->widgets, 1, "Delete", relative_path, sz,
                                   reason);
-                    g_free(full_s);
+                    g_free(full_src);
                     g_free(full_d);
                 } else if (strchr(buffer, ' ')
                            && (buffer[0] == '>' || buffer[0] == '.'
                                || buffer[0] == 'h' || buffer[0] == 'c')) {
                     char *relative_path;
                     char *act;
-                    char *full_s;
+                    char *full_src;
                     struct stat st;
                     int64 sz;
 
@@ -221,11 +222,11 @@ sync_worker(gpointer user_data) {
                         act = "New";
                     }
 
-                    full_s
+                    full_src
                         = g_build_filename(td->src_path, relative_path, NULL);
-                    sz = (stat(full_s, &st) == 0) ? st.st_size : 0;
+                    sz = (stat(full_src, &st) == 0) ? st.st_size : 0;
                     dispatch_tree(td->widgets, 0, act, relative_path, sz, act);
-                    g_free(full_s);
+                    g_free(full_src);
                 }
             } else {
                 dispatch_log(td->widgets, buffer);
