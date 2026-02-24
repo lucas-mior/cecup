@@ -4,6 +4,20 @@
 #include "rsync.c"
 
 static void
+free_cecup_row(CecupRow *row) {
+    g_free(row->src_action);
+    g_free(row->dst_action);
+    g_free(row->src_path);
+    g_free(row->dst_path);
+    g_free(row->size_text);
+    g_free(row->src_color);
+    g_free(row->dst_color);
+    g_free(row->reason);
+    g_free(row);
+    return;
+}
+
+static void
 free_task_list(GList *tasks) {
     char *shared_src;
     char *shared_dst;
@@ -39,47 +53,36 @@ static GList *
 get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
                  char *clicked_action) {
     GList *tasks;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    gboolean valid;
     char *shared_src;
     char *shared_dst;
 
     tasks = NULL;
-    model = GTK_TREE_MODEL(w->store);
-    valid = gtk_tree_model_get_iter_first(model, &iter);
-
     shared_src = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->src_entry)));
     shared_dst = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->dst_entry)));
 
-    while (valid) {
-        gboolean selected;
+    for (GList *l = w->rows; l != NULL; l = l->next) {
+        CecupRow *row;
 
-        gtk_tree_model_get(model, &iter, COL_SELECTED, &selected, -1);
-        if (selected) {
+        row = (CecupRow *)l->data;
+        if (row->selected) {
             char *f_path;
             char *action;
             UIUpdateData *task;
 
-            gtk_tree_model_get(
-                model, &iter, side == 0 ? COL_SRC_PATH : COL_DST_PATH, &f_path,
-                side == 0 ? COL_SRC_ACTION : COL_DST_ACTION, &action, -1);
+            f_path = (side == 0) ? row->src_path : row->dst_path;
+            action = (side == 0) ? row->src_action : row->dst_action;
 
             if (g_strcmp0(f_path, "-") != 0) {
                 task = g_new0(UIUpdateData, 1);
                 task->widgets = w;
-                task->filepath = f_path;
-                task->action = action;
+                task->filepath = g_strdup(f_path);
+                task->action = g_strdup(action);
                 task->side = side;
                 task->src_base = shared_src;
                 task->dst_base = shared_dst;
                 tasks = g_list_prepend(tasks, task);
-            } else {
-                g_free(f_path);
-                g_free(action);
             }
         }
-        valid = gtk_tree_model_iter_next(model, &iter);
     }
 
     if (tasks == NULL && g_strcmp0(clicked_path, "-") != 0) {
@@ -101,6 +104,99 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
     }
 
     return g_list_reverse(tasks);
+}
+
+static gint
+cecup_row_compare(gconstpointer a, gconstpointer b, gpointer user_data) {
+    AppWidgets *w;
+    CecupRow *ra;
+    CecupRow *rb;
+    int32 result;
+
+    w = (AppWidgets *)user_data;
+    ra = (CecupRow *)a;
+    rb = (CecupRow *)b;
+    result = 0;
+
+    switch (w->sort_col) {
+    case COL_SRC_PATH:
+    case COL_DST_PATH:
+        result = g_strcmp0(ra->src_path, rb->src_path);
+        break;
+    case COL_SIZE_RAW:
+        result = (ra->size_raw > rb->size_raw)
+                     ? 1
+                     : (ra->size_raw < rb->size_raw ? -1 : 0);
+        break;
+    default:
+        result = g_strcmp0(ra->src_action, rb->src_action);
+        break;
+    }
+
+    if (w->sort_order == GTK_SORT_DESCENDING) {
+        result *= -1;
+    }
+
+    return result;
+}
+
+static void
+refresh_ui_list(AppWidgets *w) {
+    gboolean show_new;
+    gboolean show_hard;
+    gboolean show_update;
+    gboolean show_equal;
+    gboolean show_delete;
+    gboolean show_ignore;
+
+    show_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_new));
+    show_hard = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_hard));
+    show_update
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_update));
+    show_equal
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_equal));
+    show_delete
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_delete));
+    show_ignore
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_ignore));
+
+    gtk_list_store_clear(w->store);
+    w->rows = g_list_sort_with_data(w->rows, cecup_row_compare, w);
+
+    for (GList *l = w->rows; l != NULL; l = l->next) {
+        CecupRow *row;
+        gboolean visible;
+
+        row = (CecupRow *)l->data;
+        visible = FALSE;
+
+        if (g_strcmp0(row->src_action, "New") == 0) {
+            visible = show_new;
+        } else if (g_strcmp0(row->src_action, "Hardlink") == 0) {
+            visible = show_hard;
+        } else if (g_strcmp0(row->src_action, "Update") == 0) {
+            visible = show_update;
+        } else if (g_strcmp0(row->src_action, "Equal") == 0) {
+            visible = show_equal;
+        } else if (g_strcmp0(row->src_action, "Deleted") == 0) {
+            visible = show_delete;
+        } else if (g_strcmp0(row->src_action, "Ignore") == 0) {
+            visible = show_ignore;
+        }
+
+        if (visible) {
+            GtkTreeIter iter;
+            gtk_list_store_append(w->store, &iter);
+            gtk_list_store_set(w->store, &iter, COL_SELECTED, row->selected,
+                               COL_SRC_ACTION, row->src_action, COL_DST_ACTION,
+                               row->dst_action, COL_SRC_PATH, row->src_path,
+                               COL_DST_PATH, row->dst_path, COL_SIZE_TEXT,
+                               row->size_text, COL_SIZE_RAW, row->size_raw,
+                               COL_SRC_COLOR, row->src_color, COL_DST_COLOR,
+                               row->dst_color, COL_REASON, row->reason, -1);
+        }
+    }
+    return;
 }
 
 static void
@@ -445,23 +541,22 @@ on_filter_toggled(GtkToggleButton *b, gpointer data) {
 
     w = (AppWidgets *)data;
     (void)b;
-    gtk_tree_model_filter_refilter(w->filter_model);
+    refresh_ui_list(w);
     save_config(w);
     return;
 }
 
 static void
 on_sort_changed(GtkTreeSortable *s, gpointer d) {
+    AppWidgets *w;
     int32 id;
     GtkSortType o;
 
+    w = (AppWidgets *)d;
     if (gtk_tree_sortable_get_sort_column_id(s, &id, &o)) {
-        GtkTreeViewColumn *c;
-
-        if ((c = gtk_tree_view_get_column(GTK_TREE_VIEW(d), 1)) != NULL) {
-            gtk_tree_view_column_set_sort_indicator(c, TRUE);
-            gtk_tree_view_column_set_sort_order(c, o);
-        }
+        w->sort_col = id;
+        w->sort_order = o;
+        refresh_ui_list(w);
     }
     return;
 }
@@ -469,31 +564,32 @@ on_sort_changed(GtkTreeSortable *s, gpointer d) {
 static void
 on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
     AppWidgets *w;
-    GtkTreePath *filter_path;
-    GtkTreePath *sort_path;
-    GtkTreePath *child_path;
-    GtkTreeIter iter;
-    gboolean val;
+    GtkTreePath *p;
+    GtkTreeIter i;
+    char *f_path;
 
     (void)cell;
     w = (AppWidgets *)data;
-    sort_path = gtk_tree_path_new_from_string(path_str);
+    p = gtk_tree_path_new_from_string(path_str);
 
-    filter_path = gtk_tree_model_sort_convert_path_to_child_path(w->sort_model,
-                                                                 sort_path);
-
-    child_path = gtk_tree_model_filter_convert_path_to_child_path(
-        w->filter_model, filter_path);
-
-    if (gtk_tree_model_get_iter(GTK_TREE_MODEL(w->store), &iter, child_path)) {
-        gtk_tree_model_get(GTK_TREE_MODEL(w->store), &iter, COL_SELECTED, &val,
+    if (gtk_tree_model_get_iter(GTK_TREE_MODEL(w->store), &i, p)) {
+        gtk_tree_model_get(GTK_TREE_MODEL(w->store), &i, COL_SRC_PATH, &f_path,
                            -1);
-        gtk_list_store_set(w->store, &iter, COL_SELECTED, !val, -1);
+
+        for (GList *l = w->rows; l != NULL; l = l->next) {
+            CecupRow *row;
+            row = (CecupRow *)l->data;
+            if (g_strcmp0(row->src_path, f_path) == 0
+                || g_strcmp0(row->dst_path, f_path) == 0) {
+                row->selected = !row->selected;
+                break;
+            }
+        }
+        g_free(f_path);
+        refresh_ui_list(w);
     }
 
-    gtk_tree_path_free(sort_path);
-    gtk_tree_path_free(filter_path);
-    gtk_tree_path_free(child_path);
+    gtk_tree_path_free(p);
     return;
 }
 

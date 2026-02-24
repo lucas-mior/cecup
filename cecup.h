@@ -18,6 +18,19 @@ enum {
     NUM_COLS
 };
 
+typedef struct CecupRow {
+    int32 selected;
+    char *src_action;
+    char *dst_action;
+    char *src_path;
+    char *dst_path;
+    char *size_text;
+    int64 size_raw;
+    char *src_color;
+    char *dst_color;
+    char *reason;
+} CecupRow;
+
 typedef struct AppWidgets {
     GtkWidget *gtk_window;
     GtkWidget *src_entry;
@@ -38,14 +51,16 @@ typedef struct AppWidgets {
     GtkWidget *filter_ignore;
 
     GtkListStore *store;
-    GtkTreeModelFilter *filter_model;
-    GtkTreeModelSort *sort_model;
     GtkTextBuffer *log_buffer;
     char *exclude_path;
     char *config_path;
     volatile int32 cancel_sync;
     GtkWidget *l_tree;
     GtkWidget *r_tree;
+
+    GList *rows;
+    int32 sort_col;
+    GtkSortType sort_order;
 } AppWidgets;
 
 typedef struct ThreadData {
@@ -82,5 +97,6 @@ typedef struct UIUpdateData {
 
 static gboolean update_ui_handler(gpointer user_data);
 static void on_preview_clicked(GtkWidget *b, gpointer data);
+static void refresh_ui_list(AppWidgets *w);
 
 #endif /* CECUP_H */

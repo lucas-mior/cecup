@@ -9,40 +9,6 @@
 static void setup_tree_columns(GtkWidget *tree, AppWidgets *w, int32 col_act,
                                int32 col_path, int32 col_color);
 
-static gboolean
-is_row_visible(GtkTreeModel *model, GtkTreeIter *iter, gpointer data) {
-    AppWidgets *w;
-    char *action_src;
-    gboolean visible;
-
-    w = (AppWidgets *)data;
-    visible = FALSE;
-    gtk_tree_model_get(model, iter, COL_SRC_ACTION, &action_src, -1);
-
-    if (g_strcmp0(action_src, "New") == 0) {
-        visible
-            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_new));
-    } else if (g_strcmp0(action_src, "Hardlink") == 0) {
-        visible
-            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_hard));
-    } else if (g_strcmp0(action_src, "Update") == 0) {
-        visible
-            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_update));
-    } else if (g_strcmp0(action_src, "Deleted") == 0) {
-        visible
-            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_delete));
-    } else if (g_strcmp0(action_src, "Ignore") == 0) {
-        visible
-            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_ignore));
-    } else if (g_strcmp0(action_src, "Equal") == 0) {
-        visible
-            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_equal));
-    }
-
-    g_free(action_src);
-    return visible;
-}
-
 int32
 main(int32 argc, char *argv[]) {
     AppWidgets *w;
@@ -69,7 +35,6 @@ main(int32 argc, char *argv[]) {
     GtkWidget *log_view;
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
-    GtkTreeModel *sort_model;
     char *cwd;
     char *default_src;
     char *default_dst;
@@ -77,6 +42,9 @@ main(int32 argc, char *argv[]) {
 
     gtk_init(&argc, &argv);
     w = g_new0(AppWidgets, 1);
+    w->rows = NULL;
+    w->sort_col = COL_SRC_PATH;
+    w->sort_order = GTK_SORT_ASCENDING;
 
     config_base = g_build_filename(g_get_user_config_dir(), "cecup", NULL);
     g_mkdir_with_parents(config_base, 0755);
@@ -161,15 +129,6 @@ main(int32 argc, char *argv[]) {
                                   G_TYPE_STRING, G_TYPE_INT64, G_TYPE_STRING,
                                   G_TYPE_STRING, G_TYPE_STRING);
 
-    w->filter_model = GTK_TREE_MODEL_FILTER(
-        gtk_tree_model_filter_new(GTK_TREE_MODEL(w->store), NULL));
-    gtk_tree_model_filter_set_visible_func(w->filter_model, is_row_visible, w,
-                                           NULL);
-
-    sort_model
-        = gtk_tree_model_sort_new_with_model(GTK_TREE_MODEL(w->filter_model));
-    w->sort_model = GTK_TREE_MODEL_SORT(sort_model);
-
     g_signal_connect(w->filter_new, "toggled", G_CALLBACK(on_filter_toggled),
                      w);
     g_signal_connect(w->filter_hard, "toggled", G_CALLBACK(on_filter_toggled),
@@ -201,7 +160,7 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), browse_src, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(l_vbox), l_entry_hbox, FALSE, FALSE, 0);
     l_scroll = gtk_scrolled_window_new(NULL, NULL);
-    l_tree = gtk_tree_view_new_with_model(sort_model);
+    l_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->store));
     w->l_tree = l_tree;
     g_object_set_data(G_OBJECT(l_tree), "side", GINT_TO_POINTER(0));
     setup_tree_columns(l_tree, w, COL_SRC_ACTION, COL_SRC_PATH, COL_SRC_COLOR);
@@ -218,7 +177,7 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(r_entry_hbox), browse_dst, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(r_vbox), r_entry_hbox, FALSE, FALSE, 0);
     r_scroll = gtk_scrolled_window_new(NULL, NULL);
-    r_tree = gtk_tree_view_new_with_model(sort_model);
+    r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(w->store));
     w->r_tree = r_tree;
     g_object_set_data(G_OBJECT(r_tree), "side", GINT_TO_POINTER(1));
     setup_tree_columns(r_tree, w, COL_DST_ACTION, COL_DST_PATH, COL_DST_COLOR);
@@ -230,10 +189,8 @@ main(int32 argc, char *argv[]) {
     r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(r_scroll));
     g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
     g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
-    g_signal_connect(sort_model, "sort-column-changed",
-                     G_CALLBACK(on_sort_changed), l_tree);
-    g_signal_connect(sort_model, "sort-column-changed",
-                     G_CALLBACK(on_sort_changed), r_tree);
+    g_signal_connect(w->store, "sort-column-changed",
+                     G_CALLBACK(on_sort_changed), w);
 
     log_scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(log_scroll, -1, 150);
@@ -338,15 +295,12 @@ main(int32 argc, char *argv[]) {
 static gboolean
 update_ui_handler(gpointer user_data) {
     UIUpdateData *data;
-    GtkListStore *store;
 
     data = (UIUpdateData *)user_data;
-    store = data->widgets->store;
 
     switch (data->type) {
     case DATA_TYPE_LOG: {
         GtkTextIter end;
-
         gtk_text_buffer_get_end_iter(data->widgets->log_buffer, &end);
         gtk_text_buffer_insert(data->widgets->log_buffer, &end, data->message,
                                -1);
@@ -354,7 +308,7 @@ update_ui_handler(gpointer user_data) {
         break;
     }
     case DATA_TYPE_TREE_ROW: {
-        GtkTreeIter iter;
+        CecupRow *row;
         char *sz_str;
         char *bg_src;
         char *bg_dst;
@@ -385,7 +339,6 @@ update_ui_handler(gpointer user_data) {
             bg_dst = "#F0F0F0";
         } else if (g_strcmp0(data->action, "Delete") == 0) {
             char *rl;
-
             rl = g_utf8_strdown(data->reason ? data->reason : "", -1);
             if (g_strrstr(rl, "exclude")) {
                 bg_src = "#FFF3CD";
@@ -401,52 +354,46 @@ update_ui_handler(gpointer user_data) {
             g_free(rl);
         }
 
-        gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, COL_SELECTED, FALSE, COL_SRC_ACTION,
-                           act_src, COL_DST_ACTION, act_dst, COL_SRC_PATH,
-                           path_src, COL_DST_PATH, path_dst, COL_SIZE_TEXT,
-                           sz_str, COL_SIZE_RAW, data->size, COL_SRC_COLOR,
-                           bg_src, COL_DST_COLOR, bg_dst, COL_REASON,
-                           data->reason, -1);
+        row = g_new0(CecupRow, 1);
+        row->selected = FALSE;
+        row->src_action = g_strdup(act_src);
+        row->dst_action = g_strdup(act_dst);
+        row->src_path = g_strdup(path_src);
+        row->dst_path = g_strdup(path_dst);
+        row->size_text = g_strdup(sz_str);
+        row->size_raw = data->size;
+        row->src_color = g_strdup(bg_src);
+        row->dst_color = g_strdup(bg_dst);
+        row->reason = g_strdup(data->reason);
+
+        data->widgets->rows = g_list_append(data->widgets->rows, row);
+        refresh_ui_list(data->widgets);
         g_free(sz_str);
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
-        GtkTreeIter iter;
-        gboolean valid;
-
-        valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter);
-        while (valid) {
-            char *ps;
-            char *pd;
-
-            gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, COL_SRC_PATH, &ps,
-                               COL_DST_PATH, &pd, -1);
-            if (g_strcmp0(ps, data->filepath) == 0
-                || g_strcmp0(pd, data->filepath) == 0) {
-                gtk_list_store_remove(store, &iter);
-                g_free(ps);
-                g_free(pd);
+        for (GList *l = data->widgets->rows; l != NULL; l = l->next) {
+            CecupRow *row;
+            row = (CecupRow *)l->data;
+            if (g_strcmp0(row->src_path, data->filepath) == 0
+                || g_strcmp0(row->dst_path, data->filepath) == 0) {
+                free_cecup_row(row);
+                data->widgets->rows
+                    = g_list_delete_link(data->widgets->rows, l);
                 break;
             }
-            g_free(ps);
-            g_free(pd);
-            valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter);
         }
+        refresh_ui_list(data->widgets);
         break;
     }
     case DATA_TYPE_ENABLE_BUTTONS:
-        gtk_tree_view_set_model(GTK_TREE_VIEW(data->widgets->l_tree),
-                                GTK_TREE_MODEL(data->widgets->sort_model));
-        gtk_tree_view_set_model(GTK_TREE_VIEW(data->widgets->r_tree),
-                                GTK_TREE_MODEL(data->widgets->sort_model));
         gtk_widget_set_sensitive(data->widgets->sync_button, TRUE);
         gtk_widget_set_sensitive(data->widgets->preview_button, TRUE);
         gtk_widget_set_sensitive(data->widgets->stop_button, FALSE);
         break;
     case DATA_TYPE_CLEAR_TREES:
-        gtk_tree_view_set_model(GTK_TREE_VIEW(data->widgets->l_tree), NULL);
-        gtk_tree_view_set_model(GTK_TREE_VIEW(data->widgets->r_tree), NULL);
+        g_list_free_full(data->widgets->rows, (GDestroyNotify)free_cecup_row);
+        data->widgets->rows = NULL;
         gtk_list_store_clear(data->widgets->store);
         break;
     default:
