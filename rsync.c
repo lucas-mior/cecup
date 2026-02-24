@@ -182,9 +182,9 @@ sync_worker(gpointer user_data) {
                                       rel_path, sz,
                                       "File is excluded by configuration");
                     } else {
-                        dispatch_tree(thread_data->widgets, 1, "Delete",
-                                      rel_path, sz,
-                                      "File removed from source directory");
+                        dispatch_tree(
+                            thread_data->widgets, 1, "Delete", rel_path, sz,
+                            "File does not exist in source directory");
                     }
                 } else if (strncmp(buffer, ">f", 2) == 0
                            || strncmp(buffer, ">c", 2) == 0) {
