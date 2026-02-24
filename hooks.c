@@ -298,6 +298,80 @@ on_menu_exclude_dir(GtkWidget *m, gpointer data) {
 }
 
 static void
+save_config(AppWidgets *w) {
+    GKeyFile *key;
+    char *out;
+    gsize len;
+
+    key = g_key_file_new();
+    g_key_file_set_string(key, "Paths", "src",
+                          gtk_entry_get_text(GTK_ENTRY(w->src_entry)));
+    g_key_file_set_string(key, "Paths", "dst",
+                          gtk_entry_get_text(GTK_ENTRY(w->dst_entry)));
+    g_key_file_set_string(key, "Tools", "diff",
+                          gtk_entry_get_text(GTK_ENTRY(w->diff_entry)));
+    g_key_file_set_string(key, "Tools", "term",
+                          gtk_entry_get_text(GTK_ENTRY(w->term_entry)));
+    g_key_file_set_boolean(
+        key, "Filters", "new",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_new)));
+    g_key_file_set_boolean(
+        key, "Filters", "hard",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_hard)));
+    g_key_file_set_boolean(
+        key, "Filters", "update",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_update)));
+    g_key_file_set_boolean(
+        key, "Filters", "equal",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_equal)));
+    g_key_file_set_boolean(
+        key, "Filters", "delete",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_delete)));
+    g_key_file_set_boolean(
+        key, "Filters", "ignore",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->filter_ignore)));
+    g_key_file_set_boolean(
+        key, "Options", "check_fs",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w->check_fs_toggle)));
+
+    out = g_key_file_to_data(key, &len, NULL);
+    g_file_set_contents(w->config_path, out, (gssize)len, NULL);
+
+    g_free(out);
+    g_key_file_free(key);
+    return;
+}
+
+static void
+on_config_changed(GtkWidget *widget, gpointer data) {
+    AppWidgets *w;
+
+    (void)widget;
+    w = (AppWidgets *)data;
+    save_config(w);
+    return;
+}
+
+static void
+on_reset_clicked(GtkWidget *b, gpointer data) {
+    AppWidgets *w;
+
+    (void)b;
+    w = (AppWidgets *)data;
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_new), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_hard), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_update), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_equal), FALSE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_delete), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->filter_ignore), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->check_fs_toggle), FALSE);
+    gtk_entry_set_text(GTK_ENTRY(w->diff_entry), "unidiff.bash");
+    gtk_entry_set_text(GTK_ENTRY(w->term_entry), "xterm");
+    save_config(w);
+    return;
+}
+
+static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w;
     char *s;
@@ -334,6 +408,7 @@ on_filter_toggled(GtkToggleButton *b, gpointer data) {
     w = (AppWidgets *)data;
     (void)b;
     gtk_tree_model_filter_refilter(w->filter_model);
+    save_config(w);
     return;
 }
 

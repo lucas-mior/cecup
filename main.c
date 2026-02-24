@@ -52,6 +52,7 @@ main(int32 argc, char *argv[]) {
     GtkWidget *btn_hbox;
     GtkWidget *filter_hbox;
     GtkWidget *options_hbox;
+    GtkWidget *reset_btn;
     GtkWidget *v_paned;
     GtkWidget *paned;
     GtkWidget *l_vbox;
@@ -135,6 +136,7 @@ main(int32 argc, char *argv[]) {
         = gtk_check_button_new_with_label("Require different filesystems");
     w->diff_entry = gtk_entry_new();
     w->term_entry = gtk_entry_new();
+    reset_btn = gtk_button_new_with_label("Reset");
     gtk_box_pack_start(GTK_BOX(options_hbox), w->check_fs_toggle, FALSE, FALSE,
                        5);
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Diff Tool:"),
@@ -145,6 +147,7 @@ main(int32 argc, char *argv[]) {
                        FALSE, 0);
     gtk_box_pack_start(GTK_BOX(options_hbox), w->term_entry, FALSE, FALSE, 0);
     gtk_entry_set_text(GTK_ENTRY(w->term_entry), "xterm");
+    gtk_box_pack_start(GTK_BOX(options_hbox), reset_btn, FALSE, FALSE, 0);
 
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
@@ -233,6 +236,73 @@ main(int32 argc, char *argv[]) {
     gtk_container_add(GTK_CONTAINER(log_scroll), log_view);
     gtk_paned_pack2(GTK_PANED(v_paned), log_scroll, FALSE, FALSE);
 
+    {
+        GKeyFile *key;
+        char *val;
+
+        key = g_key_file_new();
+        if (g_key_file_load_from_file(key, w->config_path, G_KEY_FILE_NONE,
+                                      NULL)) {
+            if ((val = g_key_file_get_string(key, "Paths", "src", NULL))
+                != NULL) {
+                gtk_entry_set_text(GTK_ENTRY(w->src_entry), val);
+                g_free(val);
+            }
+            if ((val = g_key_file_get_string(key, "Paths", "dst", NULL))
+                != NULL) {
+                gtk_entry_set_text(GTK_ENTRY(w->dst_entry), val);
+                g_free(val);
+            }
+            if ((val = g_key_file_get_string(key, "Tools", "diff", NULL))
+                != NULL) {
+                gtk_entry_set_text(GTK_ENTRY(w->diff_entry), val);
+                g_free(val);
+            }
+            if ((val = g_key_file_get_string(key, "Tools", "term", NULL))
+                != NULL) {
+                gtk_entry_set_text(GTK_ENTRY(w->term_entry), val);
+                g_free(val);
+            }
+
+            if (g_key_file_has_key(key, "Filters", "new", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(w->filter_new),
+                    g_key_file_get_boolean(key, "Filters", "new", NULL));
+            }
+            if (g_key_file_has_key(key, "Filters", "hard", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(w->filter_hard),
+                    g_key_file_get_boolean(key, "Filters", "hard", NULL));
+            }
+            if (g_key_file_has_key(key, "Filters", "update", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(w->filter_update),
+                    g_key_file_get_boolean(key, "Filters", "update", NULL));
+            }
+            if (g_key_file_has_key(key, "Filters", "equal", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(w->filter_equal),
+                    g_key_file_get_boolean(key, "Filters", "equal", NULL));
+            }
+            if (g_key_file_has_key(key, "Filters", "delete", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(w->filter_delete),
+                    g_key_file_get_boolean(key, "Filters", "delete", NULL));
+            }
+            if (g_key_file_has_key(key, "Filters", "ignore", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(w->filter_ignore),
+                    g_key_file_get_boolean(key, "Filters", "ignore", NULL));
+            }
+            if (g_key_file_has_key(key, "Options", "check_fs", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(w->check_fs_toggle),
+                    g_key_file_get_boolean(key, "Options", "check_fs", NULL));
+            }
+        }
+        g_key_file_free(key);
+    }
+
     g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), w);
     g_signal_connect(browse_dst, "clicked", G_CALLBACK(on_browse_dst), w);
     g_signal_connect(invert_btn, "clicked", G_CALLBACK(on_invert_clicked), w);
@@ -241,6 +311,16 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(w->sync_button, "clicked", G_CALLBACK(on_sync_clicked), w);
     g_signal_connect(w->exclude_button, "clicked",
                      G_CALLBACK(on_exclude_clicked), w);
+    g_signal_connect(reset_btn, "clicked", G_CALLBACK(on_reset_clicked), w);
+
+    g_signal_connect(w->diff_entry, "changed", G_CALLBACK(on_config_changed),
+                     w);
+    g_signal_connect(w->term_entry, "changed", G_CALLBACK(on_config_changed),
+                     w);
+    g_signal_connect(w->src_entry, "changed", G_CALLBACK(on_config_changed), w);
+    g_signal_connect(w->dst_entry, "changed", G_CALLBACK(on_config_changed), w);
+    g_signal_connect(w->check_fs_toggle, "toggled",
+                     G_CALLBACK(on_config_changed), w);
 
     gtk_widget_show_all(w->gtk_window);
     gtk_main();
