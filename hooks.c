@@ -5,18 +5,32 @@
 
 static void
 free_task_list(GList *tasks) {
+    char *shared_src;
+    char *shared_dst;
+
+    shared_src = NULL;
+    shared_dst = NULL;
+
     for (GList *l = tasks; l != NULL; l = l->next) {
         UIUpdateData *t;
 
         t = (UIUpdateData *)l->data;
+        if (shared_src == NULL) {
+            shared_src = t->src_base;
+        }
+        if (shared_dst == NULL) {
+            shared_dst = t->dst_base;
+        }
+
         g_free(t->filepath);
         g_free(t->action);
-        g_free(t->src_base);
-        g_free(t->dst_base);
         g_free(t->term_cmd);
         g_free(t->diff_tool);
         g_free(t);
     }
+
+    g_free(shared_src);
+    g_free(shared_dst);
     g_list_free(tasks);
     return;
 }
@@ -28,14 +42,15 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
     GtkTreeModel *model;
     GtkTreeIter iter;
     gboolean valid;
-    char *src_base;
-    char *dst_base;
+    char *shared_src;
+    char *shared_dst;
 
     tasks = NULL;
     model = GTK_TREE_MODEL(w->store);
     valid = gtk_tree_model_get_iter_first(model, &iter);
-    src_base = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
-    dst_base = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
+
+    shared_src = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->src_entry)));
+    shared_dst = g_strdup(gtk_entry_get_text(GTK_ENTRY(w->dst_entry)));
 
     while (valid) {
         gboolean selected;
@@ -53,15 +68,16 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
             if (g_strcmp0(f_path, "-") != 0) {
                 task = g_new0(UIUpdateData, 1);
                 task->widgets = w;
-                task->filepath = g_strdup(f_path);
-                task->action = g_strdup(action);
+                task->filepath = f_path;
+                task->action = action;
                 task->side = side;
-                task->src_base = g_strdup(src_base);
-                task->dst_base = g_strdup(dst_base);
+                task->src_base = shared_src;
+                task->dst_base = shared_dst;
                 tasks = g_list_prepend(tasks, task);
+            } else {
+                g_free(f_path);
+                g_free(action);
             }
-            g_free(f_path);
-            g_free(action);
         }
         valid = gtk_tree_model_iter_next(model, &iter);
     }
@@ -74,9 +90,14 @@ get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
         task->filepath = g_strdup(clicked_path);
         task->action = g_strdup(clicked_action);
         task->side = side;
-        task->src_base = g_strdup(src_base);
-        task->dst_base = g_strdup(dst_base);
+        task->src_base = shared_src;
+        task->dst_base = shared_dst;
         tasks = g_list_prepend(tasks, task);
+    }
+
+    if (tasks == NULL) {
+        g_free(shared_src);
+        g_free(shared_dst);
     }
 
     return g_list_reverse(tasks);
