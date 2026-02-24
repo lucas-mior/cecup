@@ -64,8 +64,7 @@ single_sync_worker(gpointer user_data) {
     snprintf(log_msg, sizeof(log_msg), "+ %s", cmd);
     dispatch_log(ud->widgets, log_msg);
 
-    rsync_pipe = popen(cmd, "r");
-    if (!rsync_pipe) {
+    if ((rsync_pipe = popen(cmd, "r")) == NULL) {
         dispatch_log(ud->widgets,
                      "ERROR: Failed to open pipe for single sync.");
     } else {
@@ -73,8 +72,7 @@ single_sync_worker(gpointer user_data) {
             buffer[strcspn(buffer, "\n")] = 0;
             dispatch_log(ud->widgets, buffer);
         }
-        status = pclose(rsync_pipe);
-        if (status != 0) {
+        if ((status = pclose(rsync_pipe)) != 0) {
             snprintf(log_msg, sizeof(log_msg),
                      "ERROR: Command failed with exit code %d",
                      WEXITSTATUS(status));
@@ -150,8 +148,7 @@ sync_worker(gpointer user_data) {
     snprintf(log_msg, sizeof(log_msg), "+ %s", cmd);
     dispatch_log(thread_data->widgets, log_msg);
 
-    rsync_pipe = popen(cmd, "r");
-    if (!rsync_pipe) {
+    if ((rsync_pipe = popen(cmd, "r")) == NULL) {
         dispatch_log(thread_data->widgets, "ERROR: Failed to open rsync pipe.");
     } else {
         while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
@@ -218,8 +215,7 @@ sync_worker(gpointer user_data) {
                 dispatch_log(thread_data->widgets, buffer);
             }
         }
-        status = pclose(rsync_pipe);
-        if (status != 0) {
+        if ((status = pclose(rsync_pipe)) != 0) {
             snprintf(log_msg, sizeof(log_msg),
                      "ERROR: rsync failed with exit code %d",
                      WEXITSTATUS(status));
@@ -243,14 +239,12 @@ find_terminal(void) {
 
     env_term = getenv("TERMINAL");
     if (env_term && strlen64(env_term) > 0) {
-        path = g_find_program_in_path(env_term);
-        if (path) {
+        if ((path = g_find_program_in_path(env_term)) != NULL) {
             g_free(path);
             return env_term;
         }
     }
-    path = g_find_program_in_path("xterm");
-    if (path) {
+    if ((path = g_find_program_in_path("xterm")) != NULL) {
         g_free(path);
         return "xterm";
     }

@@ -80,11 +80,12 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
         return;
     }
     full = g_build_filename(base, ud->filepath, NULL);
-    dir = g_path_get_dirname(full);
-    cmd = g_strdup_printf("xdg-open '%s' &", dir);
-    system(cmd);
-    g_free(cmd);
-    g_free(dir);
+    if ((dir = g_path_get_dirname(full)) != NULL) {
+        cmd = g_strdup_printf("xdg-open '%s' &", dir);
+        system(cmd);
+        g_free(cmd);
+        g_free(dir);
+    }
     g_free(full);
     g_free(ud->filepath);
     g_free(ud->action);
@@ -154,10 +155,8 @@ on_menu_exclude_ext(GtkWidget *m, gpointer data) {
     FILE *fp;
     (void)m;
     ud = (UIUpdateData *)data;
-    ext = strrchr(ud->filepath, '.');
-    if (ext) {
-        fp = fopen(ud->widgets->exclude_path, "a");
-        if (fp) {
+    if ((ext = strrchr(ud->filepath, '.')) != NULL) {
+        if ((fp = fopen(ud->widgets->exclude_path, "a")) != NULL) {
             fprintf(fp, "\n*%s", ext);
             fclose(fp);
             on_preview_clicked(NULL, ud->widgets);
@@ -176,16 +175,16 @@ on_menu_exclude_dir(GtkWidget *m, gpointer data) {
     FILE *fp;
     (void)m;
     ud = (UIUpdateData *)data;
-    dir = g_path_get_dirname(ud->filepath);
-    if (g_strcmp0(dir, ".") != 0) {
-        fp = fopen(ud->widgets->exclude_path, "a");
-        if (fp) {
-            fprintf(fp, "\n/%s/", dir);
-            fclose(fp);
-            on_preview_clicked(NULL, ud->widgets);
+    if ((dir = g_path_get_dirname(ud->filepath)) != NULL) {
+        if (g_strcmp0(dir, ".") != 0) {
+            if ((fp = fopen(ud->widgets->exclude_path, "a")) != NULL) {
+                fprintf(fp, "\n/%s/", dir);
+                fclose(fp);
+                on_preview_clicked(NULL, ud->widgets);
+            }
         }
+        g_free(dir);
     }
-    g_free(dir);
     g_free(ud->filepath);
     g_free(ud->action);
     g_free(ud);
@@ -270,8 +269,8 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
         gtk_text_buffer_get_start_iter(buffer, &start);
         gtk_text_buffer_get_end_iter(buffer, &end);
         char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
-        FILE *fp = fopen(w->exclude_path, "w");
-        if (fp) {
+        FILE *fp;
+        if ((fp = fopen(w->exclude_path, "w")) != NULL) {
             fputs(text, fp);
             fclose(fp);
         }
