@@ -365,7 +365,7 @@ update_ui_handler(gpointer user_data) {
         row->size_raw = data->size;
         row->src_color = g_strdup(bg_src);
         row->dst_color = g_strdup(bg_dst);
-        row->reason = g_strdup(data->reason);
+        row->reason = data->reason;
 
         data->widgets->rows = g_list_append(data->widgets->rows, row);
 
@@ -423,7 +423,6 @@ update_ui_handler(gpointer user_data) {
     g_free(data->message);
     g_free(data->action);
     g_free(data->filepath);
-    g_free(data->reason);
     g_free(data);
     return G_SOURCE_REMOVE;
 }

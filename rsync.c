@@ -75,7 +75,7 @@ dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
     data->side = side;
     data->action = g_strdup(act);
     data->filepath = g_strdup(path);
-    data->reason = g_strdup(reason);
+    data->reason = reason;
     data->size = size;
     g_idle_add(update_ui_handler, data);
     return;
