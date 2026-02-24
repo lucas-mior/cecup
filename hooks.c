@@ -3,42 +3,202 @@
 #include "cecup.h"
 #include "rsync.c"
 
-static void
-on_menu_delete(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
-    AppWidgets *w;
-    GtkWidget *dialog;
-    char *base;
-    char *full;
+static GList *
+get_target_tasks(AppWidgets *w, int32 side, char *clicked_path,
+                 char *clicked_action) {
+    GList *tasks;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    gboolean valid;
+    char *s_base;
+    char *d_base;
 
-    (void)m;
-    ud = (UIUpdateData *)data;
-    w = ud->widgets;
+    tasks = NULL;
+    model = GTK_TREE_MODEL(w->store);
+    valid = gtk_tree_model_get_iter_first(model, &iter);
+    s_base = (char *)gtk_entry_get_text(GTK_ENTRY(w->src_entry));
+    d_base = (char *)gtk_entry_get_text(GTK_ENTRY(w->dst_entry));
 
-    base = (char *)gtk_entry_get_text(
-        GTK_ENTRY(ud->side == 0 ? w->src_entry : w->dst_entry));
-    full = g_build_filename(base, ud->filepath, NULL);
+    while (valid) {
+        gboolean selected;
 
-    dialog = gtk_message_dialog_new(GTK_WINDOW(w->gtk_window), GTK_DIALOG_MODAL,
-                                    GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
-                                    "Permanently delete '%s'?", full);
+        gtk_tree_model_get(model, &iter, COL_SELECTED, &selected, -1);
+        if (selected) {
+            char *f_path;
+            char *action;
+            UIUpdateData *task;
 
-    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
+            gtk_tree_model_get(
+                model, &iter, side == 0 ? COL_SRC_PATH : COL_DST_PATH, &f_path,
+                side == 0 ? COL_SRC_ACTION : COL_DST_ACTION, &action, -1);
+
+            if (g_strcmp0(f_path, "-") != 0) {
+                task = g_new0(UIUpdateData, 1);
+                task->widgets = w;
+                task->filepath = g_strdup(f_path);
+                task->action = g_strdup(action);
+                task->side = side;
+                task->src_base = g_strdup(s_base);
+                task->dst_base = g_strdup(d_base);
+                tasks = g_list_append(tasks, task);
+            }
+            g_free(f_path);
+            g_free(action);
+        }
+        valid = gtk_tree_model_iter_next(model, &iter);
+    }
+
+    if (tasks == NULL && g_strcmp0(clicked_path, "-") != 0) {
         UIUpdateData *task;
 
         task = g_new0(UIUpdateData, 1);
         task->widgets = w;
-        task->filepath = g_strdup(ud->filepath);
-        task->action = g_strdup("Delete");
-        task->side = ud->side;
-        task->dst_base = g_strdup(base);
+        task->filepath = g_strdup(clicked_path);
+        task->action = g_strdup(clicked_action);
+        task->side = side;
+        task->src_base = g_strdup(s_base);
+        task->dst_base = g_strdup(d_base);
+        tasks = g_list_append(tasks, task);
+    }
 
-        g_thread_new("single_delete", bulk_sync_worker,
-                     g_list_append(NULL, task));
+    return tasks;
+}
+
+static void
+on_menu_apply(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud;
+    GList *tasks;
+
+    (void)m;
+    ud = (UIUpdateData *)data;
+    tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
+
+    if (tasks != NULL) {
+        g_thread_new("bulk_sync", bulk_sync_worker, tasks);
+    }
+
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return;
+}
+
+static void
+on_menu_open(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud;
+    GList *tasks;
+    GList *l;
+
+    (void)m;
+    ud = (UIUpdateData *)data;
+    tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
+
+    for (l = tasks; l != NULL; l = l->next) {
+        UIUpdateData *t = (UIUpdateData *)l->data;
+        char *full;
+        char *cmd;
+
+        full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
+                                t->filepath, NULL);
+        cmd = g_strdup_printf("xdg-open '%s' &", full);
+        system(cmd);
+        g_free(cmd);
+        g_free(full);
+
+        g_free(t->filepath);
+        g_free(t->action);
+        g_free(t->src_base);
+        g_free(t->dst_base);
+        g_free(t);
+    }
+
+    g_list_free(tasks);
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return;
+}
+
+static void
+on_menu_open_dir(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud;
+    GList *tasks;
+    GList *l;
+
+    (void)m;
+    ud = (UIUpdateData *)data;
+    tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, ud->action);
+
+    for (l = tasks; l != NULL; l = l->next) {
+        UIUpdateData *t = (UIUpdateData *)l->data;
+        char *full;
+        char *dir;
+
+        full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
+                                t->filepath, NULL);
+        if ((dir = g_path_get_dirname(full)) != NULL) {
+            char *cmd;
+            cmd = g_strdup_printf("xdg-open '%s' &", dir);
+            system(cmd);
+            g_free(cmd);
+            g_free(dir);
+        }
+        g_free(full);
+
+        g_free(t->filepath);
+        g_free(t->action);
+        g_free(t->src_base);
+        g_free(t->dst_base);
+        g_free(t);
+    }
+
+    g_list_free(tasks);
+    g_free(ud->filepath);
+    g_free(ud->action);
+    g_free(ud);
+    return;
+}
+
+static void
+on_menu_delete(GtkWidget *m, gpointer data) {
+    UIUpdateData *ud;
+    GList *tasks;
+    GtkWidget *dialog;
+    int count;
+
+    (void)m;
+    ud = (UIUpdateData *)data;
+    tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, "Delete");
+    count = g_list_length(tasks);
+
+    if (count == 0) {
+        g_free(ud->filepath);
+        g_free(ud->action);
+        g_free(ud);
+        return;
+    }
+
+    dialog = gtk_message_dialog_new(GTK_WINDOW(ud->widgets->gtk_window),
+                                    GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
+                                    GTK_BUTTONS_YES_NO,
+                                    "Permanently delete %d item(s)?", count);
+
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
+        g_thread_new("bulk_delete", bulk_sync_worker, tasks);
+    } else {
+        GList *l;
+        for (l = tasks; l != NULL; l = l->next) {
+            UIUpdateData *t = (UIUpdateData *)l->data;
+            g_free(t->filepath);
+            g_free(t->action);
+            g_free(t->src_base);
+            g_free(t->dst_base);
+            g_free(t);
+        }
+        g_list_free(tasks);
     }
 
     gtk_widget_destroy(dialog);
-    g_free(full);
     g_free(ud->filepath);
     g_free(ud->action);
     g_free(ud);
@@ -133,68 +293,6 @@ on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
 }
 
 static void
-on_menu_apply(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    gboolean valid;
-    GList *tasks;
-    char *s_base;
-    char *d_base;
-
-    ud = (UIUpdateData *)data;
-    model = GTK_TREE_MODEL(ud->widgets->store);
-    valid = gtk_tree_model_get_iter_first(model, &iter);
-    tasks = NULL;
-    (void)m;
-
-    s_base = g_strdup(gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry)));
-    d_base = g_strdup(gtk_entry_get_text(GTK_ENTRY(ud->widgets->dst_entry)));
-
-    while (valid) {
-        gboolean selected;
-
-        gtk_tree_model_get(model, &iter, COL_SELECTED, &selected, -1);
-        if (selected) {
-            char *f_path;
-            char *action;
-
-            gtk_tree_model_get(
-                model, &iter, ud->side == 0 ? COL_SRC_PATH : COL_DST_PATH,
-                &f_path, ud->side == 0 ? COL_SRC_ACTION : COL_DST_ACTION,
-                &action, -1);
-
-            if (g_strcmp0(f_path, "-") != 0) {
-                UIUpdateData *task;
-
-                task = g_new0(UIUpdateData, 1);
-                task->widgets = ud->widgets;
-                task->filepath = g_strdup(f_path);
-                task->action = g_strdup(action);
-                task->side = ud->side;
-                task->src_base = g_strdup(s_base);
-                task->dst_base = g_strdup(d_base);
-                tasks = g_list_append(tasks, task);
-            }
-            g_free(f_path);
-            g_free(action);
-        }
-        valid = gtk_tree_model_iter_next(model, &iter);
-    }
-
-    if (tasks != NULL) {
-        g_thread_new("bulk_sync", bulk_sync_worker, tasks);
-    }
-
-    g_free(s_base);
-    g_free(d_base);
-    g_free(ud->filepath);
-    g_free(ud->action);
-    g_free(ud);
-    return;
-}
-
-static void
 on_exclude_clicked(GtkWidget *b, gpointer data) {
     AppWidgets *w;
     GtkWidget *dialog;
@@ -236,69 +334,6 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
         on_preview_clicked(NULL, w);
     }
     gtk_widget_destroy(dialog);
-    return;
-}
-
-static void
-on_menu_open(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
-
-    (void)m;
-    ud = (UIUpdateData *)data;
-    if (g_strcmp0(ud->filepath, "-") == 0) {
-        g_free(ud->filepath);
-        g_free(ud->action);
-        g_free(ud);
-    } else {
-        char *base;
-        char *full;
-        char *cmd;
-
-        base = (char *)gtk_entry_get_text(GTK_ENTRY(
-            ud->side == 0 ? ud->widgets->src_entry : ud->widgets->dst_entry));
-        full = g_build_filename(base, ud->filepath, NULL);
-        cmd = g_strdup_printf("xdg-open '%s' &", full);
-        system(cmd);
-        g_free(cmd);
-        g_free(full);
-        g_free(ud->filepath);
-        g_free(ud->action);
-        g_free(ud);
-    }
-    return;
-}
-
-static void
-on_menu_open_dir(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
-
-    (void)m;
-    ud = (UIUpdateData *)data;
-    if (g_strcmp0(ud->filepath, "-") == 0) {
-        g_free(ud->filepath);
-        g_free(ud->action);
-        g_free(ud);
-    } else {
-        char *base;
-        char *full;
-        char *dir;
-
-        base = (char *)gtk_entry_get_text(GTK_ENTRY(
-            ud->side == 0 ? ud->widgets->src_entry : ud->widgets->dst_entry));
-        full = g_build_filename(base, ud->filepath, NULL);
-        if ((dir = g_path_get_dirname(full)) != NULL) {
-            char *cmd;
-
-            cmd = g_strdup_printf("xdg-open '%s' &", dir);
-            system(cmd);
-            g_free(cmd);
-            g_free(dir);
-        }
-        g_free(full);
-        g_free(ud->filepath);
-        g_free(ud->action);
-        g_free(ud);
-    }
     return;
 }
 
@@ -504,7 +539,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 char *action;
                 char *other_path;
                 UIUpdateData *ud;
-                UIUpdateData *ud_del;
                 GtkWidget *menu;
                 GtkWidget *item;
                 GtkWidget *sub;
@@ -535,7 +569,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                                  ud);
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-                item = gtk_menu_item_new_with_label("Apply (Selected items)");
+                item = gtk_menu_item_new_with_label("Apply");
                 g_object_set_data(G_OBJECT(item), "target_tree", widget);
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply),
                                  ud);
@@ -573,12 +607,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 if (g_strcmp0(f_path, "-") == 0) {
                     gtk_widget_set_sensitive(item, FALSE);
                 } else {
-                    ud_del = g_new0(UIUpdateData, 1);
-                    ud_del->widgets = w;
-                    ud_del->filepath = g_strdup(f_path);
-                    ud_del->side = side;
                     g_signal_connect(item, "activate",
-                                     G_CALLBACK(on_menu_delete), ud_del);
+                                     G_CALLBACK(on_menu_delete), ud);
                 }
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
