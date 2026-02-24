@@ -87,7 +87,7 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
     int32 rel_len;
     char *name;
 
-    snprintf(path_src, sizeof(path_src), "%s/%s", src_base, relative_path);
+    SNPRINTF(path_src, "%s/%s", src_base, relative_path);
     if (!(dir = opendir(path_src))) {
         return;
     }
@@ -179,10 +179,10 @@ bulk_sync_worker(gpointer user_data) {
             char *full_dst;
 
             full_dst = g_build_filename(ud->dst_base, ud->filepath, NULL);
-            snprintf(cmd, sizeof(cmd), "rm -rfv '%s'", full_dst);
+            SNPRINTF(cmd, "rm -rfv '%s'", full_dst);
             g_free(full_dst);
         } else {
-            snprintf(cmd, sizeof(cmd),
+            SNPRINTF(cmd,
                      "rsync --verbose --update --recursive "
                      "--partial --progress --info=progress2 "
                      "--links --hard-links --itemize-changes "
@@ -392,7 +392,7 @@ sync_worker(gpointer user_data) {
              ? g_strdup_printf("--exclude-from='%s'", cecup_state.exclude_path)
              : g_strdup("");
 
-    snprintf(cmd, sizeof(cmd),
+    SNPRINTF(cmd,
              "rsync --verbose --update --recursive"
              " --partial --progress --info=progress2"
              " --links --hard-links --itemize-changes"
@@ -655,7 +655,7 @@ diff_worker(gpointer user_data) {
     char cmd[8192];
 
     ud = (UIUpdateData *)user_data;
-    snprintf(cmd, sizeof(cmd),
+    SNPRINTF(cmd,
              "%s -e bash -c \"%s '%s/%s' '%s/%s'; read -p 'Press Enter...'\" &",
              ud->term_cmd, ud->diff_tool, ud->src_base, ud->filepath,
              ud->dst_base, ud->filepath);

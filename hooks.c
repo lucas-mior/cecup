@@ -248,7 +248,7 @@ on_menu_open(GtkWidget *m, gpointer data) {
             t = (UIUpdateData *)g_ptr_array_index(tasks, i);
             full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
                                     t->filepath, NULL);
-            snprintf(cmd, sizeof(cmd), "xdg-open '%s' &", full);
+            SNPRINTF(cmd, "xdg-open '%s' &", full);
             system(cmd);
             g_free(full);
         }
@@ -280,7 +280,7 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
             full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
                                     t->filepath, NULL);
             if ((dir = g_path_get_dirname(full)) != NULL) {
-                snprintf(cmd, sizeof(cmd), "xdg-open '%s' &", dir);
+                SNPRINTF(cmd, "xdg-open '%s' &", dir);
                 system(cmd);
                 g_free(dir);
             }
