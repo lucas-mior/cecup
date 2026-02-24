@@ -41,6 +41,7 @@ typedef struct ThreadData {
 enum DataType {
     DATA_TYPE_LOG,
     DATA_TYPE_TREE_ROW,
+    DATA_TYPE_REMOVE_TREE_ROW,
     DATA_TYPE_ENABLE_BUTTONS,
     DATA_TYPE_CLEAR_TREES,
 };

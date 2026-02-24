@@ -41,6 +41,7 @@ single_sync_worker(gpointer user_data) {
     char log_msg[5120];
     char *path_src;
     char *path_dst;
+    UIUpdateData *remove_data;
 
     ud = (UIUpdateData *)user_data;
     path_src = (char *)gtk_entry_get_text(GTK_ENTRY(ud->widgets->src_entry));
@@ -64,7 +65,15 @@ single_sync_worker(gpointer user_data) {
         pclose(rsync_pipe);
     }
 
-    dispatch_log(ud->widgets, ">>> Single file sync finished.");
+    dispatch_log(ud->widgets,
+                 ">>> Single file sync finished. Updating list...");
+
+    remove_data = g_new0(UIUpdateData, 1);
+    remove_data->widgets = ud->widgets;
+    remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
+    remove_data->filepath = g_strdup(ud->filepath);
+    g_idle_add(update_ui_handler, remove_data);
+
     g_free(ud->filepath);
     g_free(ud->action);
     g_free(ud);

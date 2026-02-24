@@ -187,6 +187,7 @@ update_ui_handler(gpointer user_data) {
     char *path_dst;
     char *action_src;
     char *action_dst;
+    gboolean valid;
 
     data = (UIUpdateData *)user_data;
     store = data->widgets->store;
@@ -272,6 +273,27 @@ update_ui_handler(gpointer user_data) {
                            COL_SIZE_RAW, data->size, COL_SRC_COLOR, bg_src,
                            COL_DST_COLOR, bg_dst, COL_REASON, data->reason, -1);
         g_free(size_str);
+        break;
+    }
+    case DATA_TYPE_REMOVE_TREE_ROW: {
+        valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter);
+        while (valid) {
+            char *row_path_src;
+            char *row_path_dst;
+            gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, COL_SRC_PATH,
+                               &row_path_src, COL_DST_PATH, &row_path_dst, -1);
+
+            if (g_strcmp0(row_path_src, data->filepath) == 0
+                || g_strcmp0(row_path_dst, data->filepath) == 0) {
+                gtk_list_store_remove(store, &iter);
+                g_free(row_path_src);
+                g_free(row_path_dst);
+                break;
+            }
+            g_free(row_path_src);
+            g_free(row_path_dst);
+            valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter);
+        }
         break;
     }
     case DATA_TYPE_ENABLE_BUTTONS:
