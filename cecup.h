@@ -68,7 +68,7 @@ typedef struct ThreadData {
     CecupState *widgets;
     char src_path[1024];
     char dst_path[1024];
-    int32 is_preview;
+    bool is_preview;
     int32 check_different_fs;
     int32 show_equal;
 } ThreadData;
