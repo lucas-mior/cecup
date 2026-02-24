@@ -417,25 +417,24 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
+                /* Diff logic with sensitivity check */
                 item = gtk_menu_item_new_with_label("Diff");
-                char *diff_check_path = (side == 0) ? f_path : NULL;
-                if (side == 1) {
-                    gtk_tree_model_get(model, &iter, COL_SRC_PATH,
-                                       &diff_check_path, -1);
-                }
 
+                char *other_path = NULL;
+                int32 other_col = (side == 0) ? COL_DST_PATH : COL_SRC_PATH;
+                gtk_tree_model_get(model, &iter, other_col, &other_path, -1);
+
+                /* Disable if either side is marked as missing with "-" */
                 if (g_strcmp0(f_path, "-") == 0
-                    || g_strcmp0(diff_check_path, "-") == 0) {
+                    || g_strcmp0(other_path, "-") == 0) {
                     gtk_widget_set_sensitive(item, FALSE);
                 } else {
                     g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
                                      ud);
                 }
-                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-                if (side == 1) {
-                    g_free(diff_check_path);
-                }
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+                g_free(other_path);
 
                 gtk_widget_show_all(menu);
                 gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
