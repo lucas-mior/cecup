@@ -15,6 +15,14 @@ on_menu_open(GtkWidget *m, gpointer data) {
     ud = (UIUpdateData *)data;
     base = (char *)gtk_entry_get_text(GTK_ENTRY(
         ud->side == 0 ? ud->widgets->src_entry : ud->widgets->dst_entry));
+
+    if (g_strcmp0(ud->filepath, "-") == 0) {
+        g_free(ud->filepath);
+        g_free(ud->action);
+        g_free(ud);
+        return;
+    }
+
     full = g_build_filename(base, ud->filepath, NULL);
     cmd = g_strdup_printf("xdg-open '%s' &", full);
     system(cmd);
@@ -38,6 +46,14 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
     ud = (UIUpdateData *)data;
     base = (char *)gtk_entry_get_text(GTK_ENTRY(
         ud->side == 0 ? ud->widgets->src_entry : ud->widgets->dst_entry));
+
+    if (g_strcmp0(ud->filepath, "-") == 0) {
+        g_free(ud->filepath);
+        g_free(ud->action);
+        g_free(ud);
+        return;
+    }
+
     full = g_build_filename(base, ud->filepath, NULL);
     dir = g_path_get_dirname(full);
     cmd = g_strdup_printf("xdg-open '%s' &", dir);
@@ -54,9 +70,8 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
 static void
 on_menu_apply(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
-
-    (void)m;
     ud = (UIUpdateData *)data;
+    (void)m;
     g_thread_new("single_worker", single_sync_worker, ud);
     return;
 }
@@ -356,29 +371,26 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
     char *action;
     AppWidgets *w;
     int32 side;
-    gint bin_x;
-    gint bin_y;
 
     w = (AppWidgets *)data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
 
-    /* Convert coordinates from widget-space to bin-window space */
-    gtk_tree_view_convert_widget_to_bin_window_coords(
-        GTK_TREE_VIEW(widget), (gint)event->x, (gint)event->y, &bin_x, &bin_y);
-
     if (event->type == GDK_BUTTON_PRESS && event->button == 3) {
-        /* Use the converted bin_x and bin_y to find the correct path */
-        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), bin_x, bin_y,
-                                          &path, NULL, NULL, NULL)) {
+        /* Coordinate fix: Removed conversion. (event->x, event->y) are already
+           bin-relative in GTK3 for this widget. */
+        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
+                                          (gint)event->y, &path, NULL, NULL,
+                                          NULL)) {
 
-            /* Crucial: Get the model currently attached to the view (usually a
-             * Sort Model) */
             model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
 
             if (gtk_tree_model_get_iter(model, &iter, path)) {
-                /* Pull strings from the iterator at this specific path */
-                gtk_tree_model_get(model, &iter, COL_SRC_PATH, &f_path,
-                                   COL_SRC_ACTION, &action, -1);
+                /* Side-aware path retrieval logic */
+                int32 path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
+                int32 act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;
+
+                gtk_tree_model_get(model, &iter, path_col, &f_path, act_col,
+                                   &action, -1);
 
                 ud = g_new0(UIUpdateData, 1);
                 ud->widgets = w;
@@ -388,25 +400,21 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
 
                 menu = gtk_menu_new();
 
-                /* Open File */
                 item = gtk_menu_item_new_with_label("Open File");
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_open),
                                  ud);
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-                /* Open Folder */
                 item = gtk_menu_item_new_with_label("Open Folder");
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_open_dir),
                                  ud);
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-                /* Apply Single */
                 item = gtk_menu_item_new_with_label("Apply (This file only)");
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply),
                                  ud);
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-                /* Exclude Submenu */
                 item = gtk_menu_item_new_with_label("Exclude via filter...");
                 sub = gtk_menu_new();
                 gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
@@ -424,10 +432,17 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-                /* Diff */
                 item = gtk_menu_item_new_with_label("Diff");
-                if (g_strcmp0(f_path, "-") == 0 || g_strcmp0(action, "New") == 0
-                    || g_strcmp0(action, "Deleted") == 0) {
+                /* Retrieve source path for diff if right-clicking destination
+                 */
+                char *diff_check_path = (side == 0) ? f_path : NULL;
+                if (side == 1) {
+                    gtk_tree_model_get(model, &iter, COL_SRC_PATH,
+                                       &diff_check_path, -1);
+                }
+
+                if (g_strcmp0(f_path, "-") == 0
+                    || g_strcmp0(diff_check_path, "-") == 0) {
                     gtk_widget_set_sensitive(item, FALSE);
                 } else {
                     g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
@@ -435,7 +450,10 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 }
                 gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-                /* Display the menu */
+                if (side == 1) {
+                    g_free(diff_check_path);
+                }
+
                 gtk_widget_show_all(menu);
                 gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
 
@@ -446,9 +464,9 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             return TRUE;
         }
     } else if (event->type == GDK_BUTTON_PRESS && event->button == 1) {
-        /* Normal selection logic also uses the bin coordinates */
-        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), bin_x, bin_y,
-                                          &path, NULL, NULL, NULL)) {
+        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
+                                          (gint)event->y, &path, NULL, NULL,
+                                          NULL)) {
             GtkTreeSelection *sel
                 = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
             if (gtk_tree_selection_path_is_selected(sel, path)) {
@@ -475,6 +493,8 @@ on_tree_tooltip(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode,
     (void)keyboard_mode;
     (void)user_data;
 
+    /* Tooltips still require conversion because (x,y) are relative to the
+     * widget layout */
     gtk_tree_view_convert_widget_to_bin_window_coords(GTK_TREE_VIEW(widget), x,
                                                       y, &bin_x, &bin_y);
 

@@ -330,6 +330,7 @@ setup_tree_columns(GtkWidget *gtk_tree, AppWidgets *w, int32 col_act,
     gtk_widget_set_has_tooltip(gtk_tree, TRUE);
     g_signal_connect(gtk_tree, "query-tooltip", G_CALLBACK(on_tree_tooltip),
                      NULL);
+
     g_signal_connect(gtk_tree, "button-press-event",
                      G_CALLBACK(on_tree_button_press), w);
     return;
