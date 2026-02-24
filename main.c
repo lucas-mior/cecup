@@ -342,8 +342,8 @@ update_ui_handler(gpointer user_data) {
         char *bg_dst;
         char *path_src;
         char *path_dst;
-        char *action_src;
-        char *action_dst;
+        CecupAction action_src;
+        CecupAction action_dst;
 
         size_string = bytes_pretty(data->size);
         bg_src = "#FFFFFF";
@@ -353,33 +353,30 @@ update_ui_handler(gpointer user_data) {
         action_src = data->action;
         action_dst = data->action;
 
-        if (g_strcmp0(data->action, "New") == 0) {
+        if (data->action == UI_ACTION_NEW) {
             bg_src = "#D4EDDA";
             path_dst = "-";
-        } else if (g_strcmp0(data->action, "Update") == 0) {
+        } else if (data->action == UI_ACTION_UPDATE) {
             bg_src = "#CCE5FF";
             bg_dst = "#CCE5FF";
-        } else if (g_strcmp0(data->action, "Hardlink") == 0) {
+        } else if (data->action == UI_ACTION_HARDLINK) {
             bg_src = "#E2D1F9";
             bg_dst = "#E2D1F9";
-        } else if (g_strcmp0(data->action, "Equal") == 0) {
+        } else if (data->action == UI_ACTION_EQUAL) {
             bg_src = "#F0F0F0";
             bg_dst = "#F0F0F0";
-        } else if (g_strcmp0(data->action, "Delete") == 0) {
-            char *rl;
-            rl = g_utf8_strdown(data->reason ? data->reason : "", -1);
-            if (g_strrstr(rl, "exclude")) {
+        } else if (data->action == UI_ACTION_DELETE) {
+            if (data->reason == UI_REASON_EXCLUDED) {
                 bg_src = "#FFF3CD";
                 bg_dst = "#FFF3CD";
-                action_src = "Ignore";
-                action_dst = "Delete";
+                action_src = UI_ACTION_IGNORE;
+                action_dst = UI_ACTION_DELETE;
             } else {
                 bg_dst = "#F8D7DA";
-                action_src = "Deleted";
-                action_dst = "Delete";
+                action_src = UI_ACTION_DELETED;
+                action_dst = UI_ACTION_DELETE;
                 path_src = "-";
             }
-            g_free(rl);
         }
 
         row = g_new0(CecupRow, 1);

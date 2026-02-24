@@ -47,7 +47,7 @@ free_task_list(GPtrArray *tasks) {
 }
 
 static GPtrArray *
-get_target_tasks(int32 side, char *clicked_path, char *clicked_action) {
+get_target_tasks(int32 side, char *clicked_path, CecupAction clicked_action) {
     GPtrArray *tasks;
     char *shared_src;
     char *shared_dst;
@@ -62,7 +62,7 @@ get_target_tasks(int32 side, char *clicked_path, char *clicked_action) {
         row = (CecupRow *)g_ptr_array_index(cecup_state.rows, i);
         if (row->selected) {
             char *f_path;
-            char *action;
+            CecupAction action;
             UIUpdateData *task;
 
             f_path = (side == 0) ? row->src_path : row->dst_path;
@@ -125,7 +125,9 @@ cecup_row_compare(gconstpointer a, gconstpointer b, gpointer user_data) {
                      : (ra->size_raw < rb->size_raw ? -1 : 0);
         break;
     default:
-        result = g_strcmp0(ra->src_action, rb->src_action);
+        result = (ra->src_action > rb->src_action)
+                     ? 1
+                     : (ra->src_action < rb->src_action ? -1 : 0);
         break;
     }
 
@@ -168,17 +170,17 @@ refresh_ui_list(void) {
         row = (CecupRow *)g_ptr_array_index(cecup_state.rows, i);
         visible = FALSE;
 
-        if (g_strcmp0(row->src_action, "New") == 0) {
+        if (row->src_action == UI_ACTION_NEW) {
             visible = show_new;
-        } else if (g_strcmp0(row->src_action, "Hardlink") == 0) {
+        } else if (row->src_action == UI_ACTION_HARDLINK) {
             visible = show_hard;
-        } else if (g_strcmp0(row->src_action, "Update") == 0) {
+        } else if (row->src_action == UI_ACTION_UPDATE) {
             visible = show_update;
-        } else if (g_strcmp0(row->src_action, "Equal") == 0) {
+        } else if (row->src_action == UI_ACTION_EQUAL) {
             visible = show_equal;
-        } else if (g_strcmp0(row->src_action, "Deleted") == 0) {
+        } else if (row->src_action == UI_ACTION_DELETED) {
             visible = show_delete;
-        } else if (g_strcmp0(row->src_action, "Ignore") == 0) {
+        } else if (row->src_action == UI_ACTION_IGNORE) {
             visible = show_ignore;
         }
 
@@ -187,11 +189,12 @@ refresh_ui_list(void) {
             gtk_list_store_append(cecup_state.store, &iter);
             gtk_list_store_set(
                 cecup_state.store, &iter, COL_SELECTED, row->selected,
-                COL_SRC_ACTION, row->src_action, COL_DST_ACTION,
-                row->dst_action, COL_SRC_PATH, row->src_path, COL_DST_PATH,
-                row->dst_path, COL_SIZE_TEXT, row->size_text, COL_SIZE_RAW,
-                row->size_raw, COL_SRC_COLOR, row->src_color, COL_DST_COLOR,
-                row->dst_color, COL_REASON, row->reason, -1);
+                COL_SRC_ACTION, action_strings[row->src_action], COL_DST_ACTION,
+                action_strings[row->dst_action], COL_SRC_PATH, row->src_path,
+                COL_DST_PATH, row->dst_path, COL_SIZE_TEXT, row->size_text,
+                COL_SIZE_RAW, row->size_raw, COL_SRC_COLOR, row->src_color,
+                COL_DST_COLOR, row->dst_color, COL_REASON,
+                reason_strings[row->reason], -1);
         }
     }
     return;
@@ -300,7 +303,7 @@ on_menu_delete(GtkWidget *m, gpointer data) {
 
     (void)m;
     ud = (UIUpdateData *)data;
-    tasks = get_target_tasks(ud->side, ud->filepath, "Delete");
+    tasks = get_target_tasks(ud->side, ud->filepath, UI_ACTION_DELETE);
 
     if (tasks == NULL) {
         g_free(ud->filepath);
@@ -768,7 +771,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 int32 act_col;
                 int32 other_col;
                 char *f_path;
-                char *action;
+                char *action_str;
                 char *other_path;
                 UIUpdateData *ud;
                 GtkWidget *menu;
@@ -777,12 +780,21 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 GtkWidget *sub_ext;
                 GtkWidget *sub_dir;
                 int32 is_disabled;
+                CecupAction action;
 
                 path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
                 act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;
                 other_col = (side == 0) ? COL_DST_PATH : COL_SRC_PATH;
                 gtk_tree_model_get(model, &iter, path_col, &f_path, act_col,
-                                   &action, other_col, &other_path, -1);
+                                   &action_str, other_col, &other_path, -1);
+
+                action = UI_ACTION_NONE;
+                for (int32 k = 0; k < NUM_UI_ACTIONS; k += 1) {
+                    if (g_strcmp0(action_str, action_strings[k]) == 0) {
+                        action = k;
+                        break;
+                    }
+                }
 
                 ud = g_new0(UIUpdateData, 1);
                 ud->filepath = g_strdup(f_path);
@@ -825,7 +837,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 item = gtk_menu_item_new_with_label("Diff");
                 is_disabled = (g_strcmp0(f_path, "-") == 0
                                || g_strcmp0(other_path, "-") == 0
-                               || g_strcmp0(action, "Hardlink") == 0);
+                               || action == UI_ACTION_HARDLINK);
                 if (is_disabled) {
                     gtk_widget_set_sensitive(item, FALSE);
                 } else {
@@ -847,6 +859,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
                 g_free(f_path);
                 g_free(other_path);
+                g_free(action_str);
             }
             gtk_tree_path_free(path);
             return TRUE;

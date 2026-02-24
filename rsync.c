@@ -63,7 +63,8 @@ dispatch_log_error(char *format, ...) {
 }
 
 static void
-dispatch_tree(int32 side, char *action, char *path, int64 size, char *reason) {
+dispatch_tree(int32 side, CecupAction action, char *path, int64 size,
+              CecupReason reason) {
     UIUpdateData *data;
 
     data = g_new0(UIUpdateData, 1);
@@ -112,8 +113,8 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
             } else if (S_ISREG(st_s.st_mode)) {
                 if (st_s.st_size == st_d.st_size
                     && st_s.st_mtime == st_d.st_mtime) {
-                    dispatch_tree(0, "Equal", sub_rel, st_s.st_size,
-                                  "Identical");
+                    dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, st_s.st_size,
+                                  UI_REASON_IDENTICAL);
                 }
             }
         }
@@ -163,7 +164,7 @@ bulk_sync_worker(gpointer user_data) {
             continue;
         }
 
-        if (g_strcmp0(ud->action, "Delete") == 0) {
+        if (ud->action == UI_ACTION_DELETE) {
             char *full_dst;
 
             full_dst = g_build_filename(ud->dst_base, ud->filepath, NULL);
@@ -510,7 +511,7 @@ sync_worker(gpointer user_data) {
                                 struct stat st_s;
                                 struct stat st_d;
                                 int64 sz;
-                                char *reason;
+                                CecupReason reason;
 
                                 relative_path = output_buffer + 10;
                                 while (isspace(*relative_path)) {
@@ -524,11 +525,11 @@ sync_worker(gpointer user_data) {
                                 sz = (stat(full_dst, &st_d) == 0) ? st_d.st_size
                                                                   : 0;
                                 reason = (stat(full_src, &st_s) == 0)
-                                             ? "Excluded by pattern"
-                                             : "Missing in source";
+                                             ? UI_REASON_EXCLUDED
+                                             : UI_REASON_MISSING;
 
-                                dispatch_tree(1, "Delete", relative_path, sz,
-                                              reason);
+                                dispatch_tree(1, UI_ACTION_DELETE,
+                                              relative_path, sz, reason);
                                 g_free(full_src);
                                 g_free(full_dst);
                             } else if (strchr(output_buffer, ' ')
@@ -537,21 +538,21 @@ sync_worker(gpointer user_data) {
                                            || output_buffer[0] == 'h'
                                            || output_buffer[0] == 'c')) {
                                 char *relative_path;
-                                char *action;
+                                CecupAction action;
                                 char *full_src;
                                 struct stat st;
                                 int64 sz;
 
                                 relative_path = strchr(output_buffer, ' ') + 1;
-                                action = "Update";
+                                action = UI_ACTION_UPDATE;
 
                                 if (strncmp(output_buffer, "hf", 2) == 0) {
-                                    action = "Hardlink";
+                                    action = UI_ACTION_HARDLINK;
                                 } else if (strncmp(output_buffer, "cd", 2) == 0
                                            || strncmp(output_buffer, ">f+++++",
                                                       7)
                                                   == 0) {
-                                    action = "New";
+                                    action = UI_ACTION_NEW;
                                 }
 
                                 full_src = g_build_filename(
@@ -559,7 +560,7 @@ sync_worker(gpointer user_data) {
                                 sz = (stat(full_src, &st) == 0) ? st.st_size
                                                                 : 0;
                                 dispatch_tree(0, action, relative_path, sz,
-                                              action);
+                                              (CecupReason)action);
                                 g_free(full_src);
                             }
                         } else {

@@ -6,6 +6,50 @@
 
 #define MAX_PATH_LENGTH 4096
 
+typedef enum CecupAction {
+    UI_ACTION_NONE = 0,
+    UI_ACTION_NEW,
+    UI_ACTION_HARDLINK,
+    UI_ACTION_UPDATE,
+    UI_ACTION_EQUAL,
+    UI_ACTION_DELETED,
+    UI_ACTION_DELETE,
+    UI_ACTION_IGNORE,
+    NUM_UI_ACTIONS
+} CecupAction;
+
+typedef enum CecupReason {
+    UI_REASON_NONE = 0,
+    UI_REASON_IDENTICAL,
+    UI_REASON_EXCLUDED,
+    UI_REASON_MISSING,
+    UI_REASON_NEW,
+    UI_REASON_HARDLINK,
+    UI_REASON_UPDATE,
+    NUM_UI_REASONS
+} CecupReason;
+
+static const char *action_strings[] = {
+    [UI_ACTION_NONE]     = "",
+    [UI_ACTION_NEW]      = "New",
+    [UI_ACTION_HARDLINK] = "Hardlink",
+    [UI_ACTION_UPDATE]   = "Update",
+    [UI_ACTION_EQUAL]    = "Equal",
+    [UI_ACTION_DELETED]  = "Deleted",
+    [UI_ACTION_DELETE]   = "Delete",
+    [UI_ACTION_IGNORE]   = "Ignore"
+};
+
+static const char *reason_strings[] = {
+    [UI_REASON_NONE]      = "",
+    [UI_REASON_IDENTICAL] = "Identical",
+    [UI_REASON_EXCLUDED]  = "Excluded by pattern",
+    [UI_REASON_MISSING]   = "Missing in source",
+    [UI_REASON_NEW]       = "New",
+    [UI_REASON_HARDLINK]  = "Hardlink",
+    [UI_REASON_UPDATE]    = "Update"
+};
+
 enum {
     COL_SELECTED = 0,
     COL_SRC_ACTION,
@@ -22,15 +66,15 @@ enum {
 
 typedef struct CecupRow {
     int32 selected;
-    char *src_action;
-    char *dst_action;
+    CecupAction src_action;
+    CecupAction dst_action;
     char *src_path;
     char *dst_path;
     char *size_text;
     int64 size_raw;
     char *src_color;
     char *dst_color;
-    char *reason;
+    CecupReason reason;
 } CecupRow;
 
 static struct {
@@ -84,9 +128,9 @@ enum DataType {
 
 typedef struct UIUpdateData {
     char *message;
-    char *action;
+    CecupAction action;
     char *filepath;
-    char *reason;
+    CecupReason reason;
     char *src_base;
     char *dst_base;
     char *diff_tool;
