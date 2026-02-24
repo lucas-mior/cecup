@@ -176,7 +176,7 @@ on_menu_delete(GtkWidget *m, gpointer data) {
     (void)m;
     ud = (UIUpdateData *)data;
     tasks = get_target_tasks(ud->widgets, ud->side, ud->filepath, "Delete");
-    count = g_list_length(tasks);
+    count = (int32)g_list_length(tasks);
 
     if (count == 0) {
         g_free(ud->filepath);
