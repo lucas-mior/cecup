@@ -17,6 +17,42 @@ dispatch_log(AppWidgets *w, char *msg) {
     return;
 }
 
+static gboolean
+log_error_handler(gpointer user_data) {
+    UIUpdateData *data;
+    GtkTextIter end;
+    GtkTextTagTable *table;
+    GtkTextTag *tag;
+
+    data = (UIUpdateData *)user_data;
+    table = gtk_text_buffer_get_tag_table(data->widgets->log_buffer);
+    tag = gtk_text_tag_table_lookup(table, "err_red");
+    if (tag == NULL) {
+        gtk_text_buffer_create_tag(data->widgets->log_buffer, "err_red",
+                                   "foreground", "red", NULL);
+    }
+
+    gtk_text_buffer_get_end_iter(data->widgets->log_buffer, &end);
+    gtk_text_buffer_insert_with_tags_by_name(
+        data->widgets->log_buffer, &end, data->message, -1, "err_red", NULL);
+    gtk_text_buffer_insert(data->widgets->log_buffer, &end, "\n", -1);
+
+    g_free(data->message);
+    g_free(data);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+dispatch_log_error(AppWidgets *w, char *msg) {
+    UIUpdateData *data;
+
+    data = g_new0(UIUpdateData, 1);
+    data->widgets = w;
+    data->message = g_strdup(msg);
+    g_idle_add(log_error_handler, data);
+    return;
+}
+
 static void
 dispatch_tree(AppWidgets *w, int32 side, char *act, char *path, int64 size,
               char *reason) {
@@ -118,8 +154,22 @@ bulk_sync_worker(gpointer user_data) {
         dispatch_log(ud->widgets, cmd);
         if ((rsync_pipe = popen(cmd, "r")) != NULL) {
             while (fgets(buffer, sizeof(buffer), rsync_pipe)) {
+                int32 is_err;
+
                 buffer[strcspn(buffer, "\n")] = 0;
-                dispatch_log(ud->widgets, buffer);
+                is_err = 0;
+
+                if (strncmp(buffer, "rsync: ", 7) == 0
+                    || strncmp(buffer, "rsync error: ", 13) == 0
+                    || strncmp(buffer, "rsync warning: ", 15) == 0) {
+                    is_err = 1;
+                }
+
+                if (is_err) {
+                    dispatch_log_error(ud->widgets, buffer);
+                } else {
+                    dispatch_log(ud->widgets, buffer);
+                }
             }
             pclose(rsync_pipe);
         }
@@ -271,9 +321,26 @@ sync_worker(gpointer user_data) {
                     dispatch_tree(thread_data->widgets, 0, act, relative_path,
                                   sz, act);
                     g_free(full_src);
+                } else if (strncmp(buffer, "rsync: ", 7) == 0
+                           || strncmp(buffer, "rsync error: ", 13) == 0
+                           || strncmp(buffer, "rsync warning: ", 15) == 0) {
+                    dispatch_log_error(thread_data->widgets, buffer);
                 }
             } else {
-                dispatch_log(thread_data->widgets, buffer);
+                int32 is_err;
+
+                is_err = 0;
+                if (strncmp(buffer, "rsync: ", 7) == 0
+                    || strncmp(buffer, "rsync error: ", 13) == 0
+                    || strncmp(buffer, "rsync warning: ", 15) == 0) {
+                    is_err = 1;
+                }
+
+                if (is_err) {
+                    dispatch_log_error(thread_data->widgets, buffer);
+                } else {
+                    dispatch_log(thread_data->widgets, buffer);
+                }
             }
         }
         pclose(pipe);
