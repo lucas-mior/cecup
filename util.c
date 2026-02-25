@@ -1538,6 +1538,13 @@ bytes_pretty(int64 raw) {
     int32 n;
     char *string;
 
+    if (raw <= 1023) {
+        n = SNPRINTF(buffer, "%lldB", (llong)raw);
+        string = xmalloc(n + 1);
+        memcpy64(string, buffer, n + 1);
+        return string;
+    }
+
     aux_pretty = (double)raw;
     i = 0;
     while ((aux_pretty >= 1024) && (i < LENGTH(suffixes))) {
