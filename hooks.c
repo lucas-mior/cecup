@@ -416,7 +416,7 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
             }
 
             SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
-            if ((dir_path = g_path_get_dirname(full_path)) != NULL) {
+            if ((dir_path = g_path_get_dirname(full_path))) {
                 char *command[] = {
                     "xdg-open",
                     dir_path,
