@@ -161,9 +161,12 @@ count_files_recursive(const char *base_path, const char *relative_path) {
     }
 
     if (!(dir = opendir(full_path))) {
+        dispatch_log_error("Error opendir %s: %s.\n", full_path,
+                           strerror(errno));
         return 0;
     }
 
+    errno = 0;
     while ((entry = readdir(dir))) {
         char *name;
         char sub_rel[MAX_PATH_LENGTH];
@@ -188,9 +191,22 @@ count_files_recursive(const char *base_path, const char *relative_path) {
             } else {
                 count += 1;
             }
+        } else {
+            dispatch_log_error("Error lstat %s: %s.\n", full_path,
+                               strerror(errno));
         }
+        errno = 0;
     }
-    closedir(dir);
+
+    if (errno) {
+        dispatch_log_error("Error readdir in %s: %s.\n", full_path,
+                           strerror(errno));
+    }
+
+    if (closedir(dir) < 0) {
+        dispatch_log_error("Error closedir %s: %s.\n", full_path,
+                           strerror(errno));
+    }
     return count;
 }
 
@@ -212,9 +228,12 @@ find_equal_files(EqualScannerData *sd, char *relative_path) {
     }
 
     if (!(dir = opendir(src_full))) {
+        dispatch_log_error("Error opendir %s: %s.\n", src_full,
+                           strerror(errno));
         return;
     }
 
+    errno = 0;
     while ((entry = readdir(dir))) {
         struct stat st_s;
         struct stat st_d;
@@ -241,6 +260,8 @@ find_equal_files(EqualScannerData *sd, char *relative_path) {
         SNPRINTF(dst_full, "%s/%s", sd->dst_path, sub_rel);
 
         if (lstat(src_full, &st_s) != 0) {
+            dispatch_log_error("Error lstat %s: %s.\n", src_full,
+                               strerror(errno));
             continue;
         }
 
@@ -265,9 +286,18 @@ find_equal_files(EqualScannerData *sd, char *relative_path) {
                 }
             }
         }
+        errno = 0;
     }
 
-    closedir(dir);
+    if (errno != 0) {
+        dispatch_log_error("Error readdir in %s: %s.\n", src_full,
+                           strerror(errno));
+    }
+
+    if (closedir(dir) < 0) {
+        dispatch_log_error("Error closedir %s: %s.\n", src_full,
+                           strerror(errno));
+    }
     return;
 }
 
@@ -368,19 +398,24 @@ bulk_sync_worker(gpointer user_data) {
             XCLOSE(&pipe_error[1]);
             continue;
         case 0:
-            setpgid(0, 0);
+            if (setpgid(0, 0) < 0) {
+                fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
             XCLOSE(&pipe_output[0]);
             XCLOSE(&pipe_error[0]);
             if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
+                fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
                 exit(EXIT_FAILURE);
             }
             if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
+                fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
                 exit(EXIT_FAILURE);
             }
             XCLOSE(&pipe_output[1]);
             XCLOSE(&pipe_error[1]);
             execl("/bin/sh", "sh", "-c", cmd, NULL);
-            fprintf(stderr, "Error: execl failed\n");
+            fprintf(stderr, "Error: execl failed: %s.\n", strerror(errno));
             exit(EXIT_FAILURE);
         default:
             break;
@@ -399,7 +434,10 @@ bulk_sync_worker(gpointer user_data) {
 
         while (1) {
             if (cecup_state.cancel_sync) {
-                kill(-child_pid, SIGTERM);
+                if (kill(-child_pid, SIGTERM) < 0) {
+                    dispatch_log_error("Error kill process group: %s.\n",
+                                       strerror(errno));
+                }
                 dispatch_log_error("Process cancelled: %s\n", ud->filepath);
                 break;
             }
@@ -418,6 +456,8 @@ bulk_sync_worker(gpointer user_data) {
                 char buffer[2048];
                 int64 r = read64(pipe_output[0], buffer, SIZEOF(buffer));
                 if (r < 0) {
+                    dispatch_log_error("Error reading stdout pipe: %s.\n",
+                                       strerror(errno));
                     pipes[0].fd = -1;
                 } else if (r > 0) {
                     for (int64 k = 0; k < r; k += 1) {
@@ -442,6 +482,8 @@ bulk_sync_worker(gpointer user_data) {
                 char buffer[2048];
                 int64 r = read64(pipe_error[0], buffer, SIZEOF(buffer));
                 if (r < 0) {
+                    dispatch_log_error("Error reading stderr pipe: %s.\n",
+                                       strerror(errno));
                     pipes[1].fd = -1;
                 } else if (r > 0) {
                     for (int64 k = 0; k < r; k += 1) {
@@ -583,9 +625,15 @@ sync_worker(gpointer user_data) {
             = g_thread_new("equal_scanner", equal_scanner_worker, sd);
     }
 
-    ex = (access(cecup_state.ignore_path, F_OK) != -1)
-             ? g_strdup_printf("--exclude-from='%s'", cecup_state.ignore_path)
-             : g_strdup("");
+    if (access(cecup_state.ignore_path, F_OK) != -1) {
+        ex = g_strdup_printf("--exclude-from='%s'", cecup_state.ignore_path);
+    } else {
+        if (errno != ENOENT) {
+            dispatch_log_error("Error access %s: %s.\n",
+                               cecup_state.ignore_path, strerror(errno));
+        }
+        ex = g_strdup("");
+    }
 
     SNPRINTF(cmd,
              "rsync " RSYNC_UNIVERSAL_ARGS " --delete-excluded %s %s "
@@ -649,19 +697,24 @@ sync_worker(gpointer user_data) {
         XCLOSE(&pipe_error[1]);
         goto clean_exit;
     case 0:
-        setpgid(0, 0);
+        if (setpgid(0, 0) < 0) {
+            fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_error[0]);
         if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
+            fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
         if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
+            fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
         XCLOSE(&pipe_output[1]);
         XCLOSE(&pipe_error[1]);
         execl("/bin/sh", "sh", "-c", cmd, NULL);
-        fprintf(stderr, "Error: execl failed\n");
+        fprintf(stderr, "Error: execl failed: %s.\n", strerror(errno));
         exit(EXIT_FAILURE);
     default:
         break;
@@ -680,7 +733,10 @@ sync_worker(gpointer user_data) {
 
     while (1) {
         if (cecup_state.cancel_sync) {
-            kill(-child_pid, SIGTERM);
+            if (kill(-child_pid, SIGTERM) < 0) {
+                dispatch_log_error("Error kill process group: %s.\n",
+                                   strerror(errno));
+            }
             dispatch_log_error("rsync operation stopped by user.\n");
             break;
         }
@@ -700,6 +756,10 @@ sync_worker(gpointer user_data) {
             int64 r;
 
             if ((r = read64(pipe_output[0], buffer, SIZEOF(buffer))) <= 0) {
+                if (r < 0) {
+                    dispatch_log_error("Error reading stdout pipe: %s.\n",
+                                       strerror(errno));
+                }
                 pipes[0].fd = -1;
                 goto output_end;
             }
@@ -756,9 +816,20 @@ sync_worker(gpointer user_data) {
                                                 relative_path, NULL);
                     full_dst = g_build_filename(thread_data->dst_path,
                                                 relative_path, NULL);
-                    sz = (lstat(full_dst, &st_d) == 0) ? st_d.st_size : 0;
-                    reason = (lstat(full_src, &st_s) == 0) ? UI_REASON_IGNORED
-                                                           : UI_REASON_MISSING;
+
+                    if (lstat(full_dst, &st_d) == 0) {
+                        sz = st_d.st_size;
+                    } else {
+                        dispatch_log_error("Error lstat %s: %s.\n", full_dst,
+                                           strerror(errno));
+                        sz = 0;
+                    }
+
+                    if (lstat(full_src, &st_s) == 0) {
+                        reason = UI_REASON_IGNORED;
+                    } else {
+                        reason = UI_REASON_MISSING;
+                    }
 
                     dispatch_tree(1, UI_ACTION_DELETE, relative_path, sz,
                                   reason);
@@ -799,9 +870,14 @@ sync_worker(gpointer user_data) {
 
                 full_src_path = g_build_filename(thread_data->src_path,
                                                  relative_path_entry, NULL);
-                sz_path = (lstat(full_src_path, &st_path) == 0)
-                              ? st_path.st_size
-                              : 0;
+                if (lstat(full_src_path, &st_path) == 0) {
+                    sz_path = st_path.st_size;
+                } else {
+                    dispatch_log_error("Error lstat %s: %s.\n", full_src_path,
+                                       strerror(errno));
+                    sz_path = 0;
+                }
+
                 dispatch_tree(0, action, relative_path_entry, sz_path,
                               (enum CecupReason)action);
                 g_free(full_src_path);
@@ -823,6 +899,8 @@ sync_worker(gpointer user_data) {
             char buffer[2048];
             int64 r = read64(pipe_error[0], buffer, SIZEOF(buffer));
             if (r < 0) {
+                dispatch_log_error("Error reading stderr pipe: %s.\n",
+                                   strerror(errno));
                 pipes[1].fd = -1;
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
@@ -890,7 +968,9 @@ diff_worker(gpointer user_data) {
              "%s -e bash -c \"%s '%s/%s' '%s/%s'; read -p 'Press Enter...'\" &",
              ud->term_cmd, ud->diff_tool, ud->src_base, ud->filepath,
              ud->dst_base, ud->filepath);
-    system(cmd);
+    if (system(cmd) == -1) {
+        dispatch_log_error("Error system call: %s.\n", strerror(errno));
+    }
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     if (ud->filepath) {
