@@ -169,8 +169,8 @@ bulk_sync_worker(gpointer user_data) {
         char temp_error[2048];
         int32 output_position;
         int32 error_position;
-        ssize_t output_bytes;
-        ssize_t error_bytes;
+        int64 output_bytes;
+        int64 error_bytes;
         int32 poll_return;
         UIUpdateData *remove_data;
 
@@ -276,7 +276,7 @@ bulk_sync_worker(gpointer user_data) {
                     dispatch_log_error("Error: read from stdout failed");
                     poll_descriptors[0].fd = -1;
                 } else if (output_bytes > 0) {
-                    for (ssize_t k = 0; k < output_bytes; k += 1) {
+                    for (int64 k = 0; k < output_bytes; k += 1) {
                         if (temp_output[k] == '\n'
                             || output_position == sizeof(output_buffer) - 1) {
                             output_buffer[output_position] = '\0';
@@ -301,7 +301,7 @@ bulk_sync_worker(gpointer user_data) {
                     dispatch_log_error("Error: read from stderr failed");
                     poll_descriptors[1].fd = -1;
                 } else if (error_bytes > 0) {
-                    for (ssize_t k = 0; k < error_bytes; k += 1) {
+                    for (int64 k = 0; k < error_bytes; k += 1) {
                         if (temp_error[k] == '\n'
                             || error_position == sizeof(error_buffer) - 1) {
                             error_buffer[error_position] = '\0';
@@ -381,8 +381,8 @@ sync_worker(gpointer user_data) {
     char temp_error[2048];
     int32 output_position;
     int32 error_position;
-    ssize_t output_bytes;
-    ssize_t error_bytes;
+    int64 output_bytes;
+    int64 error_bytes;
     int32 poll_return;
     UIUpdateData *ready;
 
@@ -513,7 +513,7 @@ sync_worker(gpointer user_data) {
                 dispatch_log_error("Error: read from stdout failed");
                 poll_descriptors[0].fd = -1;
             } else if (output_bytes > 0) {
-                for (ssize_t k = 0; k < output_bytes; k += 1) {
+                for (int64 k = 0; k < output_bytes; k += 1) {
                     if (temp_output[k] != '\n'
                         && output_position < (int32)sizeof(output_buffer) - 1) {
                         output_buffer[output_position] = temp_output[k];
@@ -608,7 +608,7 @@ sync_worker(gpointer user_data) {
                 dispatch_log_error("Error: read from stderr failed");
                 poll_descriptors[1].fd = -1;
             } else if (error_bytes > 0) {
-                for (ssize_t k = 0; k < error_bytes; k += 1) {
+                for (int64 k = 0; k < error_bytes; k += 1) {
                     if (temp_error[k] == '\n'
                         || error_position == sizeof(error_buffer) - 1) {
                         error_buffer[error_position] = '\0';
