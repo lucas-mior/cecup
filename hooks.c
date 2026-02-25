@@ -47,7 +47,8 @@ free_task_list(GPtrArray *tasks) {
 }
 
 static GPtrArray *
-get_target_tasks(int32 side, char *clicked_path, CecupAction clicked_action) {
+get_target_tasks(int32 side, char *clicked_path,
+                 enum CecupAction clicked_action) {
     GPtrArray *tasks;
     char *shared_src;
     char *shared_dst;
@@ -62,7 +63,7 @@ get_target_tasks(int32 side, char *clicked_path, CecupAction clicked_action) {
         row = (CecupRow *)g_ptr_array_index(cecup_state.rows, i);
         if (row->selected) {
             char *f_path;
-            CecupAction action;
+            enum CecupAction action;
             UIUpdateData *task;
 
             f_path = (side == 0) ? row->src_path : row->dst_path;
@@ -780,7 +781,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 GtkWidget *sub_ext;
                 GtkWidget *sub_dir;
                 int32 is_disabled;
-                CecupAction action;
+                enum CecupAction action;
 
                 path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
                 act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;

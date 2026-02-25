@@ -6,7 +6,7 @@
 
 #define MAX_PATH_LENGTH 4096
 
-typedef enum CecupAction {
+enum CecupAction {
     UI_ACTION_NONE = 0,
     UI_ACTION_NEW,
     UI_ACTION_HARDLINK,
@@ -16,7 +16,7 @@ typedef enum CecupAction {
     UI_ACTION_DELETE,
     UI_ACTION_IGNORE,
     NUM_UI_ACTIONS
-} CecupAction;
+};
 
 typedef enum CecupReason {
     UI_REASON_NONE = 0,
@@ -66,8 +66,8 @@ enum {
 
 typedef struct CecupRow {
     int32 selected;
-    CecupAction src_action;
-    CecupAction dst_action;
+    enum CecupAction src_action;
+    enum CecupAction dst_action;
     char *src_path;
     char *dst_path;
     char *size_text;
@@ -128,7 +128,7 @@ enum DataType {
 
 typedef struct UIUpdateData {
     char *message;
-    CecupAction action;
+    enum CecupAction action;
     char *filepath;
     CecupReason reason;
     char *src_base;

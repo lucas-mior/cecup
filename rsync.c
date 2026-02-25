@@ -63,7 +63,7 @@ dispatch_log_error(char *format, ...) {
 }
 
 static void
-dispatch_tree(int32 side, CecupAction action, char *path, int64 size,
+dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
               CecupReason reason) {
     UIUpdateData *data;
 
@@ -549,7 +549,7 @@ sync_worker(gpointer user_data) {
                                            || output_buffer[0] == 'h'
                                            || output_buffer[0] == 'c')) {
                                 char *relative_path;
-                                CecupAction action;
+                                enum CecupAction action;
                                 char *full_src;
                                 struct stat st;
                                 int64 sz;

@@ -342,8 +342,8 @@ update_ui_handler(gpointer user_data) {
         char *bg_dst;
         char *path_src;
         char *path_dst;
-        CecupAction action_src;
-        CecupAction action_dst;
+        enum CecupAction action_src;
+        enum CecupAction action_dst;
 
         size_string = bytes_pretty(data->size);
         bg_src = "#FFFFFF";
