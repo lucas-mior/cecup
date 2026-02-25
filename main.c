@@ -80,13 +80,23 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
     invert_btn = gtk_button_new_with_label("<--->");
+    gtk_widget_set_tooltip_text(invert_btn,
+                                "Swap Source and Destination paths");
     gtk_box_pack_start(GTK_BOX(header_vbox), invert_btn, FALSE, FALSE, 0);
 
     btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup_state.preview_button = gtk_button_new_with_label("1. Preview");
+    gtk_widget_set_tooltip_text(cecup_state.preview_button,
+                                "Run rsync --dry-run to identify changes");
     cecup_state.exclude_button = gtk_button_new_with_label("Edit Exclusions");
+    gtk_widget_set_tooltip_text(cecup_state.exclude_button,
+                                "Modify exclude.conf");
     cecup_state.stop_button = gtk_button_new_with_label("Stop");
+    gtk_widget_set_tooltip_text(cecup_state.stop_button,
+                                "Cancel current operation");
     cecup_state.sync_button = gtk_button_new_with_label("2. Sync");
+    gtk_widget_set_tooltip_text(cecup_state.sync_button,
+                                "Apply all selected changes");
     gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
     gtk_box_pack_start(GTK_BOX(btn_hbox), cecup_state.exclude_button, FALSE,
                        FALSE, 5);
@@ -101,13 +111,25 @@ main(int32 argc, char *argv[]) {
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup_state.check_fs_toggle
         = gtk_check_button_new_with_label("Require different filesystems");
+    gtk_widget_set_tooltip_text(
+        cecup_state.check_fs_toggle,
+        "Block sync if source and destination are on the same device");
     cecup_state.check_equal_toggle
         = gtk_check_button_new_with_label("Scan for equal files");
+    gtk_widget_set_tooltip_text(
+        cecup_state.check_equal_toggle,
+        "Perform parallel directory scan to find identical files");
     gtk_toggle_button_set_active(
         GTK_TOGGLE_BUTTON(cecup_state.check_equal_toggle), TRUE);
     cecup_state.diff_entry = gtk_entry_new();
+    gtk_widget_set_tooltip_text(cecup_state.diff_entry,
+                                "Executable used for comparing files");
     cecup_state.term_entry = gtk_entry_new();
+    gtk_widget_set_tooltip_text(
+        cecup_state.term_entry,
+        "Terminal emulator used to launch the diff tool");
     reset_btn = gtk_button_new_with_label("Reset");
+    gtk_widget_set_tooltip_text(reset_btn, "Restore default settings");
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_fs_toggle,
                        FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_equal_toggle,
@@ -127,8 +149,14 @@ main(int32 argc, char *argv[]) {
 
     progress_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     cecup_state.progress_rsync = gtk_progress_bar_new();
+    gtk_widget_set_tooltip_text(cecup_state.progress_rsync,
+                                "Rsync transfer progress");
     cecup_state.progress_equal = gtk_progress_bar_new();
+    gtk_widget_set_tooltip_text(cecup_state.progress_equal,
+                                "Equality scanner progress");
     cecup_state.progress_preview = gtk_progress_bar_new();
+    gtk_widget_set_tooltip_text(cecup_state.progress_preview,
+                                "Preview analysis progress");
 
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup_state.progress_rsync),
                                    TRUE);
@@ -167,6 +195,8 @@ main(int32 argc, char *argv[]) {
 
     l_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     cecup_state.src_entry = gtk_entry_new();
+    gtk_widget_set_tooltip_text(cecup_state.src_entry,
+                                "Base source directory path");
     gtk_entry_set_text(GTK_ENTRY(cecup_state.src_entry), default_src);
     browse_src = gtk_button_new_with_label("Browse");
     l_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -185,6 +215,8 @@ main(int32 argc, char *argv[]) {
 
     r_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     cecup_state.dst_entry = gtk_entry_new();
+    gtk_widget_set_tooltip_text(cecup_state.dst_entry,
+                                "Base destination directory path");
     gtk_entry_set_text(GTK_ENTRY(cecup_state.dst_entry), default_dst);
     browse_dst = gtk_button_new_with_label("Browse");
     r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);

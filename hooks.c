@@ -911,6 +911,7 @@ static gboolean
 on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 gpointer d) {
     GtkTreePath *p;
+    GtkTreeViewColumn *c;
     gint bx;
     gint by;
 
@@ -918,15 +919,47 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     (void)d;
     gtk_tree_view_convert_widget_to_bin_window_coords(GTK_TREE_VIEW(w), x, y,
                                                       &bx, &by);
-    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(w), bx, by, &p, NULL, NULL,
+    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(w), bx, by, &p, &c, NULL,
                                       NULL)) {
         int32 idx;
+        int32 side;
+        char *tip_text = NULL;
+
         idx = gtk_tree_path_get_indices(p)[0];
+        side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
+
         if (idx >= 0 && idx < cecup_state.visible_count) {
-            char *r;
-            r = (char *)reason_strings[cecup_state.visible_rows[idx]->reason];
-            if (r && strlen(r) > 0) {
-                gtk_tooltip_set_text(t, r);
+            CecupRow *row = cecup_state.visible_rows[idx];
+            int32 col_id = -1;
+
+            for (int32 i = 0; i < NUM_COLS; i += 1) {
+                if (c == gtk_tree_view_get_column(GTK_TREE_VIEW(w), i)) {
+                    col_id = i;
+                    break;
+                }
+            }
+
+            if (col_id == COL_SRC_PATH || col_id == COL_DST_PATH) {
+                char *path = (side == 0) ? row->src_path : row->dst_path;
+                enum CecupAction action
+                    = (side == 0) ? row->src_action : row->dst_action;
+                tip_text = g_strdup_printf("%s: %s - %s", path,
+                                           action_strings[action],
+                                           reason_strings[row->reason]);
+            } else if (col_id == COL_SIZE_TEXT) {
+                char *path = (side == 0) ? row->src_path : row->dst_path;
+                tip_text
+                    = g_strdup_printf("%s: %ld bytes", path, row->size_raw);
+            } else {
+                char *r = (char *)reason_strings[row->reason];
+                if (r && strlen(r) > 0) {
+                    tip_text = g_strdup(r);
+                }
+            }
+
+            if (tip_text) {
+                gtk_tooltip_set_text(t, tip_text);
+                g_free(tip_text);
                 gtk_tree_path_free(p);
                 return TRUE;
             }
