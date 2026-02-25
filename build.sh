@@ -66,19 +66,17 @@ case "$target" in
     trace_off
     ;;
 "install")
+    trace_on
     if [ ! -f "./$program" ]; then
         $0 build
     fi
-    trace_on
     $CC $CPPFLAGS $CFLAGS main.c -o "./$program" $LDFLAGS
     
     install -Dm755 "./$program" "$DESTDIR/usr/bin/$program"
-    
     install -dm755 "$DESTDIR/etc/$program"
-    if [ -d "config" ]; then
-        cp -rp config/* "$DESTDIR/etc/$program/"
+    if [ -d "etc" ]; then
+        cp -rp etc/* "$DESTDIR/etc/$program/"
     fi
-    
     if [ -f "$program.desktop" ]; then
         install -Dm644 \
             "$program.desktop" \
