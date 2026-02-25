@@ -576,6 +576,25 @@ sync_worker(gpointer user_data) {
     int64 exclude_argument_length;
     int32 is_exclude_argument_from_arena;
 
+    if (thread_data->check_different_fs) {
+        struct stat stat_src;
+        struct stat stat_dst;
+
+        if (stat(thread_data->src_path, &stat_src) == 0
+            && stat(thread_data->dst_path, &stat_dst) == 0) {
+            if (stat_src.st_dev == stat_dst.st_dev) {
+                dispatch_log_error(
+                    "Aborting: Source and Destination are on the "
+                    "same filesystem.\n");
+                goto finalize;
+            }
+        } else {
+            dispatch_log_error("Error checking filesystems: %s.\n",
+                               strerror(errno));
+            goto finalize;
+        }
+    }
+
     if (thread_data->is_preview) {
         UIUpdateData *clear;
 
@@ -945,6 +964,8 @@ sync_worker(gpointer user_data) {
     if (scanner_thread != NULL) {
         g_thread_join(scanner_thread);
     }
+
+finalize:
     dispatch_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);
     dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 

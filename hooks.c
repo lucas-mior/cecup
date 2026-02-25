@@ -733,6 +733,8 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     thread_data->is_preview = 1;
     thread_data->scan_equal = gtk_toggle_button_get_active(
         GTK_TOGGLE_BUTTON(cecup_state.check_equal_toggle));
+    thread_data->check_different_fs = gtk_toggle_button_get_active(
+        GTK_TOGGLE_BUTTON(cecup_state.check_fs_toggle));
     strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
     strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
     g_thread_new("worker", sync_worker, thread_data);
