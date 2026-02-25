@@ -392,7 +392,6 @@ sync_worker(gpointer user_data) {
     char temp_error[2048];
     int32 output_position;
     int32 error_position;
-    int64 error_bytes;
     int32 poll_return;
     UIUpdateData *ready;
 
@@ -612,12 +611,12 @@ sync_worker(gpointer user_data) {
         }
 
         if (pipes[1].revents & POLLIN) {
-            error_bytes = read64(pipe_error[0], temp_error, sizeof(temp_error));
-            if (error_bytes < 0) {
+            int64 r = read64(pipe_error[0], temp_error, sizeof(temp_error));
+            if (r < 0) {
                 dispatch_log_error("Error: read from stderr failed");
                 pipes[1].fd = -1;
-            } else if (error_bytes > 0) {
-                for (int64 k = 0; k < error_bytes; k += 1) {
+            } else if (r > 0) {
+                for (int64 k = 0; k < r; k += 1) {
                     if (temp_error[k] == '\n'
                         || error_position == sizeof(error_buffer) - 1) {
                         error_buffer[error_position] = '\0';
