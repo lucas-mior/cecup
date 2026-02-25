@@ -173,7 +173,6 @@ bulk_sync_worker(gpointer user_data) {
         struct pollfd pipes[2];
         char output_buffer[8192];
         char error_buffer[8192];
-        char temp_error[2048];
         int32 output_position;
         int32 error_position;
         int32 poll_return;
@@ -300,19 +299,20 @@ bulk_sync_worker(gpointer user_data) {
             }
 
             if (pipes[1].revents & POLLIN) {
-                int64 r = read64(pipe_error[0], temp_error, sizeof(temp_error));
+                char buffer[2048];
+                int64 r = read64(pipe_error[0], buffer, sizeof(buffer));
                 if (r < 0) {
                     dispatch_log_error("Error: read from stderr failed");
                     pipes[1].fd = -1;
                 } else if (r > 0) {
                     for (int64 k = 0; k < r; k += 1) {
-                        if (temp_error[k] == '\n'
+                        if (buffer[k] == '\n'
                             || error_position == sizeof(error_buffer) - 1) {
                             error_buffer[error_position] = '\0';
                             dispatch_log_error(error_buffer);
                             error_position = 0;
                         } else {
-                            error_buffer[error_position] = temp_error[k];
+                            error_buffer[error_position] = buffer[k];
                             error_position += 1;
                         }
                     }
