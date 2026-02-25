@@ -235,8 +235,8 @@ find_equal_files(EqualScannerData *sd, char *relative_path) {
 
     errno = 0;
     while ((entry = readdir(dir))) {
-        struct stat st_s;
-        struct stat st_d;
+        struct stat stat_srt;
+        struct stat stat_dst;
         char sub_rel[MAX_PATH_LENGTH];
         char *name;
 
@@ -259,18 +259,18 @@ find_equal_files(EqualScannerData *sd, char *relative_path) {
         SNPRINTF(src_full, "%s/%s", sd->src_path, sub_rel);
         SNPRINTF(dst_full, "%s/%s", sd->dst_path, sub_rel);
 
-        if (lstat(src_full, &st_s) != 0) {
+        if (lstat(src_full, &stat_srt) != 0) {
             dispatch_log_error("Error lstat %s: %s.\n", src_full,
                                strerror(errno));
             continue;
         }
 
-        if (S_ISDIR(st_s.st_mode)) {
+        if (S_ISDIR(stat_srt.st_mode)) {
             find_equal_files(sd, sub_rel);
             continue;
         }
 
-        if (S_ISREG(st_s.st_mode)) {
+        if (S_ISREG(stat_srt.st_mode)) {
             sd->processed_files += 1;
             if (sd->total_files > 0) {
                 dispatch_progress(DATA_TYPE_PROGRESS_EQUAL,
@@ -278,10 +278,10 @@ find_equal_files(EqualScannerData *sd, char *relative_path) {
                                       / sd->total_files);
             }
 
-            if (lstat(dst_full, &st_d) == 0) {
-                if (st_s.st_size == st_d.st_size
-                    && st_s.st_mtime == st_d.st_mtime) {
-                    dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, st_s.st_size,
+            if (lstat(dst_full, &stat_dst) == 0) {
+                if (stat_srt.st_size == stat_dst.st_size
+                    && stat_srt.st_mtime == stat_dst.st_mtime) {
+                    dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, stat_srt.st_size,
                                   UI_REASON_EQUAL);
                 }
             }
@@ -786,17 +786,17 @@ sync_worker(gpointer user_data) {
                             char *full_dst = g_build_filename(
                                 thread_data->dst_path, relative_path, NULL);
 
-                            struct stat st_s;
-                            struct stat st_d;
-                            int64 sz = (lstat(full_dst, &st_d) == 0)
-                                           ? st_d.st_size
+                            struct stat stat_srt;
+                            struct stat stat_dst;
+                            int64 sz = (lstat(full_dst, &stat_dst) == 0)
+                                           ? stat_dst.st_size
                                            : 0;
                             if (sz == 0 && errno != ENOENT && errno != 0) {
                                 dispatch_log_error("Error lstat %s: %s.\n",
                                                    full_dst, strerror(errno));
                             }
                             enum CecupReason reason
-                                = (lstat(full_src, &st_s) == 0)
+                                = (lstat(full_src, &stat_srt) == 0)
                                       ? UI_REASON_IGNORED
                                       : UI_REASON_MISSING;
 
