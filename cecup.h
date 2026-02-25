@@ -104,7 +104,10 @@ static struct {
     GtkWidget *l_tree;
     GtkWidget *r_tree;
 
-    GPtrArray *rows;
+    CecupRow **rows;
+    int32 rows_count;
+    int32 rows_capacity;
+
     int32 sort_col;
     GtkSortType sort_order;
     uint32 refresh_id;

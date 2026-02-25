@@ -41,7 +41,12 @@ main(int32 argc, char *argv[]) {
     char *config_base;
 
     gtk_init(&argc, &argv);
-    cecup_state.rows = g_ptr_array_new_with_free_func(free_cecup_row);
+
+    cecup_state.rows_count = 0;
+    cecup_state.rows_capacity = 2048;
+    cecup_state.rows
+        = g_malloc0(cecup_state.rows_capacity*sizeof(CecupRow *));
+
     cecup_state.sort_col = COL_SRC_PATH;
     cecup_state.sort_order = GTK_SORT_ASCENDING;
     cecup_state.refresh_id = 0;
@@ -339,29 +344,41 @@ update_ui_handler(gpointer user_data) {
             row->dst_path = g_strdup(row->src_path);
         }
 
-        g_ptr_array_add(cecup_state.rows, row);
+        if (cecup_state.rows_count >= cecup_state.rows_capacity) {
+            cecup_state.rows_capacity *= 2;
+            cecup_state.rows
+                = g_realloc(cecup_state.rows,
+                            cecup_state.rows_capacity*sizeof(CecupRow *));
+        }
+        cecup_state.rows[cecup_state.rows_count] = row;
+        cecup_state.rows_count += 1;
 
         if (cecup_state.refresh_id == 0) {
             cecup_state.refresh_id
-                = g_timeout_add(1000, refresh_ui_timeout_callback, NULL);
+                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
         }
 
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
-        for (int32 i = 0; i < (int32)cecup_state.rows->len; i += 1) {
+        for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
             CecupRow *row;
-            row = (CecupRow *)g_ptr_array_index(cecup_state.rows, i);
+            row = cecup_state.rows[i];
             if (g_strcmp0(row->src_path, data->filepath) == 0
                 || g_strcmp0(row->dst_path, data->filepath) == 0) {
-                g_ptr_array_remove_index(cecup_state.rows, (guint)i);
+
+                free_cecup_row(row);
+                for (int32 j = i; j < cecup_state.rows_count - 1; j += 1) {
+                    cecup_state.rows[j] = cecup_state.rows[j + 1];
+                }
+                cecup_state.rows_count -= 1;
                 break;
             }
         }
 
         if (cecup_state.refresh_id == 0) {
             cecup_state.refresh_id
-                = g_timeout_add(1000, refresh_ui_timeout_callback, NULL);
+                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
         }
         break;
     }
@@ -381,7 +398,10 @@ update_ui_handler(gpointer user_data) {
             g_source_remove(cecup_state.refresh_id);
             cecup_state.refresh_id = 0;
         }
-        g_ptr_array_set_size(cecup_state.rows, 0);
+        for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
+            free_cecup_row(cecup_state.rows[i]);
+        }
+        cecup_state.rows_count = 0;
         gtk_list_store_clear(cecup_state.store);
         break;
     default:

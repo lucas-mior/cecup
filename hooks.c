@@ -5,10 +5,7 @@
 #include "config.c"
 
 static void
-free_cecup_row(gpointer data) {
-    CecupRow *row;
-
-    row = (CecupRow *)data;
+free_cecup_row(CecupRow *row) {
     g_free(row->src_path);
     g_free(row->dst_path);
     g_free(row->size_text);
@@ -46,10 +43,10 @@ get_target_tasks(int32 side, char *clicked_path,
     shared_src = g_strdup(gtk_entry_get_text(GTK_ENTRY(cecup_state.src_entry)));
     shared_dst = g_strdup(gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry)));
 
-    for (int32 i = 0; i < (int32)cecup_state.rows->len; i += 1) {
+    for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
         CecupRow *row;
 
-        row = (CecupRow *)g_ptr_array_index(cecup_state.rows, i);
+        row = cecup_state.rows[i];
         if (row->selected) {
             char *f_path;
             enum CecupAction action;
@@ -93,13 +90,11 @@ get_target_tasks(int32 side, char *clicked_path,
     return tasks;
 }
 
-static gint
-cecup_row_compare(gconstpointer a, gconstpointer b, gpointer user_data) {
+static int
+cecup_row_compare(const void *a, const void *b) {
     CecupRow *ra;
     CecupRow *rb;
     int32 result;
-
-    (void)user_data;
 
     ra = *(CecupRow **)a;
     rb = *(CecupRow **)b;
@@ -152,13 +147,17 @@ refresh_ui_list(void) {
         GTK_TOGGLE_BUTTON(cecup_state.filter_ignore));
 
     gtk_list_store_clear(cecup_state.store);
-    g_ptr_array_sort_with_data(cecup_state.rows, cecup_row_compare, NULL);
 
-    for (int32 i = 0; i < (int32)cecup_state.rows->len; i += 1) {
+    if (cecup_state.rows_count > 0) {
+        qsort(cecup_state.rows, cecup_state.rows_count, sizeof(CecupRow *),
+              cecup_row_compare);
+    }
+
+    for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
         CecupRow *row;
         gboolean visible;
 
-        row = (CecupRow *)g_ptr_array_index(cecup_state.rows, i);
+        row = cecup_state.rows[i];
         visible = FALSE;
 
         if (row->src_action == UI_ACTION_NEW) {
@@ -527,9 +526,9 @@ on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
         gtk_tree_model_get(GTK_TREE_MODEL(cecup_state.store), &i, COL_SRC_PATH,
                            &f_path, -1);
 
-        for (int32 k = 0; k < (int32)cecup_state.rows->len; k += 1) {
+        for (int32 k = 0; k < cecup_state.rows_count; k += 1) {
             CecupRow *row;
-            row = (CecupRow *)g_ptr_array_index(cecup_state.rows, k);
+            row = cecup_state.rows[k];
             if (g_strcmp0(row->src_path, f_path) == 0
                 || g_strcmp0(row->dst_path, f_path) == 0) {
                 row->selected = !row->selected;
