@@ -38,6 +38,7 @@ main(int32 argc, char *argv[]) {
     char *default_src;
     char *default_dst;
     char *config_base;
+    GType column_types[NUM_COLS];
 
     gtk_init(&argc, &argv);
 
@@ -150,7 +151,10 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(options_hbox), reset_btn, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
-    cecup_state.store = gtk_list_store_new(1, G_TYPE_INT);
+    for (int32 i = 0; i < NUM_COLS; i += 1) {
+        column_types[i] = G_TYPE_INT;
+    }
+    cecup_state.store = gtk_list_store_newv(NUM_COLS, column_types);
 
     v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
     gtk_box_pack_start(GTK_BOX(main_vbox), v_paned, TRUE, TRUE, 0);
