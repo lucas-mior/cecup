@@ -701,6 +701,8 @@ sync_worker(gpointer user_data) {
                 pipes[0].fd = -1;
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
+                    char *p_pos;
+
                     if (buffer[k] != '\n' && buffer[k] != '\r'
                         && output_position < (int32)SIZEOF(output_buffer) - 1) {
                         output_buffer[output_position] = buffer[k];
@@ -715,7 +717,6 @@ sync_worker(gpointer user_data) {
                         continue;
                     }
 
-                    char *p_pos;
                     p_pos = strstr(output_buffer, "%");
                     if (p_pos != NULL) {
                         char *start;
