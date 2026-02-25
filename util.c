@@ -814,7 +814,7 @@ util_filename_from(char *buffer, int64 size, int fd) {
     }
 
     if (strncmp(buffer, "\\\\?\\", 4) == 0) {
-        memmove64(buffer, buffer + 4, len - 3);
+        memmove(buffer, buffer + 4, len - 3);
     }
 
     return;

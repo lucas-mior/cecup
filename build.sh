@@ -1,26 +1,39 @@
-#!/bin/sh
+#!/bin/sh -e
 
 # shellcheck disable=SC2086
 
 set -e
-program=$(basename "$(readlink -f "$(dirname "$0")")")
-script=$(basename "$0")
-DESTDIR="${DESTDIR:-}"
-# CC=clang
-
-target="${1:-build}"
-
-printf "========$RED $script $target ($program) $RES========"
-
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
 
+program=$(basename "$(readlink -f "$(dirname "$0")")")
+script=$(basename "$0")
+dir="$(realpath "$(dirname "$0")")"
+
+. ./targets
+target="${1:-build}"
+
+if ! grep -q "$target" ./targets; then
+    echo "usage: $script <targets>"
+    cat targets
+    exit 1
+fi
+
+cross="$2"
+
+printf "\n${script} ${RED}${1} ${2}$RES\n"
+PREFIX="${PREFIX:-/usr/local}"
+DESTDIR="${DESTDIR:-/}"
+
+main="main.c"
+exe="bin/$program"
+mkdir -p "$(dirname "$exe")"
+
 CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
 CFLAGS="$CFLAGS -std=c11"
-CFLAGS="$CFLAGS -O2 -flto -g"
-CFLAGS="$CFLAGS -Wextra -Wall"
 CFLAGS="$CFLAGS -Wfatal-errors"
-CFLAGS="$CFLAGS -Werror"
+CFLAGS="$CFLAGS -Wextra -Wall"
+# CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-format-pedantic"
 CFLAGS="$CFLAGS -Wno-unknown-warning-option"
 CFLAGS="$CFLAGS -Wno-gnu-union-cast"
@@ -34,8 +47,76 @@ CFLAGS="$CFLAGS -Wno-cast-qual"
 CFLAGS="$CFLAGS -Wno-deprecated-declarations"
 
 LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk+-3.0) -lpthread"
+OS=$(uname -a)
 
 CC="${CC:-cc}"
+if echo "$OS" | grep -q "Linux"; then
+    if echo "$OS" | grep -q "GNU"; then
+        GNUSOURCE="-D_GNU_SOURCE"
+    fi
+fi
+
+option_remove() {
+    echo "$1" | sed "s/$2//g"
+}
+
+CC=${CC:-cc}
+
+case "$target" in
+"debug")
+    CFLAGS="$CFLAGS -g -fsanitize=undefined"
+    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
+    exe="bin/${program}_debug"
+    ;;
+"benchmark")
+    CFLAGS="$CFLAGS -O2 -flto -march=native -ftree-vectorize"
+    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DBRN2_BENCHMARK=1"
+    exe="bin/${program}_benchmark"
+    ;;
+"perf")
+    CFLAGS="$CFLAGS -g3 -Og -flto"
+    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DBRN2_BENCHMARK=1"
+    exe="bin/${program}_perf"
+    ;;
+"valgrind") 
+    CFLAGS="$CFLAGS -g -O0 -ftree-vectorize"
+    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
+    ;;
+"test")
+    CFLAGS="$CFLAGS -g $GNUSOURCE -DDEBUGGING=1 -fsanitize=undefined"
+    ;;
+"check") 
+    CC=gcc
+    CFLAGS="$CFLAGS $GNUSOURCE -DDEBUGGING=1 -fanalyzer"
+    ;;
+"build") 
+    CFLAGS="$CFLAGS $GNUSOURCE -O2 -flto -march=native -ftree-vectorize"
+    ;;
+*)
+    CFLAGS="$CFLAGS -O2"
+    ;;
+esac
+
+if [ "$target" = "cross" ]; then
+    CC="zig cc"
+    CFLAGS="$CFLAGS -target $cross"
+    CFLAGS=$(option_remove "$CFLAGS" "-D_GNU_SOURCE")
+
+    case $cross in
+    "x86_64-macos"|"aarch64-macos")
+        CFLAGS="$CFLAGS -fno-lto"
+        LDFLAGS="$LDFLAGS -lpthread"
+        ;;
+    *windows*)
+        exe="bin/$program.exe"
+        ;;
+    *)
+        LDFLAGS="$LDFLAGS -lpthread"
+        ;;
+    esac
+else
+    LDFLAGS="$LDFLAGS -lpthread"
+fi
 
 if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Weverything"
@@ -58,7 +139,7 @@ if [ "$CC" = "clang" ]; then
 fi
 
 case "$target" in
-"build"|"debug"|"valgrind"|"callgrind")
+"build"|"debug"|"valgrind")
     trace_on
 
     ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
@@ -69,14 +150,13 @@ case "$target" in
     ;;
 "install")
     trace_on
-    if [ ! -f "./$program" ]; then
+    if [ ! -f "$program" ]; then
         $0 build
     fi
-    $CC $CPPFLAGS $CFLAGS main.c -o "./$program" $LDFLAGS
-    
-    install -Dm755 "./$program" "$DESTDIR/usr/bin/$program"
-    install -dm755 "$DESTDIR/etc/$program"
+    install -Dm755 bin/${program}   ${DESTDIR}${PREFIX}/bin/${program}
+    install -Dm644 ${program}.1 ${DESTDIR}${PREFIX}/man/man1/${program}.1
     if [ -d "etc" ]; then
+        install -dm755 "$DESTDIR/etc/$program"
         cp -rp etc/* "$DESTDIR/etc/$program/"
     fi
     if [ -f "$program.desktop" ]; then
@@ -85,12 +165,90 @@ case "$target" in
             "$DESTDIR/usr/share/applications/$program.desktop"
     fi
     trace_off
+    exit
+    ;;
+"assembly")
+    trace_on
+    $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "$main"
+    exit
+    ;;
+"test")
+    for src in *.c; do
+        if [ -n "$2" ] && [ $src != "$2" ]; then
+            continue
+        fi
+        if [ "$src" = "$main" ]; then
+            continue
+        fi
+        printf "\nTesting ${RED}${src}${RES} ...\n"
+        name="$(echo "$src" | sed 's/\.c//g')"
+
+        flags="$(awk '/\/\/ flags:/ { $1=$2=""; print $0 }' "$src")"
+        if [ $src = "windows_functions.c" ]; then
+            if ! zig version; then
+                continue
+            fi
+            cmdline="zig cc $CPPFLAGS $CFLAGS"
+            cmdline=$(option_remove "$cmdline" "-D_GNU_SOURCE")
+            cmdline="$cmdline -target x86_64-windows-gnu"
+            cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1"
+            cmdline="$cmdline $flags -o /tmp/$src.exe $src"
+        else
+            cmdline="$CC $CPPFLAGS $CFLAGS -Wno-unused-variable -DTESTING_$name=1"
+            cmdline="$cmdline $flags -o /tmp/$src.exe $src"
+        fi
+
+        trace_on
+        if $cmdline; then
+            /tmp/$src.exe || gdb /tmp/$src.exe -ex run
+        else
+            trace_off
+            exit 1
+        fi
+        trace_off
+        if [ -n "$2" ] && [ $src = "$2" ]; then
+            exit
+        fi
+    done
+    exit
+    ;;
+"test_all")
     ;;
 *)
-    echo "usage: $script [ build | debug | valgrind | callgrind ]"
-    exit 1
+    trace_on
+    ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
+    vtags.sed tags | sort | uniq > .tags.vim       2> /dev/null || true
+    $CC $CPPFLAGS $CFLAGS $LDFLAGS -o ${exe} "$main"
+    trace_off
+    ;;
 esac
 
 case "$target" in
-    "valgrind")
+"valgrind")
+    vg_flags="--error-exitcode=1 --errors-for-leak-kinds=all"
+    vg_flags="$vg_flags --leak-check=full --show-leak-kinds=all"
+    vg_flags="$vg_flags --track-origins=yes"
+    valgrind $vg_flags -s --tool=memcheck $program
+    trace_off
+    exit
+    ;;
+"check")
+    CC=gcc CFLAGS="-fanalyzer" ./build.sh
+    scan-build --view -analyze-headers --status-bugs ./build.sh
+    exit
+    ;;
 esac
+
+trace_off
+if [ "$target" = "test_all" ]; then
+    printf '%s\n' "$targets" | while IFS= read -r target; do
+        echo "$target" | grep -Eq "^(# |$)" && continue
+        if echo "$target" | grep "cross"; then
+            $0 $target
+            continue
+        fi
+        for compiler in gcc tcc clang "zig cc" ; do
+            CC=$compiler $0 $target || exit
+        done
+    done
+fi
