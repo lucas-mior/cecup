@@ -198,7 +198,7 @@ static void util_segv_handler(int32) __attribute__((noreturn));
 static char *itoa2(long, char *);
 static long atoi2(char *);
 INLINE void *memchr64(void *pointer, int32 value, int64 size);
-static int xclose(int *fd, char *filename);
+static int xclose(char *file, int line, int *fd, char *filename);
 
 #if !defined(CAT)
 #define CAT_(a, b) a##b
@@ -827,14 +827,15 @@ util_filename_from(char *buffer, int64 size, int fd) {
 }
 
 static int
-xclose(int *fd, char *filename) {
+xclose(char *file, int line, int *fd, char *filename) {
     if (close(*fd) < 0) {
         char buffer[4096];
         if (filename == NULL) {
             util_filename_from(buffer, sizeof(buffer), *fd);
             filename = buffer;
         }
-        error("Error closing %s: %s.\n", filename, strerror(errno));
+        error("%s:%d Error closing %s: %s.\n", file, line, filename,
+              strerror(errno));
         *fd = -1;
         return -1;
     }
@@ -842,8 +843,8 @@ xclose(int *fd, char *filename) {
     return 0;
 }
 
-#define xclose_1(...) xclose(__VA_ARGS__, NULL)
-#define xclose_2(...) xclose(__VA_ARGS__)
+#define xclose_1(...) xclose(__FILE__, __LINE__, __VA_ARGS__, NULL)
+#define xclose_2(...) xclose(__FILE__, __LINE__, __VA_ARGS__)
 #define XCLOSE(...) SELECT_ON_NUM_ARGS(xclose_, __VA_ARGS__)
 
 static int

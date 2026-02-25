@@ -552,27 +552,19 @@ bulk_sync_worker(gpointer user_data) {
         dispatch_log("+ %s\n", cmd);
 
         if (pipe(pipe_output) < 0) {
-            dispatch_log_error("Error creating pipe for stdout: %s.\n",
-                               strerror(errno));
-            continue;
+            error("Error creating pipe for stdout: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
         }
 
         if (pipe(pipe_error) < 0) {
-            dispatch_log_error("Error creating pipe for stderr: %s.\n",
-                               strerror(errno));
-            XCLOSE(&pipe_output[0]);
-            XCLOSE(&pipe_output[1]);
-            continue;
+            error("Error creating pipe for stderr: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
         }
 
         switch (child_pid = fork()) {
         case -1:
-            dispatch_log_error("Error forking: %s.\n", strerror(errno));
-            XCLOSE(&pipe_output[0]);
-            XCLOSE(&pipe_output[1]);
-            XCLOSE(&pipe_error[0]);
-            XCLOSE(&pipe_error[1]);
-            continue;
+            error("Error forking: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
         case 0:
             if (setpgid(0, 0) < 0) {
                 fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
@@ -582,11 +574,11 @@ bulk_sync_worker(gpointer user_data) {
             XCLOSE(&pipe_error[0]);
             if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
                 fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
-                exit(EXIT_FAILURE);
+                fatal(EXIT_FAILURE);
             }
             if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
                 fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
-                exit(EXIT_FAILURE);
+                fatal(EXIT_FAILURE);
             }
             XCLOSE(&pipe_output[1]);
             XCLOSE(&pipe_error[1]);
@@ -888,15 +880,13 @@ sync_worker(gpointer user_data) {
 
     do {
         if (pipe(pipe_output) < 0) {
-            dispatch_log_error("Error creating pipe for stdout: %s.\n",
-                               strerror(errno));
-            break;
+            error("Error creating pipe for stdout: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
         }
 
         if (pipe(pipe_error) < 0) {
-            dispatch_log_error("Error creating pipe for stderr: %s.\n",
-                               strerror(errno));
-            break;
+            error("Error creating pipe for stderr: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
         }
 
         switch (child_pid = fork()) {
@@ -906,17 +896,17 @@ sync_worker(gpointer user_data) {
         case 0:
             if (setpgid(0, 0) < 0) {
                 fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
-                exit(EXIT_FAILURE);
+                fatal(EXIT_FAILURE);
             }
             XCLOSE(&pipe_output[0]);
             XCLOSE(&pipe_error[0]);
             if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
                 fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
-                exit(EXIT_FAILURE);
+                fatal(EXIT_FAILURE);
             }
             if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
                 fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
-                exit(EXIT_FAILURE);
+                fatal(EXIT_FAILURE);
             }
             XCLOSE(&pipe_output[1]);
             XCLOSE(&pipe_error[1]);
@@ -1148,9 +1138,7 @@ sync_worker(gpointer user_data) {
     } while (0);
 
     XCLOSE(&pipe_output[0]);
-    XCLOSE(&pipe_output[1]);
     XCLOSE(&pipe_error[0]);
-    XCLOSE(&pipe_error[1]);
 
     if (scanner_thread != NULL) {
         g_thread_join(scanner_thread);

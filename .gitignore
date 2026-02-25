@@ -8,3 +8,4 @@ compile_commands.json
 tags
 .tags.vim
 callgrind.out.*
+valgrind.out.*
