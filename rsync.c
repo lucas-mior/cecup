@@ -781,6 +781,7 @@ sync_worker(gpointer user_data) {
                             char full_dst[MAX_PATH_LENGTH];
                             struct stat stat_srt;
                             struct stat stat_dst;
+                            int64 size;
 
                             while (isspace(*relative_path)) {
                                 relative_path += 1;
@@ -791,10 +792,10 @@ sync_worker(gpointer user_data) {
                             SNPRINTF(full_dst, "%s/%s", thread_data->dst_path,
                                      relative_path);
 
-                            int64 sz = (lstat(full_dst, &stat_dst) == 0)
-                                           ? stat_dst.st_size
-                                           : 0;
-                            if (sz == 0 && errno != ENOENT && errno != 0) {
+                            size = (lstat(full_dst, &stat_dst) == 0)
+                                       ? stat_dst.st_size
+                                       : 0;
+                            if (size == 0 && errno != ENOENT && errno != 0) {
                                 dispatch_log_error("Error lstat %s: %s.\n",
                                                    full_dst, strerror(errno));
                             }
@@ -804,7 +805,7 @@ sync_worker(gpointer user_data) {
                                       : UI_REASON_MISSING;
 
                             dispatch_tree(1, UI_ACTION_DELETE, relative_path,
-                                          sz, reason);
+                                          size, reason);
                             continue;
                         }
 
