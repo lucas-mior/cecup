@@ -3,7 +3,7 @@
 set -e
 program="cecup"
 DESTDIR="${DESTDIR:-}"
-CC=clang
+# CC=clang
 
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'

@@ -482,7 +482,8 @@ bulk_sync_worker(gpointer user_data) {
             memset64(remove_data, 0, SIZEOF(UIUpdateData));
 
             path_len = strlen64(ud->filepath);
-            remove_data->filepath = arena_push(cecup_state.ui_arena, path_len + 1);
+            remove_data->filepath
+                = arena_push(cecup_state.ui_arena, path_len + 1);
             memcpy64(remove_data->filepath, ud->filepath, path_len + 1);
             g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
@@ -696,126 +697,127 @@ sync_worker(gpointer user_data) {
 
         if (pipes[0].revents & POLLIN) {
             char buffer[2048];
-            int64 r = read64(pipe_output[0], buffer, SIZEOF(buffer));
-            if (r < 0) {
+            int64 r;
+
+            if ((r = read64(pipe_output[0], buffer, SIZEOF(buffer))) <= 0) {
                 pipes[0].fd = -1;
-            } else if (r > 0) {
-                for (int64 k = 0; k < r; k += 1) {
-                    char *p_pos;
-                    char *space_pos;
-                    char type_char;
+                goto output_end;
+            }
 
-                    if (buffer[k] != '\n' && buffer[k] != '\r'
-                        && output_position < (int32)SIZEOF(output_buffer) - 1) {
-                        output_buffer[output_position] = buffer[k];
-                        output_position += 1;
-                        continue;
-                    }
+            for (int64 k = 0; k < r; k += 1) {
+                char *p_pos;
+                char *space_pos;
+                char type_char;
 
-                    output_buffer[output_position] = '\0';
-                    output_position = 0;
-
-                    if (output_buffer[0] == '\0') {
-                        continue;
-                    }
-
-                    if ((p_pos = strstr(output_buffer, "%"))) {
-                        char *start;
-                        start = p_pos;
-                        while (start > output_buffer && isdigit(*(start - 1))) {
-                            start -= 1;
-                        }
-                        dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
-                                          atof(start) / 100.0);
-                    }
-
-                    if (thread_data->is_preview == 0) {
-                        dispatch_log(output_buffer);
-                        continue;
-                    }
-
-                    if (strncmp(output_buffer, "*deleting", 9) == 0) {
-                        char *relative_path;
-                        char *full_src;
-                        char *full_dst;
-                        struct stat st_s;
-                        struct stat st_d;
-                        int64 sz;
-                        enum CecupReason reason;
-
-                        relative_path = output_buffer + 10;
-                        while (isspace(*relative_path)) {
-                            relative_path += 1;
-                        }
-
-                        full_src = g_build_filename(thread_data->src_path,
-                                                    relative_path, NULL);
-                        full_dst = g_build_filename(thread_data->dst_path,
-                                                    relative_path, NULL);
-                        sz = (lstat(full_dst, &st_d) == 0) ? st_d.st_size : 0;
-                        reason = (lstat(full_src, &st_s) == 0)
-                                     ? UI_REASON_IGNORED
-                                     : UI_REASON_MISSING;
-
-                        dispatch_tree(1, UI_ACTION_DELETE, relative_path, sz,
-                                      reason);
-                        g_free(full_src);
-                        g_free(full_dst);
-                        continue;
-                    }
-
-                    if ((space_pos = strchr(output_buffer, ' '))) {
-                        continue;
-                    }
-
-                    type_char = output_buffer[0];
-                    if (type_char != '>' && type_char != '.' && type_char != 'h'
-                        && type_char != 'c') {
-                        continue;
-                    }
-
-                    char *relative_path_entry;
-                    enum CecupAction action;
-                    char *full_src_path;
-                    struct stat st_path;
-                    int64 sz_path;
-
-                    relative_path_entry = space_pos + 1;
-                    while (isspace(*relative_path_entry)) {
-                        relative_path_entry += 1;
-                    }
-
-                    action = UI_ACTION_UPDATE;
-
-                    if (strncmp(output_buffer, "hf", 2) == 0) {
-                        action = UI_ACTION_HARDLINK;
-                    } else if (strncmp(output_buffer, "cd", 2) == 0
-                               || strncmp(output_buffer, ">f+++++", 7) == 0) {
-                        action = UI_ACTION_NEW;
-                    }
-
-                    full_src_path = g_build_filename(thread_data->src_path,
-                                                     relative_path_entry, NULL);
-                    sz_path = (lstat(full_src_path, &st_path) == 0)
-                                  ? st_path.st_size
-                                  : 0;
-                    dispatch_tree(0, action, relative_path_entry, sz_path,
-                                  (enum CecupReason)action);
-                    g_free(full_src_path);
-
-                    processed_files_preview += 1;
-                    if (total_files_preview > 0) {
-                        dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                          (double)processed_files_preview
-                                              / total_files_preview);
-                    }
+                if (buffer[k] != '\n' && buffer[k] != '\r'
+                    && output_position < (int32)SIZEOF(output_buffer) - 1) {
+                    output_buffer[output_position] = buffer[k];
+                    output_position += 1;
+                    continue;
                 }
-            } else {
-                pipes[0].fd = -1;
+
+                output_buffer[output_position] = '\0';
+                output_position = 0;
+
+                if (output_buffer[0] == '\0') {
+                    continue;
+                }
+
+                if ((p_pos = strstr(output_buffer, "%"))) {
+                    char *start;
+                    start = p_pos;
+                    while (start > output_buffer && isdigit(*(start - 1))) {
+                        start -= 1;
+                    }
+                    dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
+                                      atof(start) / 100.0);
+                }
+
+                if (thread_data->is_preview == 0) {
+                    dispatch_log(output_buffer);
+                    continue;
+                }
+
+                if (strncmp(output_buffer, "*deleting", 9) == 0) {
+                    char *relative_path;
+                    char *full_src;
+                    char *full_dst;
+                    struct stat st_s;
+                    struct stat st_d;
+                    int64 sz;
+                    enum CecupReason reason;
+
+                    relative_path = output_buffer + 10;
+                    while (isspace(*relative_path)) {
+                        relative_path += 1;
+                    }
+
+                    full_src = g_build_filename(thread_data->src_path,
+                                                relative_path, NULL);
+                    full_dst = g_build_filename(thread_data->dst_path,
+                                                relative_path, NULL);
+                    sz = (lstat(full_dst, &st_d) == 0) ? st_d.st_size : 0;
+                    reason = (lstat(full_src, &st_s) == 0) ? UI_REASON_IGNORED
+                                                           : UI_REASON_MISSING;
+
+                    dispatch_tree(1, UI_ACTION_DELETE, relative_path, sz,
+                                  reason);
+                    g_free(full_src);
+                    g_free(full_dst);
+                    continue;
+                }
+
+                if (!(space_pos = strchr(output_buffer, ' '))) {
+                    continue;
+                }
+
+                type_char = output_buffer[0];
+                if (type_char != '>' && type_char != '.' && type_char != 'h'
+                    && type_char != 'c') {
+                    continue;
+                }
+
+                char *relative_path_entry;
+                enum CecupAction action;
+                char *full_src_path;
+                struct stat st_path;
+                int64 sz_path;
+
+                relative_path_entry = space_pos + 1;
+                while (isspace(*relative_path_entry)) {
+                    relative_path_entry += 1;
+                }
+
+                action = UI_ACTION_UPDATE;
+
+                if (strncmp(output_buffer, "hf", 2) == 0) {
+                    action = UI_ACTION_HARDLINK;
+                } else if (strncmp(output_buffer, "cd", 2) == 0
+                           || strncmp(output_buffer, ">f+++++", 7) == 0) {
+                    action = UI_ACTION_NEW;
+                }
+
+                full_src_path = g_build_filename(thread_data->src_path,
+                                                 relative_path_entry, NULL);
+                sz_path = (lstat(full_src_path, &st_path) == 0)
+                              ? st_path.st_size
+                              : 0;
+                dispatch_tree(0, action, relative_path_entry, sz_path,
+                              (enum CecupReason)action);
+                g_free(full_src_path);
+
+                processed_files_preview += 1;
+                if (total_files_preview > 0) {
+                    dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                                      (double)processed_files_preview
+                                          / total_files_preview);
+                }
             }
         } else if (pipes[0].revents & (POLLHUP | POLLERR)) {
             pipes[0].fd = -1;
         }
+
+    output_end:
 
         if (pipes[1].revents & POLLIN) {
             char buffer[2048];
