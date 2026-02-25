@@ -13,29 +13,29 @@ free_cecup_row(CecupRow *row) {
 static void
 free_task_list(GPtrArray *tasks) {
     for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-        UIUpdateData *t;
+        UIUpdateData *task;
 
-        t = (UIUpdateData *)g_ptr_array_index(tasks, i);
+        task = (UIUpdateData *)g_ptr_array_index(tasks, i);
         g_mutex_lock(&cecup_state.ui_arena_mutex);
-        if (t->filepath) {
-            arena_pop(cecup_state.ui_arena, t->filepath);
+        if (task->filepath) {
+            arena_pop(cecup_state.ui_arena, task->filepath);
         }
-        if (t->src_base) {
-            arena_pop(cecup_state.ui_arena, t->src_base);
+        if (task->src_base) {
+            arena_pop(cecup_state.ui_arena, task->src_base);
         }
-        if (t->dst_base) {
-            arena_pop(cecup_state.ui_arena, t->dst_base);
+        if (task->dst_base) {
+            arena_pop(cecup_state.ui_arena, task->dst_base);
         }
-        if (t->term_cmd) {
-            arena_pop(cecup_state.ui_arena, t->term_cmd);
+        if (task->term_cmd) {
+            arena_pop(cecup_state.ui_arena, task->term_cmd);
         }
-        if (t->diff_tool) {
-            arena_pop(cecup_state.ui_arena, t->diff_tool);
+        if (task->diff_tool) {
+            arena_pop(cecup_state.ui_arena, task->diff_tool);
         }
-        if (t->message) {
-            arena_pop(cecup_state.ui_arena, t->message);
+        if (task->message) {
+            arena_pop(cecup_state.ui_arena, task->message);
         }
-        arena_pop(cecup_state.ui_arena, t);
+        arena_pop(cecup_state.ui_arena, task);
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
     }
 
@@ -59,27 +59,35 @@ get_target_tasks(int32 side, char *clicked_path,
 
         row = cecup_state.rows[i];
         if (row->selected) {
-            char *f_path;
+            char *file_path;
             enum CecupAction action;
             UIUpdateData *task;
 
-            f_path = (side == 0) ? row->src_path : row->dst_path;
-            action = (side == 0) ? row->src_action : row->dst_action;
+            if (side == 0) {
+                file_path = row->src_path;
+                action = row->src_action;
+            } else {
+                file_path = row->dst_path;
+                action = row->dst_action;
+            }
 
-            if (g_strcmp0(f_path, "-") != 0) {
+            if (g_strcmp0(file_path, "-") != 0) {
                 g_mutex_lock(&cecup_state.ui_arena_mutex);
                 task = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
                 memset64(task, 0, SIZEOF(UIUpdateData));
 
-                int64 path_len = strlen64(f_path) + 1;
+                int64 path_len;
+                path_len = strlen64(file_path) + 1;
                 task->filepath = arena_push(cecup_state.ui_arena, path_len);
-                memcpy64(task->filepath, f_path, path_len);
+                memcpy64(task->filepath, file_path, path_len);
 
-                int64 src_len = strlen64(shared_src) + 1;
+                int64 src_len;
+                src_len = strlen64(shared_src) + 1;
                 task->src_base = arena_push(cecup_state.ui_arena, src_len);
                 memcpy64(task->src_base, shared_src, src_len);
 
-                int64 dst_len = strlen64(shared_dst) + 1;
+                int64 dst_len;
+                dst_len = strlen64(shared_dst) + 1;
                 task->dst_base = arena_push(cecup_state.ui_arena, dst_len);
                 memcpy64(task->dst_base, shared_dst, dst_len);
                 g_mutex_unlock(&cecup_state.ui_arena_mutex);
@@ -98,15 +106,18 @@ get_target_tasks(int32 side, char *clicked_path,
         task = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
         memset64(task, 0, SIZEOF(UIUpdateData));
 
-        int64 path_len = strlen64(clicked_path) + 1;
+        int64 path_len;
+        path_len = strlen64(clicked_path) + 1;
         task->filepath = arena_push(cecup_state.ui_arena, path_len);
         memcpy64(task->filepath, clicked_path, path_len);
 
-        int64 src_len = strlen64(shared_src) + 1;
+        int64 src_len;
+        src_len = strlen64(shared_src) + 1;
         task->src_base = arena_push(cecup_state.ui_arena, src_len);
         memcpy64(task->src_base, shared_src, src_len);
 
-        int64 dst_len = strlen64(shared_dst) + 1;
+        int64 dst_len;
+        dst_len = strlen64(shared_dst) + 1;
         task->dst_base = arena_push(cecup_state.ui_arena, dst_len);
         memcpy64(task->dst_base, shared_dst, dst_len);
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
@@ -126,28 +137,36 @@ get_target_tasks(int32 side, char *clicked_path,
 
 static int
 cecup_row_compare(const void *a, const void *b) {
-    CecupRow *ra;
-    CecupRow *rb;
+    CecupRow *row_a;
+    CecupRow *row_b;
     int32 result;
 
-    ra = *(CecupRow **)a;
-    rb = *(CecupRow **)b;
+    row_a = *(CecupRow **)a;
+    row_b = *(CecupRow **)b;
     result = 0;
 
     switch (cecup_state.sort_col) {
     case COL_SRC_PATH:
     case COL_DST_PATH:
-        result = g_strcmp0(ra->src_path, rb->src_path);
+        result = g_strcmp0(row_a->src_path, row_b->src_path);
         break;
     case COL_SIZE_RAW:
-        result = (ra->size_raw > rb->size_raw)
-                     ? 1
-                     : (ra->size_raw < rb->size_raw ? -1 : 0);
+        if (row_a->size_raw > row_b->size_raw) {
+            result = 1;
+        } else if (row_a->size_raw < row_b->size_raw) {
+            result = -1;
+        } else {
+            result = 0;
+        }
         break;
     default:
-        result = (ra->src_action > rb->src_action)
-                     ? 1
-                     : (ra->src_action < rb->src_action ? -1 : 0);
+        if (row_a->src_action > row_b->src_action) {
+            result = 1;
+        } else if (row_a->src_action < row_b->src_action) {
+            result = -1;
+        } else {
+            result = 0;
+        }
         break;
     }
 
@@ -316,15 +335,21 @@ on_menu_open(GtkWidget *m, gpointer data) {
 
     if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-            UIUpdateData *t;
-            char *full;
+            UIUpdateData *task;
+            char *full_path;
+            char *base_path;
 
-            t = (UIUpdateData *)g_ptr_array_index(tasks, i);
-            full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
-                                    t->filepath, NULL);
-            SNPRINTF(cmd, "xdg-open '%s' &", full);
+            task = (UIUpdateData *)g_ptr_array_index(tasks, i);
+            if (ud->side == 0) {
+                base_path = task->src_base;
+            } else {
+                base_path = task->dst_base;
+            }
+
+            full_path = g_build_filename(base_path, task->filepath, NULL);
+            SNPRINTF(cmd, "xdg-open '%s' &", full_path);
             system(cmd);
-            g_free(full);
+            g_free(full_path);
         }
         free_task_list(tasks);
     }
@@ -348,19 +373,25 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
 
     if (tasks != NULL) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-            UIUpdateData *t;
-            char *full;
-            char *dir;
+            UIUpdateData *task;
+            char *full_path;
+            char *dir_path;
+            char *base_path;
 
-            t = (UIUpdateData *)g_ptr_array_index(tasks, i);
-            full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
-                                    t->filepath, NULL);
-            if ((dir = g_path_get_dirname(full)) != NULL) {
-                SNPRINTF(cmd, "xdg-open '%s' &", dir);
-                system(cmd);
-                g_free(dir);
+            task = (UIUpdateData *)g_ptr_array_index(tasks, i);
+            if (ud->side == 0) {
+                base_path = task->src_base;
+            } else {
+                base_path = task->dst_base;
             }
-            g_free(full);
+
+            full_path = g_build_filename(base_path, task->filepath, NULL);
+            if ((dir_path = g_path_get_dirname(full_path)) != NULL) {
+                SNPRINTF(cmd, "xdg-open '%s' &", dir_path);
+                system(cmd);
+                g_free(dir_path);
+            }
+            g_free(full_path);
         }
         free_task_list(tasks);
     }
@@ -385,13 +416,13 @@ on_menu_copy_relative(GtkWidget *m, gpointer data) {
 
     if (tasks != NULL) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-            UIUpdateData *t;
+            UIUpdateData *task;
 
-            t = (UIUpdateData *)g_ptr_array_index(tasks, i);
+            task = (UIUpdateData *)g_ptr_array_index(tasks, i);
             if (i > 0) {
                 g_string_append(buffer, "\n");
             }
-            g_string_append(buffer, t->filepath);
+            g_string_append(buffer, task->filepath);
         }
         gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
                                buffer->str, -1);
@@ -419,17 +450,23 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
 
     if (tasks != NULL) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-            UIUpdateData *t;
-            char *full;
+            UIUpdateData *task;
+            char *full_path;
+            char *base_path;
 
-            t = (UIUpdateData *)g_ptr_array_index(tasks, i);
-            full = g_build_filename(ud->side == 0 ? t->src_base : t->dst_base,
-                                    t->filepath, NULL);
+            task = (UIUpdateData *)g_ptr_array_index(tasks, i);
+            if (ud->side == 0) {
+                base_path = task->src_base;
+            } else {
+                base_path = task->dst_base;
+            }
+
+            full_path = g_build_filename(base_path, task->filepath, NULL);
             if (i > 0) {
                 g_string_append(buffer, "\n");
             }
-            g_string_append(buffer, full);
-            g_free(full);
+            g_string_append(buffer, full_path);
+            g_free(full_path);
         }
         gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
                                buffer->str, -1);
@@ -502,20 +539,22 @@ on_menu_diff(GtkWidget *m, gpointer data) {
 
     if (tasks != NULL) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-            UIUpdateData *t;
+            UIUpdateData *task;
 
-            t = (UIUpdateData *)g_ptr_array_index(tasks, i);
+            task = (UIUpdateData *)g_ptr_array_index(tasks, i);
             g_mutex_lock(&cecup_state.ui_arena_mutex);
-            int64 diff_len = strlen64(diff_tool) + 1;
-            t->diff_tool = arena_push(cecup_state.ui_arena, diff_len);
-            memcpy64(t->diff_tool, diff_tool, diff_len);
+            int64 diff_len;
+            diff_len = strlen64(diff_tool) + 1;
+            task->diff_tool = arena_push(cecup_state.ui_arena, diff_len);
+            memcpy64(task->diff_tool, diff_tool, diff_len);
 
-            int64 term_len = strlen64(term_cmd) + 1;
-            t->term_cmd = arena_push(cecup_state.ui_arena, term_len);
-            memcpy64(t->term_cmd, term_cmd, term_len);
+            int64 term_len;
+            term_len = strlen64(term_cmd) + 1;
+            task->term_cmd = arena_push(cecup_state.ui_arena, term_len);
+            memcpy64(task->term_cmd, term_cmd, term_len);
             g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
-            g_thread_new("diff_worker", diff_worker, t);
+            g_thread_new("diff_worker", diff_worker, task);
         }
         g_ptr_array_unref(tasks);
     }
@@ -540,11 +579,11 @@ on_menu_ignore_ext(GtkWidget *m, gpointer data) {
     if (tasks != NULL) {
         if ((fp = fopen(cecup_state.ignore_path, "a")) != NULL) {
             for (uint32 i = 0; i < tasks->len; i += 1) {
-                UIUpdateData *t;
+                UIUpdateData *task;
                 char *ext;
 
-                t = (UIUpdateData *)g_ptr_array_index(tasks, i);
-                if ((ext = strrchr(t->filepath, '.')) != NULL) {
+                task = (UIUpdateData *)g_ptr_array_index(tasks, i);
+                if ((ext = strrchr(task->filepath, '.')) != NULL) {
                     fprintf(fp, "\n*%s", ext);
                 }
             }
@@ -574,11 +613,11 @@ on_menu_ignore_dir(GtkWidget *m, gpointer data) {
     if (tasks != NULL) {
         if ((fp = fopen(cecup_state.ignore_path, "a")) != NULL) {
             for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-                UIUpdateData *t;
+                UIUpdateData *task;
                 char *dir;
 
-                t = (UIUpdateData *)g_ptr_array_index(tasks, i);
-                if ((dir = g_path_get_dirname(t->filepath)) != NULL) {
+                task = (UIUpdateData *)g_ptr_array_index(tasks, i);
+                if ((dir = g_path_get_dirname(task->filepath)) != NULL) {
                     if (g_strcmp0(dir, ".") != 0) {
                         fprintf(fp, "\n/%s/", dir);
                     }
@@ -642,16 +681,16 @@ on_stop_clicked(GtkWidget *b, gpointer data) {
 
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
-    char *s;
-    char *d;
-    ThreadData *td;
+    char *src_path;
+    char *dst_path;
+    ThreadData *thread_data;
 
     (void)data;
-    s = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.src_entry));
-    d = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry));
+    src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.src_entry));
+    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry));
     (void)b;
 
-    if (strlen64(s) < 1 || strlen64(d) < 1) {
+    if (strlen64(src_path) < 1 || strlen64(dst_path) < 1) {
         return;
     }
 
@@ -661,16 +700,16 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     gtk_widget_set_sensitive(cecup_state.stop_button, TRUE);
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
-    td = arena_push(cecup_state.ui_arena, SIZEOF(ThreadData));
-    memset64(td, 0, SIZEOF(ThreadData));
+    thread_data = arena_push(cecup_state.ui_arena, SIZEOF(ThreadData));
+    memset64(thread_data, 0, SIZEOF(ThreadData));
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
-    td->is_preview = 1;
-    td->scan_equal = gtk_toggle_button_get_active(
+    thread_data->is_preview = 1;
+    thread_data->scan_equal = gtk_toggle_button_get_active(
         GTK_TOGGLE_BUTTON(cecup_state.check_equal_toggle));
-    strncpy(td->src_path, s, MAX_PATH_LENGTH - 1);
-    strncpy(td->dst_path, d, MAX_PATH_LENGTH - 1);
-    g_thread_new("worker", sync_worker, td);
+    strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
+    strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
+    g_thread_new("worker", sync_worker, thread_data);
     return;
 }
 
@@ -684,14 +723,14 @@ on_filter_toggled(GtkToggleButton *b, gpointer data) {
 }
 
 static void
-on_sort_changed(GtkTreeSortable *s, gpointer d) {
+on_sort_changed(GtkTreeSortable *sortable, gpointer data) {
     int32 id;
-    GtkSortType o;
+    GtkSortType order;
 
-    (void)d;
-    if (gtk_tree_sortable_get_sort_column_id(s, &id, &o)) {
+    (void)data;
+    if (gtk_tree_sortable_get_sort_column_id(sortable, &id, &order)) {
         cecup_state.sort_col = id;
-        cecup_state.sort_order = o;
+        cecup_state.sort_order = order;
         refresh_ui_list();
     }
     return;
@@ -699,13 +738,13 @@ on_sort_changed(GtkTreeSortable *s, gpointer d) {
 
 static void
 on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
-    GtkTreePath *p;
+    GtkTreePath *path;
     int32 row_idx;
 
     (void)cell;
     (void)data;
-    p = gtk_tree_path_new_from_string(path_str);
-    row_idx = gtk_tree_path_get_indices(p)[0];
+    path = gtk_tree_path_new_from_string(path_str);
+    row_idx = gtk_tree_path_get_indices(path)[0];
 
     if (row_idx >= 0 && row_idx < cecup_state.visible_count) {
         cecup_state.visible_rows[row_idx]->selected
@@ -714,7 +753,7 @@ on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
         gtk_widget_queue_draw(cecup_state.r_tree);
     }
 
-    gtk_tree_path_free(p);
+    gtk_tree_path_free(path);
     return;
 }
 
@@ -748,12 +787,12 @@ on_ignore_clicked(GtkWidget *b, gpointer data) {
     gtk_widget_show_all(dialog);
 
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        GtkTextIter s;
-        GtkTextIter e;
+        GtkTextIter start;
+        GtkTextIter end;
         char *content;
 
-        gtk_text_buffer_get_bounds(buffer, &s, &e);
-        content = gtk_text_buffer_get_text(buffer, &s, &e, FALSE);
+        gtk_text_buffer_get_bounds(buffer, &start, &end);
+        content = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
         g_file_set_contents(cecup_state.ignore_path, content, -1, NULL);
         g_free(content);
         on_preview_clicked(NULL, NULL);
@@ -897,23 +936,30 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             GtkWidget *sub_ext;
             GtkWidget *sub_dir;
             int32 is_disabled;
-            char *f_path;
+            char *file_path;
             char *other_path;
             enum CecupAction action;
 
             row_idx = gtk_tree_path_get_indices(path)[0];
             row = cecup_state.visible_rows[row_idx];
 
-            f_path = (side == 0) ? row->src_path : row->dst_path;
-            other_path = (side == 0) ? row->dst_path : row->src_path;
-            action = (side == 0) ? row->src_action : row->dst_action;
+            if (side == 0) {
+                file_path = row->src_path;
+                other_path = row->dst_path;
+                action = row->src_action;
+            } else {
+                file_path = row->dst_path;
+                other_path = row->src_path;
+                action = row->dst_action;
+            }
 
             g_mutex_lock(&cecup_state.ui_arena_mutex);
             ud = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
             memset64(ud, 0, SIZEOF(UIUpdateData));
-            int64 path_len = strlen64(f_path) + 1;
+            int64 path_len;
+            path_len = strlen64(file_path) + 1;
             ud->filepath = arena_push(cecup_state.ui_arena, path_len);
-            memcpy64(ud->filepath, f_path, path_len);
+            memcpy64(ud->filepath, file_path, path_len);
             g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
             ud->action = action;
@@ -957,7 +1003,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label("Diff");
-            is_disabled = (g_strcmp0(f_path, "-") == 0
+            is_disabled = (g_strcmp0(file_path, "-") == 0
                            || g_strcmp0(other_path, "-") == 0
                            || action == UI_ACTION_HARDLINK);
             if (is_disabled) {
@@ -969,7 +1015,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label("Delete");
-            if (g_strcmp0(f_path, "-") == 0) {
+            if (g_strcmp0(file_path, "-") == 0) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_delete),
@@ -992,29 +1038,29 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
 static gboolean
 on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 gpointer d) {
-    GtkTreePath *p;
-    GtkTreeViewColumn *c;
-    gint bx;
-    gint by;
+    GtkTreePath *path_obj;
+    GtkTreeViewColumn *col;
+    gint bin_x;
+    gint bin_y;
 
     (void)k;
     (void)d;
     gtk_tree_view_convert_widget_to_bin_window_coords(GTK_TREE_VIEW(w), x, y,
-                                                      &bx, &by);
-    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(w), bx, by, &p, &c, NULL,
-                                      NULL)) {
+                                                      &bin_x, &bin_y);
+    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(w), bin_x, bin_y, &path_obj,
+                                      &col, NULL, NULL)) {
         int32 idx;
         int32 side;
         int32 view_col_idx;
         char *tip_text;
 
-        idx = gtk_tree_path_get_indices(p)[0];
+        idx = gtk_tree_path_get_indices(path_obj)[0];
         side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
         view_col_idx = -1;
         tip_text = NULL;
 
         for (int32 i = 0; i < 4; i += 1) {
-            if (c == gtk_tree_view_get_column(GTK_TREE_VIEW(w), i)) {
+            if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(w), i)) {
                 view_col_idx = i;
                 break;
             }
@@ -1022,33 +1068,43 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
         if (idx >= 0 && idx < cecup_state.visible_count) {
             CecupRow *row;
-            char *path;
+            char *file_path;
             enum CecupAction action;
 
             row = cecup_state.visible_rows[idx];
-            path = (side == 0) ? row->src_path : row->dst_path;
-            action = (side == 0) ? row->src_action : row->dst_action;
+
+            if (side == 0) {
+                file_path = row->src_path;
+                action = row->src_action;
+            } else {
+                file_path = row->dst_path;
+                action = row->dst_action;
+            }
 
             if (view_col_idx == 1) {
                 const char **strings;
-                strings = (side == 0) ? src_action_strings : dst_action_strings;
+                if (side == 0) {
+                    strings = src_action_strings;
+                } else {
+                    strings = dst_action_strings;
+                }
                 tip_text = g_strdup(strings[action]);
             } else if (view_col_idx == 2) {
-                tip_text = g_strdup_printf("%s: %s", path,
+                tip_text = g_strdup_printf("%s: %s", file_path,
                                            reason_strings[row->reason]);
             } else if (view_col_idx == 3) {
-                tip_text
-                    = g_strdup_printf("%s: %ld bytes", path, row->size_raw);
+                tip_text = g_strdup_printf("%s: %ld bytes", file_path,
+                                           row->size_raw);
             }
         }
 
         if (tip_text) {
             gtk_tooltip_set_text(t, tip_text);
             g_free(tip_text);
-            gtk_tree_path_free(p);
+            gtk_tree_path_free(path_obj);
             return TRUE;
         }
-        gtk_tree_path_free(p);
+        gtk_tree_path_free(path_obj);
     }
     return FALSE;
 }
@@ -1120,7 +1176,8 @@ update_ui_handler(gpointer user_data) {
 
         char *pretty;
         pretty = bytes_pretty(data->size);
-        int64 pretty_len = strlen64(pretty) + 1;
+        int64 pretty_len;
+        pretty_len = strlen64(pretty) + 1;
         row->size_text = arena_push(cecup_state.row_arena, pretty_len);
         memcpy64(row->size_text, pretty, pretty_len);
         g_free(pretty);
@@ -1133,17 +1190,20 @@ update_ui_handler(gpointer user_data) {
         if (g_strcmp0(src_path_final, "-") == 0) {
             row->src_path = arena_push(cecup_state.row_arena, 2);
             memcpy64(row->src_path, "-", 2);
-            int64 path_len = strlen64(data->filepath) + 1;
+            int64 path_len;
+            path_len = strlen64(data->filepath) + 1;
             row->dst_path = arena_push(cecup_state.row_arena, path_len);
             memcpy64(row->dst_path, data->filepath, path_len);
         } else if (g_strcmp0(dst_path_final, "-") == 0) {
-            int64 path_len = strlen64(data->filepath) + 1;
+            int64 path_len;
+            path_len = strlen64(data->filepath) + 1;
             row->src_path = arena_push(cecup_state.row_arena, path_len);
             memcpy64(row->src_path, data->filepath, path_len);
             row->dst_path = arena_push(cecup_state.row_arena, 2);
             memcpy64(row->dst_path, "-", 2);
         } else {
-            int64 path_len = strlen64(data->filepath) + 1;
+            int64 path_len;
+            path_len = strlen64(data->filepath) + 1;
             row->src_path = arena_push(cecup_state.row_arena, path_len);
             memcpy64(row->src_path, data->filepath, path_len);
             row->dst_path = arena_push(cecup_state.row_arena, path_len);
@@ -1214,7 +1274,6 @@ update_ui_handler(gpointer user_data) {
             cecup_state.refresh_id = 0;
         }
         arena_reset(cecup_state.row_arena);
-        /* Re-allocate the initial arrays from the fresh arena */
         cecup_state.rows
             = arena_push(cecup_state.row_arena,
                          cecup_state.rows_capacity*SIZEOF(CecupRow *));

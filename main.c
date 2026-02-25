@@ -387,13 +387,15 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
                      row->dst_color, NULL);
         break;
     case COL_SIZE_TEXT: {
-        char *bg = (col
-                    == gtk_tree_view_get_column(
-                        GTK_TREE_VIEW(cecup_state.l_tree), 3))
-                       ? row->src_color
-                       : row->dst_color;
-        g_object_set(renderer, "text", row->size_text, "cell-background", bg,
-                     NULL);
+        char *background;
+        if (col
+            == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup_state.l_tree), 3)) {
+            background = row->src_color;
+        } else {
+            background = row->dst_color;
+        }
+        g_object_set(renderer, "text", row->size_text, "cell-background",
+                     background, NULL);
         break;
     }
     default:

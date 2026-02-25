@@ -323,7 +323,7 @@ bulk_sync_worker(gpointer user_data) {
 
     tasks = (GPtrArray *)user_data;
 
-    for (uint32 i = 0; i < tasks->len; i += 1) {
+    for (int32 i = 0; i < (int32)tasks->len; i += 1) {
         UIUpdateData *ud;
         char cmd[4096];
         int32 pipe_output[2];
@@ -759,15 +759,15 @@ sync_worker(gpointer user_data) {
                             continue;
                         }
 
-                        char *p_pos;
-                        if ((p_pos = strstr(output_buffer, "%"))) {
-                            char *start = p_pos;
-                            while (start > output_buffer
-                                   && isdigit(*(start - 1))) {
-                                start -= 1;
+                        char *percent_pos;
+                        if ((percent_pos = strstr(output_buffer, "%"))) {
+                            char *start_digit = percent_pos;
+                            while (start_digit > output_buffer
+                                   && isdigit(*(start_digit - 1))) {
+                                start_digit -= 1;
                             }
                             dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
-                                              atof(start) / 100.0);
+                                              atof(start_digit) / 100.0);
                         }
 
                         if (thread_data->is_preview == 0) {
@@ -779,9 +779,10 @@ sync_worker(gpointer user_data) {
                             char *relative_path = output_buffer + 10;
                             char full_src[MAX_PATH_LENGTH];
                             char full_dst[MAX_PATH_LENGTH];
-                            struct stat stat_srt;
-                            struct stat stat_dst;
-                            int64 size;
+                            struct stat stat_src_local;
+                            struct stat stat_dst_local;
+                            int64 size_val;
+                            enum CecupReason deletion_reason;
 
                             while (isspace(*relative_path)) {
                                 relative_path += 1;
@@ -792,20 +793,26 @@ sync_worker(gpointer user_data) {
                             SNPRINTF(full_dst, "%s/%s", thread_data->dst_path,
                                      relative_path);
 
-                            size = (lstat(full_dst, &stat_dst) == 0)
-                                       ? stat_dst.st_size
-                                       : 0;
-                            if (size == 0 && errno != ENOENT && errno != 0) {
+                            if (lstat(full_dst, &stat_dst_local) == 0) {
+                                size_val = stat_dst_local.st_size;
+                            } else {
+                                size_val = 0;
+                            }
+
+                            if (size_val == 0 && errno != ENOENT
+                                && errno != 0) {
                                 dispatch_log_error("Error lstat %s: %s.\n",
                                                    full_dst, strerror(errno));
                             }
-                            enum CecupReason reason
-                                = (lstat(full_src, &stat_srt) == 0)
-                                      ? UI_REASON_IGNORED
-                                      : UI_REASON_MISSING;
+
+                            if (lstat(full_src, &stat_src_local) == 0) {
+                                deletion_reason = UI_REASON_IGNORED;
+                            } else {
+                                deletion_reason = UI_REASON_MISSING;
+                            }
 
                             dispatch_tree(1, UI_ACTION_DELETE, relative_path,
-                                          size, reason);
+                                          size_val, deletion_reason);
                             continue;
                         }
 
@@ -825,29 +832,31 @@ sync_worker(gpointer user_data) {
                             relative_path_entry += 1;
                         }
 
-                        enum CecupAction action = UI_ACTION_UPDATE;
+                        enum CecupAction action_val = UI_ACTION_UPDATE;
                         if (strncmp(output_buffer, "hf", 2) == 0) {
-                            action = UI_ACTION_HARDLINK;
+                            action_val = UI_ACTION_HARDLINK;
                         } else if (strncmp(output_buffer, "cd", 2) == 0
                                    || strncmp(output_buffer, ">f+++++", 7)
                                           == 0) {
-                            action = UI_ACTION_NEW;
+                            action_val = UI_ACTION_NEW;
                         }
 
-                        char *full_src_path = g_build_filename(
+                        char *full_src_path_val = g_build_filename(
                             thread_data->src_path, relative_path_entry, NULL);
-                        struct stat st_path;
-                        int64 sz_path = 0;
-                        if (lstat(full_src_path, &st_path) < 0) {
+                        struct stat st_path_val;
+                        int64 sz_path_val = 0;
+                        if (lstat(full_src_path_val, &st_path_val) < 0) {
                             dispatch_log_error("Error lstat %s: %s.\n",
-                                               full_src_path, strerror(errno));
+                                               full_src_path_val,
+                                               strerror(errno));
                         } else {
-                            sz_path = st_path.st_size;
+                            sz_path_val = st_path_val.st_size;
                         }
 
-                        dispatch_tree(0, action, relative_path_entry, sz_path,
-                                      (enum CecupReason)action);
-                        g_free(full_src_path);
+                        dispatch_tree(0, action_val, relative_path_entry,
+                                      sz_path_val,
+                                      (enum CecupReason)action_val);
+                        g_free(full_src_path_val);
 
                         processed_files_preview += 1;
                         if (total_files_preview > 0) {
@@ -918,13 +927,13 @@ sync_worker(gpointer user_data) {
 
     {
         g_mutex_lock(&cecup_state.ui_arena_mutex);
-        UIUpdateData *ready
+        UIUpdateData *ready_signal
             = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
-        memset64(ready, 0, SIZEOF(UIUpdateData));
+        memset64(ready_signal, 0, SIZEOF(UIUpdateData));
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
-        ready->type = DATA_TYPE_ENABLE_BUTTONS;
-        g_idle_add(update_ui_handler, ready);
+        ready_signal->type = DATA_TYPE_ENABLE_BUTTONS;
+        g_idle_add(update_ui_handler, ready_signal);
     }
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
