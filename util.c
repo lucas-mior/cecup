@@ -460,7 +460,7 @@ qsort64(void *base, int64 n, int64 size,
               (llong)size);
         fatal(EXIT_FAILURE);
     }
-    qsort(base, n, size, compar);
+    qsort(base, (size_t)n, (size_t)size, compar);
     return;
 }
 
