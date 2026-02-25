@@ -126,14 +126,15 @@ static void
 dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
               enum CecupReason reason) {
     UIUpdateData *data;
+    int64 path_len;
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     data = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
-    int64 path_len = strlen64(path) + 1;
-    data->filepath = arena_push(cecup_state.ui_arena, path_len);
-    memcpy64(data->filepath, path, path_len);
+    path_len = strlen64(path);
+    data->filepath = arena_push(cecup_state.ui_arena, path_len + 1);
+    memcpy64(data->filepath, path, path_len + 1);
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     data->type = DATA_TYPE_TREE_ROW;
@@ -474,14 +475,15 @@ bulk_sync_worker(gpointer user_data) {
         }
 
         if (!cecup_state.cancel_sync) {
+            int64 path_len;
             g_mutex_lock(&cecup_state.ui_arena_mutex);
             remove_data
                 = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
             memset64(remove_data, 0, SIZEOF(UIUpdateData));
 
-            int64 path_len = strlen64(ud->filepath) + 1;
-            remove_data->filepath = arena_push(cecup_state.ui_arena, path_len);
-            memcpy64(remove_data->filepath, ud->filepath, path_len);
+            path_len = strlen64(ud->filepath);
+            remove_data->filepath = arena_push(cecup_state.ui_arena, path_len + 1);
+            memcpy64(remove_data->filepath, ud->filepath, path_len + 1);
             g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
             remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
