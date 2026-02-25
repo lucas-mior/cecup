@@ -494,9 +494,8 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
     ud = (UIUpdateData *)data;
     write_pointer = buffer;
     remaining_capacity = (int64)sizeof(buffer) - 1;
-    tasks = get_target_tasks(ud->side, ud->filepath, ud->action);
 
-    if (tasks != NULL) {
+    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
             char full_path[MAX_PATH_LENGTH];
