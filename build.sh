@@ -1,9 +1,14 @@
 #!/bin/sh
 
+# shellcheck disable=SC2086
+
 set -e
 program="cecup"
+script=$(basename "$0")
 DESTDIR="${DESTDIR:-}"
 # CC=clang
+
+target="${1:-build}"
 
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
@@ -50,7 +55,20 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
 fi
 
-if [ "$1" = "install" ]; then
+case "$target" in
+"build|debug")
+    trace_on
+
+    ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
+    vtags.sed tags | sort | uniq > .tags.vim       2> /dev/null || true
+    $CC $CPPFLAGS $CFLAGS main.c -o "./$program" $LDFLAGS
+
+    trace_off
+    ;;
+"install")
+    if [ ! -f "./$program" ]; then
+        $0 build
+    fi
     trace_on
     $CC $CPPFLAGS $CFLAGS main.c -o "./$program" $LDFLAGS
     
@@ -67,13 +85,8 @@ if [ "$1" = "install" ]; then
             "$DESTDIR/usr/share/applications/$program.desktop"
     fi
     trace_off
-else
-    trace_on
-    # shellcheck disable=SC2086
-    rm ./$program || true
-    ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
-    vtags.sed tags | sort | uniq > .tags.vim       2> /dev/null || true
-    $CC $CPPFLAGS $CFLAGS main.c -o ./$program $LDFLAGS
-    ./$program
-    trace_off
-fi
+    ;;
+*)
+    echo "usage: $script [ build | debug | valgrind | callgrind ]"
+    exit 1
+esac
