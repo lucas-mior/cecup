@@ -438,7 +438,8 @@ X64(fread)
 #undef X64
 
 static void
-qsort64(void *base, int64 n, int64 size, void *compar) {
+qsort64(void *base, int64 n, int64 size,
+        int (*compar)(const void *, const void *)) {
     if ((size_t)size >= (SIZE_MAX / (size_t)n)) {
         error("Error in %s: Overflow (%lld*%lld)\n", __func__, (llong)size,
               (llong)n);
