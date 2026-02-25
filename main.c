@@ -386,7 +386,6 @@ update_ui_handler(gpointer user_data) {
         GtkTextIter end;
         gtk_text_buffer_get_end_iter(cecup_state.log_buffer, &end);
         gtk_text_buffer_insert(cecup_state.log_buffer, &end, data->message, -1);
-        gtk_text_buffer_insert(cecup_state.log_buffer, &end, "\n", -1);
         break;
     }
     case DATA_TYPE_TREE_ROW: {
