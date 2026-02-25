@@ -39,7 +39,8 @@ main(int32 argc, char *argv[]) {
     char *cwd;
     char *default_src;
     char *default_dst;
-    char *config_base;
+    char config_base[MAX_PATH_LENGTH];
+    char *user_config_dir;
     GType column_types[NUM_COLS];
 
     gtk_init(&argc, &argv);
@@ -59,7 +60,8 @@ main(int32 argc, char *argv[]) {
     cecup_state.sort_order = GTK_SORT_ASCENDING;
     cecup_state.refresh_id = 0;
 
-    config_base = g_build_filename(g_get_user_config_dir(), "cecup", NULL);
+    user_config_dir = (char *)g_get_user_config_dir();
+    SNPRINTF(config_base, "%s/cecup", user_config_dir);
 
     if (access(config_base, F_OK) == -1) {
         char cmd[4096];
@@ -69,9 +71,8 @@ main(int32 argc, char *argv[]) {
         system(cmd);
     }
 
-    cecup_state.ignore_path
-        = g_build_filename(config_base, "ignore.conf", NULL);
-    cecup_state.config_path = g_build_filename(config_base, "cecup.conf", NULL);
+    SNPRINTF(cecup_state.ignore_path, "%s/ignore.conf", config_base);
+    SNPRINTF(cecup_state.config_path, "%s/cecup.conf", config_base);
 
     cecup_state.gtk_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(cecup_state.gtk_window), "cecup");
@@ -183,7 +184,7 @@ main(int32 argc, char *argv[]) {
                        FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), progress_vbox, FALSE, FALSE, 5);
 
-    cwd = g_get_current_dir();
+    cwd = (char *)g_get_current_dir();
     default_src = g_strdup_printf("%s/a/", cwd);
     default_dst = g_strdup_printf("%s/b/", cwd);
 

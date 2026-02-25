@@ -129,8 +129,8 @@ static struct {
 
     GtkListStore *store;
     GtkTextBuffer *log_buffer;
-    char *ignore_path;
-    char *config_path;
+    char ignore_path[MAX_PATH_LENGTH];
+    char config_path[MAX_PATH_LENGTH];
     volatile int32 cancel_sync;
     GtkWidget *l_tree;
     GtkWidget *r_tree;

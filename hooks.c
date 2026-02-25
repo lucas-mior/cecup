@@ -336,7 +336,7 @@ on_menu_open(GtkWidget *m, gpointer data) {
     if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
-            char *full_path;
+            char full_path[MAX_PATH_LENGTH];
             char *base_path;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
@@ -346,10 +346,9 @@ on_menu_open(GtkWidget *m, gpointer data) {
                 base_path = task->dst_base;
             }
 
-            full_path = g_build_filename(base_path, task->filepath, NULL);
+            SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
             SNPRINTF(cmd, "xdg-open '%s' &", full_path);
             system(cmd);
-            g_free(full_path);
         }
         free_task_list(tasks);
     }
@@ -373,7 +372,7 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
     if (tasks != NULL) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
-            char *full_path;
+            char full_path[MAX_PATH_LENGTH];
             char *dir_path;
             char *base_path;
 
@@ -384,7 +383,7 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
                 base_path = task->dst_base;
             }
 
-            full_path = g_build_filename(base_path, task->filepath, NULL);
+            SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
             if ((dir_path = g_path_get_dirname(full_path)) != NULL) {
                 char *command[] = {
                     "xdg-open",
@@ -394,7 +393,6 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
                 util_command_launch(LENGTH(command), command);
                 g_free(dir_path);
             }
-            g_free(full_path);
         }
         free_task_list(tasks);
     }
@@ -454,7 +452,7 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
     if (tasks != NULL) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
-            char *full_path;
+            char full_path[MAX_PATH_LENGTH];
             char *base_path;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
@@ -464,12 +462,11 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
                 base_path = task->dst_base;
             }
 
-            full_path = g_build_filename(base_path, task->filepath, NULL);
+            SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
             if (i > 0) {
                 g_string_append(buffer, "\n");
             }
             g_string_append(buffer, full_path);
-            g_free(full_path);
         }
         gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
                                buffer->str, -1);
@@ -806,17 +803,21 @@ on_ignore_clicked(GtkWidget *b, gpointer data) {
 
 static void
 on_invert_clicked(GtkWidget *b, gpointer data) {
-    char *path_src;
-    char *path_dst;
+    char path_src[MAX_PATH_LENGTH];
+    char path_dst[MAX_PATH_LENGTH];
+    char *entry_text;
 
     (void)b;
     (void)data;
-    path_src = g_strdup(gtk_entry_get_text(GTK_ENTRY(cecup_state.src_entry)));
-    path_dst = g_strdup(gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry)));
+
+    entry_text = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.src_entry));
+    SNPRINTF(path_src, "%s", entry_text);
+
+    entry_text = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry));
+    SNPRINTF(path_dst, "%s", entry_text);
+
     gtk_entry_set_text(GTK_ENTRY(cecup_state.src_entry), path_dst);
     gtk_entry_set_text(GTK_ENTRY(cecup_state.dst_entry), path_src);
-    g_free(path_src);
-    g_free(path_dst);
     on_preview_clicked(NULL, NULL);
     return;
 }

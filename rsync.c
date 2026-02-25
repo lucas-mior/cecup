@@ -363,10 +363,9 @@ bulk_sync_worker(gpointer user_data) {
         }
 
         if (ud->action == UI_ACTION_DELETE) {
-            char *full_dst;
-            full_dst = g_build_filename(ud->dst_base, ud->filepath, NULL);
+            char full_dst[MAX_PATH_LENGTH];
+            SNPRINTF(full_dst, "%s/%s", ud->dst_base, ud->filepath);
             SNPRINTF(cmd, "rm -rfv '%s'", full_dst);
-            g_free(full_dst);
         } else {
             SNPRINTF(cmd,
                      "rsync " RSYNC_UNIVERSAL_ARGS
@@ -845,8 +844,10 @@ sync_worker(gpointer user_data) {
                             action_val = UI_ACTION_NEW;
                         }
 
-                        char *full_src_path_val = g_build_filename(
-                            thread_data->src_path, relative_path_entry, NULL);
+                        char full_src_path_val[MAX_PATH_LENGTH];
+                        SNPRINTF(full_src_path_val, "%s/%s",
+                                 thread_data->src_path, relative_path_entry);
+
                         struct stat st_path_val;
                         int64 sz_path_val = 0;
                         if (lstat(full_src_path_val, &st_path_val) < 0) {
@@ -860,7 +861,6 @@ sync_worker(gpointer user_data) {
                         dispatch_tree(0, action_val, relative_path_entry,
                                       sz_path_val,
                                       (enum CecupReason)action_val);
-                        g_free(full_src_path_val);
 
                         processed_files_preview += 1;
                         if (total_files_preview > 0) {
