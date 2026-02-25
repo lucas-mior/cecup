@@ -173,8 +173,8 @@ refresh_ui_list(void) {
     }
 
     if (cecup_state.visible_count > 0) {
-        qsort(cecup_state.visible_rows, cecup_state.visible_count,
-              sizeof(CecupRow *), cecup_row_compare);
+        qsort64(cecup_state.visible_rows, cecup_state.visible_count,
+                sizeof(CecupRow *), cecup_row_compare);
     }
 
     current_store_count = gtk_tree_model_iter_n_children(
