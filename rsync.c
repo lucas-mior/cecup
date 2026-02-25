@@ -777,17 +777,20 @@ sync_worker(gpointer user_data) {
 
                         if (strncmp(output_buffer, "*deleting", 9) == 0) {
                             char *relative_path = output_buffer + 10;
+                            char full_src[MAX_PATH_LENGTH];
+                            char full_dst[MAX_PATH_LENGTH];
+                            struct stat stat_srt;
+                            struct stat stat_dst;
+
                             while (isspace(*relative_path)) {
                                 relative_path += 1;
                             }
 
-                            char *full_src = g_build_filename(
-                                thread_data->src_path, relative_path, NULL);
-                            char *full_dst = g_build_filename(
-                                thread_data->dst_path, relative_path, NULL);
+                            SNPRINTF(full_src, "%s/%s", thread_data->src_path,
+                                     relative_path);
+                            SNPRINTF(full_dst, "%s/%s", thread_data->dst_path,
+                                     relative_path);
 
-                            struct stat stat_srt;
-                            struct stat stat_dst;
                             int64 sz = (lstat(full_dst, &stat_dst) == 0)
                                            ? stat_dst.st_size
                                            : 0;
@@ -802,8 +805,6 @@ sync_worker(gpointer user_data) {
 
                             dispatch_tree(1, UI_ACTION_DELETE, relative_path,
                                           sz, reason);
-                            g_free(full_src);
-                            g_free(full_dst);
                             continue;
                         }
 
