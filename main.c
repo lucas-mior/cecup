@@ -276,22 +276,22 @@ update_ui_handler(gpointer user_data) {
         char *size_string;
         char *bg_src;
         char *bg_dst;
-        char *src_path;
-        char *dst_path;
+        char *src_path_final;
+        char *dst_path_final;
         enum CecupAction action_src;
         enum CecupAction action_dst;
 
         size_string = bytes_pretty(data->size);
         bg_src = "#FFFFFF";
         bg_dst = "#FFFFFF";
-        src_path = data->filepath;
-        dst_path = data->filepath;
+        src_path_final = data->filepath;
+        dst_path_final = data->filepath;
         action_src = data->action;
         action_dst = data->action;
 
         if (data->action == UI_ACTION_NEW) {
             bg_src = "#D4EDDA";
-            dst_path = "-";
+            dst_path_final = "-";
         } else if (data->action == UI_ACTION_UPDATE) {
             bg_src = "#CCE5FF";
             bg_dst = "#CCE5FF";
@@ -311,7 +311,7 @@ update_ui_handler(gpointer user_data) {
                 bg_dst = "#F8D7DA";
                 action_src = UI_ACTION_DELETED;
                 action_dst = UI_ACTION_DELETE;
-                src_path = "-";
+                src_path_final = "-";
             }
         }
 
@@ -319,13 +319,25 @@ update_ui_handler(gpointer user_data) {
         row->selected = FALSE;
         row->src_action = action_src;
         row->dst_action = action_dst;
-        row->src_path = g_strdup(src_path);
-        row->dst_path = g_strdup(dst_path);
         row->size_text = size_string;
         row->size_raw = data->size;
         row->src_color = bg_src;
         row->dst_color = bg_dst;
         row->reason = data->reason;
+
+        if (g_strcmp0(src_path_final, "-") == 0) {
+            row->src_path = g_strdup("-");
+            row->dst_path = data->filepath;
+            data->filepath = NULL;
+        } else if (g_strcmp0(dst_path_final, "-") == 0) {
+            row->src_path = data->filepath;
+            data->filepath = NULL;
+            row->dst_path = g_strdup("-");
+        } else {
+            row->src_path = data->filepath;
+            data->filepath = NULL;
+            row->dst_path = g_strdup(row->src_path);
+        }
 
         g_ptr_array_add(cecup_state.rows, row);
 

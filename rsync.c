@@ -351,7 +351,8 @@ bulk_sync_worker(gpointer user_data) {
 
             remove_data = g_new0(UIUpdateData, 1);
             remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
-            remove_data->filepath = g_strdup(ud->filepath);
+            remove_data->filepath = ud->filepath;
+            ud->filepath = NULL;
             g_idle_add(update_ui_handler, remove_data);
         }
 
