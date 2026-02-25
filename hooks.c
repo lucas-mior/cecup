@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include "cecup.h"
+#include "util.c"
 #include "rsync.c"
 #include "config.c"
 
