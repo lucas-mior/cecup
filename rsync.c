@@ -217,7 +217,7 @@ bulk_sync_worker(gpointer user_data) {
 
         switch (child_pid = fork()) {
         case -1:
-            dispatch_log_error("Error: fork failed");
+            dispatch_log_error("Error forking: %s.\n", strerror(errno));
             XCLOSE(&pipe_output[0]);
             XCLOSE(&pipe_output[1]);
             XCLOSE(&pipe_error[0]);
@@ -259,14 +259,14 @@ bulk_sync_worker(gpointer user_data) {
                 break;
             }
 
-            poll_return = poll(poll_descriptors, 2, 200);
-            if (poll_return < 0) {
-                dispatch_log_error("Error: poll failed");
+            switch ((poll_return = poll(poll_descriptors, 2, 200))) {
+            case -1:
+                dispatch_log_error("Error in poll: %s.\n", strerror(errno));
                 break;
-            }
-
-            if (poll_return == 0) {
+            case 0:
                 continue;
+            default:
+                break;
             }
 
             if (poll_descriptors[0].revents & POLLIN) {
