@@ -376,6 +376,9 @@ fix_fs_recursive(const char *base_path, const char *relative_path) {
         }
 
         for (int64 i = 0; i < strlen64(d_name); i += 1) {
+            if (j >= 250) {
+                break;
+            }
             if (d_name[i] == '=' && d_name[i + 1] == '>') {
                 memcpy64(new_name + j, "_equal_arrow_in_filename_", 25);
                 j += 25;
@@ -480,7 +483,7 @@ bulk_sync_worker(gpointer user_data) {
 
     for (int32 i = 0; i < (int32)tasks->len; i += 1) {
         UIUpdateData *ud;
-        char cmd[4096];
+        char cmd[8192];
         int32 pipe_output[2];
         int32 pipe_error[2];
         pid_t child_pid;
@@ -521,13 +524,28 @@ bulk_sync_worker(gpointer user_data) {
 
         if (ud->action == UI_ACTION_DELETE) {
             char full_dst[MAX_PATH_LENGTH];
+            char *escaped_dst;
+
             SNPRINTF(full_dst, "%s/%s", ud->dst_base, ud->filepath);
-            SNPRINTF(cmd, "rm -rfv '%s'", full_dst);
+            escaped_dst = shell_escape(full_dst);
+            SNPRINTF(cmd, "rm -rfv '%s'", escaped_dst);
+            free(escaped_dst);
         } else {
+            char *escaped_src;
+            char *escaped_dst;
+
+            escaped_src = shell_escape(ud->src_base);
+            escaped_dst = shell_escape(ud->dst_base);
+            char *escaped_file = shell_escape(ud->filepath);
+
             SNPRINTF(cmd,
                      "rsync " RSYNC_UNIVERSAL_ARGS
                      " --relative '%s/./%s' '%s/'",
-                     ud->src_base, ud->filepath, ud->dst_base);
+                     escaped_src, escaped_file, escaped_dst);
+
+            free(escaped_src);
+            free(escaped_dst);
+            free(escaped_file);
         }
 
         dispatch_log("+ %s\n", cmd);
@@ -807,12 +825,18 @@ sync_worker(gpointer user_data) {
         exclude_arg = xstrdup("");
     }
 
-    char cmd[4096];
+    char cmd[8192];
+    char *esc_src = shell_escape(thread_data->src_path);
+    char *esc_dst = shell_escape(thread_data->dst_path);
+
     SNPRINTF(cmd,
              "rsync " RSYNC_UNIVERSAL_ARGS
              " --delete-excluded %s %s '%s/' '%s/'",
-             thread_data->is_preview ? "--dry-run" : "", exclude_arg,
-             thread_data->src_path, thread_data->dst_path);
+             thread_data->is_preview ? "--dry-run" : "", exclude_arg, esc_src,
+             esc_dst);
+
+    free(esc_src);
+    free(esc_dst);
 
     if (is_exclude_argument_from_arena) {
         g_mutex_lock(&cecup_state.ui_arena_mutex);
@@ -1156,12 +1180,22 @@ static gpointer
 diff_worker(gpointer user_data) {
     UIUpdateData *ud;
     char cmd[8192];
+    char *esc_src;
+    char *esc_dst;
 
     ud = (UIUpdateData *)user_data;
+    esc_src = shell_escape(ud->src_base);
+    esc_dst = shell_escape(ud->dst_base);
+    char *esc_file = shell_escape(ud->filepath);
+
     SNPRINTF(cmd,
              "%s -e bash -c \"%s '%s/%s' '%s/%s'; read -p 'Press Enter...'\" &",
-             ud->term_cmd, ud->diff_tool, ud->src_base, ud->filepath,
-             ud->dst_base, ud->filepath);
+             ud->term_cmd, ud->diff_tool, esc_src, esc_file, esc_dst, esc_file);
+
+    free(esc_src);
+    free(esc_dst);
+    free(esc_file);
+
     if (system(cmd) < 0) {
         dispatch_log_error("Error system call: %s.\n", strerror(errno));
     }
