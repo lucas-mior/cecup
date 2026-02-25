@@ -32,12 +32,6 @@
 #endif
 
 static void
-free_cecup_row(CecupRow *row) {
-    (void)row;
-    return;
-}
-
-static void
 free_task_list(GPtrArray *tasks) {
     for (int32 i = 0; i < (int32)tasks->len; i += 1) {
         UIUpdateData *task;
@@ -1389,7 +1383,6 @@ update_ui_handler(gpointer user_data) {
             CecupRow *row = cecup_state.rows[i];
             if (strcmp(row->src_path, data->filepath) == 0
                 || strcmp(row->dst_path, data->filepath) == 0) {
-                free_cecup_row(row);
                 for (int32 j = i; j < cecup_state.rows_count - 1; j += 1) {
                     cecup_state.rows[j] = cecup_state.rows[j + 1];
                 }
