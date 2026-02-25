@@ -9,6 +9,11 @@
 #include "util.c"
 #include "cecup.h"
 
+#define RSYNC_UNIVERSAL_ARGS "--verbose --update --recursive" \
+                             " --partial --progress --info=progress2" \
+                             " --links --hard-links --itemize-changes" \
+                             " --perms --times --owner --group"
+
 static void
 dispatch_log(char *msg) {
     UIUpdateData *data;
@@ -188,12 +193,9 @@ bulk_sync_worker(gpointer user_data) {
             g_free(full_dst);
         } else {
             SNPRINTF(cmd,
-                     "rsync --verbose --update --recursive "
-                     "--partial --progress --info=progress2 "
-                     "--links --hard-links --itemize-changes "
-                     "--perms --times --owner --group "
-                     "--include='%s' --include='%s/**' --exclude='*' '%s/' "
-                     "'%s/'",
+                     "rsync " RSYNC_UNIVERSAL_ARGS
+                     " --include='%s' --include='%s/**' --exclude='*'"
+                     " '%s/' '%s/'",
                      ud->filepath, ud->filepath, ud->src_base, ud->dst_base);
         }
 
@@ -396,11 +398,7 @@ sync_worker(gpointer user_data) {
              : g_strdup("");
 
     SNPRINTF(cmd,
-             "rsync --verbose --update --recursive"
-             " --partial --progress --info=progress2"
-             " --links --hard-links --itemize-changes"
-             " --perms --times --owner --group"
-             " --delete-excluded %s %s "
+             "rsync " RSYNC_UNIVERSAL_ARGS " --delete-excluded %s %s "
              "'%s/' '%s/'",
              thread_data->is_preview ? "--dry-run" : "", ex,
              thread_data->src_path, thread_data->dst_path);
