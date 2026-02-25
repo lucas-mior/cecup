@@ -36,11 +36,15 @@ main(int32 argc, char *argv[]) {
     GtkWidget *paths_hbox;
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
+
     char cwd[MAX_PATH_LENGTH];
-    char *default_src;
-    char *default_dst;
+    char xdg_buffer[MAX_PATH_LENGTH];
     char config_base[MAX_PATH_LENGTH];
     char *XDG_CONFIG_HOME;
+
+    char *default_src;
+    char *default_dst;
+
     GType column_types[NUM_COLS];
     char source_path_buffer[4096];
     int64 source_path_length;
@@ -65,7 +69,13 @@ main(int32 argc, char *argv[]) {
     cecup_state.refresh_id = 0;
 
     if ((XDG_CONFIG_HOME = getenv("XDG_CONFIG_HOME")) == NULL) {
-        XDG_CONFIG_HOME = ".config";
+        char *HOME;
+        if ((HOME = getenv("HOME")) == NULL) {
+            error("HOME is not defined. Fix your system.\n");
+            exit(EXIT_FAILURE);
+        }
+        SNPRINTF(xdg_buffer, "%s/.config", HOME);
+        XDG_CONFIG_HOME = xdg_buffer;
     }
     SNPRINTF(config_base, "%s/cecup", XDG_CONFIG_HOME);
 
