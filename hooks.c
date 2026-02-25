@@ -158,8 +158,8 @@ get_target_tasks(int32 side, char *clicked_path,
         dst_len = strlen64(shared_dst) + 1;
         task->dst_base = arena_push(cecup_state.ui_arena, dst_len);
         memcpy64(task->dst_base, shared_dst, dst_len);
-        g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
+        g_mutex_unlock(&cecup_state.ui_arena_mutex);
         task->action = clicked_action;
         task->side = side;
         g_ptr_array_add(tasks, task);
