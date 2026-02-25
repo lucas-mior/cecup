@@ -139,22 +139,22 @@ get_target_tasks(int32 side, char *clicked_path,
 
     if (tasks->len == 0 && strcmp(clicked_path, "-") != 0) {
         UIUpdateData *task;
+        int64 path_len;
+        int64 src_len;
+        int64 dst_len;
 
         g_mutex_lock(&cecup_state.ui_arena_mutex);
         task = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
         memset64(task, 0, SIZEOF(UIUpdateData));
 
-        int64 path_len;
         path_len = strlen64(clicked_path) + 1;
         task->filepath = arena_push(cecup_state.ui_arena, path_len);
         memcpy64(task->filepath, clicked_path, path_len);
 
-        int64 src_len;
         src_len = strlen64(shared_src) + 1;
         task->src_base = arena_push(cecup_state.ui_arena, src_len);
         memcpy64(task->src_base, shared_src, src_len);
 
-        int64 dst_len;
         dst_len = strlen64(shared_dst) + 1;
         task->dst_base = arena_push(cecup_state.ui_arena, dst_len);
         memcpy64(task->dst_base, shared_dst, dst_len);
