@@ -113,6 +113,9 @@ static struct {
     GtkWidget *r_tree;
     GtkWidget *stats_label;
 
+    GtkWidget *progress_rsync;
+    GtkWidget *progress_equal;
+
     CecupRow **rows;
     int32 rows_count;
     int32 rows_capacity;
@@ -139,6 +142,8 @@ enum DataType {
     DATA_TYPE_REMOVE_TREE_ROW,
     DATA_TYPE_ENABLE_BUTTONS,
     DATA_TYPE_CLEAR_TREES,
+    DATA_TYPE_PROGRESS_RSYNC,
+    DATA_TYPE_PROGRESS_EQUAL
 };
 
 typedef struct UIUpdateData {
@@ -152,6 +157,7 @@ typedef struct UIUpdateData {
     char *term_cmd;
     int64 size;
     int32 side;
+    double fraction;
     enum DataType type;
 } UIUpdateData;
 

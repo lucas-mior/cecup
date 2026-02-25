@@ -19,6 +19,8 @@
 typedef struct EqualScannerData {
     char src_path[MAX_PATH_LENGTH];
     char dst_path[MAX_PATH_LENGTH];
+    int32 total_files;
+    int32 processed_files;
 } EqualScannerData;
 
 static void
@@ -80,6 +82,17 @@ dispatch_log_error(char *format, ...) {
 }
 
 static void
+dispatch_progress(enum DataType type, double fraction) {
+    UIUpdateData *data;
+
+    data = g_new0(UIUpdateData, 1);
+    data->type = type;
+    data->fraction = fraction;
+    g_idle_add(update_ui_handler, data);
+    return;
+}
+
+static void
 dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
               enum CecupReason reason) {
     UIUpdateData *data;
@@ -95,8 +108,51 @@ dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
     return;
 }
 
+static int32
+count_files_recursive(char *base_path, char *relative_path) {
+    DIR *dir;
+    struct dirent *entry;
+    char path[MAX_PATH_LENGTH];
+    int32 count;
+
+    count = 0;
+    SNPRINTF(path, "%s/%s", base_path, relative_path);
+    if (!(dir = opendir(path))) {
+        return 0;
+    }
+
+    while ((entry = readdir(dir))) {
+        char *name;
+        char sub_rel[MAX_PATH_LENGTH];
+        struct stat st;
+
+        name = entry->d_name;
+        if (name[0] == '.'
+            && (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'))) {
+            continue;
+        }
+
+        if (strlen(relative_path) > 0) {
+            SNPRINTF(sub_rel, "%s/%s", relative_path, name);
+        } else {
+            SNPRINTF(sub_rel, "%s", name);
+        }
+
+        SNPRINTF(path, "%s/%s", base_path, sub_rel);
+        if (stat(path, &st) == 0) {
+            if (S_ISDIR(st.st_mode)) {
+                count += count_files_recursive(base_path, sub_rel);
+            } else if (S_ISREG(st.st_mode)) {
+                count += 1;
+            }
+        }
+    }
+    closedir(dir);
+    return count;
+}
+
 static void
-find_equal_files(char *src_base, char *dst_base, char *relative_path) {
+find_equal_files(EqualScannerData *sd, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
     char src_path[MAX_PATH_LENGTH];
@@ -108,7 +164,7 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
         return;
     }
 
-    SNPRINTF(src_path, "%s/%s", src_base, relative_path);
+    SNPRINTF(src_path, "%s/%s", sd->src_path, relative_path);
     if (!(dir = opendir(src_path))) {
         return;
     }
@@ -136,10 +192,10 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
             continue;
         }
 
-        SNPRINTF(src_path, "%s/%s/%s", src_base, relative_path, name);
-        SNPRINTF(dst_path, "%s/%s/%s", dst_base, relative_path, name);
+        SNPRINTF(src_path, "%s/%s/%s", sd->src_path, relative_path, name);
+        SNPRINTF(dst_path, "%s/%s/%s", sd->dst_path, relative_path, name);
 
-        if (stat(src_path, &st_s) != 0 || stat(dst_path, &st_d) != 0) {
+        if (stat(src_path, &st_s) != 0) {
             continue;
         }
 
@@ -150,20 +206,26 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
         }
 
         if (S_ISDIR(st_s.st_mode)) {
-            find_equal_files(src_base, dst_base, sub_rel);
+            find_equal_files(sd, sub_rel);
             continue;
         }
 
-        if (!S_ISREG(st_s.st_mode)) {
-            continue;
-        }
+        if (S_ISREG(st_s.st_mode)) {
+            sd->processed_files += 1;
+            if (sd->total_files > 0) {
+                dispatch_progress(DATA_TYPE_PROGRESS_EQUAL,
+                                  (double)sd->processed_files
+                                      / sd->total_files);
+            }
 
-        if (st_s.st_size != st_d.st_size || st_s.st_mtime != st_d.st_mtime) {
-            continue;
+            if (stat(dst_path, &st_d) == 0) {
+                if (st_s.st_size == st_d.st_size
+                    && st_s.st_mtime == st_d.st_mtime) {
+                    dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, st_s.st_size,
+                                  UI_REASON_EQUAL);
+                }
+            }
         }
-
-        dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, st_s.st_size,
-                      UI_REASON_EQUAL);
     }
 
     closedir(dir);
@@ -175,7 +237,9 @@ equal_scanner_worker(gpointer user_data) {
     EqualScannerData *data;
 
     data = (EqualScannerData *)user_data;
-    find_equal_files(data->src_path, data->dst_path, "");
+    data->total_files = count_files_recursive(data->src_path, "");
+    find_equal_files(data, "");
+    dispatch_progress(DATA_TYPE_PROGRESS_EQUAL, 1.0);
     g_free(data);
     return NULL;
 }
@@ -544,7 +608,7 @@ sync_worker(gpointer user_data) {
                 pipes[0].fd = -1;
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
-                    if (buffer[k] != '\n'
+                    if (buffer[k] != '\n' && buffer[k] != '\r'
                         && output_position < (int32)sizeof(output_buffer) - 1) {
                         output_buffer[output_position] = buffer[k];
                         output_position += 1;
@@ -553,6 +617,18 @@ sync_worker(gpointer user_data) {
 
                     output_buffer[output_position] = '\0';
                     output_position = 0;
+
+                    char *p_pos;
+                    p_pos = strstr(output_buffer, "%");
+                    if (p_pos != NULL) {
+                        char *start;
+                        start = p_pos;
+                        while (start > output_buffer && isdigit(*(start - 1))) {
+                            start -= 1;
+                        }
+                        dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
+                                          atof(start) / 100.0);
+                    }
 
                     if (thread_data->is_preview == 0) {
                         dispatch_log(output_buffer);
@@ -602,13 +678,13 @@ sync_worker(gpointer user_data) {
                         continue;
                     }
 
-                    char *relative_path;
+                    char *relative_path_entry;
                     enum CecupAction action;
-                    char *full_src;
-                    struct stat st;
-                    int64 sz;
+                    char *full_src_path;
+                    struct stat st_path;
+                    int64 sz_path;
 
-                    relative_path = space_pos + 1;
+                    relative_path_entry = space_pos + 1;
                     action = UI_ACTION_UPDATE;
 
                     if (strncmp(output_buffer, "hf", 2) == 0) {
@@ -618,12 +694,14 @@ sync_worker(gpointer user_data) {
                         action = UI_ACTION_NEW;
                     }
 
-                    full_src = g_build_filename(thread_data->src_path,
-                                                relative_path, NULL);
-                    sz = (stat(full_src, &st) == 0) ? st.st_size : 0;
-                    dispatch_tree(0, action, relative_path, sz,
+                    full_src_path = g_build_filename(thread_data->src_path,
+                                                     relative_path_entry, NULL);
+                    sz_path = (stat(full_src_path, &st_path) == 0)
+                                  ? st_path.st_size
+                                  : 0;
+                    dispatch_tree(0, action, relative_path_entry, sz_path,
                                   (enum CecupReason)action);
-                    g_free(full_src);
+                    g_free(full_src_path);
                 }
             } else {
                 pipes[0].fd = -1;
@@ -676,7 +754,7 @@ clean_exit:
     if (scanner_thread != NULL) {
         g_thread_join(scanner_thread);
     }
-
+    dispatch_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);
     ready = g_new0(UIUpdateData, 1);
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, ready);

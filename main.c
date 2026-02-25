@@ -32,6 +32,7 @@ main(int32 argc, char *argv[]) {
     GtkWidget *r_tree;
     GtkWidget *log_scroll;
     GtkWidget *log_view;
+    GtkWidget *progress_vbox;
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
     char *cwd;
@@ -118,6 +119,23 @@ main(int32 argc, char *argv[]) {
     gtk_entry_set_text(GTK_ENTRY(cecup_state.term_entry), "xterm");
     gtk_box_pack_start(GTK_BOX(options_hbox), reset_btn, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
+
+    progress_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+    cecup_state.progress_rsync = gtk_progress_bar_new();
+    cecup_state.progress_equal = gtk_progress_bar_new();
+    gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup_state.progress_rsync),
+                                   TRUE);
+    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup_state.progress_rsync),
+                              "rsync");
+    gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup_state.progress_equal),
+                                   TRUE);
+    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup_state.progress_equal),
+                              "equal scanner");
+    gtk_box_pack_start(GTK_BOX(progress_vbox), cecup_state.progress_rsync,
+                       FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(progress_vbox), cecup_state.progress_equal,
+                       FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(header_vbox), progress_vbox, FALSE, FALSE, 5);
 
     for (int32 i = 0; i < NUM_COLS; i += 1) {
         column_types[i] = G_TYPE_INT;
@@ -388,6 +406,14 @@ update_ui_handler(gpointer user_data) {
         gtk_text_buffer_insert(cecup_state.log_buffer, &end, data->message, -1);
         break;
     }
+    case DATA_TYPE_PROGRESS_RSYNC:
+        gtk_progress_bar_set_fraction(
+            GTK_PROGRESS_BAR(cecup_state.progress_rsync), data->fraction);
+        break;
+    case DATA_TYPE_PROGRESS_EQUAL:
+        gtk_progress_bar_set_fraction(
+            GTK_PROGRESS_BAR(cecup_state.progress_equal), data->fraction);
+        break;
     case DATA_TYPE_TREE_ROW: {
         CecupRow *row;
         char *bg_src = "#FFFFFF";
@@ -504,6 +530,10 @@ update_ui_handler(gpointer user_data) {
         cecup_state.rows_count = 0;
         cecup_state.visible_count = 0;
         gtk_list_store_clear(cecup_state.store);
+        gtk_progress_bar_set_fraction(
+            GTK_PROGRESS_BAR(cecup_state.progress_rsync), 0.0);
+        gtk_progress_bar_set_fraction(
+            GTK_PROGRESS_BAR(cecup_state.progress_equal), 0.0);
         break;
     default:
         break;
