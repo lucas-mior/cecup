@@ -5,6 +5,7 @@
 
 #include "util.c"
 #include "hooks.c"
+#include "config.c"
 
 static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path,
                                int32 col_color);
@@ -224,72 +225,7 @@ main(int32 argc, char *argv[]) {
     gtk_container_add(GTK_CONTAINER(log_scroll), log_view);
     gtk_paned_pack2(GTK_PANED(v_paned), log_scroll, FALSE, FALSE);
 
-    {
-        GKeyFile *key;
-        char *val;
-
-        key = g_key_file_new();
-        if (g_key_file_load_from_file(key, cecup_state.config_path,
-                                      G_KEY_FILE_NONE, NULL)) {
-            if ((val = g_key_file_get_string(key, "Paths", "src", NULL))
-                != NULL) {
-                gtk_entry_set_text(GTK_ENTRY(cecup_state.src_entry), val);
-                g_free(val);
-            }
-            if ((val = g_key_file_get_string(key, "Paths", "dst", NULL))
-                != NULL) {
-                gtk_entry_set_text(GTK_ENTRY(cecup_state.dst_entry), val);
-                g_free(val);
-            }
-            if ((val = g_key_file_get_string(key, "Tools", "diff", NULL))
-                != NULL) {
-                gtk_entry_set_text(GTK_ENTRY(cecup_state.diff_entry), val);
-                g_free(val);
-            }
-            if ((val = g_key_file_get_string(key, "Tools", "term", NULL))
-                != NULL) {
-                gtk_entry_set_text(GTK_ENTRY(cecup_state.term_entry), val);
-                g_free(val);
-            }
-
-            if (g_key_file_has_key(key, "Filters", "new", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup_state.filter_new),
-                    g_key_file_get_boolean(key, "Filters", "new", NULL));
-            }
-            if (g_key_file_has_key(key, "Filters", "hard", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup_state.filter_hard),
-                    g_key_file_get_boolean(key, "Filters", "hard", NULL));
-            }
-            if (g_key_file_has_key(key, "Filters", "update", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup_state.filter_update),
-                    g_key_file_get_boolean(key, "Filters", "update", NULL));
-            }
-            if (g_key_file_has_key(key, "Filters", "equal", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup_state.filter_equal),
-                    g_key_file_get_boolean(key, "Filters", "equal", NULL));
-            }
-            if (g_key_file_has_key(key, "Filters", "delete", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup_state.filter_delete),
-                    g_key_file_get_boolean(key, "Filters", "delete", NULL));
-            }
-            if (g_key_file_has_key(key, "Filters", "ignore", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup_state.filter_ignore),
-                    g_key_file_get_boolean(key, "Filters", "ignore", NULL));
-            }
-            if (g_key_file_has_key(key, "Options", "check_fs", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup_state.check_fs_toggle),
-                    g_key_file_get_boolean(key, "Options", "check_fs", NULL));
-            }
-        }
-        g_key_file_free(key);
-    }
+    read_config();
 
     g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), NULL);
     g_signal_connect(browse_dst, "clicked", G_CALLBACK(on_browse_dst), NULL);

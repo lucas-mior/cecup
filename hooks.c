@@ -10,37 +10,26 @@ free_cecup_row(gpointer data) {
     row = (CecupRow *)data;
     g_free(row->src_path);
     g_free(row->dst_path);
+    g_free(row->size_text);
     g_free(row);
     return;
 }
 
 static void
 free_task_list(GPtrArray *tasks) {
-    char *shared_src;
-    char *shared_dst;
-
-    shared_src = NULL;
-    shared_dst = NULL;
-
     for (int32 i = 0; i < (int32)tasks->len; i += 1) {
         UIUpdateData *t;
 
         t = (UIUpdateData *)g_ptr_array_index(tasks, i);
-        if (shared_src == NULL) {
-            shared_src = t->src_base;
-        }
-        if (shared_dst == NULL) {
-            shared_dst = t->dst_base;
-        }
-
         g_free(t->filepath);
+        g_free(t->src_base);
+        g_free(t->dst_base);
         g_free(t->term_cmd);
         g_free(t->diff_tool);
+        g_free(t->message);
         g_free(t);
     }
 
-    g_free(shared_src);
-    g_free(shared_dst);
     g_ptr_array_unref(tasks);
     return;
 }
@@ -73,8 +62,8 @@ get_target_tasks(int32 side, char *clicked_path,
                 task->filepath = g_strdup(f_path);
                 task->action = action;
                 task->side = side;
-                task->src_base = shared_src;
-                task->dst_base = shared_dst;
+                task->src_base = g_strdup(shared_src);
+                task->dst_base = g_strdup(shared_dst);
                 g_ptr_array_add(tasks, task);
             }
         }
@@ -87,14 +76,15 @@ get_target_tasks(int32 side, char *clicked_path,
         task->filepath = g_strdup(clicked_path);
         task->action = clicked_action;
         task->side = side;
-        task->src_base = shared_src;
-        task->dst_base = shared_dst;
+        task->src_base = g_strdup(shared_src);
+        task->dst_base = g_strdup(shared_dst);
         g_ptr_array_add(tasks, task);
     }
 
+    g_free(shared_src);
+    g_free(shared_dst);
+
     if (tasks->len == 0) {
-        g_free(shared_src);
-        g_free(shared_dst);
         g_ptr_array_unref(tasks);
         return NULL;
     }
