@@ -266,7 +266,7 @@ bulk_sync_worker(gpointer user_data) {
             switch ((poll_return = poll(pipes, 2, 200))) {
             case -1:
                 dispatch_log_error("Error in poll: %s.\n", strerror(errno));
-                break;
+                goto out;
             case 0:
                 continue;
             default:
@@ -362,6 +362,7 @@ bulk_sync_worker(gpointer user_data) {
         g_free(ud->diff_tool);
         g_free(ud);
     }
+out:
 
     ready = g_new0(UIUpdateData, 1);
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
@@ -503,14 +504,14 @@ sync_worker(gpointer user_data) {
             break;
         }
 
-        poll_return = poll(pipes, 2, 200);
-        if (poll_return < 0) {
+        switch (poll_return = poll(pipes, 2, 200)) {
+        case -1:
             dispatch_log_error("Error in poll: %s.\n", strerror(errno));
-            break;
-        }
-
-        if (poll_return == 0) {
+            goto out;
+        case 0:
             continue;
+        default:
+            break;
         }
 
         if (pipes[0].revents & POLLIN) {
@@ -638,6 +639,7 @@ sync_worker(gpointer user_data) {
             break;
         }
     }
+out:
 
     XCLOSE(&pipe_output[0]);
     XCLOSE(&pipe_error[0]);
