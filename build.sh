@@ -58,7 +58,7 @@ if [ "$CC" = "clang" ]; then
 fi
 
 case "$target" in
-"build"|"debug")
+"build"|"debug"|"valgrind"|"callgrind")
     trace_on
 
     ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
@@ -89,4 +89,8 @@ case "$target" in
 *)
     echo "usage: $script [ build | debug | valgrind | callgrind ]"
     exit 1
+esac
+
+case "$target" in
+    "valgrind")
 esac
