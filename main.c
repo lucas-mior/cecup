@@ -396,6 +396,9 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
                      NULL);
         break;
     }
+    default:
+        error("Invalid col_id = %d\n", col_id);
+        exit(EXIT_FAILURE);
     }
     return;
 }
