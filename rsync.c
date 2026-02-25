@@ -15,12 +15,18 @@
                              " --perms --times --owner --group"
 
 static void
-dispatch_log(char *msg) {
+dispatch_log(char *format, ...) {
     UIUpdateData *data;
+    va_list va_args;
+    char buffer[8192];
+
+    va_start(va_args, format);
+    vsnprintf(buffer, sizeof(buffer), format, va_args);
+    va_end(va_args);
 
     data = g_new0(UIUpdateData, 1);
     data->type = DATA_TYPE_LOG;
-    data->message = g_strdup(msg);
+    data->message = g_strdup(buffer);
     g_idle_add(update_ui_handler, data);
     return;
 }
