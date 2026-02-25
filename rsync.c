@@ -228,6 +228,7 @@ bulk_sync_worker(gpointer user_data) {
             XCLOSE(&pipe_error[1]);
             continue;
         case 0:
+            setpgid(0, 0);
             XCLOSE(&pipe_output[0]);
             XCLOSE(&pipe_error[0]);
             if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
@@ -258,12 +259,12 @@ bulk_sync_worker(gpointer user_data) {
 
         while (1) {
             if (cecup_state.cancel_sync) {
-                kill(child_pid, SIGTERM);
-                dispatch_log_error("Process cancelled by user.");
+                kill(-child_pid, SIGTERM);
+                dispatch_log_error("Process cancelled: %s", ud->filepath);
                 break;
             }
 
-            switch ((poll_return = poll(pipes, 2, 200))) {
+            switch ((poll_return = poll(pipes, 2, 100))) {
             case -1:
                 dispatch_log_error("Error in poll: %s.\n", strerror(errno));
                 goto out;
@@ -277,7 +278,6 @@ bulk_sync_worker(gpointer user_data) {
                 char buffer[2048];
                 int64 r = read64(pipe_output[0], buffer, sizeof(buffer));
                 if (r < 0) {
-                    dispatch_log_error("Error: read from stdout failed");
                     pipes[0].fd = -1;
                 } else if (r > 0) {
                     for (int64 k = 0; k < r; k += 1) {
@@ -302,7 +302,6 @@ bulk_sync_worker(gpointer user_data) {
                 char buffer[2048];
                 int64 r = read64(pipe_error[0], buffer, sizeof(buffer));
                 if (r < 0) {
-                    dispatch_log_error("Error: read from stderr failed");
                     pipes[1].fd = -1;
                 } else if (r > 0) {
                     for (int64 k = 0; k < r; k += 1) {
@@ -335,24 +334,10 @@ bulk_sync_worker(gpointer user_data) {
                                strerror(errno));
         }
 
-        if (output_position > 0) {
-            output_buffer[output_position] = '\0';
-            dispatch_log(output_buffer);
-        }
-        if (error_position > 0) {
-            error_buffer[error_position] = '\0';
-            dispatch_log_error(error_buffer);
-        }
-
         if (!cecup_state.cancel_sync) {
-            char log_finished[MAX_PATH_LENGTH + 64];
-            SNPRINTF(log_finished, "Task finished: %s", ud->filepath);
-            dispatch_log(log_finished);
-
             remove_data = g_new0(UIUpdateData, 1);
             remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
-            remove_data->filepath = ud->filepath;
-            ud->filepath = NULL;
+            remove_data->filepath = g_strdup(ud->filepath);
             g_idle_add(update_ui_handler, remove_data);
         }
 
@@ -470,6 +455,7 @@ sync_worker(gpointer user_data) {
         XCLOSE(&pipe_error[1]);
         goto clean_exit;
     case 0:
+        setpgid(0, 0);
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_error[0]);
         if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
@@ -500,12 +486,12 @@ sync_worker(gpointer user_data) {
 
     while (1) {
         if (cecup_state.cancel_sync) {
-            kill(child_pid, SIGTERM);
-            dispatch_log_error("Process cancelled by user.");
+            kill(-child_pid, SIGTERM);
+            dispatch_log_error("Rsync operation stopped by user.");
             break;
         }
 
-        switch (poll_return = poll(pipes, 2, 200)) {
+        switch (poll_return = poll(pipes, 2, 100)) {
         case -1:
             dispatch_log_error("Error in poll: %s.\n", strerror(errno));
             goto out;
@@ -519,7 +505,6 @@ sync_worker(gpointer user_data) {
             char buffer[2048];
             int64 r = read64(pipe_output[0], buffer, sizeof(buffer));
             if (r < 0) {
-                dispatch_log_error("Error: read from stdout failed");
                 pipes[0].fd = -1;
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
@@ -615,7 +600,6 @@ sync_worker(gpointer user_data) {
             char buffer[2048];
             int64 r = read64(pipe_error[0], buffer, sizeof(buffer));
             if (r < 0) {
-                dispatch_log_error("Error: read from stderr failed");
                 pipes[1].fd = -1;
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
@@ -648,25 +632,14 @@ out:
         dispatch_log_error("Error waiting for child: %s.\n", strerror(errno));
     }
 
-    if (output_position > 0) {
-        output_buffer[output_position] = '\0';
-        if (!thread_data->is_preview) {
-            dispatch_log(output_buffer);
-        }
-    }
-
-    if (error_position > 0) {
-        error_buffer[error_position] = '\0';
-        dispatch_log_error(error_buffer);
-    }
-
     if (!cecup_state.cancel_sync) {
-        dispatch_log("rsync process finished.");
+        dispatch_log("Sync analysis finished.");
     }
 
 clean_exit:
-    if (thread_data->is_preview && thread_data->show_equal
+    if (thread_data->is_preview && thread_data->scan_equal
         && !cecup_state.cancel_sync) {
+        dispatch_log("Scanning for equal files...");
         find_equal_files(thread_data->src_path, thread_data->dst_path, "");
     }
 

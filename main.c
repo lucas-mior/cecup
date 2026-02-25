@@ -95,10 +95,16 @@ main(int32 argc, char *argv[]) {
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup_state.check_fs_toggle
         = gtk_check_button_new_with_label("Require different filesystems");
+    cecup_state.check_equal_toggle
+        = gtk_check_button_new_with_label("Scan for equal files");
+    gtk_toggle_button_set_active(
+        GTK_TOGGLE_BUTTON(cecup_state.check_equal_toggle), TRUE);
     cecup_state.diff_entry = gtk_entry_new();
     cecup_state.term_entry = gtk_entry_new();
     reset_btn = gtk_button_new_with_label("Reset");
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_fs_toggle,
+                       FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_equal_toggle,
                        FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Diff Tool:"),
                        FALSE, FALSE, 0);
@@ -250,6 +256,8 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(cecup_state.dst_entry, "changed",
                      G_CALLBACK(on_config_changed), NULL);
     g_signal_connect(cecup_state.check_fs_toggle, "toggled",
+                     G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup_state.check_equal_toggle, "toggled",
                      G_CALLBACK(on_config_changed), NULL);
 
     gtk_widget_show_all(cecup_state.gtk_window);

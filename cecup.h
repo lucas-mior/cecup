@@ -95,6 +95,7 @@ static struct {
     GtkWidget *stop_button;
     GtkWidget *exclude_button;
     GtkWidget *check_fs_toggle;
+    GtkWidget *check_equal_toggle;
     
     GtkWidget *filter_new;
     GtkWidget *filter_hard;
@@ -129,7 +130,7 @@ typedef struct ThreadData {
     char dst_path[MAX_PATH_LENGTH];
     bool is_preview;
     bool check_different_fs;
-    bool show_equal;
+    bool scan_equal;
 } ThreadData;
 
 enum DataType {
