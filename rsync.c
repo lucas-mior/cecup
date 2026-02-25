@@ -331,7 +331,10 @@ bulk_sync_worker(gpointer user_data) {
 
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_error[0]);
-        waitpid(child_pid, NULL, 0);
+        if (waitpid(child_pid, NULL, 0) < 0) {
+            dispatch_log_error("Error waiting for child: %s.\n",
+                               strerror(errno));
+        }
 
         if (output_position > 0) {
             output_buffer[output_position] = '\0';
@@ -640,7 +643,9 @@ sync_worker(gpointer user_data) {
 
     XCLOSE(&pipe_output[0]);
     XCLOSE(&pipe_error[0]);
-    waitpid(child_pid, NULL, 0);
+    if (waitpid(child_pid, NULL, 0) < 0) {
+        dispatch_log_error("Error waiting for child: %s.\n", strerror(errno));
+    }
 
     if (output_position > 0) {
         output_buffer[output_position] = '\0';
