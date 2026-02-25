@@ -35,11 +35,11 @@ dispatch_log(char *format, ...) {
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     data = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset(data, 0, sizeof(UIUpdateData));
+    memset64(data, 0, sizeof(UIUpdateData));
 
     int64 msg_len = strlen64(buffer) + 1;
     data->message = arena_push(cecup_state.ui_arena, msg_len);
-    memcpy(data->message, buffer, msg_len);
+    memcpy64(data->message, buffer, msg_len);
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     data->type = DATA_TYPE_LOG;
@@ -86,11 +86,11 @@ dispatch_log_error(char *format, ...) {
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     data = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset(data, 0, sizeof(UIUpdateData));
+    memset64(data, 0, sizeof(UIUpdateData));
 
     int64 msg_len = strlen64(message_buffer) + 1;
     data->message = arena_push(cecup_state.ui_arena, msg_len);
-    memcpy(data->message, message_buffer, msg_len);
+    memcpy64(data->message, message_buffer, msg_len);
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     g_idle_add(log_error_handler, data);
@@ -103,7 +103,7 @@ dispatch_progress(enum DataType type, double fraction) {
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     data = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset(data, 0, sizeof(UIUpdateData));
+    memset64(data, 0, sizeof(UIUpdateData));
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     data->type = type;
@@ -119,11 +119,11 @@ dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     data = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset(data, 0, sizeof(UIUpdateData));
+    memset64(data, 0, sizeof(UIUpdateData));
 
     int64 path_len = strlen64(path) + 1;
     data->filepath = arena_push(cecup_state.ui_arena, path_len);
-    memcpy(data->filepath, path, path_len);
+    memcpy64(data->filepath, path, path_len);
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     data->type = DATA_TYPE_TREE_ROW;
@@ -467,11 +467,11 @@ bulk_sync_worker(gpointer user_data) {
             g_mutex_lock(&cecup_state.ui_arena_mutex);
             remove_data
                 = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-            memset(remove_data, 0, sizeof(UIUpdateData));
+            memset64(remove_data, 0, sizeof(UIUpdateData));
 
             int64 path_len = strlen64(ud->filepath) + 1;
             remove_data->filepath = arena_push(cecup_state.ui_arena, path_len);
-            memcpy(remove_data->filepath, ud->filepath, path_len);
+            memcpy64(remove_data->filepath, ud->filepath, path_len);
             g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
             remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
@@ -501,7 +501,7 @@ out:
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     ready = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset(ready, 0, sizeof(UIUpdateData));
+    memset64(ready, 0, sizeof(UIUpdateData));
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
@@ -545,7 +545,7 @@ sync_worker(gpointer user_data) {
         UIUpdateData *clear;
         g_mutex_lock(&cecup_state.ui_arena_mutex);
         clear = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-        memset(clear, 0, sizeof(UIUpdateData));
+        memset64(clear, 0, sizeof(UIUpdateData));
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
         clear->type = DATA_TYPE_CLEAR_TREES;
@@ -561,7 +561,7 @@ sync_worker(gpointer user_data) {
         dispatch_log("Scanning for equal files (parallel)...\n");
         g_mutex_lock(&cecup_state.ui_arena_mutex);
         sd = arena_push(cecup_state.ui_arena, sizeof(EqualScannerData));
-        memset(sd, 0, sizeof(EqualScannerData));
+        memset64(sd, 0, sizeof(EqualScannerData));
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
         strncpy(sd->src_path, thread_data->src_path, MAX_PATH_LENGTH - 1);
@@ -855,7 +855,7 @@ clean_exit:
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     ready = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset(ready, 0, sizeof(UIUpdateData));
+    memset64(ready, 0, sizeof(UIUpdateData));
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
