@@ -71,15 +71,15 @@ get_target_tasks(int32 side, char *clicked_path,
                 task = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
                 memset(task, 0, sizeof(UIUpdateData));
 
-                int64 path_len = strlen(f_path) + 1;
+                int64 path_len = strlen64(f_path) + 1;
                 task->filepath = arena_push(cecup_state.ui_arena, path_len);
                 memcpy(task->filepath, f_path, path_len);
 
-                int64 src_len = strlen(shared_src) + 1;
+                int64 src_len = strlen64(shared_src) + 1;
                 task->src_base = arena_push(cecup_state.ui_arena, src_len);
                 memcpy(task->src_base, shared_src, src_len);
 
-                int64 dst_len = strlen(shared_dst) + 1;
+                int64 dst_len = strlen64(shared_dst) + 1;
                 task->dst_base = arena_push(cecup_state.ui_arena, dst_len);
                 memcpy(task->dst_base, shared_dst, dst_len);
                 g_mutex_unlock(&cecup_state.ui_arena_mutex);
@@ -579,7 +579,7 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     d = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry));
     (void)b;
 
-    if (strlen(s) < 1 || strlen(d) < 1) {
+    if (strlen64(s) < 1 || strlen64(d) < 1) {
         return;
     }
 
@@ -950,7 +950,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             if (view_col_idx == 1) {
                 char *r;
                 r = (char *)reason_strings[row->reason];
-                if (r && strlen(r) > 0) {
+                if (r && strlen64(r) > 0) {
                     tip_text = g_strdup(r);
                 }
             } else if (view_col_idx == 2) {
