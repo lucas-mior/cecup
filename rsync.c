@@ -94,13 +94,13 @@ static void
 find_equal_files(char *src_base, char *dst_base, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
-    char path_src[MAX_PATH_LENGTH];
-    char path_dst[MAX_PATH_LENGTH];
+    char src_path[MAX_PATH_LENGTH];
+    char dst_path[MAX_PATH_LENGTH];
     int32 rel_len;
     char *name;
 
-    SNPRINTF(path_src, "%s/%s", src_base, relative_path);
-    if (!(dir = opendir(path_src))) {
+    SNPRINTF(src_path, "%s/%s", src_base, relative_path);
+    if (!(dir = opendir(src_path))) {
         return;
     }
 
@@ -123,10 +123,10 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
             continue;
         }
 
-        SNPRINTF(path_src, "%s/%s/%s", src_base, relative_path, name);
-        SNPRINTF(path_dst, "%s/%s/%s", dst_base, relative_path, name);
+        SNPRINTF(src_path, "%s/%s/%s", src_base, relative_path, name);
+        SNPRINTF(dst_path, "%s/%s/%s", dst_base, relative_path, name);
 
-        if (stat(path_src, &st_s) != 0 || stat(path_dst, &st_d) != 0) {
+        if (stat(src_path, &st_s) != 0 || stat(dst_path, &st_d) != 0) {
             continue;
         }
 
