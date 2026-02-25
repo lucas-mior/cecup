@@ -231,7 +231,7 @@ case "$target" in
     # vg_flags="$vg_flags --track-origins=yes"
     trace_on
     valgrind $vg_flags -s --tool=memcheck bin/$program 2>&1 \
-        | tee "valgrind_$(date +%s).txt"
+        | tee "valgrind.out.$(date +%s).txt"
     trace_off
     exit
     ;;
