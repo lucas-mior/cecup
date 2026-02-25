@@ -3,12 +3,14 @@
 # shellcheck disable=SC2086
 
 set -e
-program="cecup"
+program=$(basename "$(readlink -f "$(dirname "$0")")")
 script=$(basename "$0")
 DESTDIR="${DESTDIR:-}"
 # CC=clang
 
 target="${1:-build}"
+
+printf "========$RED $script $target ($program) $RES========"
 
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
