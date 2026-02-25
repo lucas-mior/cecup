@@ -203,7 +203,7 @@ bulk_sync_worker(gpointer user_data) {
                      ud->filepath, ud->filepath, ud->src_base, ud->dst_base);
         }
 
-        dispatch_log("+ %s", cmd);
+        dispatch_log("+ %s\n", cmd);
 
         if (pipe(pipe_output) < 0) {
             dispatch_log_error("Error creating pipe for stdout: %s.\n",
@@ -260,7 +260,7 @@ bulk_sync_worker(gpointer user_data) {
         while (1) {
             if (cecup_state.cancel_sync) {
                 kill(-child_pid, SIGTERM);
-                dispatch_log_error("Process cancelled: %s", ud->filepath);
+                dispatch_log_error("Process cancelled: %s\n", ud->filepath);
                 break;
             }
 
@@ -430,7 +430,7 @@ sync_worker(gpointer user_data) {
     }
     log_cmd[j] = '\0';
 
-    dispatch_log("+ %s", log_cmd);
+    dispatch_log("+ %s\n", log_cmd);
 
     if (pipe(pipe_output) < 0) {
         dispatch_log_error("Error creating pipe for stdout: %s.\n",
@@ -487,7 +487,7 @@ sync_worker(gpointer user_data) {
     while (1) {
         if (cecup_state.cancel_sync) {
             kill(-child_pid, SIGTERM);
-            dispatch_log_error("Rsync operation stopped by user.");
+            dispatch_log_error("rsync operation stopped by user.\n");
             break;
         }
 
@@ -633,13 +633,13 @@ out:
     }
 
     if (!cecup_state.cancel_sync) {
-        dispatch_log("Sync analysis finished.");
+        dispatch_log("Sync analysis finished.\n");
     }
 
 clean_exit:
     if (thread_data->is_preview && thread_data->scan_equal
         && !cecup_state.cancel_sync) {
-        dispatch_log("Scanning for equal files...");
+        dispatch_log("Scanning for equal files...\n");
         find_equal_files(thread_data->src_path, thread_data->dst_path, "");
     }
 
