@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <signal.h>
+#include <string.h>
+#include <errno.h>
 #include "util.c"
 #include "cecup.h"
 
@@ -205,7 +207,7 @@ bulk_sync_worker(gpointer user_data) {
                      ud->filepath, ud->filepath, ud->src_base, ud->dst_base);
         }
 
-        dispatch_log(cmd);
+        dispatch_log("+ %s", cmd);
 
         if (pipe(pipe_output) < 0) {
             dispatch_log_error("Error creating pipe for stdout: %s.\n",
@@ -344,6 +346,10 @@ bulk_sync_worker(gpointer user_data) {
         }
 
         if (!cecup_state.cancel_sync) {
+            char log_finished[MAX_PATH_LENGTH + 64];
+            SNPRINTF(log_finished, "Task finished: %s", ud->filepath);
+            dispatch_log(log_finished);
+
             remove_data = g_new0(UIUpdateData, 1);
             remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
             remove_data->filepath = g_strdup(ud->filepath);
@@ -442,7 +448,7 @@ sync_worker(gpointer user_data) {
     }
     log_cmd[j] = '\0';
 
-    dispatch_log(log_cmd);
+    dispatch_log("+ %s", log_cmd);
 
     if (pipe(pipe_output) == -1) {
         dispatch_log_error("Error creating pipe for stdout: %s.\n",
@@ -651,6 +657,10 @@ sync_worker(gpointer user_data) {
     if (error_position > 0) {
         error_buffer[error_position] = '\0';
         dispatch_log_error(error_buffer);
+    }
+
+    if (!cecup_state.cancel_sync) {
+        dispatch_log("rsync process finished.");
     }
 
 clean_exit:
