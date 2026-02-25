@@ -363,7 +363,7 @@ main(int32 argc, char *argv[]) {
     arena_destroy(cecup_state.row_arena);
     arena_destroy(cecup_state.ui_arena);
     g_mutex_clear(&cecup_state.ui_arena_mutex);
-    return 0;
+    exit(EXIT_SUCCESS);
 }
 
 static void
