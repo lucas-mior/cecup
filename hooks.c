@@ -189,10 +189,8 @@ refresh_ui_list(void) {
     }
 
     pretty_size = bytes_pretty(total_size_bytes);
-    SNPRINTF(
-        stats_text,
-        "New: %d | Update: %d | Hardlink: %d | Delete: %d | Total transfer: %s",
-        count_new, count_update, count_hard, count_delete, pretty_size);
+    SNPRINTF(stats_text, "🆕 %d | 🔄 %d | 🔗 %d | 🗑️ %d | 📦 %s", count_new,
+             count_update, count_hard, count_delete, pretty_size);
     gtk_label_set_text(GTK_LABEL(cecup_state.stats_label), stats_text);
     g_free(pretty_size);
 
