@@ -56,7 +56,7 @@ if [ "$CC" = "clang" ]; then
 fi
 
 case "$target" in
-"build|debug")
+"build"|"debug")
     trace_on
 
     ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
