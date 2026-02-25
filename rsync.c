@@ -568,38 +568,15 @@ out:
 
 static gpointer
 sync_worker(gpointer user_data) {
-    ThreadData *thread_data;
-    char cmd[4096];
-    char log_cmd[8192];
-    char *ex;
-    int32 i;
-    int32 j;
-    int32 line_len;
-    int32 last_space_index;
-    int32 word_len;
-    int32 pipe_output[2];
-    int32 pipe_error[2];
-    pid_t child_pid;
-    struct pollfd pipes[2];
-    char output_buffer[8192];
-    char error_buffer[8192];
-    int32 output_position;
-    int32 error_position;
-    int32 poll_return;
-    UIUpdateData *ready;
-    GThread *scanner_thread;
-    int32 total_files_preview;
-    int32 processed_files_preview;
-
-    thread_data = (ThreadData *)user_data;
-    scanner_thread = NULL;
-    total_files_preview = 0;
-    processed_files_preview = 0;
+    ThreadData *thread_data = (ThreadData *)user_data;
+    GThread *scanner_thread = NULL;
+    int32 total_files_preview = 0;
+    int32 processed_files_preview = 0;
 
     if (thread_data->is_preview) {
-        UIUpdateData *clear;
         g_mutex_lock(&cecup_state.ui_arena_mutex);
-        clear = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+        UIUpdateData *clear
+            = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
         memset64(clear, 0, SIZEOF(UIUpdateData));
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
@@ -611,11 +588,9 @@ sync_worker(gpointer user_data) {
     }
 
     if (thread_data->is_preview && thread_data->scan_equal) {
-        EqualScannerData *sd;
-
-        dispatch_log("Scanning for equal files (parallel)...\n");
         g_mutex_lock(&cecup_state.ui_arena_mutex);
-        sd = arena_push(cecup_state.ui_arena, SIZEOF(EqualScannerData));
+        EqualScannerData *sd
+            = arena_push(cecup_state.ui_arena, SIZEOF(EqualScannerData));
         memset64(sd, 0, SIZEOF(EqualScannerData));
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
@@ -625,6 +600,7 @@ sync_worker(gpointer user_data) {
             = g_thread_new("equal_scanner", equal_scanner_worker, sd);
     }
 
+    char *ex;
     if (access(cecup_state.ignore_path, F_OK) != -1) {
         ex = g_strdup_printf("--exclude-from='%s'", cecup_state.ignore_path);
     } else {
@@ -635,322 +611,316 @@ sync_worker(gpointer user_data) {
         ex = g_strdup("");
     }
 
+    char cmd[4096];
     SNPRINTF(cmd,
-             "rsync " RSYNC_UNIVERSAL_ARGS " --delete-excluded %s %s "
-             "'%s/' '%s/'",
+             "rsync " RSYNC_UNIVERSAL_ARGS
+             " --delete-excluded %s %s '%s/' '%s/'",
              thread_data->is_preview ? "--dry-run" : "", ex,
              thread_data->src_path, thread_data->dst_path);
     g_free(ex);
 
-    i = 0;
-    j = 0;
-    line_len = 0;
-    last_space_index = -1;
-
-    while (cmd[i] != '\0') {
-        log_cmd[j] = cmd[i];
-        if (cmd[i] == ' ') {
-            last_space_index = j;
-        }
-        line_len += 1;
-        if (line_len > 120 && last_space_index != -1) {
-            log_cmd[last_space_index] = '\n';
-            word_len = j - last_space_index;
-            for (int32 k = 0; k < word_len; k += 1) {
-                log_cmd[j + 4 - k] = log_cmd[j - k];
+    char log_cmd[8192];
+    {
+        int32 i = 0;
+        int32 j = 0;
+        int32 line_len = 0;
+        int32 last_space_index = -1;
+        while (cmd[i] != '\0') {
+            log_cmd[j] = cmd[i];
+            if (cmd[i] == ' ') {
+                last_space_index = j;
             }
-            log_cmd[last_space_index + 1] = ' ';
-            log_cmd[last_space_index + 2] = ' ';
-            log_cmd[last_space_index + 3] = ' ';
-            log_cmd[last_space_index + 4] = ' ';
-            j += 4;
-            line_len = word_len + 4;
-            last_space_index = -1;
+            line_len += 1;
+            if (line_len > 120 && last_space_index != -1) {
+                log_cmd[last_space_index] = '\n';
+                int32 word_len = j - last_space_index;
+                for (int32 k = 0; k < word_len; k += 1) {
+                    log_cmd[j + 4 - k] = log_cmd[j - k];
+                }
+                log_cmd[last_space_index + 1] = ' ';
+                log_cmd[last_space_index + 2] = ' ';
+                log_cmd[last_space_index + 3] = ' ';
+                log_cmd[last_space_index + 4] = ' ';
+                j += 4;
+                line_len = word_len + 4;
+                last_space_index = -1;
+            }
+            i += 1;
+            j += 1;
         }
-        i += 1;
-        j += 1;
+        log_cmd[j] = '\0';
     }
-    log_cmd[j] = '\0';
 
     dispatch_log("+ %s\n", log_cmd);
 
-    if (pipe(pipe_output) < 0) {
-        dispatch_log_error("Error creating pipe for stdout: %s.\n",
-                           strerror(errno));
-        goto clean_exit;
-    }
+    int32 pipe_output[2] = {-1, -1};
+    int32 pipe_error[2] = {-1, -1};
+    pid_t child_pid = -1;
 
-    if (pipe(pipe_error) < 0) {
-        dispatch_log_error("Error creating pipe for stderr: %s.\n",
-                           strerror(errno));
-        XCLOSE(&pipe_output[0]);
-        XCLOSE(&pipe_output[1]);
-        goto clean_exit;
-    }
-
-    switch (child_pid = fork()) {
-    case -1:
-        dispatch_log_error("Error forking: %s.\n", strerror(errno));
-        XCLOSE(&pipe_output[0]);
-        XCLOSE(&pipe_output[1]);
-        XCLOSE(&pipe_error[0]);
-        XCLOSE(&pipe_error[1]);
-        goto clean_exit;
-    case 0:
-        if (setpgid(0, 0) < 0) {
-            fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
-            exit(EXIT_FAILURE);
+    do {
+        if (pipe(pipe_output) < 0) {
+            dispatch_log_error("Error creating pipe for stdout: %s.\n",
+                               strerror(errno));
+            break;
         }
-        XCLOSE(&pipe_output[0]);
-        XCLOSE(&pipe_error[0]);
-        if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
-            fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
-            exit(EXIT_FAILURE);
+
+        if (pipe(pipe_error) < 0) {
+            dispatch_log_error("Error creating pipe for stderr: %s.\n",
+                               strerror(errno));
+            break;
         }
-        if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
-            fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
-            exit(EXIT_FAILURE);
+
+        child_pid = fork();
+        if (child_pid == -1) {
+            dispatch_log_error("Error forking: %s.\n", strerror(errno));
+            break;
         }
-        XCLOSE(&pipe_output[1]);
-        XCLOSE(&pipe_error[1]);
-        execl("/bin/sh", "sh", "-c", cmd, NULL);
-        fprintf(stderr, "Error: execl failed: %s.\n", strerror(errno));
-        exit(EXIT_FAILURE);
-    default:
-        break;
-    }
 
-    XCLOSE(&pipe_output[1]);
-    XCLOSE(&pipe_error[1]);
-
-    pipes[0].fd = pipe_output[0];
-    pipes[0].events = POLLIN;
-    pipes[1].fd = pipe_error[0];
-    pipes[1].events = POLLIN;
-
-    output_position = 0;
-    error_position = 0;
-
-    while (1) {
-        if (cecup_state.cancel_sync) {
-            if (kill(-child_pid, SIGTERM) < 0) {
-                dispatch_log_error("Error kill process group: %s.\n",
-                                   strerror(errno));
+        if (child_pid == 0) {
+            if (setpgid(0, 0) < 0) {
+                fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
+                exit(EXIT_FAILURE);
             }
-            dispatch_log_error("rsync operation stopped by user.\n");
-            break;
+            XCLOSE(&pipe_output[0]);
+            XCLOSE(&pipe_error[0]);
+            if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
+                fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
+                fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            XCLOSE(&pipe_output[1]);
+            XCLOSE(&pipe_error[1]);
+            execl("/bin/sh", "sh", "-c", cmd, NULL);
+            fprintf(stderr, "Error: execl failed: %s.\n", strerror(errno));
+            exit(EXIT_FAILURE);
         }
 
-        switch (poll_return = poll(pipes, 2, 100)) {
-        case -1:
-            dispatch_log_error("Error in poll: %s.\n", strerror(errno));
-            goto out;
-        case 0:
-            continue;
-        default:
-            break;
-        }
+        XCLOSE(&pipe_output[1]);
+        XCLOSE(&pipe_error[1]);
 
-        if (pipes[0].revents & POLLIN) {
-            char buffer[2048];
-            int64 r;
+        struct pollfd pipes[2];
+        pipes[0].fd = pipe_output[0];
+        pipes[0].events = POLLIN;
+        pipes[1].fd = pipe_error[0];
+        pipes[1].events = POLLIN;
 
-            if ((r = read64(pipe_output[0], buffer, SIZEOF(buffer))) <= 0) {
-                if (r < 0) {
-                    dispatch_log_error("Error reading stdout pipe: %s.\n",
+        char output_buffer[8192];
+        char error_buffer[8192];
+        int32 output_position = 0;
+        int32 error_position = 0;
+
+        while (1) {
+            if (cecup_state.cancel_sync) {
+                if (kill(-child_pid, SIGTERM) < 0) {
+                    dispatch_log_error("Error kill process group: %s.\n",
                                        strerror(errno));
                 }
-                pipes[0].fd = -1;
-                goto output_end;
+                dispatch_log_error("rsync operation stopped by user.\n");
+                break;
             }
 
-            for (int64 k = 0; k < r; k += 1) {
-                char *p_pos;
-                char *space_pos;
-                char type_char;
+            int32 poll_return = poll(pipes, 2, 100);
+            if (poll_return == -1) {
+                dispatch_log_error("Error in poll: %s.\n", strerror(errno));
+                break;
+            } else if (poll_return == 0) {
+                continue;
+            }
 
-                if (buffer[k] != '\n' && buffer[k] != '\r'
-                    && output_position < (int32)SIZEOF(output_buffer) - 1) {
-                    output_buffer[output_position] = buffer[k];
-                    output_position += 1;
-                    continue;
-                }
-
-                output_buffer[output_position] = '\0';
-                output_position = 0;
-
-                if (output_buffer[0] == '\0') {
-                    continue;
-                }
-
-                if ((p_pos = strstr(output_buffer, "%"))) {
-                    char *start;
-                    start = p_pos;
-                    while (start > output_buffer && isdigit(*(start - 1))) {
-                        start -= 1;
-                    }
-                    dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
-                                      atof(start) / 100.0);
-                }
-
-                if (thread_data->is_preview == 0) {
-                    dispatch_log(output_buffer);
-                    continue;
-                }
-
-                if (strncmp(output_buffer, "*deleting", 9) == 0) {
-                    char *relative_path;
-                    char *full_src;
-                    char *full_dst;
-                    struct stat st_s;
-                    struct stat st_d;
-                    int64 sz;
-                    enum CecupReason reason;
-
-                    relative_path = output_buffer + 10;
-                    while (isspace(*relative_path)) {
-                        relative_path += 1;
-                    }
-
-                    full_src = g_build_filename(thread_data->src_path,
-                                                relative_path, NULL);
-                    full_dst = g_build_filename(thread_data->dst_path,
-                                                relative_path, NULL);
-
-                    if (lstat(full_dst, &st_d) == 0) {
-                        sz = st_d.st_size;
-                    } else {
-                        dispatch_log_error("Error lstat %s: %s.\n", full_dst,
+            if (pipes[0].revents & POLLIN) {
+                char buffer[2048];
+                int64 r = read64(pipe_output[0], buffer, SIZEOF(buffer));
+                if (r <= 0) {
+                    if (r < 0) {
+                        dispatch_log_error("Error reading stdout pipe: %s.\n",
                                            strerror(errno));
-                        sz = 0;
                     }
-
-                    if (lstat(full_src, &st_s) == 0) {
-                        reason = UI_REASON_IGNORED;
-                    } else {
-                        reason = UI_REASON_MISSING;
-                    }
-
-                    dispatch_tree(1, UI_ACTION_DELETE, relative_path, sz,
-                                  reason);
-                    g_free(full_src);
-                    g_free(full_dst);
-                    continue;
-                }
-
-                if (!(space_pos = strchr(output_buffer, ' '))) {
-                    continue;
-                }
-
-                type_char = output_buffer[0];
-                if (type_char != '>' && type_char != '.' && type_char != 'h'
-                    && type_char != 'c') {
-                    continue;
-                }
-
-                char *relative_path_entry;
-                enum CecupAction action;
-                char *full_src_path;
-                struct stat st_path;
-                int64 sz_path;
-
-                relative_path_entry = space_pos + 1;
-                while (isspace(*relative_path_entry)) {
-                    relative_path_entry += 1;
-                }
-
-                action = UI_ACTION_UPDATE;
-
-                if (strncmp(output_buffer, "hf", 2) == 0) {
-                    action = UI_ACTION_HARDLINK;
-                } else if (strncmp(output_buffer, "cd", 2) == 0
-                           || strncmp(output_buffer, ">f+++++", 7) == 0) {
-                    action = UI_ACTION_NEW;
-                }
-
-                full_src_path = g_build_filename(thread_data->src_path,
-                                                 relative_path_entry, NULL);
-                if (lstat(full_src_path, &st_path) < 0) {
-                    dispatch_log_error("Error lstat %s: %s.\n", full_src_path,
-                                       strerror(errno));
-                    sz_path = 0;
+                    pipes[0].fd = -1;
                 } else {
-                    sz_path = st_path.st_size;
-                }
+                    for (int64 k = 0; k < r; k += 1) {
+                        if (buffer[k] != '\n' && buffer[k] != '\r'
+                            && output_position
+                                   < (int32)SIZEOF(output_buffer) - 1) {
+                            output_buffer[output_position] = buffer[k];
+                            output_position += 1;
+                            continue;
+                        }
 
-                dispatch_tree(0, action, relative_path_entry, sz_path,
-                              (enum CecupReason)action);
-                g_free(full_src_path);
+                        output_buffer[output_position] = '\0';
+                        output_position = 0;
 
-                processed_files_preview += 1;
-                if (total_files_preview > 0) {
-                    dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                      (double)processed_files_preview
-                                          / total_files_preview);
-                }
-            }
-        } else if (pipes[0].revents & (POLLHUP | POLLERR)) {
-            pipes[0].fd = -1;
-        }
+                        if (output_buffer[0] == '\0') {
+                            continue;
+                        }
 
-    output_end:
+                        char *p_pos;
+                        if ((p_pos = strstr(output_buffer, "%"))) {
+                            char *start = p_pos;
+                            while (start > output_buffer
+                                   && isdigit(*(start - 1))) {
+                                start -= 1;
+                            }
+                            dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
+                                              atof(start) / 100.0);
+                        }
 
-        if (pipes[1].revents & POLLIN) {
-            char buffer[2048];
-            int64 r = read64(pipe_error[0], buffer, SIZEOF(buffer));
-            if (r < 0) {
-                dispatch_log_error("Error reading stderr pipe: %s.\n",
-                                   strerror(errno));
-                pipes[1].fd = -1;
-            } else if (r > 0) {
-                for (int64 k = 0; k < r; k += 1) {
-                    if (buffer[k] == '\n'
-                        && error_position == SIZEOF(error_buffer) - 1) {
-                        error_buffer[error_position] = '\0';
-                        dispatch_log_error(error_buffer);
-                        error_position = 0;
-                    } else {
-                        error_buffer[error_position] = buffer[k];
-                        error_position += 1;
+                        if (thread_data->is_preview == 0) {
+                            dispatch_log(output_buffer);
+                            continue;
+                        }
+
+                        if (strncmp(output_buffer, "*deleting", 9) == 0) {
+                            char *relative_path = output_buffer + 10;
+                            while (isspace(*relative_path)) {
+                                relative_path += 1;
+                            }
+
+                            char *full_src = g_build_filename(
+                                thread_data->src_path, relative_path, NULL);
+                            char *full_dst = g_build_filename(
+                                thread_data->dst_path, relative_path, NULL);
+
+                            struct stat st_s;
+                            struct stat st_d;
+                            int64 sz = (lstat(full_dst, &st_d) == 0)
+                                           ? st_d.st_size
+                                           : 0;
+                            if (sz == 0 && errno != ENOENT && errno != 0) {
+                                dispatch_log_error("Error lstat %s: %s.\n",
+                                                   full_dst, strerror(errno));
+                            }
+                            enum CecupReason reason
+                                = (lstat(full_src, &st_s) == 0)
+                                      ? UI_REASON_IGNORED
+                                      : UI_REASON_MISSING;
+
+                            dispatch_tree(1, UI_ACTION_DELETE, relative_path,
+                                          sz, reason);
+                            g_free(full_src);
+                            g_free(full_dst);
+                            continue;
+                        }
+
+                        char *space_pos;
+                        if (!(space_pos = strchr(output_buffer, ' '))) {
+                            continue;
+                        }
+
+                        char type_char = output_buffer[0];
+                        if (type_char != '>' && type_char != '.'
+                            && type_char != 'h' && type_char != 'c') {
+                            continue;
+                        }
+
+                        char *relative_path_entry = space_pos + 1;
+                        while (isspace(*relative_path_entry)) {
+                            relative_path_entry += 1;
+                        }
+
+                        enum CecupAction action = UI_ACTION_UPDATE;
+                        if (strncmp(output_buffer, "hf", 2) == 0) {
+                            action = UI_ACTION_HARDLINK;
+                        } else if (strncmp(output_buffer, "cd", 2) == 0
+                                   || strncmp(output_buffer, ">f+++++", 7)
+                                          == 0) {
+                            action = UI_ACTION_NEW;
+                        }
+
+                        char *full_src_path = g_build_filename(
+                            thread_data->src_path, relative_path_entry, NULL);
+                        struct stat st_path;
+                        int64 sz_path = 0;
+                        if (lstat(full_src_path, &st_path) < 0) {
+                            dispatch_log_error("Error lstat %s: %s.\n",
+                                               full_src_path, strerror(errno));
+                        } else {
+                            sz_path = st_path.st_size;
+                        }
+
+                        dispatch_tree(0, action, relative_path_entry, sz_path,
+                                      (enum CecupReason)action);
+                        g_free(full_src_path);
+
+                        processed_files_preview += 1;
+                        if (total_files_preview > 0) {
+                            dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                                              (double)processed_files_preview
+                                                  / total_files_preview);
+                        }
                     }
                 }
-            } else {
+            } else if (pipes[0].revents & (POLLHUP | POLLERR)) {
+                pipes[0].fd = -1;
+            }
+
+            if (pipes[1].revents & POLLIN) {
+                char buffer[2048];
+                int64 r = read64(pipe_error[0], buffer, SIZEOF(buffer));
+                if (r <= 0) {
+                    if (r < 0) {
+                        dispatch_log_error("Error reading stderr pipe: %s.\n",
+                                           strerror(errno));
+                    }
+                    pipes[1].fd = -1;
+                } else {
+                    for (int64 k = 0; k < r; k += 1) {
+                        if (buffer[k] == '\n'
+                            || error_position == SIZEOF(error_buffer) - 1) {
+                            error_buffer[error_position] = '\0';
+                            dispatch_log_error(error_buffer);
+                            error_position = 0;
+                        } else {
+                            error_buffer[error_position] = buffer[k];
+                            error_position += 1;
+                        }
+                    }
+                }
+            } else if (pipes[1].revents & (POLLHUP | POLLERR)) {
                 pipes[1].fd = -1;
             }
-        } else if (pipes[1].revents & (POLLHUP | POLLERR)) {
-            pipes[1].fd = -1;
+
+            if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
+                break;
+            }
         }
 
-        if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
-            break;
+        if (child_pid != -1) {
+            if (waitpid(child_pid, NULL, 0) < 0) {
+                dispatch_log_error("Error waiting for child: %s.\n",
+                                   strerror(errno));
+            }
+
+            if (!cecup_state.cancel_sync) {
+                dispatch_log("Sync analysis finished.\n");
+            }
         }
-    }
-out:
+
+    } while (0);
 
     XCLOSE(&pipe_output[0]);
+    XCLOSE(&pipe_output[1]);
     XCLOSE(&pipe_error[0]);
-    if (waitpid(child_pid, NULL, 0) < 0) {
-        dispatch_log_error("Error waiting for child: %s.\n", strerror(errno));
-    }
+    XCLOSE(&pipe_error[1]);
 
-    if (!cecup_state.cancel_sync) {
-        dispatch_log("Sync analysis finished.\n");
-    }
-
-clean_exit:
     if (scanner_thread != NULL) {
         g_thread_join(scanner_thread);
     }
     dispatch_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);
     dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    ready = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
-    memset64(ready, 0, SIZEOF(UIUpdateData));
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    {
+        g_mutex_lock(&cecup_state.ui_arena_mutex);
+        UIUpdateData *ready
+            = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+        memset64(ready, 0, SIZEOF(UIUpdateData));
+        g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
-    ready->type = DATA_TYPE_ENABLE_BUTTONS;
-    g_idle_add(update_ui_handler, ready);
+        ready->type = DATA_TYPE_ENABLE_BUTTONS;
+        g_idle_add(update_ui_handler, ready);
+    }
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     arena_pop(cecup_state.ui_arena, thread_data);
