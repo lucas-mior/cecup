@@ -100,6 +100,7 @@ typedef struct CecupRow {
     enum CecupAction dst_action;
     char *src_path;
     char *dst_path;
+    char *link_target;
     char *size_text;
     int64 size_raw;
     char *src_color;
@@ -179,6 +180,7 @@ typedef struct UIUpdateData {
     char *message;
     enum CecupAction action;
     char *filepath;
+    char *link_target;
     enum CecupReason reason;
     char *src_base;
     char *dst_base;

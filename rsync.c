@@ -123,10 +123,11 @@ dispatch_progress(enum DataType type, double fraction) {
 }
 
 static void
-dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
-              enum CecupReason reason) {
+dispatch_tree(int32 side, enum CecupAction action, char *path,
+              char *link_target, int64 size, enum CecupReason reason) {
     UIUpdateData *data;
     int64 path_len;
+    int64 target_len;
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     data = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
@@ -135,6 +136,12 @@ dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
     path_len = strlen64(path);
     data->filepath = arena_push(cecup_state.ui_arena, path_len + 1);
     memcpy64(data->filepath, path, path_len + 1);
+
+    if (link_target) {
+        target_len = strlen64(link_target);
+        data->link_target = arena_push(cecup_state.ui_arena, target_len + 1);
+        memcpy64(data->link_target, link_target, target_len + 1);
+    }
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     data->type = DATA_TYPE_TREE_ROW;
@@ -282,8 +289,8 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path) {
             if (lstat(dst_full, &stat_dst) == 0) {
                 if (stat_srt.st_size == stat_dst.st_size
                     && stat_srt.st_mtime == stat_dst.st_mtime) {
-                    dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, stat_srt.st_size,
-                                  UI_REASON_EQUAL);
+                    dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, NULL,
+                                  stat_srt.st_size, UI_REASON_EQUAL);
                 }
             }
         }
@@ -356,6 +363,9 @@ bulk_sync_worker(gpointer user_data) {
             }
             if (ud->diff_tool) {
                 arena_pop(cecup_state.ui_arena, ud->diff_tool);
+            }
+            if (ud->link_target) {
+                arena_pop(cecup_state.ui_arena, ud->link_target);
             }
             arena_pop(cecup_state.ui_arena, ud);
             g_mutex_unlock(&cecup_state.ui_arena_mutex);
@@ -548,6 +558,9 @@ bulk_sync_worker(gpointer user_data) {
         }
         if (ud->diff_tool) {
             arena_pop(cecup_state.ui_arena, ud->diff_tool);
+        }
+        if (ud->link_target) {
+            arena_pop(cecup_state.ui_arena, ud->link_target);
         }
         arena_pop(cecup_state.ui_arena, ud);
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
@@ -853,7 +866,7 @@ sync_worker(gpointer user_data) {
                             }
 
                             dispatch_tree(1, UI_ACTION_DELETE, relative_path,
-                                          size_val, deletion_reason);
+                                          NULL, size_val, deletion_reason);
                             continue;
                         }
 
@@ -874,8 +887,14 @@ sync_worker(gpointer user_data) {
                         }
 
                         enum CecupAction action_val = UI_ACTION_UPDATE;
+                        char *link_target = NULL;
                         if (strncmp(output_buffer, "hf", 2) == 0) {
                             action_val = UI_ACTION_HARDLINK;
+                            char *sep = strstr(relative_path_entry, " => ");
+                            if (sep) {
+                                *sep = '\0';
+                                link_target = sep + 4;
+                            }
                         } else if (strncmp(output_buffer, "cd", 2) == 0
                                    || strncmp(output_buffer, ">f+++++", 7)
                                           == 0) {
@@ -897,7 +916,7 @@ sync_worker(gpointer user_data) {
                         }
 
                         dispatch_tree(0, action_val, relative_path_entry,
-                                      sz_path_val,
+                                      link_target, sz_path_val,
                                       (enum CecupReason)action_val);
 
                         processed_files_preview += 1;
@@ -1015,6 +1034,9 @@ diff_worker(gpointer user_data) {
     }
     if (ud->diff_tool) {
         arena_pop(cecup_state.ui_arena, ud->diff_tool);
+    }
+    if (ud->link_target) {
+        arena_pop(cecup_state.ui_arena, ud->link_target);
     }
     arena_pop(cecup_state.ui_arena, ud);
     g_mutex_unlock(&cecup_state.ui_arena_mutex);

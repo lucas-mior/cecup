@@ -36,6 +36,9 @@ free_task_list(GPtrArray *tasks) {
         if (task->message) {
             arena_pop(cecup_state.ui_arena, task->message);
         }
+        if (task->link_target) {
+            arena_pop(cecup_state.ui_arena, task->link_target);
+        }
         arena_pop(cecup_state.ui_arena, task);
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
     }
@@ -91,6 +94,14 @@ get_target_tasks(int32 side, char *clicked_path,
                 dst_len = strlen64(shared_dst) + 1;
                 task->dst_base = arena_push(cecup_state.ui_arena, dst_len);
                 memcpy64(task->dst_base, shared_dst, dst_len);
+
+                if (row->link_target) {
+                    int64 target_len;
+                    target_len = strlen64(row->link_target) + 1;
+                    task->link_target
+                        = arena_push(cecup_state.ui_arena, target_len);
+                    memcpy64(task->link_target, row->link_target, target_len);
+                }
                 g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
                 task->action = action;
@@ -1085,7 +1096,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
         int32 side;
         int32 view_col_idx;
         char *tip_text;
-        char tip_text_buffer[4096];
+        char tip_text_buffer[8192];
         int64 tip_text_length;
         int32 is_tip_text_from_arena;
 
@@ -1126,8 +1137,15 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 }
                 tip_text = xstrdup(strings[action]);
             } else if (view_col_idx == 2) {
-                tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", file_path,
-                                           reason_strings[row->reason]);
+                if (row->link_target) {
+                    tip_text_length = SNPRINTF(tip_text_buffer, "%s -> %s: %s",
+                                               file_path, row->link_target,
+                                               reason_strings[row->reason]);
+                } else {
+                    tip_text_length
+                        = SNPRINTF(tip_text_buffer, "%s: %s", file_path,
+                                   reason_strings[row->reason]);
+                }
                 g_mutex_lock(&cecup_state.ui_arena_mutex);
                 tip_text
                     = arena_push(cecup_state.ui_arena, tip_text_length + 1);
@@ -1241,6 +1259,13 @@ update_ui_handler(gpointer user_data) {
         row->dst_color = bg_dst;
         row->reason = data->reason;
 
+        if (data->link_target) {
+            int64 target_len;
+            target_len = strlen64(data->link_target) + 1;
+            row->link_target = arena_push(cecup_state.row_arena, target_len);
+            memcpy64(row->link_target, data->link_target, target_len);
+        }
+
         if (strcmp(src_path_final, "-") == 0) {
             row->src_path = arena_push(cecup_state.row_arena, 2);
             memcpy64(row->src_path, "-", 2);
@@ -1352,6 +1377,9 @@ update_ui_handler(gpointer user_data) {
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     if (data->filepath) {
         arena_pop(cecup_state.ui_arena, data->filepath);
+    }
+    if (data->link_target) {
+        arena_pop(cecup_state.ui_arena, data->link_target);
     }
     if (data->message) {
         arena_pop(cecup_state.ui_arena, data->message);
