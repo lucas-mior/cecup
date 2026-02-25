@@ -194,7 +194,7 @@ case "$target" in
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1"
             cmdline="$cmdline $flags -o /tmp/$src.exe $src"
         else
-            cmdline="$CC $CPPFLAGS $CFLAGS -Wno-unused-variable -DTESTING_$name=1"
+            cmdline="$CC $CPPFLAGS $CFLAGS -Wno-unused-variable -DTESTING_$name=1 $LDFLAGS"
             cmdline="$cmdline $flags -o /tmp/$src.exe $src"
         fi
 

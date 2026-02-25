@@ -19,6 +19,7 @@
 #define CONFIG_C
 
 #include "cecup.h"
+#include "util.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_config 1
@@ -138,7 +139,7 @@ save_config(void) {
 }
 
 #if TESTING_config
-#include <assert.h>
+#include "assert.c"
 #include <string.h>
 #include <stdio.h>
 

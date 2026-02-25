@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if !defined(HOOKS_C)
+#define HOOKS_C
+
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include "cecup.h"
@@ -1494,3 +1497,5 @@ main(void) {
 }
 
 #endif
+
+#endif /* HOOKS_C */

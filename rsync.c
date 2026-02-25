@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if !defined(RSYNC_C)
+#define RSYNC_C
+
 #include <gtk/gtk.h>
 #include <ctype.h>
 #include <sys/wait.h>
@@ -1240,3 +1243,5 @@ main(void) {
 }
 
 #endif
+
+#endif /* RSYNC_C */
