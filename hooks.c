@@ -149,8 +149,10 @@ refresh_ui_list(void) {
     gtk_list_store_clear(cecup_state.store);
 
     if (cecup_state.rows_count > 0) {
+        system("dunstify starting_qsort");
         qsort(cecup_state.rows, cecup_state.rows_count, sizeof(CecupRow *),
               cecup_row_compare);
+        system("dunstify qsort_finished");
     }
 
     for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
