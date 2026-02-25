@@ -31,12 +31,12 @@ dispatch_log(char *format, ...) {
     char buffer[8192];
 
     va_start(va_args, format);
-    vsnprintf(buffer, sizeof(buffer), format, va_args);
+    vsnprintf(buffer, SIZEOF(buffer), format, va_args);
     va_end(va_args);
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
-    data = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset64(data, 0, sizeof(UIUpdateData));
+    data = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+    memset64(data, 0, SIZEOF(UIUpdateData));
 
     int64 msg_len = strlen64(buffer) + 1;
     data->message = arena_push(cecup_state.ui_arena, msg_len);
@@ -81,13 +81,13 @@ dispatch_log_error(char *format, ...) {
     char message_buffer[8192];
 
     va_start(variable_arguments, format);
-    vsnprintf(message_buffer, sizeof(message_buffer), format,
+    vsnprintf(message_buffer, SIZEOF(message_buffer), format,
               variable_arguments);
     va_end(variable_arguments);
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
-    data = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset64(data, 0, sizeof(UIUpdateData));
+    data = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+    memset64(data, 0, SIZEOF(UIUpdateData));
 
     int64 msg_len = strlen64(message_buffer) + 1;
     data->message = arena_push(cecup_state.ui_arena, msg_len);
@@ -103,8 +103,8 @@ dispatch_progress(enum DataType type, double fraction) {
     UIUpdateData *data;
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
-    data = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset64(data, 0, sizeof(UIUpdateData));
+    data = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+    memset64(data, 0, SIZEOF(UIUpdateData));
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     data->type = type;
@@ -119,8 +119,8 @@ dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
     UIUpdateData *data;
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
-    data = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset64(data, 0, sizeof(UIUpdateData));
+    data = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+    memset64(data, 0, SIZEOF(UIUpdateData));
 
     int64 path_len = strlen64(path) + 1;
     data->filepath = arena_push(cecup_state.ui_arena, path_len);
@@ -406,13 +406,13 @@ bulk_sync_worker(gpointer user_data) {
 
             if (pipes[0].revents & POLLIN) {
                 char buffer[2048];
-                int64 r = read64(pipe_output[0], buffer, sizeof(buffer));
+                int64 r = read64(pipe_output[0], buffer, SIZEOF(buffer));
                 if (r < 0) {
                     pipes[0].fd = -1;
                 } else if (r > 0) {
                     for (int64 k = 0; k < r; k += 1) {
                         if (buffer[k] == '\n'
-                            || output_position == sizeof(output_buffer) - 1) {
+                            || output_position == SIZEOF(output_buffer) - 1) {
                             output_buffer[output_position] = '\0';
                             dispatch_log(output_buffer);
                             output_position = 0;
@@ -430,13 +430,13 @@ bulk_sync_worker(gpointer user_data) {
 
             if (pipes[1].revents & POLLIN) {
                 char buffer[2048];
-                int64 r = read64(pipe_error[0], buffer, sizeof(buffer));
+                int64 r = read64(pipe_error[0], buffer, SIZEOF(buffer));
                 if (r < 0) {
                     pipes[1].fd = -1;
                 } else if (r > 0) {
                     for (int64 k = 0; k < r; k += 1) {
                         if (buffer[k] == '\n'
-                            || error_position == sizeof(error_buffer) - 1) {
+                            || error_position == SIZEOF(error_buffer) - 1) {
                             error_buffer[error_position] = '\0';
                             dispatch_log_error(error_buffer);
                             error_position = 0;
@@ -467,8 +467,8 @@ bulk_sync_worker(gpointer user_data) {
         if (!cecup_state.cancel_sync) {
             g_mutex_lock(&cecup_state.ui_arena_mutex);
             remove_data
-                = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-            memset64(remove_data, 0, sizeof(UIUpdateData));
+                = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+            memset64(remove_data, 0, SIZEOF(UIUpdateData));
 
             int64 path_len = strlen64(ud->filepath) + 1;
             remove_data->filepath = arena_push(cecup_state.ui_arena, path_len);
@@ -501,8 +501,8 @@ bulk_sync_worker(gpointer user_data) {
 out:
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
-    ready = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset64(ready, 0, sizeof(UIUpdateData));
+    ready = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+    memset64(ready, 0, SIZEOF(UIUpdateData));
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
@@ -545,8 +545,8 @@ sync_worker(gpointer user_data) {
     if (thread_data->is_preview) {
         UIUpdateData *clear;
         g_mutex_lock(&cecup_state.ui_arena_mutex);
-        clear = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-        memset64(clear, 0, sizeof(UIUpdateData));
+        clear = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+        memset64(clear, 0, SIZEOF(UIUpdateData));
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
         clear->type = DATA_TYPE_CLEAR_TREES;
@@ -561,8 +561,8 @@ sync_worker(gpointer user_data) {
 
         dispatch_log("Scanning for equal files (parallel)...\n");
         g_mutex_lock(&cecup_state.ui_arena_mutex);
-        sd = arena_push(cecup_state.ui_arena, sizeof(EqualScannerData));
-        memset64(sd, 0, sizeof(EqualScannerData));
+        sd = arena_push(cecup_state.ui_arena, SIZEOF(EqualScannerData));
+        memset64(sd, 0, SIZEOF(EqualScannerData));
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
         strncpy(sd->src_path, thread_data->src_path, MAX_PATH_LENGTH - 1);
@@ -685,13 +685,13 @@ sync_worker(gpointer user_data) {
 
         if (pipes[0].revents & POLLIN) {
             char buffer[2048];
-            int64 r = read64(pipe_output[0], buffer, sizeof(buffer));
+            int64 r = read64(pipe_output[0], buffer, SIZEOF(buffer));
             if (r < 0) {
                 pipes[0].fd = -1;
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
                     if (buffer[k] != '\n' && buffer[k] != '\r'
-                        && output_position < (int32)sizeof(output_buffer) - 1) {
+                        && output_position < (int32)SIZEOF(output_buffer) - 1) {
                         output_buffer[output_position] = buffer[k];
                         output_position += 1;
                         continue;
@@ -809,13 +809,13 @@ sync_worker(gpointer user_data) {
 
         if (pipes[1].revents & POLLIN) {
             char buffer[2048];
-            int64 r = read64(pipe_error[0], buffer, sizeof(buffer));
+            int64 r = read64(pipe_error[0], buffer, SIZEOF(buffer));
             if (r < 0) {
                 pipes[1].fd = -1;
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
                     if (buffer[k] == '\n'
-                        && error_position == sizeof(error_buffer) - 1) {
+                        && error_position == SIZEOF(error_buffer) - 1) {
                         error_buffer[error_position] = '\0';
                         dispatch_log_error(error_buffer);
                         error_position = 0;
@@ -855,8 +855,8 @@ clean_exit:
     dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
-    ready = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-    memset64(ready, 0, sizeof(UIUpdateData));
+    ready = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+    memset64(ready, 0, SIZEOF(UIUpdateData));
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     ready->type = DATA_TYPE_ENABLE_BUTTONS;

@@ -68,8 +68,8 @@ get_target_tasks(int32 side, char *clicked_path,
 
             if (g_strcmp0(f_path, "-") != 0) {
                 g_mutex_lock(&cecup_state.ui_arena_mutex);
-                task = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-                memset64(task, 0, sizeof(UIUpdateData));
+                task = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+                memset64(task, 0, SIZEOF(UIUpdateData));
 
                 int64 path_len = strlen64(f_path) + 1;
                 task->filepath = arena_push(cecup_state.ui_arena, path_len);
@@ -95,8 +95,8 @@ get_target_tasks(int32 side, char *clicked_path,
         UIUpdateData *task;
 
         g_mutex_lock(&cecup_state.ui_arena_mutex);
-        task = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-        memset64(task, 0, sizeof(UIUpdateData));
+        task = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+        memset64(task, 0, SIZEOF(UIUpdateData));
 
         int64 path_len = strlen64(clicked_path) + 1;
         task->filepath = arena_push(cecup_state.ui_arena, path_len);
@@ -245,7 +245,7 @@ refresh_ui_list(void) {
 
     if (cecup_state.visible_count > 0) {
         qsort64(cecup_state.visible_rows, cecup_state.visible_count,
-                sizeof(CecupRow *), cecup_row_compare);
+                SIZEOF(CecupRow *), cecup_row_compare);
     }
 
     current_store_count = gtk_tree_model_iter_n_children(
@@ -661,8 +661,8 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     gtk_widget_set_sensitive(cecup_state.stop_button, TRUE);
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
-    td = arena_push(cecup_state.ui_arena, sizeof(ThreadData));
-    memset64(td, 0, sizeof(ThreadData));
+    td = arena_push(cecup_state.ui_arena, SIZEOF(ThreadData));
+    memset64(td, 0, SIZEOF(ThreadData));
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     td->is_preview = 1;
@@ -802,8 +802,8 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
         gtk_widget_set_sensitive(cecup_state.stop_button, TRUE);
 
         g_mutex_lock(&cecup_state.ui_arena_mutex);
-        thread_data = arena_push(cecup_state.ui_arena, sizeof(ThreadData));
-        memset64(thread_data, 0, sizeof(ThreadData));
+        thread_data = arena_push(cecup_state.ui_arena, SIZEOF(ThreadData));
+        memset64(thread_data, 0, SIZEOF(ThreadData));
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
         thread_data->is_preview = 0;
@@ -909,8 +909,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             action = (side == 0) ? row->src_action : row->dst_action;
 
             g_mutex_lock(&cecup_state.ui_arena_mutex);
-            ud = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
-            memset64(ud, 0, sizeof(UIUpdateData));
+            ud = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+            memset64(ud, 0, SIZEOF(UIUpdateData));
             int64 path_len = strlen64(f_path) + 1;
             ud->filepath = arena_push(cecup_state.ui_arena, path_len);
             memcpy64(ud->filepath, f_path, path_len);
@@ -1113,8 +1113,8 @@ update_ui_handler(gpointer user_data) {
             }
         }
 
-        row = arena_push(cecup_state.row_arena, sizeof(CecupRow));
-        memset64(row, 0, sizeof(CecupRow));
+        row = arena_push(cecup_state.row_arena, SIZEOF(CecupRow));
+        memset64(row, 0, SIZEOF(CecupRow));
         row->src_action = action_src;
         row->dst_action = action_dst;
 
@@ -1217,10 +1217,10 @@ update_ui_handler(gpointer user_data) {
         /* Re-allocate the initial arrays from the fresh arena */
         cecup_state.rows
             = arena_push(cecup_state.row_arena,
-                         cecup_state.rows_capacity*sizeof(CecupRow *));
+                         cecup_state.rows_capacity*SIZEOF(CecupRow *));
         cecup_state.visible_rows
             = arena_push(cecup_state.row_arena,
-                         cecup_state.rows_capacity*sizeof(CecupRow *));
+                         cecup_state.rows_capacity*SIZEOF(CecupRow *));
 
         cecup_state.rows_count = 0;
         cecup_state.visible_count = 0;
