@@ -4,6 +4,13 @@
 #include <gtk/gtk.h>
 #include "generic.c"
 
+#define EMOJI_NEW "➕"
+#define EMOJI_LINK "🔗"
+#define EMOJI_UPDATE "➡️"
+#define EMOJI_EQUAL "🟰"
+#define EMOJI_DELETE "❌"
+#define EMOJI_IGNORE "💤"
+
 #define MAX_PATH_LENGTH 4096
 
 enum CecupAction {

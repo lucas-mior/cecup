@@ -93,12 +93,12 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(header_vbox), btn_hbox, FALSE, FALSE, 5);
 
     filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    cecup_state.filter_new = gtk_toggle_button_new_with_label("Show 🆕");
-    cecup_state.filter_hard = gtk_toggle_button_new_with_label("Show 🔗");
-    cecup_state.filter_update = gtk_toggle_button_new_with_label("Show 🔄");
-    cecup_state.filter_equal = gtk_toggle_button_new_with_label("Show ✅");
-    cecup_state.filter_delete = gtk_toggle_button_new_with_label("Show 🗑️");
-    cecup_state.filter_ignore = gtk_toggle_button_new_with_label("Show ⚪");
+    cecup_state.filter_new = gtk_toggle_button_new_with_label(EMOJI_NEW);
+    cecup_state.filter_hard = gtk_toggle_button_new_with_label(EMOJI_LINK);
+    cecup_state.filter_update = gtk_toggle_button_new_with_label(EMOJI_UPDATE);
+    cecup_state.filter_equal = gtk_toggle_button_new_with_label(EMOJI_EQUAL);
+    cecup_state.filter_delete = gtk_toggle_button_new_with_label(EMOJI_DELETE);
+    cecup_state.filter_ignore = gtk_toggle_button_new_with_label(EMOJI_IGNORE);
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_new),
                                  TRUE);
@@ -148,7 +148,7 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(options_hbox), reset_btn, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
-    cecup_state.stats_label = gtk_label_new("✨ Ready");
+    cecup_state.stats_label = gtk_label_new("✅ Ready");
     gtk_box_pack_start(GTK_BOX(main_vbox), cecup_state.stats_label, FALSE,
                        FALSE, 0);
 
