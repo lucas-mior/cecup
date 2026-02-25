@@ -60,7 +60,15 @@ main(int32 argc, char *argv[]) {
     cecup_state.refresh_id = 0;
 
     config_base = g_build_filename(g_get_user_config_dir(), "cecup", NULL);
-    g_mkdir_with_parents(config_base, 0755);
+
+    if (access(config_base, F_OK) == -1) {
+        char cmd[4096];
+        g_mkdir_with_parents(config_base, 0755);
+
+        SNPRINTF(cmd, "cp -r /etc/cecup/* '%s/'", config_base);
+        system(cmd);
+    }
+
     cecup_state.ignore_path
         = g_build_filename(config_base, "ignore.conf", NULL);
     cecup_state.config_path = g_build_filename(config_base, "cecup.conf", NULL);
