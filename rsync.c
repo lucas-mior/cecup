@@ -870,12 +870,12 @@ sync_worker(gpointer user_data) {
 
                 full_src_path = g_build_filename(thread_data->src_path,
                                                  relative_path_entry, NULL);
-                if (lstat(full_src_path, &st_path) == 0) {
-                    sz_path = st_path.st_size;
-                } else {
+                if (lstat(full_src_path, &st_path) < 0) {
                     dispatch_log_error("Error lstat %s: %s.\n", full_src_path,
                                        strerror(errno));
                     sz_path = 0;
+                } else {
+                    sz_path = st_path.st_size;
                 }
 
                 dispatch_tree(0, action, relative_path_entry, sz_path,
@@ -968,7 +968,7 @@ diff_worker(gpointer user_data) {
              "%s -e bash -c \"%s '%s/%s' '%s/%s'; read -p 'Press Enter...'\" &",
              ud->term_cmd, ud->diff_tool, ud->src_base, ud->filepath,
              ud->dst_base, ud->filepath);
-    if (system(cmd) == -1) {
+    if (system(cmd) < 0) {
         dispatch_log_error("Error system call: %s.\n", strerror(errno));
     }
 
