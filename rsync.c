@@ -271,7 +271,7 @@ bulk_sync_worker(gpointer user_data) {
 
             if (poll_descriptors[0].revents & POLLIN) {
                 output_bytes
-                    = read(pipe_output[0], temp_output, sizeof(temp_output));
+                    = read64(pipe_output[0], temp_output, sizeof(temp_output));
                 if (output_bytes < 0) {
                     dispatch_log_error("Error: read from stdout failed");
                     poll_descriptors[0].fd = -1;
@@ -296,7 +296,7 @@ bulk_sync_worker(gpointer user_data) {
 
             if (poll_descriptors[1].revents & POLLIN) {
                 error_bytes
-                    = read(pipe_error[0], temp_error, sizeof(temp_error));
+                    = read64(pipe_error[0], temp_error, sizeof(temp_error));
                 if (error_bytes < 0) {
                     dispatch_log_error("Error: read from stderr failed");
                     poll_descriptors[1].fd = -1;
@@ -508,7 +508,7 @@ sync_worker(gpointer user_data) {
 
         if (poll_descriptors[0].revents & POLLIN) {
             output_bytes
-                = read(pipe_output[0], temp_output, sizeof(temp_output));
+                = read64(pipe_output[0], temp_output, sizeof(temp_output));
             if (output_bytes < 0) {
                 dispatch_log_error("Error: read from stdout failed");
                 poll_descriptors[0].fd = -1;
@@ -603,7 +603,7 @@ sync_worker(gpointer user_data) {
         }
 
         if (poll_descriptors[1].revents & POLLIN) {
-            error_bytes = read(pipe_error[0], temp_error, sizeof(temp_error));
+            error_bytes = read64(pipe_error[0], temp_error, sizeof(temp_error));
             if (error_bytes < 0) {
                 dispatch_log_error("Error: read from stderr failed");
                 poll_descriptors[1].fd = -1;
