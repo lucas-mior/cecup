@@ -73,37 +73,6 @@ free_task_list(GPtrArray *tasks) {
     return;
 }
 
-static char *
-shell_escape(char *path) {
-    int64 len;
-    int64 count;
-    char *escaped;
-    char *write_ptr;
-
-    len = strlen64(path);
-    count = 0;
-    for (int64 i = 0; i < len; i += 1) {
-        if (path[i] == '\'') {
-            count += 1;
-        }
-    }
-
-    escaped = xmalloc(len + (count*3) + 1);
-    write_ptr = escaped;
-
-    for (int64 i = 0; i < len; i += 1) {
-        if (path[i] == '\'') {
-            memcpy64(write_ptr, "'\\''", 4);
-            write_ptr += 4;
-        } else {
-            *write_ptr = path[i];
-            write_ptr += 1;
-        }
-    }
-    *write_ptr = '\0';
-    return escaped;
-}
-
 static GPtrArray *
 get_target_tasks(int32 side, char *clicked_path,
                  enum CecupAction clicked_action) {

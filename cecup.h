@@ -214,6 +214,5 @@ static gboolean update_ui_handler(gpointer user_data);
 static void on_preview_clicked(GtkWidget *b, gpointer data);
 static void refresh_ui_list(void);
 static gboolean refresh_ui_timeout_callback(gpointer data);
-static char *shell_escape(char *path);
 
 #endif /* CECUP_H */
