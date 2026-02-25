@@ -72,7 +72,7 @@ get_target_tasks(int32 side, char *clicked_path,
                 action = row->dst_action;
             }
 
-            if (g_strcmp0(file_path, "-") != 0) {
+            if (strcmp(file_path, "-") != 0) {
                 g_mutex_lock(&cecup_state.ui_arena_mutex);
                 task = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
                 memset64(task, 0, SIZEOF(UIUpdateData));
@@ -100,7 +100,7 @@ get_target_tasks(int32 side, char *clicked_path,
         }
     }
 
-    if (tasks->len == 0 && g_strcmp0(clicked_path, "-") != 0) {
+    if (tasks->len == 0 && strcmp(clicked_path, "-") != 0) {
         UIUpdateData *task;
 
         g_mutex_lock(&cecup_state.ui_arena_mutex);
@@ -149,7 +149,7 @@ cecup_row_compare(const void *a, const void *b) {
     switch (cecup_state.sort_col) {
     case COL_SRC_PATH:
     case COL_DST_PATH:
-        result = g_strcmp0(row_a->src_path, row_b->src_path);
+        result = strcmp(row_a->src_path, row_b->src_path);
         break;
     case COL_SIZE_RAW:
         if (row_a->size_raw > row_b->size_raw) {
@@ -644,7 +644,7 @@ on_menu_ignore_dir(GtkWidget *m, gpointer data) {
 
                 task = (UIUpdateData *)g_ptr_array_index(tasks, i);
                 if ((dir = g_path_get_dirname(task->filepath)) != NULL) {
-                    if (g_strcmp0(dir, ".") != 0) {
+                    if (strcmp(dir, ".") != 0) {
                         fprintf(fp, "\n/%s/", dir);
                     }
                     g_free(dir);
@@ -1033,9 +1033,9 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label("Diff");
-            is_disabled = (g_strcmp0(file_path, "-") == 0
-                           || g_strcmp0(other_path, "-") == 0
-                           || action == UI_ACTION_HARDLINK);
+            is_disabled
+                = (strcmp(file_path, "-") == 0 || strcmp(other_path, "-") == 0
+                   || action == UI_ACTION_HARDLINK);
             if (is_disabled) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
@@ -1045,7 +1045,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label("Delete");
-            if (g_strcmp0(file_path, "-") == 0) {
+            if (strcmp(file_path, "-") == 0) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_delete),
@@ -1239,14 +1239,14 @@ update_ui_handler(gpointer user_data) {
         row->dst_color = bg_dst;
         row->reason = data->reason;
 
-        if (g_strcmp0(src_path_final, "-") == 0) {
+        if (strcmp(src_path_final, "-") == 0) {
             row->src_path = arena_push(cecup_state.row_arena, 2);
             memcpy64(row->src_path, "-", 2);
             int64 path_len;
             path_len = strlen64(data->filepath) + 1;
             row->dst_path = arena_push(cecup_state.row_arena, path_len);
             memcpy64(row->dst_path, data->filepath, path_len);
-        } else if (g_strcmp0(dst_path_final, "-") == 0) {
+        } else if (strcmp(dst_path_final, "-") == 0) {
             int64 path_len;
             path_len = strlen64(data->filepath) + 1;
             row->src_path = arena_push(cecup_state.row_arena, path_len);
@@ -1294,8 +1294,8 @@ update_ui_handler(gpointer user_data) {
     case DATA_TYPE_REMOVE_TREE_ROW: {
         for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
             CecupRow *row = cecup_state.rows[i];
-            if (g_strcmp0(row->src_path, data->filepath) == 0
-                || g_strcmp0(row->dst_path, data->filepath) == 0) {
+            if (strcmp(row->src_path, data->filepath) == 0
+                || strcmp(row->dst_path, data->filepath) == 0) {
                 free_cecup_row(row);
                 for (int32 j = i; j < cecup_state.rows_count - 1; j += 1) {
                     cecup_state.rows[j] = cecup_state.rows[j + 1];
