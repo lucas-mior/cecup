@@ -388,8 +388,6 @@ sync_worker(gpointer user_data) {
     struct pollfd pipes[2];
     char output_buffer[8192];
     char error_buffer[8192];
-    char temp_output[2048];
-    char temp_error[2048];
     int32 output_position;
     int32 error_position;
     int32 poll_return;
@@ -516,15 +514,16 @@ sync_worker(gpointer user_data) {
         }
 
         if (pipes[0].revents & POLLIN) {
-            int64 r = read64(pipe_output[0], temp_output, sizeof(temp_output));
+            char buffer[2048];
+            int64 r = read64(pipe_output[0], buffer, sizeof(buffer));
             if (r < 0) {
                 dispatch_log_error("Error: read from stdout failed");
                 pipes[0].fd = -1;
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
-                    if (temp_output[k] != '\n'
+                    if (buffer[k] != '\n'
                         && output_position < (int32)sizeof(output_buffer) - 1) {
-                        output_buffer[output_position] = temp_output[k];
+                        output_buffer[output_position] = buffer[k];
                         output_position += 1;
                         continue;
                     }
@@ -611,19 +610,20 @@ sync_worker(gpointer user_data) {
         }
 
         if (pipes[1].revents & POLLIN) {
-            int64 r = read64(pipe_error[0], temp_error, sizeof(temp_error));
+            char buffer[2048];
+            int64 r = read64(pipe_error[0], buffer, sizeof(buffer));
             if (r < 0) {
                 dispatch_log_error("Error: read from stderr failed");
                 pipes[1].fd = -1;
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
-                    if (temp_error[k] == '\n'
+                    if (buffer[k] == '\n'
                         || error_position == sizeof(error_buffer) - 1) {
                         error_buffer[error_position] = '\0';
                         dispatch_log_error(error_buffer);
                         error_position = 0;
                     } else {
-                        error_buffer[error_position] = temp_error[k];
+                        error_buffer[error_position] = buffer[k];
                         error_position += 1;
                     }
                 }
