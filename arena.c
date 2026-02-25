@@ -139,7 +139,7 @@ static int64 arena_page_size = 0;
 #endif
 
 #if !defined(UTIL_C)
-void memset64(void *buffer, int value, int64 size);
+static void memset64(void *buffer, int value, int64 size);
 #endif
 
 static void
@@ -474,7 +474,7 @@ arenas_destroy(Arena **arenas, int64 number) {
 #include <stdio.h>
 
 #if !defined(UTIL_C)
-void
+static void
 memset64(void *buffer, int value, int64 size) {
     if (size == 0) {
         return;
