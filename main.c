@@ -43,11 +43,16 @@ main(int32 argc, char *argv[]) {
 
     gtk_init(&argc, &argv);
 
+    cecup_state.row_arena = arena_create(SIZEMB(64));
+    cecup_state.ui_arena = arena_create(SIZEMB(16));
+    g_mutex_init(&cecup_state.ui_arena_mutex);
+
     cecup_state.rows_count = 0;
     cecup_state.rows_capacity = 4096;
-    cecup_state.rows = xmalloc(cecup_state.rows_capacity*SIZEOF(CecupRow *));
-    cecup_state.visible_rows
-        = xmalloc(cecup_state.rows_capacity*SIZEOF(CecupRow *));
+    cecup_state.rows = arena_push(
+        cecup_state.row_arena, cecup_state.rows_capacity*sizeof(CecupRow *));
+    cecup_state.visible_rows = arena_push(
+        cecup_state.row_arena, cecup_state.rows_capacity*sizeof(CecupRow *));
 
     cecup_state.sort_col = COL_SRC_PATH;
     cecup_state.sort_order = GTK_SORT_ASCENDING;
@@ -289,6 +294,10 @@ main(int32 argc, char *argv[]) {
 
     gtk_widget_show_all(cecup_state.gtk_window);
     gtk_main();
+
+    arena_destroy(cecup_state.row_arena);
+    arena_destroy(cecup_state.ui_arena);
+    g_mutex_clear(&cecup_state.ui_arena_mutex);
     return 0;
 }
 
@@ -400,162 +409,4 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     g_signal_connect(tree, "button-press-event",
                      G_CALLBACK(on_tree_button_press), NULL);
     return;
-}
-
-static gboolean
-update_ui_handler(gpointer user_data) {
-    UIUpdateData *data;
-
-    data = (UIUpdateData *)user_data;
-
-    switch (data->type) {
-    case DATA_TYPE_LOG: {
-        GtkTextIter end;
-        gtk_text_buffer_get_end_iter(cecup_state.log_buffer, &end);
-        gtk_text_buffer_insert(cecup_state.log_buffer, &end, data->message, -1);
-        break;
-    }
-    case DATA_TYPE_PROGRESS_RSYNC:
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_rsync), data->fraction);
-        break;
-    case DATA_TYPE_PROGRESS_EQUAL:
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_equal), data->fraction);
-        break;
-    case DATA_TYPE_PROGRESS_PREVIEW:
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_preview), data->fraction);
-        break;
-    case DATA_TYPE_TREE_ROW: {
-        CecupRow *row;
-        char *bg_src = "#FFFFFF";
-        char *bg_dst = "#FFFFFF";
-        char *src_path_final = data->filepath;
-        char *dst_path_final = data->filepath;
-        enum CecupAction action_src = data->action;
-        enum CecupAction action_dst = data->action;
-
-        if (data->action == UI_ACTION_NEW) {
-            bg_src = "#D4EDDA";
-            dst_path_final = "-";
-        } else if (data->action == UI_ACTION_UPDATE) {
-            bg_src = "#CCE5FF";
-            bg_dst = "#CCE5FF";
-        } else if (data->action == UI_ACTION_HARDLINK) {
-            bg_src = "#E2D1F9";
-            bg_dst = "#E2D1F9";
-        } else if (data->action == UI_ACTION_EQUAL) {
-            bg_src = "#F0F0F0";
-            bg_dst = "#F0F0F0";
-        } else if (data->action == UI_ACTION_DELETE) {
-            if (data->reason == UI_REASON_EXCLUDED) {
-                bg_src = "#FFF3CD";
-                bg_dst = "#FFF3CD";
-                action_src = UI_ACTION_IGNORE;
-                action_dst = UI_ACTION_DELETE;
-            } else {
-                bg_dst = "#F8D7DA";
-                action_src = UI_ACTION_DELETED;
-                action_dst = UI_ACTION_DELETE;
-                src_path_final = "-";
-            }
-        }
-
-        row = g_new0(CecupRow, 1);
-        row->src_action = action_src;
-        row->dst_action = action_dst;
-        row->size_text = bytes_pretty(data->size);
-        row->size_raw = data->size;
-        row->src_color = bg_src;
-        row->dst_color = bg_dst;
-        row->reason = data->reason;
-
-        if (g_strcmp0(src_path_final, "-") == 0) {
-            row->src_path = g_strdup("-");
-            row->dst_path = data->filepath;
-            data->filepath = NULL;
-        } else if (g_strcmp0(dst_path_final, "-") == 0) {
-            row->src_path = data->filepath;
-            data->filepath = NULL;
-            row->dst_path = g_strdup("-");
-        } else {
-            row->src_path = data->filepath;
-            data->filepath = NULL;
-            row->dst_path = g_strdup(row->src_path);
-        }
-
-        if (cecup_state.rows_count >= cecup_state.rows_capacity) {
-            cecup_state.rows_capacity *= 2;
-            cecup_state.rows
-                = g_realloc(cecup_state.rows,
-                            cecup_state.rows_capacity*sizeof(CecupRow *));
-            cecup_state.visible_rows
-                = g_realloc(cecup_state.visible_rows,
-                            cecup_state.rows_capacity*sizeof(CecupRow *));
-        }
-        cecup_state.rows[cecup_state.rows_count] = row;
-        cecup_state.rows_count += 1;
-
-        if (cecup_state.refresh_id == 0) {
-            cecup_state.refresh_id
-                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
-        }
-        break;
-    }
-    case DATA_TYPE_REMOVE_TREE_ROW: {
-        for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
-            CecupRow *row = cecup_state.rows[i];
-            if (g_strcmp0(row->src_path, data->filepath) == 0
-                || g_strcmp0(row->dst_path, data->filepath) == 0) {
-                free_cecup_row(row);
-                for (int32 j = i; j < cecup_state.rows_count - 1; j += 1) {
-                    cecup_state.rows[j] = cecup_state.rows[j + 1];
-                }
-                cecup_state.rows_count -= 1;
-                break;
-            }
-        }
-        if (cecup_state.refresh_id == 0) {
-            cecup_state.refresh_id
-                = g_timeout_add(50, refresh_ui_timeout_callback, NULL);
-        }
-        break;
-    }
-    case DATA_TYPE_ENABLE_BUTTONS:
-        if (cecup_state.refresh_id != 0) {
-            g_source_remove(cecup_state.refresh_id);
-            cecup_state.refresh_id = 0;
-        }
-        refresh_ui_list();
-        gtk_widget_set_sensitive(cecup_state.sync_button, TRUE);
-        gtk_widget_set_sensitive(cecup_state.preview_button, TRUE);
-        gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
-        break;
-    case DATA_TYPE_CLEAR_TREES:
-        if (cecup_state.refresh_id != 0) {
-            g_source_remove(cecup_state.refresh_id);
-            cecup_state.refresh_id = 0;
-        }
-        for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
-            free_cecup_row(cecup_state.rows[i]);
-        }
-        cecup_state.rows_count = 0;
-        cecup_state.visible_count = 0;
-        gtk_list_store_clear(cecup_state.store);
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_rsync), 0.0);
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_equal), 0.0);
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_preview), 0.0);
-        break;
-    default:
-        break;
-    }
-
-    g_free(data->message);
-    g_free(data->filepath);
-    g_free(data);
-    return G_SOURCE_REMOVE;
 }

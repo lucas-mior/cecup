@@ -3,6 +3,7 @@
 
 #include <gtk/gtk.h>
 #include "generic.c"
+#include "arena.c"
 
 #define EMOJI_NEW "➕"
 #define EMOJI_LINK "🔗"
@@ -127,6 +128,10 @@ static struct {
     int32 sort_col;
     GtkSortType sort_order;
     uint32 refresh_id;
+
+    Arena *row_arena;
+    Arena *ui_arena;
+    GMutex ui_arena_mutex;
 } cecup_state;
 
 typedef struct ThreadData {
