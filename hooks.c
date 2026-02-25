@@ -126,69 +126,35 @@ cecup_row_compare(const void *a, const void *b) {
 
 static void
 refresh_ui_list(void) {
-    gboolean show_new;
-    gboolean show_hard;
-    gboolean show_update;
-    gboolean show_equal;
-    gboolean show_delete;
-    gboolean show_ignore;
-
-    show_new = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_new));
-    show_hard = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_hard));
-    show_update = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_update));
-    show_equal = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_equal));
-    show_delete = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_delete));
-    show_ignore = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_ignore));
-
-    gtk_list_store_clear(cecup_state.store);
+    int32 current_store_count;
 
     if (cecup_state.rows_count > 0) {
-        system("dunstify starting_qsort");
         qsort(cecup_state.rows, cecup_state.rows_count, sizeof(CecupRow *),
               cecup_row_compare);
-        system("dunstify qsort_finished");
     }
 
-    for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
-        CecupRow *row;
-        gboolean visible;
+    current_store_count = gtk_tree_model_iter_n_children(
+        GTK_TREE_MODEL(cecup_state.store), NULL);
 
-        row = cecup_state.rows[i];
-        visible = FALSE;
-
-        if (row->src_action == UI_ACTION_NEW) {
-            visible = show_new;
-        } else if (row->src_action == UI_ACTION_HARDLINK) {
-            visible = show_hard;
-        } else if (row->src_action == UI_ACTION_UPDATE) {
-            visible = show_update;
-        } else if (row->src_action == UI_ACTION_EQUAL) {
-            visible = show_equal;
-        } else if (row->src_action == UI_ACTION_DELETED) {
-            visible = show_delete;
-        } else if (row->src_action == UI_ACTION_IGNORE) {
-            visible = show_ignore;
-        }
-
-        if (visible) {
+    if (cecup_state.rows_count > current_store_count) {
+        for (int32 i = 0; i < (cecup_state.rows_count - current_store_count);
+             i += 1) {
             GtkTreeIter iter;
             gtk_list_store_append(cecup_state.store, &iter);
-            gtk_list_store_set(
-                cecup_state.store, &iter, COL_SELECTED, row->selected,
-                COL_SRC_ACTION, action_strings[row->src_action], COL_DST_ACTION,
-                action_strings[row->dst_action], COL_SRC_PATH, row->src_path,
-                COL_DST_PATH, row->dst_path, COL_SIZE_TEXT, row->size_text,
-                COL_SIZE_RAW, row->size_raw, COL_SRC_COLOR, row->src_color,
-                COL_DST_COLOR, row->dst_color, COL_REASON,
-                reason_strings[row->reason], -1);
+        }
+    } else if (cecup_state.rows_count < current_store_count) {
+        for (int32 i = 0; i < (current_store_count - cecup_state.rows_count);
+             i += 1) {
+            GtkTreeIter iter;
+            if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cecup_state.store),
+                                              &iter)) {
+                gtk_list_store_remove(cecup_state.store, &iter);
+            }
         }
     }
+
+    gtk_widget_queue_draw(cecup_state.l_tree);
+    gtk_widget_queue_draw(cecup_state.r_tree);
     return;
 }
 
@@ -517,27 +483,16 @@ on_sort_changed(GtkTreeSortable *s, gpointer d) {
 static void
 on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
     GtkTreePath *p;
-    GtkTreeIter i;
-    char *f_path;
+    int32 row_idx;
 
     (void)cell;
     (void)data;
     p = gtk_tree_path_new_from_string(path_str);
+    row_idx = gtk_tree_path_get_indices(p)[0];
 
-    if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup_state.store), &i, p)) {
-        gtk_tree_model_get(GTK_TREE_MODEL(cecup_state.store), &i, COL_SRC_PATH,
-                           &f_path, -1);
-
-        for (int32 k = 0; k < cecup_state.rows_count; k += 1) {
-            CecupRow *row;
-            row = cecup_state.rows[k];
-            if (g_strcmp0(row->src_path, f_path) == 0
-                || g_strcmp0(row->dst_path, f_path) == 0) {
-                row->selected = !row->selected;
-                break;
-            }
-        }
-        g_free(f_path);
+    if (row_idx >= 0 && row_idx < cecup_state.rows_count) {
+        cecup_state.rows[row_idx]->selected
+            = !cecup_state.rows[row_idx]->selected;
         refresh_ui_list();
     }
 
@@ -710,122 +665,83 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
         if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
                                           (gint)event->y, &path, NULL, NULL,
                                           NULL)) {
-            GtkTreeModel *model;
-            GtkTreeIter iter;
+            int32 row_idx;
+            CecupRow *row;
+            UIUpdateData *ud;
+            GtkWidget *menu;
+            GtkWidget *item;
+            GtkWidget *sub;
+            GtkWidget *sub_ext;
+            GtkWidget *sub_dir;
+            int32 is_disabled;
+            char *f_path;
+            char *other_path;
+            enum CecupAction action;
 
-            model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
-            if (gtk_tree_model_get_iter(model, &iter, path)) {
-                int32 path_col;
-                int32 act_col;
-                int32 other_col;
-                char *f_path;
-                char *action_str;
-                char *other_path;
-                UIUpdateData *ud;
-                GtkWidget *menu;
-                GtkWidget *item;
-                GtkWidget *sub;
-                GtkWidget *sub_ext;
-                GtkWidget *sub_dir;
-                int32 is_disabled;
-                enum CecupAction action;
+            row_idx = gtk_tree_path_get_indices(path)[0];
+            row = cecup_state.rows[row_idx];
 
-                path_col = (side == 0) ? COL_SRC_PATH : COL_DST_PATH;
-                act_col = (side == 0) ? COL_SRC_ACTION : COL_DST_ACTION;
-                other_col = (side == 0) ? COL_DST_PATH : COL_SRC_PATH;
-                gtk_tree_model_get(model, &iter, path_col, &f_path, act_col,
-                                   &action_str, other_col, &other_path, -1);
+            f_path = (side == 0) ? row->src_path : row->dst_path;
+            other_path = (side == 0) ? row->dst_path : row->src_path;
+            action = (side == 0) ? row->src_action : row->dst_action;
 
-                action = UI_ACTION_NONE;
-                for (int32 k = 0; k < NUM_UI_ACTIONS; k += 1) {
-                    if (g_strcmp0(action_str, action_strings[k]) == 0) {
-                        action = k;
-                        break;
-                    }
-                }
+            ud = g_new0(UIUpdateData, 1);
+            ud->filepath = g_strdup(f_path);
+            ud->action = action;
+            ud->side = side;
 
-                ud = g_new0(UIUpdateData, 1);
-                ud->filepath = g_strdup(f_path);
-                ud->action = action;
-                ud->side = side;
+            menu = gtk_menu_new();
+            item = gtk_menu_item_new_with_label("Open File");
+            g_signal_connect(item, "activate", G_CALLBACK(on_menu_open), ud);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-                menu = gtk_menu_new();
-                item = gtk_menu_item_new_with_label("Open File");
-                g_signal_connect(item, "activate", G_CALLBACK(on_menu_open),
+            item = gtk_menu_item_new_with_label("Open Folder");
+            g_signal_connect(item, "activate", G_CALLBACK(on_menu_open_dir),
+                             ud);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+            item = gtk_menu_item_new_with_label("Apply");
+            g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply), ud);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+            item = gtk_menu_item_new_with_label("Exclude...");
+            sub = gtk_menu_new();
+            gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
+            sub_ext = gtk_menu_item_new_with_label("Ext");
+            g_signal_connect(sub_ext, "activate",
+                             G_CALLBACK(on_menu_exclude_ext), ud);
+            gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
+            sub_dir = gtk_menu_item_new_with_label("Dir");
+            g_signal_connect(sub_dir, "activate",
+                             G_CALLBACK(on_menu_exclude_dir), ud);
+            gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+            item = gtk_menu_item_new_with_label("Diff");
+            is_disabled = (g_strcmp0(f_path, "-") == 0
+                           || g_strcmp0(other_path, "-") == 0
+                           || action == UI_ACTION_HARDLINK);
+            if (is_disabled) {
+                gtk_widget_set_sensitive(item, FALSE);
+            } else {
+                g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
                                  ud);
-                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-
-                item = gtk_menu_item_new_with_label("Open Folder");
-                g_signal_connect(item, "activate", G_CALLBACK(on_menu_open_dir),
-                                 ud);
-                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-
-                item = gtk_menu_item_new_with_label("Apply");
-                g_object_set_data(G_OBJECT(item), "target_tree", widget);
-                g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply),
-                                 ud);
-                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-
-                item = gtk_menu_item_new_with_label("Exclude...");
-                sub = gtk_menu_new();
-                gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
-
-                sub_ext = gtk_menu_item_new_with_label("Ext");
-                g_signal_connect(sub_ext, "activate",
-                                 G_CALLBACK(on_menu_exclude_ext), ud);
-                gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
-
-                sub_dir = gtk_menu_item_new_with_label("Dir");
-                g_signal_connect(sub_dir, "activate",
-                                 G_CALLBACK(on_menu_exclude_dir), ud);
-                gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
-
-                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-
-                item = gtk_menu_item_new_with_label("Diff");
-                is_disabled = (g_strcmp0(f_path, "-") == 0
-                               || g_strcmp0(other_path, "-") == 0
-                               || action == UI_ACTION_HARDLINK);
-                if (is_disabled) {
-                    gtk_widget_set_sensitive(item, FALSE);
-                } else {
-                    g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
-                                     ud);
-                }
-                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-
-                item = gtk_menu_item_new_with_label("Delete");
-                if (g_strcmp0(f_path, "-") == 0) {
-                    gtk_widget_set_sensitive(item, FALSE);
-                } else {
-                    g_signal_connect(item, "activate",
-                                     G_CALLBACK(on_menu_delete), ud);
-                }
-                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-
-                gtk_widget_show_all(menu);
-                gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
-                g_free(f_path);
-                g_free(other_path);
-                g_free(action_str);
             }
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+            item = gtk_menu_item_new_with_label("Delete");
+            if (g_strcmp0(f_path, "-") == 0) {
+                gtk_widget_set_sensitive(item, FALSE);
+            } else {
+                g_signal_connect(item, "activate", G_CALLBACK(on_menu_delete),
+                                 ud);
+            }
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+            gtk_widget_show_all(menu);
+            gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
             gtk_tree_path_free(path);
             return TRUE;
-        }
-        break;
-    case GDK_BUTTON_PRIMARY:
-        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
-                                          (gint)event->y, &path, NULL, NULL,
-                                          NULL)) {
-            GtkTreeSelection *sel;
-
-            sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
-            if (gtk_tree_selection_path_is_selected(sel, path)) {
-                gtk_tree_selection_unselect_path(sel, path);
-                gtk_tree_path_free(path);
-                return TRUE;
-            }
-            gtk_tree_path_free(path);
         }
         break;
     default:
@@ -847,21 +763,16 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                                                       &bx, &by);
     if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(w), bx, by, &p, NULL, NULL,
                                       NULL)) {
-        GtkTreeModel *m;
-        GtkTreeIter i;
-
-        m = gtk_tree_view_get_model(GTK_TREE_VIEW(w));
-        if (gtk_tree_model_get_iter(m, &i, p)) {
+        int32 idx;
+        idx = gtk_tree_path_get_indices(p)[0];
+        if (idx >= 0 && idx < cecup_state.rows_count) {
             char *r;
-
-            gtk_tree_model_get(m, &i, COL_REASON, &r, -1);
+            r = (char *)reason_strings[cecup_state.rows[idx]->reason];
             if (r && strlen(r) > 0) {
                 gtk_tooltip_set_text(t, r);
-                g_free(r);
                 gtk_tree_path_free(p);
                 return TRUE;
             }
-            g_free(r);
         }
         gtk_tree_path_free(p);
     }

@@ -7,8 +7,7 @@
 #include "hooks.c"
 #include "config.c"
 
-static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path,
-                               int32 col_color);
+static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path);
 
 int32
 main(int32 argc, char *argv[]) {
@@ -44,7 +43,8 @@ main(int32 argc, char *argv[]) {
 
     cecup_state.rows_count = 0;
     cecup_state.rows_capacity = 2048;
-    cecup_state.rows = xmalloc(cecup_state.rows_capacity*sizeof(CecupRow *));
+    cecup_state.rows
+        = g_malloc0(cecup_state.rows_capacity*sizeof(CecupRow *));
 
     cecup_state.sort_col = COL_SRC_PATH;
     cecup_state.sort_order = GTK_SORT_ASCENDING;
@@ -79,9 +79,7 @@ main(int32 argc, char *argv[]) {
     cecup_state.exclude_button = gtk_button_new_with_label("Edit Exclusions");
     cecup_state.stop_button = gtk_button_new_with_label("Stop");
     cecup_state.sync_button = gtk_button_new_with_label("2. Sync");
-
     gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
-
     gtk_box_pack_start(GTK_BOX(btn_hbox), cecup_state.exclude_button, FALSE,
                        FALSE, 5);
     gtk_box_pack_end(GTK_BOX(btn_hbox), cecup_state.sync_button, FALSE, FALSE,
@@ -148,26 +146,9 @@ main(int32 argc, char *argv[]) {
                        FALSE, 0);
     gtk_entry_set_text(GTK_ENTRY(cecup_state.term_entry), "xterm");
     gtk_box_pack_start(GTK_BOX(options_hbox), reset_btn, FALSE, FALSE, 0);
-
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
-    cecup_state.store = gtk_list_store_new(
-        NUM_COLS, G_TYPE_BOOLEAN, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
-        G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT64, G_TYPE_STRING,
-        G_TYPE_STRING, G_TYPE_STRING);
-
-    g_signal_connect(cecup_state.filter_new, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
-    g_signal_connect(cecup_state.filter_hard, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
-    g_signal_connect(cecup_state.filter_update, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
-    g_signal_connect(cecup_state.filter_equal, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
-    g_signal_connect(cecup_state.filter_delete, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
-    g_signal_connect(cecup_state.filter_ignore, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
+    cecup_state.store = gtk_list_store_new(1, G_TYPE_INT);
 
     v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
     gtk_box_pack_start(GTK_BOX(main_vbox), v_paned, TRUE, TRUE, 0);
@@ -191,7 +172,7 @@ main(int32 argc, char *argv[]) {
     l_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup_state.store));
     cecup_state.l_tree = l_tree;
     g_object_set_data(G_OBJECT(l_tree), "side", GINT_TO_POINTER(0));
-    setup_tree_columns(l_tree, COL_SRC_ACTION, COL_SRC_PATH, COL_SRC_COLOR);
+    setup_tree_columns(l_tree, COL_SRC_ACTION, COL_SRC_PATH);
     gtk_container_add(GTK_CONTAINER(l_scroll), l_tree);
     gtk_box_pack_start(GTK_BOX(l_vbox), l_scroll, TRUE, TRUE, 0);
     gtk_paned_pack1(GTK_PANED(paned), l_vbox, TRUE, FALSE);
@@ -209,7 +190,7 @@ main(int32 argc, char *argv[]) {
     r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup_state.store));
     cecup_state.r_tree = r_tree;
     g_object_set_data(G_OBJECT(r_tree), "side", GINT_TO_POINTER(1));
-    setup_tree_columns(r_tree, COL_DST_ACTION, COL_DST_PATH, COL_DST_COLOR);
+    setup_tree_columns(r_tree, COL_DST_ACTION, COL_DST_PATH);
     gtk_container_add(GTK_CONTAINER(r_scroll), r_tree);
     gtk_box_pack_start(GTK_BOX(r_vbox), r_scroll, TRUE, TRUE, 0);
     gtk_paned_pack2(GTK_PANED(paned), r_vbox, TRUE, FALSE);
@@ -261,6 +242,103 @@ main(int32 argc, char *argv[]) {
     return 0;
 }
 
+static void
+cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
+               GtkTreeModel *model, GtkTreeIter *iter, gpointer data) {
+    int32 col_id;
+    int32 row_idx;
+    GtkTreePath *path;
+    CecupRow *row;
+
+    col_id = GPOINTER_TO_INT(data);
+    path = gtk_tree_model_get_path(model, iter);
+    row_idx = gtk_tree_path_get_indices(path)[0];
+    gtk_tree_path_free(path);
+
+    if (row_idx >= cecup_state.rows_count) {
+        return;
+    }
+    row = cecup_state.rows[row_idx];
+
+    switch (col_id) {
+    case COL_SELECTED:
+        g_object_set(renderer, "active", row->selected, NULL);
+        break;
+    case COL_SRC_ACTION:
+        g_object_set(renderer, "text", action_strings[row->src_action],
+                     "cell-background", row->src_color, NULL);
+        break;
+    case COL_DST_ACTION:
+        g_object_set(renderer, "text", action_strings[row->dst_action],
+                     "cell-background", row->dst_color, NULL);
+        break;
+    case COL_SRC_PATH:
+        g_object_set(renderer, "text", row->src_path, "cell-background",
+                     row->src_color, NULL);
+        break;
+    case COL_DST_PATH:
+        g_object_set(renderer, "text", row->dst_path, "cell-background",
+                     row->dst_color, NULL);
+        break;
+    case COL_SIZE_TEXT: {
+        char *bg = (col
+                    == gtk_tree_view_get_column(
+                        GTK_TREE_VIEW(cecup_state.l_tree), 3))
+                       ? row->src_color
+                       : row->dst_color;
+        g_object_set(renderer, "text", row->size_text, "cell-background", bg,
+                     NULL);
+        break;
+    }
+    }
+    return;
+}
+
+static void
+setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
+    GtkCellRenderer *r;
+    GtkTreeViewColumn *c;
+
+    r = gtk_cell_renderer_toggle_new();
+    c = gtk_tree_view_column_new();
+    gtk_tree_view_column_pack_start(c, r, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        c, r, cell_data_func, GINT_TO_POINTER(COL_SELECTED), NULL);
+    g_signal_connect(r, "toggled", G_CALLBACK(on_cell_toggled), NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), c);
+
+    r = gtk_cell_renderer_text_new();
+    c = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(c, "Action");
+    gtk_tree_view_column_pack_start(c, r, TRUE);
+    gtk_tree_view_column_set_cell_data_func(c, r, cell_data_func,
+                                            GINT_TO_POINTER(col_act), NULL);
+    gtk_tree_view_column_set_sort_column_id(c, col_act);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), c);
+
+    c = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(c, "File Path");
+    gtk_tree_view_column_pack_start(c, r, TRUE);
+    gtk_tree_view_column_set_cell_data_func(c, r, cell_data_func,
+                                            GINT_TO_POINTER(col_path), NULL);
+    gtk_tree_view_column_set_sort_column_id(c, col_path);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), c);
+
+    c = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(c, "Size");
+    gtk_tree_view_column_pack_start(c, r, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        c, r, cell_data_func, GINT_TO_POINTER(COL_SIZE_TEXT), NULL);
+    gtk_tree_view_column_set_sort_column_id(c, COL_SIZE_RAW);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), c);
+
+    gtk_widget_set_has_tooltip(tree, TRUE);
+    g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
+    g_signal_connect(tree, "button-press-event",
+                     G_CALLBACK(on_tree_button_press), NULL);
+    return;
+}
+
 static gboolean
 update_ui_handler(gpointer user_data) {
     UIUpdateData *data;
@@ -277,21 +355,12 @@ update_ui_handler(gpointer user_data) {
     }
     case DATA_TYPE_TREE_ROW: {
         CecupRow *row;
-        char *size_string;
-        char *bg_src;
-        char *bg_dst;
-        char *src_path_final;
-        char *dst_path_final;
-        enum CecupAction action_src;
-        enum CecupAction action_dst;
-
-        size_string = bytes_pretty(data->size);
-        bg_src = "#FFFFFF";
-        bg_dst = "#FFFFFF";
-        src_path_final = data->filepath;
-        dst_path_final = data->filepath;
-        action_src = data->action;
-        action_dst = data->action;
+        char *bg_src = "#FFFFFF";
+        char *bg_dst = "#FFFFFF";
+        char *src_path_final = data->filepath;
+        char *dst_path_final = data->filepath;
+        enum CecupAction action_src = data->action;
+        enum CecupAction action_dst = data->action;
 
         if (data->action == UI_ACTION_NEW) {
             bg_src = "#D4EDDA";
@@ -320,10 +389,9 @@ update_ui_handler(gpointer user_data) {
         }
 
         row = g_new0(CecupRow, 1);
-        row->selected = FALSE;
         row->src_action = action_src;
         row->dst_action = action_dst;
-        row->size_text = size_string;
+        row->size_text = bytes_pretty(data->size);
         row->size_raw = data->size;
         row->src_color = bg_src;
         row->dst_color = bg_dst;
@@ -356,16 +424,13 @@ update_ui_handler(gpointer user_data) {
             cecup_state.refresh_id
                 = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
         }
-
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
         for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
-            CecupRow *row;
-            row = cecup_state.rows[i];
+            CecupRow *row = cecup_state.rows[i];
             if (g_strcmp0(row->src_path, data->filepath) == 0
                 || g_strcmp0(row->dst_path, data->filepath) == 0) {
-
                 free_cecup_row(row);
                 for (int32 j = i; j < cecup_state.rows_count - 1; j += 1) {
                     cecup_state.rows[j] = cecup_state.rows[j + 1];
@@ -374,7 +439,6 @@ update_ui_handler(gpointer user_data) {
                 break;
             }
         }
-
         if (cecup_state.refresh_id == 0) {
             cecup_state.refresh_id
                 = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
@@ -387,7 +451,6 @@ update_ui_handler(gpointer user_data) {
             cecup_state.refresh_id = 0;
         }
         refresh_ui_list();
-
         gtk_widget_set_sensitive(cecup_state.sync_button, TRUE);
         gtk_widget_set_sensitive(cecup_state.preview_button, TRUE);
         gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
@@ -411,39 +474,4 @@ update_ui_handler(gpointer user_data) {
     g_free(data->filepath);
     g_free(data);
     return G_SOURCE_REMOVE;
-}
-
-static void
-setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path,
-                   int32 col_color) {
-    GtkCellRenderer *r;
-    GtkTreeViewColumn *c;
-
-    r = gtk_cell_renderer_toggle_new();
-    c = gtk_tree_view_column_new_with_attributes("", r, "active", COL_SELECTED,
-                                                 NULL);
-    g_signal_connect(r, "toggled", G_CALLBACK(on_cell_toggled), NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), c);
-
-    r = gtk_cell_renderer_text_new();
-    c = gtk_tree_view_column_new_with_attributes(
-        "Action", r, "text", col_act, "cell-background", col_color, NULL);
-    gtk_tree_view_column_set_sort_column_id(c, col_act);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), c);
-
-    c = gtk_tree_view_column_new_with_attributes(
-        "File Path", r, "text", col_path, "cell-background", col_color, NULL);
-    gtk_tree_view_column_set_sort_column_id(c, col_path);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), c);
-
-    c = gtk_tree_view_column_new_with_attributes(
-        "Size", r, "text", COL_SIZE_TEXT, "cell-background", col_color, NULL);
-    gtk_tree_view_column_set_sort_column_id(c, COL_SIZE_RAW);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), c);
-
-    gtk_widget_set_has_tooltip(tree, TRUE);
-    g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
-    g_signal_connect(tree, "button-press-event",
-                     G_CALLBACK(on_tree_button_press), NULL);
-    return;
 }
