@@ -842,14 +842,32 @@ on_ignore_clicked(GtkWidget *b, gpointer data) {
 
 static void
 on_fix_clicked(GtkWidget *b, gpointer data) {
-    char *command[] = {
-        "cecup-fix",
-        NULL,
-    };
+    char *src_path;
+    char *dst_path;
+    ThreadData *thread_data;
 
     (void)b;
     (void)data;
-    util_command_launch(LENGTH(command), command);
+    src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.src_entry));
+    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry));
+
+    if (strlen64(src_path) < 1 || strlen64(dst_path) < 1) {
+        return;
+    }
+
+    cecup_state.cancel_sync = 0;
+    gtk_widget_set_sensitive(cecup_state.preview_button, FALSE);
+    gtk_widget_set_sensitive(cecup_state.sync_button, FALSE);
+    gtk_widget_set_sensitive(cecup_state.stop_button, TRUE);
+
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    thread_data = arena_push(cecup_state.ui_arena, SIZEOF(ThreadData));
+    memset64(thread_data, 0, SIZEOF(ThreadData));
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+
+    strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
+    strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
+    g_thread_new("fix_fs_worker", fix_fs_worker, thread_data);
     return;
 }
 

@@ -324,6 +324,153 @@ equal_scanner_worker(gpointer user_data) {
     return NULL;
 }
 
+static void
+fix_fs_recursive(const char *base_path, const char *relative_path) {
+    DIR *dir;
+    struct dirent *entry;
+    char full_path[MAX_PATH_LENGTH];
+
+    if (cecup_state.cancel_sync) {
+        return;
+    }
+
+    if (relative_path[0] == '\0') {
+        SNPRINTF(full_path, "%s", base_path);
+    } else {
+        SNPRINTF(full_path, "%s/%s", base_path, relative_path);
+    }
+
+    if (!(dir = opendir(full_path))) {
+        return;
+    }
+
+    while ((entry = readdir(dir))) {
+        char *d_name;
+        char sub_rel[MAX_PATH_LENGTH];
+        char old_full[MAX_PATH_LENGTH];
+        char new_full[MAX_PATH_LENGTH];
+        char new_name[MAX_PATH_LENGTH];
+        struct stat st;
+        int32 changed = 0;
+        int64 j = 0;
+
+        d_name = entry->d_name;
+        if (d_name[0] == '.'
+            && (d_name[1] == '\0' || (d_name[1] == '.' && d_name[2] == '\0'))) {
+            continue;
+        }
+
+        if (relative_path[0] != '\0') {
+            SNPRINTF(sub_rel, "%s/%s", relative_path, d_name);
+        } else {
+            SNPRINTF(sub_rel, "%s", d_name);
+        }
+
+        SNPRINTF(old_full, "%s/%s", base_path, sub_rel);
+        if (lstat(old_full, &st) != 0) {
+            continue;
+        }
+
+        if (S_ISDIR(st.st_mode)) {
+            fix_fs_recursive(base_path, sub_rel);
+        }
+
+        for (int64 i = 0; i < strlen64(d_name); i += 1) {
+            if (d_name[i] == '=' && d_name[i + 1] == '>') {
+                memcpy64(new_name + j, "_equal_arrow_in_filename_", 25);
+                j += 25;
+                i += 1;
+                changed = 1;
+            } else if (d_name[i] == '\\') {
+                memcpy64(new_name + j, "_backslash_in_filename_", 23);
+                j += 23;
+                changed = 1;
+            } else if (d_name[i] == '\n') {
+                memcpy64(new_name + j, "_newline_in_filename_", 21);
+                j += 21;
+                changed = 1;
+            } else if (d_name[i] == '<') {
+                memcpy64(new_name + j, "_less_than_in_filename_", 23);
+                j += 23;
+                changed = 1;
+            } else if (d_name[i] == '>') {
+                memcpy64(new_name + j, "_greater_than_in_filename_", 26);
+                j += 26;
+                changed = 1;
+            } else if (d_name[i] == ':') {
+                memcpy64(new_name + j, "_colon_in_filename_", 19);
+                j += 19;
+                changed = 1;
+            } else if (d_name[i] == '\"') {
+                memcpy64(new_name + j, "_double_quote_in_filename_", 26);
+                j += 26;
+                changed = 1;
+            } else if (d_name[i] == '|') {
+                memcpy64(new_name + j, "_pipe_in_filename_", 18);
+                j += 18;
+                changed = 1;
+            } else if (d_name[i] == '?') {
+                memcpy64(new_name + j, "_question_mark_in_filename_", 27);
+                j += 27;
+                changed = 1;
+            } else if (d_name[i] == '*') {
+                memcpy64(new_name + j, "_asterisk_in_filename_", 22);
+                j += 22;
+                changed = 1;
+            } else {
+                new_name[j] = d_name[i];
+                j += 1;
+            }
+        }
+        new_name[j] = '\0';
+
+        if (changed) {
+            if (relative_path[0] != '\0') {
+                SNPRINTF(new_full, "%s/%s/%s", base_path, relative_path,
+                         new_name);
+            } else {
+                SNPRINTF(new_full, "%s/%s", base_path, new_name);
+            }
+
+            if (rename(old_full, new_full) == 0) {
+                dispatch_log("Fixed: %s -> %s\n", d_name, new_name);
+            } else {
+                dispatch_log_error("Failed to rename %s: %s\n", d_name,
+                                   strerror(errno));
+            }
+        }
+    }
+
+    closedir(dir);
+    return;
+}
+
+static gpointer
+fix_fs_worker(gpointer user_data) {
+    ThreadData *thread_data;
+    UIUpdateData *ready;
+
+    thread_data = (ThreadData *)user_data;
+    dispatch_log("Starting File System Fix on Source...\n");
+    fix_fs_recursive(thread_data->src_path, "");
+    dispatch_log("Starting File System Fix on Destination...\n");
+    fix_fs_recursive(thread_data->dst_path, "");
+    dispatch_log("File System Fix finished.\n");
+
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    ready = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+    memset64(ready, 0, SIZEOF(UIUpdateData));
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+
+    ready->type = DATA_TYPE_ENABLE_BUTTONS;
+    g_idle_add(update_ui_handler, ready);
+
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    arena_pop(cecup_state.ui_arena, thread_data);
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    return NULL;
+}
+
 static gpointer
 bulk_sync_worker(gpointer user_data) {
     GPtrArray *tasks;
