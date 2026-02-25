@@ -37,7 +37,7 @@ dispatch_log(char *format, ...) {
     data = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
     memset(data, 0, sizeof(UIUpdateData));
 
-    int64 msg_len = strlen(buffer) + 1;
+    int64 msg_len = strlen64(buffer) + 1;
     data->message = arena_push(cecup_state.ui_arena, msg_len);
     memcpy(data->message, buffer, msg_len);
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
@@ -88,7 +88,7 @@ dispatch_log_error(char *format, ...) {
     data = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
     memset(data, 0, sizeof(UIUpdateData));
 
-    int64 msg_len = strlen(message_buffer) + 1;
+    int64 msg_len = strlen64(message_buffer) + 1;
     data->message = arena_push(cecup_state.ui_arena, msg_len);
     memcpy(data->message, message_buffer, msg_len);
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
@@ -121,7 +121,7 @@ dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
     data = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
     memset(data, 0, sizeof(UIUpdateData));
 
-    int64 path_len = strlen(path) + 1;
+    int64 path_len = strlen64(path) + 1;
     data->filepath = arena_push(cecup_state.ui_arena, path_len);
     memcpy(data->filepath, path, path_len);
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
@@ -469,7 +469,7 @@ bulk_sync_worker(gpointer user_data) {
                 = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
             memset(remove_data, 0, sizeof(UIUpdateData));
 
-            int64 path_len = strlen(ud->filepath) + 1;
+            int64 path_len = strlen64(ud->filepath) + 1;
             remove_data->filepath = arena_push(cecup_state.ui_arena, path_len);
             memcpy(remove_data->filepath, ud->filepath, path_len);
             g_mutex_unlock(&cecup_state.ui_arena_mutex);

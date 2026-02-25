@@ -98,15 +98,15 @@ get_target_tasks(int32 side, char *clicked_path,
         task = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
         memset(task, 0, sizeof(UIUpdateData));
 
-        int64 path_len = strlen(clicked_path) + 1;
+        int64 path_len = strlen64(clicked_path) + 1;
         task->filepath = arena_push(cecup_state.ui_arena, path_len);
         memcpy(task->filepath, clicked_path, path_len);
 
-        int64 src_len = strlen(shared_src) + 1;
+        int64 src_len = strlen64(shared_src) + 1;
         task->src_base = arena_push(cecup_state.ui_arena, src_len);
         memcpy(task->src_base, shared_src, src_len);
 
-        int64 dst_len = strlen(shared_dst) + 1;
+        int64 dst_len = strlen64(shared_dst) + 1;
         task->dst_base = arena_push(cecup_state.ui_arena, dst_len);
         memcpy(task->dst_base, shared_dst, dst_len);
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
@@ -434,11 +434,11 @@ on_menu_diff(GtkWidget *m, gpointer data) {
 
             t = (UIUpdateData *)g_ptr_array_index(tasks, i);
             g_mutex_lock(&cecup_state.ui_arena_mutex);
-            int64 diff_len = strlen(diff_tool) + 1;
+            int64 diff_len = strlen64(diff_tool) + 1;
             t->diff_tool = arena_push(cecup_state.ui_arena, diff_len);
             memcpy(t->diff_tool, diff_tool, diff_len);
 
-            int64 term_len = strlen(term_cmd) + 1;
+            int64 term_len = strlen64(term_cmd) + 1;
             t->term_cmd = arena_push(cecup_state.ui_arena, term_len);
             memcpy(t->term_cmd, term_cmd, term_len);
             g_mutex_unlock(&cecup_state.ui_arena_mutex);
@@ -839,7 +839,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             g_mutex_lock(&cecup_state.ui_arena_mutex);
             ud = arena_push(cecup_state.ui_arena, sizeof(UIUpdateData));
             memset(ud, 0, sizeof(UIUpdateData));
-            int64 path_len = strlen(f_path) + 1;
+            int64 path_len = strlen64(f_path) + 1;
             ud->filepath = arena_push(cecup_state.ui_arena, path_len);
             memcpy(ud->filepath, f_path, path_len);
             g_mutex_unlock(&cecup_state.ui_arena_mutex);
@@ -1041,7 +1041,7 @@ update_ui_handler(gpointer user_data) {
 
         char *pretty;
         pretty = bytes_pretty(data->size);
-        int64 pretty_len = strlen(pretty) + 1;
+        int64 pretty_len = strlen64(pretty) + 1;
         row->size_text = arena_push(cecup_state.row_arena, pretty_len);
         memcpy(row->size_text, pretty, pretty_len);
         g_free(pretty);
@@ -1054,17 +1054,17 @@ update_ui_handler(gpointer user_data) {
         if (g_strcmp0(src_path_final, "-") == 0) {
             row->src_path = arena_push(cecup_state.row_arena, 2);
             memcpy(row->src_path, "-", 2);
-            int64 path_len = strlen(data->filepath) + 1;
+            int64 path_len = strlen64(data->filepath) + 1;
             row->dst_path = arena_push(cecup_state.row_arena, path_len);
             memcpy(row->dst_path, data->filepath, path_len);
         } else if (g_strcmp0(dst_path_final, "-") == 0) {
-            int64 path_len = strlen(data->filepath) + 1;
+            int64 path_len = strlen64(data->filepath) + 1;
             row->src_path = arena_push(cecup_state.row_arena, path_len);
             memcpy(row->src_path, data->filepath, path_len);
             row->dst_path = arena_push(cecup_state.row_arena, 2);
             memcpy(row->dst_path, "-", 2);
         } else {
-            int64 path_len = strlen(data->filepath) + 1;
+            int64 path_len = strlen64(data->filepath) + 1;
             row->src_path = arena_push(cecup_state.row_arena, path_len);
             memcpy(row->src_path, data->filepath, path_len);
             row->dst_path = arena_push(cecup_state.row_arena, path_len);
