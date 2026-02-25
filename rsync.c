@@ -150,7 +150,7 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
         }
 
         dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, st_s.st_size,
-                      UI_REASON_IDENTICAL);
+                      UI_REASON_EQUAL);
     }
 
     closedir(dir);
