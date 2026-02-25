@@ -10,7 +10,6 @@ free_cecup_row(gpointer data) {
     row = (CecupRow *)data;
     g_free(row->src_path);
     g_free(row->dst_path);
-    free(row->size_text);
     g_free(row);
     return;
 }
