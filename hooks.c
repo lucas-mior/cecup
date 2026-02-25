@@ -528,7 +528,7 @@ on_menu_diff(GtkWidget *m, gpointer data) {
 }
 
 static void
-on_menu_exclude_ext(GtkWidget *m, gpointer data) {
+on_menu_ignore_ext(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GPtrArray *tasks;
     FILE *fp;
@@ -538,7 +538,7 @@ on_menu_exclude_ext(GtkWidget *m, gpointer data) {
     tasks = get_target_tasks(ud->side, ud->filepath, ud->action);
 
     if (tasks != NULL) {
-        if ((fp = fopen(cecup_state.exclude_path, "a")) != NULL) {
+        if ((fp = fopen(cecup_state.ignore_path, "a")) != NULL) {
             for (uint32 i = 0; i < tasks->len; i += 1) {
                 UIUpdateData *t;
                 char *ext;
@@ -562,7 +562,7 @@ on_menu_exclude_ext(GtkWidget *m, gpointer data) {
 }
 
 static void
-on_menu_exclude_dir(GtkWidget *m, gpointer data) {
+on_menu_ignore_dir(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GPtrArray *tasks;
     FILE *fp;
@@ -572,7 +572,7 @@ on_menu_exclude_dir(GtkWidget *m, gpointer data) {
     tasks = get_target_tasks(ud->side, ud->filepath, ud->action);
 
     if (tasks != NULL) {
-        if ((fp = fopen(cecup_state.exclude_path, "a")) != NULL) {
+        if ((fp = fopen(cecup_state.ignore_path, "a")) != NULL) {
             for (int32 i = 0; i < (int32)tasks->len; i += 1) {
                 UIUpdateData *t;
                 char *dir;
@@ -719,7 +719,7 @@ on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
 }
 
 static void
-on_exclude_clicked(GtkWidget *b, gpointer data) {
+on_ignore_clicked(GtkWidget *b, gpointer data) {
     GtkWidget *dialog;
     GtkWidget *scroll;
     GtkWidget *view;
@@ -729,7 +729,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
 
     (void)data;
     dialog = gtk_dialog_new_with_buttons(
-        "Exclusions", GTK_WINDOW(cecup_state.gtk_window), GTK_DIALOG_MODAL,
+        "Ignore List", GTK_WINDOW(cecup_state.gtk_window), GTK_DIALOG_MODAL,
         "_Save", GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
     (void)b;
     gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
@@ -737,7 +737,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
     view = gtk_text_view_new();
     buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 
-    if (g_file_get_contents(cecup_state.exclude_path, &text, &len, NULL)) {
+    if (g_file_get_contents(cecup_state.ignore_path, &text, &len, NULL)) {
         gtk_text_buffer_set_text(buffer, text, -1);
         g_free(text);
     }
@@ -754,7 +754,7 @@ on_exclude_clicked(GtkWidget *b, gpointer data) {
 
         gtk_text_buffer_get_bounds(buffer, &s, &e);
         content = gtk_text_buffer_get_text(buffer, &s, &e, FALSE);
-        g_file_set_contents(cecup_state.exclude_path, content, -1, NULL);
+        g_file_set_contents(cecup_state.ignore_path, content, -1, NULL);
         g_free(content);
         on_preview_clicked(NULL, NULL);
     }
@@ -943,16 +943,16 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply), ud);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-            item = gtk_menu_item_new_with_label("Exclude...");
+            item = gtk_menu_item_new_with_label("Ignore...");
             sub = gtk_menu_new();
             gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
             sub_ext = gtk_menu_item_new_with_label("Ext");
             g_signal_connect(sub_ext, "activate",
-                             G_CALLBACK(on_menu_exclude_ext), ud);
+                             G_CALLBACK(on_menu_ignore_ext), ud);
             gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
             sub_dir = gtk_menu_item_new_with_label("Dir");
             g_signal_connect(sub_dir, "activate",
-                             G_CALLBACK(on_menu_exclude_dir), ud);
+                             G_CALLBACK(on_menu_ignore_dir), ud);
             gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
@@ -1100,7 +1100,7 @@ update_ui_handler(gpointer user_data) {
             bg_src = "#F0F0F0";
             bg_dst = "#F0F0F0";
         } else if (data->action == UI_ACTION_DELETE) {
-            if (data->reason == UI_REASON_EXCLUDED) {
+            if (data->reason == UI_REASON_IGNORED) {
                 bg_src = "#FFF3CD";
                 bg_dst = "#FFF3CD";
                 action_src = UI_ACTION_IGNORE;

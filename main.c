@@ -61,8 +61,8 @@ main(int32 argc, char *argv[]) {
 
     config_base = g_build_filename(g_get_user_config_dir(), "cecup", NULL);
     g_mkdir_with_parents(config_base, 0755);
-    cecup_state.exclude_path
-        = g_build_filename(config_base, "exclude.conf", NULL);
+    cecup_state.ignore_path
+        = g_build_filename(config_base, "ignore.conf", NULL);
     cecup_state.config_path = g_build_filename(config_base, "cecup.conf", NULL);
 
     cecup_state.gtk_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -84,9 +84,9 @@ main(int32 argc, char *argv[]) {
     cecup_state.preview_button = gtk_button_new_with_label("🔎 Preview");
     gtk_widget_set_tooltip_text(cecup_state.preview_button,
                                 "Run rsync --dry-run to identify changes");
-    cecup_state.exclude_button = gtk_button_new_with_label("Edit Exclusions");
-    gtk_widget_set_tooltip_text(cecup_state.exclude_button,
-                                "Modify exclude.conf");
+    cecup_state.ignore_button = gtk_button_new_with_label("Edit Ignore List");
+    gtk_widget_set_tooltip_text(cecup_state.ignore_button,
+                                "Modify ignore.conf");
     cecup_state.stop_button = gtk_button_new_with_label("Stop");
     gtk_widget_set_tooltip_text(cecup_state.stop_button,
                                 "Cancel current operation");
@@ -94,7 +94,7 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(cecup_state.sync_button,
                                 "Apply all selected changes");
     gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
-    gtk_box_pack_start(GTK_BOX(btn_hbox), cecup_state.exclude_button, FALSE,
+    gtk_box_pack_start(GTK_BOX(btn_hbox), cecup_state.ignore_button, FALSE,
                        FALSE, 5);
     gtk_box_pack_end(GTK_BOX(btn_hbox), cecup_state.sync_button, FALSE, FALSE,
                      5);
@@ -301,8 +301,8 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_stop_clicked), NULL);
     g_signal_connect(cecup_state.sync_button, "clicked",
                      G_CALLBACK(on_sync_clicked), NULL);
-    g_signal_connect(cecup_state.exclude_button, "clicked",
-                     G_CALLBACK(on_exclude_clicked), NULL);
+    g_signal_connect(cecup_state.ignore_button, "clicked",
+                     G_CALLBACK(on_ignore_clicked), NULL);
     g_signal_connect(reset_btn, "clicked", G_CALLBACK(on_reset_clicked), NULL);
 
     g_signal_connect(cecup_state.filter_new, "toggled",

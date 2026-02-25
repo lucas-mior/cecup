@@ -570,8 +570,8 @@ sync_worker(gpointer user_data) {
             = g_thread_new("equal_scanner", equal_scanner_worker, sd);
     }
 
-    ex = (access(cecup_state.exclude_path, F_OK) != -1)
-             ? g_strdup_printf("--exclude-from='%s'", cecup_state.exclude_path)
+    ex = (access(cecup_state.ignore_path, F_OK) != -1)
+             ? g_strdup_printf("--exclude-from='%s'", cecup_state.ignore_path)
              : g_strdup("");
 
     SNPRINTF(cmd,
@@ -740,7 +740,7 @@ sync_worker(gpointer user_data) {
                                                     relative_path, NULL);
                         sz = (lstat(full_dst, &st_d) == 0) ? st_d.st_size : 0;
                         reason = (lstat(full_src, &st_s) == 0)
-                                     ? UI_REASON_EXCLUDED
+                                     ? UI_REASON_IGNORED
                                      : UI_REASON_MISSING;
 
                         dispatch_tree(1, UI_ACTION_DELETE, relative_path, sz,

@@ -32,7 +32,7 @@ enum CecupReason {
     UI_REASON_HARDLINK,
     UI_REASON_UPDATE,
     UI_REASON_EQUAL,
-    UI_REASON_EXCLUDED,
+    UI_REASON_IGNORED,
     UI_REASON_MISSING,
     NUM_UI_REASONS
 };
@@ -73,7 +73,7 @@ static const char *dst_action_strings[] = {
 static const char *reason_strings[] = {
     [UI_REASON_NONE]      = "",
     [UI_REASON_EQUAL]      = "Files have the same name, size and modification time",
-    [UI_REASON_EXCLUDED]  = "Matched exclusion pattern",
+    [UI_REASON_IGNORED]   = "Matched ignore pattern",
     [UI_REASON_MISSING]   = "Missing in source directory",
     [UI_REASON_NEW]        = "New file in source directory",
     [UI_REASON_HARDLINK]  = "Hardlink in source directory",
@@ -116,7 +116,7 @@ static struct {
     GtkWidget *preview_button;
     GtkWidget *sync_button;
     GtkWidget *stop_button;
-    GtkWidget *exclude_button;
+    GtkWidget *ignore_button;
     GtkWidget *check_fs_toggle;
     GtkWidget *check_equal_toggle;
     
@@ -129,7 +129,7 @@ static struct {
 
     GtkListStore *store;
     GtkTextBuffer *log_buffer;
-    char *exclude_path;
+    char *ignore_path;
     char *config_path;
     volatile int32 cancel_sync;
     GtkWidget *l_tree;
