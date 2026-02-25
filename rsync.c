@@ -38,7 +38,6 @@ log_error_handler(gpointer user_data) {
     gtk_text_buffer_get_end_iter(cecup_state.log_buffer, &end);
     gtk_text_buffer_insert_with_tags_by_name(
         cecup_state.log_buffer, &end, data->message, -1, "err_red", NULL);
-    gtk_text_buffer_insert(cecup_state.log_buffer, &end, "\n", -1);
 
     g_free(data->message);
     g_free(data);
@@ -497,7 +496,7 @@ sync_worker(gpointer user_data) {
 
         poll_return = poll(poll_descriptors, 2, 200);
         if (poll_return < 0) {
-            dispatch_log_error("Error: poll failed");
+            dispatch_log_error("Error in poll: %s.\n", strerror(errno));
             break;
         }
 
