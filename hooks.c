@@ -307,9 +307,8 @@ on_menu_apply(GtkWidget *m, gpointer data) {
 
     (void)m;
     ud = (UIUpdateData *)data;
-    tasks = get_target_tasks(ud->side, ud->filepath, ud->action);
 
-    if (tasks != NULL) {
+    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
         cecup_state.cancel_sync = 0;
         gtk_widget_set_sensitive(cecup_state.preview_button, FALSE);
         gtk_widget_set_sensitive(cecup_state.sync_button, FALSE);
