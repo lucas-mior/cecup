@@ -439,12 +439,14 @@ sync_worker(gpointer user_data) {
     dispatch_log(log_cmd);
 
     if (pipe(pipe_output) == -1) {
-        dispatch_log_error("Error: pipe creation for stdout failed");
+        dispatch_log_error("Error creating pipe for stdout: %s.\n",
+                           strerror(errno));
         goto clean_exit;
     }
 
     if (pipe(pipe_error) == -1) {
-        dispatch_log_error("Error: pipe creation for stderr failed");
+        dispatch_log_error("Error creating pipe for stderr: %s.\n",
+                           strerror(errno));
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_output[1]);
         goto clean_exit;
@@ -452,7 +454,7 @@ sync_worker(gpointer user_data) {
 
     switch (child_pid = fork()) {
     case -1:
-        dispatch_log_error("Error: fork failed");
+        dispatch_log_error("Error forking: %s.\n", strerror(errno));
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_output[1]);
         XCLOSE(&pipe_error[0]);
