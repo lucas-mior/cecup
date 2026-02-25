@@ -27,6 +27,7 @@ prepare() {
 build() {
   cd "${pkgname%-git}"
   export CFLAGS="$CFLAGS -Wno-used-but-marked-unused"
+  export CFLAGS="$CFLAGS -Wno-warn-unused-result"
   export CFLAGS="$CFLAGS -Wno-unused-result"
   ./build.sh
 }
