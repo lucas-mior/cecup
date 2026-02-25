@@ -365,7 +365,6 @@ static void
 on_menu_open_dir(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GPtrArray *tasks;
-    char cmd[4096];
 
     (void)m;
     ud = (UIUpdateData *)data;
@@ -387,8 +386,12 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
 
             full_path = g_build_filename(base_path, task->filepath, NULL);
             if ((dir_path = g_path_get_dirname(full_path)) != NULL) {
-                SNPRINTF(cmd, "xdg-open '%s' &", dir_path);
-                system(cmd);
+                char *command[] = {
+                    "xdg-open",
+                    dir_path,
+                    NULL,
+                };
+                util_command_launch(LENGTH(command), command);
                 g_free(dir_path);
             }
             g_free(full_path);

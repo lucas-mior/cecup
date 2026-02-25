@@ -984,6 +984,30 @@ util_command(int argc, char **argv) {
         return WEXITSTATUS(status);
     }
 }
+static int
+util_command_launch(int argc, char **argv) {
+    pid_t child;
+    (void)argc;
+
+    switch (child = fork()) {
+    case 0:
+        if (setsid() < 0) {
+            error("Error in setsid: %s.\n", strerror(errno));
+        }
+        execvp(argv[0], argv);
+        error("\nError executing '%s", argv[0]);
+        for (int j = 1; j < argc; j += 1) {
+            error(" %s", argv[j]);
+        }
+        error("': %s.\n", strerror(errno));
+        return -1;
+    case -1:
+        error("Error forking: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    default:
+        return 0;
+    }
+}
 #endif
 
 #define GENERATE_STRING_FROM_ARRAY(NAME, TYPE, FORMAT) \
