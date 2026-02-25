@@ -98,6 +98,7 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
         struct stat st_s;
         struct stat st_d;
         int32 name_len;
+        char sub_rel[MAX_PATH_LENGTH];
 
         name = entry->d_name;
         if (name[0] == '.'
@@ -106,7 +107,6 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
         }
 
         name_len = (int32)strlen(name);
-
         if (rel_len + name_len + 2 > MAX_PATH_LENGTH) {
             continue;
         }
@@ -114,24 +114,31 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
         SNPRINTF(path_src, "%s/%s/%s", src_base, relative_path, name);
         SNPRINTF(path_dst, "%s/%s/%s", dst_base, relative_path, name);
 
-        if (stat(path_src, &st_s) == 0 && stat(path_dst, &st_d) == 0) {
-            char sub_rel[MAX_PATH_LENGTH];
-            if (rel_len > 0) {
-                SNPRINTF(sub_rel, "%s/%s", relative_path, name);
-            } else {
-                SNPRINTF(sub_rel, "%s", name);
-            }
-
-            if (S_ISDIR(st_s.st_mode)) {
-                find_equal_files(src_base, dst_base, sub_rel);
-            } else if (S_ISREG(st_s.st_mode)) {
-                if (st_s.st_size == st_d.st_size
-                    && st_s.st_mtime == st_d.st_mtime) {
-                    dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, st_s.st_size,
-                                  UI_REASON_IDENTICAL);
-                }
-            }
+        if (stat(path_src, &st_s) != 0 || stat(path_dst, &st_d) != 0) {
+            continue;
         }
+
+        if (rel_len > 0) {
+            SNPRINTF(sub_rel, "%s/%s", relative_path, name);
+        } else {
+            SNPRINTF(sub_rel, "%s", name);
+        }
+
+        if (S_ISDIR(st_s.st_mode)) {
+            find_equal_files(src_base, dst_base, sub_rel);
+            continue;
+        }
+
+        if (!S_ISREG(st_s.st_mode)) {
+            continue;
+        }
+
+        if (st_s.st_size != st_d.st_size || st_s.st_mtime != st_d.st_mtime) {
+            continue;
+        }
+
+        dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, st_s.st_size,
+                      UI_REASON_IDENTICAL);
     }
 
     closedir(dir);
@@ -177,7 +184,6 @@ bulk_sync_worker(gpointer user_data) {
 
         if (ud->action == UI_ACTION_DELETE) {
             char *full_dst;
-
             full_dst = g_build_filename(ud->dst_base, ud->filepath, NULL);
             SNPRINTF(cmd, "rm -rfv '%s'", full_dst);
             g_free(full_dst);
@@ -207,7 +213,6 @@ bulk_sync_worker(gpointer user_data) {
         }
 
         child_pid = fork();
-
         if (child_pid < 0) {
             dispatch_log_error("Error: fork failed");
             XCLOSE(&pipe_output[0]);
@@ -382,7 +387,6 @@ sync_worker(gpointer user_data) {
 
     if (thread_data->is_preview) {
         UIUpdateData *clear;
-
         clear = g_new0(UIUpdateData, 1);
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
@@ -448,7 +452,6 @@ sync_worker(gpointer user_data) {
     }
 
     child_pid = fork();
-
     if (child_pid < 0) {
         dispatch_log_error("Error: fork failed");
         XCLOSE(&pipe_output[0]);
@@ -510,79 +513,86 @@ sync_worker(gpointer user_data) {
                 poll_descriptors[0].fd = -1;
             } else if (output_bytes > 0) {
                 for (ssize_t k = 0; k < output_bytes; k += 1) {
-                    if (temp_output[k] == '\n'
-                        || output_position == sizeof(output_buffer) - 1) {
-                        output_buffer[output_position] = '\0';
-
-                        if (thread_data->is_preview) {
-                            if (strncmp(output_buffer, "*deleting", 9) == 0) {
-                                char *relative_path;
-                                char *full_src;
-                                char *full_dst;
-                                struct stat st_s;
-                                struct stat st_d;
-                                int64 sz;
-                                enum CecupReason reason;
-
-                                relative_path = output_buffer + 10;
-                                while (isspace(*relative_path)) {
-                                    relative_path++;
-                                }
-
-                                full_src = g_build_filename(
-                                    thread_data->src_path, relative_path, NULL);
-                                full_dst = g_build_filename(
-                                    thread_data->dst_path, relative_path, NULL);
-                                sz = (stat(full_dst, &st_d) == 0) ? st_d.st_size
-                                                                  : 0;
-                                reason = (stat(full_src, &st_s) == 0)
-                                             ? UI_REASON_EXCLUDED
-                                             : UI_REASON_MISSING;
-
-                                dispatch_tree(1, UI_ACTION_DELETE,
-                                              relative_path, sz, reason);
-                                g_free(full_src);
-                                g_free(full_dst);
-                            } else if (strchr(output_buffer, ' ')
-                                       && (output_buffer[0] == '>'
-                                           || output_buffer[0] == '.'
-                                           || output_buffer[0] == 'h'
-                                           || output_buffer[0] == 'c')) {
-                                char *relative_path;
-                                enum CecupAction action;
-                                char *full_src;
-                                struct stat st;
-                                int64 sz;
-
-                                relative_path = strchr(output_buffer, ' ') + 1;
-                                action = UI_ACTION_UPDATE;
-
-                                if (strncmp(output_buffer, "hf", 2) == 0) {
-                                    action = UI_ACTION_HARDLINK;
-                                } else if (strncmp(output_buffer, "cd", 2) == 0
-                                           || strncmp(output_buffer, ">f+++++",
-                                                      7)
-                                                  == 0) {
-                                    action = UI_ACTION_NEW;
-                                }
-
-                                full_src = g_build_filename(
-                                    thread_data->src_path, relative_path, NULL);
-                                sz = (stat(full_src, &st) == 0) ? st.st_size
-                                                                : 0;
-                                dispatch_tree(0, action, relative_path, sz,
-                                              (enum CecupReason)action);
-                                g_free(full_src);
-                            }
-                        } else {
-                            dispatch_log(output_buffer);
-                        }
-
-                        output_position = 0;
-                    } else {
+                    if (temp_output[k] != '\n'
+                        && output_position < (int32)sizeof(output_buffer) - 1) {
                         output_buffer[output_position] = temp_output[k];
                         output_position += 1;
+                        continue;
                     }
+
+                    output_buffer[output_position] = '\0';
+                    output_position = 0;
+
+                    if (thread_data->is_preview == 0) {
+                        dispatch_log(output_buffer);
+                        continue;
+                    }
+
+                    if (strncmp(output_buffer, "*deleting", 9) == 0) {
+                        char *relative_path;
+                        char *full_src;
+                        char *full_dst;
+                        struct stat st_s;
+                        struct stat st_d;
+                        int64 sz;
+                        enum CecupReason reason;
+
+                        relative_path = output_buffer + 10;
+                        while (isspace(*relative_path)) {
+                            relative_path += 1;
+                        }
+
+                        full_src = g_build_filename(thread_data->src_path,
+                                                    relative_path, NULL);
+                        full_dst = g_build_filename(thread_data->dst_path,
+                                                    relative_path, NULL);
+                        sz = (stat(full_dst, &st_d) == 0) ? st_d.st_size : 0;
+                        reason = (stat(full_src, &st_s) == 0)
+                                     ? UI_REASON_EXCLUDED
+                                     : UI_REASON_MISSING;
+
+                        dispatch_tree(1, UI_ACTION_DELETE, relative_path, sz,
+                                      reason);
+                        g_free(full_src);
+                        g_free(full_dst);
+                        continue;
+                    }
+
+                    char *space_pos;
+                    space_pos = strchr(output_buffer, ' ');
+                    if (space_pos == NULL) {
+                        continue;
+                    }
+
+                    char type_char;
+                    type_char = output_buffer[0];
+                    if (type_char != '>' && type_char != '.' && type_char != 'h'
+                        && type_char != 'c') {
+                        continue;
+                    }
+
+                    char *relative_path;
+                    enum CecupAction action;
+                    char *full_src;
+                    struct stat st;
+                    int64 sz;
+
+                    relative_path = space_pos + 1;
+                    action = UI_ACTION_UPDATE;
+
+                    if (strncmp(output_buffer, "hf", 2) == 0) {
+                        action = UI_ACTION_HARDLINK;
+                    } else if (strncmp(output_buffer, "cd", 2) == 0
+                               || strncmp(output_buffer, ">f+++++", 7) == 0) {
+                        action = UI_ACTION_NEW;
+                    }
+
+                    full_src = g_build_filename(thread_data->src_path,
+                                                relative_path, NULL);
+                    sz = (stat(full_src, &st) == 0) ? st.st_size : 0;
+                    dispatch_tree(0, action, relative_path, sz,
+                                  (enum CecupReason)action);
+                    g_free(full_src);
                 }
             } else {
                 poll_descriptors[0].fd = -1;
