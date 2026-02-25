@@ -118,6 +118,7 @@ static struct {
     GtkWidget *sync_button;
     GtkWidget *stop_button;
     GtkWidget *ignore_button;
+    GtkWidget *fix_button;
     GtkWidget *check_fs_toggle;
     GtkWidget *check_equal_toggle;
     

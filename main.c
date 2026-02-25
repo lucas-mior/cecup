@@ -100,6 +100,9 @@ main(int32 argc, char *argv[]) {
     cecup_state.ignore_button = gtk_button_new_with_label("Edit Ignore List");
     gtk_widget_set_tooltip_text(cecup_state.ignore_button,
                                 "Modify ignore.conf");
+    cecup_state.fix_button = gtk_button_new_with_label("🛠️ Fix FS");
+    gtk_widget_set_tooltip_text(cecup_state.fix_button,
+                                "Run external tool to fix filename issues");
     cecup_state.stop_button = gtk_button_new_with_label("Stop");
     gtk_widget_set_tooltip_text(cecup_state.stop_button,
                                 "Cancel current operation");
@@ -109,6 +112,8 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
     gtk_box_pack_start(GTK_BOX(btn_hbox), cecup_state.ignore_button, FALSE,
                        FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(btn_hbox), cecup_state.fix_button, FALSE, FALSE,
+                       5);
     gtk_box_pack_end(GTK_BOX(btn_hbox), cecup_state.sync_button, FALSE, FALSE,
                      5);
     gtk_box_pack_end(GTK_BOX(btn_hbox), cecup_state.stop_button, FALSE, FALSE,
@@ -322,6 +327,8 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_sync_clicked), NULL);
     g_signal_connect(cecup_state.ignore_button, "clicked",
                      G_CALLBACK(on_ignore_clicked), NULL);
+    g_signal_connect(cecup_state.fix_button, "clicked",
+                     G_CALLBACK(on_fix_clicked), NULL);
     g_signal_connect(reset_btn, "clicked", G_CALLBACK(on_reset_clicked), NULL);
 
     g_signal_connect(cecup_state.filter_new, "toggled",

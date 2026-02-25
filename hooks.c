@@ -841,6 +841,19 @@ on_ignore_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
+on_fix_clicked(GtkWidget *b, gpointer data) {
+    char *command[] = {
+        "cecup-fix",
+        NULL,
+    };
+
+    (void)b;
+    (void)data;
+    util_command_launch(LENGTH(command), command);
+    return;
+}
+
+static void
 on_invert_clicked(GtkWidget *b, gpointer data) {
     char path_src[MAX_PATH_LENGTH];
     char path_dst[MAX_PATH_LENGTH];
