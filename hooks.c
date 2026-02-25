@@ -1159,6 +1159,14 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 action = row->dst_action;
             }
 
+            if (strcmp(file_path, "-") == 0) {
+                if (side == 0) {
+                    file_path = row->dst_path;
+                } else {
+                    file_path = row->src_path;
+                }
+            }
+
             if (view_col_idx == 1) {
                 const char **strings;
                 if (side == 0) {
