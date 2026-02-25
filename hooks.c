@@ -408,29 +408,42 @@ static void
 on_menu_copy_relative(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GPtrArray *tasks;
-    GString *buffer;
+    char buffer[1048576];
+    char *write_pointer;
+    int64 remaining_capacity;
 
     (void)m;
     ud = (UIUpdateData *)data;
-    buffer = g_string_new("");
+    write_pointer = buffer;
+    remaining_capacity = (int64)sizeof(buffer) - 1;
     tasks = get_target_tasks(ud->side, ud->filepath, ud->action);
 
     if (tasks != NULL) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
+            int64 path_length;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-            if (i > 0) {
-                g_string_append(buffer, "\n");
+            path_length = strlen64(task->filepath);
+
+            if (i > 0 && remaining_capacity > 0) {
+                *write_pointer = '\n';
+                write_pointer += 1;
+                remaining_capacity -= 1;
             }
-            g_string_append(buffer, task->filepath);
+
+            if (remaining_capacity >= path_length) {
+                memcpy64(write_pointer, task->filepath, path_length);
+                write_pointer += path_length;
+                remaining_capacity -= path_length;
+            }
         }
+        *write_pointer = '\0';
         gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
-                               buffer->str, -1);
+                               buffer, -1);
         free_task_list(tasks);
     }
 
-    g_string_free(buffer, TRUE);
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     arena_pop(cecup_state.ui_arena, ud->filepath);
     arena_pop(cecup_state.ui_arena, ud);
@@ -442,11 +455,14 @@ static void
 on_menu_copy_full(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GPtrArray *tasks;
-    GString *buffer;
+    char buffer[1048576];
+    char *write_pointer;
+    int64 remaining_capacity;
 
     (void)m;
     ud = (UIUpdateData *)data;
-    buffer = g_string_new("");
+    write_pointer = buffer;
+    remaining_capacity = (int64)sizeof(buffer) - 1;
     tasks = get_target_tasks(ud->side, ud->filepath, ud->action);
 
     if (tasks != NULL) {
@@ -454,6 +470,7 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
             UIUpdateData *task;
             char full_path[MAX_PATH_LENGTH];
             char *base_path;
+            int64 path_length;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
             if (ud->side == 0) {
@@ -462,18 +479,27 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
                 base_path = task->dst_base;
             }
 
-            SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
-            if (i > 0) {
-                g_string_append(buffer, "\n");
+            path_length
+                = SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
+
+            if (i > 0 && remaining_capacity > 0) {
+                *write_pointer = '\n';
+                write_pointer += 1;
+                remaining_capacity -= 1;
             }
-            g_string_append(buffer, full_path);
+
+            if (remaining_capacity >= path_length) {
+                memcpy64(write_pointer, full_path, path_length);
+                write_pointer += path_length;
+                remaining_capacity -= path_length;
+            }
         }
+        *write_pointer = '\0';
         gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
-                               buffer->str, -1);
+                               buffer, -1);
         free_task_list(tasks);
     }
 
-    g_string_free(buffer, TRUE);
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     arena_pop(cecup_state.ui_arena, ud->filepath);
     arena_pop(cecup_state.ui_arena, ud);
