@@ -591,9 +591,8 @@ on_menu_diff(GtkWidget *m, gpointer data) {
     ud = (UIUpdateData *)data;
     diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.diff_entry));
     term_cmd = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.term_entry));
-    tasks = get_target_tasks(ud->side, ud->filepath, ud->action);
 
-    if (tasks != NULL) {
+    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
 
