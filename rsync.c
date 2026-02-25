@@ -702,6 +702,7 @@ sync_worker(gpointer user_data) {
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
                     char *p_pos;
+                    char *space_pos;
 
                     if (buffer[k] != '\n' && buffer[k] != '\r'
                         && output_position < (int32)SIZEOF(output_buffer) - 1) {
@@ -717,8 +718,7 @@ sync_worker(gpointer user_data) {
                         continue;
                     }
 
-                    p_pos = strstr(output_buffer, "%");
-                    if (p_pos != NULL) {
+                    if ((p_pos = strstr(output_buffer, "%"))) {
                         char *start;
                         start = p_pos;
                         while (start > output_buffer && isdigit(*(start - 1))) {
@@ -763,9 +763,7 @@ sync_worker(gpointer user_data) {
                         continue;
                     }
 
-                    char *space_pos;
-                    space_pos = strchr(output_buffer, ' ');
-                    if (space_pos == NULL) {
+                    if ((space_pos = strchr(output_buffer, ' '))) {
                         continue;
                     }
 
