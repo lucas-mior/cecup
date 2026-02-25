@@ -62,7 +62,7 @@ dispatch_log(char *format, ...) {
     va_end(va_args);
 
     if ((n <= 0) || (n >= SIZEOF(buffer))) {
-        error("Error in vsnprintf.\n");
+        error("Error in vsnprintf (n = %lld)\n", (llong)n);
         exit(EXIT_FAILURE);
     }
 
@@ -117,7 +117,7 @@ dispatch_log_error(char *format, ...) {
     va_end(va_args);
 
     if ((n <= 0) || (n >= SIZEOF(buffer))) {
-        error("Error in vsnprintf.\n");
+        error("Error in vsnprintf (n = %lld)\n", (llong)n);
         exit(EXIT_FAILURE);
     }
 
