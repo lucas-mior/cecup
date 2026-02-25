@@ -574,9 +574,10 @@ sync_worker(gpointer user_data) {
     int32 processed_files_preview = 0;
 
     if (thread_data->is_preview) {
+        UIUpdateData *clear;
+
         g_mutex_lock(&cecup_state.ui_arena_mutex);
-        UIUpdateData *clear
-            = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+        clear = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
         memset64(clear, 0, SIZEOF(UIUpdateData));
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
@@ -588,9 +589,9 @@ sync_worker(gpointer user_data) {
     }
 
     if (thread_data->is_preview && thread_data->scan_equal) {
+        EqualScannerData *sd;
         g_mutex_lock(&cecup_state.ui_arena_mutex);
-        EqualScannerData *sd
-            = arena_push(cecup_state.ui_arena, SIZEOF(EqualScannerData));
+        sd = arena_push(cecup_state.ui_arena, SIZEOF(EqualScannerData));
         memset64(sd, 0, SIZEOF(EqualScannerData));
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
@@ -633,8 +634,9 @@ sync_worker(gpointer user_data) {
             }
             line_len += 1;
             if (line_len > 120 && last_space_index != -1) {
-                log_cmd[last_space_index] = '\n';
                 int32 word_len = j - last_space_index;
+
+                log_cmd[last_space_index] = '\n';
                 for (int32 k = 0; k < word_len; k += 1) {
                     log_cmd[j + 4 - k] = log_cmd[j - k];
                 }
