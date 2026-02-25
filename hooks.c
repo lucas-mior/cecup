@@ -126,24 +126,68 @@ cecup_row_compare(const void *a, const void *b) {
 
 static void
 refresh_ui_list(void) {
+    gboolean show_new;
+    gboolean show_hard;
+    gboolean show_update;
+    gboolean show_equal;
+    gboolean show_delete;
+    gboolean show_ignore;
     int32 current_store_count;
 
-    if (cecup_state.rows_count > 0) {
-        qsort(cecup_state.rows, cecup_state.rows_count, sizeof(CecupRow *),
-              cecup_row_compare);
+    show_new = gtk_toggle_button_get_active(
+        GTK_TOGGLE_BUTTON(cecup_state.filter_new));
+    show_hard = gtk_toggle_button_get_active(
+        GTK_TOGGLE_BUTTON(cecup_state.filter_hard));
+    show_update = gtk_toggle_button_get_active(
+        GTK_TOGGLE_BUTTON(cecup_state.filter_update));
+    show_equal = gtk_toggle_button_get_active(
+        GTK_TOGGLE_BUTTON(cecup_state.filter_equal));
+    show_delete = gtk_toggle_button_get_active(
+        GTK_TOGGLE_BUTTON(cecup_state.filter_delete));
+    show_ignore = gtk_toggle_button_get_active(
+        GTK_TOGGLE_BUTTON(cecup_state.filter_ignore));
+
+    cecup_state.visible_count = 0;
+    for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
+        CecupRow *row = cecup_state.rows[i];
+        gboolean visible = FALSE;
+
+        if (row->src_action == UI_ACTION_NEW) {
+            visible = show_new;
+        } else if (row->src_action == UI_ACTION_HARDLINK) {
+            visible = show_hard;
+        } else if (row->src_action == UI_ACTION_UPDATE) {
+            visible = show_update;
+        } else if (row->src_action == UI_ACTION_EQUAL) {
+            visible = show_equal;
+        } else if (row->src_action == UI_ACTION_DELETED) {
+            visible = show_delete;
+        } else if (row->src_action == UI_ACTION_IGNORE) {
+            visible = show_ignore;
+        }
+
+        if (visible) {
+            cecup_state.visible_rows[cecup_state.visible_count] = row;
+            cecup_state.visible_count += 1;
+        }
+    }
+
+    if (cecup_state.visible_count > 0) {
+        qsort(cecup_state.visible_rows, cecup_state.visible_count,
+              sizeof(CecupRow *), cecup_row_compare);
     }
 
     current_store_count = gtk_tree_model_iter_n_children(
         GTK_TREE_MODEL(cecup_state.store), NULL);
 
-    if (cecup_state.rows_count > current_store_count) {
-        for (int32 i = 0; i < (cecup_state.rows_count - current_store_count);
+    if (cecup_state.visible_count > current_store_count) {
+        for (int32 i = 0; i < (cecup_state.visible_count - current_store_count);
              i += 1) {
             GtkTreeIter iter;
             gtk_list_store_append(cecup_state.store, &iter);
         }
-    } else if (cecup_state.rows_count < current_store_count) {
-        for (int32 i = 0; i < (current_store_count - cecup_state.rows_count);
+    } else if (cecup_state.visible_count < current_store_count) {
+        for (int32 i = 0; i < (current_store_count - cecup_state.visible_count);
              i += 1) {
             GtkTreeIter iter;
             if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cecup_state.store),
@@ -490,10 +534,11 @@ on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
     p = gtk_tree_path_new_from_string(path_str);
     row_idx = gtk_tree_path_get_indices(p)[0];
 
-    if (row_idx >= 0 && row_idx < cecup_state.rows_count) {
-        cecup_state.rows[row_idx]->selected
-            = !cecup_state.rows[row_idx]->selected;
-        refresh_ui_list();
+    if (row_idx >= 0 && row_idx < cecup_state.visible_count) {
+        cecup_state.visible_rows[row_idx]->selected
+            = !cecup_state.visible_rows[row_idx]->selected;
+        gtk_widget_queue_draw(cecup_state.l_tree);
+        gtk_widget_queue_draw(cecup_state.r_tree);
     }
 
     gtk_tree_path_free(p);
@@ -679,7 +724,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             enum CecupAction action;
 
             row_idx = gtk_tree_path_get_indices(path)[0];
-            row = cecup_state.rows[row_idx];
+            row = cecup_state.visible_rows[row_idx];
 
             f_path = (side == 0) ? row->src_path : row->dst_path;
             other_path = (side == 0) ? row->dst_path : row->src_path;
@@ -765,9 +810,9 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                                       NULL)) {
         int32 idx;
         idx = gtk_tree_path_get_indices(p)[0];
-        if (idx >= 0 && idx < cecup_state.rows_count) {
+        if (idx >= 0 && idx < cecup_state.visible_count) {
             char *r;
-            r = (char *)reason_strings[cecup_state.rows[idx]->reason];
+            r = (char *)reason_strings[cecup_state.visible_rows[idx]->reason];
             if (r && strlen(r) > 0) {
                 gtk_tooltip_set_text(t, r);
                 gtk_tree_path_free(p);

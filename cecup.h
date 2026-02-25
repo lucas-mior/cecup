@@ -105,8 +105,11 @@ static struct {
     GtkWidget *r_tree;
 
     CecupRow **rows;
-    int64 rows_count;
-    int64 rows_capacity;
+    int32 rows_count;
+    int32 rows_capacity;
+
+    CecupRow **visible_rows;
+    int32 visible_count;
 
     int32 sort_col;
     GtkSortType sort_order;

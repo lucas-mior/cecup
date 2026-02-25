@@ -42,8 +42,10 @@ main(int32 argc, char *argv[]) {
     gtk_init(&argc, &argv);
 
     cecup_state.rows_count = 0;
-    cecup_state.rows_capacity = 2048;
+    cecup_state.rows_capacity = 4096;
     cecup_state.rows
+        = g_malloc0(cecup_state.rows_capacity*sizeof(CecupRow *));
+    cecup_state.visible_rows
         = g_malloc0(cecup_state.rows_capacity*sizeof(CecupRow *));
 
     cecup_state.sort_col = COL_SRC_PATH;
@@ -226,6 +228,19 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_exclude_clicked), NULL);
     g_signal_connect(reset_btn, "clicked", G_CALLBACK(on_reset_clicked), NULL);
 
+    g_signal_connect(cecup_state.filter_new, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup_state.filter_hard, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup_state.filter_update, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup_state.filter_equal, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup_state.filter_delete, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup_state.filter_ignore, "toggled",
+                     G_CALLBACK(on_filter_toggled), NULL);
+
     g_signal_connect(cecup_state.diff_entry, "changed",
                      G_CALLBACK(on_config_changed), NULL);
     g_signal_connect(cecup_state.term_entry, "changed",
@@ -255,10 +270,10 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
     row_idx = gtk_tree_path_get_indices(path)[0];
     gtk_tree_path_free(path);
 
-    if (row_idx >= cecup_state.rows_count) {
+    if (row_idx < 0 || row_idx >= cecup_state.visible_count) {
         return;
     }
-    row = cecup_state.rows[row_idx];
+    row = cecup_state.visible_rows[row_idx];
 
     switch (col_id) {
     case COL_SELECTED:
@@ -416,13 +431,16 @@ update_ui_handler(gpointer user_data) {
             cecup_state.rows
                 = g_realloc(cecup_state.rows,
                             cecup_state.rows_capacity*sizeof(CecupRow *));
+            cecup_state.visible_rows
+                = g_realloc(cecup_state.visible_rows,
+                            cecup_state.rows_capacity*sizeof(CecupRow *));
         }
         cecup_state.rows[cecup_state.rows_count] = row;
         cecup_state.rows_count += 1;
 
         if (cecup_state.refresh_id == 0) {
             cecup_state.refresh_id
-                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
+                = g_timeout_add(200, refresh_ui_timeout_callback, NULL);
         }
         break;
     }
@@ -464,6 +482,7 @@ update_ui_handler(gpointer user_data) {
             free_cecup_row(cecup_state.rows[i]);
         }
         cecup_state.rows_count = 0;
+        cecup_state.visible_count = 0;
         gtk_list_store_clear(cecup_state.store);
         break;
     default:
