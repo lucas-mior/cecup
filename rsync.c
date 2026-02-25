@@ -29,6 +29,12 @@
 #include "cecup.h"
 #include "util.c"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_rsync 1
+#elif !defined(TESTING_assert)
+#define TESTING_rsync 0
+#endif
+
 #define RSYNC_UNIVERSAL_ARGS "--verbose --update --recursive" \
                              " --partial --progress --info=progress2" \
                              " --links --hard-links --itemize-changes" \
@@ -1222,3 +1228,15 @@ diff_worker(gpointer user_data) {
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
     return NULL;
 }
+
+#if TESTING_rsync
+#include <assert.h>
+#include <string.h>
+#include <stdio.h>
+
+int
+main(void) {
+    ASSERT(true);
+}
+
+#endif

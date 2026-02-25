@@ -22,6 +22,12 @@
 #include "rsync.c"
 #include "config.c"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_hooks 1
+#elif !defined(TESTING_assert)
+#define TESTING_hooks 0
+#endif
+
 static void
 free_cecup_row(CecupRow *row) {
     (void)row;
@@ -1476,3 +1482,15 @@ update_ui_handler(gpointer user_data) {
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
     return G_SOURCE_REMOVE;
 }
+
+#if TESTING_hooks
+#include <assert.h>
+#include <string.h>
+#include <stdio.h>
+
+int
+main(void) {
+    ASSERT(true);
+}
+
+#endif

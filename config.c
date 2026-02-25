@@ -20,6 +20,12 @@
 
 #include "cecup.h"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_config 1
+#elif !defined(TESTING_assert)
+#define TESTING_config 0
+#endif
+
 static void
 read_config(void) {
     GKeyFile *key;
@@ -130,5 +136,17 @@ save_config(void) {
     g_key_file_free(key);
     return;
 }
+
+#if TESTING_config
+#include <assert.h>
+#include <string.h>
+#include <stdio.h>
+
+int
+main(void) {
+    ASSERT(true);
+}
+
+#endif
 
 #endif /* CONFIG_C */
