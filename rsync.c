@@ -328,9 +328,8 @@ bulk_sync_worker(gpointer user_data) {
         } else {
             SNPRINTF(cmd,
                      "rsync " RSYNC_UNIVERSAL_ARGS
-                     " --include='%s' --include='%s/**' --exclude='*'"
-                     " '%s/' '%s/'",
-                     ud->filepath, ud->filepath, ud->src_base, ud->dst_base);
+                     " --relative '%s/./%s' '%s/'",
+                     ud->src_base, ud->filepath, ud->dst_base);
         }
 
         dispatch_log("+ %s\n", cmd);
@@ -771,6 +770,10 @@ sync_worker(gpointer user_data) {
                     int64 sz_path;
 
                     relative_path_entry = space_pos + 1;
+                    while (isspace(*relative_path_entry)) {
+                        relative_path_entry += 1;
+                    }
+
                     action = UI_ACTION_UPDATE;
 
                     if (strncmp(output_buffer, "hf", 2) == 0) {
