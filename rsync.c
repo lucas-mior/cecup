@@ -16,6 +16,11 @@
                              " --links --hard-links --itemize-changes" \
                              " --perms --times --owner --group"
 
+typedef struct EqualScannerData {
+    char src_path[MAX_PATH_LENGTH];
+    char dst_path[MAX_PATH_LENGTH];
+} EqualScannerData;
+
 static void
 dispatch_log(char *format, ...) {
     UIUpdateData *data;
@@ -99,6 +104,10 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
     int32 rel_len;
     char *name;
 
+    if (cecup_state.cancel_sync) {
+        return;
+    }
+
     SNPRINTF(src_path, "%s/%s", src_base, relative_path);
     if (!(dir = opendir(src_path))) {
         return;
@@ -111,6 +120,10 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
         struct stat st_d;
         int32 name_len;
         char sub_rel[MAX_PATH_LENGTH];
+
+        if (cecup_state.cancel_sync) {
+            break;
+        }
 
         name = entry->d_name;
         if (name[0] == '.'
@@ -155,6 +168,16 @@ find_equal_files(char *src_base, char *dst_base, char *relative_path) {
 
     closedir(dir);
     return;
+}
+
+static gpointer
+equal_scanner_worker(gpointer user_data) {
+    EqualScannerData *data;
+
+    data = (EqualScannerData *)user_data;
+    find_equal_files(data->src_path, data->dst_path, "");
+    g_free(data);
+    return NULL;
 }
 
 static gpointer
@@ -379,14 +402,27 @@ sync_worker(gpointer user_data) {
     int32 error_position;
     int32 poll_return;
     UIUpdateData *ready;
+    GThread *scanner_thread;
 
     thread_data = (ThreadData *)user_data;
+    scanner_thread = NULL;
 
     if (thread_data->is_preview) {
         UIUpdateData *clear;
         clear = g_new0(UIUpdateData, 1);
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
+    }
+
+    if (thread_data->is_preview && thread_data->scan_equal) {
+        EqualScannerData *sd;
+
+        dispatch_log("Scanning for equal files (parallel)...\n");
+        sd = g_new0(EqualScannerData, 1);
+        strncpy(sd->src_path, thread_data->src_path, MAX_PATH_LENGTH - 1);
+        strncpy(sd->dst_path, thread_data->dst_path, MAX_PATH_LENGTH - 1);
+        scanner_thread
+            = g_thread_new("equal_scanner", equal_scanner_worker, sd);
     }
 
     ex = (access(cecup_state.exclude_path, F_OK) != -1)
@@ -604,7 +640,7 @@ sync_worker(gpointer user_data) {
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
                     if (buffer[k] == '\n'
-                        || error_position == sizeof(error_buffer) - 1) {
+                        && error_position == sizeof(error_buffer) - 1) {
                         error_buffer[error_position] = '\0';
                         dispatch_log_error(error_buffer);
                         error_position = 0;
@@ -637,10 +673,8 @@ out:
     }
 
 clean_exit:
-    if (thread_data->is_preview && thread_data->scan_equal
-        && !cecup_state.cancel_sync) {
-        dispatch_log("Scanning for equal files...\n");
-        find_equal_files(thread_data->src_path, thread_data->dst_path, "");
+    if (scanner_thread != NULL) {
+        g_thread_join(scanner_thread);
     }
 
     ready = g_new0(UIUpdateData, 1);
