@@ -600,24 +600,25 @@ sync_worker(gpointer user_data) {
             = g_thread_new("equal_scanner", equal_scanner_worker, sd);
     }
 
-    char *ex;
+    char *exclude_arg;
     if (access(cecup_state.ignore_path, F_OK) != -1) {
-        ex = g_strdup_printf("--exclude-from='%s'", cecup_state.ignore_path);
+        exclude_arg
+            = g_strdup_printf("--exclude-from='%s'", cecup_state.ignore_path);
     } else {
         if (errno != ENOENT) {
             dispatch_log_error("Error access %s: %s.\n",
                                cecup_state.ignore_path, strerror(errno));
         }
-        ex = g_strdup("");
+        exclude_arg = g_strdup("");
     }
 
     char cmd[4096];
     SNPRINTF(cmd,
              "rsync " RSYNC_UNIVERSAL_ARGS
              " --delete-excluded %s %s '%s/' '%s/'",
-             thread_data->is_preview ? "--dry-run" : "", ex,
+             thread_data->is_preview ? "--dry-run" : "", exclude_arg,
              thread_data->src_path, thread_data->dst_path);
-    g_free(ex);
+    g_free(exclude_arg);
 
     char log_cmd[8192];
     {
