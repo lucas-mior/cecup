@@ -62,7 +62,9 @@ if [ "$1" = "install" ]; then
     fi
     
     if [ -f "$program.desktop" ]; then
-        install -Dm644 "$program.desktop" "$DESTDIR/usr/share/applications/$program.desktop"
+        install -Dm644 \
+            "$program.desktop" \
+            "$DESTDIR/usr/share/applications/$program.desktop"
     fi
     trace_off
 else
