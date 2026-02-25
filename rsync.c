@@ -211,7 +211,7 @@ count_files_recursive(const char *base_path, const char *relative_path) {
 }
 
 static void
-find_equal_files(EqualScannerData *sd, char *relative_path) {
+find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
     char src_full[MAX_PATH_LENGTH];
@@ -222,9 +222,10 @@ find_equal_files(EqualScannerData *sd, char *relative_path) {
     }
 
     if (relative_path[0] == '\0') {
-        SNPRINTF(src_full, "%s", sd->src_path);
+        SNPRINTF(src_full, "%s", equal_scanner_data->src_path);
     } else {
-        SNPRINTF(src_full, "%s/%s", sd->src_path, relative_path);
+        SNPRINTF(src_full, "%s/%s", equal_scanner_data->src_path,
+                 relative_path);
     }
 
     if (!(dir = opendir(src_full))) {
@@ -256,8 +257,8 @@ find_equal_files(EqualScannerData *sd, char *relative_path) {
             SNPRINTF(sub_rel, "%s", name);
         }
 
-        SNPRINTF(src_full, "%s/%s", sd->src_path, sub_rel);
-        SNPRINTF(dst_full, "%s/%s", sd->dst_path, sub_rel);
+        SNPRINTF(src_full, "%s/%s", equal_scanner_data->src_path, sub_rel);
+        SNPRINTF(dst_full, "%s/%s", equal_scanner_data->dst_path, sub_rel);
 
         if (lstat(src_full, &stat_srt) != 0) {
             dispatch_log_error("Error lstat %s: %s.\n", src_full,
@@ -266,16 +267,16 @@ find_equal_files(EqualScannerData *sd, char *relative_path) {
         }
 
         if (S_ISDIR(stat_srt.st_mode)) {
-            find_equal_files(sd, sub_rel);
+            find_equal_files(equal_scanner_data, sub_rel);
             continue;
         }
 
         if (S_ISREG(stat_srt.st_mode)) {
-            sd->processed_files += 1;
-            if (sd->total_files > 0) {
+            equal_scanner_data->processed_files += 1;
+            if (equal_scanner_data->total_files > 0) {
                 dispatch_progress(DATA_TYPE_PROGRESS_EQUAL,
-                                  (double)sd->processed_files
-                                      / sd->total_files);
+                                  (double)equal_scanner_data->processed_files
+                                      / equal_scanner_data->total_files);
             }
 
             if (lstat(dst_full, &stat_dst) == 0) {
@@ -305,7 +306,7 @@ static gpointer
 equal_scanner_worker(gpointer user_data) {
     EqualScannerData *data;
 
-    data = (EqualScannerData *)user_data;
+    data = user_data;
     data->total_files = count_files_recursive(data->src_path, "");
     find_equal_files(data, "");
     dispatch_progress(DATA_TYPE_PROGRESS_EQUAL, 1.0);
@@ -589,16 +590,19 @@ sync_worker(gpointer user_data) {
     }
 
     if (thread_data->is_preview && thread_data->scan_equal) {
-        EqualScannerData *sd;
+        EqualScannerData *equal_scanner_data;
         g_mutex_lock(&cecup_state.ui_arena_mutex);
-        sd = arena_push(cecup_state.ui_arena, SIZEOF(EqualScannerData));
-        memset64(sd, 0, SIZEOF(EqualScannerData));
+        equal_scanner_data
+            = arena_push(cecup_state.ui_arena, SIZEOF(EqualScannerData));
+        memset64(equal_scanner_data, 0, SIZEOF(EqualScannerData));
         g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
-        strncpy(sd->src_path, thread_data->src_path, MAX_PATH_LENGTH - 1);
-        strncpy(sd->dst_path, thread_data->dst_path, MAX_PATH_LENGTH - 1);
-        scanner_thread
-            = g_thread_new("equal_scanner", equal_scanner_worker, sd);
+        strncpy(equal_scanner_data->src_path, thread_data->src_path,
+                MAX_PATH_LENGTH - 1);
+        strncpy(equal_scanner_data->dst_path, thread_data->dst_path,
+                MAX_PATH_LENGTH - 1);
+        scanner_thread = g_thread_new("equal_scanner", equal_scanner_worker,
+                                      equal_scanner_data);
     }
 
     char *exclude_arg;
