@@ -239,9 +239,8 @@ on_menu_open(GtkWidget *m, gpointer data) {
 
     (void)m;
     ud = (UIUpdateData *)data;
-    tasks = get_target_tasks(ud->side, ud->filepath, ud->action);
 
-    if (tasks != NULL) {
+    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *t;
             char *full;
