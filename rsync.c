@@ -451,17 +451,15 @@ sync_worker(gpointer user_data) {
         goto clean_exit;
     }
 
-    child_pid = fork();
-    if (child_pid < 0) {
+    switch (child_pid = fork()) {
+    case -1:
         dispatch_log_error("Error: fork failed");
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_output[1]);
         XCLOSE(&pipe_error[0]);
         XCLOSE(&pipe_error[1]);
         goto clean_exit;
-    }
-
-    if (child_pid == 0) {
+    case 0:
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_error[0]);
         if (dup2(pipe_output[1], STDOUT_FILENO) == -1) {
@@ -475,6 +473,8 @@ sync_worker(gpointer user_data) {
         execl("/bin/sh", "sh", "-c", cmd, NULL);
         fprintf(stderr, "Error: execl failed\n");
         exit(1);
+    default:
+        break;
     }
 
     XCLOSE(&pipe_output[1]);
