@@ -109,50 +109,24 @@ dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
 }
 
 static int32
-count_files_recursive(const char *base_path, const char *relative_path) {
-    DIR *dir;
-    struct dirent *entry;
-    char full_path[MAX_PATH_LENGTH];
+count_files_shell(const char *path) {
+    FILE *fp;
+    char cmd[MAX_PATH_LENGTH + 64];
+    char result[64];
     int32 count;
 
     count = 0;
-    if (relative_path[0] == '\0') {
-        SNPRINTF(full_path, "%s", base_path);
-    } else {
-        SNPRINTF(full_path, "%s/%s", base_path, relative_path);
-    }
-
-    if (!(dir = opendir(full_path))) {
+    SNPRINTF(cmd, "find '%s' -type f | wc -l", path);
+    fp = popen(cmd, "r");
+    if (fp == NULL) {
         return 0;
     }
 
-    while ((entry = readdir(dir))) {
-        char *name;
-        char sub_rel[MAX_PATH_LENGTH];
-        struct stat st;
-
-        name = entry->d_name;
-        if (name[0] == '.'
-            && (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'))) {
-            continue;
-        }
-
-        if (relative_path[0] != '\0') {
-            SNPRINTF(sub_rel, "%s/%s", relative_path, name);
-        } else {
-            SNPRINTF(sub_rel, "%s", name);
-        }
-
-        SNPRINTF(full_path, "%s/%s", base_path, sub_rel);
-        if (lstat(full_path, &st) == 0) {
-            if (S_ISDIR(st.st_mode)) {
-                count += count_files_recursive(base_path, sub_rel);
-            } else {
-                count += 1;
-            }
-        }
+    if (fgets(result, sizeof(result), fp) != NULL) {
+        count = atoi(result);
     }
-    closedir(dir);
+
+    pclose(fp);
     return count;
 }
 
@@ -238,7 +212,7 @@ equal_scanner_worker(gpointer user_data) {
     EqualScannerData *data;
 
     data = (EqualScannerData *)user_data;
-    data->total_files = count_files_recursive(data->src_path, "");
+    data->total_files = count_files_shell(data->src_path);
     find_equal_files(data, "");
     dispatch_progress(DATA_TYPE_PROGRESS_EQUAL, 1.0);
     g_free(data);
@@ -482,8 +456,8 @@ sync_worker(gpointer user_data) {
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
 
-        dispatch_log("Calculating file count for preview...\n");
-        total_files_preview = count_files_recursive(thread_data->src_path, "");
+        dispatch_log("Estimating file count for preview...\n");
+        total_files_preview = count_files_shell(thread_data->src_path);
     }
 
     if (thread_data->is_preview && thread_data->scan_equal) {
@@ -626,6 +600,10 @@ sync_worker(gpointer user_data) {
                     output_buffer[output_position] = '\0';
                     output_position = 0;
 
+                    if (output_buffer[0] == '\0') {
+                        continue;
+                    }
+
                     char *p_pos;
                     p_pos = strstr(output_buffer, "%");
                     if (p_pos != NULL) {
@@ -639,8 +617,18 @@ sync_worker(gpointer user_data) {
                     }
 
                     if (thread_data->is_preview == 0) {
-                        dispatch_log(output_buffer);
+                        dispatch_log("%s\n", output_buffer);
                         continue;
+                    }
+
+                    processed_files_preview += 1;
+                    if (total_files_preview > 0) {
+                        double frac = (double)processed_files_preview
+                                      / total_files_preview;
+                        if (frac > 1.0) {
+                            frac = 1.0;
+                        }
+                        dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW, frac);
                     }
 
                     if (strncmp(output_buffer, "*deleting", 9) == 0) {
@@ -710,13 +698,6 @@ sync_worker(gpointer user_data) {
                     dispatch_tree(0, action, relative_path_entry, sz_path,
                                   (enum CecupReason)action);
                     g_free(full_src_path);
-
-                    processed_files_preview += 1;
-                    if (total_files_preview > 0) {
-                        dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                          (double)processed_files_preview
-                                              / total_files_preview);
-                    }
                 }
             } else {
                 pipes[0].fd = -1;
