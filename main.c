@@ -92,41 +92,6 @@ main(int32 argc, char *argv[]) {
                      FALSE, 5);
     gtk_box_pack_start(GTK_BOX(header_vbox), btn_hbox, FALSE, FALSE, 5);
 
-    filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    cecup_state.filter_new = gtk_toggle_button_new_with_label(EMOJI_NEW);
-    cecup_state.filter_hard = gtk_toggle_button_new_with_label(EMOJI_LINK);
-    cecup_state.filter_update = gtk_toggle_button_new_with_label(EMOJI_UPDATE);
-    cecup_state.filter_equal = gtk_toggle_button_new_with_label(EMOJI_EQUAL);
-    cecup_state.filter_delete = gtk_toggle_button_new_with_label(EMOJI_DELETE);
-    cecup_state.filter_ignore = gtk_toggle_button_new_with_label(EMOJI_IGNORE);
-
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_new),
-                                 TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_hard),
-                                 TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_update),
-                                 TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_equal),
-                                 FALSE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_delete),
-                                 TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_ignore),
-                                 TRUE);
-
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_new, FALSE,
-                       FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_hard, FALSE,
-                       FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_update, FALSE,
-                       FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_equal, FALSE,
-                       FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_delete, FALSE,
-                       FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_ignore, FALSE,
-                       FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(header_vbox), filter_hbox, FALSE, FALSE, 5);
-
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup_state.check_fs_toggle
         = gtk_check_button_new_with_label("Require different filesystems");
@@ -147,10 +112,6 @@ main(int32 argc, char *argv[]) {
     gtk_entry_set_text(GTK_ENTRY(cecup_state.term_entry), "xterm");
     gtk_box_pack_start(GTK_BOX(options_hbox), reset_btn, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
-
-    cecup_state.stats_label = gtk_label_new("✅ Ready");
-    gtk_box_pack_start(GTK_BOX(main_vbox), cecup_state.stats_label, FALSE,
-                       FALSE, 0);
 
     for (int32 i = 0; i < NUM_COLS; i += 1) {
         column_types[i] = G_TYPE_INT;
@@ -216,6 +177,40 @@ main(int32 argc, char *argv[]) {
     cecup_state.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(log_view));
     gtk_container_add(GTK_CONTAINER(log_scroll), log_view);
     gtk_paned_pack2(GTK_PANED(v_paned), log_scroll, FALSE, FALSE);
+
+    filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_widget_set_halign(filter_hbox, GTK_ALIGN_CENTER);
+    cecup_state.filter_new = gtk_toggle_button_new_with_label(EMOJI_NEW);
+    cecup_state.filter_hard = gtk_toggle_button_new_with_label(EMOJI_LINK);
+    cecup_state.filter_update = gtk_toggle_button_new_with_label(EMOJI_UPDATE);
+    cecup_state.filter_equal = gtk_toggle_button_new_with_label(EMOJI_EQUAL);
+    cecup_state.filter_delete = gtk_toggle_button_new_with_label(EMOJI_DELETE);
+    cecup_state.filter_ignore = gtk_toggle_button_new_with_label(EMOJI_IGNORE);
+
+    gtk_widget_set_tooltip_text(cecup_state.filter_new, "Show New Files");
+    gtk_widget_set_tooltip_text(cecup_state.filter_hard, "Show Hardlinks");
+    gtk_widget_set_tooltip_text(cecup_state.filter_update, "Show Updates");
+    gtk_widget_set_tooltip_text(cecup_state.filter_equal, "Show Identical");
+    gtk_widget_set_tooltip_text(cecup_state.filter_delete, "Show Deletions");
+    gtk_widget_set_tooltip_text(cecup_state.filter_ignore, "Show Ignored");
+
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_new, FALSE,
+                       FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_hard, FALSE,
+                       FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_update, FALSE,
+                       FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_equal, FALSE,
+                       FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_delete, FALSE,
+                       FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_ignore, FALSE,
+                       FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(main_vbox), filter_hbox, FALSE, FALSE, 0);
+
+    cecup_state.stats_label = gtk_label_new("✅ Ready");
+    gtk_box_pack_start(GTK_BOX(main_vbox), cecup_state.stats_label, FALSE,
+                       FALSE, 5);
 
     read_config();
 

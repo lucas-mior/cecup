@@ -138,10 +138,13 @@ refresh_ui_list(void) {
     int32 count_new = 0;
     int32 count_hard = 0;
     int32 count_update = 0;
+    int32 count_equal = 0;
     int32 count_delete = 0;
+    int32 count_ignore = 0;
     int64 total_size_bytes = 0;
     char *pretty_size;
-    char stats_text[1024];
+    char stats_text[128];
+    char btn_label[64];
 
     show_new = gtk_toggle_button_get_active(
         GTK_TOGGLE_BUTTON(cecup_state.filter_new));
@@ -175,11 +178,13 @@ refresh_ui_list(void) {
             total_size_bytes += row->size_raw;
         } else if (row->src_action == UI_ACTION_EQUAL) {
             visible = show_equal;
+            count_equal += 1;
         } else if (row->src_action == UI_ACTION_DELETED) {
             visible = show_delete;
             count_delete += 1;
         } else if (row->src_action == UI_ACTION_IGNORE) {
             visible = show_ignore;
+            count_ignore += 1;
         }
 
         if (visible) {
@@ -188,10 +193,21 @@ refresh_ui_list(void) {
         }
     }
 
+    SNPRINTF(btn_label, "%s %d", EMOJI_NEW, count_new);
+    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_new), btn_label);
+    SNPRINTF(btn_label, "%s %d", EMOJI_LINK, count_hard);
+    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_hard), btn_label);
+    SNPRINTF(btn_label, "%s %d", EMOJI_UPDATE, count_update);
+    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_update), btn_label);
+    SNPRINTF(btn_label, "%s %d", EMOJI_EQUAL, count_equal);
+    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_equal), btn_label);
+    SNPRINTF(btn_label, "%s %d", EMOJI_DELETE, count_delete);
+    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_delete), btn_label);
+    SNPRINTF(btn_label, "%s %d", EMOJI_IGNORE, count_ignore);
+    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_ignore), btn_label);
+
     pretty_size = bytes_pretty(total_size_bytes);
-    SNPRINTF(stats_text, "%s %d | %s %d | %s %d | %s %d | 📦 %s", EMOJI_NEW,
-             count_new, EMOJI_UPDATE, count_update, EMOJI_LINK, count_hard,
-             EMOJI_DELETE, count_delete, pretty_size);
+    SNPRINTF(stats_text, "Total Transfer Size: 📦 %s", pretty_size);
     gtk_label_set_text(GTK_LABEL(cecup_state.stats_label), stats_text);
     g_free(pretty_size);
 
