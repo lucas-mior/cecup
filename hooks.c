@@ -400,9 +400,8 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
 
     (void)m;
     ud = (UIUpdateData *)data;
-    tasks = get_target_tasks(ud->side, ud->filepath, ud->action);
 
-    if (tasks != NULL) {
+    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
             char full_path[MAX_PATH_LENGTH];
