@@ -450,13 +450,13 @@ sync_worker(gpointer user_data) {
 
     dispatch_log("+ %s", log_cmd);
 
-    if (pipe(pipe_output) == -1) {
+    if (pipe(pipe_output) < 0) {
         dispatch_log_error("Error creating pipe for stdout: %s.\n",
                            strerror(errno));
         goto clean_exit;
     }
 
-    if (pipe(pipe_error) == -1) {
+    if (pipe(pipe_error) < 0) {
         dispatch_log_error("Error creating pipe for stderr: %s.\n",
                            strerror(errno));
         XCLOSE(&pipe_output[0]);
@@ -475,10 +475,10 @@ sync_worker(gpointer user_data) {
     case 0:
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_error[0]);
-        if (dup2(pipe_output[1], STDOUT_FILENO) == -1) {
+        if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
             exit(1);
         }
-        if (dup2(pipe_error[1], STDERR_FILENO) == -1) {
+        if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
             exit(1);
         }
         XCLOSE(&pipe_output[1]);
@@ -638,7 +638,7 @@ sync_worker(gpointer user_data) {
             poll_descriptors[1].fd = -1;
         }
 
-        if (poll_descriptors[0].fd == -1 && poll_descriptors[1].fd == -1) {
+        if ((poll_descriptors[0].fd < 0) && (poll_descriptors[1].fd < 0)) {
             break;
         }
     }
