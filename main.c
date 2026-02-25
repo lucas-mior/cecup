@@ -40,7 +40,7 @@ main(int32 argc, char *argv[]) {
     char *default_src;
     char *default_dst;
     char config_base[MAX_PATH_LENGTH];
-    char *user_config_dir;
+    char *XDG_CONFIG_HOME;
     GType column_types[NUM_COLS];
     char source_path_buffer[4096];
     int64 source_path_length;
@@ -64,8 +64,10 @@ main(int32 argc, char *argv[]) {
     cecup_state.sort_order = GTK_SORT_ASCENDING;
     cecup_state.refresh_id = 0;
 
-    user_config_dir = (char *)g_get_user_config_dir();
-    SNPRINTF(config_base, "%s/cecup", user_config_dir);
+    if ((XDG_CONFIG_HOME = getenv("XDG_CONFIG_HOME")) == NULL) {
+        XDG_CONFIG_HOME = ".config";
+    }
+    SNPRINTF(config_base, "%s/cecup", XDG_CONFIG_HOME);
 
     if (access(config_base, F_OK) == -1) {
         char cmd[4096];
