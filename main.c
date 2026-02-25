@@ -44,10 +44,9 @@ main(int32 argc, char *argv[]) {
 
     cecup_state.rows_count = 0;
     cecup_state.rows_capacity = 4096;
-    cecup_state.rows
-        = g_malloc0(cecup_state.rows_capacity*sizeof(CecupRow *));
+    cecup_state.rows = xmalloc(cecup_state.rows_capacity*sizeof(CecupRow *));
     cecup_state.visible_rows
-        = g_malloc0(cecup_state.rows_capacity*sizeof(CecupRow *));
+        = xmalloc(cecup_state.rows_capacity*sizeof(CecupRow *));
 
     cecup_state.sort_col = COL_SRC_PATH;
     cecup_state.sort_order = GTK_SORT_ASCENDING;
