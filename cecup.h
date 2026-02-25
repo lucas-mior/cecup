@@ -3,6 +3,7 @@
 
 #include <gtk/gtk.h>
 #include "generic.c"
+#include "util.c"
 #include "arena.c"
 
 #define EMOJI_NEW "➕"
