@@ -759,7 +759,7 @@ sync_worker(gpointer user_data) {
         while (1) {
             if (cecup_state.cancel_sync) {
                 if (kill(-child_pid, SIGTERM) < 0) {
-                    dispatch_log_error("Error kill process group: %s.\n",
+                    dispatch_log_error("Error killing process group: %s.\n",
                                        strerror(errno));
                 }
                 dispatch_log_error("rsync operation stopped by user.\n");
