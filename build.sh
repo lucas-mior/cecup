@@ -144,13 +144,13 @@ case "$target" in
 
     ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
     vtags.sed tags | sort | uniq > .tags.vim       2> /dev/null || true
-    $CC $CPPFLAGS $CFLAGS main.c -o "./$program" $LDFLAGS
+    $CC $CPPFLAGS $CFLAGS main.c -o "bin/$program" $LDFLAGS
 
     trace_off
     ;;
 "install")
     trace_on
-    if [ ! -f "$program" ]; then
+    if [ ! -f "bin/$program" ]; then
         $0 build
     fi
     install -Dm755 bin/${program}   ${DESTDIR}${PREFIX}/bin/${program}
@@ -228,7 +228,7 @@ case "$target" in
     vg_flags="--error-exitcode=1 --errors-for-leak-kinds=all"
     vg_flags="$vg_flags --leak-check=full --show-leak-kinds=all"
     vg_flags="$vg_flags --track-origins=yes"
-    valgrind $vg_flags -s --tool=memcheck $program
+    valgrind $vg_flags -s --tool=memcheck bin/$program
     trace_off
     exit
     ;;

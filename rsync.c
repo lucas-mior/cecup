@@ -509,7 +509,6 @@ bulk_sync_worker(gpointer user_data) {
         char error_buffer[8192];
         int32 output_position;
         int32 error_position;
-        int32 poll_return;
         UIUpdateData *remove_data;
 
         ud = (UIUpdateData *)g_ptr_array_index(tasks, i);
@@ -627,7 +626,7 @@ bulk_sync_worker(gpointer user_data) {
                 break;
             }
 
-            switch ((poll_return = poll(pipes, 2, 100))) {
+            switch (poll(pipes, 2, 100)) {
             case -1:
                 dispatch_log_error("Error in poll: %s.\n", strerror(errno));
                 goto out;

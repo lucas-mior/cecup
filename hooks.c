@@ -203,7 +203,6 @@ cecup_row_compare(const void *a, const void *b) {
 
     row_a = *(CecupRow **)a;
     row_b = *(CecupRow **)b;
-    result = 0;
 
     switch (cecup_state.sort_col) {
     case COL_SRC_PATH:

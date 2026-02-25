@@ -1,5 +1,6 @@
 *.o
 /cecup
+/bin/
 /package/cecup
 /package/src
 /package/pkg

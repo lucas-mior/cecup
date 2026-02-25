@@ -987,10 +987,9 @@ util_command(int argc, char **argv) {
 }
 static int
 util_command_launch(int argc, char **argv) {
-    pid_t child;
     (void)argc;
 
-    switch (child = fork()) {
+    switch (fork()) {
     case 0:
         if (setsid() < 0) {
             error("Error in setsid: %s.\n", strerror(errno));
