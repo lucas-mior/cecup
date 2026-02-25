@@ -753,13 +753,17 @@ on_scroll_sync(GtkAdjustment *s, gpointer d) {
 static gboolean
 on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
     int32 side;
+    GtkTreePath *path;
 
     (void)data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
 
-    if (event->type == GDK_BUTTON_PRESS && event->button == 3) {
-        GtkTreePath *path;
+    if (event->type != GDK_BUTTON_PRESS) {
+        return false;
+    }
 
+    switch (event->button) {
+    case GDK_BUTTON_SECONDARY:
         if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
                                           (gint)event->y, &path, NULL, NULL,
                                           NULL)) {
@@ -865,9 +869,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             gtk_tree_path_free(path);
             return TRUE;
         }
-    } else if (event->type == GDK_BUTTON_PRESS && event->button == 1) {
-        GtkTreePath *path;
-
+        break;
+    case GDK_BUTTON_PRIMARY:
         if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
                                           (gint)event->y, &path, NULL, NULL,
                                           NULL)) {
@@ -881,6 +884,9 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             }
             gtk_tree_path_free(path);
         }
+        break;
+    default:
+        break;
     }
     return FALSE;
 }
