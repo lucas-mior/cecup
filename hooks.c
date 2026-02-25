@@ -630,22 +630,29 @@ on_menu_ignore_ext(GtkWidget *m, gpointer data) {
     (void)m;
     ud = (UIUpdateData *)data;
 
-    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
-        if ((fp = fopen(cecup_state.ignore_path, "a")) != NULL) {
-            for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-                UIUpdateData *task;
-                char *ext;
-
-                task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-                if ((ext = strrchr(task->filepath, '.')) != NULL) {
-                    fprintf(fp, "\n*%s", ext);
-                }
-            }
-            fclose(fp);
-            on_preview_clicked(NULL, NULL);
+    do {
+        if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))
+            == NULL) {
+            break;
         }
+        if ((fp = fopen(cecup_state.ignore_path, "a")) == NULL) {
+            dispatch_log_error("Error opening %s: %s.\n",
+                               cecup_state.ignore_path, strerror(errno));
+            break;
+        }
+        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+            UIUpdateData *task;
+            char *ext;
+
+            task = (UIUpdateData *)g_ptr_array_index(tasks, i);
+            if ((ext = strrchr(task->filepath, '.')) != NULL) {
+                fprintf(fp, "\n*%s", ext);
+            }
+        }
+        fclose(fp);
+        on_preview_clicked(NULL, NULL);
         free_task_list(tasks);
-    }
+    } while (0);
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     arena_pop(cecup_state.ui_arena, ud->filepath);
