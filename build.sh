@@ -2,6 +2,7 @@
 
 set -e
 program="cecup"
+DESTDIR="${DESTDIR:-}"
 
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
@@ -50,11 +51,28 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-implicit-int-enum-cast"
 fi
 
-trace_on
-# shellcheck disable=SC2086
-rm ./$program || true
-ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
-vtags.sed tags | sort | uniq > .tags.vim       2> /dev/null || true
-$CC $CPPFLAGS $CFLAGS main.c -o ./$program $LDFLAGS
-./$program
-trace_off
+if [ "$1" = "install" ]; then
+    trace_on
+    $CC $CPPFLAGS $CFLAGS main.c -o "./$program" $LDFLAGS
+    
+    install -Dm755 "./$program" "$DESTDIR/usr/bin/$program"
+    
+    install -dm755 "$DESTDIR/etc/$program"
+    if [ -d "config" ]; then
+        cp -rp config/* "$DESTDIR/etc/$program/"
+    fi
+    
+    if [ -f "$program.desktop" ]; then
+        install -Dm644 "$program.desktop" "$DESTDIR/usr/share/applications/$program.desktop"
+    fi
+    trace_off
+else
+    trace_on
+    # shellcheck disable=SC2086
+    rm ./$program || true
+    ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
+    vtags.sed tags | sort | uniq > .tags.vim       2> /dev/null || true
+    $CC $CPPFLAGS $CFLAGS main.c -o ./$program $LDFLAGS
+    ./$program
+    trace_off
+fi

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Cecup
+Comment=Directory synchronization frontend for rsync
+Exec=cecup
+Icon=folder-sync
+Terminal=false
+Type=Application
+Categories=System;FileTools;GTK;
+Keywords=rsync;sync;backup;copy;
+StartupNotify=true
