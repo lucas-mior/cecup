@@ -170,7 +170,7 @@ bulk_sync_worker(gpointer user_data) {
         int32 pipe_output[2];
         int32 pipe_error[2];
         pid_t child_pid;
-        struct pollfd poll_descriptors[2];
+        struct pollfd pipes[2];
         char output_buffer[8192];
         char error_buffer[8192];
         char temp_output[2048];
@@ -250,10 +250,10 @@ bulk_sync_worker(gpointer user_data) {
         XCLOSE(&pipe_output[1]);
         XCLOSE(&pipe_error[1]);
 
-        poll_descriptors[0].fd = pipe_output[0];
-        poll_descriptors[0].events = POLLIN;
-        poll_descriptors[1].fd = pipe_error[0];
-        poll_descriptors[1].events = POLLIN;
+        pipes[0].fd = pipe_output[0];
+        pipes[0].events = POLLIN;
+        pipes[1].fd = pipe_error[0];
+        pipes[1].events = POLLIN;
 
         output_position = 0;
         error_position = 0;
@@ -265,7 +265,7 @@ bulk_sync_worker(gpointer user_data) {
                 break;
             }
 
-            switch ((poll_return = poll(poll_descriptors, 2, 200))) {
+            switch ((poll_return = poll(pipes, 2, 200))) {
             case -1:
                 dispatch_log_error("Error in poll: %s.\n", strerror(errno));
                 break;
@@ -275,12 +275,12 @@ bulk_sync_worker(gpointer user_data) {
                 break;
             }
 
-            if (poll_descriptors[0].revents & POLLIN) {
+            if (pipes[0].revents & POLLIN) {
                 int64 r
                     = read64(pipe_output[0], temp_output, sizeof(temp_output));
                 if (r < 0) {
                     dispatch_log_error("Error: read from stdout failed");
-                    poll_descriptors[0].fd = -1;
+                    pipes[0].fd = -1;
                 } else if (r > 0) {
                     for (int64 k = 0; k < r; k += 1) {
                         if (temp_output[k] == '\n'
@@ -294,17 +294,17 @@ bulk_sync_worker(gpointer user_data) {
                         }
                     }
                 } else {
-                    poll_descriptors[0].fd = -1;
+                    pipes[0].fd = -1;
                 }
-            } else if (poll_descriptors[0].revents & (POLLHUP | POLLERR)) {
-                poll_descriptors[0].fd = -1;
+            } else if (pipes[0].revents & (POLLHUP | POLLERR)) {
+                pipes[0].fd = -1;
             }
 
-            if (poll_descriptors[1].revents & POLLIN) {
+            if (pipes[1].revents & POLLIN) {
                 int64 r = read64(pipe_error[0], temp_error, sizeof(temp_error));
                 if (r < 0) {
                     dispatch_log_error("Error: read from stderr failed");
-                    poll_descriptors[1].fd = -1;
+                    pipes[1].fd = -1;
                 } else if (r > 0) {
                     for (int64 k = 0; k < r; k += 1) {
                         if (temp_error[k] == '\n'
@@ -318,13 +318,13 @@ bulk_sync_worker(gpointer user_data) {
                         }
                     }
                 } else {
-                    poll_descriptors[1].fd = -1;
+                    pipes[1].fd = -1;
                 }
-            } else if (poll_descriptors[1].revents & (POLLHUP | POLLERR)) {
-                poll_descriptors[1].fd = -1;
+            } else if (pipes[1].revents & (POLLHUP | POLLERR)) {
+                pipes[1].fd = -1;
             }
 
-            if ((poll_descriptors[0].fd < 0) && (poll_descriptors[1].fd < 0)) {
+            if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
                 break;
             }
         }
@@ -383,7 +383,7 @@ sync_worker(gpointer user_data) {
     int32 pipe_output[2];
     int32 pipe_error[2];
     pid_t child_pid;
-    struct pollfd poll_descriptors[2];
+    struct pollfd pipes[2];
     char output_buffer[8192];
     char error_buffer[8192];
     char temp_output[2048];
@@ -489,10 +489,10 @@ sync_worker(gpointer user_data) {
     XCLOSE(&pipe_output[1]);
     XCLOSE(&pipe_error[1]);
 
-    poll_descriptors[0].fd = pipe_output[0];
-    poll_descriptors[0].events = POLLIN;
-    poll_descriptors[1].fd = pipe_error[0];
-    poll_descriptors[1].events = POLLIN;
+    pipes[0].fd = pipe_output[0];
+    pipes[0].events = POLLIN;
+    pipes[1].fd = pipe_error[0];
+    pipes[1].events = POLLIN;
 
     output_position = 0;
     error_position = 0;
@@ -504,7 +504,7 @@ sync_worker(gpointer user_data) {
             break;
         }
 
-        poll_return = poll(poll_descriptors, 2, 200);
+        poll_return = poll(pipes, 2, 200);
         if (poll_return < 0) {
             dispatch_log_error("Error in poll: %s.\n", strerror(errno));
             break;
@@ -514,11 +514,11 @@ sync_worker(gpointer user_data) {
             continue;
         }
 
-        if (poll_descriptors[0].revents & POLLIN) {
+        if (pipes[0].revents & POLLIN) {
             int64 r = read64(pipe_output[0], temp_output, sizeof(temp_output));
             if (r < 0) {
                 dispatch_log_error("Error: read from stdout failed");
-                poll_descriptors[0].fd = -1;
+                pipes[0].fd = -1;
             } else if (r > 0) {
                 for (int64 k = 0; k < r; k += 1) {
                     if (temp_output[k] != '\n'
@@ -603,17 +603,17 @@ sync_worker(gpointer user_data) {
                     g_free(full_src);
                 }
             } else {
-                poll_descriptors[0].fd = -1;
+                pipes[0].fd = -1;
             }
-        } else if (poll_descriptors[0].revents & (POLLHUP | POLLERR)) {
-            poll_descriptors[0].fd = -1;
+        } else if (pipes[0].revents & (POLLHUP | POLLERR)) {
+            pipes[0].fd = -1;
         }
 
-        if (poll_descriptors[1].revents & POLLIN) {
+        if (pipes[1].revents & POLLIN) {
             error_bytes = read64(pipe_error[0], temp_error, sizeof(temp_error));
             if (error_bytes < 0) {
                 dispatch_log_error("Error: read from stderr failed");
-                poll_descriptors[1].fd = -1;
+                pipes[1].fd = -1;
             } else if (error_bytes > 0) {
                 for (int64 k = 0; k < error_bytes; k += 1) {
                     if (temp_error[k] == '\n'
@@ -627,13 +627,13 @@ sync_worker(gpointer user_data) {
                     }
                 }
             } else {
-                poll_descriptors[1].fd = -1;
+                pipes[1].fd = -1;
             }
-        } else if (poll_descriptors[1].revents & (POLLHUP | POLLERR)) {
-            poll_descriptors[1].fd = -1;
+        } else if (pipes[1].revents & (POLLHUP | POLLERR)) {
+            pipes[1].fd = -1;
         }
 
-        if ((poll_descriptors[0].fd < 0) && (poll_descriptors[1].fd < 0)) {
+        if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
             break;
         }
     }
