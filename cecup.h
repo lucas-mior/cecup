@@ -3,7 +3,6 @@
 
 #include <gtk/gtk.h>
 #include "generic.c"
-#include "util.c"
 #include "arena.c"
 
 #define EMOJI_NEW "➕"
@@ -38,23 +37,34 @@ enum CecupReason {
     NUM_UI_REASONS
 };
 
-static const char *action_strings[] = {
+static const char *src_action_strings[] = {
     [UI_ACTION_NONE]     = "",
-    [UI_ACTION_NEW]      = "New",
-    [UI_ACTION_HARDLINK] = "Hardlink",
-    [UI_ACTION_UPDATE]   = "Update",
+    [UI_ACTION_NEW]      = "Copy to destination",
+    [UI_ACTION_HARDLINK] = "Hardlink to destination",
+    [UI_ACTION_UPDATE]   = "Update destination",
     [UI_ACTION_EQUAL]    = "Equal",
-    [UI_ACTION_DELETED]  = "Deleted",
-    [UI_ACTION_DELETE]   = "Delete",
+    [UI_ACTION_DELETED]  = "Missing in source",
+    [UI_ACTION_DELETE]   = "",
+    [UI_ACTION_IGNORE]   = "Ignore"
+};
+
+static const char *dst_action_strings[] = {
+    [UI_ACTION_NONE]     = "",
+    [UI_ACTION_NEW]      = "Copy from source",
+    [UI_ACTION_HARDLINK] = "Hardlink from source",
+    [UI_ACTION_UPDATE]   = "Update from source",
+    [UI_ACTION_EQUAL]    = "Equal",
+    [UI_ACTION_DELETED]  = "",
+    [UI_ACTION_DELETE]   = "Delete from destination",
     [UI_ACTION_IGNORE]   = "Ignore"
 };
 
 static const char *reason_strings[] = {
     [UI_REASON_NONE]      = "",
-    [UI_REASON_EQUAL]     = "Files have the same name, size and modification time",
+    [UI_REASON_EQUAL]      = "Files have the same name, size and modification time",
     [UI_REASON_EXCLUDED]  = "Matched exclusion pattern",
     [UI_REASON_MISSING]   = "Missing in source directory",
-    [UI_REASON_NEW]       = "New file in source directory",
+    [UI_REASON_NEW]        = "New file in source directory",
     [UI_REASON_HARDLINK]  = "Hardlink in source directory",
     [UI_REASON_UPDATE]    = "Updated in source directory"
 };

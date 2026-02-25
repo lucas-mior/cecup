@@ -1,9 +1,6 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
-
 #include "cecup.h"
-#include "util.c"
-#include "arena.c"
 #include "rsync.c"
 #include "config.c"
 
@@ -957,8 +954,9 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                     tip_text = g_strdup(r);
                 }
             } else if (view_col_idx == 2) {
-                tip_text = g_strdup_printf("%s: %s - %s", path,
-                                           action_strings[action],
+                const char **strings;
+                strings = (side == 0) ? src_action_strings : dst_action_strings;
+                tip_text = g_strdup_printf("%s: %s - %s", path, strings[action],
                                            reason_strings[row->reason]);
             } else if (view_col_idx == 3) {
                 tip_text
