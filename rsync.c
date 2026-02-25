@@ -657,7 +657,7 @@ bulk_sync_worker(gpointer user_data) {
                         if (buffer[k] == '\n'
                             || output_position == SIZEOF(output_buffer) - 1) {
                             output_buffer[output_position] = '\0';
-                            dispatch_log(output_buffer);
+                            dispatch_log("%s.\n", output_buffer);
                             output_position = 0;
                         } else {
                             output_buffer[output_position] = buffer[k];
@@ -1010,7 +1010,7 @@ sync_worker(gpointer user_data) {
                     }
 
                     if (thread_data->is_preview == 0) {
-                        dispatch_log(output_buffer);
+                        dispatch_log("%s.\n", output_buffer);
                         continue;
                     }
 
