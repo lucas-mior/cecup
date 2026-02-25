@@ -37,6 +37,17 @@ enum CecupReason {
     NUM_UI_REASONS
 };
 
+static const char *action_emojis[] = {
+    [UI_ACTION_NONE]     = "",
+    [UI_ACTION_NEW]      = EMOJI_NEW,
+    [UI_ACTION_HARDLINK] = EMOJI_LINK,
+    [UI_ACTION_UPDATE]   = EMOJI_UPDATE,
+    [UI_ACTION_EQUAL]    = EMOJI_EQUAL,
+    [UI_ACTION_DELETED]  = EMOJI_DELETE,
+    [UI_ACTION_DELETE]   = EMOJI_DELETE,
+    [UI_ACTION_IGNORE]   = EMOJI_IGNORE
+};
+
 static const char *src_action_strings[] = {
     [UI_ACTION_NONE]     = "",
     [UI_ACTION_NEW]      = "Copy to destination",

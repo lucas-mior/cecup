@@ -363,11 +363,11 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
         g_object_set(renderer, "active", row->selected, NULL);
         break;
     case COL_SRC_ACTION:
-        g_object_set(renderer, "text", src_action_strings[row->src_action],
+        g_object_set(renderer, "text", action_emojis[row->src_action],
                      "cell-background", row->src_color, NULL);
         break;
     case COL_DST_ACTION:
-        g_object_set(renderer, "text", dst_action_strings[row->dst_action],
+        g_object_set(renderer, "text", action_emojis[row->dst_action],
                      "cell-background", row->dst_color, NULL);
         break;
     case COL_SRC_PATH:

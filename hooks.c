@@ -948,15 +948,11 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             action = (side == 0) ? row->src_action : row->dst_action;
 
             if (view_col_idx == 1) {
-                char *r;
-                r = (char *)reason_strings[row->reason];
-                if (r && strlen64(r) > 0) {
-                    tip_text = g_strdup(r);
-                }
-            } else if (view_col_idx == 2) {
                 const char **strings;
                 strings = (side == 0) ? src_action_strings : dst_action_strings;
-                tip_text = g_strdup_printf("%s: %s - %s", path, strings[action],
+                tip_text = g_strdup(strings[action]);
+            } else if (view_col_idx == 2) {
+                tip_text = g_strdup_printf("%s: %s", path,
                                            reason_strings[row->reason]);
             } else if (view_col_idx == 3) {
                 tip_text
