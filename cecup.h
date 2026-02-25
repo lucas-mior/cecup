@@ -18,7 +18,7 @@ enum CecupAction {
     NUM_UI_ACTIONS
 };
 
-typedef enum CecupReason {
+enum CecupReason {
     UI_REASON_NONE = 0,
     UI_REASON_IDENTICAL,
     UI_REASON_EXCLUDED,
@@ -27,7 +27,7 @@ typedef enum CecupReason {
     UI_REASON_HARDLINK,
     UI_REASON_UPDATE,
     NUM_UI_REASONS
-} CecupReason;
+};
 
 static const char *action_strings[] = {
     [UI_ACTION_NONE]     = "",
@@ -74,7 +74,7 @@ typedef struct CecupRow {
     int64 size_raw;
     char *src_color;
     char *dst_color;
-    CecupReason reason;
+    enum CecupReason reason;
 } CecupRow;
 
 static struct {
@@ -130,7 +130,7 @@ typedef struct UIUpdateData {
     char *message;
     enum CecupAction action;
     char *filepath;
-    CecupReason reason;
+    enum CecupReason reason;
     char *src_base;
     char *dst_base;
     char *diff_tool;

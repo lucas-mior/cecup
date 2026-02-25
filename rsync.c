@@ -64,7 +64,7 @@ dispatch_log_error(char *format, ...) {
 
 static void
 dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
-              CecupReason reason) {
+              enum CecupReason reason) {
     UIUpdateData *data;
 
     data = g_new0(UIUpdateData, 1);
@@ -522,7 +522,7 @@ sync_worker(gpointer user_data) {
                                 struct stat st_s;
                                 struct stat st_d;
                                 int64 sz;
-                                CecupReason reason;
+                                enum CecupReason reason;
 
                                 relative_path = output_buffer + 10;
                                 while (isspace(*relative_path)) {
@@ -571,7 +571,7 @@ sync_worker(gpointer user_data) {
                                 sz = (stat(full_src, &st) == 0) ? st.st_size
                                                                 : 0;
                                 dispatch_tree(0, action, relative_path, sz,
-                                              (CecupReason)action);
+                                              (enum CecupReason)action);
                                 g_free(full_src);
                             }
                         } else {
