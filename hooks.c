@@ -189,8 +189,9 @@ refresh_ui_list(void) {
     }
 
     pretty_size = bytes_pretty(total_size_bytes);
-    SNPRINTF(stats_text, "🆕 %d | 🔄 %d | 🔗 %d | 🗑️ %d | 📦 %s", count_new,
-             count_update, count_hard, count_delete, pretty_size);
+    SNPRINTF(stats_text, "%s %d | %s %d | %s %d | %s %d | 📦 %s", EMOJI_NEW,
+             count_new, EMOJI_UPDATE, count_update, EMOJI_LINK, count_hard,
+             EMOJI_DELETE, count_delete, pretty_size);
     gtk_label_set_text(GTK_LABEL(cecup_state.stats_label), stats_text);
     g_free(pretty_size);
 
