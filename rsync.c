@@ -8,8 +8,9 @@
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
-#include "util.c"
+
 #include "cecup.h"
+#include "util.c"
 
 #define RSYNC_UNIVERSAL_ARGS "--verbose --update --recursive" \
                              " --partial --progress --info=progress2" \

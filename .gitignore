@@ -1,5 +1,8 @@
 *.o
 /cecup
+/package/cecup
+/package/src
+/package/pkg
 /.cache/
 compile_commands.json
 tags

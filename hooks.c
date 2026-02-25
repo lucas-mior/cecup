@@ -1157,14 +1157,14 @@ update_ui_handler(gpointer user_data) {
 
             new_capacity = cecup_state.rows_capacity*2;
             new_rows = arena_push(cecup_state.row_arena,
-                                  new_capacity*sizeof(CecupRow *));
+                                  new_capacity*SIZEOF(CecupRow *));
             new_visible = arena_push(cecup_state.row_arena,
-                                     new_capacity*sizeof(CecupRow *));
+                                     new_capacity*SIZEOF(CecupRow *));
 
             memcpy64(new_rows, cecup_state.rows,
-                     cecup_state.rows_count*sizeof(CecupRow *));
+                     cecup_state.rows_count*SIZEOF(CecupRow *));
             memcpy64(new_visible, cecup_state.visible_rows,
-                     cecup_state.rows_count*sizeof(CecupRow *));
+                     cecup_state.rows_count*SIZEOF(CecupRow *));
 
             cecup_state.rows = new_rows;
             cecup_state.visible_rows = new_visible;
