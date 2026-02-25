@@ -1,7 +1,7 @@
 # Maintainer: Lucas Mior <lucas.bmior@gmail.com>
 
 pkgname=cecup-git
-pkgver=r256.6e3a4aa
+pkgver=r259.1e0308f
 pkgrel=1
 pkgdesc="A GTK-based rsync frontend for directory synchronization"
 arch=('x86_64')
