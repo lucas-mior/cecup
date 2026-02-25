@@ -923,46 +923,51 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                                       NULL)) {
         int32 idx;
         int32 side;
-        char *tip_text = NULL;
+        int32 view_col_idx;
+        char *tip_text;
 
         idx = gtk_tree_path_get_indices(p)[0];
         side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
+        view_col_idx = -1;
+        tip_text = NULL;
+
+        for (int32 i = 0; i < 4; i += 1) {
+            if (c == gtk_tree_view_get_column(GTK_TREE_VIEW(w), i)) {
+                view_col_idx = i;
+                break;
+            }
+        }
 
         if (idx >= 0 && idx < cecup_state.visible_count) {
-            CecupRow *row = cecup_state.visible_rows[idx];
-            int32 col_id = -1;
+            CecupRow *row;
+            char *path;
+            enum CecupAction action;
 
-            for (int32 i = 0; i < NUM_COLS; i += 1) {
-                if (c == gtk_tree_view_get_column(GTK_TREE_VIEW(w), i)) {
-                    col_id = i;
-                    break;
-                }
-            }
+            row = cecup_state.visible_rows[idx];
+            path = (side == 0) ? row->src_path : row->dst_path;
+            action = (side == 0) ? row->src_action : row->dst_action;
 
-            if (col_id == COL_SRC_PATH || col_id == COL_DST_PATH) {
-                char *path = (side == 0) ? row->src_path : row->dst_path;
-                enum CecupAction action
-                    = (side == 0) ? row->src_action : row->dst_action;
-                tip_text = g_strdup_printf("%s: %s - %s", path,
-                                           action_strings[action],
-                                           reason_strings[row->reason]);
-            } else if (col_id == COL_SIZE_TEXT) {
-                char *path = (side == 0) ? row->src_path : row->dst_path;
-                tip_text
-                    = g_strdup_printf("%s: %ld bytes", path, row->size_raw);
-            } else {
-                char *r = (char *)reason_strings[row->reason];
+            if (view_col_idx == 1) {
+                char *r;
+                r = (char *)reason_strings[row->reason];
                 if (r && strlen(r) > 0) {
                     tip_text = g_strdup(r);
                 }
+            } else if (view_col_idx == 2) {
+                tip_text = g_strdup_printf("%s: %s - %s", path,
+                                           action_strings[action],
+                                           reason_strings[row->reason]);
+            } else if (view_col_idx == 3) {
+                tip_text
+                    = g_strdup_printf("%s: %ld bytes", path, row->size_raw);
             }
+        }
 
-            if (tip_text) {
-                gtk_tooltip_set_text(t, tip_text);
-                g_free(tip_text);
-                gtk_tree_path_free(p);
-                return TRUE;
-            }
+        if (tip_text) {
+            gtk_tooltip_set_text(t, tip_text);
+            g_free(tip_text);
+            gtk_tree_path_free(p);
+            return TRUE;
         }
         gtk_tree_path_free(p);
     }
