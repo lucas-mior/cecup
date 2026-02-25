@@ -228,7 +228,8 @@ case "$target" in
     vg_flags="--error-exitcode=1 --errors-for-leak-kinds=all"
     vg_flags="$vg_flags --leak-check=full --show-leak-kinds=all"
     vg_flags="$vg_flags --track-origins=yes"
-    valgrind $vg_flags -s --tool=memcheck bin/$program
+    valgrind $vg_flags -s --tool=memcheck bin/$program 2>&1 \
+        | tee "valgrind_$(date +%s).txt"
     trace_off
     exit
     ;;
