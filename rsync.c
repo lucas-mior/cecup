@@ -533,10 +533,11 @@ bulk_sync_worker(gpointer user_data) {
         } else {
             char *escaped_src;
             char *escaped_dst;
+            char *escaped_file;
 
             escaped_src = shell_escape(ud->src_base);
             escaped_dst = shell_escape(ud->dst_base);
-            char *escaped_file = shell_escape(ud->filepath);
+            escaped_file = shell_escape(ud->filepath);
 
             SNPRINTF(cmd,
                      "rsync " RSYNC_UNIVERSAL_ARGS
@@ -1182,11 +1183,12 @@ diff_worker(gpointer user_data) {
     char cmd[8192];
     char *esc_src;
     char *esc_dst;
+    char *esc_file;
 
     ud = (UIUpdateData *)user_data;
     esc_src = shell_escape(ud->src_base);
     esc_dst = shell_escape(ud->dst_base);
-    char *esc_file = shell_escape(ud->filepath);
+    esc_file = shell_escape(ud->filepath);
 
     SNPRINTF(cmd,
              "%s -e bash -c \"%s '%s/%s' '%s/%s'; read -p 'Press Enter...'\" &",

@@ -344,18 +344,6 @@ refresh_ui_timeout_callback(gpointer data) {
 }
 
 static void
-free_menu_ud(gpointer data) {
-    UIUpdateData *ud;
-
-    ud = (UIUpdateData *)data;
-    if (ud->filepath) {
-        free(ud->filepath);
-    }
-    free(ud);
-    return;
-}
-
-static void
 on_menu_apply(GtkWidget *m, gpointer data) {
     UIUpdateData *ud;
     GPtrArray *tasks;
@@ -370,6 +358,11 @@ on_menu_apply(GtkWidget *m, gpointer data) {
         gtk_widget_set_sensitive(cecup_state.stop_button, TRUE);
         g_thread_new("bulk_sync", bulk_sync_worker, tasks);
     }
+
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    arena_pop(cecup_state.ui_arena, ud->filepath);
+    arena_pop(cecup_state.ui_arena, ud);
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
     return;
 }
 
@@ -404,6 +397,11 @@ on_menu_open(GtkWidget *m, gpointer data) {
         }
         free_task_list(tasks);
     }
+
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    arena_pop(cecup_state.ui_arena, ud->filepath);
+    arena_pop(cecup_state.ui_arena, ud);
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
     return;
 }
 
@@ -443,6 +441,11 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
         }
         free_task_list(tasks);
     }
+
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    arena_pop(cecup_state.ui_arena, ud->filepath);
+    arena_pop(cecup_state.ui_arena, ud);
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
     return;
 }
 
@@ -485,6 +488,11 @@ on_menu_copy_relative(GtkWidget *m, gpointer data) {
                                buffer, -1);
         free_task_list(tasks);
     }
+
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    arena_pop(cecup_state.ui_arena, ud->filepath);
+    arena_pop(cecup_state.ui_arena, ud);
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
     return;
 }
 
@@ -536,6 +544,11 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
                                buffer, -1);
         free_task_list(tasks);
     }
+
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    arena_pop(cecup_state.ui_arena, ud->filepath);
+    arena_pop(cecup_state.ui_arena, ud);
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
     return;
 }
 
@@ -551,6 +564,10 @@ on_menu_delete(GtkWidget *m, gpointer data) {
     tasks = get_target_tasks(ud->side, ud->filepath, UI_ACTION_DELETE);
 
     if (tasks == NULL) {
+        g_mutex_lock(&cecup_state.ui_arena_mutex);
+        arena_pop(cecup_state.ui_arena, ud->filepath);
+        arena_pop(cecup_state.ui_arena, ud);
+        g_mutex_unlock(&cecup_state.ui_arena_mutex);
         return;
     }
 
@@ -571,6 +588,10 @@ on_menu_delete(GtkWidget *m, gpointer data) {
     }
 
     gtk_widget_destroy(dialog);
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    arena_pop(cecup_state.ui_arena, ud->filepath);
+    arena_pop(cecup_state.ui_arena, ud);
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
     return;
 }
 
@@ -608,6 +629,11 @@ on_menu_diff(GtkWidget *m, gpointer data) {
         }
         g_ptr_array_unref(tasks);
     }
+
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    arena_pop(cecup_state.ui_arena, ud->filepath);
+    arena_pop(cecup_state.ui_arena, ud);
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
     return;
 }
 
@@ -637,6 +663,11 @@ on_menu_ignore_ext(GtkWidget *m, gpointer data) {
         }
         free_task_list(tasks);
     }
+
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    arena_pop(cecup_state.ui_arena, ud->filepath);
+    arena_pop(cecup_state.ui_arena, ud);
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
     return;
 }
 
@@ -669,6 +700,11 @@ on_menu_ignore_dir(GtkWidget *m, gpointer data) {
         }
         free_task_list(tasks);
     }
+
+    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    arena_pop(cecup_state.ui_arena, ud->filepath);
+    arena_pop(cecup_state.ui_arena, ud);
+    g_mutex_unlock(&cecup_state.ui_arena_mutex);
     return;
 }
 
@@ -1025,16 +1061,19 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 action = row->dst_action;
             }
 
-            ud = xmalloc(SIZEOF(UIUpdateData));
+            g_mutex_lock(&cecup_state.ui_arena_mutex);
+            ud = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
             memset64(ud, 0, SIZEOF(UIUpdateData));
-            ud->filepath = xstrdup(file_path);
+            int64 path_len;
+            path_len = strlen64(file_path) + 1;
+            ud->filepath = arena_push(cecup_state.ui_arena, path_len);
+            memcpy64(ud->filepath, file_path, path_len);
+            g_mutex_unlock(&cecup_state.ui_arena_mutex);
+
             ud->action = action;
             ud->side = side;
 
             menu = gtk_menu_new();
-            g_object_set_data_full(G_OBJECT(menu), "ud_cleanup", ud,
-                                   free_menu_ud);
-
             item = gtk_menu_item_new_with_label("Open File");
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_open), ud);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
