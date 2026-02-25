@@ -36,7 +36,7 @@ main(int32 argc, char *argv[]) {
     GtkWidget *paths_hbox;
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
-    char *cwd;
+    char cwd[MAX_PATH_LENGTH];
     char *default_src;
     char *default_dst;
     char config_base[MAX_PATH_LENGTH];
@@ -193,7 +193,11 @@ main(int32 argc, char *argv[]) {
                        FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), progress_vbox, FALSE, FALSE, 5);
 
-    cwd = (char *)g_get_current_dir();
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        error("Error getting current working directory: %s.\n",
+              strerror(errno));
+        exit(EXIT_FAILURE);
+    }
 
     source_path_length = SNPRINTF(source_path_buffer, "%s/a/", cwd);
     default_src = arena_push(cecup_state.ui_arena, source_path_length + 1);
