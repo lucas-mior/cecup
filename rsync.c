@@ -703,6 +703,7 @@ sync_worker(gpointer user_data) {
                 for (int64 k = 0; k < r; k += 1) {
                     char *p_pos;
                     char *space_pos;
+                    char type_char;
 
                     if (buffer[k] != '\n' && buffer[k] != '\r'
                         && output_position < (int32)SIZEOF(output_buffer) - 1) {
@@ -767,7 +768,6 @@ sync_worker(gpointer user_data) {
                         continue;
                     }
 
-                    char type_char;
                     type_char = output_buffer[0];
                     if (type_char != '>' && type_char != '.' && type_char != 'h'
                         && type_char != 'c') {
