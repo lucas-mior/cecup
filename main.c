@@ -385,7 +385,7 @@ update_ui_handler(gpointer user_data) {
         row->dst_action = action_dst;
         row->src_path = g_strdup(path_src);
         row->dst_path = g_strdup(path_dst);
-        row->size_text = g_strdup(size_string);
+        row->size_text = size_string;
         row->size_raw = data->size;
         row->src_color = bg_src;
         row->dst_color = bg_dst;
@@ -398,7 +398,6 @@ update_ui_handler(gpointer user_data) {
                 = g_timeout_add(1000, refresh_ui_timeout_callback, NULL);
         }
 
-        g_free(size_string);
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
