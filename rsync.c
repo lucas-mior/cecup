@@ -671,13 +671,11 @@ sync_worker(gpointer user_data) {
             break;
         }
 
-        child_pid = fork();
-        if (child_pid == -1) {
-            dispatch_log_error("Error forking: %s.\n", strerror(errno));
-            break;
-        }
-
-        if (child_pid == 0) {
+        switch (child_pid = fork()) {
+        case -1:
+            error("Error forking: %s.\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        case 0:
             if (setpgid(0, 0) < 0) {
                 fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
                 exit(EXIT_FAILURE);
@@ -697,6 +695,8 @@ sync_worker(gpointer user_data) {
             execl("/bin/sh", "sh", "-c", cmd, NULL);
             fprintf(stderr, "Error: execl failed: %s.\n", strerror(errno));
             exit(EXIT_FAILURE);
+        default:
+            break;
         }
 
         XCLOSE(&pipe_output[1]);
