@@ -1057,11 +1057,15 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
         int32 side;
         int32 view_col_idx;
         char *tip_text;
+        char tip_text_buffer[4096];
+        int64 tip_text_length;
+        int32 is_tip_text_from_arena;
 
         idx = gtk_tree_path_get_indices(path_obj)[0];
         side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
         view_col_idx = -1;
         tip_text = NULL;
+        is_tip_text_from_arena = 0;
 
         for (int32 i = 0; i < 4; i += 1) {
             if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(w), i)) {
@@ -1092,19 +1096,37 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 } else {
                     strings = dst_action_strings;
                 }
-                tip_text = g_strdup(strings[action]);
+                tip_text = xstrdup(strings[action]);
             } else if (view_col_idx == 2) {
-                tip_text = g_strdup_printf("%s: %s", file_path,
+                tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", file_path,
                                            reason_strings[row->reason]);
+                g_mutex_lock(&cecup_state.ui_arena_mutex);
+                tip_text
+                    = arena_push(cecup_state.ui_arena, tip_text_length + 1);
+                g_mutex_unlock(&cecup_state.ui_arena_mutex);
+                memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
+                is_tip_text_from_arena = 1;
             } else if (view_col_idx == 3) {
-                tip_text = g_strdup_printf("%s: %ld bytes", file_path,
-                                           row->size_raw);
+                tip_text_length = SNPRINTF(tip_text_buffer, "%s: %ld bytes",
+                                           file_path, row->size_raw);
+                g_mutex_lock(&cecup_state.ui_arena_mutex);
+                tip_text
+                    = arena_push(cecup_state.ui_arena, tip_text_length + 1);
+                g_mutex_unlock(&cecup_state.ui_arena_mutex);
+                memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
+                is_tip_text_from_arena = 1;
             }
         }
 
         if (tip_text) {
             gtk_tooltip_set_text(t, tip_text);
-            g_free(tip_text);
+            if (is_tip_text_from_arena) {
+                g_mutex_lock(&cecup_state.ui_arena_mutex);
+                arena_pop(cecup_state.ui_arena, tip_text);
+                g_mutex_unlock(&cecup_state.ui_arena_mutex);
+            } else {
+                free(tip_text);
+            }
             gtk_tree_path_free(path_obj);
             return TRUE;
         }

@@ -572,6 +572,9 @@ sync_worker(gpointer user_data) {
     GThread *scanner_thread = NULL;
     int32 total_files_preview = 0;
     int32 processed_files_preview = 0;
+    char exclude_argument_buffer[4096];
+    int64 exclude_argument_length;
+    int32 is_exclude_argument_from_arena;
 
     if (thread_data->is_preview) {
         UIUpdateData *clear;
@@ -605,15 +608,24 @@ sync_worker(gpointer user_data) {
     }
 
     char *exclude_arg;
+    is_exclude_argument_from_arena = 0;
     if (access(cecup_state.ignore_path, F_OK) != -1) {
+        exclude_argument_length
+            = SNPRINTF(exclude_argument_buffer, "--exclude-from='%s'",
+                       cecup_state.ignore_path);
+        g_mutex_lock(&cecup_state.ui_arena_mutex);
         exclude_arg
-            = g_strdup_printf("--exclude-from='%s'", cecup_state.ignore_path);
+            = arena_push(cecup_state.ui_arena, exclude_argument_length + 1);
+        g_mutex_unlock(&cecup_state.ui_arena_mutex);
+        memcpy64(exclude_arg, exclude_argument_buffer,
+                 exclude_argument_length + 1);
+        is_exclude_argument_from_arena = 1;
     } else {
         if (errno != ENOENT) {
             dispatch_log_error("Error access %s: %s.\n",
                                cecup_state.ignore_path, strerror(errno));
         }
-        exclude_arg = g_strdup("");
+        exclude_arg = xstrdup("");
     }
 
     char cmd[4096];
@@ -622,7 +634,14 @@ sync_worker(gpointer user_data) {
              " --delete-excluded %s %s '%s/' '%s/'",
              thread_data->is_preview ? "--dry-run" : "", exclude_arg,
              thread_data->src_path, thread_data->dst_path);
-    g_free(exclude_arg);
+
+    if (is_exclude_argument_from_arena) {
+        g_mutex_lock(&cecup_state.ui_arena_mutex);
+        arena_pop(cecup_state.ui_arena, exclude_arg);
+        g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    } else {
+        free(exclude_arg);
+    }
 
     char log_cmd[8192];
     {

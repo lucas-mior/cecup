@@ -42,6 +42,10 @@ main(int32 argc, char *argv[]) {
     char config_base[MAX_PATH_LENGTH];
     char *user_config_dir;
     GType column_types[NUM_COLS];
+    char source_path_buffer[4096];
+    int64 source_path_length;
+    char destination_path_buffer[4096];
+    int64 destination_path_length;
 
     gtk_init(&argc, &argv);
 
@@ -185,8 +189,14 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(header_vbox), progress_vbox, FALSE, FALSE, 5);
 
     cwd = (char *)g_get_current_dir();
-    default_src = g_strdup_printf("%s/a/", cwd);
-    default_dst = g_strdup_printf("%s/b/", cwd);
+
+    source_path_length = SNPRINTF(source_path_buffer, "%s/a/", cwd);
+    default_src = arena_push(cecup_state.ui_arena, source_path_length + 1);
+    memcpy64(default_src, source_path_buffer, source_path_length + 1);
+
+    destination_path_length = SNPRINTF(destination_path_buffer, "%s/b/", cwd);
+    default_dst = arena_push(cecup_state.ui_arena, destination_path_length + 1);
+    memcpy64(default_dst, destination_path_buffer, destination_path_length + 1);
 
     paths_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_container_set_border_width(GTK_CONTAINER(paths_hbox), 10);
