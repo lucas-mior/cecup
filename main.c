@@ -81,7 +81,7 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
     btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    cecup_state.preview_button = gtk_button_new_with_label("1. Preview");
+    cecup_state.preview_button = gtk_button_new_with_label("🔎 Preview");
     gtk_widget_set_tooltip_text(cecup_state.preview_button,
                                 "Run rsync --dry-run to identify changes");
     cecup_state.exclude_button = gtk_button_new_with_label("Edit Exclusions");
@@ -90,7 +90,7 @@ main(int32 argc, char *argv[]) {
     cecup_state.stop_button = gtk_button_new_with_label("Stop");
     gtk_widget_set_tooltip_text(cecup_state.stop_button,
                                 "Cancel current operation");
-    cecup_state.sync_button = gtk_button_new_with_label("2. Sync");
+    cecup_state.sync_button = gtk_button_new_with_label("⏩ Sync");
     gtk_widget_set_tooltip_text(cecup_state.sync_button,
                                 "Apply all selected changes");
     gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
