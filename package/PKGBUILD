@@ -1,7 +1,7 @@
 # Maintainer: Lucas Mior <lucas.bmior@gmail.com>
 
 pkgname=cecup-git
-pkgver=r264.2edeaf4
+pkgver=r265.e6b6ba7
 pkgrel=1
 pkgdesc="A GTK-based rsync frontend for directory synchronization"
 arch=('x86_64')
@@ -27,6 +27,7 @@ prepare() {
 build() {
   cd "${pkgname%-git}"
   export CFLAGS="$CFLAGS -Wno-used-but-marked-unused"
+  export CFLAGS="$CFLAGS -Wno-unused-result"
   ./build.sh
 }
 
