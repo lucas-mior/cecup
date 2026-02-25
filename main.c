@@ -123,6 +123,8 @@ main(int32 argc, char *argv[]) {
     progress_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     cecup_state.progress_rsync = gtk_progress_bar_new();
     cecup_state.progress_equal = gtk_progress_bar_new();
+    cecup_state.progress_preview = gtk_progress_bar_new();
+
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup_state.progress_rsync),
                                    TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup_state.progress_rsync),
@@ -131,9 +133,16 @@ main(int32 argc, char *argv[]) {
                                    TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup_state.progress_equal),
                               "equal scanner");
+    gtk_progress_bar_set_show_text(
+        GTK_PROGRESS_BAR(cecup_state.progress_preview), TRUE);
+    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup_state.progress_preview),
+                              "preview analysis");
+
     gtk_box_pack_start(GTK_BOX(progress_vbox), cecup_state.progress_rsync,
                        FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(progress_vbox), cecup_state.progress_equal,
+                       FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(progress_vbox), cecup_state.progress_preview,
                        FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), progress_vbox, FALSE, FALSE, 5);
 
@@ -414,6 +423,10 @@ update_ui_handler(gpointer user_data) {
         gtk_progress_bar_set_fraction(
             GTK_PROGRESS_BAR(cecup_state.progress_equal), data->fraction);
         break;
+    case DATA_TYPE_PROGRESS_PREVIEW:
+        gtk_progress_bar_set_fraction(
+            GTK_PROGRESS_BAR(cecup_state.progress_preview), data->fraction);
+        break;
     case DATA_TYPE_TREE_ROW: {
         CecupRow *row;
         char *bg_src = "#FFFFFF";
@@ -486,7 +499,7 @@ update_ui_handler(gpointer user_data) {
 
         if (cecup_state.refresh_id == 0) {
             cecup_state.refresh_id
-                = g_timeout_add(200, refresh_ui_timeout_callback, NULL);
+                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
         }
         break;
     }
@@ -505,7 +518,7 @@ update_ui_handler(gpointer user_data) {
         }
         if (cecup_state.refresh_id == 0) {
             cecup_state.refresh_id
-                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
+                = g_timeout_add(50, refresh_ui_timeout_callback, NULL);
         }
         break;
     }
@@ -534,6 +547,8 @@ update_ui_handler(gpointer user_data) {
             GTK_PROGRESS_BAR(cecup_state.progress_rsync), 0.0);
         gtk_progress_bar_set_fraction(
             GTK_PROGRESS_BAR(cecup_state.progress_equal), 0.0);
+        gtk_progress_bar_set_fraction(
+            GTK_PROGRESS_BAR(cecup_state.progress_preview), 0.0);
         break;
     default:
         break;

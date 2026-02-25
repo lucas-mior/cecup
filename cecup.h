@@ -115,6 +115,7 @@ static struct {
 
     GtkWidget *progress_rsync;
     GtkWidget *progress_equal;
+    GtkWidget *progress_preview;
 
     CecupRow **rows;
     int32 rows_count;
@@ -143,7 +144,8 @@ enum DataType {
     DATA_TYPE_ENABLE_BUTTONS,
     DATA_TYPE_CLEAR_TREES,
     DATA_TYPE_PROGRESS_RSYNC,
-    DATA_TYPE_PROGRESS_EQUAL
+    DATA_TYPE_PROGRESS_EQUAL,
+    DATA_TYPE_PROGRESS_PREVIEW
 };
 
 typedef struct UIUpdateData {

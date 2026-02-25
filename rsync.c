@@ -109,15 +109,20 @@ dispatch_tree(int32 side, enum CecupAction action, char *path, int64 size,
 }
 
 static int32
-count_files_recursive(char *base_path, char *relative_path) {
+count_files_recursive(const char *base_path, const char *relative_path) {
     DIR *dir;
     struct dirent *entry;
-    char path[MAX_PATH_LENGTH];
+    char full_path[MAX_PATH_LENGTH];
     int32 count;
 
     count = 0;
-    SNPRINTF(path, "%s/%s", base_path, relative_path);
-    if (!(dir = opendir(path))) {
+    if (relative_path[0] == '\0') {
+        SNPRINTF(full_path, "%s", base_path);
+    } else {
+        SNPRINTF(full_path, "%s/%s", base_path, relative_path);
+    }
+
+    if (!(dir = opendir(full_path))) {
         return 0;
     }
 
@@ -132,17 +137,17 @@ count_files_recursive(char *base_path, char *relative_path) {
             continue;
         }
 
-        if (strlen(relative_path) > 0) {
+        if (relative_path[0] != '\0') {
             SNPRINTF(sub_rel, "%s/%s", relative_path, name);
         } else {
             SNPRINTF(sub_rel, "%s", name);
         }
 
-        SNPRINTF(path, "%s/%s", base_path, sub_rel);
-        if (stat(path, &st) == 0) {
+        SNPRINTF(full_path, "%s/%s", base_path, sub_rel);
+        if (lstat(full_path, &st) == 0) {
             if (S_ISDIR(st.st_mode)) {
                 count += count_files_recursive(base_path, sub_rel);
-            } else if (S_ISREG(st.st_mode)) {
+            } else {
                 count += 1;
             }
         }
@@ -155,27 +160,28 @@ static void
 find_equal_files(EqualScannerData *sd, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
-    char src_path[MAX_PATH_LENGTH];
-    char dst_path[MAX_PATH_LENGTH];
-    int32 rel_len;
-    char *name;
+    char src_full[MAX_PATH_LENGTH];
+    char dst_full[MAX_PATH_LENGTH];
 
     if (cecup_state.cancel_sync) {
         return;
     }
 
-    SNPRINTF(src_path, "%s/%s", sd->src_path, relative_path);
-    if (!(dir = opendir(src_path))) {
-        return;
+    if (relative_path[0] == '\0') {
+        SNPRINTF(src_full, "%s", sd->src_path);
+    } else {
+        SNPRINTF(src_full, "%s/%s", sd->src_path, relative_path);
     }
 
-    rel_len = (int32)strlen(relative_path);
+    if (!(dir = opendir(src_full))) {
+        return;
+    }
 
     while ((entry = readdir(dir))) {
         struct stat st_s;
         struct stat st_d;
-        int32 name_len;
         char sub_rel[MAX_PATH_LENGTH];
+        char *name;
 
         if (cecup_state.cancel_sync) {
             break;
@@ -187,22 +193,17 @@ find_equal_files(EqualScannerData *sd, char *relative_path) {
             continue;
         }
 
-        name_len = (int32)strlen(name);
-        if (rel_len + name_len + 2 > MAX_PATH_LENGTH) {
-            continue;
-        }
-
-        SNPRINTF(src_path, "%s/%s/%s", sd->src_path, relative_path, name);
-        SNPRINTF(dst_path, "%s/%s/%s", sd->dst_path, relative_path, name);
-
-        if (stat(src_path, &st_s) != 0) {
-            continue;
-        }
-
-        if (rel_len > 0) {
+        if (relative_path[0] != '\0') {
             SNPRINTF(sub_rel, "%s/%s", relative_path, name);
         } else {
             SNPRINTF(sub_rel, "%s", name);
+        }
+
+        SNPRINTF(src_full, "%s/%s", sd->src_path, sub_rel);
+        SNPRINTF(dst_full, "%s/%s", sd->dst_path, sub_rel);
+
+        if (lstat(src_full, &st_s) != 0) {
+            continue;
         }
 
         if (S_ISDIR(st_s.st_mode)) {
@@ -218,7 +219,7 @@ find_equal_files(EqualScannerData *sd, char *relative_path) {
                                       / sd->total_files);
             }
 
-            if (stat(dst_path, &st_d) == 0) {
+            if (lstat(dst_full, &st_d) == 0) {
                 if (st_s.st_size == st_d.st_size
                     && st_s.st_mtime == st_d.st_mtime) {
                     dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, st_s.st_size,
@@ -467,15 +468,22 @@ sync_worker(gpointer user_data) {
     int32 poll_return;
     UIUpdateData *ready;
     GThread *scanner_thread;
+    int32 total_files_preview;
+    int32 processed_files_preview;
 
     thread_data = (ThreadData *)user_data;
     scanner_thread = NULL;
+    total_files_preview = 0;
+    processed_files_preview = 0;
 
     if (thread_data->is_preview) {
         UIUpdateData *clear;
         clear = g_new0(UIUpdateData, 1);
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
+
+        dispatch_log("Calculating file count for preview...\n");
+        total_files_preview = count_files_recursive(thread_data->src_path, "");
     }
 
     if (thread_data->is_preview && thread_data->scan_equal) {
@@ -653,8 +661,8 @@ sync_worker(gpointer user_data) {
                                                     relative_path, NULL);
                         full_dst = g_build_filename(thread_data->dst_path,
                                                     relative_path, NULL);
-                        sz = (stat(full_dst, &st_d) == 0) ? st_d.st_size : 0;
-                        reason = (stat(full_src, &st_s) == 0)
+                        sz = (lstat(full_dst, &st_d) == 0) ? st_d.st_size : 0;
+                        reason = (lstat(full_src, &st_s) == 0)
                                      ? UI_REASON_EXCLUDED
                                      : UI_REASON_MISSING;
 
@@ -696,12 +704,19 @@ sync_worker(gpointer user_data) {
 
                     full_src_path = g_build_filename(thread_data->src_path,
                                                      relative_path_entry, NULL);
-                    sz_path = (stat(full_src_path, &st_path) == 0)
+                    sz_path = (lstat(full_src_path, &st_path) == 0)
                                   ? st_path.st_size
                                   : 0;
                     dispatch_tree(0, action, relative_path_entry, sz_path,
                                   (enum CecupReason)action);
                     g_free(full_src_path);
+
+                    processed_files_preview += 1;
+                    if (total_files_preview > 0) {
+                        dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                                          (double)processed_files_preview
+                                              / total_files_preview);
+                    }
                 }
             } else {
                 pipes[0].fd = -1;
@@ -755,6 +770,7 @@ clean_exit:
         g_thread_join(scanner_thread);
     }
     dispatch_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);
+    dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
     ready = g_new0(UIUpdateData, 1);
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, ready);
