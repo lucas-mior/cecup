@@ -33,6 +33,7 @@ main(int32 argc, char *argv[]) {
     GtkWidget *log_scroll;
     GtkWidget *log_view;
     GtkWidget *progress_vbox;
+    GtkWidget *paths_hbox;
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
     char *cwd;
@@ -78,11 +79,6 @@ main(int32 argc, char *argv[]) {
     header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_set_border_width(GTK_CONTAINER(header_vbox), 10);
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
-
-    invert_btn = gtk_button_new_with_label("<--->");
-    gtk_widget_set_tooltip_text(invert_btn,
-                                "Swap Source and Destination paths");
-    gtk_box_pack_start(GTK_BOX(header_vbox), invert_btn, FALSE, FALSE, 0);
 
     btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup_state.preview_button = gtk_button_new_with_label("1. Preview");
@@ -179,6 +175,41 @@ main(int32 argc, char *argv[]) {
                        FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), progress_vbox, FALSE, FALSE, 5);
 
+    cwd = g_get_current_dir();
+    default_src = g_strdup_printf("%s/a/", cwd);
+    default_dst = g_strdup_printf("%s/b/", cwd);
+
+    paths_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk_container_set_border_width(GTK_CONTAINER(paths_hbox), 10);
+    gtk_box_pack_start(GTK_BOX(main_vbox), paths_hbox, FALSE, FALSE, 0);
+
+    l_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    cecup_state.src_entry = gtk_entry_new();
+    gtk_widget_set_tooltip_text(cecup_state.src_entry,
+                                "Base source directory path");
+    gtk_entry_set_text(GTK_ENTRY(cecup_state.src_entry), default_src);
+    browse_src = gtk_button_new_with_label("Browse");
+    gtk_box_pack_start(GTK_BOX(l_entry_hbox), cecup_state.src_entry, TRUE, TRUE,
+                       0);
+    gtk_box_pack_start(GTK_BOX(l_entry_hbox), browse_src, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(paths_hbox), l_entry_hbox, TRUE, TRUE, 0);
+
+    invert_btn = gtk_button_new_with_label("<--->");
+    gtk_widget_set_tooltip_text(invert_btn,
+                                "Swap Source and Destination paths");
+    gtk_box_pack_start(GTK_BOX(paths_hbox), invert_btn, FALSE, FALSE, 0);
+
+    r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    cecup_state.dst_entry = gtk_entry_new();
+    gtk_widget_set_tooltip_text(cecup_state.dst_entry,
+                                "Base destination directory path");
+    gtk_entry_set_text(GTK_ENTRY(cecup_state.dst_entry), default_dst);
+    browse_dst = gtk_button_new_with_label("Browse");
+    gtk_box_pack_start(GTK_BOX(r_entry_hbox), cecup_state.dst_entry, TRUE, TRUE,
+                       0);
+    gtk_box_pack_start(GTK_BOX(r_entry_hbox), browse_dst, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(paths_hbox), r_entry_hbox, TRUE, TRUE, 0);
+
     for (int32 i = 0; i < NUM_COLS; i += 1) {
         column_types[i] = G_TYPE_INT;
     }
@@ -189,21 +220,7 @@ main(int32 argc, char *argv[]) {
     paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_paned_pack1(GTK_PANED(v_paned), paned, TRUE, FALSE);
 
-    cwd = g_get_current_dir();
-    default_src = g_strdup_printf("%s/a/", cwd);
-    default_dst = g_strdup_printf("%s/b/", cwd);
-
     l_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    cecup_state.src_entry = gtk_entry_new();
-    gtk_widget_set_tooltip_text(cecup_state.src_entry,
-                                "Base source directory path");
-    gtk_entry_set_text(GTK_ENTRY(cecup_state.src_entry), default_src);
-    browse_src = gtk_button_new_with_label("Browse");
-    l_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(l_entry_hbox), cecup_state.src_entry, TRUE, TRUE,
-                       0);
-    gtk_box_pack_start(GTK_BOX(l_entry_hbox), browse_src, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(l_vbox), l_entry_hbox, FALSE, FALSE, 0);
     l_scroll = gtk_scrolled_window_new(NULL, NULL);
     l_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup_state.store));
     cecup_state.l_tree = l_tree;
@@ -214,16 +231,6 @@ main(int32 argc, char *argv[]) {
     gtk_paned_pack1(GTK_PANED(paned), l_vbox, TRUE, FALSE);
 
     r_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    cecup_state.dst_entry = gtk_entry_new();
-    gtk_widget_set_tooltip_text(cecup_state.dst_entry,
-                                "Base destination directory path");
-    gtk_entry_set_text(GTK_ENTRY(cecup_state.dst_entry), default_dst);
-    browse_dst = gtk_button_new_with_label("Browse");
-    r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(r_entry_hbox), cecup_state.dst_entry, TRUE, TRUE,
-                       0);
-    gtk_box_pack_start(GTK_BOX(r_entry_hbox), browse_dst, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(r_vbox), r_entry_hbox, FALSE, FALSE, 0);
     r_scroll = gtk_scrolled_window_new(NULL, NULL);
     r_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup_state.store));
     cecup_state.r_tree = r_tree;
