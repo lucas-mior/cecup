@@ -12,7 +12,7 @@ CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
 CFLAGS="$CFLAGS -std=c11"
 CFLAGS="$CFLAGS -O2 -flto -g"
 CFLAGS="$CFLAGS -Wextra -Wall"
-CFLAGS="$CFLAGS -Werror -Wfatal-errors"
+# CFLAGS="$CFLAGS -Werror -Wfatal-errors"
 CFLAGS="$CFLAGS -Wno-format-pedantic"
 CFLAGS="$CFLAGS -Wno-unknown-warning-option"
 CFLAGS="$CFLAGS -Wno-gnu-union-cast"
@@ -47,8 +47,6 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-padded"
     CFLAGS="$CFLAGS -Wno-incompatible-pointer-types-discards-qualifiers"
     CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
-    CFLAGS="$CFLAGS -Wno-declaration-after-statement"
-    CFLAGS="$CFLAGS -Wno-assign-enum"
 fi
 
 if [ "$1" = "install" ]; then

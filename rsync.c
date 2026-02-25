@@ -29,18 +29,23 @@ dispatch_log(char *format, ...) {
     UIUpdateData *data;
     va_list va_args;
     char buffer[8192];
+    int64 n;
 
     va_start(va_args, format);
-    vsnprintf(buffer, SIZEOF(buffer), format, va_args);
+    n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
     va_end(va_args);
+
+    if ((n <= 0) || (n >= SIZEOF(buffer))) {
+        error("Error in vsnprintf.\n");
+        exit(EXIT_FAILURE);
+    }
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     data = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
-    int64 msg_len = strlen64(buffer) + 1;
-    data->message = arena_push(cecup_state.ui_arena, msg_len);
-    memcpy64(data->message, buffer, msg_len);
+    data->message = arena_push(cecup_state.ui_arena, n + 1);
+    memcpy64(data->message, buffer, n + 1);
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     data->type = DATA_TYPE_LOG;
@@ -77,21 +82,25 @@ log_error_handler(gpointer user_data) {
 static void
 dispatch_log_error(char *format, ...) {
     UIUpdateData *data;
-    va_list variable_arguments;
-    char message_buffer[8192];
+    va_list va_args;
+    char buffer[8192];
+    int64 n;
 
-    va_start(variable_arguments, format);
-    vsnprintf(message_buffer, SIZEOF(message_buffer), format,
-              variable_arguments);
-    va_end(variable_arguments);
+    va_start(va_args, format);
+    n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
+    va_end(va_args);
+
+    if ((n <= 0) || (n >= SIZEOF(buffer))) {
+        error("Error in vsnprintf.\n");
+        exit(EXIT_FAILURE);
+    }
 
     g_mutex_lock(&cecup_state.ui_arena_mutex);
     data = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
-    int64 msg_len = strlen64(message_buffer) + 1;
-    data->message = arena_push(cecup_state.ui_arena, msg_len);
-    memcpy64(data->message, message_buffer, msg_len);
+    data->message = arena_push(cecup_state.ui_arena, n + 1);
+    memcpy64(data->message, buffer, n + 1);
     g_mutex_unlock(&cecup_state.ui_arena_mutex);
 
     g_idle_add(log_error_handler, data);
