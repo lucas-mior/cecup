@@ -878,264 +878,257 @@ sync_worker(gpointer user_data) {
     int32 pipe_error[2] = {-1, -1};
     pid_t child_pid = -1;
 
-    do {
-        if (pipe(pipe_output) < 0) {
-            error("Error creating pipe for stdout: %s.\n", strerror(errno));
+    if (pipe(pipe_output) < 0) {
+        error("Error creating pipe for stdout: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    }
+
+    if (pipe(pipe_error) < 0) {
+        error("Error creating pipe for stderr: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    }
+
+    switch (child_pid = fork()) {
+    case -1:
+        error("Error forking: %s.\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    case 0:
+        if (setpgid(0, 0) < 0) {
+            fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-
-        if (pipe(pipe_error) < 0) {
-            error("Error creating pipe for stderr: %s.\n", strerror(errno));
+        XCLOSE(&pipe_output[0]);
+        XCLOSE(&pipe_error[0]);
+        if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
+            fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
+        if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
+            fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
+        }
+        XCLOSE(&pipe_output[1]);
+        XCLOSE(&pipe_error[1]);
+        execl("/bin/sh", "sh", "-c", cmd, NULL);
+        fprintf(stderr, "Error: execl failed: %s.\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    default:
+        break;
+    }
 
-        switch (child_pid = fork()) {
-        case -1:
-            error("Error forking: %s.\n", strerror(errno));
-            exit(EXIT_FAILURE);
-        case 0:
-            if (setpgid(0, 0) < 0) {
-                fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
-                fatal(EXIT_FAILURE);
+    XCLOSE(&pipe_output[1]);
+    XCLOSE(&pipe_error[1]);
+
+    struct pollfd pipes[2];
+    pipes[0].fd = pipe_output[0];
+    pipes[0].events = POLLIN;
+    pipes[1].fd = pipe_error[0];
+    pipes[1].events = POLLIN;
+
+    char output_buffer[8192];
+    char error_buffer[8192];
+    int32 output_position = 0;
+    int32 error_position = 0;
+
+    while (1) {
+        if (cecup_state.cancel_sync) {
+            if (kill(-child_pid, SIGTERM) < 0) {
+                dispatch_log_error("Error killing process group: %s.\n",
+                                   strerror(errno));
             }
-            XCLOSE(&pipe_output[0]);
-            XCLOSE(&pipe_error[0]);
-            if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
-                fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
-                fatal(EXIT_FAILURE);
-            }
-            if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
-                fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
-                fatal(EXIT_FAILURE);
-            }
-            XCLOSE(&pipe_output[1]);
-            XCLOSE(&pipe_error[1]);
-            execl("/bin/sh", "sh", "-c", cmd, NULL);
-            fprintf(stderr, "Error: execl failed: %s.\n", strerror(errno));
-            exit(EXIT_FAILURE);
-        default:
+            dispatch_log_error("rsync operation stopped by user.\n");
             break;
         }
 
-        XCLOSE(&pipe_output[1]);
-        XCLOSE(&pipe_error[1]);
+        int32 poll_return = poll(pipes, 2, 100);
+        if (poll_return == -1) {
+            dispatch_log_error("Error in poll: %s.\n", strerror(errno));
+            break;
+        } else if (poll_return == 0) {
+            continue;
+        }
 
-        struct pollfd pipes[2];
-        pipes[0].fd = pipe_output[0];
-        pipes[0].events = POLLIN;
-        pipes[1].fd = pipe_error[0];
-        pipes[1].events = POLLIN;
-
-        char output_buffer[8192];
-        char error_buffer[8192];
-        int32 output_position = 0;
-        int32 error_position = 0;
-
-        while (1) {
-            if (cecup_state.cancel_sync) {
-                if (kill(-child_pid, SIGTERM) < 0) {
-                    dispatch_log_error("Error killing process group: %s.\n",
+        if (pipes[0].revents & POLLIN) {
+            char buffer[2048];
+            int64 r = read64(pipe_output[0], buffer, SIZEOF(buffer));
+            if (r <= 0) {
+                if (r < 0) {
+                    dispatch_log_error("Error reading stdout pipe: %s.\n",
                                        strerror(errno));
                 }
-                dispatch_log_error("rsync operation stopped by user.\n");
-                break;
-            }
-
-            int32 poll_return = poll(pipes, 2, 100);
-            if (poll_return == -1) {
-                dispatch_log_error("Error in poll: %s.\n", strerror(errno));
-                break;
-            } else if (poll_return == 0) {
-                continue;
-            }
-
-            if (pipes[0].revents & POLLIN) {
-                char buffer[2048];
-                int64 r = read64(pipe_output[0], buffer, SIZEOF(buffer));
-                if (r <= 0) {
-                    if (r < 0) {
-                        dispatch_log_error("Error reading stdout pipe: %s.\n",
-                                           strerror(errno));
-                    }
-                    pipes[0].fd = -1;
-                } else {
-                    for (int64 k = 0; k < r; k += 1) {
-                        if (buffer[k] != '\n' && buffer[k] != '\r'
-                            && output_position
-                                   < (int32)SIZEOF(output_buffer) - 1) {
-                            output_buffer[output_position] = buffer[k];
-                            output_position += 1;
-                            continue;
-                        }
-
-                        output_buffer[output_position] = '\0';
-                        output_position = 0;
-
-                        if (output_buffer[0] == '\0') {
-                            continue;
-                        }
-
-                        char *percent_pos;
-                        if ((percent_pos = strstr(output_buffer, "%"))) {
-                            char *start_digit = percent_pos;
-                            while (start_digit > output_buffer
-                                   && isdigit(*(start_digit - 1))) {
-                                start_digit -= 1;
-                            }
-                            dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
-                                              atof(start_digit) / 100.0);
-                        }
-
-                        if (thread_data->is_preview == 0) {
-                            dispatch_log(output_buffer);
-                            continue;
-                        }
-
-                        if (strncmp(output_buffer, "*deleting", 9) == 0) {
-                            char *relative_path = output_buffer + 10;
-                            char full_src[MAX_PATH_LENGTH];
-                            char full_dst[MAX_PATH_LENGTH];
-                            struct stat stat_src_local;
-                            struct stat stat_dst_local;
-                            int64 size_val;
-                            enum CecupReason deletion_reason;
-
-                            while (isspace(*relative_path)) {
-                                relative_path += 1;
-                            }
-
-                            SNPRINTF(full_src, "%s/%s", thread_data->src_path,
-                                     relative_path);
-                            SNPRINTF(full_dst, "%s/%s", thread_data->dst_path,
-                                     relative_path);
-
-                            if (lstat(full_dst, &stat_dst_local) == 0) {
-                                size_val = stat_dst_local.st_size;
-                            } else {
-                                size_val = 0;
-                            }
-
-                            if (size_val == 0 && errno != ENOENT
-                                && errno != 0) {
-                                dispatch_log_error("Error lstat %s: %s.\n",
-                                                   full_dst, strerror(errno));
-                            }
-
-                            if (lstat(full_src, &stat_src_local) == 0) {
-                                deletion_reason = UI_REASON_IGNORED;
-                            } else {
-                                deletion_reason = UI_REASON_MISSING;
-                            }
-
-                            dispatch_tree(1, UI_ACTION_DELETE, relative_path,
-                                          NULL, size_val, deletion_reason);
-                            continue;
-                        }
-
-                        char *space_pos;
-                        if (!(space_pos = strchr(output_buffer, ' '))) {
-                            continue;
-                        }
-
-                        char type_char = output_buffer[0];
-                        if (type_char != '>' && type_char != '.'
-                            && type_char != 'h' && type_char != 'c') {
-                            continue;
-                        }
-
-                        char *relative_path_entry = space_pos + 1;
-                        while (isspace(*relative_path_entry)) {
-                            relative_path_entry += 1;
-                        }
-
-                        enum CecupAction action_val = UI_ACTION_UPDATE;
-                        char *link_target = NULL;
-                        if (strncmp(output_buffer, "hf", 2) == 0) {
-                            action_val = UI_ACTION_HARDLINK;
-                            char *sep = strstr(relative_path_entry, " => ");
-                            if (sep) {
-                                *sep = '\0';
-                                link_target = sep + 4;
-                            }
-                        } else if (strncmp(output_buffer, "cd", 2) == 0
-                                   || strncmp(output_buffer, ">f+++++", 7)
-                                          == 0) {
-                            action_val = UI_ACTION_NEW;
-                        }
-
-                        char full_src_path_val[MAX_PATH_LENGTH];
-                        SNPRINTF(full_src_path_val, "%s/%s",
-                                 thread_data->src_path, relative_path_entry);
-
-                        struct stat st_path_val;
-                        int64 sz_path_val = 0;
-                        if (lstat(full_src_path_val, &st_path_val) < 0) {
-                            dispatch_log_error("Error lstat %s: %s.\n",
-                                               full_src_path_val,
-                                               strerror(errno));
-                        } else {
-                            sz_path_val = st_path_val.st_size;
-                        }
-
-                        dispatch_tree(0, action_val, relative_path_entry,
-                                      link_target, sz_path_val,
-                                      (enum CecupReason)action_val);
-
-                        processed_files_preview += 1;
-                        if (total_files_preview > 0) {
-                            dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                              (double)processed_files_preview
-                                                  / total_files_preview);
-                        }
-                    }
-                }
-            } else if (pipes[0].revents & (POLLHUP | POLLERR)) {
                 pipes[0].fd = -1;
-            }
-
-            if (pipes[1].revents & POLLIN) {
-                char buffer[2048];
-                int64 r = read64(pipe_error[0], buffer, SIZEOF(buffer));
-                if (r <= 0) {
-                    if (r < 0) {
-                        dispatch_log_error("Error reading stderr pipe: %s.\n",
-                                           strerror(errno));
+            } else {
+                for (int64 k = 0; k < r; k += 1) {
+                    if (buffer[k] != '\n' && buffer[k] != '\r'
+                        && output_position < (int32)SIZEOF(output_buffer) - 1) {
+                        output_buffer[output_position] = buffer[k];
+                        output_position += 1;
+                        continue;
                     }
-                    pipes[1].fd = -1;
-                } else {
-                    for (int64 k = 0; k < r; k += 1) {
-                        if (buffer[k] == '\n'
-                            || error_position == SIZEOF(error_buffer) - 1) {
-                            error_buffer[error_position] = '\0';
-                            dispatch_log_error(error_buffer);
-                            error_position = 0;
-                        } else {
-                            error_buffer[error_position] = buffer[k];
-                            error_position += 1;
+
+                    output_buffer[output_position] = '\0';
+                    output_position = 0;
+
+                    if (output_buffer[0] == '\0') {
+                        continue;
+                    }
+
+                    char *percent_pos;
+                    if ((percent_pos = strstr(output_buffer, "%"))) {
+                        char *start_digit = percent_pos;
+                        while (start_digit > output_buffer
+                               && isdigit(*(start_digit - 1))) {
+                            start_digit -= 1;
                         }
+                        dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
+                                          atof(start_digit) / 100.0);
+                    }
+
+                    if (thread_data->is_preview == 0) {
+                        dispatch_log(output_buffer);
+                        continue;
+                    }
+
+                    if (strncmp(output_buffer, "*deleting", 9) == 0) {
+                        char *relative_path = output_buffer + 10;
+                        char full_src[MAX_PATH_LENGTH];
+                        char full_dst[MAX_PATH_LENGTH];
+                        struct stat stat_src_local;
+                        struct stat stat_dst_local;
+                        int64 size_val;
+                        enum CecupReason deletion_reason;
+
+                        while (isspace(*relative_path)) {
+                            relative_path += 1;
+                        }
+
+                        SNPRINTF(full_src, "%s/%s", thread_data->src_path,
+                                 relative_path);
+                        SNPRINTF(full_dst, "%s/%s", thread_data->dst_path,
+                                 relative_path);
+
+                        if (lstat(full_dst, &stat_dst_local) == 0) {
+                            size_val = stat_dst_local.st_size;
+                        } else {
+                            size_val = 0;
+                        }
+
+                        if (size_val == 0 && errno != ENOENT && errno != 0) {
+                            dispatch_log_error("Error lstat %s: %s.\n",
+                                               full_dst, strerror(errno));
+                        }
+
+                        if (lstat(full_src, &stat_src_local) == 0) {
+                            deletion_reason = UI_REASON_IGNORED;
+                        } else {
+                            deletion_reason = UI_REASON_MISSING;
+                        }
+
+                        dispatch_tree(1, UI_ACTION_DELETE, relative_path, NULL,
+                                      size_val, deletion_reason);
+                        continue;
+                    }
+
+                    char *space_pos;
+                    if (!(space_pos = strchr(output_buffer, ' '))) {
+                        continue;
+                    }
+
+                    char type_char = output_buffer[0];
+                    if (type_char != '>' && type_char != '.' && type_char != 'h'
+                        && type_char != 'c') {
+                        continue;
+                    }
+
+                    char *relative_path_entry = space_pos + 1;
+                    while (isspace(*relative_path_entry)) {
+                        relative_path_entry += 1;
+                    }
+
+                    enum CecupAction action_val = UI_ACTION_UPDATE;
+                    char *link_target = NULL;
+                    if (strncmp(output_buffer, "hf", 2) == 0) {
+                        action_val = UI_ACTION_HARDLINK;
+                        char *sep = strstr(relative_path_entry, " => ");
+                        if (sep) {
+                            *sep = '\0';
+                            link_target = sep + 4;
+                        }
+                    } else if (strncmp(output_buffer, "cd", 2) == 0
+                               || strncmp(output_buffer, ">f+++++", 7) == 0) {
+                        action_val = UI_ACTION_NEW;
+                    }
+
+                    char full_src_path_val[MAX_PATH_LENGTH];
+                    SNPRINTF(full_src_path_val, "%s/%s", thread_data->src_path,
+                             relative_path_entry);
+
+                    struct stat st_path_val;
+                    int64 sz_path_val = 0;
+                    if (lstat(full_src_path_val, &st_path_val) < 0) {
+                        dispatch_log_error("Error lstat %s: %s.\n",
+                                           full_src_path_val, strerror(errno));
+                    } else {
+                        sz_path_val = st_path_val.st_size;
+                    }
+
+                    dispatch_tree(0, action_val, relative_path_entry,
+                                  link_target, sz_path_val,
+                                  (enum CecupReason)action_val);
+
+                    processed_files_preview += 1;
+                    if (total_files_preview > 0) {
+                        dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                                          (double)processed_files_preview
+                                              / total_files_preview);
                     }
                 }
-            } else if (pipes[1].revents & (POLLHUP | POLLERR)) {
+            }
+        } else if (pipes[0].revents & (POLLHUP | POLLERR)) {
+            pipes[0].fd = -1;
+        }
+
+        if (pipes[1].revents & POLLIN) {
+            char buffer[2048];
+            int64 r = read64(pipe_error[0], buffer, SIZEOF(buffer));
+            if (r <= 0) {
+                if (r < 0) {
+                    dispatch_log_error("Error reading stderr pipe: %s.\n",
+                                       strerror(errno));
+                }
                 pipes[1].fd = -1;
+            } else {
+                for (int64 k = 0; k < r; k += 1) {
+                    if (buffer[k] == '\n'
+                        || error_position == SIZEOF(error_buffer) - 1) {
+                        error_buffer[error_position] = '\0';
+                        dispatch_log_error(error_buffer);
+                        error_position = 0;
+                    } else {
+                        error_buffer[error_position] = buffer[k];
+                        error_position += 1;
+                    }
+                }
             }
-
-            if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
-                break;
-            }
+        } else if (pipes[1].revents & (POLLHUP | POLLERR)) {
+            pipes[1].fd = -1;
         }
 
-        if (child_pid != -1) {
-            if (waitpid(child_pid, NULL, 0) < 0) {
-                dispatch_log_error("Error waiting for child: %s.\n",
-                                   strerror(errno));
-            }
+        if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
+            break;
+        }
+    }
 
-            if (!cecup_state.cancel_sync) {
-                dispatch_log("Sync analysis finished.\n");
-            }
+    if (child_pid != -1) {
+        if (waitpid(child_pid, NULL, 0) < 0) {
+            dispatch_log_error("Error waiting for child: %s.\n",
+                               strerror(errno));
         }
 
-    } while (0);
+        if (!cecup_state.cancel_sync) {
+            dispatch_log("Sync analysis finished.\n");
+        }
+    }
 
     XCLOSE(&pipe_output[0]);
     XCLOSE(&pipe_error[0]);
