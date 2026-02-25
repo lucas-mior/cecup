@@ -8,6 +8,8 @@ static void
 free_cecup_row(CecupRow *row) {
     g_free(row->src_path);
     g_free(row->dst_path);
+    row->src_path = NULL;
+    row->dst_path = NULL;
     g_free(row->size_text);
     g_free(row);
     return;
@@ -133,6 +135,13 @@ refresh_ui_list(void) {
     gboolean show_delete;
     gboolean show_ignore;
     int32 current_store_count;
+    int32 count_new = 0;
+    int32 count_hard = 0;
+    int32 count_update = 0;
+    int32 count_delete = 0;
+    int64 total_size_bytes = 0;
+    char *pretty_size;
+    char stats_text[1024];
 
     show_new = gtk_toggle_button_get_active(
         GTK_TOGGLE_BUTTON(cecup_state.filter_new));
@@ -154,14 +163,21 @@ refresh_ui_list(void) {
 
         if (row->src_action == UI_ACTION_NEW) {
             visible = show_new;
+            count_new += 1;
+            total_size_bytes += row->size_raw;
         } else if (row->src_action == UI_ACTION_HARDLINK) {
             visible = show_hard;
+            count_hard += 1;
+            total_size_bytes += row->size_raw;
         } else if (row->src_action == UI_ACTION_UPDATE) {
             visible = show_update;
+            count_update += 1;
+            total_size_bytes += row->size_raw;
         } else if (row->src_action == UI_ACTION_EQUAL) {
             visible = show_equal;
         } else if (row->src_action == UI_ACTION_DELETED) {
             visible = show_delete;
+            count_delete += 1;
         } else if (row->src_action == UI_ACTION_IGNORE) {
             visible = show_ignore;
         }
@@ -171,6 +187,14 @@ refresh_ui_list(void) {
             cecup_state.visible_count += 1;
         }
     }
+
+    pretty_size = bytes_pretty(total_size_bytes);
+    SNPRINTF(
+        stats_text,
+        "New: %d | Update: %d | Hardlink: %d | Delete: %d | Total transfer: %s",
+        count_new, count_update, count_hard, count_delete, pretty_size);
+    gtk_label_set_text(GTK_LABEL(cecup_state.stats_label), stats_text);
+    g_free(pretty_size);
 
     if (cecup_state.visible_count > 0) {
         qsort64(cecup_state.visible_rows, cecup_state.visible_count,

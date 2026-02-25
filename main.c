@@ -150,6 +150,10 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(options_hbox), reset_btn, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
+    cecup_state.stats_label = gtk_label_new("Ready");
+    gtk_box_pack_start(GTK_BOX(main_vbox), cecup_state.stats_label, FALSE,
+                       FALSE, 0);
+
     for (int32 i = 0; i < NUM_COLS; i += 1) {
         column_types[i] = G_TYPE_INT;
     }

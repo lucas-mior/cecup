@@ -103,6 +103,7 @@ static struct {
     volatile int32 cancel_sync;
     GtkWidget *l_tree;
     GtkWidget *r_tree;
+    GtkWidget *stats_label;
 
     CecupRow **rows;
     int32 rows_count;
