@@ -372,16 +372,16 @@ bulk_sync_worker(gpointer user_data) {
             XCLOSE(&pipe_output[0]);
             XCLOSE(&pipe_error[0]);
             if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             XCLOSE(&pipe_output[1]);
             XCLOSE(&pipe_error[1]);
             execl("/bin/sh", "sh", "-c", cmd, NULL);
             fprintf(stderr, "Error: execl failed\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         default:
             break;
         }
@@ -653,16 +653,16 @@ sync_worker(gpointer user_data) {
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_error[0]);
         if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         XCLOSE(&pipe_output[1]);
         XCLOSE(&pipe_error[1]);
         execl("/bin/sh", "sh", "-c", cmd, NULL);
         fprintf(stderr, "Error: execl failed\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     default:
         break;
     }
