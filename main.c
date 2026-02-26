@@ -25,7 +25,7 @@
 #include "config.c"
 
 #define BUTTON_PADDING 5
-#define LABEL_PADDING 10
+#define LABEL_PADDING 0
 
 static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path);
 
