@@ -181,7 +181,7 @@ dispatch_tree(int32 side, enum CecupAction action, char *path,
 }
 
 static int32
-count_files_recursive(const char *base_path, const char *relative_path) {
+count_files_recursive(char *base_path, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
     char full_path[MAX_PATH_LENGTH];
