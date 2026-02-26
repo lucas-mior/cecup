@@ -37,30 +37,30 @@ free_task_list(GPtrArray *tasks) {
         UIUpdateData *task;
 
         task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-        g_mutex_lock(&cecup_state.ui_arena_mutex);
+        g_mutex_lock(&cecup.ui_arena_mutex);
         if (task->filepath) {
-            arena_pop(cecup_state.ui_arena, task->filepath);
+            arena_pop(cecup.ui_arena, task->filepath);
         }
         if (task->src_base) {
-            arena_pop(cecup_state.ui_arena, task->src_base);
+            arena_pop(cecup.ui_arena, task->src_base);
         }
         if (task->dst_base) {
-            arena_pop(cecup_state.ui_arena, task->dst_base);
+            arena_pop(cecup.ui_arena, task->dst_base);
         }
         if (task->term_cmd) {
-            arena_pop(cecup_state.ui_arena, task->term_cmd);
+            arena_pop(cecup.ui_arena, task->term_cmd);
         }
         if (task->diff_tool) {
-            arena_pop(cecup_state.ui_arena, task->diff_tool);
+            arena_pop(cecup.ui_arena, task->diff_tool);
         }
         if (task->message) {
-            arena_pop(cecup_state.ui_arena, task->message);
+            arena_pop(cecup.ui_arena, task->message);
         }
         if (task->link_target) {
-            arena_pop(cecup_state.ui_arena, task->link_target);
+            arena_pop(cecup.ui_arena, task->link_target);
         }
-        arena_pop(cecup_state.ui_arena, task);
-        g_mutex_unlock(&cecup_state.ui_arena_mutex);
+        arena_pop(cecup.ui_arena, task);
+        g_mutex_unlock(&cecup.ui_arena_mutex);
     }
 
     g_ptr_array_unref(tasks);
@@ -75,13 +75,13 @@ get_target_tasks(int32 side, char *clicked_path,
     char *shared_dst;
 
     tasks = g_ptr_array_new();
-    shared_src = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.src_entry));
-    shared_dst = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry));
+    shared_src = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
+    shared_dst = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
 
-    for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
+    for (int32 i = 0; i < cecup.rows_count; i += 1) {
         CecupRow *row;
 
-        row = cecup_state.rows[i];
+        row = cecup.rows[i];
         if (row->selected) {
             char *file_path;
             enum CecupAction action;
@@ -96,33 +96,32 @@ get_target_tasks(int32 side, char *clicked_path,
             }
 
             if (strcmp(file_path, "-") != 0) {
-                g_mutex_lock(&cecup_state.ui_arena_mutex);
-                task = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+                g_mutex_lock(&cecup.ui_arena_mutex);
+                task = arena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
                 memset64(task, 0, SIZEOF(UIUpdateData));
 
                 int64 path_len;
                 path_len = strlen64(file_path) + 1;
-                task->filepath = arena_push(cecup_state.ui_arena, path_len);
+                task->filepath = arena_push(cecup.ui_arena, path_len);
                 memcpy64(task->filepath, file_path, path_len);
 
                 int64 src_len;
                 src_len = strlen64(shared_src) + 1;
-                task->src_base = arena_push(cecup_state.ui_arena, src_len);
+                task->src_base = arena_push(cecup.ui_arena, src_len);
                 memcpy64(task->src_base, shared_src, src_len);
 
                 int64 dst_len;
                 dst_len = strlen64(shared_dst) + 1;
-                task->dst_base = arena_push(cecup_state.ui_arena, dst_len);
+                task->dst_base = arena_push(cecup.ui_arena, dst_len);
                 memcpy64(task->dst_base, shared_dst, dst_len);
 
                 if (row->link_target) {
                     int64 target_len;
                     target_len = strlen64(row->link_target) + 1;
-                    task->link_target
-                        = arena_push(cecup_state.ui_arena, target_len);
+                    task->link_target = arena_push(cecup.ui_arena, target_len);
                     memcpy64(task->link_target, row->link_target, target_len);
                 }
-                g_mutex_unlock(&cecup_state.ui_arena_mutex);
+                g_mutex_unlock(&cecup.ui_arena_mutex);
 
                 task->action = action;
                 task->side = side;
@@ -137,22 +136,22 @@ get_target_tasks(int32 side, char *clicked_path,
         int64 src_len;
         int64 dst_len;
 
-        g_mutex_lock(&cecup_state.ui_arena_mutex);
-        task = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+        g_mutex_lock(&cecup.ui_arena_mutex);
+        task = arena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
         memset64(task, 0, SIZEOF(UIUpdateData));
 
         path_len = strlen64(clicked_path) + 1;
-        task->filepath = arena_push(cecup_state.ui_arena, path_len);
+        task->filepath = arena_push(cecup.ui_arena, path_len);
         memcpy64(task->filepath, clicked_path, path_len);
 
         src_len = strlen64(shared_src) + 1;
-        task->src_base = arena_push(cecup_state.ui_arena, src_len);
+        task->src_base = arena_push(cecup.ui_arena, src_len);
         memcpy64(task->src_base, shared_src, src_len);
 
         dst_len = strlen64(shared_dst) + 1;
-        task->dst_base = arena_push(cecup_state.ui_arena, dst_len);
+        task->dst_base = arena_push(cecup.ui_arena, dst_len);
         memcpy64(task->dst_base, shared_dst, dst_len);
-        g_mutex_unlock(&cecup_state.ui_arena_mutex);
+        g_mutex_unlock(&cecup.ui_arena_mutex);
 
         task->action = clicked_action;
         task->side = side;
@@ -176,7 +175,7 @@ cecup_row_compare(const void *a, const void *b) {
     row_a = *(CecupRow **)a;
     row_b = *(CecupRow **)b;
 
-    switch (cecup_state.sort_col) {
+    switch (cecup.sort_col) {
     case COL_SRC_PATH:
     case COL_DST_PATH:
         result = strcmp(row_a->src_path, row_b->src_path);
@@ -201,7 +200,7 @@ cecup_row_compare(const void *a, const void *b) {
         break;
     }
 
-    if (cecup_state.sort_order == GTK_SORT_DESCENDING) {
+    if (cecup.sort_order == GTK_SORT_DESCENDING) {
         result *= -1;
     }
 
@@ -228,22 +227,22 @@ refresh_ui_list(void) {
     char stats_text[128];
     char btn_label[64];
 
-    show_new = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_new));
-    show_hard = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_hard));
-    show_update = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_update));
-    show_equal = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_equal));
-    show_delete = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_delete));
-    show_ignore = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.filter_ignore));
+    show_new
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
+    show_hard
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
+    show_update
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
+    show_equal
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_equal));
+    show_delete
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
+    show_ignore
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
-    cecup_state.visible_count = 0;
-    for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
-        CecupRow *row = cecup_state.rows[i];
+    cecup.visible_count = 0;
+    for (int32 i = 0; i < cecup.rows_count; i += 1) {
+        CecupRow *row = cecup.rows[i];
         gboolean visible = FALSE;
 
         if (row->src_action == UI_ACTION_NEW) {
@@ -270,56 +269,56 @@ refresh_ui_list(void) {
         }
 
         if (visible) {
-            cecup_state.visible_rows[cecup_state.visible_count] = row;
-            cecup_state.visible_count += 1;
+            cecup.visible_rows[cecup.visible_count] = row;
+            cecup.visible_count += 1;
         }
     }
 
     SNPRINTF(btn_label, "%s %d", EMOJI_NEW, count_new);
-    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_new), btn_label);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_new), btn_label);
     SNPRINTF(btn_label, "%s %d", EMOJI_LINK, count_hard);
-    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_hard), btn_label);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_hard), btn_label);
     SNPRINTF(btn_label, "%s %d", EMOJI_UPDATE, count_update);
-    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_update), btn_label);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_update), btn_label);
     SNPRINTF(btn_label, "%s %d", EMOJI_EQUAL, count_equal);
-    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_equal), btn_label);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_equal), btn_label);
     SNPRINTF(btn_label, "%s %d", EMOJI_DELETE, count_delete);
-    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_delete), btn_label);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), btn_label);
     SNPRINTF(btn_label, "%s %d", EMOJI_IGNORE, count_ignore);
-    gtk_button_set_label(GTK_BUTTON(cecup_state.filter_ignore), btn_label);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), btn_label);
 
     pretty_size = bytes_pretty(total_size_bytes);
     SNPRINTF(stats_text, "Total Transfer Size: 📦 %s", pretty_size);
-    gtk_label_set_text(GTK_LABEL(cecup_state.stats_label), stats_text);
+    gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
     g_free(pretty_size);
 
-    if (cecup_state.visible_count > 0) {
-        qsort64(cecup_state.visible_rows, cecup_state.visible_count,
-                SIZEOF(CecupRow *), cecup_row_compare);
+    if (cecup.visible_count > 0) {
+        qsort64(cecup.visible_rows, cecup.visible_count, SIZEOF(CecupRow *),
+                cecup_row_compare);
     }
 
-    current_store_count = gtk_tree_model_iter_n_children(
-        GTK_TREE_MODEL(cecup_state.store), NULL);
+    current_store_count
+        = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(cecup.store), NULL);
 
-    if (cecup_state.visible_count > current_store_count) {
-        for (int32 i = 0; i < (cecup_state.visible_count - current_store_count);
+    if (cecup.visible_count > current_store_count) {
+        for (int32 i = 0; i < (cecup.visible_count - current_store_count);
              i += 1) {
             GtkTreeIter iter;
-            gtk_list_store_append(cecup_state.store, &iter);
+            gtk_list_store_append(cecup.store, &iter);
         }
-    } else if (cecup_state.visible_count < current_store_count) {
-        for (int32 i = 0; i < (current_store_count - cecup_state.visible_count);
+    } else if (cecup.visible_count < current_store_count) {
+        for (int32 i = 0; i < (current_store_count - cecup.visible_count);
              i += 1) {
             GtkTreeIter iter;
-            if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cecup_state.store),
+            if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cecup.store),
                                               &iter)) {
-                gtk_list_store_remove(cecup_state.store, &iter);
+                gtk_list_store_remove(cecup.store, &iter);
             }
         }
     }
 
-    gtk_widget_queue_draw(cecup_state.l_tree);
-    gtk_widget_queue_draw(cecup_state.r_tree);
+    gtk_widget_queue_draw(cecup.l_tree);
+    gtk_widget_queue_draw(cecup.r_tree);
     return;
 }
 
@@ -327,7 +326,7 @@ static gboolean
 refresh_ui_timeout_callback(gpointer data) {
     (void)data;
     refresh_ui_list();
-    cecup_state.refresh_id = 0;
+    cecup.refresh_id = 0;
     return G_SOURCE_REMOVE;
 }
 
@@ -344,17 +343,17 @@ on_menu_apply(GtkWidget *m, gpointer data) {
             == NULL) {
             break;
         }
-        cecup_state.cancel_sync = 0;
-        gtk_widget_set_sensitive(cecup_state.preview_button, FALSE);
-        gtk_widget_set_sensitive(cecup_state.sync_button, FALSE);
-        gtk_widget_set_sensitive(cecup_state.stop_button, TRUE);
+        cecup.cancel_sync = 0;
+        gtk_widget_set_sensitive(cecup.preview_button, FALSE);
+        gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+        gtk_widget_set_sensitive(cecup.stop_button, TRUE);
         g_thread_new("bulk_sync", bulk_sync_worker, tasks);
     } while (0);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    arena_pop(cecup_state.ui_arena, ud->filepath);
-    arena_pop(cecup_state.ui_arena, ud);
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    arena_pop(cecup.ui_arena, ud->filepath);
+    arena_pop(cecup.ui_arena, ud);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
@@ -394,10 +393,10 @@ on_menu_open(GtkWidget *m, gpointer data) {
         free_task_list(tasks);
     } while (0);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    arena_pop(cecup_state.ui_arena, ud->filepath);
-    arena_pop(cecup_state.ui_arena, ud);
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    arena_pop(cecup.ui_arena, ud->filepath);
+    arena_pop(cecup.ui_arena, ud);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
@@ -441,10 +440,10 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
         free_task_list(tasks);
     } while (0);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    arena_pop(cecup_state.ui_arena, ud->filepath);
-    arena_pop(cecup_state.ui_arena, ud);
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    arena_pop(cecup.ui_arena, ud->filepath);
+    arena_pop(cecup.ui_arena, ud);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
@@ -491,10 +490,10 @@ on_menu_copy_relative(GtkWidget *m, gpointer data) {
         free_task_list(tasks);
     } while (0);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    arena_pop(cecup_state.ui_arena, ud->filepath);
-    arena_pop(cecup_state.ui_arena, ud);
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    arena_pop(cecup.ui_arena, ud->filepath);
+    arena_pop(cecup.ui_arena, ud);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
@@ -550,10 +549,10 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
         free_task_list(tasks);
     } while (0);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    arena_pop(cecup_state.ui_arena, ud->filepath);
-    arena_pop(cecup_state.ui_arena, ud);
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    arena_pop(cecup.ui_arena, ud->filepath);
+    arena_pop(cecup.ui_arena, ud);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
@@ -575,15 +574,14 @@ on_menu_delete(GtkWidget *m, gpointer data) {
 
         count = (int32)tasks->len;
         dialog = gtk_message_dialog_new(
-            GTK_WINDOW(cecup_state.gtk_window), GTK_DIALOG_MODAL,
-            GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
-            "Permanently delete %d item(s)?", count);
+            GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
+            GTK_BUTTONS_YES_NO, "Permanently delete %d item(s)?", count);
 
         if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
-            cecup_state.cancel_sync = 0;
-            gtk_widget_set_sensitive(cecup_state.preview_button, FALSE);
-            gtk_widget_set_sensitive(cecup_state.sync_button, FALSE);
-            gtk_widget_set_sensitive(cecup_state.stop_button, TRUE);
+            cecup.cancel_sync = 0;
+            gtk_widget_set_sensitive(cecup.preview_button, FALSE);
+            gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+            gtk_widget_set_sensitive(cecup.stop_button, TRUE);
             g_thread_new("bulk_delete", bulk_sync_worker, tasks);
         } else {
             free_task_list(tasks);
@@ -591,10 +589,10 @@ on_menu_delete(GtkWidget *m, gpointer data) {
         gtk_widget_destroy(dialog);
     } while (0);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    arena_pop(cecup_state.ui_arena, ud->filepath);
-    arena_pop(cecup_state.ui_arena, ud);
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    arena_pop(cecup.ui_arena, ud->filepath);
+    arena_pop(cecup.ui_arena, ud);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
@@ -607,8 +605,8 @@ on_menu_diff(GtkWidget *m, gpointer data) {
 
     (void)m;
     ud = (UIUpdateData *)data;
-    diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.diff_entry));
-    term_cmd = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.term_entry));
+    diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.diff_entry));
+    term_cmd = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.term_entry));
 
     do {
         if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))
@@ -619,27 +617,27 @@ on_menu_diff(GtkWidget *m, gpointer data) {
             UIUpdateData *task;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-            g_mutex_lock(&cecup_state.ui_arena_mutex);
+            g_mutex_lock(&cecup.ui_arena_mutex);
             int64 diff_len;
             diff_len = strlen64(diff_tool) + 1;
-            task->diff_tool = arena_push(cecup_state.ui_arena, diff_len);
+            task->diff_tool = arena_push(cecup.ui_arena, diff_len);
             memcpy64(task->diff_tool, diff_tool, diff_len);
 
             int64 term_len;
             term_len = strlen64(term_cmd) + 1;
-            task->term_cmd = arena_push(cecup_state.ui_arena, term_len);
+            task->term_cmd = arena_push(cecup.ui_arena, term_len);
             memcpy64(task->term_cmd, term_cmd, term_len);
-            g_mutex_unlock(&cecup_state.ui_arena_mutex);
+            g_mutex_unlock(&cecup.ui_arena_mutex);
 
             g_thread_new("diff_worker", diff_worker, task);
         }
         g_ptr_array_unref(tasks);
     } while (0);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    arena_pop(cecup_state.ui_arena, ud->filepath);
-    arena_pop(cecup_state.ui_arena, ud);
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    arena_pop(cecup.ui_arena, ud->filepath);
+    arena_pop(cecup.ui_arena, ud);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
@@ -657,9 +655,9 @@ on_menu_ignore_ext(GtkWidget *m, gpointer data) {
             == NULL) {
             break;
         }
-        if ((fp = fopen(cecup_state.ignore_path, "a")) == NULL) {
-            dispatch_log_error("Error opening %s: %s.\n",
-                               cecup_state.ignore_path, strerror(errno));
+        if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
+            dispatch_log_error("Error opening %s: %s.\n", cecup.ignore_path,
+                               strerror(errno));
             break;
         }
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
@@ -676,10 +674,10 @@ on_menu_ignore_ext(GtkWidget *m, gpointer data) {
         free_task_list(tasks);
     } while (0);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    arena_pop(cecup_state.ui_arena, ud->filepath);
-    arena_pop(cecup_state.ui_arena, ud);
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    arena_pop(cecup.ui_arena, ud->filepath);
+    arena_pop(cecup.ui_arena, ud);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
@@ -697,7 +695,7 @@ on_menu_ignore_dir(GtkWidget *m, gpointer data) {
             == NULL) {
             break;
         }
-        if ((fp = fopen(cecup_state.ignore_path, "a"))) {
+        if ((fp = fopen(cecup.ignore_path, "a"))) {
             for (int32 i = 0; i < (int32)tasks->len; i += 1) {
                 UIUpdateData *task;
                 char *dir;
@@ -716,10 +714,10 @@ on_menu_ignore_dir(GtkWidget *m, gpointer data) {
         free_task_list(tasks);
     } while (0);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    arena_pop(cecup_state.ui_arena, ud->filepath);
-    arena_pop(cecup_state.ui_arena, ud);
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    arena_pop(cecup.ui_arena, ud->filepath);
+    arena_pop(cecup.ui_arena, ud);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
@@ -735,24 +733,16 @@ static void
 on_reset_clicked(GtkWidget *b, gpointer data) {
     (void)b;
     (void)data;
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_new),
-                                 TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_hard),
-                                 TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_update),
-                                 TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_equal),
-                                 FALSE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_delete),
-                                 TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_ignore),
-                                 TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.check_fs),
-                                 FALSE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.check_equal),
-                                 TRUE);
-    gtk_entry_set_text(GTK_ENTRY(cecup_state.diff_entry), "unidiff.bash");
-    gtk_entry_set_text(GTK_ENTRY(cecup_state.term_entry), "xterm");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_new), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_hard), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_update), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal), FALSE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.check_fs), FALSE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.check_equal), TRUE);
+    gtk_entry_set_text(GTK_ENTRY(cecup.diff_entry), "unidiff.bash");
+    gtk_entry_set_text(GTK_ENTRY(cecup.term_entry), "xterm");
     save_config();
     return;
 }
@@ -761,7 +751,7 @@ static void
 on_stop_clicked(GtkWidget *b, gpointer data) {
     (void)b;
     (void)data;
-    cecup_state.cancel_sync = 1;
+    cecup.cancel_sync = 1;
     return;
 }
 
@@ -772,29 +762,29 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     ThreadData *thread_data;
 
     (void)data;
-    src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.src_entry));
-    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry));
+    src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
+    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
     (void)b;
 
     if (strlen64(src_path) < 1 || strlen64(dst_path) < 1) {
         return;
     }
 
-    cecup_state.cancel_sync = 0;
-    gtk_widget_set_sensitive(cecup_state.preview_button, FALSE);
-    gtk_widget_set_sensitive(cecup_state.sync_button, FALSE);
-    gtk_widget_set_sensitive(cecup_state.stop_button, TRUE);
+    cecup.cancel_sync = 0;
+    gtk_widget_set_sensitive(cecup.preview_button, FALSE);
+    gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+    gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    thread_data = arena_push(cecup_state.ui_arena, SIZEOF(ThreadData));
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    thread_data = arena_push(cecup.ui_arena, SIZEOF(ThreadData));
     memset64(thread_data, 0, SIZEOF(ThreadData));
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
 
     thread_data->is_preview = 1;
-    thread_data->scan_equal = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.check_equal));
+    thread_data->scan_equal
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_equal));
     thread_data->check_different_fs
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup_state.check_fs));
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
     strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
     strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
     g_thread_new("worker", sync_worker, thread_data);
@@ -817,8 +807,8 @@ on_sort_changed(GtkTreeSortable *sortable, gpointer data) {
 
     (void)data;
     if (gtk_tree_sortable_get_sort_column_id(sortable, &id, &order)) {
-        cecup_state.sort_col = id;
-        cecup_state.sort_order = order;
+        cecup.sort_col = id;
+        cecup.sort_order = order;
         refresh_ui_list();
     }
     return;
@@ -834,11 +824,11 @@ on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
     path = gtk_tree_path_new_from_string(path_str);
     row_idx = gtk_tree_path_get_indices(path)[0];
 
-    if (row_idx >= 0 && row_idx < cecup_state.visible_count) {
-        cecup_state.visible_rows[row_idx]->selected
-            = !cecup_state.visible_rows[row_idx]->selected;
-        gtk_widget_queue_draw(cecup_state.l_tree);
-        gtk_widget_queue_draw(cecup_state.r_tree);
+    if (row_idx >= 0 && row_idx < cecup.visible_count) {
+        cecup.visible_rows[row_idx]->selected
+            = !cecup.visible_rows[row_idx]->selected;
+        gtk_widget_queue_draw(cecup.l_tree);
+        gtk_widget_queue_draw(cecup.r_tree);
     }
 
     gtk_tree_path_free(path);
@@ -856,15 +846,15 @@ on_ignore_clicked(GtkWidget *b, gpointer data) {
 
     (void)data;
     dialog = gtk_dialog_new_with_buttons(
-        "Ignore List", GTK_WINDOW(cecup_state.gtk_window), GTK_DIALOG_MODAL,
-        "_Save", GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
+        "Ignore List", GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, "_Save",
+        GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
     (void)b;
     gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
     scroll = gtk_scrolled_window_new(NULL, NULL);
     view = gtk_text_view_new();
     buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 
-    if (g_file_get_contents(cecup_state.ignore_path, &text, &len, NULL)) {
+    if (g_file_get_contents(cecup.ignore_path, &text, &len, NULL)) {
         gtk_text_buffer_set_text(buffer, text, -1);
         g_free(text);
     }
@@ -881,7 +871,7 @@ on_ignore_clicked(GtkWidget *b, gpointer data) {
 
         gtk_text_buffer_get_bounds(buffer, &start, &end);
         content = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
-        g_file_set_contents(cecup_state.ignore_path, content, -1, NULL);
+        g_file_set_contents(cecup.ignore_path, content, -1, NULL);
         g_free(content);
         on_preview_clicked(NULL, NULL);
     }
@@ -897,22 +887,22 @@ on_fix_clicked(GtkWidget *b, gpointer data) {
 
     (void)b;
     (void)data;
-    src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.src_entry));
-    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry));
+    src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
+    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
 
     if (strlen64(src_path) < 1 || strlen64(dst_path) < 1) {
         return;
     }
 
-    cecup_state.cancel_sync = 0;
-    gtk_widget_set_sensitive(cecup_state.preview_button, FALSE);
-    gtk_widget_set_sensitive(cecup_state.sync_button, FALSE);
-    gtk_widget_set_sensitive(cecup_state.stop_button, TRUE);
+    cecup.cancel_sync = 0;
+    gtk_widget_set_sensitive(cecup.preview_button, FALSE);
+    gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+    gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
-    thread_data = arena_push(cecup_state.ui_arena, SIZEOF(ThreadData));
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    thread_data = arena_push(cecup.ui_arena, SIZEOF(ThreadData));
     memset64(thread_data, 0, SIZEOF(ThreadData));
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
 
     strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
     strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
@@ -929,14 +919,14 @@ on_invert_clicked(GtkWidget *b, gpointer data) {
     (void)b;
     (void)data;
 
-    entry_text = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.src_entry));
+    entry_text = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
     SNPRINTF(path_src, "%s", entry_text);
 
-    entry_text = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry));
+    entry_text = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
     SNPRINTF(path_dst, "%s", entry_text);
 
-    gtk_entry_set_text(GTK_ENTRY(cecup_state.src_entry), path_dst);
-    gtk_entry_set_text(GTK_ENTRY(cecup_state.dst_entry), path_src);
+    gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), path_dst);
+    gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), path_src);
     on_preview_clicked(NULL, NULL);
     return;
 }
@@ -948,30 +938,29 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
     GtkWidget *dialog;
 
     (void)data;
-    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.src_entry));
-    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(cecup_state.dst_entry));
+    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
+    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
     (void)b;
-    dialog = gtk_message_dialog_new(GTK_WINDOW(cecup_state.gtk_window),
-                                    GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
-                                    GTK_BUTTONS_YES_NO, "Sync %s -> %s?",
-                                    path_src, path_dst);
+    dialog = gtk_message_dialog_new(
+        GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
+        GTK_BUTTONS_YES_NO, "Sync %s -> %s?", path_src, path_dst);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         ThreadData *thread_data;
 
-        cecup_state.cancel_sync = 0;
-        gtk_widget_set_sensitive(cecup_state.preview_button, FALSE);
-        gtk_widget_set_sensitive(cecup_state.sync_button, FALSE);
-        gtk_widget_set_sensitive(cecup_state.stop_button, TRUE);
+        cecup.cancel_sync = 0;
+        gtk_widget_set_sensitive(cecup.preview_button, FALSE);
+        gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+        gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
-        g_mutex_lock(&cecup_state.ui_arena_mutex);
-        thread_data = arena_push(cecup_state.ui_arena, SIZEOF(ThreadData));
+        g_mutex_lock(&cecup.ui_arena_mutex);
+        thread_data = arena_push(cecup.ui_arena, SIZEOF(ThreadData));
         memset64(thread_data, 0, SIZEOF(ThreadData));
-        g_mutex_unlock(&cecup_state.ui_arena_mutex);
+        g_mutex_unlock(&cecup.ui_arena_mutex);
 
         thread_data->is_preview = 0;
         thread_data->scan_equal = 0;
-        thread_data->check_different_fs = gtk_toggle_button_get_active(
-            GTK_TOGGLE_BUTTON(cecup_state.check_fs));
+        thread_data->check_different_fs
+            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
         strncpy(thread_data->src_path, path_src, MAX_PATH_LENGTH - 1);
         strncpy(thread_data->dst_path, path_dst, MAX_PATH_LENGTH - 1);
         g_thread_new("worker", sync_worker, thread_data);
@@ -986,15 +975,15 @@ on_browse_src(GtkWidget *b, gpointer data) {
 
     (void)data;
     (void)b;
-    dialog = gtk_file_chooser_dialog_new(
-        "Src", GTK_WINDOW(cecup_state.gtk_window),
-        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
-        "_Select", GTK_RESPONSE_ACCEPT, NULL);
+    dialog = gtk_file_chooser_dialog_new("Src", GTK_WINDOW(cecup.gtk_window),
+                                         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                         "_Cancel", GTK_RESPONSE_CANCEL,
+                                         "_Select", GTK_RESPONSE_ACCEPT, NULL);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         char *path;
 
         path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-        gtk_entry_set_text(GTK_ENTRY(cecup_state.src_entry), path);
+        gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), path);
         g_free(path);
     }
     gtk_widget_destroy(dialog);
@@ -1007,15 +996,15 @@ on_browse_dst(GtkWidget *b, gpointer data) {
 
     (void)data;
     (void)b;
-    dialog = gtk_file_chooser_dialog_new(
-        "Dst", GTK_WINDOW(cecup_state.gtk_window),
-        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel", GTK_RESPONSE_CANCEL,
-        "_Select", GTK_RESPONSE_ACCEPT, NULL);
+    dialog = gtk_file_chooser_dialog_new("Dst", GTK_WINDOW(cecup.gtk_window),
+                                         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                         "_Cancel", GTK_RESPONSE_CANCEL,
+                                         "_Select", GTK_RESPONSE_ACCEPT, NULL);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         char *path;
 
         path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-        gtk_entry_set_text(GTK_ENTRY(cecup_state.dst_entry), path);
+        gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), path);
         g_free(path);
     }
     gtk_widget_destroy(dialog);
@@ -1064,7 +1053,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             enum CecupAction action;
 
             row_idx = gtk_tree_path_get_indices(path)[0];
-            row = cecup_state.visible_rows[row_idx];
+            row = cecup.visible_rows[row_idx];
 
             if (side == 0) {
                 file_path = row->src_path;
@@ -1076,14 +1065,14 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 action = row->dst_action;
             }
 
-            g_mutex_lock(&cecup_state.ui_arena_mutex);
-            ud = arena_push(cecup_state.ui_arena, SIZEOF(UIUpdateData));
+            g_mutex_lock(&cecup.ui_arena_mutex);
+            ud = arena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
             memset64(ud, 0, SIZEOF(UIUpdateData));
             int64 path_len;
             path_len = strlen64(file_path) + 1;
-            ud->filepath = arena_push(cecup_state.ui_arena, path_len);
+            ud->filepath = arena_push(cecup.ui_arena, path_len);
             memcpy64(ud->filepath, file_path, path_len);
-            g_mutex_unlock(&cecup_state.ui_arena_mutex);
+            g_mutex_unlock(&cecup.ui_arena_mutex);
 
             ud->action = action;
             ud->side = side;
@@ -1191,12 +1180,12 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             }
         }
 
-        if (idx >= 0 && idx < cecup_state.visible_count) {
+        if (idx >= 0 && idx < cecup.visible_count) {
             CecupRow *row;
             char *file_path;
             enum CecupAction action;
 
-            row = cecup_state.visible_rows[idx];
+            row = cecup.visible_rows[idx];
 
             if (side == 0) {
                 file_path = row->src_path;
@@ -1224,9 +1213,9 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
                 int64 str_len;
                 str_len = strlen64(strings[action]);
-                g_mutex_lock(&cecup_state.ui_arena_mutex);
-                tip_text = arena_push(cecup_state.ui_arena, str_len + 1);
-                g_mutex_unlock(&cecup_state.ui_arena_mutex);
+                g_mutex_lock(&cecup.ui_arena_mutex);
+                tip_text = arena_push(cecup.ui_arena, str_len + 1);
+                g_mutex_unlock(&cecup.ui_arena_mutex);
                 memcpy64(tip_text, strings[action], str_len + 1);
 
             } else if (view_col_idx == 2) {
@@ -1239,27 +1228,25 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                         = SNPRINTF(tip_text_buffer, "%s: %s", file_path,
                                    reason_strings[row->reason]);
                 }
-                g_mutex_lock(&cecup_state.ui_arena_mutex);
-                tip_text
-                    = arena_push(cecup_state.ui_arena, tip_text_length + 1);
-                g_mutex_unlock(&cecup_state.ui_arena_mutex);
+                g_mutex_lock(&cecup.ui_arena_mutex);
+                tip_text = arena_push(cecup.ui_arena, tip_text_length + 1);
+                g_mutex_unlock(&cecup.ui_arena_mutex);
                 memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             } else if (view_col_idx == 3) {
                 tip_text_length = SNPRINTF(tip_text_buffer, "%s: %ld bytes",
                                            file_path, row->size_raw);
-                g_mutex_lock(&cecup_state.ui_arena_mutex);
-                tip_text
-                    = arena_push(cecup_state.ui_arena, tip_text_length + 1);
-                g_mutex_unlock(&cecup_state.ui_arena_mutex);
+                g_mutex_lock(&cecup.ui_arena_mutex);
+                tip_text = arena_push(cecup.ui_arena, tip_text_length + 1);
+                g_mutex_unlock(&cecup.ui_arena_mutex);
                 memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             }
         }
 
         if (tip_text) {
             gtk_tooltip_set_text(t, tip_text);
-            g_mutex_lock(&cecup_state.ui_arena_mutex);
-            arena_pop(cecup_state.ui_arena, tip_text);
-            g_mutex_unlock(&cecup_state.ui_arena_mutex);
+            g_mutex_lock(&cecup.ui_arena_mutex);
+            arena_pop(cecup.ui_arena, tip_text);
+            g_mutex_unlock(&cecup.ui_arena_mutex);
             gtk_tree_path_free(path_obj);
             return TRUE;
         }
@@ -1277,21 +1264,21 @@ update_ui_handler(gpointer user_data) {
     switch (data->type) {
     case DATA_TYPE_LOG: {
         GtkTextIter end;
-        gtk_text_buffer_get_end_iter(cecup_state.log_buffer, &end);
-        gtk_text_buffer_insert(cecup_state.log_buffer, &end, data->message, -1);
+        gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
+        gtk_text_buffer_insert(cecup.log_buffer, &end, data->message, -1);
         break;
     }
     case DATA_TYPE_PROGRESS_RSYNC:
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_rsync), data->fraction);
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_rsync),
+                                      data->fraction);
         break;
     case DATA_TYPE_PROGRESS_EQUAL:
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_equal), data->fraction);
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_equal),
+                                      data->fraction);
         break;
     case DATA_TYPE_PROGRESS_PREVIEW:
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_preview), data->fraction);
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
+                                      data->fraction);
         break;
     case DATA_TYPE_TREE_ROW: {
         CecupRow *row;
@@ -1328,7 +1315,7 @@ update_ui_handler(gpointer user_data) {
             }
         }
 
-        row = arena_push(cecup_state.row_arena, SIZEOF(CecupRow));
+        row = arena_push(cecup.row_arena, SIZEOF(CecupRow));
         memset64(row, 0, SIZEOF(CecupRow));
         row->src_action = action_src;
         row->dst_action = action_dst;
@@ -1337,7 +1324,7 @@ update_ui_handler(gpointer user_data) {
         pretty = bytes_pretty(data->size);
         int64 pretty_len;
         pretty_len = strlen64(pretty) + 1;
-        row->size_text = arena_push(cecup_state.row_arena, pretty_len);
+        row->size_text = arena_push(cecup.row_arena, pretty_len);
         memcpy64(row->size_text, pretty, pretty_len);
         g_free(pretty);
 
@@ -1349,133 +1336,131 @@ update_ui_handler(gpointer user_data) {
         if (data->link_target) {
             int64 target_len;
             target_len = strlen64(data->link_target) + 1;
-            row->link_target = arena_push(cecup_state.row_arena, target_len);
+            row->link_target = arena_push(cecup.row_arena, target_len);
             memcpy64(row->link_target, data->link_target, target_len);
         }
 
         if (strcmp(src_path_final, "-") == 0) {
             int64 path_len;
 
-            row->src_path = arena_push(cecup_state.row_arena, 2);
+            row->src_path = arena_push(cecup.row_arena, 2);
             memcpy64(row->src_path, "-", 2);
             path_len = strlen64(data->filepath) + 1;
-            row->dst_path = arena_push(cecup_state.row_arena, path_len);
+            row->dst_path = arena_push(cecup.row_arena, path_len);
             memcpy64(row->dst_path, data->filepath, path_len);
         } else if (strcmp(dst_path_final, "-") == 0) {
             int64 path_len;
 
             path_len = strlen64(data->filepath) + 1;
-            row->src_path = arena_push(cecup_state.row_arena, path_len);
+            row->src_path = arena_push(cecup.row_arena, path_len);
             memcpy64(row->src_path, data->filepath, path_len);
-            row->dst_path = arena_push(cecup_state.row_arena, 2);
+            row->dst_path = arena_push(cecup.row_arena, 2);
             memcpy64(row->dst_path, "-", 2);
         } else {
             int64 path_len;
 
             path_len = strlen64(data->filepath) + 1;
-            row->src_path = arena_push(cecup_state.row_arena, path_len);
+            row->src_path = arena_push(cecup.row_arena, path_len);
             memcpy64(row->src_path, data->filepath, path_len);
-            row->dst_path = arena_push(cecup_state.row_arena, path_len);
+            row->dst_path = arena_push(cecup.row_arena, path_len);
             memcpy64(row->dst_path, data->filepath, path_len);
         }
 
-        if (cecup_state.rows_count >= cecup_state.rows_capacity) {
+        if (cecup.rows_count >= cecup.rows_capacity) {
             int32 new_capacity;
             CecupRow **new_rows;
             CecupRow **new_visible;
 
-            new_capacity = cecup_state.rows_capacity*2;
-            new_rows = arena_push(cecup_state.row_arena,
+            new_capacity = cecup.rows_capacity*2;
+            new_rows = arena_push(cecup.row_arena,
                                   new_capacity*SIZEOF(CecupRow *));
-            new_visible = arena_push(cecup_state.row_arena,
+            new_visible = arena_push(cecup.row_arena,
                                      new_capacity*SIZEOF(CecupRow *));
 
-            memcpy64(new_rows, cecup_state.rows,
-                     cecup_state.rows_count*SIZEOF(CecupRow *));
-            memcpy64(new_visible, cecup_state.visible_rows,
-                     cecup_state.rows_count*SIZEOF(CecupRow *));
+            memcpy64(new_rows, cecup.rows,
+                     cecup.rows_count*SIZEOF(CecupRow *));
+            memcpy64(new_visible, cecup.visible_rows,
+                     cecup.rows_count*SIZEOF(CecupRow *));
 
-            cecup_state.rows = new_rows;
-            cecup_state.visible_rows = new_visible;
-            cecup_state.rows_capacity = new_capacity;
+            cecup.rows = new_rows;
+            cecup.visible_rows = new_visible;
+            cecup.rows_capacity = new_capacity;
         }
-        cecup_state.rows[cecup_state.rows_count] = row;
-        cecup_state.rows_count += 1;
+        cecup.rows[cecup.rows_count] = row;
+        cecup.rows_count += 1;
 
-        if (cecup_state.refresh_id == 0) {
-            cecup_state.refresh_id
+        if (cecup.refresh_id == 0) {
+            cecup.refresh_id
                 = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
         }
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
-        for (int32 i = 0; i < cecup_state.rows_count; i += 1) {
-            CecupRow *row = cecup_state.rows[i];
+        for (int32 i = 0; i < cecup.rows_count; i += 1) {
+            CecupRow *row = cecup.rows[i];
             if (strcmp(row->src_path, data->filepath) == 0
                 || strcmp(row->dst_path, data->filepath) == 0) {
-                for (int32 j_idx = i; j_idx < cecup_state.rows_count - 1;
+                for (int32 j_idx = i; j_idx < cecup.rows_count - 1;
                      j_idx += 1) {
-                    cecup_state.rows[j_idx] = cecup_state.rows[j_idx + 1];
+                    cecup.rows[j_idx] = cecup.rows[j_idx + 1];
                 }
-                cecup_state.rows_count -= 1;
+                cecup.rows_count -= 1;
                 break;
             }
         }
-        if (cecup_state.refresh_id == 0) {
-            cecup_state.refresh_id
+        if (cecup.refresh_id == 0) {
+            cecup.refresh_id
                 = g_timeout_add(50, refresh_ui_timeout_callback, NULL);
         }
         break;
     }
     case DATA_TYPE_ENABLE_BUTTONS:
-        if (cecup_state.refresh_id != 0) {
-            g_source_remove(cecup_state.refresh_id);
-            cecup_state.refresh_id = 0;
+        if (cecup.refresh_id != 0) {
+            g_source_remove(cecup.refresh_id);
+            cecup.refresh_id = 0;
         }
         refresh_ui_list();
-        gtk_widget_set_sensitive(cecup_state.sync_button, TRUE);
-        gtk_widget_set_sensitive(cecup_state.preview_button, TRUE);
-        gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
+        gtk_widget_set_sensitive(cecup.sync_button, TRUE);
+        gtk_widget_set_sensitive(cecup.preview_button, TRUE);
+        gtk_widget_set_sensitive(cecup.stop_button, FALSE);
         break;
     case DATA_TYPE_CLEAR_TREES:
-        if (cecup_state.refresh_id != 0) {
-            g_source_remove(cecup_state.refresh_id);
-            cecup_state.refresh_id = 0;
+        if (cecup.refresh_id != 0) {
+            g_source_remove(cecup.refresh_id);
+            cecup.refresh_id = 0;
         }
-        arena_reset(cecup_state.row_arena);
-        cecup_state.rows
-            = arena_push(cecup_state.row_arena,
-                         cecup_state.rows_capacity*SIZEOF(CecupRow *));
-        cecup_state.visible_rows
-            = arena_push(cecup_state.row_arena,
-                         cecup_state.rows_capacity*SIZEOF(CecupRow *));
+        arena_reset(cecup.row_arena);
+        cecup.rows = arena_push(cecup.row_arena,
+                                cecup.rows_capacity*SIZEOF(CecupRow *));
+        cecup.visible_rows = arena_push(
+            cecup.row_arena, cecup.rows_capacity*SIZEOF(CecupRow *));
 
-        cecup_state.rows_count = 0;
-        cecup_state.visible_count = 0;
-        gtk_list_store_clear(cecup_state.store);
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_rsync), 0.0);
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_equal), 0.0);
-        gtk_progress_bar_set_fraction(
-            GTK_PROGRESS_BAR(cecup_state.progress_preview), 0.0);
+        cecup.rows_count = 0;
+        cecup.visible_count = 0;
+        gtk_list_store_clear(cecup.store);
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_rsync),
+                                      0.0);
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_equal),
+                                      0.0);
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
+                                      0.0);
         break;
     default:
         break;
     }
 
-    g_mutex_lock(&cecup_state.ui_arena_mutex);
+    g_mutex_lock(&cecup.ui_arena_mutex);
     if (data->filepath) {
-        arena_pop(cecup_state.ui_arena, data->filepath);
+        arena_pop(cecup.ui_arena, data->filepath);
     }
     if (data->link_target) {
-        arena_pop(cecup_state.ui_arena, data->link_target);
+        arena_pop(cecup.ui_arena, data->link_target);
     }
     if (data->message) {
-        arena_pop(cecup_state.ui_arena, data->message);
+        arena_pop(cecup.ui_arena, data->message);
     }
-    arena_pop(cecup_state.ui_arena, data);
-    g_mutex_unlock(&cecup_state.ui_arena_mutex);
+    arena_pop(cecup.ui_arena, data);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
     return G_SOURCE_REMOVE;
 }
 

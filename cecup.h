@@ -173,7 +173,7 @@ static struct {
     Arena *row_arena;
     Arena *ui_arena;
     GMutex ui_arena_mutex;
-} cecup_state;
+} cecup;
 
 typedef struct ThreadData {
     char src_path[MAX_PATH_LENGTH];
