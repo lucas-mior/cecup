@@ -25,6 +25,7 @@
 #include "config.c"
 
 #define BUTTON_PADDING 5
+#define LABEL_PADDING 10
 
 static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path);
 
@@ -182,18 +183,18 @@ main(int32 argc, char *argv[]) {
     reset_button = gtk_button_new_with_label("Reset");
     gtk_widget_set_tooltip_text(reset_button, "Restore default settings");
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_fs_toggle,
-                       FALSE, FALSE, 5);
+                       FALSE, FALSE, BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_equal_toggle,
-                       FALSE, FALSE, 5);
+                       FALSE, FALSE, BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Diff Tool:"),
-                       FALSE, FALSE, 0);
+                       FALSE, FALSE, LABEL_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.diff_entry, FALSE,
-                       FALSE, 0);
+                       FALSE, LABEL_PADDING);
     gtk_entry_set_text(GTK_ENTRY(cecup_state.diff_entry), "unidiff.bash");
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Terminal:"), FALSE,
-                       FALSE, 0);
+                       FALSE, LABEL_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.term_entry, FALSE,
-                       FALSE, 0);
+                       FALSE, LABEL_PADDING);
     gtk_entry_set_text(GTK_ENTRY(cecup_state.term_entry), "xterm");
     gtk_box_pack_start(GTK_BOX(options_hbox), reset_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
