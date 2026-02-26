@@ -971,7 +971,7 @@ sync_worker(gpointer user_data) {
         }
 
         if (pipes[0].revents & POLLIN) {
-            char buffer[2048];
+            char buffer[MAX_PATH_LENGTH];
             int64 r = read64(pipe_output[0], buffer, SIZEOF(buffer));
             if (r <= 0) {
                 if (r < 0) {
