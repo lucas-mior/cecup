@@ -1553,20 +1553,16 @@ deg2rad(double degrees) {
     return degrees*DEG2RAD;
 }
 
-static char *
-bytes_pretty(int64 raw) {
+static int64
+bytes_pretty(char *buffer, int64 raw) {
     char *suffixes[] = {"B", "kB", "MB", "GB", "TB", "PB"};
-    char buffer[32];
     double aux_pretty;
     int i;
     int32 n;
-    char *string;
 
     if (raw <= 1023) {
-        n = SNPRINTF(buffer, "%lldB", (llong)raw);
-        string = xmalloc(n + 1);
-        memcpy64(string, buffer, n + 1);
-        return string;
+        n = snprintf2(buffer, 32, "%lldB", (llong)raw);
+        return n;
     }
 
     aux_pretty = (double)raw;
@@ -1586,9 +1582,7 @@ bytes_pretty(int64 raw) {
         n = SNPRINTF(buffer, "%.4f%s", aux_pretty, suffixes[i]);
     }
 
-    string = xmalloc(n + 1);
-    memcpy64(string, buffer, n + 1);
-    return string;
+    return n;
 }
 
 static char *

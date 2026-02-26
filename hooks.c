@@ -223,7 +223,7 @@ refresh_ui_list(void) {
     int32 count_delete = 0;
     int32 count_ignore = 0;
     int64 total_size_bytes = 0;
-    char *pretty_size;
+    char pretty_size[32];
     char stats_text[128];
     char button_label[64];
 
@@ -287,10 +287,9 @@ refresh_ui_list(void) {
     SNPRINTF(button_label, "%s %d", EMOJI_IGNORE, count_ignore);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
 
-    pretty_size = bytes_pretty(total_size_bytes);
+    bytes_pretty(pretty_size, total_size_bytes);
     SNPRINTF(stats_text, "Total Transfer Size: 📦 %s", pretty_size);
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
-    g_free(pretty_size);
 
     if (cecup.visible_count > 0) {
         qsort64(cecup.visible_rows, cecup.visible_count, SIZEOF(CecupRow *),
@@ -1327,11 +1326,10 @@ update_ui_handler(gpointer user_data) {
         row->src_action = action_src;
         row->dst_action = action_dst;
 
-        char *pretty;
+        char pretty[32];
         int64 pretty_len;
 
-        pretty = bytes_pretty(data->size);
-        pretty_len = strlen64(pretty) + 1;
+        pretty_len = bytes_pretty(pretty, data->size) + 1;
 
         row->size_text = arena_push(cecup.row_arena, pretty_len);
         memcpy64(row->size_text, pretty, pretty_len);
