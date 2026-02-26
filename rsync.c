@@ -352,7 +352,7 @@ equal_scanner_worker(gpointer user_data) {
 }
 
 static void
-fix_fs_recursive(const char *base_path, const char *relative_path) {
+fix_fs_recursive(char *base_path, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
     char full_path[MAX_PATH_LENGTH];
