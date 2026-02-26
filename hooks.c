@@ -1354,14 +1354,16 @@ update_ui_handler(gpointer user_data) {
         }
 
         if (strcmp(src_path_final, "-") == 0) {
+            int64 path_len;
+
             row->src_path = arena_push(cecup_state.row_arena, 2);
             memcpy64(row->src_path, "-", 2);
-            int64 path_len;
             path_len = strlen64(data->filepath) + 1;
             row->dst_path = arena_push(cecup_state.row_arena, path_len);
             memcpy64(row->dst_path, data->filepath, path_len);
         } else if (strcmp(dst_path_final, "-") == 0) {
             int64 path_len;
+
             path_len = strlen64(data->filepath) + 1;
             row->src_path = arena_push(cecup_state.row_arena, path_len);
             memcpy64(row->src_path, data->filepath, path_len);
@@ -1369,6 +1371,7 @@ update_ui_handler(gpointer user_data) {
             memcpy64(row->dst_path, "-", 2);
         } else {
             int64 path_len;
+
             path_len = strlen64(data->filepath) + 1;
             row->src_path = arena_push(cecup_state.row_arena, path_len);
             memcpy64(row->src_path, data->filepath, path_len);
