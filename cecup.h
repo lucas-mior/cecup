@@ -89,12 +89,12 @@ static const char *dst_action_strings[] = {
 
 static const char *reason_strings[] = {
     [UI_REASON_NONE]      = "",
-    [UI_REASON_EQUAL]      = "Files have the same name, size and modification time",
+    [UI_REASON_EQUAL]     = "Files have the same name, size and modification time",
     [UI_REASON_IGNORED]   = "Matched ignore pattern",
     [UI_REASON_MISSING]   = "Missing in source directory",
-    [UI_REASON_NEW]        = "New file in source directory",
+    [UI_REASON_NEW]       = "New file in source directory",
     [UI_REASON_HARDLINK]  = "Hardlink in source directory",
-    [UI_REASON_UPDATE]    = "Updated in source directory"
+    [UI_REASON_UPDATE]    = "Modification time is newer in the source directory",
 };
 
 enum {
