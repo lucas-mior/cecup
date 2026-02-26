@@ -1266,9 +1266,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
 static gboolean
 update_ui_handler(gpointer user_data) {
-    UIUpdateData *data;
-
-    data = (UIUpdateData *)user_data;
+    UIUpdateData *data = user_data;
 
     switch (data->type) {
     case DATA_TYPE_LOG: {
