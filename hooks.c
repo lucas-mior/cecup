@@ -1328,9 +1328,11 @@ update_ui_handler(gpointer user_data) {
         row->dst_action = action_dst;
 
         char *pretty;
-        pretty = bytes_pretty(data->size);
         int64 pretty_len;
+
+        pretty = bytes_pretty(data->size);
         pretty_len = strlen64(pretty) + 1;
+
         row->size_text = arena_push(cecup.row_arena, pretty_len);
         memcpy64(row->size_text, pretty, pretty_len);
         g_free(pretty);
