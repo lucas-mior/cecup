@@ -1071,9 +1071,9 @@ sync_worker(gpointer user_data) {
                     enum CecupAction action_val = UI_ACTION_UPDATE;
                     char *link_target = NULL;
                     if (strncmp(output_buffer, "hf", 2) == 0) {
-                        action_val = UI_ACTION_HARDLINK;
                         char *sep = strstr(relative_path_entry,
                                            RSYNC_HARDLINK_NOTATION);
+                        action_val = UI_ACTION_HARDLINK;
                         if (sep) {
                             *sep = '\0';
                             link_target
