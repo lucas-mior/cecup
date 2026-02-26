@@ -1157,8 +1157,9 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     int32 idx;
     int32 side;
     int32 view_col_idx;
+    int32 number_of_columns;
     char *tip_text;
-    char tip_text_buffer[MAX_PATH_LENGTH*2 + 256];
+    char tip_text_buffer[8192];
     int64 tip_text_length;
 
     (void)k;
@@ -1176,7 +1177,8 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     view_col_idx = -1;
     tip_text = NULL;
 
-    for (int32 i = 0; i < 4; i += 1) {
+    number_of_columns = (int32)gtk_tree_view_get_n_columns(GTK_TREE_VIEW(w));
+    for (int32 i = 0; i < number_of_columns; i += 1) {
         if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(w), i)) {
             view_col_idx = i;
             break;
@@ -1206,7 +1208,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
         switch (view_col_idx) {
         case 1: {
-            const char **strings;
+            char **strings;
             if (side == 0) {
                 strings = src_action_strings;
             } else {

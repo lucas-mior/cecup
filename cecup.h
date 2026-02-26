@@ -54,7 +54,7 @@ enum CecupReason {
     NUM_UI_REASONS
 };
 
-static const char *action_emojis[] = {
+static char *action_emojis[] = {
     [UI_ACTION_NONE]     = "",
     [UI_ACTION_NEW]      = EMOJI_NEW,
     [UI_ACTION_HARDLINK] = EMOJI_LINK,
@@ -65,7 +65,7 @@ static const char *action_emojis[] = {
     [UI_ACTION_IGNORE]   = EMOJI_IGNORE
 };
 
-static const char *src_action_strings[] = {
+static char *src_action_strings[] = {
     [UI_ACTION_NONE]     = "",
     [UI_ACTION_NEW]      = "Copy to destination",
     [UI_ACTION_HARDLINK] = "Hardlink to destination",
@@ -76,7 +76,7 @@ static const char *src_action_strings[] = {
     [UI_ACTION_IGNORE]   = "Ignore"
 };
 
-static const char *dst_action_strings[] = {
+static char *dst_action_strings[] = {
     [UI_ACTION_NONE]     = "",
     [UI_ACTION_NEW]      = "Copy from source",
     [UI_ACTION_HARDLINK] = "Hardlink from source",
@@ -87,7 +87,7 @@ static const char *dst_action_strings[] = {
     [UI_ACTION_IGNORE]   = "Ignore"
 };
 
-static const char *reason_strings[] = {
+static char *reason_strings[] = {
     [UI_REASON_NONE]     = "",
     [UI_REASON_EQUAL]    = "Files have the same size and modification time",
     [UI_REASON_IGNORED]  = "Matched ignore pattern",
