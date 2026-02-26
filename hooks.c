@@ -1326,14 +1326,7 @@ update_ui_handler(gpointer user_data) {
         row->src_action = action_src;
         row->dst_action = action_dst;
 
-        char pretty[32];
-        int64 pretty_len;
-
-        pretty_len = bytes_pretty(pretty, data->size) + 1;
-
-        row->size_text = arena_push(cecup.row_arena, pretty_len);
-        memcpy64(row->size_text, pretty, pretty_len);
-        g_free(pretty);
+        bytes_pretty(row->size_text, data->size);
 
         row->size_raw = data->size;
         row->src_color = bg_src;

@@ -118,7 +118,7 @@ typedef struct CecupRow {
     char *src_path;
     char *dst_path;
     char *link_target;
-    char *size_text;
+    char size_text[32];
     int64 size_raw;
     char *src_color;
     char *dst_color;
