@@ -107,13 +107,15 @@ main(int32 argc, char *argv[]) {
     SNPRINTF(cecup_state.ignore_path, "%s/ignore.conf", config_base);
     SNPRINTF(cecup_state.config_path, "%s/cecup.conf", config_base);
 
+    // clang-format off
     cecup_state.gtk_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(cecup_state.gtk_window), "cecup");
-    gtk_window_set_wmclass(GTK_WINDOW(cecup_state.gtk_window), "cecup",
-                           "Cecup");
+    gtk_window_set_wmclass(GTK_WINDOW(cecup_state.gtk_window),
+                           "cecup", "Cecup");
     gtk_window_set_default_size(GTK_WINDOW(cecup_state.gtk_window), 1100, 800);
-    g_signal_connect(cecup_state.gtk_window, "destroy",
-                     G_CALLBACK(gtk_main_quit), NULL);
+    g_signal_connect(cecup_state.gtk_window,
+                     "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    // clang-format on
 
     main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_container_add(GTK_CONTAINER(cecup_state.gtk_window), main_vbox);
