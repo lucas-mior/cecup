@@ -30,11 +30,11 @@ int32
 main(int32 argc, char *argv[]) {
     GtkWidget *main_vbox;
     GtkWidget *header_vbox;
-    GtkWidget *invert_btn;
-    GtkWidget *btn_hbox;
+    GtkWidget *invert_button;
+    GtkWidget *button_hbox;
     GtkWidget *filter_hbox;
     GtkWidget *options_hbox;
-    GtkWidget *reset_btn;
+    GtkWidget *reset_button;
     GtkWidget *v_paned;
     GtkWidget *paned;
     GtkWidget *l_vbox;
@@ -122,7 +122,7 @@ main(int32 argc, char *argv[]) {
     gtk_container_set_border_width(GTK_CONTAINER(header_vbox), 10);
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
-    btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    button_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup_state.preview_button = gtk_button_new_with_label("🔎 Preview");
     gtk_widget_set_tooltip_text(cecup_state.preview_button,
                                 "Run rsync --dry-run to identify changes");
@@ -139,17 +139,17 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(cecup_state.sync_button,
                                 "Apply all selected changes");
     gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
-    gtk_box_pack_start(GTK_BOX(btn_hbox), cecup_state.ignore_button, FALSE,
+    gtk_box_pack_start(GTK_BOX(button_hbox), cecup_state.ignore_button, FALSE,
                        FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(btn_hbox), cecup_state.fix_button, FALSE, FALSE,
-                       5);
-    gtk_box_pack_end(GTK_BOX(btn_hbox), cecup_state.sync_button, FALSE, FALSE,
-                     5);
-    gtk_box_pack_end(GTK_BOX(btn_hbox), cecup_state.stop_button, FALSE, FALSE,
-                     5);
-    gtk_box_pack_end(GTK_BOX(btn_hbox), cecup_state.preview_button, FALSE,
+    gtk_box_pack_start(GTK_BOX(button_hbox), cecup_state.fix_button, FALSE,
+                       FALSE, 5);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup_state.sync_button, FALSE,
                      FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(header_vbox), btn_hbox, FALSE, FALSE, 5);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup_state.stop_button, FALSE,
+                     FALSE, 5);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup_state.preview_button, FALSE,
+                     FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(header_vbox), button_hbox, FALSE, FALSE, 5);
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup_state.check_fs_toggle
@@ -171,8 +171,8 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(
         cecup_state.term_entry,
         "Terminal emulator used to launch the diff tool");
-    reset_btn = gtk_button_new_with_label("Reset");
-    gtk_widget_set_tooltip_text(reset_btn, "Restore default settings");
+    reset_button = gtk_button_new_with_label("Reset");
+    gtk_widget_set_tooltip_text(reset_button, "Restore default settings");
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_fs_toggle,
                        FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_equal_toggle,
@@ -187,7 +187,7 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.term_entry, FALSE,
                        FALSE, 0);
     gtk_entry_set_text(GTK_ENTRY(cecup_state.term_entry), "xterm");
-    gtk_box_pack_start(GTK_BOX(options_hbox), reset_btn, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(options_hbox), reset_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
     progress_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
@@ -251,10 +251,10 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), browse_src, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(paths_hbox), l_entry_hbox, TRUE, TRUE, 0);
 
-    invert_btn = gtk_button_new_with_label("<--->");
-    gtk_widget_set_tooltip_text(invert_btn,
+    invert_button = gtk_button_new_with_label("<--->");
+    gtk_widget_set_tooltip_text(invert_button,
                                 "Swap Source and Destination paths");
-    gtk_box_pack_start(GTK_BOX(paths_hbox), invert_btn, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(paths_hbox), invert_button, FALSE, FALSE, 0);
 
     r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     cecup_state.dst_entry = gtk_entry_new();
@@ -352,7 +352,7 @@ main(int32 argc, char *argv[]) {
 
     g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), NULL);
     g_signal_connect(browse_dst, "clicked", G_CALLBACK(on_browse_dst), NULL);
-    g_signal_connect(invert_btn, "clicked", G_CALLBACK(on_invert_clicked),
+    g_signal_connect(invert_button, "clicked", G_CALLBACK(on_invert_clicked),
                      NULL);
     g_signal_connect(cecup_state.preview_button, "clicked",
                      G_CALLBACK(on_preview_clicked), NULL);
@@ -364,7 +364,8 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_ignore_clicked), NULL);
     g_signal_connect(cecup_state.fix_button, "clicked",
                      G_CALLBACK(on_fix_clicked), NULL);
-    g_signal_connect(reset_btn, "clicked", G_CALLBACK(on_reset_clicked), NULL);
+    g_signal_connect(reset_button, "clicked", G_CALLBACK(on_reset_clicked),
+                     NULL);
 
     g_signal_connect(cecup_state.filter_new, "toggled",
                      G_CALLBACK(on_filter_toggled), NULL);
