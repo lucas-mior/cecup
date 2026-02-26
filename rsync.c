@@ -372,7 +372,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
     }
 
     while ((entry = readdir(dir))) {
-        char *d_name;
+        char *d_name = entry->d_name;
         char sub_rel[MAX_PATH_LENGTH];
         char old_full[MAX_PATH_LENGTH];
         char new_full[MAX_PATH_LENGTH];
@@ -381,7 +381,6 @@ fix_fs_recursive(char *base_path, char *relative_path) {
         int32 changed = 0;
         int64 j = 0;
 
-        d_name = entry->d_name;
         if (d_name[0] == '.'
             && (d_name[1] == '\0' || (d_name[1] == '.' && d_name[2] == '\0'))) {
             continue;
