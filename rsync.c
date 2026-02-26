@@ -843,11 +843,11 @@ sync_worker(gpointer user_data) {
     char *esc_src = shell_escape(thread_data->src_path);
     char *esc_dst = shell_escape(thread_data->dst_path);
 
-    SNPRINTF(cmd,
-             "rsync " RSYNC_UNIVERSAL_ARGS
-             " --delete-excluded %s %s '%s/' '%s/'",
-             thread_data->is_preview ? "--dry-run" : "", exclude_arg, esc_src,
-             esc_dst);
+    snprintf2(cmd, MAX_PATH_LENGTH*2 + 256,
+              "rsync " RSYNC_UNIVERSAL_ARGS
+              " --delete-excluded %s %s '%s/' '%s/'",
+              thread_data->is_preview ? "--dry-run" : "", exclude_arg, esc_src,
+              esc_dst);
 
     free(esc_src);
     free(esc_dst);
