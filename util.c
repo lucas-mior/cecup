@@ -1573,13 +1573,13 @@ bytes_pretty(char *buffer, int64 raw) {
     }
 
     if (aux_pretty >= 1000) {
-        n = SNPRINTF(buffer, "%.1f%s", aux_pretty, suffixes[i]);
+        n = snprintf2(buffer, 32, "%.1f%s", aux_pretty, suffixes[i]);
     } else if (aux_pretty >= 100) {
-        n = SNPRINTF(buffer, "%.2f%s", aux_pretty, suffixes[i]);
+        n = snprintf2(buffer, 32, "%.2f%s", aux_pretty, suffixes[i]);
     } else if (aux_pretty >= 10) {
-        n = SNPRINTF(buffer, "%.3f%s", aux_pretty, suffixes[i]);
+        n = snprintf2(buffer, 32, "%.3f%s", aux_pretty, suffixes[i]);
     } else {
-        n = SNPRINTF(buffer, "%.4f%s", aux_pretty, suffixes[i]);
+        n = snprintf2(buffer, 32, "%.4f%s", aux_pretty, suffixes[i]);
     }
 
     return n;
