@@ -84,7 +84,7 @@ read_config(void) {
         }
         if (g_key_file_has_key(key, "Options", "check_fs", NULL)) {
             gtk_toggle_button_set_active(
-                GTK_TOGGLE_BUTTON(cecup_state.check_fs_toggle),
+                GTK_TOGGLE_BUTTON(cecup_state.check_fs),
                 g_key_file_get_boolean(key, "Options", "check_fs", NULL));
         }
     }
@@ -126,9 +126,9 @@ save_config(void) {
     g_key_file_set_boolean(key, "Filters", "ignore",
                            gtk_toggle_button_get_active(
                                GTK_TOGGLE_BUTTON(cecup_state.filter_ignore)));
-    g_key_file_set_boolean(key, "Options", "check_fs",
-                           gtk_toggle_button_get_active(
-                               GTK_TOGGLE_BUTTON(cecup_state.check_fs_toggle)));
+    g_key_file_set_boolean(
+        key, "Options", "check_fs",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup_state.check_fs)));
 
     out = g_key_file_to_data(key, &len, NULL);
     g_file_set_contents(cecup_state.config_path, out, (gssize)len, NULL);

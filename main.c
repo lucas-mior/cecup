@@ -161,18 +161,18 @@ main(int32 argc, char *argv[]) {
     // clang-format on
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    cecup_state.check_fs_toggle
+    cecup_state.check_fs
         = gtk_check_button_new_with_label("Require different filesystems");
-    gtk_widget_set_tooltip_text(
-        cecup_state.check_fs_toggle,
-        "Block sync if source and destination are on the same device");
-    cecup_state.check_equal_toggle
+    gtk_widget_set_tooltip_text(cecup_state.check_fs,
+                                "Block sync if source and destination"
+                                " are on the same device (file system)");
+    cecup_state.check_equal
         = gtk_check_button_new_with_label("Scan for equal files");
-    gtk_widget_set_tooltip_text(
-        cecup_state.check_equal_toggle,
-        "Perform parallel directory scan to find identical files");
-    gtk_toggle_button_set_active(
-        GTK_TOGGLE_BUTTON(cecup_state.check_equal_toggle), TRUE);
+    gtk_widget_set_tooltip_text(cecup_state.check_equal,
+                                "Perform parallel directory scan"
+                                " to find identical files");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.check_equal),
+                                 TRUE);
     cecup_state.diff_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup_state.diff_entry,
                                 "Executable used for comparing files");
@@ -182,10 +182,10 @@ main(int32 argc, char *argv[]) {
         "Terminal emulator used to launch the diff tool");
     reset_button = gtk_button_new_with_label("Reset");
     gtk_widget_set_tooltip_text(reset_button, "Restore default settings");
-    gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_fs_toggle,
-                       FALSE, FALSE, BUTTON_PADDING);
-    gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_equal_toggle,
-                       FALSE, FALSE, BUTTON_PADDING);
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_fs, FALSE,
+                       FALSE, BUTTON_PADDING);
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.check_equal, FALSE,
+                       FALSE, BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Diff Tool:"),
                        FALSE, FALSE, LABEL_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup_state.diff_entry, FALSE,
@@ -397,9 +397,9 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_config_changed), NULL);
     g_signal_connect(cecup_state.dst_entry, "changed",
                      G_CALLBACK(on_config_changed), NULL);
-    g_signal_connect(cecup_state.check_fs_toggle, "toggled",
+    g_signal_connect(cecup_state.check_fs, "toggled",
                      G_CALLBACK(on_config_changed), NULL);
-    g_signal_connect(cecup_state.check_equal_toggle, "toggled",
+    g_signal_connect(cecup_state.check_equal, "toggled",
                      G_CALLBACK(on_config_changed), NULL);
 
     gtk_widget_show_all(cecup_state.gtk_window);

@@ -747,10 +747,10 @@ on_reset_clicked(GtkWidget *b, gpointer data) {
                                  TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.filter_ignore),
                                  TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.check_fs_toggle),
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.check_fs),
                                  FALSE);
-    gtk_toggle_button_set_active(
-        GTK_TOGGLE_BUTTON(cecup_state.check_equal_toggle), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup_state.check_equal),
+                                 TRUE);
     gtk_entry_set_text(GTK_ENTRY(cecup_state.diff_entry), "unidiff.bash");
     gtk_entry_set_text(GTK_ENTRY(cecup_state.term_entry), "xterm");
     save_config();
@@ -792,9 +792,9 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
 
     thread_data->is_preview = 1;
     thread_data->scan_equal = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.check_equal_toggle));
-    thread_data->check_different_fs = gtk_toggle_button_get_active(
-        GTK_TOGGLE_BUTTON(cecup_state.check_fs_toggle));
+        GTK_TOGGLE_BUTTON(cecup_state.check_equal));
+    thread_data->check_different_fs
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup_state.check_fs));
     strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
     strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
     g_thread_new("worker", sync_worker, thread_data);
@@ -971,7 +971,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
         thread_data->is_preview = 0;
         thread_data->scan_equal = 0;
         thread_data->check_different_fs = gtk_toggle_button_get_active(
-            GTK_TOGGLE_BUTTON(cecup_state.check_fs_toggle));
+            GTK_TOGGLE_BUTTON(cecup_state.check_fs));
         strncpy(thread_data->src_path, path_src, MAX_PATH_LENGTH - 1);
         strncpy(thread_data->dst_path, path_dst, MAX_PATH_LENGTH - 1);
         g_thread_new("worker", sync_worker, thread_data);

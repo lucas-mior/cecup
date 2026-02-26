@@ -136,8 +136,8 @@ static struct {
     GtkWidget *stop_button;
     GtkWidget *ignore_button;
     GtkWidget *fix_button;
-    GtkWidget *check_fs_toggle;
-    GtkWidget *check_equal_toggle;
+    GtkWidget *check_fs;
+    GtkWidget *check_equal;
     
     GtkWidget *filter_new;
     GtkWidget *filter_hard;
