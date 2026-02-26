@@ -839,7 +839,7 @@ sync_worker(gpointer user_data) {
         exclude_arg = xstrdup("");
     }
 
-    char cmd[8192];
+    char *cmd = xmalloc(MAX_PATH_LENGTH*2 + 256);
     char *esc_src = shell_escape(thread_data->src_path);
     char *esc_dst = shell_escape(thread_data->dst_path);
 
@@ -937,6 +937,7 @@ sync_worker(gpointer user_data) {
         break;
     }
 
+    free(cmd);
     XCLOSE(&pipe_output[1]);
     XCLOSE(&pipe_error[1]);
 
