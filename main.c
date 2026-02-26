@@ -76,10 +76,10 @@ main(int32 argc, char *argv[]) {
 
     cecup_state.rows_count = 0;
     cecup_state.rows_capacity = 4096;
-    cecup_state.rows = arena_push(
-        cecup_state.row_arena, cecup_state.rows_capacity*SIZEOF(CecupRow *));
-    cecup_state.visible_rows = arena_push(
-        cecup_state.row_arena, cecup_state.rows_capacity*SIZEOF(CecupRow *));
+
+    int64 rows_size = cecup_state.rows_capacity*SIZEOF(CecupRow *);
+    cecup_state.rows = arena_push(cecup_state.row_arena, rows_size);
+    cecup_state.visible_rows = arena_push(cecup_state.row_arena, rows_size);
 
     cecup_state.sort_col = COL_SRC_PATH;
     cecup_state.sort_order = GTK_SORT_ASCENDING;
