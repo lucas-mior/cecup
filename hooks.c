@@ -225,7 +225,7 @@ refresh_ui_list(void) {
     int64 total_size_bytes = 0;
     char *pretty_size;
     char stats_text[128];
-    char btn_label[64];
+    char button_label[64];
 
     show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
@@ -274,18 +274,18 @@ refresh_ui_list(void) {
         }
     }
 
-    SNPRINTF(btn_label, "%s %d", EMOJI_NEW, count_new);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_new), btn_label);
-    SNPRINTF(btn_label, "%s %d", EMOJI_LINK, count_hard);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_hard), btn_label);
-    SNPRINTF(btn_label, "%s %d", EMOJI_UPDATE, count_update);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_update), btn_label);
-    SNPRINTF(btn_label, "%s %d", EMOJI_EQUAL, count_equal);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_equal), btn_label);
-    SNPRINTF(btn_label, "%s %d", EMOJI_DELETE, count_delete);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), btn_label);
-    SNPRINTF(btn_label, "%s %d", EMOJI_IGNORE, count_ignore);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), btn_label);
+    SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_new), button_label);
+    SNPRINTF(button_label, "%s %d", EMOJI_LINK, count_hard);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_hard), button_label);
+    SNPRINTF(button_label, "%s %d", EMOJI_UPDATE, count_update);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_update), button_label);
+    SNPRINTF(button_label, "%s %d", EMOJI_EQUAL, count_equal);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_equal), button_label);
+    SNPRINTF(button_label, "%s %d", EMOJI_DELETE, count_delete);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), button_label);
+    SNPRINTF(button_label, "%s %d", EMOJI_IGNORE, count_ignore);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
 
     pretty_size = bytes_pretty(total_size_bytes);
     SNPRINTF(stats_text, "Total Transfer Size: 📦 %s", pretty_size);
