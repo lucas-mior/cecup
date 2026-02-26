@@ -328,19 +328,21 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(cecup_state.filter_delete, "Show Deletions");
     gtk_widget_set_tooltip_text(cecup_state.filter_ignore, "Show Ignored");
 
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_new, FALSE,
-                       FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_hard, FALSE,
-                       FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_update, FALSE,
-                       FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_equal, FALSE,
-                       FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_delete, FALSE,
-                       FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_ignore, FALSE,
-                       FALSE, 2);
+    // clang-format off
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_new,
+                       FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_hard,
+                       FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_update,
+                       FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_equal,
+                       FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_delete,
+                       FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup_state.filter_ignore,
+                       FALSE, FALSE, 2);
     gtk_box_pack_start(GTK_BOX(main_vbox), filter_hbox, FALSE, FALSE, 0);
+    // clang-format on
 
     cecup_state.stats_label = gtk_label_new("✅ Ready");
     gtk_box_pack_start(GTK_BOX(main_vbox), cecup_state.stats_label, FALSE,
