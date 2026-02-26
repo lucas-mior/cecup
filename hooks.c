@@ -1203,7 +1203,8 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 }
             }
 
-            if (view_col_idx == 1) {
+            switch (view_col_idx) {
+            case 1: {
                 const char **strings;
                 if (side == 0) {
                     strings = src_action_strings;
@@ -1217,8 +1218,9 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 tip_text = arena_push(cecup.ui_arena, str_len + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
                 memcpy64(tip_text, strings[action], str_len + 1);
-
-            } else if (view_col_idx == 2) {
+                break;
+            }
+            case 2: {
                 if (row->link_target) {
                     tip_text_length = SNPRINTF(tip_text_buffer, "%s -> %s: %s",
                                                file_path, row->link_target,
@@ -1232,13 +1234,20 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 tip_text = arena_push(cecup.ui_arena, tip_text_length + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
                 memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
-            } else if (view_col_idx == 3) {
+                break;
+            }
+            case 3: {
                 tip_text_length = SNPRINTF(tip_text_buffer, "%s: %ld bytes",
                                            file_path, row->size_raw);
                 g_mutex_lock(&cecup.ui_arena_mutex);
                 tip_text = arena_push(cecup.ui_arena, tip_text_length + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
                 memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
+                break;
+            }
+            default: {
+                break;
+            }
             }
         }
 
