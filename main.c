@@ -139,17 +139,21 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(cecup_state.sync_button,
                                 "Apply all selected changes");
     gtk_widget_set_sensitive(cecup_state.stop_button, FALSE);
-    gtk_box_pack_start(GTK_BOX(button_hbox), cecup_state.ignore_button, FALSE,
-                       FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(button_hbox), cecup_state.fix_button, FALSE,
-                       FALSE, 5);
-    gtk_box_pack_end(GTK_BOX(button_hbox), cecup_state.sync_button, FALSE,
-                     FALSE, 5);
-    gtk_box_pack_end(GTK_BOX(button_hbox), cecup_state.stop_button, FALSE,
-                     FALSE, 5);
-    gtk_box_pack_end(GTK_BOX(button_hbox), cecup_state.preview_button, FALSE,
-                     FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(header_vbox), button_hbox, FALSE, FALSE, 5);
+
+    // clang-format off
+    gtk_box_pack_start(GTK_BOX(button_hbox), cecup_state.ignore_button,
+                       FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(button_hbox), cecup_state.fix_button,
+                       FALSE, FALSE, 5);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup_state.sync_button,
+                     FALSE, FALSE, 5);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup_state.stop_button,
+                     FALSE, FALSE, 5);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup_state.preview_button,
+                     FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(header_vbox), button_hbox,
+                       FALSE, FALSE, 5);
+    // clang-format on
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup_state.check_fs_toggle
