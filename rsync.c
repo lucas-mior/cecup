@@ -38,6 +38,7 @@
 #define TESTING_rsync 0
 #endif
 
+#define RSYNC_HARDLINK_NOTATION " => "
 #define RSYNC_UNIVERSAL_ARGS "--verbose --update --recursive" \
                              " --partial --progress --info=progress2" \
                              " --links --hard-links --itemize-changes" \
@@ -1071,10 +1072,12 @@ sync_worker(gpointer user_data) {
                     char *link_target = NULL;
                     if (strncmp(output_buffer, "hf", 2) == 0) {
                         action_val = UI_ACTION_HARDLINK;
-                        char *sep = strstr(relative_path_entry, " => ");
+                        char *sep = strstr(relative_path_entry,
+                                           RSYNC_HARDLINK_NOTATION);
                         if (sep) {
                             *sep = '\0';
-                            link_target = sep + 4;
+                            link_target
+                                = sep + strlen64(RSYNC_HARDLINK_NOTATION);
                         }
                     } else if (strncmp(output_buffer, "cd", 2) == 0
                                || strncmp(output_buffer, ">f+++++", 7) == 0) {
