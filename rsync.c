@@ -42,6 +42,7 @@
                              " --partial --progress --info=progress2" \
                              " --links --hard-links --itemize-changes" \
                              " --perms --times --owner --group"
+#define MAX_COMMAND_LENGTH (MAX_PATH_LENGTH*2 + strlen(RSYNC_UNIVERSAL_ARGS)*2)
 
 typedef struct EqualScannerData {
     char src_path[MAX_PATH_LENGTH];
@@ -839,11 +840,11 @@ sync_worker(gpointer user_data) {
         exclude_arg = xstrdup("");
     }
 
-    char *cmd = xmalloc(MAX_PATH_LENGTH*2 + 256);
+    char *cmd = xmalloc(MAX_COMMAND_LENGTH);
     char *esc_src = shell_escape(thread_data->src_path);
     char *esc_dst = shell_escape(thread_data->dst_path);
 
-    snprintf2(cmd, MAX_PATH_LENGTH*2 + 256,
+    snprintf2(cmd, MAX_COMMAND_LENGTH,
               "rsync " RSYNC_UNIVERSAL_ARGS
               " --delete-excluded %s %s '%s/' '%s/'",
               thread_data->is_preview ? "--dry-run" : "", exclude_arg, esc_src,
@@ -1183,7 +1184,7 @@ finalize:
 static gpointer
 diff_worker(gpointer user_data) {
     UIUpdateData *ud;
-    char cmd[8192];
+    char *cmd = xmalloc(MAX_COMMAND_LENGTH);
     char *esc_src;
     char *esc_dst;
     char *esc_file;
@@ -1193,9 +1194,10 @@ diff_worker(gpointer user_data) {
     esc_dst = shell_escape(ud->dst_base);
     esc_file = shell_escape(ud->filepath);
 
-    SNPRINTF(cmd,
-             "%s -e bash -c \"%s '%s/%s' '%s/%s'; read -p 'Press Enter...'\" &",
-             ud->term_cmd, ud->diff_tool, esc_src, esc_file, esc_dst, esc_file);
+    snprintf2(
+        cmd, MAX_COMMAND_LENGTH,
+        "%s -e bash -c \"%s '%s/%s' '%s/%s'; read -p 'Press Enter...'\" &",
+        ud->term_cmd, ud->diff_tool, esc_src, esc_file, esc_dst, esc_file);
 
     free(esc_src);
     free(esc_dst);
