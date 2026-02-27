@@ -517,6 +517,7 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
         }
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
+            char raw_path[MAX_PATH_LENGTH];
             char full_path[MAX_PATH_LENGTH];
             char *base_path;
             int64 path_length;
@@ -528,8 +529,22 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
                 base_path = task->dst_base;
             }
 
-            path_length
-                = SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
+            SNPRINTF(raw_path, "%s/%s", base_path, task->filepath);
+            if (realpath(raw_path, full_path) == NULL) {
+                if (raw_path[0] != '/') {
+                    char cwd[MAX_PATH_LENGTH];
+
+                    if (getcwd(cwd, SIZEOF(cwd))) {
+                        SNPRINTF(full_path, "%s/%s", cwd, raw_path);
+                    } else {
+                        memcpy64(full_path, raw_path, MAX_PATH_LENGTH);
+                    }
+                } else {
+                    memcpy64(full_path, raw_path, MAX_PATH_LENGTH);
+                }
+            }
+
+            path_length = strlen64(full_path);
 
             if (i > 0 && remaining_capacity > 0) {
                 *write_pointer = '\n';
@@ -1125,13 +1140,21 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label("Copy Relative Path");
-            g_signal_connect(item, "activate",
-                             G_CALLBACK(on_menu_copy_relative), ud);
+            if (strcmp(file_path, "-") == 0) {
+                gtk_widget_set_sensitive(item, FALSE);
+            } else {
+                g_signal_connect(item, "activate",
+                                 G_CALLBACK(on_menu_copy_relative), ud);
+            }
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label("Copy Full Path");
-            g_signal_connect(item, "activate", G_CALLBACK(on_menu_copy_full),
-                             ud);
+            if (strcmp(file_path, "-") == 0) {
+                gtk_widget_set_sensitive(item, FALSE);
+            } else {
+                g_signal_connect(item, "activate",
+                                 G_CALLBACK(on_menu_copy_full), ud);
+            }
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label("Apply");
