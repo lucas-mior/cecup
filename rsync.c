@@ -1133,7 +1133,7 @@ sync_worker(gpointer user_data) {
 
                     cecup_action = UI_ACTION_UPDATE;
                     link_target = NULL;
-                    if (output_buffer[1] == 'f' && output_buffer[2] == 'h') {
+                    if (type_char == 'h') {
                         char *sep;
                         cecup_action = UI_ACTION_HARDLINK;
 
