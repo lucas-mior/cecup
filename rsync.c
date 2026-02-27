@@ -34,7 +34,7 @@
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_rsync 1
-#elif !defined(TESTING_assert)
+#elif !defined(TESTING_rsync)
 #define TESTING_rsync 0
 #endif
 
@@ -951,13 +951,13 @@ sync_worker(gpointer user_data) {
         char error_buffer[8192];
         int32 output_position = 0;
         int32 error_position = 0;
+        int32 poll_return;
 
         pipes[0].fd = pipe_output[0];
         pipes[0].events = POLLIN;
         pipes[1].fd = pipe_error[0];
         pipes[1].events = POLLIN;
 
-        int32 poll_return;
         if (cecup.cancel_sync) {
             if (kill(-child_pid, SIGTERM) < 0) {
                 dispatch_log_error("Error killing process group: %s.\n",

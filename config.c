@@ -23,7 +23,7 @@
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_config 1
-#elif !defined(TESTING_assert)
+#elif !defined(TESTING_config)
 #define TESTING_config 0
 #endif
 
