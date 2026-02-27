@@ -133,6 +133,7 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-documentation-unknown-command"
     CFLAGS="$CFLAGS -Wno-documentation"
     CFLAGS="$CFLAGS -Wno-padded"
+    CFLAGS="$CFLAGS -Wno-pedantic"
     CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
 fi
 
