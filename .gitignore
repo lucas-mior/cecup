@@ -10,3 +10,4 @@ tags
 .tags.vim
 callgrind.out.*
 valgrind.out.*
+*.SRCINFO
