@@ -702,10 +702,10 @@ bulk_sync_worker(gpointer user_data) {
                     char *eol;
                     output_line_pos += (int32)r;
 
-                    while ((eol
-                            = memchr(output_line_buffer, '\n', output_line_pos))
-                           || (eol = memchr(output_line_buffer, '\r',
-                                            output_line_pos))) {
+                    while ((eol = memchr64(output_line_buffer, '\n',
+                                           output_line_pos))
+                           || (eol = memchr64(output_line_buffer, '\r',
+                                              output_line_pos))) {
                         int32 line_len = (int32)(eol - output_line_buffer);
                         *eol = '\0';
 
@@ -745,10 +745,10 @@ bulk_sync_worker(gpointer user_data) {
                     char *eol;
                     error_line_pos += (int32)r;
 
-                    while (
-                        (eol = memchr(error_line_buffer, '\n', error_line_pos))
-                        || (eol = memchr(error_line_buffer, '\r',
-                                         error_line_pos))) {
+                    while ((eol
+                            = memchr64(error_line_buffer, '\n', error_line_pos))
+                           || (eol = memchr64(error_line_buffer, '\r',
+                                              error_line_pos))) {
                         int32 line_len = (int32)(eol - error_line_buffer);
                         *eol = '\0';
 
@@ -1068,9 +1068,10 @@ sync_worker(gpointer user_data) {
                 char *eol;
                 output_line_pos += (int32)r;
 
-                while ((eol = memchr(output_line_buffer, '\n', output_line_pos))
-                       || (eol = memchr(output_line_buffer, '\r',
-                                        output_line_pos))) {
+                while (
+                    (eol = memchr64(output_line_buffer, '\n', output_line_pos))
+                    || (eol = memchr64(output_line_buffer, '\r',
+                                       output_line_pos))) {
                     char *percent_pos;
                     char *space_pos;
                     char *relative_path_entry;
@@ -1244,9 +1245,9 @@ sync_worker(gpointer user_data) {
                 char *eol;
                 error_line_pos += (int32)r;
 
-                while ((eol = memchr(error_line_buffer, '\n', error_line_pos))
-                       || (eol
-                           = memchr(error_line_buffer, '\r', error_line_pos))) {
+                while ((eol = memchr64(error_line_buffer, '\n', error_line_pos))
+                       || (eol = memchr64(error_line_buffer, '\r',
+                                          error_line_pos))) {
                     int32 line_len = (int32)(eol - error_line_buffer);
                     *eol = '\0';
 
