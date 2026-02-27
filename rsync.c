@@ -944,18 +944,19 @@ sync_worker(gpointer user_data) {
     XCLOSE(&pipe_output[1]);
     XCLOSE(&pipe_error[1]);
 
-    struct pollfd pipes[2];
-    pipes[0].fd = pipe_output[0];
-    pipes[0].events = POLLIN;
-    pipes[1].fd = pipe_error[0];
-    pipes[1].events = POLLIN;
+    while (true) {
+        struct pollfd pipes[2];
 
-    char output_buffer[8192];
-    char error_buffer[8192];
-    int32 output_position = 0;
-    int32 error_position = 0;
+        char output_buffer[8192];
+        char error_buffer[8192];
+        int32 output_position = 0;
+        int32 error_position = 0;
 
-    while (1) {
+        pipes[0].fd = pipe_output[0];
+        pipes[0].events = POLLIN;
+        pipes[1].fd = pipe_error[0];
+        pipes[1].events = POLLIN;
+
         int32 poll_return;
         if (cecup.cancel_sync) {
             if (kill(-child_pid, SIGTERM) < 0) {
