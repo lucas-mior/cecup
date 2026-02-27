@@ -105,6 +105,8 @@ enum {
     COL_DST_PATH,
     COL_SIZE_TEXT,
     COL_SIZE_RAW,
+    COL_MTIME_TEXT,
+    COL_MTIME_RAW,
     COL_SRC_COLOR,
     COL_DST_COLOR,
     COL_REASON,
@@ -120,6 +122,8 @@ typedef struct CecupRow {
     char *link_target;
     char size_text[32];
     int64 size_raw;
+    char mtime_text[32];
+    int64 mtime_raw;
     char *src_color;
     char *dst_color;
     enum CecupReason reason;
@@ -210,6 +214,7 @@ typedef struct UIUpdateData {
     char *diff_tool;
     char *term_cmd;
     int64 size;
+    int64 mtime;
     int32 side;
     double fraction;
     enum DataType type;
