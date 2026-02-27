@@ -1076,10 +1076,11 @@ sync_worker(gpointer user_data) {
                     cecup_action = UI_ACTION_UPDATE;
                     link_target = NULL;
                     if (strncmp(output_buffer, "hf", 2) == 0) {
-                        char *sep = strstr(relative_path_entry,
-                                           RSYNC_HARDLINK_NOTATION);
+                        char *sep;
                         cecup_action = UI_ACTION_HARDLINK;
-                        if (sep) {
+
+                        if ((sep = strstr(relative_path_entry,
+                                          RSYNC_HARDLINK_NOTATION))) {
                             *sep = '\0';
                             link_target
                                 = sep + strlen64(RSYNC_HARDLINK_NOTATION);
