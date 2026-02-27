@@ -168,7 +168,8 @@ dispatch_progress(enum DataType type, double fraction) {
 
 static void
 dispatch_tree(int32 side, enum CecupAction action, char *path,
-              char *link_target, int64 size, enum CecupReason reason) {
+              char *link_target, int64 size, int64 mtime,
+              enum CecupReason reason) {
     UIUpdateData *data;
     int64 path_len;
     int64 target_len;
@@ -193,6 +194,7 @@ dispatch_tree(int32 side, enum CecupAction action, char *path,
     data->action = action;
     data->reason = reason;
     data->size = size;
+    data->mtime = mtime;
     g_idle_add(update_ui_handler, data);
     return;
 }
@@ -334,7 +336,8 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path) {
                 if (stat_srt.st_size == stat_dst.st_size
                     && stat_srt.st_mtime == stat_dst.st_mtime) {
                     dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, NULL,
-                                  stat_srt.st_size, UI_REASON_EQUAL);
+                                  stat_srt.st_size, (int64)stat_srt.st_mtime,
+                                  UI_REASON_EQUAL);
                 }
             }
         }
@@ -1032,6 +1035,7 @@ sync_worker(gpointer user_data) {
                     struct stat st_path_val;
                     char full_src_path_val[MAX_PATH_LENGTH];
                     int64 sz_path_val = 0;
+                    int64 mt_path_val = 0;
 
                     if (buffer[k] != '\n' && buffer[k] != '\r'
                         && output_position < (int32)SIZEOF(output_buffer) - 1) {
@@ -1069,6 +1073,7 @@ sync_worker(gpointer user_data) {
                         struct stat stat_src_local;
                         struct stat stat_dst_local;
                         int64 size_val;
+                        int64 time_val;
                         enum CecupReason deletion_reason;
 
                         while (isspace(*relative_path)) {
@@ -1082,8 +1087,10 @@ sync_worker(gpointer user_data) {
 
                         if (lstat(full_dst, &stat_dst_local) == 0) {
                             size_val = stat_dst_local.st_size;
+                            time_val = (int64)stat_dst_local.st_mtime;
                         } else {
                             size_val = 0;
+                            time_val = 0;
                         }
 
                         if (size_val == 0 && errno != ENOENT && errno != 0) {
@@ -1098,7 +1105,7 @@ sync_worker(gpointer user_data) {
                         }
 
                         dispatch_tree(1, UI_ACTION_DELETE, relative_path, NULL,
-                                      size_val, deletion_reason);
+                                      size_val, time_val, deletion_reason);
                         continue;
                     }
 
@@ -1142,10 +1149,11 @@ sync_worker(gpointer user_data) {
                                            full_src_path_val, strerror(errno));
                     } else {
                         sz_path_val = st_path_val.st_size;
+                        mt_path_val = (int64)st_path_val.st_mtime;
                     }
 
                     dispatch_tree(0, cecup_action, relative_path_entry,
-                                  link_target, sz_path_val,
+                                  link_target, sz_path_val, mt_path_val,
                                   (enum CecupReason)cecup_action);
 
                     processed_files_preview += 1;
