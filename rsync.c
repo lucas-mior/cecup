@@ -864,8 +864,8 @@ sync_worker(gpointer user_data) {
         free(exclude_arg);
     }
 
-    char log_cmd[8192];
     {
+        char log_cmd[8192];
         int32 i = 0;
         int32 j = 0;
         int32 line_len = 0;
@@ -895,9 +895,8 @@ sync_worker(gpointer user_data) {
             j += 1;
         }
         log_cmd[j] = '\0';
+        dispatch_log("+ %s\n", log_cmd);
     }
-
-    dispatch_log("+ %s\n", log_cmd);
 
     int32 pipe_output[2] = {-1, -1};
     int32 pipe_error[2] = {-1, -1};
