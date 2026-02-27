@@ -1064,8 +1064,8 @@ sync_worker(gpointer user_data) {
                     }
 
                     type_char = output_buffer[0];
-                    if (type_char != '>' && type_char != '.' && type_char != 'h'
-                        && type_char != 'c') {
+                    if ((type_char != '>') && (type_char != '.')
+                        && (type_char != 'h') && (type_char != 'c')) {
                         continue;
                     }
 
