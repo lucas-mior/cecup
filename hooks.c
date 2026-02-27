@@ -98,7 +98,7 @@ get_target_tasks(int32 side, char *clicked_path,
             if (strcmp(file_path, "-") != 0) {
                 int64 path_len;
                 int64 src_len;
-                int64 dst_len;
+                int64 l_dst_len;
 
                 g_mutex_lock(&cecup.ui_arena_mutex);
                 task = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
@@ -112,9 +112,9 @@ get_target_tasks(int32 side, char *clicked_path,
                 task->src_base = xarena_push(cecup.ui_arena, src_len);
                 memcpy64(task->src_base, shared_src, src_len);
 
-                dst_len = strlen64(shared_dst) + 1;
-                task->dst_base = xarena_push(cecup.ui_arena, dst_len);
-                memcpy64(task->dst_base, shared_dst, dst_len);
+                l_dst_len = strlen64(shared_dst) + 1;
+                task->dst_base = xarena_push(cecup.ui_arena, l_dst_len);
+                memcpy64(task->dst_base, shared_dst, l_dst_len);
 
                 if (row->link_target) {
                     int64 target_len;
@@ -135,7 +135,7 @@ get_target_tasks(int32 side, char *clicked_path,
         UIUpdateData *task;
         int64 path_len;
         int64 src_len;
-        int64 dst_len;
+        int64 l_dst_len;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
         task = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
@@ -149,9 +149,9 @@ get_target_tasks(int32 side, char *clicked_path,
         task->src_base = xarena_push(cecup.ui_arena, src_len);
         memcpy64(task->src_base, shared_src, src_len);
 
-        dst_len = strlen64(shared_dst) + 1;
-        task->dst_base = xarena_push(cecup.ui_arena, dst_len);
-        memcpy64(task->dst_base, shared_dst, dst_len);
+        l_dst_len = strlen64(shared_dst) + 1;
+        task->dst_base = xarena_push(cecup.ui_arena, l_dst_len);
+        memcpy64(task->dst_base, shared_dst, l_dst_len);
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         task->action = clicked_action;
@@ -730,6 +730,15 @@ on_config_changed(GtkWidget *widget, gpointer data) {
 }
 
 static void
+on_delete_excluded_toggled(GtkToggleButton *b, gpointer data) {
+    (void)b;
+    (void)data;
+    save_config();
+    on_preview_clicked(NULL, NULL);
+    return;
+}
+
+static void
 on_reset_clicked(GtkWidget *b, gpointer data) {
     (void)b;
     (void)data;
@@ -762,15 +771,15 @@ on_stop_clicked(GtkWidget *b, gpointer data) {
 static void
 on_preview_clicked(GtkWidget *b, gpointer data) {
     char *src_path;
-    char *dst_path;
+    char *l_dst_path;
     ThreadData *thread_data;
 
     (void)data;
     src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
-    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+    l_dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
     (void)b;
 
-    if (strlen64(src_path) < 1 || strlen64(dst_path) < 1) {
+    if (strlen64(src_path) < 1 || strlen64(l_dst_path) < 1) {
         return;
     }
 
@@ -792,7 +801,7 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     thread_data->delete_excluded = gtk_toggle_button_get_active(
         GTK_TOGGLE_BUTTON(cecup.delete_excluded));
     strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
-    strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
+    strncpy(thread_data->dst_path, l_dst_path, MAX_PATH_LENGTH - 1);
     g_thread_new("worker", sync_worker, thread_data);
     return;
 }
@@ -888,15 +897,15 @@ on_ignore_clicked(GtkWidget *b, gpointer data) {
 static void
 on_fix_clicked(GtkWidget *b, gpointer data) {
     char *src_path;
-    char *dst_path;
+    char *l_dst_path;
     ThreadData *thread_data;
 
     (void)b;
     (void)data;
     src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
-    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+    l_dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
 
-    if (strlen64(src_path) < 1 || strlen64(dst_path) < 1) {
+    if (strlen64(src_path) < 1 || strlen64(l_dst_path) < 1) {
         return;
     }
 
@@ -911,7 +920,7 @@ on_fix_clicked(GtkWidget *b, gpointer data) {
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
-    strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
+    strncpy(thread_data->dst_path, l_dst_path, MAX_PATH_LENGTH - 1);
     g_thread_new("fix_fs_worker", fix_fs_worker, thread_data);
     return;
 }
