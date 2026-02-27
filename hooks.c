@@ -191,6 +191,15 @@ cecup_row_compare(const void *a, const void *b) {
             result = 0;
         }
         break;
+    case COL_MTIME_RAW:
+        if (row_a->mtime_raw > row_b->mtime_raw) {
+            result = 1;
+        } else if (row_a->mtime_raw < row_b->mtime_raw) {
+            result = -1;
+        } else {
+            result = 0;
+        }
+        break;
     default:
         if (row_a->src_action > row_b->src_action) {
             result = 1;
@@ -1316,6 +1325,15 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
         }
+        case 4: {
+            tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", file_path,
+                                       row->mtime_text);
+            g_mutex_lock(&cecup.ui_arena_mutex);
+            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
+            g_mutex_unlock(&cecup.ui_arena_mutex);
+            memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
+            break;
+        }
         default: {
             break;
         }
@@ -1398,8 +1416,19 @@ update_ui_handler(gpointer user_data) {
         row->dst_action = action_dst;
 
         bytes_pretty(row->size_text, data->size);
-
         row->size_raw = data->size;
+
+        if (data->mtime > 0) {
+            time_t t = (time_t)data->mtime;
+            struct tm *tm_info = localtime(&t);
+            strftime(row->mtime_text, sizeof(row->mtime_text),
+                     "%Y-%m-%d %H:%M:%S", tm_info);
+            row->mtime_raw = data->mtime;
+        } else {
+            memcpy64(row->mtime_text, "-", 2);
+            row->mtime_raw = 0;
+        }
+
         row->src_color = bg_src;
         row->dst_color = bg_dst;
         row->reason = data->reason;
