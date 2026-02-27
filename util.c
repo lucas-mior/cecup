@@ -1678,7 +1678,7 @@ main(int argc, char **argv) {
     memset64(p2, 0, SIZEMB(1));
     p3 = xstrdup(p1);
 
-    assert(!strcmp(string, p3));
+    ASSERT_EQUAL(string, p3);
 
     srand((uint)time(NULL));
     for (int i = 0; i < 10; i += 1) {
