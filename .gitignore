@@ -11,3 +11,4 @@ tags
 callgrind.out.*
 valgrind.out.*
 *.SRCINFO
+*.git/
