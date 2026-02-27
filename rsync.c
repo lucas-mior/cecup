@@ -987,6 +987,7 @@ sync_worker(gpointer user_data) {
                     char type_char;
                     char *relative_path_entry;
                     enum CecupAction cecup_action;
+                    char *link_target;
 
                     if (buffer[k] != '\n' && buffer[k] != '\r'
                         && output_position < (int32)SIZEOF(output_buffer) - 1) {
@@ -1073,7 +1074,7 @@ sync_worker(gpointer user_data) {
                     }
 
                     cecup_action = UI_ACTION_UPDATE;
-                    char *link_target = NULL;
+                    link_target = NULL;
                     if (strncmp(output_buffer, "hf", 2) == 0) {
                         char *sep = strstr(relative_path_entry,
                                            RSYNC_HARDLINK_NOTATION);
