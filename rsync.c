@@ -671,6 +671,7 @@ bulk_sync_worker(gpointer user_data) {
         pipes[1].events = POLLIN;
 
         while (1) {
+            int64 r;
             if (cecup.cancel_sync) {
                 if (kill(-child_pid, SIGTERM) < 0) {
                     dispatch_log_error("Error kill process group: %s.\n",
@@ -693,94 +694,97 @@ bulk_sync_worker(gpointer user_data) {
                 break;
             }
 
-            if (pipes[0].revents & POLLIN) {
-                int64 r = read64(
-                    pipe_output[0], output_line_buffer + output_line_pos,
-                    SIZEOF(output_line_buffer) - output_line_pos - 1);
-                if (r < 0) {
-                    dispatch_log_error("Error reading stdout pipe: %s.\n",
-                                       strerror(errno));
-                    pipes[0].fd = -1;
-                } else if (r > 0) {
-                    char *eol;
-                    output_line_pos += (int32)r;
-
-                    while ((eol = memchr64(output_line_buffer, '\n',
-                                           output_line_pos))
-                           || (eol = memchr64(output_line_buffer, '\r',
-                                              output_line_pos))) {
-                        int32 line_len = (int32)(eol - output_line_buffer);
-                        int32 remaining;
-                        *eol = '\0';
-
-                        if (output_line_buffer[0] != '\0') {
-                            dispatch_log("%s.\n", output_line_buffer);
-                        }
-
-                        remaining = output_line_pos - (line_len + 1);
-                        if (remaining > 0) {
-                            memmove64(output_line_buffer, eol + 1, remaining);
-                        }
-                        output_line_pos = remaining;
-                    }
-
-                    if (output_line_pos
-                        >= (int32)SIZEOF(output_line_buffer) - 1) {
-                        output_line_buffer[output_line_pos] = '\0';
-                        dispatch_log("%s.\n", output_line_buffer);
-                        output_line_pos = 0;
-                    }
-                } else {
-                    pipes[0].fd = -1;
-                }
-            } else if (pipes[0].revents & (POLLHUP | POLLERR)) {
+            if (pipes[0].revents & (POLLHUP | POLLERR)) {
                 pipes[0].fd = -1;
+                goto read_error_pipe;
+            }
+            if (!(pipes[0].revents & POLLIN)) {
+                goto read_error_pipe;
             }
 
-            if (pipes[1].revents & POLLIN) {
-                int64 r
-                    = read64(pipe_error[0], error_line_buffer + error_line_pos,
-                             SIZEOF(error_line_buffer) - error_line_pos - 1);
+            r = read64(pipe_output[0], output_line_buffer + output_line_pos,
+                       SIZEOF(output_line_buffer) - output_line_pos - 1);
+            if (r <= 0) {
+                dispatch_log_error("Error reading stdout pipe: %s.\n",
+                                   strerror(errno));
                 if (r < 0) {
-                    dispatch_log_error("Error reading stderr pipe: %s.\n",
-                                       strerror(errno));
-                    pipes[1].fd = -1;
-                } else if (r > 0) {
-                    char *eol;
-                    error_line_pos += (int32)r;
+                    pipes[0].fd = -1;
+                }
+                goto read_error_pipe;
+            }
+            char *eol;
+            output_line_pos += (int32)r;
 
-                    while ((eol
-                            = memchr64(error_line_buffer, '\n', error_line_pos))
-                           || (eol = memchr64(error_line_buffer, '\r',
-                                              error_line_pos))) {
-                        int32 line_len = (int32)(eol - error_line_buffer);
-                        int32 remaining;
-                        *eol = '\0';
+            while ((eol = memchr64(output_line_buffer, '\n', output_line_pos))
+                   || (eol
+                       = memchr64(output_line_buffer, '\r', output_line_pos))) {
+                int32 line_len = (int32)(eol - output_line_buffer);
+                int32 remaining;
+                *eol = '\0';
 
-                        if (error_line_buffer[0] != '\0') {
-                            dispatch_log_error(error_line_buffer);
-                        }
+                if (output_line_buffer[0] != '\0') {
+                    dispatch_log("%s.\n", output_line_buffer);
+                }
 
-                        remaining = error_line_pos - (line_len + 1);
-                        if (remaining > 0) {
-                            memmove64(error_line_buffer, eol + 1, remaining);
-                        }
-                        error_line_pos = remaining;
-                    }
+                remaining = output_line_pos - (line_len + 1);
+                if (remaining > 0) {
+                    memmove64(output_line_buffer, eol + 1, remaining);
+                }
+                output_line_pos = remaining;
+            }
 
-                    if (error_line_pos
-                        >= (int32)SIZEOF(error_line_buffer) - 1) {
-                        error_line_buffer[error_line_pos] = '\0';
-                        dispatch_log_error(error_line_buffer);
-                        error_line_pos = 0;
-                    }
-                } else {
+            if (output_line_pos >= (int32)SIZEOF(output_line_buffer) - 1) {
+                output_line_buffer[output_line_pos] = '\0';
+                dispatch_log("%s.\n", output_line_buffer);
+                output_line_pos = 0;
+            }
+
+        read_error_pipe:
+            if (pipes[1].revents & (POLLHUP | POLLERR)) {
+                pipes[1].fd = -1;
+                goto check_pipes_or_break;
+            }
+            if (!(pipes[0].revents & POLLIN)) {
+                goto check_pipes_or_break;
+            }
+
+            r = read64(pipe_error[0], error_line_buffer + error_line_pos,
+                       SIZEOF(error_line_buffer) - error_line_pos - 1);
+            if (r <= 0) {
+                dispatch_log_error("Error reading stderr pipe: %s.\n",
+                                   strerror(errno));
+                if (r < 0) {
                     pipes[1].fd = -1;
                 }
-            } else if (pipes[1].revents & (POLLHUP | POLLERR)) {
-                pipes[1].fd = -1;
+                goto check_pipes_or_break;
+            }
+            error_line_pos += (int32)r;
+
+            while (
+                (eol = memchr64(error_line_buffer, '\n', error_line_pos))
+                || (eol = memchr64(error_line_buffer, '\r', error_line_pos))) {
+                int32 line_len = (int32)(eol - error_line_buffer);
+                int32 remaining;
+                *eol = '\0';
+
+                if (error_line_buffer[0] != '\0') {
+                    dispatch_log_error(error_line_buffer);
+                }
+
+                remaining = error_line_pos - (line_len + 1);
+                if (remaining > 0) {
+                    memmove64(error_line_buffer, eol + 1, remaining);
+                }
+                error_line_pos = remaining;
             }
 
+            if (error_line_pos >= (int32)SIZEOF(error_line_buffer) - 1) {
+                error_line_buffer[error_line_pos] = '\0';
+                dispatch_log_error(error_line_buffer);
+                error_line_pos = 0;
+            }
+
+        check_pipes_or_break:
             if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
                 break;
             }
