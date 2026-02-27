@@ -1057,9 +1057,9 @@ sync_worker(gpointer user_data) {
         }
 
         if (pipes[0].revents & POLLIN) {
-            int64 r
-                = read64(pipe_output[0], output_line_buffer + output_line_pos,
-                         SIZEOF(output_line_buffer) - output_line_pos - 1);
+            int64 r;
+            r = read64(pipe_output[0], output_line_buffer + output_line_pos,
+                       SIZEOF(output_line_buffer) - output_line_pos - 1);
             if (r <= 0) {
                 if (r < 0) {
                     dispatch_log_error("Error reading stdout pipe: %s.\n",
