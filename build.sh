@@ -10,6 +10,9 @@ program=$(basename "$(readlink -f "$(dirname "$0")")")
 script=$(basename "$0")
 dir="$(realpath "$(dirname "$0")")"
 
+# Define supported languages here
+LANGS="pt_BR"
+
 . ./targets
 target="${1:-build}"
 
@@ -60,6 +63,16 @@ option_remove() {
     echo "$1" | sed "s/$2//g"
 }
 
+# Compile locale files from .po to .mo
+compile_locales() {
+    for lang in $LANGS; do
+        if [ -f "po/$lang.po" ]; then
+            mkdir -p "po/$lang"
+            msgfmt "po/$lang.po" -o "po/$lang/$program.mo"
+        fi
+    done
+}
+
 CC=${CC:-cc}
 
 case "$target" in
@@ -91,6 +104,22 @@ case "$target" in
     ;;
 "build") 
     CFLAGS="$CFLAGS $GNUSOURCE -O2 -flto -march=native -ftree-vectorize"
+    ;;
+"po")
+    # Extract strings and update .po files
+    trace_on
+    mkdir -p po
+    xgettext --keyword=_ --language=C --add-comments --sort-output \
+             -o po/${program}.pot ./*.c ./*.h
+    for lang in $LANGS; do
+        if [ -f "po/$lang.po" ]; then
+            msgmerge -U "po/$lang.po" po/${program}.pot
+        else
+            msginit -l "$lang" -i po/${program}.pot -o "po/$lang.po" --no-translator
+        fi
+    done
+    trace_off
+    exit
     ;;
 *)
     CFLAGS="$CFLAGS -O2"
@@ -141,6 +170,7 @@ case "$target" in
 "build"|"debug"|"valgrind")
     trace_on
 
+    compile_locales
     ctags --kinds-C=+l+d ./*.h ./*.c         2> /dev/null || true
     vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
     $CC $CPPFLAGS $CFLAGS main.c -o "bin/$program" $LDFLAGS
@@ -154,6 +184,15 @@ case "$target" in
     fi
     install -Dm755 bin/${program}   ${DESTDIR}${PREFIX}/bin/${program}
     install -Dm644 ${program}.1 ${DESTDIR}${PREFIX}/man/man1/${program}.1
+    
+    # Install locale files
+    for lang in $LANGS; do
+        if [ -f "po/$lang/$program.mo" ]; then
+            install -Dm644 "po/$lang/$program.mo" \
+                "${DESTDIR}${PREFIX}/share/locale/$lang/LC_MESSAGES/$program.mo"
+        fi
+    done
+
     if [ -d "etc" ]; then
         install -dm755 "$DESTDIR/etc/$program"
         cp -rp etc/* "$DESTDIR/etc/$program/"
@@ -215,6 +254,7 @@ case "$target" in
     ;;
 *)
     trace_on
+    compile_locales
     ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
     vtags.sed tags | sort | uniq > .tags.vim       2> /dev/null || true
     $CC $CPPFLAGS $CFLAGS $LDFLAGS -o ${exe} "$main"
