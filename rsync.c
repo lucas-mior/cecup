@@ -1089,131 +1089,120 @@ sync_worker(gpointer user_data) {
 
                     *eol = '\0';
 
-                    if (output_line_buffer[0] != '\0') {
-                        if ((percent_pos = strstr(output_line_buffer, "%"))) {
-                            char *start_digit = percent_pos;
-                            while (start_digit > output_line_buffer
-                                   && isdigit(*(start_digit - 1))) {
-                                start_digit -= 1;
-                            }
-                            dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
-                                              atof(start_digit) / 100.0);
+                    if ((percent_pos = strstr(output_line_buffer, "%"))) {
+                        char *start_digit = percent_pos;
+                        while (start_digit > output_line_buffer
+                               && isdigit(*(start_digit - 1))) {
+                            start_digit -= 1;
+                        }
+                        dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
+                                          atof(start_digit) / 100.0);
+                    }
+
+                    if (thread_data->is_preview == 0) {
+                        dispatch_log("%s.\n", output_line_buffer);
+                    } else if (strncmp(output_line_buffer, "*deleting", 9)
+                               == 0) {
+                        char *relative_path = output_line_buffer + 10;
+                        char full_src[MAX_PATH_LENGTH];
+                        char full_dst[MAX_PATH_LENGTH];
+                        struct stat stat_src_local;
+                        struct stat stat_dst_local;
+                        int64 size_val;
+                        int64 time_val;
+                        enum CecupReason deletion_reason;
+
+                        while (isspace(*relative_path)) {
+                            relative_path += 1;
                         }
 
-                        if (thread_data->is_preview == 0) {
-                            dispatch_log("%s.\n", output_line_buffer);
-                        } else if (strncmp(output_line_buffer, "*deleting", 9)
-                                   == 0) {
-                            char *relative_path = output_line_buffer + 10;
-                            char full_src[MAX_PATH_LENGTH];
-                            char full_dst[MAX_PATH_LENGTH];
-                            struct stat stat_src_local;
-                            struct stat stat_dst_local;
-                            int64 size_val;
-                            int64 time_val;
-                            enum CecupReason deletion_reason;
+                        SNPRINTF(full_src, "%s/%s", thread_data->src_path,
+                                 relative_path);
+                        SNPRINTF(full_dst, "%s/%s", thread_data->dst_path,
+                                 relative_path);
 
-                            while (isspace(*relative_path)) {
-                                relative_path += 1;
+                        if (lstat(full_dst, &stat_dst_local) == 0) {
+                            size_val = stat_dst_local.st_size;
+                            time_val = (int64)stat_dst_local.st_mtime;
+                        } else {
+                            size_val = 0;
+                            time_val = 0;
+                        }
+
+                        if (lstat(full_src, &stat_src_local) == 0) {
+                            deletion_reason = UI_REASON_IGNORED;
+                        } else {
+                            deletion_reason = UI_REASON_MISSING;
+                        }
+
+                        dispatch_tree(1, UI_ACTION_DELETE, relative_path, NULL,
+                                      size_val, time_val, deletion_reason);
+                    } else if ((space_pos = strchr(output_line_buffer, ' '))) {
+                        type_char = output_line_buffer[0];
+                        if ((type_char == '>') || (type_char == '.')
+                            || (type_char == 'h') || (type_char == 'c')
+                            || (type_char == 'L')) {
+
+                            relative_path_entry = space_pos + 1;
+                            while (isspace(*relative_path_entry)) {
+                                relative_path_entry += 1;
                             }
 
-                            SNPRINTF(full_src, "%s/%s", thread_data->src_path,
-                                     relative_path);
-                            SNPRINTF(full_dst, "%s/%s", thread_data->dst_path,
-                                     relative_path);
+                            cecup_action = UI_ACTION_UPDATE;
+                            link_target = NULL;
+                            if (type_char == 'h') {
+                                char *sep;
+                                cecup_action = UI_ACTION_HARDLINK;
 
-                            if (lstat(full_dst, &stat_dst_local) == 0) {
-                                size_val = stat_dst_local.st_size;
-                                time_val = (int64)stat_dst_local.st_mtime;
-                            } else {
-                                size_val = 0;
-                                time_val = 0;
-                            }
-
-                            if (lstat(full_src, &stat_src_local) == 0) {
-                                deletion_reason = UI_REASON_IGNORED;
-                            } else {
-                                deletion_reason = UI_REASON_MISSING;
-                            }
-
-                            dispatch_tree(1, UI_ACTION_DELETE, relative_path,
-                                          NULL, size_val, time_val,
-                                          deletion_reason);
-                        } else if ((space_pos
-                                    = strchr(output_line_buffer, ' '))) {
-                            type_char = output_line_buffer[0];
-                            if ((type_char == '>') || (type_char == '.')
-                                || (type_char == 'h') || (type_char == 'c')
-                                || (type_char == 'L')) {
-
-                                relative_path_entry = space_pos + 1;
-                                while (isspace(*relative_path_entry)) {
-                                    relative_path_entry += 1;
-                                }
-
-                                cecup_action = UI_ACTION_UPDATE;
-                                link_target = NULL;
-                                if (type_char == 'h') {
-                                    char *sep;
-                                    cecup_action = UI_ACTION_HARDLINK;
-
-                                    if ((sep
-                                         = strstr(relative_path_entry,
+                                if ((sep = strstr(relative_path_entry,
                                                   RSYNC_HARDLINK_NOTATION))) {
-                                        *sep = '\0';
-                                        link_target
-                                            = sep
-                                              + strlen64(
-                                                  RSYNC_HARDLINK_NOTATION);
-                                    }
-                                } else if (type_char == 'L'
-                                           || output_line_buffer[1] == 'L') {
-                                    char *sep;
-                                    cecup_action = UI_ACTION_SYMLINK;
+                                    *sep = '\0';
+                                    link_target
+                                        = sep
+                                          + strlen64(RSYNC_HARDLINK_NOTATION);
+                                }
+                            } else if (type_char == 'L'
+                                       || output_line_buffer[1] == 'L') {
+                                char *sep;
+                                cecup_action = UI_ACTION_SYMLINK;
 
-                                    if ((sep
-                                         = strstr(relative_path_entry,
+                                if ((sep = strstr(relative_path_entry,
                                                   RSYNC_SYMLINK_NOTATION))) {
-                                        *sep = '\0';
-                                        link_target
-                                            = sep
-                                              + strlen64(
-                                                  RSYNC_SYMLINK_NOTATION);
-                                    }
-                                } else if (strncmp(output_line_buffer, "cd", 2)
-                                               == 0
-                                           || strncmp(output_line_buffer,
-                                                      ">f+++++", 7)
-                                                  == 0) {
-                                    cecup_action = UI_ACTION_NEW;
+                                    *sep = '\0';
+                                    link_target
+                                        = sep
+                                          + strlen64(RSYNC_SYMLINK_NOTATION);
                                 }
+                            } else if (strncmp(output_line_buffer, "cd", 2) == 0
+                                       || strncmp(output_line_buffer, ">f+++++",
+                                                  7)
+                                              == 0) {
+                                cecup_action = UI_ACTION_NEW;
+                            }
 
-                                SNPRINTF(full_src_path_val, "%s/%s",
-                                         thread_data->src_path,
-                                         relative_path_entry);
+                            SNPRINTF(full_src_path_val, "%s/%s",
+                                     thread_data->src_path,
+                                     relative_path_entry);
 
-                                if (lstat(full_src_path_val, &st_path_val)
-                                    < 0) {
-                                    dispatch_log_error("Error lstat %s: %s.\n",
-                                                       full_src_path_val,
-                                                       strerror(errno));
-                                } else {
-                                    sz_path_val = st_path_val.st_size;
-                                    mt_path_val = (int64)st_path_val.st_mtime;
-                                }
+                            if (lstat(full_src_path_val, &st_path_val) < 0) {
+                                dispatch_log_error("Error lstat %s: %s.\n",
+                                                   full_src_path_val,
+                                                   strerror(errno));
+                            } else {
+                                sz_path_val = st_path_val.st_size;
+                                mt_path_val = (int64)st_path_val.st_mtime;
+                            }
 
-                                dispatch_tree(0, cecup_action,
-                                              relative_path_entry, link_target,
-                                              sz_path_val, mt_path_val,
-                                              (enum CecupReason)cecup_action);
+                            dispatch_tree(0, cecup_action, relative_path_entry,
+                                          link_target, sz_path_val, mt_path_val,
+                                          (enum CecupReason)cecup_action);
 
-                                processed_files_preview += 1;
-                                if (total_files_preview > 0) {
-                                    dispatch_progress(
-                                        DATA_TYPE_PROGRESS_PREVIEW,
-                                        (double)processed_files_preview
-                                            / total_files_preview);
-                                }
+                            processed_files_preview += 1;
+                            if (total_files_preview > 0) {
+                                dispatch_progress(
+                                    DATA_TYPE_PROGRESS_PREVIEW,
+                                    (double)processed_files_preview
+                                        / total_files_preview);
                             }
                         }
                     }
