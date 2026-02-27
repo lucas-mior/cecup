@@ -770,6 +770,10 @@ sync_worker(gpointer user_data) {
     char exclude_argument_buffer[4096];
     int64 exclude_argument_length;
     int32 is_exclude_argument_from_arena;
+    char *exclude_arg;
+    char *cmd;
+    char *esc_src;
+    char *esc_dst;
 
     if (thread_data->check_different_fs) {
         struct stat stat_src;
@@ -821,7 +825,6 @@ sync_worker(gpointer user_data) {
                                       equal_scanner_data);
     }
 
-    char *exclude_arg;
     is_exclude_argument_from_arena = 0;
     if (access(cecup.ignore_path, F_OK) != -1) {
         exclude_argument_length = SNPRINTF(
@@ -840,9 +843,9 @@ sync_worker(gpointer user_data) {
         exclude_arg = xstrdup("");
     }
 
-    char *cmd = xmalloc(MAX_COMMAND_LENGTH);
-    char *esc_src = shell_escape(thread_data->src_path);
-    char *esc_dst = shell_escape(thread_data->dst_path);
+    cmd = xmalloc(MAX_COMMAND_LENGTH);
+    esc_src = shell_escape(thread_data->src_path);
+    esc_dst = shell_escape(thread_data->dst_path);
 
     snprintf2(cmd, MAX_COMMAND_LENGTH,
               "rsync " RSYNC_UNIVERSAL_ARGS
