@@ -847,10 +847,7 @@ sync_worker(gpointer user_data) {
     GThread *scanner_thread = NULL;
     int32 total_files_preview = 0;
     int32 processed_files_preview = 0;
-    char exclude_argument_buffer[MAX_PATH_LENGTH];
-    int64 exclude_argument_length;
-    int32 is_exclude_argument_from_arena;
-    char *exclude_arg;
+    char exclude_arg[MAX_PATH_LENGTH];
     char *cmd;
     char *esc_src;
     char *esc_dst;
@@ -914,22 +911,14 @@ sync_worker(gpointer user_data) {
                                       equal_scanner_data);
     }
 
-    is_exclude_argument_from_arena = 0;
     if (access(cecup.ignore_path, F_OK) != -1) {
-        exclude_argument_length = SNPRINTF(
-            exclude_argument_buffer, "--exclude-from='%s'", cecup.ignore_path);
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        exclude_arg = xarena_push(cecup.ui_arena, exclude_argument_length + 1);
-        g_mutex_unlock(&cecup.ui_arena_mutex);
-        memcpy64(exclude_arg, exclude_argument_buffer,
-                 exclude_argument_length + 1);
-        is_exclude_argument_from_arena = 1;
+        SNPRINTF(exclude_arg, "--exclude-from='%s'", cecup.ignore_path);
     } else {
         if (errno != ENOENT) {
             dispatch_log_error("Error access %s: %s.\n", cecup.ignore_path,
                                strerror(errno));
         }
-        exclude_arg = xstrdup("");
+        strcpy(exclude_arg, "");
     }
 
     cmd = xmalloc(MAX_COMMAND_LENGTH);
@@ -945,14 +934,6 @@ sync_worker(gpointer user_data) {
 
     free(esc_src);
     free(esc_dst);
-
-    if (is_exclude_argument_from_arena) {
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        arena_pop(cecup.ui_arena, exclude_arg);
-        g_mutex_unlock(&cecup.ui_arena_mutex);
-    } else {
-        free(exclude_arg);
-    }
 
     {
         char log_cmd[8192];
