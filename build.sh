@@ -8,7 +8,6 @@ alias trace_off='{ set +x; } 2>/dev/null'
 
 program=$(basename "$(readlink -f "$(dirname "$0")")")
 script=$(basename "$0")
-dir="$(realpath "$(dirname "$0")")"
 
 # Define supported languages here
 LANGS="pt_BR"
@@ -63,8 +62,10 @@ option_remove() {
     echo "$1" | sed "s/$2//g"
 }
 
-# Compile locale files from .po to .mo
 compile_locales() {
+    if [ ! -d "po" ]; then
+        return
+    fi
     for lang in $LANGS; do
         if [ -f "po/$lang.po" ]; then
             mkdir -p "po/$lang"
@@ -72,8 +73,6 @@ compile_locales() {
         fi
     done
 }
-
-CC=${CC:-cc}
 
 case "$target" in
 "debug")
@@ -106,11 +105,19 @@ case "$target" in
     CFLAGS="$CFLAGS $GNUSOURCE -O2 -flto -march=native -ftree-vectorize"
     ;;
 "po")
-    # Extract strings and update .po files
     trace_on
     mkdir -p po
-    xgettext --keyword=_ --language=C --add-comments --sort-output \
-             -o po/${program}.pot ./*.c ./*.h
+
+    xgettext \
+        --keyword=_ \
+        --keyword=N_ \
+        --language=C \
+        --add-comments \
+        --sort-output \
+        --from-code=UTF-8 \
+        -o po/${program}.pot \
+        ./*.c ./*.h
+
     for lang in $LANGS; do
         if [ -f "po/$lang.po" ]; then
             msgmerge -U "po/$lang.po" po/${program}.pot
@@ -157,7 +164,6 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-implicit-void-ptr-cast"
     CFLAGS="$CFLAGS -Wno-ignored-attributes"
     CFLAGS="$CFLAGS -Wno-covered-switch-default"
-    # check later
     CFLAGS="$CFLAGS -Wno-reserved-identifier"
     CFLAGS="$CFLAGS -Wno-documentation-unknown-command"
     CFLAGS="$CFLAGS -Wno-documentation"
@@ -185,7 +191,6 @@ case "$target" in
     install -Dm755 bin/${program}   ${DESTDIR}${PREFIX}/bin/${program}
     install -Dm644 ${program}.1 ${DESTDIR}${PREFIX}/man/man1/${program}.1
     
-    # Install locale files
     for lang in $LANGS; do
         if [ -f "po/$lang/$program.mo" ]; then
             install -Dm644 "po/$lang/$program.mo" \
