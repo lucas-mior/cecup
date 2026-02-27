@@ -560,10 +560,12 @@ bulk_sync_worker(gpointer user_data) {
         int32 pipe_error[2];
         pid_t child_pid;
         struct pollfd pipes[2];
-        char output_buffer[8192];
-        char error_buffer[8192];
-        int32 output_position;
-        int32 error_position;
+
+        char output_line_buffer[8192];
+        int32 output_line_pos = 0;
+        char error_line_buffer[8192];
+        int32 error_line_pos = 0;
+
         UIUpdateData *remove_data;
 
         ud = (UIUpdateData *)g_ptr_array_index(tasks, i);
@@ -668,9 +670,6 @@ bulk_sync_worker(gpointer user_data) {
         pipes[1].fd = pipe_error[0];
         pipes[1].events = POLLIN;
 
-        output_position = 0;
-        error_position = 0;
-
         while (1) {
             if (cecup.cancel_sync) {
                 if (kill(-child_pid, SIGTERM) < 0) {
@@ -692,23 +691,40 @@ bulk_sync_worker(gpointer user_data) {
             }
 
             if (pipes[0].revents & POLLIN) {
-                char buffer[2048];
-                int64 r = read64(pipe_output[0], buffer, SIZEOF(buffer));
+                int64 r = read64(
+                    pipe_output[0], output_line_buffer + output_line_pos,
+                    SIZEOF(output_line_buffer) - output_line_pos - 1);
                 if (r < 0) {
                     dispatch_log_error("Error reading stdout pipe: %s.\n",
                                        strerror(errno));
                     pipes[0].fd = -1;
                 } else if (r > 0) {
-                    for (int64 k = 0; k < r; k += 1) {
-                        if (buffer[k] == '\n'
-                            || output_position == SIZEOF(output_buffer) - 1) {
-                            output_buffer[output_position] = '\0';
-                            dispatch_log("%s.\n", output_buffer);
-                            output_position = 0;
-                        } else {
-                            output_buffer[output_position] = buffer[k];
-                            output_position += 1;
+                    char *eol;
+                    output_line_pos += (int32)r;
+
+                    while ((eol
+                            = memchr(output_line_buffer, '\n', output_line_pos))
+                           || (eol = memchr(output_line_buffer, '\r',
+                                            output_line_pos))) {
+                        int32 line_len = (int32)(eol - output_line_buffer);
+                        *eol = '\0';
+
+                        if (output_line_buffer[0] != '\0') {
+                            dispatch_log("%s.\n", output_line_buffer);
                         }
+
+                        int32 remaining = output_line_pos - (line_len + 1);
+                        if (remaining > 0) {
+                            memmove64(output_line_buffer, eol + 1, remaining);
+                        }
+                        output_line_pos = remaining;
+                    }
+
+                    if (output_line_pos
+                        >= (int32)SIZEOF(output_line_buffer) - 1) {
+                        output_line_buffer[output_line_pos] = '\0';
+                        dispatch_log("%s.\n", output_line_buffer);
+                        output_line_pos = 0;
                     }
                 } else {
                     pipes[0].fd = -1;
@@ -718,23 +734,40 @@ bulk_sync_worker(gpointer user_data) {
             }
 
             if (pipes[1].revents & POLLIN) {
-                char buffer[2048];
-                int64 r = read64(pipe_error[0], buffer, SIZEOF(buffer));
+                int64 r
+                    = read64(pipe_error[0], error_line_buffer + error_line_pos,
+                             SIZEOF(error_line_buffer) - error_line_pos - 1);
                 if (r < 0) {
                     dispatch_log_error("Error reading stderr pipe: %s.\n",
                                        strerror(errno));
                     pipes[1].fd = -1;
                 } else if (r > 0) {
-                    for (int64 k = 0; k < r; k += 1) {
-                        if (buffer[k] == '\n'
-                            || error_position == SIZEOF(error_buffer) - 1) {
-                            error_buffer[error_position] = '\0';
-                            dispatch_log_error(error_buffer);
-                            error_position = 0;
-                        } else {
-                            error_buffer[error_position] = buffer[k];
-                            error_position += 1;
+                    char *eol;
+                    error_line_pos += (int32)r;
+
+                    while (
+                        (eol = memchr(error_line_buffer, '\n', error_line_pos))
+                        || (eol = memchr(error_line_buffer, '\r',
+                                         error_line_pos))) {
+                        int32 line_len = (int32)(eol - error_line_buffer);
+                        *eol = '\0';
+
+                        if (error_line_buffer[0] != '\0') {
+                            dispatch_log_error(error_line_buffer);
                         }
+
+                        int32 remaining = error_line_pos - (line_len + 1);
+                        if (remaining > 0) {
+                            memmove64(error_line_buffer, eol + 1, remaining);
+                        }
+                        error_line_pos = remaining;
+                    }
+
+                    if (error_line_pos
+                        >= (int32)SIZEOF(error_line_buffer) - 1) {
+                        error_line_buffer[error_line_pos] = '\0';
+                        dispatch_log_error(error_line_buffer);
+                        error_line_pos = 0;
                     }
                 } else {
                     pipes[1].fd = -1;
