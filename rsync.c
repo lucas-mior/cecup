@@ -988,6 +988,7 @@ sync_worker(gpointer user_data) {
                     char *relative_path_entry;
                     enum CecupAction cecup_action;
                     char *link_target;
+                    struct stat st_path_val;
 
                     if (buffer[k] != '\n' && buffer[k] != '\r'
                         && output_position < (int32)SIZEOF(output_buffer) - 1) {
@@ -1094,7 +1095,6 @@ sync_worker(gpointer user_data) {
                     SNPRINTF(full_src_path_val, "%s/%s", thread_data->src_path,
                              relative_path_entry);
 
-                    struct stat st_path_val;
                     int64 sz_path_val = 0;
                     if (lstat(full_src_path_val, &st_path_val) < 0) {
                         dispatch_log_error("Error lstat %s: %s.\n",
