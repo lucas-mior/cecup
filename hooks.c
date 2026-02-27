@@ -101,25 +101,25 @@ get_target_tasks(int32 side, char *clicked_path,
                 int64 dst_len;
 
                 g_mutex_lock(&cecup.ui_arena_mutex);
-                task = arena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+                task = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
                 memset64(task, 0, SIZEOF(UIUpdateData));
 
                 path_len = strlen64(file_path) + 1;
-                task->filepath = arena_push(cecup.ui_arena, path_len);
+                task->filepath = xarena_push(cecup.ui_arena, path_len);
                 memcpy64(task->filepath, file_path, path_len);
 
                 src_len = strlen64(shared_src) + 1;
-                task->src_base = arena_push(cecup.ui_arena, src_len);
+                task->src_base = xarena_push(cecup.ui_arena, src_len);
                 memcpy64(task->src_base, shared_src, src_len);
 
                 dst_len = strlen64(shared_dst) + 1;
-                task->dst_base = arena_push(cecup.ui_arena, dst_len);
+                task->dst_base = xarena_push(cecup.ui_arena, dst_len);
                 memcpy64(task->dst_base, shared_dst, dst_len);
 
                 if (row->link_target) {
                     int64 target_len;
                     target_len = strlen64(row->link_target) + 1;
-                    task->link_target = arena_push(cecup.ui_arena, target_len);
+                    task->link_target = xarena_push(cecup.ui_arena, target_len);
                     memcpy64(task->link_target, row->link_target, target_len);
                 }
                 g_mutex_unlock(&cecup.ui_arena_mutex);
@@ -138,19 +138,19 @@ get_target_tasks(int32 side, char *clicked_path,
         int64 dst_len;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        task = arena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+        task = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
         memset64(task, 0, SIZEOF(UIUpdateData));
 
         path_len = strlen64(clicked_path) + 1;
-        task->filepath = arena_push(cecup.ui_arena, path_len);
+        task->filepath = xarena_push(cecup.ui_arena, path_len);
         memcpy64(task->filepath, clicked_path, path_len);
 
         src_len = strlen64(shared_src) + 1;
-        task->src_base = arena_push(cecup.ui_arena, src_len);
+        task->src_base = xarena_push(cecup.ui_arena, src_len);
         memcpy64(task->src_base, shared_src, src_len);
 
         dst_len = strlen64(shared_dst) + 1;
-        task->dst_base = arena_push(cecup.ui_arena, dst_len);
+        task->dst_base = xarena_push(cecup.ui_arena, dst_len);
         memcpy64(task->dst_base, shared_dst, dst_len);
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -621,11 +621,11 @@ on_menu_diff(GtkWidget *m, gpointer data) {
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
             g_mutex_lock(&cecup.ui_arena_mutex);
             diff_len = strlen64(diff_tool) + 1;
-            task->diff_tool = arena_push(cecup.ui_arena, diff_len);
+            task->diff_tool = xarena_push(cecup.ui_arena, diff_len);
             memcpy64(task->diff_tool, diff_tool, diff_len);
 
             term_len = strlen64(term_cmd) + 1;
-            task->term_cmd = arena_push(cecup.ui_arena, term_len);
+            task->term_cmd = xarena_push(cecup.ui_arena, term_len);
             memcpy64(task->term_cmd, term_cmd, term_len);
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -776,7 +776,7 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = arena_push(cecup.ui_arena, SIZEOF(ThreadData));
+    thread_data = xarena_push(cecup.ui_arena, SIZEOF(ThreadData));
     memset64(thread_data, 0, SIZEOF(ThreadData));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -900,7 +900,7 @@ on_fix_clicked(GtkWidget *b, gpointer data) {
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = arena_push(cecup.ui_arena, SIZEOF(ThreadData));
+    thread_data = xarena_push(cecup.ui_arena, SIZEOF(ThreadData));
     memset64(thread_data, 0, SIZEOF(ThreadData));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -953,7 +953,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
         gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        thread_data = arena_push(cecup.ui_arena, SIZEOF(ThreadData));
+        thread_data = xarena_push(cecup.ui_arena, SIZEOF(ThreadData));
         memset64(thread_data, 0, SIZEOF(ThreadData));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1067,11 +1067,11 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             }
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            ud = arena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+            ud = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
             memset64(ud, 0, SIZEOF(UIUpdateData));
 
             path_len = strlen64(file_path) + 1;
-            ud->filepath = arena_push(cecup.ui_arena, path_len);
+            ud->filepath = xarena_push(cecup.ui_arena, path_len);
             memcpy64(ud->filepath, file_path, path_len);
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1221,7 +1221,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
             string_len = strlen64(strings[action]);
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = arena_push(cecup.ui_arena, string_len + 1);
+            tip_text = xarena_push(cecup.ui_arena, string_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
             memcpy64(tip_text, strings[action], string_len + 1);
             break;
@@ -1236,7 +1236,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                                            reason_strings[row->reason]);
             }
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = arena_push(cecup.ui_arena, tip_text_length + 1);
+            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
@@ -1245,7 +1245,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             tip_text_length = SNPRINTF(tip_text_buffer, "%s: %ld bytes",
                                        file_path, row->size_raw);
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = arena_push(cecup.ui_arena, tip_text_length + 1);
+            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
@@ -1326,7 +1326,7 @@ update_ui_handler(gpointer user_data) {
             }
         }
 
-        row = arena_push(cecup.row_arena, SIZEOF(CecupRow));
+        row = xarena_push(cecup.row_arena, SIZEOF(CecupRow));
         memset64(row, 0, SIZEOF(CecupRow));
         row->src_action = action_src;
         row->dst_action = action_dst;
@@ -1341,33 +1341,33 @@ update_ui_handler(gpointer user_data) {
         if (data->link_target) {
             int64 target_len;
             target_len = strlen64(data->link_target) + 1;
-            row->link_target = arena_push(cecup.row_arena, target_len);
+            row->link_target = xarena_push(cecup.row_arena, target_len);
             memcpy64(row->link_target, data->link_target, target_len);
         }
 
         if (strcmp(src_path_final, "-") == 0) {
             int64 path_len;
 
-            row->src_path = arena_push(cecup.row_arena, 2);
+            row->src_path = xarena_push(cecup.row_arena, 2);
             memcpy64(row->src_path, "-", 2);
             path_len = strlen64(data->filepath) + 1;
-            row->dst_path = arena_push(cecup.row_arena, path_len);
+            row->dst_path = xarena_push(cecup.row_arena, path_len);
             memcpy64(row->dst_path, data->filepath, path_len);
         } else if (strcmp(dst_path_final, "-") == 0) {
             int64 path_len;
 
             path_len = strlen64(data->filepath) + 1;
-            row->src_path = arena_push(cecup.row_arena, path_len);
+            row->src_path = xarena_push(cecup.row_arena, path_len);
             memcpy64(row->src_path, data->filepath, path_len);
-            row->dst_path = arena_push(cecup.row_arena, 2);
+            row->dst_path = xarena_push(cecup.row_arena, 2);
             memcpy64(row->dst_path, "-", 2);
         } else {
             int64 path_len;
 
             path_len = strlen64(data->filepath) + 1;
-            row->src_path = arena_push(cecup.row_arena, path_len);
+            row->src_path = xarena_push(cecup.row_arena, path_len);
             memcpy64(row->src_path, data->filepath, path_len);
-            row->dst_path = arena_push(cecup.row_arena, path_len);
+            row->dst_path = xarena_push(cecup.row_arena, path_len);
             memcpy64(row->dst_path, data->filepath, path_len);
         }
 
@@ -1377,10 +1377,10 @@ update_ui_handler(gpointer user_data) {
             CecupRow **new_visible;
 
             new_capacity = cecup.rows_capacity*2;
-            new_rows = arena_push(cecup.row_arena,
-                                  new_capacity*SIZEOF(CecupRow *));
-            new_visible = arena_push(cecup.row_arena,
-                                     new_capacity*SIZEOF(CecupRow *));
+            new_rows = xarena_push(cecup.row_arena,
+                                   new_capacity*SIZEOF(CecupRow *));
+            new_visible = xarena_push(cecup.row_arena,
+                                      new_capacity*SIZEOF(CecupRow *));
 
             memcpy64(new_rows, cecup.rows,
                      cecup.rows_count*SIZEOF(CecupRow *));
@@ -1435,9 +1435,9 @@ update_ui_handler(gpointer user_data) {
             cecup.refresh_id = 0;
         }
         arena_reset(cecup.row_arena);
-        cecup.rows = arena_push(cecup.row_arena,
-                                cecup.rows_capacity*SIZEOF(CecupRow *));
-        cecup.visible_rows = arena_push(
+        cecup.rows = xarena_push(cecup.row_arena,
+                                 cecup.rows_capacity*SIZEOF(CecupRow *));
+        cecup.visible_rows = xarena_push(
             cecup.row_arena, cecup.rows_capacity*SIZEOF(CecupRow *));
 
         cecup.rows_count = 0;

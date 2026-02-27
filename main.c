@@ -83,8 +83,8 @@ main(int32 argc, char *argv[]) {
     cecup.rows_capacity = 4096;
 
     rows_size = cecup.rows_capacity*SIZEOF(CecupRow *);
-    cecup.rows = arena_push(cecup.row_arena, rows_size);
-    cecup.visible_rows = arena_push(cecup.row_arena, rows_size);
+    cecup.rows = xarena_push(cecup.row_arena, rows_size);
+    cecup.visible_rows = xarena_push(cecup.row_arena, rows_size);
 
     cecup.sort_col = COL_SRC_PATH;
     cecup.sort_order = GTK_SORT_ASCENDING;
@@ -234,11 +234,11 @@ main(int32 argc, char *argv[]) {
     }
 
     source_path_length = SNPRINTF(source_path_buffer, "%s/a/", cwd);
-    default_src = arena_push(cecup.ui_arena, source_path_length + 1);
+    default_src = xarena_push(cecup.ui_arena, source_path_length + 1);
     memcpy64(default_src, source_path_buffer, source_path_length + 1);
 
     destination_path_length = SNPRINTF(destination_path_buffer, "%s/b/", cwd);
-    default_dst = arena_push(cecup.ui_arena, destination_path_length + 1);
+    default_dst = xarena_push(cecup.ui_arena, destination_path_length + 1);
     memcpy64(default_dst, destination_path_buffer, destination_path_length + 1);
 
     paths_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
