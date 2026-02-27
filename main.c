@@ -79,6 +79,17 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
                      background, NULL);
         break;
     }
+    case COL_MTIME_TEXT: {
+        char *background;
+        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 4)) {
+            background = row->src_color;
+        } else {
+            background = row->dst_color;
+        }
+        g_object_set(renderer, "text", row->mtime_text, "cell-background",
+                     background, NULL);
+        break;
+    }
     default:
         error("Invalid col_id = %d\n", col_id);
         exit(EXIT_FAILURE);
@@ -135,6 +146,17 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     gtk_tree_view_column_set_sort_column_id(column, COL_SIZE_RAW);
     gtk_tree_view_column_set_resizable(column, TRUE);
     gtk_tree_view_column_set_min_width(column, 100);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Modification Time"));
+    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        column, renderer_text, cell_data_func, GINT_TO_POINTER(COL_MTIME_TEXT),
+        NULL);
+    gtk_tree_view_column_set_sort_column_id(column, COL_MTIME_RAW);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_min_width(column, 150);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     gtk_widget_set_has_tooltip(tree, TRUE);
