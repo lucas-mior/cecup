@@ -134,10 +134,11 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(cecup.preview_button,
                                 "Run rsync --dry-run to identify changes");
     cecup.ignore_button = gtk_button_new_with_label("Edit Ignore List");
-    gtk_widget_set_tooltip_text(cecup.ignore_button, "Modify ignore.conf");
+    gtk_widget_set_tooltip_text(
+        cecup.ignore_button, "Edit file with patterns of filenames to ignore");
     cecup.fix_button = gtk_button_new_with_label("🛠️ Fix FS");
     gtk_widget_set_tooltip_text(cecup.fix_button,
-                                "Run external tool to fix filename issues");
+                                "Find and rename buggy filenames");
     cecup.stop_button = gtk_button_new_with_label("Stop");
     gtk_widget_set_tooltip_text(cecup.stop_button, "Cancel current operation");
     cecup.sync_button = gtk_button_new_with_label("⏩ Sync");
