@@ -812,7 +812,7 @@ sync_worker(gpointer user_data) {
     GThread *scanner_thread = NULL;
     int32 total_files_preview = 0;
     int32 processed_files_preview = 0;
-    char exclude_argument_buffer[4096];
+    char exclude_argument_buffer[MAX_PATH_LENGTH];
     int64 exclude_argument_length;
     int32 is_exclude_argument_from_arena;
     char *exclude_arg;
@@ -823,6 +823,11 @@ sync_worker(gpointer user_data) {
     int32 pipe_output[2] = {-1, -1};
     int32 pipe_error[2] = {-1, -1};
     pid_t child_pid = -1;
+
+    char output_line_buffer[8192];
+    int32 output_line_pos = 0;
+    char error_line_buffer[8192];
+    int32 error_line_pos = 0;
 
     if (thread_data->check_different_fs) {
         struct stat stat_src;
@@ -992,11 +997,6 @@ sync_worker(gpointer user_data) {
 
     while (true) {
         struct pollfd pipes[2];
-
-        char output_buffer[8192];
-        char error_buffer[8192];
-        int32 output_position = 0;
-        int32 error_position = 0;
         int32 poll_return;
 
         pipes[0].fd = pipe_output[0];
@@ -1033,32 +1033,34 @@ sync_worker(gpointer user_data) {
             } else {
                 for (int64 k = 0; k < r; k += 1) {
                     char *percent_pos;
+                    char *space_pos;
                     char type_char;
                     char *relative_path_entry;
                     enum CecupAction cecup_action;
                     char *link_target;
-                    struct stat st_path_val;
                     char full_src_path_val[MAX_PATH_LENGTH];
+                    struct stat st_path_val;
                     int64 sz_path_val = 0;
                     int64 mt_path_val = 0;
 
                     if (buffer[k] != '\n' && buffer[k] != '\r'
-                        && output_position < (int32)SIZEOF(output_buffer) - 1) {
-                        output_buffer[output_position] = buffer[k];
-                        output_position += 1;
+                        && output_line_pos
+                               < (int32)SIZEOF(output_line_buffer) - 1) {
+                        output_line_buffer[output_line_pos] = buffer[k];
+                        output_line_pos += 1;
                         continue;
                     }
 
-                    output_buffer[output_position] = '\0';
-                    output_position = 0;
+                    output_line_buffer[output_line_pos] = '\0';
+                    output_line_pos = 0;
 
-                    if (output_buffer[0] == '\0') {
+                    if (output_line_buffer[0] == '\0') {
                         continue;
                     }
 
-                    if ((percent_pos = strstr(output_buffer, "%"))) {
+                    if ((percent_pos = strstr(output_line_buffer, "%"))) {
                         char *start_digit = percent_pos;
-                        while (start_digit > output_buffer
+                        while (start_digit > output_line_buffer
                                && isdigit(*(start_digit - 1))) {
                             start_digit -= 1;
                         }
@@ -1067,12 +1069,12 @@ sync_worker(gpointer user_data) {
                     }
 
                     if (thread_data->is_preview == 0) {
-                        dispatch_log("%s.\n", output_buffer);
+                        dispatch_log("%s.\n", output_line_buffer);
                         continue;
                     }
 
-                    if (strncmp(output_buffer, "*deleting", 9) == 0) {
-                        char *relative_path = output_buffer + 10;
+                    if (strncmp(output_line_buffer, "*deleting", 9) == 0) {
+                        char *relative_path = output_line_buffer + 10;
                         char full_src[MAX_PATH_LENGTH];
                         char full_dst[MAX_PATH_LENGTH];
                         struct stat stat_src_local;
@@ -1114,12 +1116,11 @@ sync_worker(gpointer user_data) {
                         continue;
                     }
 
-                    char *space_pos;
-                    if (!(space_pos = strchr(output_buffer, ' '))) {
+                    if (!(space_pos = strchr(output_line_buffer, ' '))) {
                         continue;
                     }
 
-                    type_char = output_buffer[0];
+                    type_char = output_line_buffer[0];
                     if ((type_char != '>') && (type_char != '.')
                         && (type_char != 'h') && (type_char != 'c')
                         && (type_char != 'L')) {
@@ -1143,7 +1144,8 @@ sync_worker(gpointer user_data) {
                             link_target
                                 = sep + strlen64(RSYNC_HARDLINK_NOTATION);
                         }
-                    } else if (type_char == 'L' || output_buffer[1] == 'L') {
+                    } else if (type_char == 'L'
+                               || output_line_buffer[1] == 'L') {
                         char *sep;
                         cecup_action = UI_ACTION_SYMLINK;
 
@@ -1153,8 +1155,9 @@ sync_worker(gpointer user_data) {
                             link_target
                                 = sep + strlen64(RSYNC_SYMLINK_NOTATION);
                         }
-                    } else if (strncmp(output_buffer, "cd", 2) == 0
-                               || strncmp(output_buffer, ">f+++++", 7) == 0) {
+                    } else if (strncmp(output_line_buffer, "cd", 2) == 0
+                               || strncmp(output_line_buffer, ">f+++++", 7)
+                                      == 0) {
                         cecup_action = UI_ACTION_NEW;
                     }
 
@@ -1196,14 +1199,19 @@ sync_worker(gpointer user_data) {
                 pipes[1].fd = -1;
             } else {
                 for (int64 k = 0; k < r; k += 1) {
-                    if (buffer[k] == '\n'
-                        || error_position == SIZEOF(error_buffer) - 1) {
-                        error_buffer[error_position] = '\0';
-                        dispatch_log_error(error_buffer);
-                        error_position = 0;
-                    } else {
-                        error_buffer[error_position] = buffer[k];
-                        error_position += 1;
+                    if (buffer[k] != '\n' && buffer[k] != '\r'
+                        && error_line_pos
+                               < (int32)SIZEOF(error_line_buffer) - 1) {
+                        error_line_buffer[error_line_pos] = buffer[k];
+                        error_line_pos += 1;
+                        continue;
+                    }
+
+                    error_line_buffer[error_line_pos] = '\0';
+                    error_line_pos = 0;
+
+                    if (error_line_buffer[0] != '\0') {
+                        dispatch_log_error(error_line_buffer);
                     }
                 }
             }
