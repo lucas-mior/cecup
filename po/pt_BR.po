@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-27 06:49-0300\n"
+"POT-Creation-Date: 2026-02-27 07:57-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -22,35 +22,35 @@ msgstr ""
 msgid "Already identical"
 msgstr "Já está igual"
 
-#: main.c:354
+#: main.c:386
 msgid "Analyzing changes"
 msgstr "Analisando mudanças"
 
-#: hooks.c:1161
+#: hooks.c:1170
 msgid "Apply"
 msgstr "Aplicar"
 
-#: main.c:267
+#: main.c:295
 msgid "Cancel the current task"
 msgstr "Cancelar a tarefa atual"
 
-#: main.c:257
+#: main.c:284
 msgid "Check which files need to be copied or updated"
 msgstr "Verificar quais arquivos precisam ser copiados ou atualizados"
 
-#: main.c:292
+#: main.c:321
 msgid "Compare identical files"
 msgstr "Comparar arquivos idênticos"
 
-#: main.c:350
+#: main.c:382
 msgid "Comparing folders"
 msgstr "Comparando pastas"
 
-#: hooks.c:1152
+#: hooks.c:1161
 msgid "Copy Full Path"
 msgstr "Copiar caminho completo"
 
-#: hooks.c:1143
+#: hooks.c:1152
 msgid "Copy Relative Path"
 msgstr "Copiar caminho relativo"
 
@@ -62,59 +62,63 @@ msgstr "Copiar do original"
 msgid "Copy to backup"
 msgstr "Copiar para o backup"
 
-#: main.c:346
+#: main.c:378
 msgid "Copying files"
 msgstr "Copiando arquivos"
+
+#: cecup.h:82
+msgid "Create link according to original"
+msgstr "Criar link conforme original"
 
 #: cecup.h:71
 msgid "Create link in backup"
 msgstr "Criar atalho no backup"
 
-#: main.c:309
+#: main.c:341
 msgid "Defaults"
 msgstr "Padrão"
 
-#: hooks.c:1190
+#: hooks.c:1199
 msgid "Delete"
 msgstr "Excluir"
 
-#: main.c:302
+#: main.c:334
 msgid "Delete old files only after the new ones are successfully copied"
 msgstr "Apaga arquivos antigos apenas após a cópia bem-sucedida dos novos"
 
-#: main.c:294
+#: main.c:324
 msgid "Detect files that are already the same (only for reference)"
 msgstr "Identifica o que já está igual (apenas para referência)"
 
-#: hooks.c:1178
+#: hooks.c:1187
 msgid "Diff"
 msgstr "Diff"
 
-#: main.c:319
+#: main.c:351
 msgid "Diff Tool:"
 msgstr "Ferramenta de comparação"
 
-#: hooks.c:1172
+#: hooks.c:1181
 msgid "Dir"
 msgstr "Pasta"
 
-#: hooks.c:1052
+#: hooks.c:1061
 msgid "Dst"
 msgstr "Backup"
 
-#: main.c:261
+#: main.c:287
 msgid "Edit the list of filename patterns to ignore"
 msgstr "Editar a lista de padrões de nomes de arquivo para ignorar"
 
-#: main.c:338
+#: main.c:370
 msgid "Equality scanner progress"
 msgstr "Progresso da busca de igualdade"
 
-#: main.c:305
+#: main.c:337
 msgid "Executable used for comparing files"
 msgstr "Programa usado para comparar arquivos"
 
-#: hooks.c:1168
+#: hooks.c:1177
 msgid "Extension"
 msgstr "Extensão"
 
@@ -126,41 +130,33 @@ msgstr "Arquivo não existe na pasta original"
 msgid "Files have the same size and modification time"
 msgstr "Arquivos tem o mesmo tamanho e data de modificação"
 
-#: main.c:264
+#: main.c:292
 msgid "Fix file names with special characters that cause errors"
 msgstr "Corrigir nomes de arquivos com caracteres que impedem a cópia"
 
-#: main.c:384
+#: main.c:417
 msgid "Folder containing your original files"
 msgstr "Pasta que contém seus arquivos originais"
 
-#: main.c:398
+#: main.c:431
 msgid "Folder where the backup will be stored"
 msgstr "Pasta onde o backup será guardado"
 
-#: hooks.c:899
-msgid "Ignore List"
-msgstr "Regras de Ignorados"
-
-#: main.c:258
+#: hooks.c:908 main.c:285
 msgid "Ignore Rules"
 msgstr "Regras de Ignorados"
 
-#: hooks.c:1165
+#: hooks.c:1174
 msgid "Ignore..."
 msgstr "Ignorar..."
 
-#: main.c:110
+#: main.c:121
 msgid "Intended Task"
 msgstr "Tarefa"
 
-#: main.c:393
+#: main.c:425
 msgid "Invert Original and Backup"
 msgstr "Inverter original e backup"
-
-#: cecup.h:82
-msgid "Create link according to original"
-msgstr "Criar link conforme original"
 
 #: cecup.h:96
 msgid "Linked file in the original folder"
@@ -170,7 +166,11 @@ msgstr "Arquivo vinculado (link) na origem"
 msgid "Matches an ignore rule"
 msgstr "Ignorado por regra de exclusão"
 
-#: main.c:120
+#: main.c:152
+msgid "Modification Time"
+msgstr ""
+
+#: main.c:131
 msgid "Name"
 msgstr "Nome do arquivo"
 
@@ -182,34 +182,34 @@ msgstr "Novo arquivo encontrado na pasta original"
 msgid "Not found in original"
 msgstr "Não encontrado na pasta original"
 
-#: hooks.c:1134
+#: hooks.c:1143
 msgid "Open File"
 msgstr "Abrir arquivo"
 
-#: hooks.c:1138
+#: hooks.c:1147
 #, fuzzy
 msgid "Open Folder"
 msgstr "Abrir Pasta"
 
-#: hooks.c:594
+#: hooks.c:603
 #, c-format
 msgid "Permanently delete %d item(s)?"
 msgstr "Excluir permanentemente %d arquivo(s)?"
 
-#: main.c:290
+#: main.c:319
 msgid "Prevent copying if original and backup are on the same disk"
 msgstr ""
 "Evita acidentes se o original e o backup estiverem no mesmo dispositivo"
 
-#: main.c:341
+#: main.c:373
 msgid "Preview analysis progress"
 msgstr "Progresso da análise da prévia"
 
-#: main.c:288
+#: main.c:316
 msgid "Protect same-drive sync"
 msgstr "Impedir cópia no mesmo disco"
 
-#: main.c:299
+#: main.c:330
 msgid "Remove files from backup if they were added to the ignore list"
 msgstr "Exclui do backup arquivos que você marcou para serem ignorados"
 
@@ -217,51 +217,51 @@ msgstr "Exclui do backup arquivos que você marcou para serem ignorados"
 msgid "Remove from backup"
 msgstr "Excluir do backup"
 
-#: main.c:297
+#: main.c:327
 msgid "Remove ignored items"
 msgstr "Excluir itens ignorados"
 
-#: main.c:310
+#: main.c:342
 msgid "Restore original settings"
 msgstr "Restaurar configurações originais"
 
-#: main.c:335
+#: main.c:367
 msgid "Rsync transfer progress"
 msgstr "Progresso de transferência do rsync"
 
-#: main.c:300
+#: main.c:331
 msgid "Safe deletion"
 msgstr "Exclusão segura"
 
-#: main.c:386 main.c:400
+#: main.c:419 main.c:433
 msgid "Select Folder"
 msgstr "Selecionar Pasta"
 
-#: main.c:463
+#: main.c:496
 msgid "Show Deletions"
 msgstr "Mostrar exclusões"
 
-#: main.c:460
-msgid "Show links"
-msgstr "Mostrar links"
-
-#: main.c:462
-msgid "Show equals"
-msgstr "Mostrar iguais"
-
-#: main.c:464
+#: main.c:497
 msgid "Show Ignored"
 msgstr "Mostrar ignorados"
 
-#: main.c:459
+#: main.c:492
 msgid "Show New Files"
 msgstr "Mostrar arquivos novos"
 
-#: main.c:461
+#: main.c:494
 msgid "Show Updates"
 msgstr "Mostrar arquivos atualizados"
 
-#: main.c:130
+#: main.c:495
+msgid "Show equals"
+msgstr "Mostrar iguais"
+
+#: main.c:493
+msgid "Show links"
+msgstr "Mostrar links"
+
+#: main.c:141
 msgid "Size"
 msgstr "Tamanho"
 
@@ -269,28 +269,28 @@ msgstr "Tamanho"
 msgid "Skip"
 msgstr "Pular"
 
-#: hooks.c:1031
+#: hooks.c:1040
 msgid "Src"
 msgstr "Original"
 
-#: main.c:270
+#: main.c:298
 msgid "Start copying and updating the selected files"
 msgstr "Iniciar a cópia e atualização dos arquivos selecionados"
 
-#: main.c:265
+#: main.c:293
 msgid "Stop"
 msgstr "Parar"
 
-#: hooks.c:996
+#: hooks.c:1005
 #, c-format
 msgid "Sync %s -> %s?"
 msgstr "Sincronizar %s -> %s?"
 
-#: main.c:308
+#: main.c:340
 msgid "Terminal emulator used to launch the diff tool"
 msgstr "Emulator de terminal usado para executar o programa de comparação"
 
-#: main.c:324
+#: main.c:356
 msgid "Terminal:"
 msgstr "Terminal:"
 
@@ -298,7 +298,7 @@ msgstr "Terminal:"
 msgid "The original file is newer"
 msgstr "O arquivo original é mais recente"
 
-#: hooks.c:293
+#: hooks.c:302
 #, c-format
 msgid "Total Transfer Size: 📦 %s"
 msgstr "Tamanho total a copiar: 📦 %s"
@@ -311,35 +311,38 @@ msgstr "Atualizar arquivo no backup"
 msgid "Update from original"
 msgstr "Atualizar conforme arquivo da pasta original"
 
-#: hooks.c:1032 hooks.c:1053
+#: hooks.c:1041 hooks.c:1062
 msgid "_Cancel"
 msgstr ""
 
-#: hooks.c:900
+#: hooks.c:909
 msgid "_Close"
 msgstr ""
 
-#: hooks.c:900
+#: hooks.c:909
 msgid "_Save"
 msgstr ""
 
-#: hooks.c:1033 hooks.c:1054
+#: hooks.c:1042 hooks.c:1063
 #, fuzzy
 msgid "_Select"
 msgstr "Selecionar Pasta"
 
-#: main.c:268
+#: main.c:296
 msgid "⏩ Apply Changes"
 msgstr "⏩ Aplicar Mudanças"
 
-#: main.c:479
+#: main.c:512
 msgid "✅ Everything ready"
 msgstr "✅ Tudo pronto"
 
-#: main.c:255
+#: main.c:281
 msgid "🔎 Analyze changes between folders"
 msgstr "🔎 Analisar mudanças entre as pastas"
 
-#: main.c:262
+#: main.c:289
 msgid "🛠️ Rename problematic files"
 msgstr "🛠️ Corrigir nomes problemáticos"
+
+#~ msgid "Ignore List"
+#~ msgstr "Regras de Ignorados"
