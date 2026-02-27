@@ -67,34 +67,34 @@ static char *action_emojis[] = {
 
 static char *src_action_strings[] = {
     [UI_ACTION_NONE]     = "",
-    [UI_ACTION_NEW]      = N_("Copy to destination"),
-    [UI_ACTION_HARDLINK] = N_("Hardlink to destination"),
-    [UI_ACTION_UPDATE]   = N_("Update destination"),
-    [UI_ACTION_EQUAL]    = N_("Equal"),
-    [UI_ACTION_DELETED]  = N_("Missing in source"),
+    [UI_ACTION_NEW]      = N_("Copy to backup"),
+    [UI_ACTION_HARDLINK] = N_("Create link in backup"),
+    [UI_ACTION_UPDATE]   = N_("Update file in backup"),
+    [UI_ACTION_EQUAL]    = N_("Already identical"),
+    [UI_ACTION_DELETED]  = N_("Not found in original"),
     [UI_ACTION_DELETE]   = "",
-    [UI_ACTION_IGNORE]   = N_("Ignore")
+    [UI_ACTION_IGNORE]   = N_("Skip")
 };
 
 static char *dst_action_strings[] = {
     [UI_ACTION_NONE]     = "",
-    [UI_ACTION_NEW]      = N_("Copy from source"),
-    [UI_ACTION_HARDLINK] = N_("Hardlink from source"),
-    [UI_ACTION_UPDATE]   = N_("Update from source"),
-    [UI_ACTION_EQUAL]    = N_("Equal"),
+    [UI_ACTION_NEW]      = N_("Copy from original"),
+    [UI_ACTION_HARDLINK] = N_("Link from original"),
+    [UI_ACTION_UPDATE]   = N_("Update from original"),
+    [UI_ACTION_EQUAL]    = N_("Already identical"),
     [UI_ACTION_DELETED]  = "",
-    [UI_ACTION_DELETE]   = N_("Delete from destination"),
-    [UI_ACTION_IGNORE]   = N_("Ignore")
+    [UI_ACTION_DELETE]   = N_("Remove from backup"),
+    [UI_ACTION_IGNORE]   = N_("Skip")
 };
 
 static char *reason_strings[] = {
     [UI_REASON_NONE]     = "",
-    [UI_REASON_EQUAL]    = N_("Files have the same size and modification time"),
-    [UI_REASON_IGNORED]  = N_("Matched ignore pattern"),
-    [UI_REASON_MISSING]  = N_("Missing in source directory"),
-    [UI_REASON_NEW]      = N_("New file in source directory"),
-    [UI_REASON_HARDLINK] = N_("Hardlink in source directory"),
-    [UI_REASON_UPDATE]   = N_("Modification time is newer in the source directory"),
+    [UI_REASON_EQUAL]    = N_("Files are already the same"),
+    [UI_REASON_IGNORED]  = N_("Matches an ignore rule"),
+    [UI_REASON_MISSING]  = N_("File does not exist in the original folder"),
+    [UI_REASON_NEW]      = N_("New file found in the original folder"),
+    [UI_REASON_HARDLINK] = N_("Linked file in the original folder"),
+    [UI_REASON_UPDATE]   = N_("The original file is newer"),
 };
 
 enum {

@@ -30,6 +30,120 @@
 
 static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path);
 
+static void
+cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
+               GtkTreeModel *model, GtkTreeIter *iter, gpointer data) {
+    int32 col_id;
+    int32 row_idx;
+    GtkTreePath *path;
+    CecupRow *row;
+
+    col_id = GPOINTER_TO_INT(data);
+    path = gtk_tree_model_get_path(model, iter);
+    row_idx = gtk_tree_path_get_indices(path)[0];
+    gtk_tree_path_free(path);
+
+    if ((row_idx < 0) || (row_idx >= cecup.visible_count)) {
+        return;
+    }
+    row = cecup.visible_rows[row_idx];
+
+    switch (col_id) {
+    case COL_SELECTED:
+        g_object_set(renderer, "active", row->selected, NULL);
+        break;
+    case COL_SRC_ACTION:
+        g_object_set(renderer, "text", action_emojis[row->src_action],
+                     "cell-background", row->src_color, NULL);
+        break;
+    case COL_DST_ACTION:
+        g_object_set(renderer, "text", action_emojis[row->dst_action],
+                     "cell-background", row->dst_color, NULL);
+        break;
+    case COL_SRC_PATH:
+        g_object_set(renderer, "text", row->src_path, "cell-background",
+                     row->src_color, NULL);
+        break;
+    case COL_DST_PATH:
+        g_object_set(renderer, "text", row->dst_path, "cell-background",
+                     row->dst_color, NULL);
+        break;
+    case COL_SIZE_TEXT: {
+        char *background;
+        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 3)) {
+            background = row->src_color;
+        } else {
+            background = row->dst_color;
+        }
+        g_object_set(renderer, "text", row->size_text, "cell-background",
+                     background, NULL);
+        break;
+    }
+    default:
+        error("Invalid col_id = %d\n", col_id);
+        exit(EXIT_FAILURE);
+    }
+    return;
+}
+
+static void
+setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
+    GtkCellRenderer *renderer_toggle;
+    GtkCellRenderer *renderer_text;
+    GtkTreeViewColumn *column;
+
+    renderer_toggle = gtk_cell_renderer_toggle_new();
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_pack_start(column, renderer_toggle, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        column, renderer_toggle, cell_data_func, GINT_TO_POINTER(COL_SELECTED),
+        NULL);
+    g_signal_connect(renderer_toggle, "toggled", G_CALLBACK(on_cell_toggled),
+                     NULL);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    renderer_text = gtk_cell_renderer_text_new();
+    g_object_set(renderer_text, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Intended Task"));
+    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        column, renderer_text, cell_data_func, GINT_TO_POINTER(col_act), NULL);
+    gtk_tree_view_column_set_sort_column_id(column, col_act);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_min_width(column, 80);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Name"));
+    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        column, renderer_text, cell_data_func, GINT_TO_POINTER(col_path), NULL);
+    gtk_tree_view_column_set_sort_column_id(column, col_path);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Size"));
+    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        column, renderer_text, cell_data_func, GINT_TO_POINTER(COL_SIZE_TEXT),
+        NULL);
+    gtk_tree_view_column_set_sort_column_id(column, COL_SIZE_RAW);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_min_width(column, 100);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    gtk_widget_set_has_tooltip(tree, TRUE);
+    g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
+    g_signal_connect(tree, "button-press-event",
+                     G_CALLBACK(on_tree_button_press), NULL);
+    return;
+}
+
 int32
 main(int32 argc, char *argv[]) {
     GtkWidget *main_vbox;
@@ -75,7 +189,6 @@ main(int32 argc, char *argv[]) {
     int64 rows_size;
 
     if (setlocale(LC_ALL, "") == NULL) {
-        /* Failed to set locale, fallback to C */
         error("Error setting locale: %s.\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
@@ -138,23 +251,25 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
     button_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    cecup.preview_button = gtk_button_new_with_label(
-        _("🔎 Search differences between source and destination"));
-    gtk_widget_set_tooltip_text(cecup.preview_button,
-                                _("Run rsync --dry-run to identify changes"));
-    cecup.ignore_button = gtk_button_new_with_label(_("Edit Ignore List"));
+    cecup.preview_button
+        = gtk_button_new_with_label(_("🔎 Analyze changes between folders"));
     gtk_widget_set_tooltip_text(
-        cecup.ignore_button,
-        _("Edit file with patterns of filenames to ignore"));
-    cecup.fix_button = gtk_button_new_with_label(_("🛠️ Fix FS"));
-    gtk_widget_set_tooltip_text(cecup.fix_button,
-                                _("Find and rename buggy filenames"));
+        cecup.preview_button,
+        _("Check which files need to be copied or updated"));
+    cecup.ignore_button = gtk_button_new_with_label(_("Ignore Rules"));
+    gtk_widget_set_tooltip_text(
+        cecup.ignore_button, _("Edit the list of files and folders to skip"));
+    cecup.fix_button
+        = gtk_button_new_with_label(_("🛠️ Rename problematic files"));
+    gtk_widget_set_tooltip_text(
+        cecup.fix_button,
+        _("Fix file names with special characters that cause errors"));
     cecup.stop_button = gtk_button_new_with_label(_("Stop"));
     gtk_widget_set_tooltip_text(cecup.stop_button,
-                                _("Cancel current operation"));
-    cecup.sync_button = gtk_button_new_with_label(_("⏩ Sync"));
-    gtk_widget_set_tooltip_text(cecup.sync_button,
-                                _("Apply all selected changes"));
+                                _("Cancel the current task"));
+    cecup.sync_button = gtk_button_new_with_label(_("⏩ Apply Changes"));
+    gtk_widget_set_tooltip_text(
+        cecup.sync_button, _("Start copying and updating the selected files"));
     gtk_widget_set_sensitive(cecup.stop_button, FALSE);
 
     gtk_box_pack_start(GTK_BOX(button_hbox), cecup.ignore_button, FALSE, FALSE,
@@ -172,31 +287,33 @@ main(int32 argc, char *argv[]) {
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup.check_fs
-        = gtk_check_button_new_with_label(_("Require different filesystems"));
-    gtk_widget_set_tooltip_text(cecup.check_fs,
-                                _("Block sync if source and destination"
-                                  " are on the same device (file system)"));
+        = gtk_check_button_new_with_label(_("Protect same-drive sync"));
+    gtk_widget_set_tooltip_text(
+        cecup.check_fs,
+        _("Prevent copying if original and backup are on the same disk"));
     cecup.check_equal
-        = gtk_check_button_new_with_label(_("Scan for equal files"));
-    gtk_widget_set_tooltip_text(cecup.check_equal,
-                                _("Perform parallel directory scan"
-                                  " to find identical files"));
+        = gtk_check_button_new_with_label(_("Compare identical files"));
+    gtk_widget_set_tooltip_text(
+        cecup.check_equal,
+        _("Detect files that are already the same to save time"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.check_equal), TRUE);
     cecup.delete_excluded
-        = gtk_check_button_new_with_label(_("Delete ignored"));
-    gtk_widget_set_tooltip_text(cecup.delete_excluded,
-                                _("Delete ignored files on destination"));
-    cecup.delete_after = gtk_check_button_new_with_label(_("Delete after"));
-    gtk_widget_set_tooltip_text(cecup.delete_after,
-                                _("Deletion strategy: --delete-after"));
+        = gtk_check_button_new_with_label(_("Remove ignored items"));
+    gtk_widget_set_tooltip_text(
+        cecup.delete_excluded,
+        _("Remove files from backup if they were added to the ignore list"));
+    cecup.delete_after = gtk_check_button_new_with_label(_("Safe deletion"));
+    gtk_widget_set_tooltip_text(
+        cecup.delete_after,
+        _("Delete old files only after the new ones are successfully copied"));
     cecup.diff_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.diff_entry,
                                 _("Executable used for comparing files"));
     cecup.term_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(
         cecup.term_entry, _("Terminal emulator used to launch the diff tool"));
-    reset_button = gtk_button_new_with_label(_("Reset"));
-    gtk_widget_set_tooltip_text(reset_button, _("Restore default settings"));
+    reset_button = gtk_button_new_with_label(_("Defaults"));
+    gtk_widget_set_tooltip_text(reset_button, _("Restore original settings"));
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_fs, FALSE, FALSE,
                        BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_equal, FALSE, FALSE,
@@ -232,15 +349,15 @@ main(int32 argc, char *argv[]) {
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_rsync),
                                    TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_rsync),
-                              _("rsync"));
+                              _("Copying files"));
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_equal),
                                    TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_equal),
-                              _("equal scanner"));
+                              _("Comparing folders"));
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_preview),
                                    TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_preview),
-                              _("preview analysis"));
+                              _("Analyzing changes"));
 
     gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_rsync, FALSE,
                        FALSE, 0);
@@ -271,24 +388,23 @@ main(int32 argc, char *argv[]) {
     l_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     cecup.src_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.src_entry,
-                                _("Base source directory path"));
+                                _("Folder containing your original files"));
     gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), default_src);
-    browse_src = gtk_button_new_with_label(_("Browse"));
+    browse_src = gtk_button_new_with_label(_("Select Folder"));
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), cecup.src_entry, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), browse_src, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(paths_hbox), l_entry_hbox, TRUE, TRUE, 0);
 
     invert_button = gtk_button_new_with_label("<--->");
-    gtk_widget_set_tooltip_text(invert_button,
-                                _("Swap Source and Destination paths"));
+    gtk_widget_set_tooltip_text(invert_button, _("Invert Original and Backup"));
     gtk_box_pack_start(GTK_BOX(paths_hbox), invert_button, FALSE, FALSE, 0);
 
     r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     cecup.dst_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.dst_entry,
-                                _("Base destination directory path"));
+                                _("Folder where the backup will be stored"));
     gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), default_dst);
-    browse_dst = gtk_button_new_with_label(_("Browse"));
+    browse_dst = gtk_button_new_with_label(_("Select Folder"));
     gtk_box_pack_start(GTK_BOX(r_entry_hbox), cecup.dst_entry, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(r_entry_hbox), browse_dst, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(paths_hbox), r_entry_hbox, TRUE, TRUE, 0);
@@ -367,7 +483,7 @@ main(int32 argc, char *argv[]) {
                        2);
     gtk_box_pack_start(GTK_BOX(main_vbox), filter_hbox, FALSE, FALSE, 0);
 
-    cecup.stats_label = gtk_label_new(_("✅ Ready"));
+    cecup.stats_label = gtk_label_new(_("✅ Everything ready"));
     gtk_box_pack_start(GTK_BOX(main_vbox), cecup.stats_label, FALSE, FALSE, 5);
 
     read_config();
@@ -426,118 +542,4 @@ main(int32 argc, char *argv[]) {
     arena_destroy(cecup.ui_arena);
     g_mutex_clear(&cecup.ui_arena_mutex);
     exit(EXIT_SUCCESS);
-}
-
-static void
-cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
-               GtkTreeModel *model, GtkTreeIter *iter, gpointer data) {
-    int32 col_id;
-    int32 row_idx;
-    GtkTreePath *path;
-    CecupRow *row;
-
-    col_id = GPOINTER_TO_INT(data);
-    path = gtk_tree_model_get_path(model, iter);
-    row_idx = gtk_tree_path_get_indices(path)[0];
-    gtk_tree_path_free(path);
-
-    if ((row_idx < 0) || (row_idx >= cecup.visible_count)) {
-        return;
-    }
-    row = cecup.visible_rows[row_idx];
-
-    switch (col_id) {
-    case COL_SELECTED:
-        g_object_set(renderer, "active", row->selected, NULL);
-        break;
-    case COL_SRC_ACTION:
-        g_object_set(renderer, "text", action_emojis[row->src_action],
-                     "cell-background", row->src_color, NULL);
-        break;
-    case COL_DST_ACTION:
-        g_object_set(renderer, "text", action_emojis[row->dst_action],
-                     "cell-background", row->dst_color, NULL);
-        break;
-    case COL_SRC_PATH:
-        g_object_set(renderer, "text", row->src_path, "cell-background",
-                     row->src_color, NULL);
-        break;
-    case COL_DST_PATH:
-        g_object_set(renderer, "text", row->dst_path, "cell-background",
-                     row->dst_color, NULL);
-        break;
-    case COL_SIZE_TEXT: {
-        char *background;
-        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 3)) {
-            background = row->src_color;
-        } else {
-            background = row->dst_color;
-        }
-        g_object_set(renderer, "text", row->size_text, "cell-background",
-                     background, NULL);
-        break;
-    }
-    default:
-        error("Invalid col_id = %d\n", col_id);
-        exit(EXIT_FAILURE);
-    }
-    return;
-}
-
-static void
-setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
-    GtkCellRenderer *renderer_toggle;
-    GtkCellRenderer *renderer_text;
-    GtkTreeViewColumn *column;
-
-    renderer_toggle = gtk_cell_renderer_toggle_new();
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_pack_start(column, renderer_toggle, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_toggle, cell_data_func, GINT_TO_POINTER(COL_SELECTED),
-        NULL);
-    g_signal_connect(renderer_toggle, "toggled", G_CALLBACK(on_cell_toggled),
-                     NULL);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    renderer_text = gtk_cell_renderer_text_new();
-    g_object_set(renderer_text, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, _("Action"));
-    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_text, cell_data_func, GINT_TO_POINTER(col_act), NULL);
-    gtk_tree_view_column_set_sort_column_id(column, col_act);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_min_width(column, 80);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, _("File Path"));
-    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_text, cell_data_func, GINT_TO_POINTER(col_path), NULL);
-    gtk_tree_view_column_set_sort_column_id(column, col_path);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_expand(column, TRUE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, _("Size"));
-    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_text, cell_data_func, GINT_TO_POINTER(COL_SIZE_TEXT),
-        NULL);
-    gtk_tree_view_column_set_sort_column_id(column, COL_SIZE_RAW);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_min_width(column, 100);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    gtk_widget_set_has_tooltip(tree, TRUE);
-    g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
-    g_signal_connect(tree, "button-press-event",
-                     G_CALLBACK(on_tree_button_press), NULL);
-    return;
 }
