@@ -67,6 +67,7 @@ option_remove() {
 }
 
 compile_locales() {
+    set -x
     if [ ! -d "po" ]; then
         return
     fi
@@ -76,6 +77,7 @@ compile_locales() {
             msgfmt "po/$lang.po" -o "po/$lang/LC_MESSAGES/$program.mo"
         fi
     done
+    set +x
 }
 
 case "$target" in
@@ -197,7 +199,7 @@ case "$target" in
     
     for lang in $LANGS; do
         if [ -f "po/$lang/$program.mo" ]; then
-            install -Dm644 "po/$lang/$program.mo" \
+            install -Dm644 "po/$lang/LC_MESSAGES/$program.mo" \
                 "${DESTDIR}${PREFIX}/share/locale/$lang/LC_MESSAGES/$program.mo"
         fi
     done
