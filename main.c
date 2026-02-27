@@ -138,7 +138,8 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
     button_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    cecup.preview_button = gtk_button_new_with_label(_("🔎 Preview"));
+    cecup.preview_button = gtk_button_new_with_label(
+        _("🔎 Search differences between source and destination"));
     gtk_widget_set_tooltip_text(cecup.preview_button,
                                 _("Run rsync --dry-run to identify changes"));
     cecup.ignore_button = gtk_button_new_with_label(_("Edit Ignore List"));
