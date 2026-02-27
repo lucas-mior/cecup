@@ -1033,6 +1033,7 @@ sync_worker(gpointer user_data) {
     while (true) {
         struct pollfd pipes[2];
         int32 poll_return;
+        int64 r;
 
         pipes[0].fd = pipe_output[0];
         pipes[0].events = POLLIN;
@@ -1066,7 +1067,6 @@ sync_worker(gpointer user_data) {
             goto parse_error;
         }
 
-        int64 r;
         r = read64(pipe_output[0], output_line_buffer + output_line_pos,
                    SIZEOF(output_line_buffer) - output_line_pos - 1);
         if (r <= 0) {
