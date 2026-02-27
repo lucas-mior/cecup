@@ -24,6 +24,7 @@
 
 #define EMOJI_NEW "➕"
 #define EMOJI_LINK "🔗"
+#define EMOJI_SYMLINK "↪️"
 #define EMOJI_UPDATE "➡️"
 #define EMOJI_EQUAL "🟰"
 #define EMOJI_DELETE "❌"
@@ -35,6 +36,7 @@ enum CecupAction {
     UI_ACTION_NONE = 0,
     UI_ACTION_NEW,
     UI_ACTION_HARDLINK,
+    UI_ACTION_SYMLINK,
     UI_ACTION_UPDATE,
     UI_ACTION_EQUAL,
     UI_ACTION_DELETED,
@@ -47,6 +49,7 @@ enum CecupReason {
     UI_REASON_NONE = 0,
     UI_REASON_NEW,
     UI_REASON_HARDLINK,
+    UI_REASON_SYMLINK,
     UI_REASON_UPDATE,
     UI_REASON_EQUAL,
     UI_REASON_IGNORED,
@@ -58,6 +61,7 @@ static char *action_emojis[] = {
     [UI_ACTION_NONE]     = "",
     [UI_ACTION_NEW]      = EMOJI_NEW,
     [UI_ACTION_HARDLINK] = EMOJI_LINK,
+    [UI_ACTION_SYMLINK]  = EMOJI_SYMLINK,
     [UI_ACTION_UPDATE]   = EMOJI_UPDATE,
     [UI_ACTION_EQUAL]    = EMOJI_EQUAL,
     [UI_ACTION_DELETED]  = EMOJI_DELETE,
@@ -68,7 +72,8 @@ static char *action_emojis[] = {
 static char *src_action_strings[] = {
     [UI_ACTION_NONE]     = "",
     [UI_ACTION_NEW]      = N_("Copy to backup"),
-    [UI_ACTION_HARDLINK] = N_("Create link in backup"),
+    [UI_ACTION_HARDLINK] = N_("Create hardlink in backup"),
+    [UI_ACTION_SYMLINK]  = N_("Create symlink in backup"),
     [UI_ACTION_UPDATE]   = N_("Update file in backup"),
     [UI_ACTION_EQUAL]    = N_("Already identical"),
     [UI_ACTION_DELETED]  = N_("Not found in original"),
@@ -79,7 +84,8 @@ static char *src_action_strings[] = {
 static char *dst_action_strings[] = {
     [UI_ACTION_NONE]     = "",
     [UI_ACTION_NEW]      = N_("Copy from original"),
-    [UI_ACTION_HARDLINK] = N_("Create link according to original"),
+    [UI_ACTION_HARDLINK] = N_("Create hardlink according to original"),
+    [UI_ACTION_SYMLINK]  = N_("Create symlink according to original"),
     [UI_ACTION_UPDATE]   = N_("Update from original"),
     [UI_ACTION_EQUAL]    = N_("Already identical"),
     [UI_ACTION_DELETED]  = "",
@@ -93,7 +99,8 @@ static char *reason_strings[] = {
     [UI_REASON_IGNORED]  = N_("Matches an ignore rule"),
     [UI_REASON_MISSING]  = N_("File does not exist in the original folder"),
     [UI_REASON_NEW]      = N_("New file found in the original folder"),
-    [UI_REASON_HARDLINK] = N_("Linked file in the original folder"),
+    [UI_REASON_HARDLINK] = N_("Hardlinked file in the original folder"),
+    [UI_REASON_SYMLINK]  = N_("Symlink in the original folder"),
     [UI_REASON_UPDATE]   = N_("The original file is newer"),
 };
 
