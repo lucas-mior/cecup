@@ -129,12 +129,10 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-ignored-attributes"
     CFLAGS="$CFLAGS -Wno-covered-switch-default"
     # check later
-    CFLAGS="$CFLAGS -Wno-reserved-macro-identifier"
     CFLAGS="$CFLAGS -Wno-reserved-identifier"
     CFLAGS="$CFLAGS -Wno-documentation-unknown-command"
     CFLAGS="$CFLAGS -Wno-documentation"
     CFLAGS="$CFLAGS -Wno-padded"
-    CFLAGS="$CFLAGS -Wno-incompatible-pointer-types-discards-qualifiers"
     CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
 fi
 
