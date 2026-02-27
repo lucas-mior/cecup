@@ -216,6 +216,13 @@ case "$target" in
     trace_off
     exit
     ;;
+"uninstall")
+    rm -vf  "${DESTDIR}${PREFIX}/bin/${program}"
+    rm -vf  "${DESTDIR}${PREFIX}/man/man1/${program}.1"
+    rm -vf  "${DESTDIR}${PREFIX}/share/locale/$lang/LC_MESSAGES/$program.mo"
+    rm -rvf "$DESTDIR/etc/$program/"
+    rm -vf  "$DESTDIR/usr/share/applications/$program.desktop"
+    ;;
 "assembly")
     trace_on
     $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "$main"
