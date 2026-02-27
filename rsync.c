@@ -1222,47 +1222,53 @@ sync_worker(gpointer user_data) {
         }
 
     parse_error:
-        if (pipes[1].revents & POLLIN) {
-            int64 r = read64(pipe_error[0], error_line_buffer + error_line_pos,
-                             SIZEOF(error_line_buffer) - error_line_pos - 1);
-            if (r <= 0) {
-                if (r < 0) {
-                    dispatch_log_error("Error reading stderr pipe: %s.\n",
-                                       strerror(errno));
-                }
-                pipes[1].fd = -1;
-            } else {
-                char *eol;
-                error_line_pos += (int32)r;
-
-                while ((eol = memchr64(error_line_buffer, '\n', error_line_pos))
-                       || (eol = memchr64(error_line_buffer, '\r',
-                                          error_line_pos))) {
-                    int32 line_len = (int32)(eol - error_line_buffer);
-                    int32 remaining;
-                    *eol = '\0';
-
-                    if (error_line_buffer[0] != '\0') {
-                        dispatch_log_error(error_line_buffer);
-                    }
-
-                    remaining = error_line_pos - (line_len + 1);
-                    if (remaining > 0) {
-                        memmove64(error_line_buffer, eol + 1, remaining);
-                    }
-                    error_line_pos = remaining;
-                }
-
-                if (error_line_pos >= (int32)SIZEOF(error_line_buffer) - 1) {
-                    error_line_buffer[error_line_pos] = '\0';
-                    dispatch_log_error(error_line_buffer);
-                    error_line_pos = 0;
-                }
-            }
-        } else if (pipes[1].revents & (POLLHUP | POLLERR)) {
+        if (pipes[1].revents & (POLLHUP | POLLERR)) {
             pipes[1].fd = -1;
+            goto more_pipe;
         }
 
+        if (!(pipes[1].revents & POLLIN)) {
+            goto more_pipe;
+        }
+
+        r = read64(pipe_error[0], error_line_buffer + error_line_pos,
+                   SIZEOF(error_line_buffer) - error_line_pos - 1);
+        if (r <= 0) {
+            if (r < 0) {
+                dispatch_log_error("Error reading stderr pipe: %s.\n",
+                                   strerror(errno));
+            }
+            pipes[1].fd = -1;
+        } else {
+            char *eol;
+            error_line_pos += (int32)r;
+
+            while (
+                (eol = memchr64(error_line_buffer, '\n', error_line_pos))
+                || (eol = memchr64(error_line_buffer, '\r', error_line_pos))) {
+                int32 line_len = (int32)(eol - error_line_buffer);
+                int32 remaining;
+                *eol = '\0';
+
+                if (error_line_buffer[0] != '\0') {
+                    dispatch_log_error(error_line_buffer);
+                }
+
+                remaining = error_line_pos - (line_len + 1);
+                if (remaining > 0) {
+                    memmove64(error_line_buffer, eol + 1, remaining);
+                }
+                error_line_pos = remaining;
+            }
+
+            if (error_line_pos >= (int32)SIZEOF(error_line_buffer) - 1) {
+                error_line_buffer[error_line_pos] = '\0';
+                dispatch_log_error(error_line_buffer);
+                error_line_pos = 0;
+            }
+        }
+
+    more_pipe:
         if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
             break;
         }
