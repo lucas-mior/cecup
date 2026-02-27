@@ -1211,18 +1211,19 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
         switch (view_col_idx) {
         case 1: {
             char **strings;
+            int64 string_len;
+
             if (side == 0) {
                 strings = src_action_strings;
             } else {
                 strings = dst_action_strings;
             }
 
-            int64 str_len;
-            str_len = strlen64(strings[action]);
+            string_len = strlen64(strings[action]);
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = arena_push(cecup.ui_arena, str_len + 1);
+            tip_text = arena_push(cecup.ui_arena, string_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
-            memcpy64(tip_text, strings[action], str_len + 1);
+            memcpy64(tip_text, strings[action], string_len + 1);
             break;
         }
         case 2: {
