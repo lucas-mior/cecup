@@ -682,8 +682,11 @@ bulk_sync_worker(gpointer user_data) {
 
             switch (poll(pipes, 2, 100)) {
             case -1:
-                dispatch_log_error("Error in poll: %s.\n", strerror(errno));
-                goto out;
+                if (errno != EINTR) {
+                    dispatch_log_error("Error in poll: %s.\n", strerror(errno));
+                    fatal(EXIT_FAILURE);
+                }
+                continue;
             case 0:
                 continue;
             default:
@@ -827,7 +830,6 @@ bulk_sync_worker(gpointer user_data) {
         arena_pop(cecup.ui_arena, ud);
         g_mutex_unlock(&cecup.ui_arena_mutex);
     }
-out:
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     ready = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
