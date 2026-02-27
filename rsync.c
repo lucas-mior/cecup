@@ -707,13 +707,14 @@ bulk_sync_worker(gpointer user_data) {
                            || (eol = memchr64(output_line_buffer, '\r',
                                               output_line_pos))) {
                         int32 line_len = (int32)(eol - output_line_buffer);
+                        int32 remaining;
                         *eol = '\0';
 
                         if (output_line_buffer[0] != '\0') {
                             dispatch_log("%s.\n", output_line_buffer);
                         }
 
-                        int32 remaining = output_line_pos - (line_len + 1);
+                        remaining = output_line_pos - (line_len + 1);
                         if (remaining > 0) {
                             memmove64(output_line_buffer, eol + 1, remaining);
                         }
@@ -750,13 +751,14 @@ bulk_sync_worker(gpointer user_data) {
                            || (eol = memchr64(error_line_buffer, '\r',
                                               error_line_pos))) {
                         int32 line_len = (int32)(eol - error_line_buffer);
+                        int32 remaining;
                         *eol = '\0';
 
                         if (error_line_buffer[0] != '\0') {
                             dispatch_log_error(error_line_buffer);
                         }
 
-                        int32 remaining = error_line_pos - (line_len + 1);
+                        remaining = error_line_pos - (line_len + 1);
                         if (remaining > 0) {
                             memmove64(error_line_buffer, eol + 1, remaining);
                         }
@@ -1083,6 +1085,7 @@ sync_worker(gpointer user_data) {
                     int64 sz_path_val = 0;
                     int64 mt_path_val = 0;
                     int32 line_len = (int32)(eol - output_line_buffer);
+                    int32 remaining;
 
                     *eol = '\0';
 
@@ -1215,7 +1218,7 @@ sync_worker(gpointer user_data) {
                         }
                     }
 
-                    int32 remaining = output_line_pos - (line_len + 1);
+                    remaining = output_line_pos - (line_len + 1);
                     if (remaining > 0) {
                         memmove64(output_line_buffer, eol + 1, remaining);
                     }
@@ -1249,13 +1252,14 @@ sync_worker(gpointer user_data) {
                        || (eol = memchr64(error_line_buffer, '\r',
                                           error_line_pos))) {
                     int32 line_len = (int32)(eol - error_line_buffer);
+                    int32 remaining;
                     *eol = '\0';
 
                     if (error_line_buffer[0] != '\0') {
                         dispatch_log_error(error_line_buffer);
                     }
 
-                    int32 remaining = error_line_pos - (line_len + 1);
+                    remaining = error_line_pos - (line_len + 1);
                     if (remaining > 0) {
                         memmove64(error_line_buffer, eol + 1, remaining);
                     }
