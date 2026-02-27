@@ -1688,7 +1688,7 @@ main(int argc, char **argv) {
 
     for (int64 i = 0; i < LENGTH(paths); i += 1) {
         char *path = paths[i];
-        assert(!strcmp(basename2(path), bases[i]));
+        ASSERT_EQUAL(basename2(path), bases[i]);
     }
 
     if (OS_WINDOWS) {
