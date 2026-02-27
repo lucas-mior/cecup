@@ -852,8 +852,8 @@ sync_worker(gpointer user_data) {
     esc_dst = shell_escape(thread_data->dst_path);
 
     snprintf2(cmd, MAX_COMMAND_LENGTH,
-              "rsync " RSYNC_UNIVERSAL_ARGS
-              " --delete-excluded %s %s '%s/' '%s/'",
+              "rsync " RSYNC_UNIVERSAL_ARGS " %s %s %s '%s/' '%s/'",
+              thread_data->delete_excluded ? "--delete-excluded" : "",
               thread_data->is_preview ? "--dry-run" : "", exclude_arg, esc_src,
               esc_dst);
 

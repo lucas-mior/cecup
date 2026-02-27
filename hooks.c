@@ -733,6 +733,7 @@ static void
 on_reset_clicked(GtkWidget *b, gpointer data) {
     (void)b;
     (void)data;
+
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_new), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_hard), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_update), TRUE);
@@ -741,6 +742,9 @@ on_reset_clicked(GtkWidget *b, gpointer data) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.check_fs), FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.check_equal), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.delete_excluded),
+                                 FALSE);
+
     gtk_entry_set_text(GTK_ENTRY(cecup.diff_entry), "unidiff.bash");
     gtk_entry_set_text(GTK_ENTRY(cecup.term_entry), "xterm");
     save_config();
@@ -785,6 +789,8 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_equal));
     thread_data->check_different_fs
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
+    thread_data->delete_excluded = gtk_toggle_button_get_active(
+        GTK_TOGGLE_BUTTON(cecup.delete_excluded));
     strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
     strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
     g_thread_new("worker", sync_worker, thread_data);

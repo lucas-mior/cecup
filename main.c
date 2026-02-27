@@ -172,6 +172,9 @@ main(int32 argc, char *argv[]) {
                                 "Perform parallel directory scan"
                                 " to find identical files");
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.check_equal), TRUE);
+    cecup.delete_excluded = gtk_check_button_new_with_label("Delete ignored");
+    gtk_widget_set_tooltip_text(cecup.delete_excluded,
+                                "Delete ignored files on destination");
     cecup.diff_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.diff_entry,
                                 "Executable used for comparing files");
@@ -184,6 +187,8 @@ main(int32 argc, char *argv[]) {
                        BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_equal, FALSE, FALSE,
                        BUTTON_PADDING);
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_excluded, FALSE,
+                       FALSE, BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Diff Tool:"),
                        FALSE, FALSE, LABEL_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.diff_entry, FALSE, FALSE,
@@ -393,6 +398,8 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(cecup.check_fs, "toggled", G_CALLBACK(on_config_changed),
                      NULL);
     g_signal_connect(cecup.check_equal, "toggled",
+                     G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup.delete_excluded, "toggled",
                      G_CALLBACK(on_config_changed), NULL);
 
     gtk_widget_show_all(cecup.gtk_window);

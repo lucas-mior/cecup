@@ -136,8 +136,10 @@ static struct {
     GtkWidget *stop_button;
     GtkWidget *ignore_button;
     GtkWidget *fix_button;
+
     GtkWidget *check_fs;
     GtkWidget *check_equal;
+    GtkWidget *delete_excluded;
     
     GtkWidget *filter_new;
     GtkWidget *filter_hard;
@@ -180,6 +182,7 @@ typedef struct ThreadData {
     char dst_path[MAX_PATH_LENGTH];
     bool is_preview;
     bool check_different_fs;
+    bool delete_excluded;
     bool scan_equal;
 } ThreadData;
 
