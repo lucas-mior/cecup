@@ -481,11 +481,11 @@ fix_fs_worker(gpointer user_data) {
     UIUpdateData *ready;
 
     thread_data = (ThreadData *)user_data;
-    dispatch_log("Starting File System Fix on Source...\n");
+    dispatch_log("Checking for problematic names in the original folder...\n");
     fix_fs_recursive(thread_data->src_path, "");
-    dispatch_log("Starting File System Fix on Destination...\n");
+    dispatch_log("Checking for problematic names in the backup folder...\n");
     fix_fs_recursive(thread_data->dst_path, "");
-    dispatch_log("File System Fix finished.\n");
+    dispatch_log("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     ready = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
@@ -787,8 +787,8 @@ sync_worker(gpointer user_data) {
             && stat(thread_data->dst_path, &stat_dst) == 0) {
             if (stat_src.st_dev == stat_dst.st_dev) {
                 dispatch_log_error(
-                    "Aborting: Source and Destination are on the "
-                    "same filesystem.\n");
+                    "Safety stop: Original and Backup are on the same disk "
+                    "partition. Change settings to ignore this.\n");
                 goto finalize;
             }
         } else {
@@ -809,7 +809,7 @@ sync_worker(gpointer user_data) {
         clear->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, clear);
 
-        dispatch_log("Calculating file count for preview...\n");
+        dispatch_log("Counting files to prepare analysis...\n");
         total_files_preview = count_files_recursive(thread_data->src_path, "");
     }
 
@@ -964,7 +964,7 @@ sync_worker(gpointer user_data) {
                 dispatch_log_error("Error killing process group: %s.\n",
                                    strerror(errno));
             }
-            dispatch_log_error("rsync operation stopped by user.\n");
+            dispatch_log_error("Operation stopped by user.\n");
             break;
         }
 
@@ -1162,7 +1162,8 @@ sync_worker(gpointer user_data) {
         }
 
         if (!cecup.cancel_sync) {
-            dispatch_log("Sync analysis finished.\n");
+            dispatch_log(
+                "Analysis complete. Review the list and click Apply.\n");
         }
     }
 

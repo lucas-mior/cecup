@@ -896,7 +896,7 @@ on_ignore_clicked(GtkWidget *b, gpointer data) {
 
     (void)data;
     dialog = gtk_dialog_new_with_buttons(
-        _("Ignore List"), GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL,
+        _("Ignore Rules"), GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL,
         _("_Save"), GTK_RESPONSE_ACCEPT, _("_Close"), GTK_RESPONSE_CLOSE, NULL);
     (void)b;
     gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
@@ -993,7 +993,8 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
     (void)b;
     dialog = gtk_message_dialog_new(
         GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
-        GTK_BUTTONS_YES_NO, _("Sync %s -> %s?"), path_src, path_dst);
+        GTK_BUTTONS_YES_NO, _("Apply changes from %s to %s?"), path_src,
+        path_dst);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         ThreadData *thread_data;
 
@@ -1028,7 +1029,7 @@ on_browse_src(GtkWidget *b, gpointer data) {
     (void)data;
     (void)b;
     dialog = gtk_file_chooser_dialog_new(
-        _("Src"), GTK_WINDOW(cecup.gtk_window),
+        _("Select Original Folder"), GTK_WINDOW(cecup.gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, _("_Cancel"),
         GTK_RESPONSE_CANCEL, _("_Select"), GTK_RESPONSE_ACCEPT, NULL);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
@@ -1049,7 +1050,7 @@ on_browse_dst(GtkWidget *b, gpointer data) {
     (void)data;
     (void)b;
     dialog = gtk_file_chooser_dialog_new(
-        _("Dst"), GTK_WINDOW(cecup.gtk_window),
+        _("Select Backup Folder"), GTK_WINDOW(cecup.gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, _("_Cancel"),
         GTK_RESPONSE_CANCEL, _("_Select"), GTK_RESPONSE_ACCEPT, NULL);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
