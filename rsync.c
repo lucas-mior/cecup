@@ -1013,7 +1013,6 @@ sync_worker(gpointer user_data) {
 
     while (true) {
         struct pollfd pipes[2];
-        int32 poll_return;
         int64 r;
         char *eol;
 
@@ -1031,14 +1030,17 @@ sync_worker(gpointer user_data) {
             break;
         }
 
-        if ((poll_return = poll(pipes, 2, 100)) < 0) {
+        switch (poll(pipes, 2, 100)) {
+        case -1:
             if (errno != EINTR) {
                 dispatch_log_error("Error in poll: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             continue;
-        } else if (poll_return == 0) {
+        case 0:
             continue;
+        default:
+            break;
         }
 
         if (pipes[0].revents & (POLLHUP | POLLERR)) {
