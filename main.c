@@ -71,6 +71,8 @@ main(int32 argc, char *argv[]) {
     char destination_path_buffer[4096];
     int64 destination_path_length;
 
+    int64 rows_size;
+
     gtk_init(&argc, &argv);
 
     cecup.row_arena = arena_create(SIZEMB(64));
@@ -80,7 +82,7 @@ main(int32 argc, char *argv[]) {
     cecup.rows_count = 0;
     cecup.rows_capacity = 4096;
 
-    int64 rows_size = cecup.rows_capacity*SIZEOF(CecupRow *);
+    rows_size = cecup.rows_capacity*SIZEOF(CecupRow *);
     cecup.rows = arena_push(cecup.row_arena, rows_size);
     cecup.visible_rows = arena_push(cecup.row_arena, rows_size);
 
