@@ -1062,10 +1062,10 @@ sync_worker(gpointer user_data) {
 
         if (pipes[0].revents & (POLLHUP | POLLERR)) {
             pipes[0].fd = -1;
-            goto parse_error;
+            goto read_error_pipe;
         }
         if (!(pipes[0].revents & POLLIN)) {
-            goto parse_error;
+            goto read_error_pipe;
         }
 
         r = read64(pipe_output[0], output_line_buffer + output_line_pos,
@@ -1076,7 +1076,7 @@ sync_worker(gpointer user_data) {
                                    strerror(errno));
                 pipes[0].fd = -1;
             }
-            goto parse_error;
+            goto read_error_pipe;
         }
         output_line_pos += (int32)r;
 
@@ -1221,7 +1221,7 @@ sync_worker(gpointer user_data) {
             output_line_pos = 0;
         }
 
-    parse_error:
+    read_error_pipe:
         if (pipes[1].revents & (POLLHUP | POLLERR)) {
             pipes[1].fd = -1;
             goto more_pipe;
