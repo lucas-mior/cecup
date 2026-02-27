@@ -260,7 +260,8 @@ refresh_ui_list(void) {
             visible = show_new;
             count_new += 1;
             total_size_bytes += row->size_raw;
-        } else if (row->src_action == UI_ACTION_HARDLINK) {
+        } else if (row->src_action == UI_ACTION_HARDLINK
+                   || row->src_action == UI_ACTION_SYMLINK) {
             visible = show_hard;
             count_hard += 1;
             total_size_bytes += row->size_raw;
@@ -287,7 +288,7 @@ refresh_ui_list(void) {
 
     SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_new), button_label);
-    SNPRINTF(button_label, "%s %d", EMOJI_LINK, count_hard);
+    SNPRINTF(button_label, "%s/%s %d", EMOJI_LINK, EMOJI_SYMLINK, count_hard);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_hard), button_label);
     SNPRINTF(button_label, "%s %d", EMOJI_UPDATE, count_update);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_update), button_label);
@@ -1187,7 +1188,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             item = gtk_menu_item_new_with_label(_("Diff"));
             is_disabled
                 = (strcmp(file_path, "-") == 0 || strcmp(other_path, "-") == 0
-                   || action == UI_ACTION_HARDLINK);
+                   || action == UI_ACTION_HARDLINK
+                   || action == UI_ACTION_SYMLINK);
             if (is_disabled) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
@@ -1393,6 +1395,9 @@ update_ui_handler(gpointer user_data) {
         } else if (data->action == UI_ACTION_HARDLINK) {
             bg_src = "#E2D1F9";
             bg_dst = "#E2D1F9";
+        } else if (data->action == UI_ACTION_SYMLINK) {
+            bg_src = "#FFD1F9";
+            bg_dst = "#FFD1F9";
         } else if (data->action == UI_ACTION_EQUAL) {
             bg_src = "#F0F0F0";
             bg_dst = "#F0F0F0";
