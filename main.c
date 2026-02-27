@@ -23,6 +23,7 @@
 #include "util.c"
 #include "hooks.c"
 #include "config.c"
+#include "i18n.h"
 
 #define BUTTON_PADDING 5
 #define LABEL_PADDING 0
@@ -72,6 +73,14 @@ main(int32 argc, char *argv[]) {
     int64 destination_path_length;
 
     int64 rows_size;
+
+    if (setlocale(LC_ALL, "") == NULL) {
+        /* Failed to set locale, fallback to C */
+    }
+
+    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+    textdomain(GETTEXT_PACKAGE);
 
     gtk_init(&argc, &argv);
 
@@ -127,20 +136,22 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
     button_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    cecup.preview_button = gtk_button_new_with_label("🔎 Preview");
+    cecup.preview_button = gtk_button_new_with_label(_("🔎 Preview"));
     gtk_widget_set_tooltip_text(cecup.preview_button,
-                                "Run rsync --dry-run to identify changes");
-    cecup.ignore_button = gtk_button_new_with_label("Edit Ignore List");
+                                _("Run rsync --dry-run to identify changes"));
+    cecup.ignore_button = gtk_button_new_with_label(_("Edit Ignore List"));
     gtk_widget_set_tooltip_text(
-        cecup.ignore_button, "Edit file with patterns of filenames to ignore");
-    cecup.fix_button = gtk_button_new_with_label("🛠️ Fix FS");
+        cecup.ignore_button,
+        _("Edit file with patterns of filenames to ignore"));
+    cecup.fix_button = gtk_button_new_with_label(_("🛠️ Fix FS"));
     gtk_widget_set_tooltip_text(cecup.fix_button,
-                                "Find and rename buggy filenames");
-    cecup.stop_button = gtk_button_new_with_label("Stop");
-    gtk_widget_set_tooltip_text(cecup.stop_button, "Cancel current operation");
-    cecup.sync_button = gtk_button_new_with_label("⏩ Sync");
+                                _("Find and rename buggy filenames"));
+    cecup.stop_button = gtk_button_new_with_label(_("Stop"));
+    gtk_widget_set_tooltip_text(cecup.stop_button,
+                                _("Cancel current operation"));
+    cecup.sync_button = gtk_button_new_with_label(_("⏩ Sync"));
     gtk_widget_set_tooltip_text(cecup.sync_button,
-                                "Apply all selected changes");
+                                _("Apply all selected changes"));
     gtk_widget_set_sensitive(cecup.stop_button, FALSE);
 
     gtk_box_pack_start(GTK_BOX(button_hbox), cecup.ignore_button, FALSE, FALSE,
@@ -158,29 +169,31 @@ main(int32 argc, char *argv[]) {
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup.check_fs
-        = gtk_check_button_new_with_label("Require different filesystems");
+        = gtk_check_button_new_with_label(_("Require different filesystems"));
     gtk_widget_set_tooltip_text(cecup.check_fs,
-                                "Block sync if source and destination"
-                                " are on the same device (file system)");
-    cecup.check_equal = gtk_check_button_new_with_label("Scan for equal files");
+                                _("Block sync if source and destination"
+                                  " are on the same device (file system)"));
+    cecup.check_equal
+        = gtk_check_button_new_with_label(_("Scan for equal files"));
     gtk_widget_set_tooltip_text(cecup.check_equal,
-                                "Perform parallel directory scan"
-                                " to find identical files");
+                                _("Perform parallel directory scan"
+                                  " to find identical files"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.check_equal), TRUE);
-    cecup.delete_excluded = gtk_check_button_new_with_label("Delete ignored");
+    cecup.delete_excluded
+        = gtk_check_button_new_with_label(_("Delete ignored"));
     gtk_widget_set_tooltip_text(cecup.delete_excluded,
-                                "Delete ignored files on destination");
-    cecup.delete_after = gtk_check_button_new_with_label("Delete after");
+                                _("Delete ignored files on destination"));
+    cecup.delete_after = gtk_check_button_new_with_label(_("Delete after"));
     gtk_widget_set_tooltip_text(cecup.delete_after,
-                                "Deletion strategy: --delete-after");
+                                _("Deletion strategy: --delete-after"));
     cecup.diff_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.diff_entry,
-                                "Executable used for comparing files");
+                                _("Executable used for comparing files"));
     cecup.term_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(
-        cecup.term_entry, "Terminal emulator used to launch the diff tool");
-    reset_button = gtk_button_new_with_label("Reset");
-    gtk_widget_set_tooltip_text(reset_button, "Restore default settings");
+        cecup.term_entry, _("Terminal emulator used to launch the diff tool"));
+    reset_button = gtk_button_new_with_label(_("Reset"));
+    gtk_widget_set_tooltip_text(reset_button, _("Restore default settings"));
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_fs, FALSE, FALSE,
                        BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_equal, FALSE, FALSE,
@@ -189,13 +202,13 @@ main(int32 argc, char *argv[]) {
                        FALSE, BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_after, FALSE, FALSE,
                        BUTTON_PADDING);
-    gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Diff Tool:"),
+    gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new(_("Diff Tool:")),
                        FALSE, FALSE, LABEL_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.diff_entry, FALSE, FALSE,
                        LABEL_PADDING);
     gtk_entry_set_text(GTK_ENTRY(cecup.diff_entry), "unidiff.bash");
-    gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Terminal:"), FALSE,
-                       FALSE, LABEL_PADDING);
+    gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new(_("Terminal:")),
+                       FALSE, FALSE, LABEL_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.term_entry, FALSE, FALSE,
                        LABEL_PADDING);
     gtk_entry_set_text(GTK_ENTRY(cecup.term_entry), "xterm");
@@ -205,25 +218,26 @@ main(int32 argc, char *argv[]) {
     progress_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     cecup.progress_rsync = gtk_progress_bar_new();
     gtk_widget_set_tooltip_text(cecup.progress_rsync,
-                                "Rsync transfer progress");
+                                _("Rsync transfer progress"));
     cecup.progress_equal = gtk_progress_bar_new();
     gtk_widget_set_tooltip_text(cecup.progress_equal,
-                                "Equality scanner progress");
+                                _("Equality scanner progress"));
     cecup.progress_preview = gtk_progress_bar_new();
     gtk_widget_set_tooltip_text(cecup.progress_preview,
-                                "Preview analysis progress");
+                                _("Preview analysis progress"));
 
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_rsync),
                                    TRUE);
-    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_rsync), "rsync");
+    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_rsync),
+                              _("rsync"));
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_equal),
                                    TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_equal),
-                              "equal scanner");
+                              _("equal scanner"));
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_preview),
                                    TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_preview),
-                              "preview analysis");
+                              _("preview analysis"));
 
     gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_rsync, FALSE,
                        FALSE, 0);
@@ -253,24 +267,25 @@ main(int32 argc, char *argv[]) {
 
     l_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     cecup.src_entry = gtk_entry_new();
-    gtk_widget_set_tooltip_text(cecup.src_entry, "Base source directory path");
+    gtk_widget_set_tooltip_text(cecup.src_entry,
+                                _("Base source directory path"));
     gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), default_src);
-    browse_src = gtk_button_new_with_label("Browse");
+    browse_src = gtk_button_new_with_label(_("Browse"));
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), cecup.src_entry, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), browse_src, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(paths_hbox), l_entry_hbox, TRUE, TRUE, 0);
 
     invert_button = gtk_button_new_with_label("<--->");
     gtk_widget_set_tooltip_text(invert_button,
-                                "Swap Source and Destination paths");
+                                _("Swap Source and Destination paths"));
     gtk_box_pack_start(GTK_BOX(paths_hbox), invert_button, FALSE, FALSE, 0);
 
     r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     cecup.dst_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.dst_entry,
-                                "Base destination directory path");
+                                _("Base destination directory path"));
     gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), default_dst);
-    browse_dst = gtk_button_new_with_label("Browse");
+    browse_dst = gtk_button_new_with_label(_("Browse"));
     gtk_box_pack_start(GTK_BOX(r_entry_hbox), cecup.dst_entry, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(r_entry_hbox), browse_dst, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(paths_hbox), r_entry_hbox, TRUE, TRUE, 0);
@@ -329,12 +344,12 @@ main(int32 argc, char *argv[]) {
     cecup.filter_delete = gtk_toggle_button_new_with_label(EMOJI_DELETE);
     cecup.filter_ignore = gtk_toggle_button_new_with_label(EMOJI_IGNORE);
 
-    gtk_widget_set_tooltip_text(cecup.filter_new, "Show New Files");
-    gtk_widget_set_tooltip_text(cecup.filter_hard, "Show Hardlinks");
-    gtk_widget_set_tooltip_text(cecup.filter_update, "Show Updates");
-    gtk_widget_set_tooltip_text(cecup.filter_equal, "Show Identical");
-    gtk_widget_set_tooltip_text(cecup.filter_delete, "Show Deletions");
-    gtk_widget_set_tooltip_text(cecup.filter_ignore, "Show Ignored");
+    gtk_widget_set_tooltip_text(cecup.filter_new, _("Show New Files"));
+    gtk_widget_set_tooltip_text(cecup.filter_hard, _("Show Hardlinks"));
+    gtk_widget_set_tooltip_text(cecup.filter_update, _("Show Updates"));
+    gtk_widget_set_tooltip_text(cecup.filter_equal, _("Show Identical"));
+    gtk_widget_set_tooltip_text(cecup.filter_delete, _("Show Deletions"));
+    gtk_widget_set_tooltip_text(cecup.filter_ignore, _("Show Ignored"));
 
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_new, FALSE, FALSE, 2);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_hard, FALSE, FALSE,
@@ -349,7 +364,7 @@ main(int32 argc, char *argv[]) {
                        2);
     gtk_box_pack_start(GTK_BOX(main_vbox), filter_hbox, FALSE, FALSE, 0);
 
-    cecup.stats_label = gtk_label_new("✅ Ready");
+    cecup.stats_label = gtk_label_new(_("✅ Ready"));
     gtk_box_pack_start(GTK_BOX(main_vbox), cecup.stats_label, FALSE, FALSE, 5);
 
     read_config();
@@ -487,7 +502,7 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     g_object_set(renderer_text, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
 
     column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, "Action");
+    gtk_tree_view_column_set_title(column, _("Action"));
     gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
     gtk_tree_view_column_set_cell_data_func(
         column, renderer_text, cell_data_func, GINT_TO_POINTER(col_act), NULL);
@@ -497,7 +512,7 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, "File Path");
+    gtk_tree_view_column_set_title(column, _("File Path"));
     gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
     gtk_tree_view_column_set_cell_data_func(
         column, renderer_text, cell_data_func, GINT_TO_POINTER(col_path), NULL);
@@ -507,7 +522,7 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, "Size");
+    gtk_tree_view_column_set_title(column, _("Size"));
     gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
     gtk_tree_view_column_set_cell_data_func(
         column, renderer_text, cell_data_func, GINT_TO_POINTER(COL_SIZE_TEXT),

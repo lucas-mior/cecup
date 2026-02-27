@@ -24,6 +24,7 @@
 #include "util.c"
 #include "rsync.c"
 #include "config.c"
+#include "i18n.h"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_hooks 1
@@ -289,7 +290,7 @@ refresh_ui_list(void) {
     gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
 
     bytes_pretty(pretty_size, total_size_bytes);
-    SNPRINTF(stats_text, "Total Transfer Size: 📦 %s", pretty_size);
+    SNPRINTF(stats_text, _("Total Transfer Size: 📦 %s"), pretty_size);
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
 
     if (cecup.visible_count > 0) {
@@ -590,7 +591,7 @@ on_menu_delete(GtkWidget *m, gpointer data) {
         count = (int32)tasks->len;
         dialog = gtk_message_dialog_new(
             GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
-            GTK_BUTTONS_YES_NO, "Permanently delete %d item(s)?", count);
+            GTK_BUTTONS_YES_NO, _("Permanently delete %d item(s)?"), count);
 
         if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
             cecup.cancel_sync = 0;
@@ -895,8 +896,8 @@ on_ignore_clicked(GtkWidget *b, gpointer data) {
 
     (void)data;
     dialog = gtk_dialog_new_with_buttons(
-        "Ignore List", GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, "_Save",
-        GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
+        _("Ignore List"), GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL,
+        _("_Save"), GTK_RESPONSE_ACCEPT, _("_Close"), GTK_RESPONSE_CLOSE, NULL);
     (void)b;
     gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
     scroll = gtk_scrolled_window_new(NULL, NULL);
@@ -992,7 +993,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
     (void)b;
     dialog = gtk_message_dialog_new(
         GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
-        GTK_BUTTONS_YES_NO, "Sync %s -> %s?", path_src, path_dst);
+        GTK_BUTTONS_YES_NO, _("Sync %s -> %s?"), path_src, path_dst);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         ThreadData *thread_data;
 
@@ -1026,10 +1027,10 @@ on_browse_src(GtkWidget *b, gpointer data) {
 
     (void)data;
     (void)b;
-    dialog = gtk_file_chooser_dialog_new("Src", GTK_WINDOW(cecup.gtk_window),
-                                         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
-                                         "_Cancel", GTK_RESPONSE_CANCEL,
-                                         "_Select", GTK_RESPONSE_ACCEPT, NULL);
+    dialog = gtk_file_chooser_dialog_new(
+        _("Src"), GTK_WINDOW(cecup.gtk_window),
+        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, _("_Cancel"),
+        GTK_RESPONSE_CANCEL, _("_Select"), GTK_RESPONSE_ACCEPT, NULL);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         char *path;
 
@@ -1047,10 +1048,10 @@ on_browse_dst(GtkWidget *b, gpointer data) {
 
     (void)data;
     (void)b;
-    dialog = gtk_file_chooser_dialog_new("Dst", GTK_WINDOW(cecup.gtk_window),
-                                         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
-                                         "_Cancel", GTK_RESPONSE_CANCEL,
-                                         "_Select", GTK_RESPONSE_ACCEPT, NULL);
+    dialog = gtk_file_chooser_dialog_new(
+        _("Dst"), GTK_WINDOW(cecup.gtk_window),
+        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, _("_Cancel"),
+        GTK_RESPONSE_CANCEL, _("_Select"), GTK_RESPONSE_ACCEPT, NULL);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         char *path;
 
@@ -1130,16 +1131,16 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             ud->side = side;
 
             menu = gtk_menu_new();
-            item = gtk_menu_item_new_with_label("Open File");
+            item = gtk_menu_item_new_with_label(_("Open File"));
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_open), ud);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-            item = gtk_menu_item_new_with_label("Open Folder");
+            item = gtk_menu_item_new_with_label(_("Open Folder"));
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_open_dir),
                              ud);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-            item = gtk_menu_item_new_with_label("Copy Relative Path");
+            item = gtk_menu_item_new_with_label(_("Copy Relative Path"));
             if (strcmp(file_path, "-") == 0) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
@@ -1148,7 +1149,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             }
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-            item = gtk_menu_item_new_with_label("Copy Full Path");
+            item = gtk_menu_item_new_with_label(_("Copy Full Path"));
             if (strcmp(file_path, "-") == 0) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
@@ -1157,24 +1158,24 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             }
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-            item = gtk_menu_item_new_with_label("Apply");
+            item = gtk_menu_item_new_with_label(_("Apply"));
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply), ud);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-            item = gtk_menu_item_new_with_label("Ignore...");
+            item = gtk_menu_item_new_with_label(_("Ignore..."));
             sub = gtk_menu_new();
             gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
-            sub_ext = gtk_menu_item_new_with_label("Ext");
+            sub_ext = gtk_menu_item_new_with_label(_("Ext"));
             g_signal_connect(sub_ext, "activate",
                              G_CALLBACK(on_menu_ignore_ext), ud);
             gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
-            sub_dir = gtk_menu_item_new_with_label("Dir");
+            sub_dir = gtk_menu_item_new_with_label(_("Dir"));
             g_signal_connect(sub_dir, "activate",
                              G_CALLBACK(on_menu_ignore_dir), ud);
             gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-            item = gtk_menu_item_new_with_label("Diff");
+            item = gtk_menu_item_new_with_label(_("Diff"));
             is_disabled
                 = (strcmp(file_path, "-") == 0 || strcmp(other_path, "-") == 0
                    || action == UI_ACTION_HARDLINK);
@@ -1186,7 +1187,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             }
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-            item = gtk_menu_item_new_with_label("Delete");
+            item = gtk_menu_item_new_with_label(_("Delete"));
             if (strcmp(file_path, "-") == 0) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
