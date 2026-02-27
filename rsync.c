@@ -1240,7 +1240,6 @@ sync_worker(gpointer user_data) {
             }
             pipes[1].fd = -1;
         } else {
-            char *eol;
             error_line_pos += (int32)r;
 
             while (
