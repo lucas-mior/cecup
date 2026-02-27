@@ -117,6 +117,7 @@ enum {
     COL_SRC_COLOR,
     COL_DST_COLOR,
     COL_REASON,
+    COL_ROW_PTR, // New column to store the CecupRow pointer safely
     NUM_COLS
 };
 

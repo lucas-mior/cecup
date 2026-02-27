@@ -220,13 +220,6 @@ cecup_row_compare(const void *a, const void *b) {
 
 static void
 refresh_ui_list(void) {
-    gboolean show_new;
-    gboolean show_hard;
-    gboolean show_update;
-    gboolean show_equal;
-    gboolean show_delete;
-    gboolean show_ignore;
-    int32 current_store_count;
     int32 count_new = 0;
     int32 count_hard = 0;
     int32 count_update = 0;
@@ -234,27 +227,29 @@ refresh_ui_list(void) {
     int32 count_delete = 0;
     int32 count_ignore = 0;
     int64 total_size_bytes = 0;
+    int32 current_store_count;
+
     char pretty_size[32];
     char stats_text[128];
     char button_label[64];
 
-    show_new
+    bool show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
-    show_hard
+    bool show_hard
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
-    show_update
+    bool show_update
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
-    show_equal
+    bool show_equal
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_equal));
-    show_delete
+    bool show_delete
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
-    show_ignore
+    bool show_ignore
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
     cecup.visible_count = 0;
     for (int32 i = 0; i < cecup.rows_count; i += 1) {
         CecupRow *row = cecup.rows[i];
-        gboolean visible = FALSE;
+        bool visible = false;
 
         if (row->src_action == UI_ACTION_NEW) {
             visible = show_new;
@@ -325,6 +320,16 @@ refresh_ui_list(void) {
                                               &iter)) {
                 gtk_list_store_remove(cecup.store, &iter);
             }
+        }
+    }
+
+    for (int32 i = 0; i < cecup.visible_count; i += 1) {
+        GtkTreeIter iter;
+        CecupRow *row = cecup.visible_rows[i];
+        if (gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(cecup.store), &iter,
+                                          NULL, i)) {
+            gtk_list_store_set(cecup.store, &iter, COL_SELECTED, row->selected,
+                               COL_ROW_PTR, row, -1);
         }
     }
 
@@ -876,22 +881,22 @@ on_sort_changed(GtkTreeSortable *sortable, gpointer data) {
 
 static void
 on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
-    GtkTreePath *path;
-    int32 row_idx;
+    GtkTreeIter iter;
+    CecupRow *row;
 
     (void)cell;
     (void)data;
-    path = gtk_tree_path_new_from_string(path_str);
-    row_idx = gtk_tree_path_get_indices(path)[0];
 
-    if (row_idx >= 0 && row_idx < cecup.visible_count) {
-        cecup.visible_rows[row_idx]->selected
-            = !cecup.visible_rows[row_idx]->selected;
-        gtk_widget_queue_draw(cecup.l_tree);
-        gtk_widget_queue_draw(cecup.r_tree);
+    if (gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(cecup.store), &iter,
+                                            path_str)) {
+        gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
+                           &row, -1);
+        if (row) {
+            row->selected = !row->selected;
+            gtk_widget_queue_draw(cecup.l_tree);
+            gtk_widget_queue_draw(cecup.r_tree);
+        }
     }
-
-    gtk_tree_path_free(path);
     return;
 }
 

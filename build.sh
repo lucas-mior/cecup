@@ -21,8 +21,6 @@ if ! grep -q "$target" ./targets; then
     exit 1
 fi
 
-cross="$2"
-
 printf "\n${script} ${RED}${1} ${2}$RES\n"
 PREFIX="${PREFIX:-/usr/local}"
 DESTDIR="${DESTDIR:-/}"
@@ -32,7 +30,6 @@ exe="bin/$program"
 mkdir -p "$(dirname "$exe")"
 
 CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
-# Localization Defines
 CPPFLAGS="$CPPFLAGS -DGETTEXT_PACKAGE=\"$program\""
 CPPFLAGS="$CPPFLAGS -DLOCALEDIR=\"$PREFIX/share/locale\""
 
@@ -219,12 +216,14 @@ case "$target" in
 "uninstall")
     rm -vf  "${DESTDIR}${PREFIX}/bin/${program}"
     rm -vf  "${DESTDIR}${PREFIX}/man/man1/${program}.1"
-    rm -vf  "${DESTDIR}${PREFIX}/share/locale/$lang/LC_MESSAGES/$program.mo"
+    for lang in $LANGS; do
+        rm -vf "${DESTDIR}${PREFIX}/share/locale/$lang/LC_MESSAGES/$program.mo"
+    done
     rm -rvf "$DESTDIR/etc/$program/"
     rm -vf  "$DESTDIR/usr/share/applications/$program.desktop"
+    exit
     ;;
 "assembly")
-    trace_on
     $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "$main"
     exit
     ;;
@@ -258,25 +257,11 @@ case "$target" in
         if $cmdline; then
             /tmp/$src.exe || gdb /tmp/$src.exe -ex run
         else
-            trace_off
             exit 1
         fi
         trace_off
-        if [ -n "$2" ] && [ $src = "$2" ]; then
-            exit
-        fi
     done
     exit
-    ;;
-"test_all")
-    ;;
-*)
-    trace_on
-    compile_locales
-    ctags --kinds-C=+l+d ./*.h ./*.c 2> /dev/null || true
-    vtags.sed tags | sort | uniq > .tags.vim       2> /dev/null || true
-    $CC $CPPFLAGS $CFLAGS $LDFLAGS -o ${exe} "$main"
-    trace_off
     ;;
 esac
 

@@ -438,10 +438,6 @@ fix_fs_recursive(char *base_path, char *relative_path) {
             continue;
         }
 
-        if (S_ISDIR(st.st_mode)) {
-            fix_fs_recursive(base_path, sub_rel);
-        }
-
         for (int64 k = 0; k < strlen64(d_name); k += 1) {
             if (j >= 250) {
                 break;
@@ -507,12 +503,27 @@ fix_fs_recursive(char *base_path, char *relative_path) {
                 SNPRINTF(new_full, "%s/%s", base_path, new_name);
             }
 
-            if (rename(old_full, new_full) == 0) {
+            if (access(new_full, F_OK) == 0) {
+                dispatch_log_error("Skip rename: %s already exists.\n",
+                                   new_name);
+            } else if (rename(old_full, new_full) == 0) {
                 dispatch_log("Fixed: %s -> %s\n", d_name, new_name);
+                // Update the current name for recursion if it's a directory
+                if (S_ISDIR(st.st_mode)) {
+                    if (relative_path[0] != '\0') {
+                        SNPRINTF(sub_rel, "%s/%s", relative_path, new_name);
+                    } else {
+                        SNPRINTF(sub_rel, "%s", new_name);
+                    }
+                }
             } else {
                 dispatch_log_error("Failed to rename %s: %s\n", d_name,
                                    strerror(errno));
             }
+        }
+
+        if (S_ISDIR(st.st_mode)) {
+            fix_fs_recursive(base_path, sub_rel);
         }
         free(d_name);
     }
