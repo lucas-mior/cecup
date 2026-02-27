@@ -198,7 +198,7 @@ case "$target" in
     install -Dm644 ${program}.1 ${DESTDIR}${PREFIX}/man/man1/${program}.1
     
     for lang in $LANGS; do
-        if [ -f "po/$lang/$program.mo" ]; then
+        if [ -f "po/$lang/LC_MESSAGES/$program.mo" ]; then
             install -Dm644 "po/$lang/LC_MESSAGES/$program.mo" \
                 "${DESTDIR}${PREFIX}/share/locale/$lang/LC_MESSAGES/$program.mo"
         fi
