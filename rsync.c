@@ -138,6 +138,22 @@ dispatch_log_error(char *format, ...) {
 static void
 dispatch_progress(enum DataType type, double fraction) {
     UIUpdateData *data;
+    static double last_fractions[4] = {0, 0, 0, 0};
+    int32 index = 0;
+
+    if (type == DATA_TYPE_PROGRESS_RSYNC) {
+        index = 1;
+    } else if (type == DATA_TYPE_PROGRESS_EQUAL) {
+        index = 2;
+    } else if (type == DATA_TYPE_PROGRESS_PREVIEW) {
+        index = 3;
+    }
+
+    if (fraction < 1.0 && (fraction - last_fractions[index] < 0.001)
+        && (fraction - last_fractions[index] > -0.001)) {
+        return;
+    }
+    last_fractions[index] = fraction;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
@@ -357,6 +373,9 @@ fix_fs_recursive(char *base_path, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
     char full_path[MAX_PATH_LENGTH];
+    char **name_list;
+    int32 count = 0;
+    int32 capacity = 1024;
 
     if (cecup.cancel_sync) {
         return;
@@ -372,8 +391,29 @@ fix_fs_recursive(char *base_path, char *relative_path) {
         return;
     }
 
+    name_list = xmalloc(capacity*SIZEOF(char *));
+
     while ((entry = readdir(dir))) {
         char *d_name = entry->d_name;
+
+        if (d_name[0] == '.'
+            && (d_name[1] == '\0' || (d_name[1] == '.' && d_name[2] == '\0'))) {
+            continue;
+        }
+
+        if (count >= capacity) {
+            capacity *= 2;
+            name_list = xrealloc(name_list, capacity*SIZEOF(char *));
+        }
+
+        name_list[count] = xstrdup(d_name);
+        count += 1;
+    }
+
+    closedir(dir);
+
+    for (int32 i = 0; i < count; i += 1) {
+        char *d_name = name_list[i];
         char sub_rel[MAX_PATH_LENGTH];
         char old_full[MAX_PATH_LENGTH];
         char new_full[MAX_PATH_LENGTH];
@@ -381,11 +421,6 @@ fix_fs_recursive(char *base_path, char *relative_path) {
         struct stat st;
         int32 changed = 0;
         int64 j = 0;
-
-        if (d_name[0] == '.'
-            && (d_name[1] == '\0' || (d_name[1] == '.' && d_name[2] == '\0'))) {
-            continue;
-        }
 
         if (relative_path[0] != '\0') {
             SNPRINTF(sub_rel, "%s/%s", relative_path, d_name);
@@ -395,6 +430,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
 
         SNPRINTF(old_full, "%s/%s", base_path, sub_rel);
         if (lstat(old_full, &st) != 0) {
+            free(d_name);
             continue;
         }
 
@@ -402,53 +438,53 @@ fix_fs_recursive(char *base_path, char *relative_path) {
             fix_fs_recursive(base_path, sub_rel);
         }
 
-        for (int64 i = 0; i < strlen64(d_name); i += 1) {
+        for (int64 k = 0; k < strlen64(d_name); k += 1) {
             if (j >= 250) {
                 break;
             }
-            if (d_name[i] == '=' && d_name[i + 1] == '>') {
+            if (d_name[k] == '=' && d_name[k + 1] == '>') {
                 memcpy64(new_name + j, "_equal_arrow_in_filename_", 25);
                 j += 25;
-                i += 1;
+                k += 1;
                 changed = 1;
-            } else if (d_name[i] == '\\') {
+            } else if (d_name[k] == '\\') {
                 memcpy64(new_name + j, "_backslash_in_filename_", 23);
                 j += 23;
                 changed = 1;
-            } else if (d_name[i] == '\n') {
+            } else if (d_name[k] == '\n') {
                 memcpy64(new_name + j, "_newline_in_filename_", 21);
                 j += 21;
                 changed = 1;
-            } else if (d_name[i] == '<') {
+            } else if (d_name[k] == '<') {
                 memcpy64(new_name + j, "_less_than_in_filename_", 23);
                 j += 23;
                 changed = 1;
-            } else if (d_name[i] == '>') {
+            } else if (d_name[k] == '>') {
                 memcpy64(new_name + j, "_greater_than_in_filename_", 26);
                 j += 26;
                 changed = 1;
-            } else if (d_name[i] == ':') {
+            } else if (d_name[k] == ':') {
                 memcpy64(new_name + j, "_colon_in_filename_", 19);
                 j += 19;
                 changed = 1;
-            } else if (d_name[i] == '\"') {
+            } else if (d_name[k] == '\"') {
                 memcpy64(new_name + j, "_double_quote_in_filename_", 26);
                 j += 26;
                 changed = 1;
-            } else if (d_name[i] == '|') {
+            } else if (d_name[k] == '|') {
                 memcpy64(new_name + j, "_pipe_in_filename_", 18);
                 j += 18;
                 changed = 1;
-            } else if (d_name[i] == '?') {
+            } else if (d_name[k] == '?') {
                 memcpy64(new_name + j, "_question_mark_in_filename_", 27);
                 j += 27;
                 changed = 1;
-            } else if (d_name[i] == '*') {
+            } else if (d_name[k] == '*') {
                 memcpy64(new_name + j, "_asterisk_in_filename_", 22);
                 j += 22;
                 changed = 1;
             } else {
-                new_name[j] = d_name[i];
+                new_name[j] = d_name[k];
                 j += 1;
             }
         }
@@ -469,9 +505,9 @@ fix_fs_recursive(char *base_path, char *relative_path) {
                                    strerror(errno));
             }
         }
+        free(d_name);
     }
-
-    closedir(dir);
+    free(name_list);
     return;
 }
 
@@ -1083,7 +1119,7 @@ sync_worker(gpointer user_data) {
 
                     cecup_action = UI_ACTION_UPDATE;
                     link_target = NULL;
-                    if (strncmp(output_buffer, "hf", 2) == 0) {
+                    if (output_buffer[1] == 'f' && output_buffer[2] == 'h') {
                         char *sep;
                         cecup_action = UI_ACTION_HARDLINK;
 
