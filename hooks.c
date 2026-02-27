@@ -1308,8 +1308,8 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             break;
         }
         case 3: {
-            tip_text_length = SNPRINTF(tip_text_buffer, _("%s: %ld bytes"),
-                                       file_path, row->size_raw);
+            tip_text_length = SNPRINTF(tip_text_buffer, "%s: %lld bytes",
+                                       file_path, (llong)row->size_raw);
             g_mutex_lock(&cecup.ui_arena_mutex);
             tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);

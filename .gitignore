@@ -13,5 +13,6 @@ valgrind.out.*
 *.SRCINFO
 *.git/
 *.po
+*.po~
 *.mo
 *.pot
