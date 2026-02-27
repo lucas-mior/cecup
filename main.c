@@ -112,15 +112,12 @@ main(int32 argc, char *argv[]) {
     SNPRINTF(cecup.ignore_path, "%s/ignore.conf", config_base);
     SNPRINTF(cecup.config_path, "%s/cecup.conf", config_base);
 
-    // clang-format off
     cecup.gtk_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(cecup.gtk_window), "cecup");
-    gtk_window_set_wmclass(GTK_WINDOW(cecup.gtk_window),
-                           "cecup", "Cecup");
+    gtk_window_set_wmclass(GTK_WINDOW(cecup.gtk_window), "cecup", "Cecup");
     gtk_window_set_default_size(GTK_WINDOW(cecup.gtk_window), 1100, 800);
-    g_signal_connect(cecup.gtk_window,
-                     "destroy", G_CALLBACK(gtk_main_quit), NULL);
-    // clang-format on
+    g_signal_connect(cecup.gtk_window, "destroy", G_CALLBACK(gtk_main_quit),
+                     NULL);
 
     main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_container_add(GTK_CONTAINER(cecup.gtk_window), main_vbox);
@@ -146,20 +143,18 @@ main(int32 argc, char *argv[]) {
                                 "Apply all selected changes");
     gtk_widget_set_sensitive(cecup.stop_button, FALSE);
 
-    // clang-format off
-    gtk_box_pack_start(GTK_BOX(button_hbox), cecup.ignore_button,
-                       FALSE, FALSE, BUTTON_PADDING);
-    gtk_box_pack_start(GTK_BOX(button_hbox), cecup.fix_button,
-                       FALSE, FALSE, BUTTON_PADDING);
-    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.sync_button,
-                     FALSE, FALSE, BUTTON_PADDING);
-    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.stop_button,
-                     FALSE, FALSE, BUTTON_PADDING);
-    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.preview_button,
-                     FALSE, FALSE, BUTTON_PADDING);
-    gtk_box_pack_start(GTK_BOX(header_vbox), button_hbox,
-                       FALSE, FALSE, BUTTON_PADDING);
-    // clang-format on
+    gtk_box_pack_start(GTK_BOX(button_hbox), cecup.ignore_button, FALSE, FALSE,
+                       BUTTON_PADDING);
+    gtk_box_pack_start(GTK_BOX(button_hbox), cecup.fix_button, FALSE, FALSE,
+                       BUTTON_PADDING);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.sync_button, FALSE, FALSE,
+                     BUTTON_PADDING);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.stop_button, FALSE, FALSE,
+                     BUTTON_PADDING);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.preview_button, FALSE, FALSE,
+                     BUTTON_PADDING);
+    gtk_box_pack_start(GTK_BOX(header_vbox), button_hbox, FALSE, FALSE,
+                       BUTTON_PADDING);
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup.check_fs
@@ -175,6 +170,9 @@ main(int32 argc, char *argv[]) {
     cecup.delete_excluded = gtk_check_button_new_with_label("Delete ignored");
     gtk_widget_set_tooltip_text(cecup.delete_excluded,
                                 "Delete ignored files on destination");
+    cecup.delete_after = gtk_check_button_new_with_label("Delete after");
+    gtk_widget_set_tooltip_text(cecup.delete_after,
+                                "Deletion strategy: --delete-after");
     cecup.diff_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.diff_entry,
                                 "Executable used for comparing files");
@@ -189,6 +187,8 @@ main(int32 argc, char *argv[]) {
                        BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_excluded, FALSE,
                        FALSE, BUTTON_PADDING);
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_after, FALSE, FALSE,
+                       BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new("Diff Tool:"),
                        FALSE, FALSE, LABEL_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.diff_entry, FALSE, FALSE,
@@ -336,21 +336,18 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(cecup.filter_delete, "Show Deletions");
     gtk_widget_set_tooltip_text(cecup.filter_ignore, "Show Ignored");
 
-    // clang-format off
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_new,
-                       FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_hard,
-                       FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_update,
-                       FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_equal,
-                       FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_delete,
-                       FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_ignore,
-                       FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_new, FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_hard, FALSE, FALSE,
+                       2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_update, FALSE, FALSE,
+                       2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_equal, FALSE, FALSE,
+                       2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_delete, FALSE, FALSE,
+                       2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_ignore, FALSE, FALSE,
+                       2);
     gtk_box_pack_start(GTK_BOX(main_vbox), filter_hbox, FALSE, FALSE, 0);
-    // clang-format on
 
     cecup.stats_label = gtk_label_new("✅ Ready");
     gtk_box_pack_start(GTK_BOX(main_vbox), cecup.stats_label, FALSE, FALSE, 5);
@@ -401,6 +398,8 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_config_changed), NULL);
     g_signal_connect(cecup.delete_excluded, "toggled",
                      G_CALLBACK(on_delete_excluded_toggled), NULL);
+    g_signal_connect(cecup.delete_after, "toggled",
+                     G_CALLBACK(on_delete_after_toggled), NULL);
 
     gtk_widget_show_all(cecup.gtk_window);
     gtk_main();

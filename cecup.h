@@ -140,6 +140,7 @@ static struct {
     GtkWidget *check_fs;
     GtkWidget *check_equal;
     GtkWidget *delete_excluded;
+    GtkWidget *delete_after;
     
     GtkWidget *filter_new;
     GtkWidget *filter_hard;
@@ -183,6 +184,7 @@ typedef struct ThreadData {
     bool is_preview;
     bool check_different_fs;
     bool delete_excluded;
+    bool delete_after;
     bool scan_equal;
 } ThreadData;
 

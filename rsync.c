@@ -852,8 +852,9 @@ sync_worker(gpointer user_data) {
     esc_dst = shell_escape(thread_data->dst_path);
 
     snprintf2(cmd, MAX_COMMAND_LENGTH,
-              "rsync " RSYNC_UNIVERSAL_ARGS " %s %s %s '%s/' '%s/'",
+              "rsync " RSYNC_UNIVERSAL_ARGS " %s %s %s %s '%s/' '%s/'",
               thread_data->delete_excluded ? "--delete-excluded" : "",
+              thread_data->delete_after ? "--delete-after" : "",
               thread_data->is_preview ? "--dry-run" : "", exclude_arg, esc_src,
               esc_dst);
 
@@ -1097,10 +1098,8 @@ sync_worker(gpointer user_data) {
                         cecup_action = UI_ACTION_NEW;
                     }
 
-                    // clang-format off
-                    SNPRINTF(full_src_path_val, "%s/%s",
-                             thread_data->src_path, relative_path_entry);
-                    // clang-format on
+                    SNPRINTF(full_src_path_val, "%s/%s", thread_data->src_path,
+                             relative_path_entry);
 
                     if (lstat(full_src_path_val, &st_path_val) < 0) {
                         dispatch_log_error("Error lstat %s: %s.\n",
