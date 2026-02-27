@@ -1034,6 +1034,7 @@ sync_worker(gpointer user_data) {
         struct pollfd pipes[2];
         int32 poll_return;
         int64 r;
+        char *eol;
 
         pipes[0].fd = pipe_output[0];
         pipes[0].events = POLLIN;
@@ -1077,7 +1078,6 @@ sync_worker(gpointer user_data) {
             }
             goto parse_error;
         }
-        char *eol;
         output_line_pos += (int32)r;
 
         while ((eol = memchr64(output_line_buffer, '\n', output_line_pos))
