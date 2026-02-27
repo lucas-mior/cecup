@@ -983,6 +983,10 @@ sync_worker(gpointer user_data) {
             } else {
                 for (int64 k = 0; k < r; k += 1) {
                     char *percent_pos;
+                    char *space_pos;
+                    char type_char;
+                    char *relative_path_entry;
+                    enum CecupAction cecup_action;
 
                     if (buffer[k] != '\n' && buffer[k] != '\r'
                         && output_position < (int32)SIZEOF(output_buffer) - 1) {
@@ -1053,28 +1057,27 @@ sync_worker(gpointer user_data) {
                         continue;
                     }
 
-                    char *space_pos;
                     if (!(space_pos = strchr(output_buffer, ' '))) {
                         continue;
                     }
 
-                    char type_char = output_buffer[0];
+                    type_char = output_buffer[0];
                     if (type_char != '>' && type_char != '.' && type_char != 'h'
                         && type_char != 'c') {
                         continue;
                     }
 
-                    char *relative_path_entry = space_pos + 1;
+                    relative_path_entry = space_pos + 1;
                     while (isspace(*relative_path_entry)) {
                         relative_path_entry += 1;
                     }
 
-                    enum CecupAction action_val = UI_ACTION_UPDATE;
+                    cecup_action = UI_ACTION_UPDATE;
                     char *link_target = NULL;
                     if (strncmp(output_buffer, "hf", 2) == 0) {
                         char *sep = strstr(relative_path_entry,
                                            RSYNC_HARDLINK_NOTATION);
-                        action_val = UI_ACTION_HARDLINK;
+                        cecup_action = UI_ACTION_HARDLINK;
                         if (sep) {
                             *sep = '\0';
                             link_target
@@ -1082,7 +1085,7 @@ sync_worker(gpointer user_data) {
                         }
                     } else if (strncmp(output_buffer, "cd", 2) == 0
                                || strncmp(output_buffer, ">f+++++", 7) == 0) {
-                        action_val = UI_ACTION_NEW;
+                        cecup_action = UI_ACTION_NEW;
                     }
 
                     char full_src_path_val[MAX_PATH_LENGTH];
@@ -1098,9 +1101,9 @@ sync_worker(gpointer user_data) {
                         sz_path_val = st_path_val.st_size;
                     }
 
-                    dispatch_tree(0, action_val, relative_path_entry,
+                    dispatch_tree(0, cecup_action, relative_path_entry,
                                   link_target, sz_path_val,
-                                  (enum CecupReason)action_val);
+                                  (enum CecupReason)cecup_action);
 
                     processed_files_preview += 1;
                     if (total_files_preview > 0) {
