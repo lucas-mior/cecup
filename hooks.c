@@ -20,11 +20,11 @@
 
 #include <gtk/gtk.h>
 #include <stdlib.h>
+#include "i18n.h"
 #include "cecup.h"
 #include "util.c"
 #include "rsync.c"
 #include "config.c"
-#include "i18n.h"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_hooks 1
@@ -1271,6 +1271,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
         switch (view_col_idx) {
         case 1: {
             char **strings;
+            char *translated_action;
             int64 string_len;
 
             if (side == 0) {
@@ -1279,21 +1280,26 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 strings = dst_action_strings;
             }
 
-            string_len = strlen64(strings[action]);
+            translated_action = _(strings[action]);
+            string_len = strlen64(translated_action);
+
             g_mutex_lock(&cecup.ui_arena_mutex);
             tip_text = xarena_push(cecup.ui_arena, string_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
-            memcpy64(tip_text, strings[action], string_len + 1);
+            memcpy64(tip_text, translated_action, string_len + 1);
             break;
         }
         case 2: {
+            char *translated_reason;
+
+            translated_reason = _(reason_strings[row->reason]);
             if (row->link_target) {
                 tip_text_length
                     = SNPRINTF(tip_text_buffer, "%s -> %s: %s", file_path,
-                               row->link_target, reason_strings[row->reason]);
+                               row->link_target, translated_reason);
             } else {
                 tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", file_path,
-                                           reason_strings[row->reason]);
+                                           translated_reason);
             }
             g_mutex_lock(&cecup.ui_arena_mutex);
             tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
@@ -1302,7 +1308,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             break;
         }
         case 3: {
-            tip_text_length = SNPRINTF(tip_text_buffer, "%s: %ld bytes",
+            tip_text_length = SNPRINTF(tip_text_buffer, _("%s: %ld bytes"),
                                        file_path, row->size_raw);
             g_mutex_lock(&cecup.ui_arena_mutex);
             tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);

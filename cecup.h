@@ -67,34 +67,34 @@ static char *action_emojis[] = {
 
 static char *src_action_strings[] = {
     [UI_ACTION_NONE]     = "",
-    [UI_ACTION_NEW]      = "Copy to destination",
-    [UI_ACTION_HARDLINK] = "Hardlink to destination",
-    [UI_ACTION_UPDATE]   = "Update destination",
-    [UI_ACTION_EQUAL]    = "Equal",
-    [UI_ACTION_DELETED]  = "Missing in source",
+    [UI_ACTION_NEW]      = N_("Copy to destination"),
+    [UI_ACTION_HARDLINK] = N_("Hardlink to destination"),
+    [UI_ACTION_UPDATE]   = N_("Update destination"),
+    [UI_ACTION_EQUAL]    = N_("Equal"),
+    [UI_ACTION_DELETED]  = N_("Missing in source"),
     [UI_ACTION_DELETE]   = "",
-    [UI_ACTION_IGNORE]   = "Ignore"
+    [UI_ACTION_IGNORE]   = N_("Ignore")
 };
 
 static char *dst_action_strings[] = {
     [UI_ACTION_NONE]     = "",
-    [UI_ACTION_NEW]      = "Copy from source",
-    [UI_ACTION_HARDLINK] = "Hardlink from source",
-    [UI_ACTION_UPDATE]   = "Update from source",
-    [UI_ACTION_EQUAL]    = "Equal",
+    [UI_ACTION_NEW]      = N_("Copy from source"),
+    [UI_ACTION_HARDLINK] = N_("Hardlink from source"),
+    [UI_ACTION_UPDATE]   = N_("Update from source"),
+    [UI_ACTION_EQUAL]    = N_("Equal"),
     [UI_ACTION_DELETED]  = "",
-    [UI_ACTION_DELETE]   = "Delete from destination",
-    [UI_ACTION_IGNORE]   = "Ignore"
+    [UI_ACTION_DELETE]   = N_("Delete from destination"),
+    [UI_ACTION_IGNORE]   = N_("Ignore")
 };
 
 static char *reason_strings[] = {
     [UI_REASON_NONE]     = "",
-    [UI_REASON_EQUAL]    = "Files have the same size and modification time",
-    [UI_REASON_IGNORED]  = "Matched ignore pattern",
-    [UI_REASON_MISSING]  = "Missing in source directory",
-    [UI_REASON_NEW]      = "New file in source directory",
-    [UI_REASON_HARDLINK] = "Hardlink in source directory",
-    [UI_REASON_UPDATE]   = "Modification time is newer in the source directory",
+    [UI_REASON_EQUAL]    = N_("Files have the same size and modification time"),
+    [UI_REASON_IGNORED]  = N_("Matched ignore pattern"),
+    [UI_REASON_MISSING]  = N_("Missing in source directory"),
+    [UI_REASON_NEW]      = N_("New file in source directory"),
+    [UI_REASON_HARDLINK] = N_("Hardlink in source directory"),
+    [UI_REASON_UPDATE]   = N_("Modification time is newer in the source directory"),
 };
 
 enum {

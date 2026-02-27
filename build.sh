@@ -72,8 +72,8 @@ compile_locales() {
     fi
     for lang in $LANGS; do
         if [ -f "po/$lang.po" ]; then
-            mkdir -p "po/$lang"
-            msgfmt "po/$lang.po" -o "po/$lang/$program.mo"
+            mkdir -p "po/$lang/LC_MESSAGES"
+            msgfmt "po/$lang.po" -o "po/$lang/LC_MESSAGES/$program.mo"
         fi
     done
 }
