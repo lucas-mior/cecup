@@ -1050,6 +1050,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             int32 is_disabled;
             char *file_path;
             char *other_path;
+            int64 path_len;
             enum CecupAction action;
 
             row_idx = gtk_tree_path_get_indices(path)[0];
@@ -1068,7 +1069,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             g_mutex_lock(&cecup.ui_arena_mutex);
             ud = arena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
             memset64(ud, 0, SIZEOF(UIUpdateData));
-            int64 path_len;
+
             path_len = strlen64(file_path) + 1;
             ud->filepath = arena_push(cecup.ui_arena, path_len);
             memcpy64(ud->filepath, file_path, path_len);
