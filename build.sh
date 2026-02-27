@@ -195,7 +195,7 @@ case "$target" in
         $0 build
     fi
     install -Dm755 bin/${program}   ${DESTDIR}${PREFIX}/bin/${program}
-    install -Dm644 ${program}.1 ${DESTDIR}${PREFIX}/man/man1/${program}.1
+    install -Dm644 ${program}.1     ${DESTDIR}${PREFIX}/man/man1/${program}.1
     
     for lang in $LANGS; do
         if [ -f "po/$lang/LC_MESSAGES/$program.mo" ]; then
