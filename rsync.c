@@ -39,6 +39,7 @@
 #endif
 
 #define RSYNC_HARDLINK_NOTATION " => "
+#define RSYNC_SYMLINK_NOTATION " -> "
 #define RSYNC_UNIVERSAL_ARGS "--verbose --update --recursive" \
                              " --partial --progress --info=progress2" \
                              " --links --hard-links --itemize-changes" \
@@ -324,7 +325,7 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path) {
             continue;
         }
 
-        if (S_ISREG(stat_srt.st_mode)) {
+        if (S_ISREG(stat_srt.st_mode) || S_ISLNK(stat_srt.st_mode)) {
             equal_scanner_data->processed_files += 1;
             if (equal_scanner_data->total_files > 0) {
                 dispatch_progress(DATA_TYPE_PROGRESS_EQUAL,
@@ -448,6 +449,11 @@ fix_fs_recursive(char *base_path, char *relative_path) {
             if (d_name[k] == '=' && d_name[k + 1] == '>') {
                 memcpy64(new_name + j, "_equal_arrow_in_filename_", 25);
                 j += 25;
+                k += 1;
+                changed = 1;
+            } else if (d_name[k] == '-' && d_name[k + 1] == '>') {
+                memcpy64(new_name + j, "_symlink_arrow_in_filename_", 27);
+                j += 27;
                 k += 1;
                 changed = 1;
             } else if (d_name[k] == '\\') {
@@ -1027,7 +1033,6 @@ sync_worker(gpointer user_data) {
             } else {
                 for (int64 k = 0; k < r; k += 1) {
                     char *percent_pos;
-                    char *space_pos;
                     char type_char;
                     char *relative_path_entry;
                     enum CecupAction cecup_action;
@@ -1109,13 +1114,15 @@ sync_worker(gpointer user_data) {
                         continue;
                     }
 
+                    char *space_pos;
                     if (!(space_pos = strchr(output_buffer, ' '))) {
                         continue;
                     }
 
                     type_char = output_buffer[0];
                     if ((type_char != '>') && (type_char != '.')
-                        && (type_char != 'h') && (type_char != 'c')) {
+                        && (type_char != 'h') && (type_char != 'c')
+                        && (type_char != 'L')) {
                         continue;
                     }
 
@@ -1135,6 +1142,16 @@ sync_worker(gpointer user_data) {
                             *sep = '\0';
                             link_target
                                 = sep + strlen64(RSYNC_HARDLINK_NOTATION);
+                        }
+                    } else if (type_char == 'L' || output_buffer[1] == 'L') {
+                        char *sep;
+                        cecup_action = UI_ACTION_SYMLINK;
+
+                        if ((sep = strstr(relative_path_entry,
+                                          RSYNC_SYMLINK_NOTATION))) {
+                            *sep = '\0';
+                            link_target
+                                = sep + strlen64(RSYNC_SYMLINK_NOTATION);
                         }
                     } else if (strncmp(output_buffer, "cd", 2) == 0
                                || strncmp(output_buffer, ">f+++++", 7) == 0) {
