@@ -351,12 +351,12 @@ arena_push(Arena *arena, int64 size) {
     return before;
 }
 
-void *
+static void *
 xarena_push(Arena *arena, int64 size) {
     void *p;
     if ((p = arena_push(arena, size)) == NULL) {
-        error("Error allocating %lld bytes.\n", (llong)size);
-        fatal(EXIT_FAILURE);
+        error2("Error allocating %lld bytes.\n", (llong)size);
+        exit(EXIT_FAILURE);
     }
     return p;
 }
