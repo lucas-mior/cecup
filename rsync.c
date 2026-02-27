@@ -990,6 +990,7 @@ sync_worker(gpointer user_data) {
                     char *link_target;
                     struct stat st_path_val;
                     char full_src_path_val[MAX_PATH_LENGTH];
+                    int64 sz_path_val = 0;
 
                     if (buffer[k] != '\n' && buffer[k] != '\r'
                         && output_position < (int32)SIZEOF(output_buffer) - 1) {
@@ -1097,7 +1098,6 @@ sync_worker(gpointer user_data) {
                              thread_data->src_path, relative_path_entry);
                     // clang-format on
 
-                    int64 sz_path_val = 0;
                     if (lstat(full_src_path_val, &st_path_val) < 0) {
                         dispatch_log_error("Error lstat %s: %s.\n",
                                            full_src_path_val, strerror(errno));
