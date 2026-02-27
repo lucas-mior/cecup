@@ -954,6 +954,7 @@ sync_worker(gpointer user_data) {
     int32 error_position = 0;
 
     while (1) {
+        int32 poll_return;
         if (cecup.cancel_sync) {
             if (kill(-child_pid, SIGTERM) < 0) {
                 dispatch_log_error("Error killing process group: %s.\n",
@@ -963,7 +964,7 @@ sync_worker(gpointer user_data) {
             break;
         }
 
-        int32 poll_return = poll(pipes, 2, 100);
+        poll_return = poll(pipes, 2, 100);
         if (poll_return == -1) {
             dispatch_log_error("Error in poll: %s.\n", strerror(errno));
             break;
@@ -1175,9 +1176,10 @@ finalize:
     dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
     {
+        UIUpdateData *ready_signal;
+
         g_mutex_lock(&cecup.ui_arena_mutex);
-        UIUpdateData *ready_signal
-            = arena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+        ready_signal = arena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
         memset64(ready_signal, 0, SIZEOF(UIUpdateData));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
