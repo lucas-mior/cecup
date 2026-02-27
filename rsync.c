@@ -775,6 +775,10 @@ sync_worker(gpointer user_data) {
     char *esc_src;
     char *esc_dst;
 
+    int32 pipe_output[2] = {-1, -1};
+    int32 pipe_error[2] = {-1, -1};
+    pid_t child_pid = -1;
+
     if (thread_data->check_different_fs) {
         struct stat stat_src;
         struct stat stat_dst;
@@ -897,10 +901,6 @@ sync_worker(gpointer user_data) {
         log_cmd[j] = '\0';
         dispatch_log("+ %s\n", log_cmd);
     }
-
-    int32 pipe_output[2] = {-1, -1};
-    int32 pipe_error[2] = {-1, -1};
-    pid_t child_pid = -1;
 
     if (pipe(pipe_output) < 0) {
         error("Error creating pipe for stdout: %s.\n", strerror(errno));
