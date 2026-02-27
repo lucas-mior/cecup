@@ -12,6 +12,8 @@
 #define LOCALEDIR "/usr/local/share/locale"
 #endif
 
+#define LOCALE_DEVEL "./po"
+
 #define _(String) gettext(String)
 #define N_(String) String
 

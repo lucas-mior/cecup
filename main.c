@@ -193,7 +193,11 @@ main(int32 argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    bindtextdomain(GETTEXT_PACKAGE, "./po");
+    if (access(LOCALE_DEVEL, F_OK) == 0) {
+        bindtextdomain("cecup", LOCALE_DEVEL);
+    } else {
+        bindtextdomain("cecup", LOCALEDIR);
+    }
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
     textdomain(GETTEXT_PACKAGE);
 
