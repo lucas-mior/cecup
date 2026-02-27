@@ -258,7 +258,7 @@ main(int32 argc, char *argv[]) {
         _("Check which files need to be copied or updated"));
     cecup.ignore_button = gtk_button_new_with_label(_("Ignore Rules"));
     gtk_widget_set_tooltip_text(
-        cecup.ignore_button, _("Edit the list of files and folders to skip"));
+        cecup.ignore_button, _("Edit the list of filename patterns to ignore"));
     cecup.fix_button
         = gtk_button_new_with_label(_("🛠️ Rename problematic files"));
     gtk_widget_set_tooltip_text(
@@ -295,7 +295,7 @@ main(int32 argc, char *argv[]) {
         = gtk_check_button_new_with_label(_("Compare identical files"));
     gtk_widget_set_tooltip_text(
         cecup.check_equal,
-        _("Detect files that are already the same to save time"));
+        _("Detect files that are already the same (only for reference)"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.check_equal), TRUE);
     cecup.delete_excluded
         = gtk_check_button_new_with_label(_("Remove ignored items"));
@@ -464,9 +464,9 @@ main(int32 argc, char *argv[]) {
     cecup.filter_ignore = gtk_toggle_button_new_with_label(EMOJI_IGNORE);
 
     gtk_widget_set_tooltip_text(cecup.filter_new, _("Show New Files"));
-    gtk_widget_set_tooltip_text(cecup.filter_hard, _("Show Hardlinks"));
+    gtk_widget_set_tooltip_text(cecup.filter_hard, _("Show links"));
     gtk_widget_set_tooltip_text(cecup.filter_update, _("Show Updates"));
-    gtk_widget_set_tooltip_text(cecup.filter_equal, _("Show Identical"));
+    gtk_widget_set_tooltip_text(cecup.filter_equal, _("Show equals"));
     gtk_widget_set_tooltip_text(cecup.filter_delete, _("Show Deletions"));
     gtk_widget_set_tooltip_text(cecup.filter_ignore, _("Show Ignored"));
 

@@ -79,7 +79,7 @@ static char *src_action_strings[] = {
 static char *dst_action_strings[] = {
     [UI_ACTION_NONE]     = "",
     [UI_ACTION_NEW]      = N_("Copy from original"),
-    [UI_ACTION_HARDLINK] = N_("Link from original"),
+    [UI_ACTION_HARDLINK] = N_("Create link according to original"),
     [UI_ACTION_UPDATE]   = N_("Update from original"),
     [UI_ACTION_EQUAL]    = N_("Already identical"),
     [UI_ACTION_DELETED]  = "",
@@ -89,7 +89,7 @@ static char *dst_action_strings[] = {
 
 static char *reason_strings[] = {
     [UI_REASON_NONE]     = "",
-    [UI_REASON_EQUAL]    = N_("Files are already the same"),
+    [UI_REASON_EQUAL]    = N_("Files have the same size and modification time"),
     [UI_REASON_IGNORED]  = N_("Matches an ignore rule"),
     [UI_REASON_MISSING]  = N_("File does not exist in the original folder"),
     [UI_REASON_NEW]      = N_("New file found in the original folder"),
