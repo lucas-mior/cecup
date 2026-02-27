@@ -1693,7 +1693,7 @@ main(int argc, char **argv) {
 
     if (OS_WINDOWS) {
         char *path2 = "aa\\cc";
-        assert(!strcmp(basename2(path2), "cc"));
+        ASSERT_EQUAL(basename2(path2), "cc");
     }
 
     {
