@@ -615,15 +615,15 @@ on_menu_diff(GtkWidget *m, gpointer data) {
         }
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
+            int64 diff_len;
+            int64 term_len;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
             g_mutex_lock(&cecup.ui_arena_mutex);
-            int64 diff_len;
             diff_len = strlen64(diff_tool) + 1;
             task->diff_tool = arena_push(cecup.ui_arena, diff_len);
             memcpy64(task->diff_tool, diff_tool, diff_len);
 
-            int64 term_len;
             term_len = strlen64(term_cmd) + 1;
             task->term_cmd = arena_push(cecup.ui_arena, term_len);
             memcpy64(task->term_cmd, term_cmd, term_len);
