@@ -1048,10 +1048,12 @@ sync_worker(gpointer user_data) {
             break;
         }
 
-        poll_return = poll(pipes, 2, 100);
-        if (poll_return == -1) {
-            dispatch_log_error("Error in poll: %s.\n", strerror(errno));
-            break;
+        if ((poll_return = poll(pipes, 2, 100)) < 0) {
+            if (errno != EINTR) {
+                dispatch_log_error("Error in poll: %s.\n", strerror(errno));
+                fatal(EXIT_FAILURE);
+            }
+            continue;
         } else if (poll_return == 0) {
             continue;
         }
