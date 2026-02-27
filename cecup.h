@@ -215,14 +215,4 @@ static void on_preview_clicked(GtkWidget *b, gpointer data);
 static void refresh_ui_list(void);
 static gboolean refresh_ui_timeout_callback(gpointer data);
 
-void *
-xarena_push(Arena *arena, int64 size) {
-    void *p;
-    if ((p = arena_push(arena, size)) == NULL) {
-        error("Error allocating %lld bytes.\n", (llong)size);
-        fatal(EXIT_FAILURE);
-    }
-    return p;
-}
-
 #endif /* CECUP_H */

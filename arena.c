@@ -351,6 +351,16 @@ arena_push(Arena *arena, int64 size) {
     return before;
 }
 
+void *
+xarena_push(Arena *arena, int64 size) {
+    void *p;
+    if ((p = arena_push(arena, size)) == NULL) {
+        error("Error allocating %lld bytes.\n", (llong)size);
+        fatal(EXIT_FAILURE);
+    }
+    return p;
+}
+
 static void *
 arenas_push(Arena **arenas, int64 number, int64 size) {
     for (uint32 i = 0; i < number; i += 1) {
