@@ -87,6 +87,17 @@ read_config(void) {
                 GTK_TOGGLE_BUTTON(cecup.check_fs),
                 g_key_file_get_boolean(key, "Options", "check_fs", NULL));
         }
+        if (g_key_file_has_key(key, "Options", "delete_after", NULL)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.delete_after),
+                g_key_file_get_boolean(key, "Options", "delete_after", NULL));
+        }
+        if (g_key_file_has_key(key, "Options", "delete_excluded", NULL)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.delete_excluded),
+                g_key_file_get_boolean(key, "Options", "delete_excluded",
+                                       NULL));
+        }
     }
     g_key_file_free(key);
 }
@@ -127,6 +138,12 @@ save_config(void) {
     g_key_file_set_boolean(
         key, "Options", "check_fs",
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs)));
+    g_key_file_set_boolean(
+        key, "Options", "delete_after",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.delete_after)));
+    g_key_file_set_boolean(
+        key, "Options", "delete_excluded",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.delete_excluded)));
 
     out = g_key_file_to_data(key, &len, NULL);
     g_file_set_contents(cecup.config_path, out, (gssize)len, NULL);

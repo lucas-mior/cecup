@@ -730,21 +730,25 @@ on_config_changed(GtkWidget *widget, gpointer data) {
 }
 
 static void
-on_delete_excluded_toggled(GtkToggleButton *b, gpointer data) {
+on_delete_after_toggled(GtkToggleButton *b, gpointer data) {
+    (void)b;
     (void)data;
-    if (gtk_toggle_button_get_active(b)) {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.delete_after),
-                                     TRUE);
-    }
     save_config();
     on_preview_clicked(NULL, NULL);
     return;
 }
 
 static void
-on_delete_after_toggled(GtkToggleButton *b, gpointer data) {
-    (void)b;
+on_delete_excluded_toggled(GtkToggleButton *b, gpointer data) {
     (void)data;
+    if (gtk_toggle_button_get_active(b)) {
+        g_signal_handlers_block_by_func(cecup.delete_after,
+                                        on_delete_after_toggled, NULL);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.delete_after),
+                                     TRUE);
+        g_signal_handlers_unblock_by_func(cecup.delete_after,
+                                          on_delete_after_toggled, NULL);
+    }
     save_config();
     on_preview_clicked(NULL, NULL);
     return;
