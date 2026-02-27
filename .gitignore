@@ -12,3 +12,6 @@ callgrind.out.*
 valgrind.out.*
 *.SRCINFO
 *.git/
+*.po
+*.mo
+*.pot

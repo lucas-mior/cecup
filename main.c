@@ -76,9 +76,11 @@ main(int32 argc, char *argv[]) {
 
     if (setlocale(LC_ALL, "") == NULL) {
         /* Failed to set locale, fallback to C */
+        error("Error setting locale: %s.\n", strerror(errno));
+        exit(EXIT_FAILURE);
     }
 
-    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+    bindtextdomain(GETTEXT_PACKAGE, "./po");
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
     textdomain(GETTEXT_PACKAGE);
 
