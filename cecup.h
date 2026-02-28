@@ -21,6 +21,7 @@
 #include <gtk/gtk.h>
 #include "generic.c"
 #include "arena.c"
+#include "i18n.h"
 
 #define EMOJI_NEW "➕"
 #define EMOJI_LINK "🔗"
