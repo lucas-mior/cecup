@@ -536,24 +536,24 @@ main(int32 argc, char *argv[]) {
 
     read_config();
 
+    // clang-format off
     g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), NULL);
     g_signal_connect(browse_dst, "clicked", G_CALLBACK(on_browse_dst), NULL);
     g_signal_connect(invert_button, "clicked", G_CALLBACK(on_invert_clicked),
                      NULL);
     g_signal_connect(cecup.preview_button, "clicked",
                      G_CALLBACK(on_preview_clicked), NULL);
-    g_signal_connect(cecup.stop_button, "clicked", G_CALLBACK(on_stop_clicked),
-                     NULL);
-    g_signal_connect(cecup.sync_button, "clicked", G_CALLBACK(on_sync_clicked),
-                     NULL);
+    g_signal_connect(cecup.stop_button, "clicked",
+                     G_CALLBACK(on_stop_clicked), NULL);
+    g_signal_connect(cecup.sync_button, "clicked",
+                     G_CALLBACK(on_sync_clicked), NULL);
     g_signal_connect(cecup.ignore_button, "clicked",
                      G_CALLBACK(on_ignore_clicked), NULL);
-    g_signal_connect(cecup.fix_button, "clicked", G_CALLBACK(on_fix_clicked),
-                     NULL);
-    g_signal_connect(reset_button, "clicked", G_CALLBACK(on_reset_clicked),
-                     NULL);
+    g_signal_connect(cecup.fix_button, "clicked",
+                     G_CALLBACK(on_fix_clicked), NULL);
+    g_signal_connect(reset_button, "clicked",
+                     G_CALLBACK(on_reset_clicked), NULL);
 
-    // clang-format off
     g_signal_connect(cecup.filter_new, "toggled",
                      G_CALLBACK(on_filter_toggled),
                      NULL);
