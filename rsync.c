@@ -44,13 +44,13 @@
                              " --partial --progress --info=progress2" \
                              " --links --hard-links --itemize-changes" \
                              " --perms --times --owner --group"
-#define MAX_COMMAND_LENGTH (MAX_PATH_LENGTH*2 + strlen(RSYNC_UNIVERSAL_ARGS)*2)
+#define MAX_COMMAND_LENGTH (MAX_PATH_LENGTH*2 + strlen64(RSYNC_UNIVERSAL_ARGS)*2)
 
 typedef struct EqualScannerData {
     char src_path[MAX_PATH_LENGTH];
     char dst_path[MAX_PATH_LENGTH];
-    int32 total_files;
-    int32 processed_files;
+    int64 total_files;
+    int64 processed_files;
 } EqualScannerData;
 
 static void
@@ -91,8 +91,7 @@ log_error_handler(gpointer user_data) {
 
     data = (UIUpdateData *)user_data;
     table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
-    tag = gtk_text_tag_table_lookup(table, "err_red");
-    if (tag == NULL) {
+    if ((tag = gtk_text_tag_table_lookup(table, "err_red")) == NULL) {
         gtk_text_buffer_create_tag(cecup.log_buffer, "err_red", "foreground",
                                    "red", NULL);
     }
@@ -199,12 +198,12 @@ dispatch_tree(int32 side, enum CecupAction action, char *path,
     return;
 }
 
-static int32
+static int64
 count_files_recursive(char *base_path, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
     char full_path[MAX_PATH_LENGTH];
-    int32 count;
+    int64 count;
 
     count = 0;
     if (relative_path[0] == '\0') {
@@ -213,7 +212,7 @@ count_files_recursive(char *base_path, char *relative_path) {
         SNPRINTF(full_path, "%s/%s", base_path, relative_path);
     }
 
-    if (!(dir = opendir(full_path))) {
+    if ((dir = opendir(full_path)) == NULL) {
         dispatch_log_error("Error opendir %s: %s.\n", full_path,
                            strerror(errno));
         return 0;
@@ -281,7 +280,7 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path) {
                  relative_path);
     }
 
-    if (!(dir = opendir(src_full))) {
+    if ((dir = opendir(src_full)) == NULL) {
         dispatch_log_error("Error opendir %s: %s.\n", src_full,
                            strerror(errno));
         return;
@@ -390,7 +389,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
         SNPRINTF(full_path, "%s/%s", base_path, relative_path);
     }
 
-    if (!(dir = opendir(full_path))) {
+    if ((dir = opendir(full_path)) == NULL) {
         return;
     }
 
@@ -437,7 +436,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
             continue;
         }
 
-        for (int64 k = 0; k < strlen64(d_name); k += 1) {
+        for (int32 k = 0; k < (int32)strlen64(d_name); k += 1) {
             if (j >= 250) {
                 break;
             }
@@ -507,7 +506,6 @@ fix_fs_recursive(char *base_path, char *relative_path) {
                                    new_name);
             } else if (rename(old_full, new_full) == 0) {
                 dispatch_log("Fixed: %s -> %s\n", d_name, new_name);
-                // Update the current name for recursion if it's a directory
                 if (S_ISDIR(st.st_mode)) {
                     if (relative_path[0] != '\0') {
                         SNPRINTF(sub_rel, "%s/%s", relative_path, new_name);
@@ -578,9 +576,255 @@ bulk_sync_worker(gpointer user_data) {
 
         UIUpdateData *remove_data;
 
-        ud = (UIUpdateData *)g_ptr_array_index(tasks, i);
+        if ((ud = (UIUpdateData *)g_ptr_array_index(tasks, i))) {
+            if (cecup.cancel_sync) {
+                g_mutex_lock(&cecup.ui_arena_mutex);
+                if (ud->filepath) {
+                    arena_pop(cecup.ui_arena, ud->filepath);
+                }
+                if (ud->src_base) {
+                    arena_pop(cecup.ui_arena, ud->src_base);
+                }
+                if (ud->dst_base) {
+                    arena_pop(cecup.ui_arena, ud->dst_base);
+                }
+                if (ud->term_cmd) {
+                    arena_pop(cecup.ui_arena, ud->term_cmd);
+                }
+                if (ud->diff_tool) {
+                    arena_pop(cecup.ui_arena, ud->diff_tool);
+                }
+                if (ud->link_target) {
+                    arena_pop(cecup.ui_arena, ud->link_target);
+                }
+                arena_pop(cecup.ui_arena, ud);
+                g_mutex_unlock(&cecup.ui_arena_mutex);
+                continue;
+            }
 
-        if (cecup.cancel_sync) {
+            if (ud->action == UI_ACTION_DELETE) {
+                char full_dst[MAX_PATH_LENGTH];
+                char *escaped_dst;
+
+                SNPRINTF(full_dst, "%s/%s", ud->dst_base, ud->filepath);
+                escaped_dst = shell_escape(full_dst);
+                SNPRINTF(cmd, "rm -rfv '%s'", escaped_dst);
+                free(escaped_dst);
+            } else {
+                char *escaped_src;
+                char *escaped_dst;
+                char *escaped_file;
+
+                escaped_src = shell_escape(ud->src_base);
+                escaped_dst = shell_escape(ud->dst_base);
+                escaped_file = shell_escape(ud->filepath);
+
+                SNPRINTF(cmd,
+                         "rsync " RSYNC_UNIVERSAL_ARGS
+                         " --relative '%s/./%s' '%s/'",
+                         escaped_src, escaped_file, escaped_dst);
+
+                free(escaped_src);
+                free(escaped_dst);
+                free(escaped_file);
+            }
+
+            dispatch_log("+ %s\n", cmd);
+
+            if (pipe(pipe_output) < 0) {
+                error("Error creating pipe for stdout: %s.\n", strerror(errno));
+                fatal(EXIT_FAILURE);
+            }
+
+            if (pipe(pipe_error) < 0) {
+                error("Error creating pipe for stderr: %s.\n", strerror(errno));
+                fatal(EXIT_FAILURE);
+            }
+
+            switch (child_pid = fork()) {
+            case -1:
+                error("Error forking: %s.\n", strerror(errno));
+                fatal(EXIT_FAILURE);
+            case 0:
+                if (setpgid(0, 0) < 0) {
+                    fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
+                    exit(EXIT_FAILURE);
+                }
+                XCLOSE(&pipe_output[0]);
+                XCLOSE(&pipe_error[0]);
+                if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
+                    fprintf(stderr, "Error dup2 stdout: %s.\n",
+                            strerror(errno));
+                    fatal(EXIT_FAILURE);
+                }
+                if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
+                    fprintf(stderr, "Error dup2 stderr: %s.\n",
+                            strerror(errno));
+                    fatal(EXIT_FAILURE);
+                }
+                XCLOSE(&pipe_output[1]);
+                XCLOSE(&pipe_error[1]);
+                execl("/bin/sh", "sh", "-c", cmd, NULL);
+                fprintf(stderr, "Error: execl failed: %s.\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            default:
+                break;
+            }
+
+            XCLOSE(&pipe_output[1]);
+            XCLOSE(&pipe_error[1]);
+
+            pipes[0].fd = pipe_output[0];
+            pipes[0].events = POLLIN;
+            pipes[1].fd = pipe_error[0];
+            pipes[1].events = POLLIN;
+
+            while (true) {
+                int64 r;
+                char *eol;
+
+                if (cecup.cancel_sync) {
+                    if (kill(-child_pid, SIGTERM) < 0) {
+                        dispatch_log_error("Error kill process group: %s.\n",
+                                           strerror(errno));
+                    }
+                    dispatch_log_error("Process cancelled: %s\n", ud->filepath);
+                    break;
+                }
+
+                switch (poll(pipes, 2, 100)) {
+                case -1:
+                    if (errno != EINTR) {
+                        dispatch_log_error("Error in poll: %s.\n",
+                                           strerror(errno));
+                        fatal(EXIT_FAILURE);
+                    }
+                    continue;
+                case 0:
+                    continue;
+                default:
+                    break;
+                }
+
+                if (pipes[0].revents & (POLLHUP | POLLERR)) {
+                    pipes[0].fd = -1;
+                    goto read_error_pipe;
+                }
+                if (!(pipes[0].revents & POLLIN)) {
+                    goto read_error_pipe;
+                }
+
+                r = read64(pipe_output[0], output_line_buffer + output_line_pos,
+                           SIZEOF(output_line_buffer) - output_line_pos - 1);
+                if (r <= 0) {
+                    dispatch_log_error("Error reading stdout pipe: %s.\n",
+                                       strerror(errno));
+                    if (r < 0) {
+                        pipes[0].fd = -1;
+                    }
+                    goto read_error_pipe;
+                }
+                output_line_pos += (int32)r;
+
+                while (
+                    (eol = memchr64(output_line_buffer, '\n', output_line_pos))
+                    || (eol = memchr64(output_line_buffer, '\r',
+                                       output_line_pos))) {
+                    int32 line_len = (int32)(eol - output_line_buffer);
+                    int32 remaining;
+                    *eol = '\0';
+
+                    if (output_line_buffer[0] != '\0') {
+                        dispatch_log("%s.\n", output_line_buffer);
+                    }
+
+                    remaining = output_line_pos - (line_len + 1);
+                    if (remaining > 0) {
+                        memmove64(output_line_buffer, eol + 1, remaining);
+                    }
+                    output_line_pos = remaining;
+                }
+
+                if (output_line_pos >= (int32)SIZEOF(output_line_buffer) - 1) {
+                    output_line_buffer[output_line_pos] = '\0';
+                    dispatch_log("%s.\n", output_line_buffer);
+                    output_line_pos = 0;
+                }
+
+            read_error_pipe:
+                if (pipes[1].revents & (POLLHUP | POLLERR)) {
+                    pipes[1].fd = -1;
+                    goto check_pipes_or_break;
+                }
+                if (!(pipes[0].revents & POLLIN)) {
+                    goto check_pipes_or_break;
+                }
+
+                r = read64(pipe_error[0], error_line_buffer + error_line_pos,
+                           SIZEOF(error_line_buffer) - error_line_pos - 1);
+                if (r <= 0) {
+                    dispatch_log_error("Error reading stderr pipe: %s.\n",
+                                       strerror(errno));
+                    if (r < 0) {
+                        pipes[1].fd = -1;
+                    }
+                    goto check_pipes_or_break;
+                }
+                error_line_pos += (int32)r;
+
+                while ((eol = memchr64(error_line_buffer, '\n', error_line_pos))
+                       || (eol = memchr64(error_line_buffer, '\r',
+                                          error_line_pos))) {
+                    int32 line_len = (int32)(eol - error_line_buffer);
+                    int32 remaining;
+                    *eol = '\0';
+
+                    if (error_line_buffer[0] != '\0') {
+                        dispatch_log_error(error_line_buffer);
+                    }
+
+                    remaining = error_line_pos - (line_len + 1);
+                    if (remaining > 0) {
+                        memmove64(error_line_buffer, eol + 1, remaining);
+                    }
+                    error_line_pos = remaining;
+                }
+
+                if (error_line_pos >= (int32)SIZEOF(error_line_buffer) - 1) {
+                    error_line_buffer[error_line_pos] = '\0';
+                    dispatch_log_error(error_line_buffer);
+                    error_line_pos = 0;
+                }
+
+            check_pipes_or_break:
+                if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
+                    break;
+                }
+            }
+
+            XCLOSE(&pipe_output[0]);
+            XCLOSE(&pipe_error[0]);
+            if (waitpid(child_pid, NULL, 0) < 0) {
+                dispatch_log_error("Error waiting for child: %s.\n",
+                                   strerror(errno));
+            }
+
+            if (!cecup.cancel_sync) {
+                int64 path_len;
+                g_mutex_lock(&cecup.ui_arena_mutex);
+                remove_data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+                memset64(remove_data, 0, SIZEOF(UIUpdateData));
+
+                path_len = strlen64(ud->filepath);
+                remove_data->filepath
+                    = xarena_push(cecup.ui_arena, path_len + 1);
+                memcpy64(remove_data->filepath, ud->filepath, path_len + 1);
+                g_mutex_unlock(&cecup.ui_arena_mutex);
+
+                remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
+                g_idle_add(update_ui_handler, remove_data);
+            }
+
             g_mutex_lock(&cecup.ui_arena_mutex);
             if (ud->filepath) {
                 arena_pop(cecup.ui_arena, ud->filepath);
@@ -602,248 +846,7 @@ bulk_sync_worker(gpointer user_data) {
             }
             arena_pop(cecup.ui_arena, ud);
             g_mutex_unlock(&cecup.ui_arena_mutex);
-            continue;
         }
-
-        if (ud->action == UI_ACTION_DELETE) {
-            char full_dst[MAX_PATH_LENGTH];
-            char *escaped_dst;
-
-            SNPRINTF(full_dst, "%s/%s", ud->dst_base, ud->filepath);
-            escaped_dst = shell_escape(full_dst);
-            SNPRINTF(cmd, "rm -rfv '%s'", escaped_dst);
-            free(escaped_dst);
-        } else {
-            char *escaped_src;
-            char *escaped_dst;
-            char *escaped_file;
-
-            escaped_src = shell_escape(ud->src_base);
-            escaped_dst = shell_escape(ud->dst_base);
-            escaped_file = shell_escape(ud->filepath);
-
-            SNPRINTF(cmd,
-                     "rsync " RSYNC_UNIVERSAL_ARGS
-                     " --relative '%s/./%s' '%s/'",
-                     escaped_src, escaped_file, escaped_dst);
-
-            free(escaped_src);
-            free(escaped_dst);
-            free(escaped_file);
-        }
-
-        dispatch_log("+ %s\n", cmd);
-
-        if (pipe(pipe_output) < 0) {
-            error("Error creating pipe for stdout: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
-
-        if (pipe(pipe_error) < 0) {
-            error("Error creating pipe for stderr: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
-
-        switch (child_pid = fork()) {
-        case -1:
-            error("Error forking: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        case 0:
-            if (setpgid(0, 0) < 0) {
-                fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
-                exit(EXIT_FAILURE);
-            }
-            XCLOSE(&pipe_output[0]);
-            XCLOSE(&pipe_error[0]);
-            if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
-                fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
-                fatal(EXIT_FAILURE);
-            }
-            if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
-                fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
-                fatal(EXIT_FAILURE);
-            }
-            XCLOSE(&pipe_output[1]);
-            XCLOSE(&pipe_error[1]);
-            execl("/bin/sh", "sh", "-c", cmd, NULL);
-            fprintf(stderr, "Error: execl failed: %s.\n", strerror(errno));
-            exit(EXIT_FAILURE);
-        default:
-            break;
-        }
-
-        XCLOSE(&pipe_output[1]);
-        XCLOSE(&pipe_error[1]);
-
-        pipes[0].fd = pipe_output[0];
-        pipes[0].events = POLLIN;
-        pipes[1].fd = pipe_error[0];
-        pipes[1].events = POLLIN;
-
-        while (1) {
-            int64 r;
-            char *eol;
-
-            if (cecup.cancel_sync) {
-                if (kill(-child_pid, SIGTERM) < 0) {
-                    dispatch_log_error("Error kill process group: %s.\n",
-                                       strerror(errno));
-                }
-                dispatch_log_error("Process cancelled: %s\n", ud->filepath);
-                break;
-            }
-
-            switch (poll(pipes, 2, 100)) {
-            case -1:
-                if (errno != EINTR) {
-                    dispatch_log_error("Error in poll: %s.\n", strerror(errno));
-                    fatal(EXIT_FAILURE);
-                }
-                continue;
-            case 0:
-                continue;
-            default:
-                break;
-            }
-
-            if (pipes[0].revents & (POLLHUP | POLLERR)) {
-                pipes[0].fd = -1;
-                goto read_error_pipe;
-            }
-            if (!(pipes[0].revents & POLLIN)) {
-                goto read_error_pipe;
-            }
-
-            r = read64(pipe_output[0], output_line_buffer + output_line_pos,
-                       SIZEOF(output_line_buffer) - output_line_pos - 1);
-            if (r <= 0) {
-                dispatch_log_error("Error reading stdout pipe: %s.\n",
-                                   strerror(errno));
-                if (r < 0) {
-                    pipes[0].fd = -1;
-                }
-                goto read_error_pipe;
-            }
-            output_line_pos += (int32)r;
-
-            while ((eol = memchr64(output_line_buffer, '\n', output_line_pos))
-                   || (eol
-                       = memchr64(output_line_buffer, '\r', output_line_pos))) {
-                int32 line_len = (int32)(eol - output_line_buffer);
-                int32 remaining;
-                *eol = '\0';
-
-                if (output_line_buffer[0] != '\0') {
-                    dispatch_log("%s.\n", output_line_buffer);
-                }
-
-                remaining = output_line_pos - (line_len + 1);
-                if (remaining > 0) {
-                    memmove64(output_line_buffer, eol + 1, remaining);
-                }
-                output_line_pos = remaining;
-            }
-
-            if (output_line_pos >= (int32)SIZEOF(output_line_buffer) - 1) {
-                output_line_buffer[output_line_pos] = '\0';
-                dispatch_log("%s.\n", output_line_buffer);
-                output_line_pos = 0;
-            }
-
-        read_error_pipe:
-            if (pipes[1].revents & (POLLHUP | POLLERR)) {
-                pipes[1].fd = -1;
-                goto check_pipes_or_break;
-            }
-            if (!(pipes[0].revents & POLLIN)) {
-                goto check_pipes_or_break;
-            }
-
-            r = read64(pipe_error[0], error_line_buffer + error_line_pos,
-                       SIZEOF(error_line_buffer) - error_line_pos - 1);
-            if (r <= 0) {
-                dispatch_log_error("Error reading stderr pipe: %s.\n",
-                                   strerror(errno));
-                if (r < 0) {
-                    pipes[1].fd = -1;
-                }
-                goto check_pipes_or_break;
-            }
-            error_line_pos += (int32)r;
-
-            while (
-                (eol = memchr64(error_line_buffer, '\n', error_line_pos))
-                || (eol = memchr64(error_line_buffer, '\r', error_line_pos))) {
-                int32 line_len = (int32)(eol - error_line_buffer);
-                int32 remaining;
-                *eol = '\0';
-
-                if (error_line_buffer[0] != '\0') {
-                    dispatch_log_error(error_line_buffer);
-                }
-
-                remaining = error_line_pos - (line_len + 1);
-                if (remaining > 0) {
-                    memmove64(error_line_buffer, eol + 1, remaining);
-                }
-                error_line_pos = remaining;
-            }
-
-            if (error_line_pos >= (int32)SIZEOF(error_line_buffer) - 1) {
-                error_line_buffer[error_line_pos] = '\0';
-                dispatch_log_error(error_line_buffer);
-                error_line_pos = 0;
-            }
-
-        check_pipes_or_break:
-            if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
-                break;
-            }
-        }
-
-        XCLOSE(&pipe_output[0]);
-        XCLOSE(&pipe_error[0]);
-        if (waitpid(child_pid, NULL, 0) < 0) {
-            dispatch_log_error("Error waiting for child: %s.\n",
-                               strerror(errno));
-        }
-
-        if (!cecup.cancel_sync) {
-            int64 path_len;
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            remove_data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
-            memset64(remove_data, 0, SIZEOF(UIUpdateData));
-
-            path_len = strlen64(ud->filepath);
-            remove_data->filepath = xarena_push(cecup.ui_arena, path_len + 1);
-            memcpy64(remove_data->filepath, ud->filepath, path_len + 1);
-            g_mutex_unlock(&cecup.ui_arena_mutex);
-
-            remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
-            g_idle_add(update_ui_handler, remove_data);
-        }
-
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        if (ud->filepath) {
-            arena_pop(cecup.ui_arena, ud->filepath);
-        }
-        if (ud->src_base) {
-            arena_pop(cecup.ui_arena, ud->src_base);
-        }
-        if (ud->dst_base) {
-            arena_pop(cecup.ui_arena, ud->dst_base);
-        }
-        if (ud->term_cmd) {
-            arena_pop(cecup.ui_arena, ud->term_cmd);
-        }
-        if (ud->diff_tool) {
-            arena_pop(cecup.ui_arena, ud->diff_tool);
-        }
-        if (ud->link_target) {
-            arena_pop(cecup.ui_arena, ud->link_target);
-        }
-        arena_pop(cecup.ui_arena, ud);
-        g_mutex_unlock(&cecup.ui_arena_mutex);
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
@@ -862,8 +865,8 @@ static gpointer
 sync_worker(gpointer user_data) {
     ThreadData *thread_data = (ThreadData *)user_data;
     GThread *scanner_thread = NULL;
-    int32 total_files_preview = 0;
-    int32 processed_files_preview = 0;
+    int64 total_files_preview = 0;
+    int64 processed_files_preview = 0;
     char exclude_arg[MAX_PATH_LENGTH];
     char *cmd;
     char *esc_src;
@@ -1028,7 +1031,7 @@ sync_worker(gpointer user_data) {
     XCLOSE(&pipe_output[1]);
     XCLOSE(&pipe_error[1]);
 
-    while (true) {
+    while (1) {
         struct pollfd pipes[2];
         int64 r;
         char *eol;
@@ -1287,7 +1290,7 @@ sync_worker(gpointer user_data) {
     XCLOSE(&pipe_output[0]);
     XCLOSE(&pipe_error[0]);
 
-    if (scanner_thread != NULL) {
+    if (scanner_thread) {
         g_thread_join(scanner_thread);
     }
 
