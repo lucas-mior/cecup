@@ -352,14 +352,18 @@ main(int32 argc, char *argv[]) {
         cecup.term_entry, _("Terminal emulator used to launch the diff tool"));
     reset_button = gtk_button_new_with_label(_("Defaults"));
     gtk_widget_set_tooltip_text(reset_button, _("Restore original settings"));
-    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_fs, FALSE, FALSE,
-                       BUTTON_PADDING);
-    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_equal, FALSE, FALSE,
-                       BUTTON_PADDING);
-    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_excluded, FALSE,
-                       FALSE, BUTTON_PADDING);
-    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_after, FALSE, FALSE,
-                       BUTTON_PADDING);
+
+    // clang-format off
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_fs,
+                       FALSE, FALSE, BUTTON_PADDING);
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_equal,
+                       FALSE, FALSE, BUTTON_PADDING);
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_excluded,
+                       FALSE, FALSE, BUTTON_PADDING);
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_after,
+                       FALSE, FALSE, BUTTON_PADDING);
+    // clang-format on
+
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new(_("Diff Tool:")),
                        FALSE, FALSE, LABEL_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.diff_entry, FALSE, FALSE,
