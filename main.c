@@ -208,8 +208,6 @@ main(int32 argc, char *argv[]) {
     char destination_path_buffer[4096];
     int64 destination_path_length;
 
-    int64 rows_size;
-
     char *locale_devel = "./po";
     char *locale_system = "/usr/share/locale/";
     char *locale_local_system = "/usr/local/share/locale/";
@@ -237,12 +235,13 @@ main(int32 argc, char *argv[]) {
     cecup.ui_arena = arena_create(SIZEMB(16));
     g_mutex_init(&cecup.ui_arena_mutex);
 
-    cecup.rows_count = 0;
-    cecup.rows_capacity = 4096;
-
-    rows_size = cecup.rows_capacity*SIZEOF(CecupRow *);
-    cecup.rows = xarena_push(cecup.row_arena, rows_size);
-    cecup.visible_rows = xarena_push(cecup.row_arena, rows_size);
+    {
+        cecup.rows_count = 0;
+        cecup.rows_capacity = 4096;
+        int64 rows_size = cecup.rows_capacity*SIZEOF(CecupRow *);
+        cecup.rows = xarena_push(cecup.row_arena, rows_size);
+        cecup.visible_rows = xarena_push(cecup.row_arena, rows_size);
+    }
 
     cecup.sort_col = COL_SRC_PATH;
     cecup.sort_order = GTK_SORT_ASCENDING;
