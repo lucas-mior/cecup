@@ -515,7 +515,8 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(cecup.filter_ignore, _("Show Ignored"));
 
     // clang-format off
-    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_new, FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_new,
+                       FALSE, FALSE, 2);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_hard,
                        FALSE, FALSE, 2);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_update,
