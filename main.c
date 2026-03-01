@@ -404,17 +404,17 @@ main(int32 argc, char *argv[]) {
 
     // clang-format off
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_new,
-                       FALSE, FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_hard,
-                       FALSE, FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_update,
-                       FALSE, FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_equal,
-                       FALSE, FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_delete,
-                       FALSE, FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_ignore,
-                       FALSE, FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
     // clang-format on
     gtk_box_pack_start(GTK_BOX(main_vbox), filter_hbox, FALSE, FALSE, 0);
 
