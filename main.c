@@ -242,9 +242,9 @@ main(int32 argc, char *argv[]) {
     // clang-format on
 
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new(_("Diff Tool:")),
-                       FALSE, FALSE, LABEL_PADDING);
-    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.diff_entry, FALSE, FALSE,
-                       LABEL_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, LABEL_PADDING);
+    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.diff_entry, EXPAND_FALSE,
+                       FILL_FALSE, LABEL_PADDING);
 
     gtk_entry_set_text(GTK_ENTRY(cecup.diff_entry), "unidiff.bash");
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new(_("Terminal:")),
