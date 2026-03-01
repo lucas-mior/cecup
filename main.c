@@ -31,142 +31,6 @@
 
 static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path);
 
-static void
-cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
-               GtkTreeModel *model, GtkTreeIter *iter, gpointer data) {
-    int32 col_id;
-    int32 row_idx;
-    GtkTreePath *path;
-    CecupRow *row;
-
-    col_id = GPOINTER_TO_INT(data);
-    path = gtk_tree_model_get_path(model, iter);
-    row_idx = gtk_tree_path_get_indices(path)[0];
-    gtk_tree_path_free(path);
-
-    if ((row_idx < 0) || (row_idx >= cecup.visible_count)) {
-        return;
-    }
-    row = cecup.visible_rows[row_idx];
-
-    switch (col_id) {
-    case COL_SELECTED:
-        g_object_set(renderer, "active", row->selected, NULL);
-        break;
-    case COL_SRC_ACTION:
-        g_object_set(renderer, "text", action_emojis[row->src_action],
-                     "cell-background", row->src_color, NULL);
-        break;
-    case COL_DST_ACTION:
-        g_object_set(renderer, "text", action_emojis[row->dst_action],
-                     "cell-background", row->dst_color, NULL);
-        break;
-    case COL_SRC_PATH:
-        g_object_set(renderer, "text", row->src_path, "cell-background",
-                     row->src_color, NULL);
-        break;
-    case COL_DST_PATH:
-        g_object_set(renderer, "text", row->dst_path, "cell-background",
-                     row->dst_color, NULL);
-        break;
-    case COL_SIZE_TEXT: {
-        char *background;
-        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 3)) {
-            background = row->src_color;
-        } else {
-            background = row->dst_color;
-        }
-        g_object_set(renderer, "text", row->size_text, "cell-background",
-                     background, NULL);
-        break;
-    }
-    case COL_MTIME_TEXT: {
-        char *background;
-        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 4)) {
-            background = row->src_color;
-        } else {
-            background = row->dst_color;
-        }
-        g_object_set(renderer, "text", row->mtime_text, "cell-background",
-                     background, NULL);
-        break;
-    }
-    default:
-        error("Invalid col_id = %d\n", col_id);
-        exit(EXIT_FAILURE);
-    }
-    return;
-}
-
-static void
-setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
-    GtkCellRenderer *renderer_toggle;
-    GtkCellRenderer *renderer_text;
-    GtkTreeViewColumn *column;
-
-    renderer_toggle = gtk_cell_renderer_toggle_new();
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_pack_start(column, renderer_toggle, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_toggle, cell_data_func, GINT_TO_POINTER(COL_SELECTED),
-        NULL);
-    g_signal_connect(renderer_toggle, "toggled", G_CALLBACK(on_cell_toggled),
-                     NULL);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    renderer_text = gtk_cell_renderer_text_new();
-    g_object_set(renderer_text, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, _("Intended Task"));
-    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_text, cell_data_func, GINT_TO_POINTER(col_act), NULL);
-    gtk_tree_view_column_set_sort_column_id(column, col_act);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_min_width(column, 80);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, _("Name"));
-    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_text, cell_data_func, GINT_TO_POINTER(col_path), NULL);
-    gtk_tree_view_column_set_sort_column_id(column, col_path);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_expand(column, TRUE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, _("Size"));
-    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_text, cell_data_func, GINT_TO_POINTER(COL_SIZE_TEXT),
-        NULL);
-    gtk_tree_view_column_set_sort_column_id(column, COL_SIZE_RAW);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_min_width(column, 100);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, _("Modification Time"));
-    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_text, cell_data_func, GINT_TO_POINTER(COL_MTIME_TEXT),
-        NULL);
-    gtk_tree_view_column_set_sort_column_id(column, COL_MTIME_RAW);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_min_width(column, 150);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    gtk_widget_set_has_tooltip(tree, TRUE);
-    g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
-    g_signal_connect(tree, "button-press-event",
-                     G_CALLBACK(on_tree_button_press), NULL);
-    return;
-}
-
 int32
 main(int32 argc, char *argv[]) {
     GtkWidget *main_vbox;
@@ -237,9 +101,11 @@ main(int32 argc, char *argv[]) {
     g_mutex_init(&cecup.ui_arena_mutex);
 
     {
+        int64 rows_size;
+
         cecup.rows_count = 0;
         cecup.rows_capacity = 4096;
-        int64 rows_size = cecup.rows_capacity*SIZEOF(CecupRow *);
+        rows_size = cecup.rows_capacity*SIZEOF(CecupRow *);
         cecup.rows = xarena_push(cecup.row_arena, rows_size);
         cecup.visible_rows = xarena_push(cecup.row_arena, rows_size);
     }
@@ -601,4 +467,140 @@ main(int32 argc, char *argv[]) {
     arena_destroy(cecup.ui_arena);
     g_mutex_clear(&cecup.ui_arena_mutex);
     exit(EXIT_SUCCESS);
+}
+
+static void
+cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
+               GtkTreeModel *model, GtkTreeIter *iter, gpointer data) {
+    int32 col_id;
+    int32 row_idx;
+    GtkTreePath *path;
+    CecupRow *row;
+
+    col_id = GPOINTER_TO_INT(data);
+    path = gtk_tree_model_get_path(model, iter);
+    row_idx = gtk_tree_path_get_indices(path)[0];
+    gtk_tree_path_free(path);
+
+    if ((row_idx < 0) || (row_idx >= cecup.visible_count)) {
+        return;
+    }
+    row = cecup.visible_rows[row_idx];
+
+    switch (col_id) {
+    case COL_SELECTED:
+        g_object_set(renderer, "active", row->selected, NULL);
+        break;
+    case COL_SRC_ACTION:
+        g_object_set(renderer, "text", action_emojis[row->src_action],
+                     "cell-background", row->src_color, NULL);
+        break;
+    case COL_DST_ACTION:
+        g_object_set(renderer, "text", action_emojis[row->dst_action],
+                     "cell-background", row->dst_color, NULL);
+        break;
+    case COL_SRC_PATH:
+        g_object_set(renderer, "text", row->src_path, "cell-background",
+                     row->src_color, NULL);
+        break;
+    case COL_DST_PATH:
+        g_object_set(renderer, "text", row->dst_path, "cell-background",
+                     row->dst_color, NULL);
+        break;
+    case COL_SIZE_TEXT: {
+        char *background;
+        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 3)) {
+            background = row->src_color;
+        } else {
+            background = row->dst_color;
+        }
+        g_object_set(renderer, "text", row->size_text, "cell-background",
+                     background, NULL);
+        break;
+    }
+    case COL_MTIME_TEXT: {
+        char *background;
+        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 4)) {
+            background = row->src_color;
+        } else {
+            background = row->dst_color;
+        }
+        g_object_set(renderer, "text", row->mtime_text, "cell-background",
+                     background, NULL);
+        break;
+    }
+    default:
+        error("Invalid col_id = %d\n", col_id);
+        exit(EXIT_FAILURE);
+    }
+    return;
+}
+
+static void
+setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
+    GtkCellRenderer *renderer_toggle;
+    GtkCellRenderer *renderer_text;
+    GtkTreeViewColumn *column;
+
+    renderer_toggle = gtk_cell_renderer_toggle_new();
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_pack_start(column, renderer_toggle, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        column, renderer_toggle, cell_data_func, GINT_TO_POINTER(COL_SELECTED),
+        NULL);
+    g_signal_connect(renderer_toggle, "toggled", G_CALLBACK(on_cell_toggled),
+                     NULL);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    renderer_text = gtk_cell_renderer_text_new();
+    g_object_set(renderer_text, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Intended Task"));
+    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        column, renderer_text, cell_data_func, GINT_TO_POINTER(col_act), NULL);
+    gtk_tree_view_column_set_sort_column_id(column, col_act);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_min_width(column, 80);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Name"));
+    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        column, renderer_text, cell_data_func, GINT_TO_POINTER(col_path), NULL);
+    gtk_tree_view_column_set_sort_column_id(column, col_path);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Size"));
+    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        column, renderer_text, cell_data_func, GINT_TO_POINTER(COL_SIZE_TEXT),
+        NULL);
+    gtk_tree_view_column_set_sort_column_id(column, COL_SIZE_RAW);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_min_width(column, 100);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Modification Time"));
+    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
+    gtk_tree_view_column_set_cell_data_func(
+        column, renderer_text, cell_data_func, GINT_TO_POINTER(COL_MTIME_TEXT),
+        NULL);
+    gtk_tree_view_column_set_sort_column_id(column, COL_MTIME_RAW);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_min_width(column, 150);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    gtk_widget_set_has_tooltip(tree, TRUE);
+    g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
+    g_signal_connect(tree, "button-press-event",
+                     G_CALLBACK(on_tree_button_press), NULL);
+    return;
 }

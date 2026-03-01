@@ -683,6 +683,8 @@ bulk_sync_worker(gpointer user_data) {
 
         while (1) {
             int64 r;
+            char *eol;
+
             if (cecup.cancel_sync) {
                 if (kill(-child_pid, SIGTERM) < 0) {
                     dispatch_log_error("Error kill process group: %s.\n",
@@ -723,7 +725,6 @@ bulk_sync_worker(gpointer user_data) {
                 }
                 goto read_error_pipe;
             }
-            char *eol;
             output_line_pos += (int32)r;
 
             while ((eol = memchr64(output_line_buffer, '\n', output_line_pos))
