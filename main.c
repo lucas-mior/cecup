@@ -208,26 +208,29 @@ main(int32 argc, char *argv[]) {
     char destination_path_buffer[4096];
     int64 destination_path_length;
 
-    char *locale_devel = "./po";
-    char *locale_system = "/usr/share/locale/";
-    char *locale_local_system = "/usr/local/share/locale/";
+    {
+        char *locale_devel = "./po";
+        char *locale_system = "/usr/share/locale/";
+        char *locale_local_system = "/usr/local/share/locale/";
 
-    if (setlocale(LC_ALL, "") == NULL) {
-        error("Error setting locale: %s.\n", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
+        if (setlocale(LC_ALL, "") == NULL) {
+            error("Error setting locale: %s.\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
 
-    if (access(locale_devel, F_OK) == 0) {
-        bindtextdomain("cecup", locale_devel);
-    } else if (access(locale_system, F_OK) == 0) {
-        bindtextdomain("cecup", locale_system);
-    } else if (access(locale_local_system, F_OK) == 0) {
-        bindtextdomain("cecup", locale_system);
-    } else {
-        error("Can't find any locale directory available.\n");
+        if (access(locale_devel, F_OK) == 0) {
+            bindtextdomain("cecup", locale_devel);
+        } else if (access(locale_system, F_OK) == 0) {
+            bindtextdomain("cecup", locale_system);
+        } else if (access(locale_local_system, F_OK) == 0) {
+            bindtextdomain("cecup", locale_system);
+        } else {
+            error("Can't find any locale directory available.\n");
+        }
+
+        bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+        textdomain(GETTEXT_PACKAGE);
     }
-    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-    textdomain(GETTEXT_PACKAGE);
 
     gtk_init(&argc, &argv);
 
