@@ -26,6 +26,7 @@
 #include "i18n.h"
 
 #define BUTTON_PADDING 5
+#define FILTER_BUTTON_PADDING 2
 #define LABEL_PADDING 0
 
 static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path);
@@ -516,17 +517,17 @@ main(int32 argc, char *argv[]) {
 
     // clang-format off
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_new,
-                       FALSE, FALSE, 2);
+                       FALSE, FALSE, FILTER_BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_hard,
-                       FALSE, FALSE, 2);
+                       FALSE, FALSE, FILTER_BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_update,
-                       FALSE, FALSE, 2);
+                       FALSE, FALSE, FILTER_BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_equal,
-                       FALSE, FALSE, 2);
+                       FALSE, FALSE, FILTER_BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_delete,
-                       FALSE, FALSE, 2);
+                       FALSE, FALSE, FILTER_BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_ignore,
-                       FALSE, FALSE, 2);
+                       FALSE, FALSE, FILTER_BUTTON_PADDING);
     // clang-format on
     gtk_box_pack_start(GTK_BOX(main_vbox), filter_hbox, FALSE, FALSE, 0);
 
