@@ -421,7 +421,80 @@ main(int32 argc, char *argv[]) {
     cecup.stats_label = gtk_label_new(_("✅ Everything ready"));
     gtk_box_pack_start(GTK_BOX(main_vbox), cecup.stats_label, FALSE, FALSE, 5);
 
-    read_config();
+    {
+        GKeyFile *key;
+        char *val;
+
+        key = g_key_file_new();
+        if (g_key_file_load_from_file(key, cecup.config_path, G_KEY_FILE_NONE,
+                                      NULL)) {
+            if ((val = g_key_file_get_string(key, "Paths", "src", NULL))) {
+                gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), val);
+                g_free(val);
+            }
+            if ((val = g_key_file_get_string(key, "Paths", "dst", NULL))) {
+                gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), val);
+                g_free(val);
+            }
+            if ((val = g_key_file_get_string(key, "Tools", "diff", NULL))) {
+                gtk_entry_set_text(GTK_ENTRY(cecup.diff_entry), val);
+                g_free(val);
+            }
+            if ((val = g_key_file_get_string(key, "Tools", "term", NULL))) {
+                gtk_entry_set_text(GTK_ENTRY(cecup.term_entry), val);
+                g_free(val);
+            }
+
+            if (g_key_file_has_key(key, "Filters", "new", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(cecup.filter_new),
+                    g_key_file_get_boolean(key, "Filters", "new", NULL));
+            }
+            if (g_key_file_has_key(key, "Filters", "hard", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(cecup.filter_hard),
+                    g_key_file_get_boolean(key, "Filters", "hard", NULL));
+            }
+            if (g_key_file_has_key(key, "Filters", "update", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(cecup.filter_update),
+                    g_key_file_get_boolean(key, "Filters", "update", NULL));
+            }
+            if (g_key_file_has_key(key, "Filters", "equal", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(cecup.filter_equal),
+                    g_key_file_get_boolean(key, "Filters", "equal", NULL));
+            }
+            if (g_key_file_has_key(key, "Filters", "delete", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(cecup.filter_delete),
+                    g_key_file_get_boolean(key, "Filters", "delete", NULL));
+            }
+            if (g_key_file_has_key(key, "Filters", "ignore", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(cecup.filter_ignore),
+                    g_key_file_get_boolean(key, "Filters", "ignore", NULL));
+            }
+            if (g_key_file_has_key(key, "Options", "check_fs", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(cecup.check_fs),
+                    g_key_file_get_boolean(key, "Options", "check_fs", NULL));
+            }
+            if (g_key_file_has_key(key, "Options", "delete_after", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(cecup.delete_after),
+                    g_key_file_get_boolean(key, "Options", "delete_after",
+                                           NULL));
+            }
+            if (g_key_file_has_key(key, "Options", "delete_excluded", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(cecup.delete_excluded),
+                    g_key_file_get_boolean(key, "Options", "delete_excluded",
+                                           NULL));
+            }
+        }
+        g_key_file_free(key);
+    }
 
     // clang-format off
     g_signal_connect(browse_src, "clicked",
