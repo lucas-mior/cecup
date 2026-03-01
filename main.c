@@ -368,12 +368,14 @@ main(int32 argc, char *argv[]) {
                        FALSE, FALSE, LABEL_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.diff_entry, FALSE, FALSE,
                        LABEL_PADDING);
+
     gtk_entry_set_text(GTK_ENTRY(cecup.diff_entry), "unidiff.bash");
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new(_("Terminal:")),
                        FALSE, FALSE, LABEL_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.term_entry, FALSE, FALSE,
                        LABEL_PADDING);
     gtk_entry_set_text(GTK_ENTRY(cecup.term_entry), "xterm");
+
     gtk_box_pack_start(GTK_BOX(options_hbox), reset_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
