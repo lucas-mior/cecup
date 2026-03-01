@@ -687,8 +687,11 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     gtk_widget_set_has_tooltip(tree, TRUE);
-    g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
+    // clang-format off
+    g_signal_connect(tree, "query-tooltip",
+                     G_CALLBACK(on_tree_tooltip), NULL);
     g_signal_connect(tree, "button-press-event",
                      G_CALLBACK(on_tree_button_press), NULL);
+    // clang-format on
     return;
 }
