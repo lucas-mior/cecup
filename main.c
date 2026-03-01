@@ -277,8 +277,10 @@ main(int32 argc, char *argv[]) {
     gtk_window_set_title(GTK_WINDOW(cecup.gtk_window), "cecup");
     gtk_window_set_wmclass(GTK_WINDOW(cecup.gtk_window), "cecup", "Cecup");
     gtk_window_set_default_size(GTK_WINDOW(cecup.gtk_window), 1100, 800);
-    g_signal_connect(cecup.gtk_window, "destroy", G_CALLBACK(gtk_main_quit),
-                     NULL);
+    // clang-format off
+    g_signal_connect(cecup.gtk_window, "destroy",
+                     G_CALLBACK(gtk_main_quit), NULL);
+    // clang-format on
 
     main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_container_add(GTK_CONTAINER(cecup.gtk_window), main_vbox);
