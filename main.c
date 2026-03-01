@@ -537,10 +537,12 @@ main(int32 argc, char *argv[]) {
     read_config();
 
     // clang-format off
-    g_signal_connect(browse_src, "clicked", G_CALLBACK(on_browse_src), NULL);
-    g_signal_connect(browse_dst, "clicked", G_CALLBACK(on_browse_dst), NULL);
-    g_signal_connect(invert_button, "clicked", G_CALLBACK(on_invert_clicked),
-                     NULL);
+    g_signal_connect(browse_src, "clicked",
+                     G_CALLBACK(on_browse_src), NULL);
+    g_signal_connect(browse_dst, "clicked",
+                     G_CALLBACK(on_browse_dst), NULL);
+    g_signal_connect(invert_button, "clicked",
+                     G_CALLBACK(on_invert_clicked), NULL);
     g_signal_connect(cecup.preview_button, "clicked",
                      G_CALLBACK(on_preview_clicked), NULL);
     g_signal_connect(cecup.stop_button, "clicked",
