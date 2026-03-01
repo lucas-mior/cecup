@@ -172,16 +172,15 @@ dispatch_tree(int32 side, enum CecupAction action, char *path,
               char *link_target, int64 size, int64 mtime,
               enum CecupReason reason) {
     UIUpdateData *data;
-    int64 path_len;
     int64 target_len;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
-    path_len = strlen64(path);
-    data->filepath = xarena_push(cecup.ui_arena, path_len + 1);
-    memcpy64(data->filepath, path, path_len + 1);
+    data->filepath_length = strlen64(path);
+    data->filepath = xarena_push(cecup.ui_arena, data->filepath_length + 1);
+    memcpy64(data->filepath, path, data->filepath_length + 1);
 
     if (link_target) {
         target_len = strlen64(link_target);

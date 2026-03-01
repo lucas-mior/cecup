@@ -1447,29 +1447,26 @@ update_ui_handler(gpointer user_data) {
         }
 
         if (strcmp(src_path_final, "-") == 0) {
-            int64 path_len;
+            int64 path_len = data->filepath_length;
 
             row->src_path = xarena_push(cecup.row_arena, 2);
             memcpy64(row->src_path, "-", 2);
-            path_len = strlen64(data->filepath) + 1;
-            row->dst_path = xarena_push(cecup.row_arena, path_len);
-            memcpy64(row->dst_path, data->filepath, path_len);
+            row->dst_path = xarena_push(cecup.row_arena, path_len + 1);
+            memcpy64(row->dst_path, data->filepath, path_len + 1);
         } else if (strcmp(dst_path_final, "-") == 0) {
-            int64 path_len;
+            int64 path_len = data->filepath_length;
 
-            path_len = strlen64(data->filepath) + 1;
             row->src_path = xarena_push(cecup.row_arena, path_len);
             memcpy64(row->src_path, data->filepath, path_len);
             row->dst_path = xarena_push(cecup.row_arena, 2);
             memcpy64(row->dst_path, "-", 2);
         } else {
-            int64 path_len;
+            int64 path_len = data->filepath_length;
 
-            path_len = strlen64(data->filepath) + 1;
-            row->src_path = xarena_push(cecup.row_arena, path_len);
-            memcpy64(row->src_path, data->filepath, path_len);
-            row->dst_path = xarena_push(cecup.row_arena, path_len);
-            memcpy64(row->dst_path, data->filepath, path_len);
+            row->src_path = xarena_push(cecup.row_arena, path_len + 1);
+            memcpy64(row->src_path, data->filepath, path_len + 1);
+            row->dst_path = xarena_push(cecup.row_arena, path_len + 1);
+            memcpy64(row->dst_path, data->filepath, path_len + 1);
         }
 
         if (cecup.rows_count >= cecup.rows_capacity) {

@@ -216,6 +216,7 @@ typedef struct UIUpdateData {
     char *message;
     enum CecupAction action;
     char *filepath;
+    int64 filepath_length;
     char *link_target;
     enum CecupReason reason;
     char *src_base;
