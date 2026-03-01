@@ -1153,7 +1153,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label(_("Copy Relative Path"));
-            if (strcmp(file_path, "-") == 0) {
+            if (file_path == NULL) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
                 g_signal_connect(item, "activate",
@@ -1162,7 +1162,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label(_("Copy Full Path"));
-            if (strcmp(file_path, "-") == 0) {
+            if (file_path == NULL) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
                 g_signal_connect(item, "activate",
@@ -1188,10 +1188,9 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label(_("Diff"));
-            is_disabled
-                = (strcmp(file_path, "-") == 0 || strcmp(other_path, "-") == 0
-                   || action == UI_ACTION_HARDLINK
-                   || action == UI_ACTION_SYMLINK);
+            is_disabled = (file_path == NULL || other_path == NULL
+                           || action == UI_ACTION_HARDLINK
+                           || action == UI_ACTION_SYMLINK);
             if (is_disabled) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
@@ -1201,7 +1200,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label(_("Delete"));
-            if (strcmp(file_path, "-") == 0) {
+            if (file_path == NULL) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_delete),
@@ -1273,7 +1272,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             action = row->dst_action;
         }
 
-        if (strcmp(file_path, "-") == 0) {
+        if (file_path == NULL) {
             if (side == 0) {
                 file_path = row->dst_path;
             } else {
@@ -1390,7 +1389,7 @@ update_ui_handler(gpointer user_data) {
 
         if (data->action == UI_ACTION_NEW) {
             bg_src = "#D4EDDA";
-            dst_path_final = "-";
+            dst_path_final = NULL;
         } else if (data->action == UI_ACTION_UPDATE) {
             bg_src = "#CCE5FF";
             bg_dst = "#CCE5FF";
@@ -1413,7 +1412,7 @@ update_ui_handler(gpointer user_data) {
                 bg_dst = "#F8D7DA";
                 action_src = UI_ACTION_DELETED;
                 action_dst = UI_ACTION_DELETE;
-                src_path_final = "-";
+                src_path_final = NULL;
             }
         }
 
@@ -1447,20 +1446,19 @@ update_ui_handler(gpointer user_data) {
             memcpy64(row->link_target, data->link_target, target_len);
         }
 
-        if (strcmp(src_path_final, "-") == 0) {
+        if (src_path_final == NULL) {
             int64 path_len = data->filepath_length;
 
-            row->src_path = xarena_push(cecup.row_arena, 2);
-            memcpy64(row->src_path, "-", 2);
+            row->src_path = NULL;
             row->dst_path = xarena_push(cecup.row_arena, path_len + 1);
             memcpy64(row->dst_path, data->filepath, path_len + 1);
-        } else if (strcmp(dst_path_final, "-") == 0) {
+        } else if (dst_path_final == NULL) {
             int64 path_len = data->filepath_length;
 
             row->src_path = xarena_push(cecup.row_arena, path_len);
             memcpy64(row->src_path, data->filepath, path_len);
             row->dst_path = xarena_push(cecup.row_arena, 2);
-            memcpy64(row->dst_path, "-", 2);
+            row->dst_path = NULL;
         } else {
             int64 path_len = data->filepath_length;
 
