@@ -277,6 +277,7 @@ main(int32 argc, char *argv[]) {
     gtk_window_set_title(GTK_WINDOW(cecup.gtk_window), "cecup");
     gtk_window_set_wmclass(GTK_WINDOW(cecup.gtk_window), "cecup", "Cecup");
     gtk_window_set_default_size(GTK_WINDOW(cecup.gtk_window), 1100, 800);
+
     // clang-format off
     g_signal_connect(cecup.gtk_window, "destroy",
                      G_CALLBACK(gtk_main_quit), NULL);
