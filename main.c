@@ -308,18 +308,20 @@ main(int32 argc, char *argv[]) {
         cecup.sync_button, _("Start copying and updating the selected files"));
     gtk_widget_set_sensitive(cecup.stop_button, FALSE);
 
-    gtk_box_pack_start(GTK_BOX(button_hbox), cecup.ignore_button, FALSE, FALSE,
-                       BUTTON_PADDING);
-    gtk_box_pack_start(GTK_BOX(button_hbox), cecup.fix_button, FALSE, FALSE,
-                       BUTTON_PADDING);
-    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.sync_button, FALSE, FALSE,
-                     BUTTON_PADDING);
-    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.stop_button, FALSE, FALSE,
-                     BUTTON_PADDING);
-    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.preview_button, FALSE, FALSE,
-                     BUTTON_PADDING);
-    gtk_box_pack_start(GTK_BOX(header_vbox), button_hbox, FALSE, FALSE,
-                       BUTTON_PADDING);
+    // clang-format off
+    gtk_box_pack_start(GTK_BOX(button_hbox), cecup.ignore_button,
+                       FALSE, FALSE, BUTTON_PADDING);
+    gtk_box_pack_start(GTK_BOX(button_hbox), cecup.fix_button,
+                       FALSE, FALSE, BUTTON_PADDING);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.sync_button,
+                     FALSE, FALSE, BUTTON_PADDING);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.stop_button,
+                     FALSE, FALSE, BUTTON_PADDING);
+    gtk_box_pack_end(GTK_BOX(button_hbox), cecup.preview_button,
+                     FALSE, FALSE, BUTTON_PADDING);
+    gtk_box_pack_start(GTK_BOX(header_vbox), button_hbox,
+                       FALSE, FALSE, BUTTON_PADDING);
+    // clang-format on
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup.check_fs
