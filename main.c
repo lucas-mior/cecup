@@ -196,9 +196,6 @@ main(int32 argc, char *argv[]) {
     GtkAdjustment *r_adj;
 
     char cwd[MAX_PATH_LENGTH];
-    char xdg_buffer[MAX_PATH_LENGTH];
-    char config_base[MAX_PATH_LENGTH];
-    char *XDG_CONFIG_HOME;
 
     char *default_src;
     char *default_dst;
@@ -251,27 +248,32 @@ main(int32 argc, char *argv[]) {
     cecup.sort_order = GTK_SORT_ASCENDING;
     cecup.refresh_id = 0;
 
-    if ((XDG_CONFIG_HOME = getenv("XDG_CONFIG_HOME")) == NULL) {
-        char *HOME;
-        if ((HOME = getenv("HOME")) == NULL) {
-            error("HOME is not defined. Fix your system.\n");
-            exit(EXIT_FAILURE);
+    {
+        char xdg_buffer[MAX_PATH_LENGTH];
+        char config_base[MAX_PATH_LENGTH];
+        char *XDG_CONFIG_HOME;
+        if ((XDG_CONFIG_HOME = getenv("XDG_CONFIG_HOME")) == NULL) {
+            char *HOME;
+            if ((HOME = getenv("HOME")) == NULL) {
+                error("HOME is not defined. Fix your system.\n");
+                exit(EXIT_FAILURE);
+            }
+            SNPRINTF(xdg_buffer, "%s/.config", HOME);
+            XDG_CONFIG_HOME = xdg_buffer;
         }
-        SNPRINTF(xdg_buffer, "%s/.config", HOME);
-        XDG_CONFIG_HOME = xdg_buffer;
+        SNPRINTF(config_base, "%s/cecup", XDG_CONFIG_HOME);
+
+        if (access(config_base, F_OK) == -1) {
+            char cmd[4096];
+            g_mkdir_with_parents(config_base, 0755);
+
+            SNPRINTF(cmd, "cp -r /etc/cecup/* '%s/'", config_base);
+            system(cmd);
+        }
+
+        SNPRINTF(cecup.ignore_path, "%s/ignore.conf", config_base);
+        SNPRINTF(cecup.config_path, "%s/cecup.conf", config_base);
     }
-    SNPRINTF(config_base, "%s/cecup", XDG_CONFIG_HOME);
-
-    if (access(config_base, F_OK) == -1) {
-        char cmd[4096];
-        g_mkdir_with_parents(config_base, 0755);
-
-        SNPRINTF(cmd, "cp -r /etc/cecup/* '%s/'", config_base);
-        system(cmd);
-    }
-
-    SNPRINTF(cecup.ignore_path, "%s/ignore.conf", config_base);
-    SNPRINTF(cecup.config_path, "%s/cecup.conf", config_base);
 
     cecup.gtk_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(cecup.gtk_window), "cecup");
