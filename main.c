@@ -252,6 +252,7 @@ main(int32 argc, char *argv[]) {
         char xdg_buffer[MAX_PATH_LENGTH];
         char config_base[MAX_PATH_LENGTH];
         char *XDG_CONFIG_HOME;
+
         if ((XDG_CONFIG_HOME = getenv("XDG_CONFIG_HOME")) == NULL) {
             char *HOME;
             if ((HOME = getenv("HOME")) == NULL) {
