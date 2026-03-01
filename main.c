@@ -28,6 +28,10 @@
 #define BUTTON_PADDING 5
 #define FILTER_BUTTON_PADDING 2
 #define LABEL_PADDING 0
+#define FILL_FALSE false
+#define EXPAND_FALSE false
+#define FILL_TRUE true
+#define EXPAND_TRUE true
 
 static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path);
 
@@ -183,17 +187,17 @@ main(int32 argc, char *argv[]) {
 
     // clang-format off
     gtk_box_pack_start(GTK_BOX(button_hbox), cecup.ignore_button,
-                       FALSE, FALSE, BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(button_hbox), cecup.fix_button,
-                       FALSE, FALSE, BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
     gtk_box_pack_end(GTK_BOX(button_hbox), cecup.sync_button,
-                     FALSE, FALSE, BUTTON_PADDING);
+                     EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
     gtk_box_pack_end(GTK_BOX(button_hbox), cecup.stop_button,
-                     FALSE, FALSE, BUTTON_PADDING);
+                     EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
     gtk_box_pack_end(GTK_BOX(button_hbox), cecup.preview_button,
-                     FALSE, FALSE, BUTTON_PADDING);
+                     EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(header_vbox), button_hbox,
-                       FALSE, FALSE, BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
     // clang-format on
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
