@@ -280,13 +280,14 @@ main(int32 argc, char *argv[]) {
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_preview),
                               _("Analyzing changes"));
 
-    gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_rsync, FALSE,
-                       FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_equal, FALSE,
-                       FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_preview, FALSE,
-                       FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(header_vbox), progress_vbox, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_rsync,
+                       EXPAND_FALSE, FILL_FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_equal,
+                       EXPAND_FALSE, FILL_FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_preview,
+                       EXPAND_FALSE, FILL_FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(header_vbox), progress_vbox, EXPAND_FALSE,
+                       FILL_FALSE, 5);
 
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
         error("Error getting current working directory: %s.\n",
