@@ -553,7 +553,9 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(reset_button, "clicked", G_CALLBACK(on_reset_clicked),
                      NULL);
 
-    g_signal_connect(cecup.filter_new, "toggled", G_CALLBACK(on_filter_toggled),
+    // clang-format off
+    g_signal_connect(cecup.filter_new, "toggled",
+                     G_CALLBACK(on_filter_toggled),
                      NULL);
     g_signal_connect(cecup.filter_hard, "toggled",
                      G_CALLBACK(on_filter_toggled), NULL);
@@ -566,22 +568,23 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(cecup.filter_ignore, "toggled",
                      G_CALLBACK(on_filter_toggled), NULL);
 
-    g_signal_connect(cecup.diff_entry, "changed", G_CALLBACK(on_config_changed),
-                     NULL);
-    g_signal_connect(cecup.term_entry, "changed", G_CALLBACK(on_config_changed),
-                     NULL);
-    g_signal_connect(cecup.src_entry, "changed", G_CALLBACK(on_config_changed),
-                     NULL);
-    g_signal_connect(cecup.dst_entry, "changed", G_CALLBACK(on_config_changed),
-                     NULL);
-    g_signal_connect(cecup.check_fs, "toggled", G_CALLBACK(on_config_changed),
-                     NULL);
+    g_signal_connect(cecup.diff_entry, "changed",
+                     G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup.term_entry, "changed",
+                     G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup.src_entry, "changed",
+                     G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup.dst_entry, "changed",
+                     G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup.check_fs, "toggled",
+                     G_CALLBACK(on_config_changed), NULL);
     g_signal_connect(cecup.check_equal, "toggled",
                      G_CALLBACK(on_config_changed), NULL);
     g_signal_connect(cecup.delete_excluded, "toggled",
                      G_CALLBACK(on_delete_excluded_toggled), NULL);
     g_signal_connect(cecup.delete_after, "toggled",
                      G_CALLBACK(on_delete_after_toggled), NULL);
+    // clang-format on
 
     gtk_widget_show_all(cecup.gtk_window);
     gtk_main();
