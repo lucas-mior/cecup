@@ -180,8 +180,26 @@ cecup_row_compare(const void *a, const void *b) {
 
     switch (cecup.sort_col) {
     case COL_SRC_PATH:
+        if (row_a->src_path == NULL && row_b->src_path == NULL) {
+            result = 0;
+        } else if (row_a->src_path == NULL) {
+            result = -1;
+        } else if (row_b->src_path == NULL) {
+            result = 1;
+        } else {
+            result = strcmp(row_a->src_path, row_b->src_path);
+        }
+        break;
     case COL_DST_PATH:
-        result = strcmp(row_a->src_path, row_b->src_path);
+        if (row_a->dst_path == NULL && row_b->dst_path == NULL) {
+            result = 0;
+        } else if (row_a->dst_path == NULL) {
+            result = -1;
+        } else if (row_b->dst_path == NULL) {
+            result = 1;
+        } else {
+            result = strcmp(row_a->dst_path, row_b->dst_path);
+        }
         break;
     case COL_SIZE_RAW:
         if (row_a->size_raw > row_b->size_raw) {
@@ -1455,9 +1473,8 @@ update_ui_handler(gpointer user_data) {
         } else if (dst_path_final == NULL) {
             int64 path_len = data->filepath_length;
 
-            row->src_path = xarena_push(cecup.row_arena, path_len);
-            memcpy64(row->src_path, data->filepath, path_len);
-            row->dst_path = xarena_push(cecup.row_arena, 2);
+            row->src_path = xarena_push(cecup.row_arena, path_len + 1);
+            memcpy64(row->src_path, data->filepath, path_len + 1);
             row->dst_path = NULL;
         } else {
             int64 path_len = data->filepath_length;
@@ -1500,8 +1517,9 @@ update_ui_handler(gpointer user_data) {
     case DATA_TYPE_REMOVE_TREE_ROW: {
         for (int32 i = 0; i < cecup.rows_count; i += 1) {
             CecupRow *row = cecup.rows[i];
-            if (strcmp(row->src_path, data->filepath) == 0
-                || strcmp(row->dst_path, data->filepath) == 0) {
+            if ((row->src_path && strcmp(row->src_path, data->filepath) == 0)
+                || (row->dst_path
+                    && strcmp(row->dst_path, data->filepath) == 0)) {
                 for (int32 j_idx = i; j_idx < cecup.rows_count - 1;
                      j_idx += 1) {
                     cecup.rows[j_idx] = cecup.rows[j_idx + 1];
