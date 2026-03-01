@@ -327,7 +327,8 @@ main(int32 argc, char *argv[]) {
 
     invert_button = gtk_button_new_with_label("<--->");
     gtk_widget_set_tooltip_text(invert_button, _("Invert Original and Backup"));
-    gtk_box_pack_start(GTK_BOX(paths_hbox), invert_button, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(paths_hbox), invert_button, EXPAND_FALSE,
+                       FILL_FALSE, 0);
 
     r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     cecup.dst_entry = gtk_entry_new();
