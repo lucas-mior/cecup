@@ -731,10 +731,8 @@ bulk_sync_worker(gpointer user_data) {
                 }
                 output_line_pos += (int32)r;
 
-                while (
-                    (eol = memchr64(output_line_buffer, '\n', output_line_pos))
-                    || (eol = memchr64(output_line_buffer, '\r',
-                                       output_line_pos))) {
+                while ((eol = memchr64(output_line_buffer, '\n', r))
+                       || (eol = memchr64(output_line_buffer, '\r', r))) {
                     int32 line_len = (int32)(eol - output_line_buffer);
                     int32 remaining;
                     *eol = '\0';
