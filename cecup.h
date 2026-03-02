@@ -106,7 +106,7 @@ static char *reason_strings[] = {
     [UI_REASON_UPDATE]   = N_("The original file is newer"),
 };
 
-enum {
+enum CecupColumn : int {
     COL_SELECTED = 0,
     COL_SRC_ACTION,
     COL_DST_ACTION,
@@ -186,7 +186,7 @@ static struct {
     CecupRow **visible_rows;
     int32 visible_count;
 
-    int32 sort_col;
+    enum CecupColumn sort_col;
     GtkSortType sort_order;
     uint32 refresh_id;
 

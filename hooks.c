@@ -226,6 +226,16 @@ cecup_row_compare(const void *a, const void *b) {
     case COL_MTIME_RAW:
         result = (int64)row_a->mtime_raw - (int64)row_b->mtime_raw;
         break;
+    case COL_DST_ACTION:
+    case COL_DST_COLOR:
+    case COL_MTIME_TEXT:
+    case COL_REASON:
+    case COL_ROW_PTR:
+    case COL_SELECTED:
+    case COL_SIZE_TEXT:
+    case COL_SRC_ACTION:
+    case COL_SRC_COLOR:
+    case NUM_COLS:
     default:
         result = (int64)row_a->src_action - (int64)row_b->src_action;
         break;
@@ -858,7 +868,7 @@ on_filter_toggled(GtkToggleButton *b, void *data) {
 
 static void
 on_sort_changed(GtkTreeSortable *sortable, void *data) {
-    int32 id;
+    enum CecupColumn id;
     GtkSortType order;
 
     (void)data;
