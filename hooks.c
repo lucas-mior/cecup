@@ -357,11 +357,10 @@ refresh_ui_timeout_callback(void *data) {
 
 static void
 on_menu_apply(GtkWidget *m, void *data) {
-    UIUpdateData *ui_update_data;
+    UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
 
     (void)m;
-    ui_update_data = (UIUpdateData *)data;
 
     if ((tasks
          = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
@@ -382,12 +381,11 @@ on_menu_apply(GtkWidget *m, void *data) {
 
 static void
 on_menu_open(GtkWidget *m, void *data) {
-    UIUpdateData *ui_update_data;
+    UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
     char cmd[8192];
 
     (void)m;
-    ui_update_data = (UIUpdateData *)data;
 
     if ((tasks
          = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
@@ -423,11 +421,11 @@ on_menu_open(GtkWidget *m, void *data) {
 
 static void
 on_menu_open_dir(GtkWidget *m, void *data) {
-    UIUpdateData *ui_update_data;
+    UIUpdateData *ui_update_data = data;
+    ;
     GPtrArray *tasks;
 
     (void)m;
-    ui_update_data = (UIUpdateData *)data;
 
     if ((tasks
          = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
@@ -468,14 +466,13 @@ on_menu_open_dir(GtkWidget *m, void *data) {
 
 static void
 on_menu_copy_relative(GtkWidget *m, void *data) {
-    UIUpdateData *ui_update_data;
+    UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
     char buffer[1048576];
     char *write_pointer;
     int64 remaining_capacity;
 
     (void)m;
-    ui_update_data = (UIUpdateData *)data;
     write_pointer = buffer;
     remaining_capacity = (int64)sizeof(buffer) - 1;
 
@@ -516,14 +513,13 @@ on_menu_copy_relative(GtkWidget *m, void *data) {
 
 static void
 on_menu_copy_full(GtkWidget *m, void *data) {
-    UIUpdateData *ui_update_data;
+    UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
     char buffer[1048576];
     char *write_pointer;
     int64 remaining_capacity;
 
     (void)m;
-    ui_update_data = (UIUpdateData *)data;
     write_pointer = buffer;
     remaining_capacity = (int64)sizeof(buffer) - 1;
 
@@ -588,13 +584,12 @@ on_menu_copy_full(GtkWidget *m, void *data) {
 
 static void
 on_menu_delete(GtkWidget *m, void *data) {
-    UIUpdateData *ui_update_data;
+    UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
     GtkWidget *dialog;
     int32 count;
 
     (void)m;
-    ui_update_data = (UIUpdateData *)data;
 
     if ((tasks
          = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
@@ -625,7 +620,7 @@ on_menu_delete(GtkWidget *m, void *data) {
 
 static void
 on_menu_diff(GtkWidget *m, void *data) {
-    UIUpdateData *ui_update_data;
+    UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
     char *diff_tool;
     char *term_cmd;
@@ -633,7 +628,6 @@ on_menu_diff(GtkWidget *m, void *data) {
     int64 term_len;
 
     (void)m;
-    ui_update_data = (UIUpdateData *)data;
     diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.diff_entry));
     term_cmd = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.term_entry));
     diff_len = strlen64(diff_tool);
@@ -671,12 +665,11 @@ on_menu_diff(GtkWidget *m, void *data) {
 
 static void
 on_menu_ignore_ext(GtkWidget *m, void *data) {
-    UIUpdateData *ui_update_data;
+    UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
     FILE *fp;
 
     (void)m;
-    ui_update_data = (UIUpdateData *)data;
 
     do {
         if ((tasks
@@ -713,12 +706,11 @@ on_menu_ignore_ext(GtkWidget *m, void *data) {
 
 static void
 on_menu_ignore_dir(GtkWidget *m, void *data) {
-    UIUpdateData *ui_update_data;
+    UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
     FILE *fp;
 
     (void)m;
-    ui_update_data = (UIUpdateData *)data;
 
     do {
         if ((tasks
