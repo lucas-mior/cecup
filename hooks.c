@@ -513,11 +513,12 @@ static void
 on_menu_copy_full(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
-    char buffer[1048576];
+    char *buffer;
     char *write_pointer;
     int64 remaining_capacity;
 
     (void)m;
+    buffer = xmalloc(1048576);
     write_pointer = buffer;
     remaining_capacity = (int64)sizeof(buffer) - 1;
 
