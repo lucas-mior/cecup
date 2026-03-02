@@ -63,18 +63,6 @@ option_remove() {
     echo "$1" | sed "s/$2//g"
 }
 
-compile_locales() {
-    if [ ! -d "po" ]; then
-        return
-    fi
-    for lang in $LANGS; do
-        if [ -f "po/$lang.po" ]; then
-            mkdir -p "po/$lang/LC_MESSAGES"
-            msgfmt "po/$lang.po" -o "po/$lang/LC_MESSAGES/$program.mo"
-        fi
-    done
-}
-
 case "$target" in
 "debug")
     CFLAGS="$CFLAGS -g -fsanitize=undefined"
@@ -176,7 +164,16 @@ case "$target" in
 "build"|"debug"|"valgrind")
     trace_on
 
-    compile_locales
+    if [ ! -d "po" ]; then
+        return
+    fi
+    for lang in $LANGS; do
+        if [ -f "po/$lang.po" ]; then
+            mkdir -p "po/$lang/LC_MESSAGES"
+            msgfmt "po/$lang.po" -o "po/$lang/LC_MESSAGES/$program.mo"
+        fi
+    done
+
     ctags --kinds-C=+l+d ./*.h ./*.c         2> /dev/null || true
     vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
     $CC $CPPFLAGS $CFLAGS main.c -o "bin/$program" $LDFLAGS
