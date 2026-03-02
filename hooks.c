@@ -1480,10 +1480,16 @@ update_ui_handler(gpointer user_data) {
                      row->link_target_len + 1);
         }
 
-        row->src_path_len
-            = (src_path_final == NULL) ? 0 : data->filepath_length;
-        row->dst_path_len
-            = (dst_path_final == NULL) ? 0 : data->filepath_length;
+        if (src_path_final) {
+            row->src_path_len = data->filepath_length;
+        } else {
+            row->src_path_len = 0;
+        }
+        if (dst_path_final) {
+            row->dst_path_len = data->filepath_length;
+        } else {
+            row->dst_path_len = 0;
+        }
 
         if (src_path_final == NULL) {
             int64 path_len = data->filepath_length;
