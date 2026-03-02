@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-02 17:02-0300\n"
+"POT-Creation-Date: 2026-03-02 17:04-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -298,6 +298,15 @@ msgstr ""
 msgid "_Select"
 msgstr "Selecionar Pasta"
 
+#: hooks.c:1178
+msgid "by extension"
+msgstr "pela extensão"
+
+#: hooks.c:1175
+#, c-format
+msgid "by extension (*%s)"
+msgstr "pela extensão (*%s)"
+
 #: main.c:183
 msgid "⏩ Apply Changes"
 msgstr "⏩ Aplicar Mudanças"
@@ -354,11 +363,3 @@ msgstr "🗑️ Excluir"
 #: main.c:176
 msgid "🛠️ Rename problematic files"
 msgstr "🛠️ Corrigir nomes problemáticos"
-
-#: hooks.c:1178
-msgid "by extension"
-msgstr "pela extensão"
-
-#: hooks.c:1175
-msgid "by extension (*%s)"
-msgstr "pela extensão (*%s)"
