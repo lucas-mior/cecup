@@ -1396,7 +1396,6 @@ add_row_logic(UIUpdateData *data) {
     char *dst_path_final = data->filepath;
     enum CecupAction action_src = data->action;
     enum CecupAction action_dst = data->action;
-    int64 path_len;
 
     switch (data->action) {
     case UI_ACTION_NEW:
@@ -1481,20 +1480,15 @@ add_row_logic(UIUpdateData *data) {
         row->dst_path_len = 0;
     }
 
-    path_len = data->filepath_length;
     if (src_path_final == NULL) {
         row->src_path = NULL;
-        row->dst_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
-        memcpy64(row->dst_path, data->filepath, path_len + 1);
+        row->dst_path = data->filepath;
     } else if (dst_path_final == NULL) {
-        row->src_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
-        memcpy64(row->src_path, data->filepath, path_len + 1);
+        row->src_path = data->filepath;
         row->dst_path = NULL;
     } else {
-        row->src_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
-        memcpy64(row->src_path, data->filepath, path_len + 1);
-        row->dst_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
-        memcpy64(row->dst_path, data->filepath, path_len + 1);
+        row->src_path = data->filepath;
+        row->dst_path = data->filepath;
     }
 
     if (cecup.rows_count >= cecup.rows_capacity) {
@@ -1620,23 +1614,7 @@ update_ui_handler(void *user_data) {
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     if (data->type == DATA_TYPE_TREE_ROW_BATCH) {
-        for (int32 i = data->batch_count - 1; i >= 0; i -= 1) {
-            UIUpdateData *item = &data->batch[i];
-            if (item->link_target) {
-                arena_pop(cecup.ui_arena, item->link_target);
-            }
-            if (item->filepath) {
-                arena_pop(cecup.ui_arena, item->filepath);
-            }
-        }
         arena_pop(cecup.ui_arena, data->batch);
-    } else {
-        if (data->filepath) {
-            arena_pop(cecup.ui_arena, data->filepath);
-        }
-        if (data->link_target) {
-            arena_pop(cecup.ui_arena, data->link_target);
-        }
     }
     if (data->message) {
         arena_pop(cecup.ui_arena, data->message);

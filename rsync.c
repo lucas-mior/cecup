@@ -221,14 +221,14 @@ dispatch_tree(int32 side,
 
     data->filepath_length = strlen64(path);
     data->filepath
-        = xarena_push(cecup.ui_arena, ALIGN16(data->filepath_length + 1));
+        = xarena_push(cecup.row_arena, ALIGN16(data->filepath_length + 1));
     memcpy64(data->filepath, path, data->filepath_length + 1);
 
     if (link_target) {
         target_len = strlen64(link_target);
         data->link_target_len = target_len;
         data->link_target
-            = xarena_push(cecup.ui_arena, ALIGN16(target_len + 1));
+            = xarena_push(cecup.row_arena, ALIGN16(target_len + 1));
         memcpy64(data->link_target, link_target, target_len + 1);
     }
     g_mutex_unlock(&cecup.ui_arena_mutex);
