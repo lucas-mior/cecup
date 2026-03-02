@@ -177,7 +177,7 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(
         cecup.fix_button,
         _("Fix file names with special characters that cause errors"));
-    cecup.stop_button = gtk_button_new_with_label(_("Stop"));
+    cecup.stop_button = gtk_button_new_with_label(_("⏹️ Stop"));
     gtk_widget_set_tooltip_text(cecup.stop_button,
                                 _("Cancel the current task"));
     cecup.sync_button = gtk_button_new_with_label(_("⏩ Apply Changes"));
