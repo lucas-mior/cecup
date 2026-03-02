@@ -1172,10 +1172,10 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
 
             if ((extension_ptr = strrchr(ui_update_data->filepath, '.'))) {
-                SNPRINTF(extension_label, _("🧩 Extension (*%s)"),
+                SNPRINTF(extension_label, _("by extension (*%s)"),
                          extension_ptr);
             } else {
-                SNPRINTF(extension_label, "%s", _("🧩 Extension"));
+                SNPRINTF(extension_label, "%s", _("by extension"));
             }
             sub_ext = gtk_menu_item_new_with_label(extension_label);
             g_signal_connect(sub_ext, "activate",

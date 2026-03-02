@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-02 16:49-0300\n"
+"POT-Creation-Date: 2026-03-02 17:02-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -302,7 +302,7 @@ msgstr "Selecionar Pasta"
 msgid "⏩ Apply Changes"
 msgstr "⏩ Aplicar Mudanças"
 
-#: hooks.c:1161
+#: hooks.c:1165
 msgid "⏯️ Apply"
 msgstr "⏯️ Aplicar"
 
@@ -310,31 +310,36 @@ msgstr "⏯️ Aplicar"
 msgid "✅ Everything ready"
 msgstr "✅ Tudo pronto"
 
-#: hooks.c:1166
+#: hooks.c:1170
 msgid "💤 Ignore..."
 msgstr "💤 Ignorar..."
 
-#: hooks.c:1173
+#: hooks.c:1191 hooks.c:1195
 msgid "📁 Dir"
 msgstr "📁 Pasta"
 
-#: hooks.c:1137
+#: hooks.c:1188
+#, fuzzy, c-format
+msgid "📁 Dir (/%s/)"
+msgstr "📁 Pasta (/%s/)"
+
+#: hooks.c:1141
 msgid "📂 Open Folder"
 msgstr "📂 Abrir Pasta"
 
-#: hooks.c:1132
+#: hooks.c:1136
 msgid "📄 Open File"
 msgstr "📄 Abrir arquivo"
 
-#: hooks.c:1142
+#: hooks.c:1146
 msgid "📋 Copy Relative Path"
 msgstr "📋 Copiar caminho relativo"
 
-#: hooks.c:1152
+#: hooks.c:1156
 msgid "📍 Copy Full Path"
 msgstr "📍 Copiar caminho completo"
 
-#: hooks.c:1179
+#: hooks.c:1203
 msgid "🔍 Diff"
 msgstr "Diff"
 
@@ -342,7 +347,7 @@ msgstr "Diff"
 msgid "🔎 Analyze changes between folders"
 msgstr "🔎 Analisar mudanças entre as pastas"
 
-#: hooks.c:1191
+#: hooks.c:1215
 msgid "🗑️ Delete"
 msgstr "🗑️ Excluir"
 
@@ -350,6 +355,10 @@ msgstr "🗑️ Excluir"
 msgid "🛠️ Rename problematic files"
 msgstr "🛠️ Corrigir nomes problemáticos"
 
-#: hooks.c:1169
-msgid "🧩 Extension"
-msgstr "🧩 Extensão"
+#: hooks.c:1178
+msgid "by extension"
+msgstr "pela extensão"
+
+#: hooks.c:1175
+msgid "by extension (*%s)"
+msgstr "pela extensão (*%s)"
