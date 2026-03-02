@@ -1458,9 +1458,11 @@ update_ui_handler(gpointer user_data) {
             time_t t = (time_t)data->mtime;
             struct tm *tm_info = localtime(&t);
             char buffer[32];
-            strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
+            int64 n;
+            n = strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
             row->mtime_raw = data->mtime;
-            row->mtime_text = xstrdup(buffer);
+            row->mtime_text = xarena_push(cecup.row_arena, ALIGN16(n + 1));
+            memcpy64(row->mtime_text, buffer, n + 1);
         } else {
             row->mtime_text = NULL;
             row->mtime_raw = 0;
