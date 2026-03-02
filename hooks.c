@@ -153,7 +153,7 @@ get_target_tasks(int32 side, char *clicked_path,
         g_ptr_array_add(tasks, task);
     }
 
-    if (tasks->len == 0 && clicked_path) {
+    if ((tasks->len) == 0 && clicked_path) {
         UIUpdateData *task;
         int64 path_len;
 
