@@ -1158,7 +1158,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             }
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-            item = gtk_menu_item_new_with_label(_("✅ Apply"));
+            item = gtk_menu_item_new_with_label(_("⏯️ Apply"));
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply),
                              ui_update_data);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
