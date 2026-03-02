@@ -135,7 +135,7 @@ typedef struct CecupRow {
     int64 link_target_len;
     char size_text[16];
     int64 size_raw;
-    char *mtime_text;
+    char mtime_text[32];
     int64 mtime_raw;
     char *src_color;
     char *dst_color;

@@ -1452,13 +1452,10 @@ add_row_logic(UIUpdateData *data) {
     if (data->mtime > 0) {
         time_t t = (time_t)data->mtime;
         struct tm *tm_info = localtime(&t);
-        char buffer[32];
-        int64 n = STRFTIME(buffer, "%Y-%m-%d %H:%M:%S", tm_info);
+        STRFTIME(row->mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
         row->mtime_raw = data->mtime;
-        row->mtime_text = xarena_push(cecup.row_arena, ALIGN16(n + 1));
-        memcpy64(row->mtime_text, buffer, n + 1);
     } else {
-        row->mtime_text = NULL;
+        strcpy(row->mtime_text, _("Unknown modification time"));
         row->mtime_raw = 0;
     }
 
