@@ -146,11 +146,14 @@ static struct {
     GtkWidget *gtk_window;
     GtkWidget *src_entry;
     GtkWidget *dst_entry;
+
     GtkWidget *diff_entry;
     GtkWidget *term_entry;
+
     GtkWidget *preview_button;
-    GtkWidget *sync_button;
     GtkWidget *stop_button;
+    GtkWidget *sync_button;
+
     GtkWidget *ignore_button;
     GtkWidget *fix_button;
 
