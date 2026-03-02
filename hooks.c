@@ -34,11 +34,15 @@
 
 static void
 free_task_list(GPtrArray *tasks) {
-    for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-        UIUpdateData *task;
+    if (tasks == NULL) {
+        return;
+    }
 
-        task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-        g_mutex_lock(&cecup.ui_arena_mutex);
+    g_mutex_lock(&cecup.ui_arena_mutex);
+
+    for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+        UIUpdateData *task = (UIUpdateData *)g_ptr_array_index(tasks, i);
+
         if (task->filepath) {
             arena_pop(cecup.ui_arena, task->filepath);
         }
@@ -61,9 +65,9 @@ free_task_list(GPtrArray *tasks) {
             arena_pop(cecup.ui_arena, task->link_target);
         }
         arena_pop(cecup.ui_arena, task);
-        g_mutex_unlock(&cecup.ui_arena_mutex);
     }
 
+    g_mutex_unlock(&cecup.ui_arena_mutex);
     g_ptr_array_unref(tasks);
     return;
 }
