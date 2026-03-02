@@ -348,7 +348,7 @@ refresh_ui_list(void) {
 }
 
 static gboolean
-refresh_ui_timeout_callback(gpointer data) {
+refresh_ui_timeout_callback(void *data) {
     (void)data;
     refresh_ui_list();
     cecup.refresh_id = 0;
@@ -356,7 +356,7 @@ refresh_ui_timeout_callback(gpointer data) {
 }
 
 static void
-on_menu_apply(GtkWidget *m, gpointer data) {
+on_menu_apply(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data;
     GPtrArray *tasks;
 
@@ -381,7 +381,7 @@ on_menu_apply(GtkWidget *m, gpointer data) {
 }
 
 static void
-on_menu_open(GtkWidget *m, gpointer data) {
+on_menu_open(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     char cmd[8192];
@@ -422,7 +422,7 @@ on_menu_open(GtkWidget *m, gpointer data) {
 }
 
 static void
-on_menu_open_dir(GtkWidget *m, gpointer data) {
+on_menu_open_dir(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data;
     GPtrArray *tasks;
 
@@ -467,7 +467,7 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
 }
 
 static void
-on_menu_copy_relative(GtkWidget *m, gpointer data) {
+on_menu_copy_relative(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     char buffer[1048576];
@@ -515,7 +515,7 @@ on_menu_copy_relative(GtkWidget *m, gpointer data) {
 }
 
 static void
-on_menu_copy_full(GtkWidget *m, gpointer data) {
+on_menu_copy_full(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     char buffer[1048576];
@@ -587,7 +587,7 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
 }
 
 static void
-on_menu_delete(GtkWidget *m, gpointer data) {
+on_menu_delete(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     GtkWidget *dialog;
@@ -624,7 +624,7 @@ on_menu_delete(GtkWidget *m, gpointer data) {
 }
 
 static void
-on_menu_diff(GtkWidget *m, gpointer data) {
+on_menu_diff(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     char *diff_tool;
@@ -670,7 +670,7 @@ on_menu_diff(GtkWidget *m, gpointer data) {
 }
 
 static void
-on_menu_ignore_ext(GtkWidget *m, gpointer data) {
+on_menu_ignore_ext(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     FILE *fp;
@@ -712,7 +712,7 @@ on_menu_ignore_ext(GtkWidget *m, gpointer data) {
 }
 
 static void
-on_menu_ignore_dir(GtkWidget *m, gpointer data) {
+on_menu_ignore_dir(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     FILE *fp;
@@ -755,7 +755,7 @@ on_menu_ignore_dir(GtkWidget *m, gpointer data) {
 }
 
 static void
-on_config_changed(GtkWidget *widget, gpointer data) {
+on_config_changed(GtkWidget *widget, void *data) {
     (void)widget;
     (void)data;
     save_config();
@@ -763,7 +763,7 @@ on_config_changed(GtkWidget *widget, gpointer data) {
 }
 
 static void
-on_delete_after_toggled(GtkToggleButton *b, gpointer data) {
+on_delete_after_toggled(GtkToggleButton *b, void *data) {
     (void)b;
     (void)data;
     save_config();
@@ -772,7 +772,7 @@ on_delete_after_toggled(GtkToggleButton *b, gpointer data) {
 }
 
 static void
-on_delete_excluded_toggled(GtkToggleButton *b, gpointer data) {
+on_delete_excluded_toggled(GtkToggleButton *b, void *data) {
     (void)data;
     if (gtk_toggle_button_get_active(b)) {
         g_signal_handlers_block_by_func(cecup.delete_after,
@@ -788,7 +788,7 @@ on_delete_excluded_toggled(GtkToggleButton *b, gpointer data) {
 }
 
 static void
-on_reset_clicked(GtkWidget *b, gpointer data) {
+on_reset_clicked(GtkWidget *b, void *data) {
     (void)b;
     (void)data;
 
@@ -811,7 +811,7 @@ on_reset_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_stop_clicked(GtkWidget *b, gpointer data) {
+on_stop_clicked(GtkWidget *b, void *data) {
     (void)b;
     (void)data;
     cecup.cancel_sync = 1;
@@ -819,7 +819,7 @@ on_stop_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_preview_clicked(GtkWidget *b, gpointer data) {
+on_preview_clicked(GtkWidget *b, void *data) {
     char *src_path;
     char *dst_path;
     ThreadData *thread_data;
@@ -859,7 +859,7 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_filter_toggled(GtkToggleButton *b, gpointer data) {
+on_filter_toggled(GtkToggleButton *b, void *data) {
     (void)data;
     (void)b;
     refresh_ui_list();
@@ -868,7 +868,7 @@ on_filter_toggled(GtkToggleButton *b, gpointer data) {
 }
 
 static void
-on_sort_changed(GtkTreeSortable *sortable, gpointer data) {
+on_sort_changed(GtkTreeSortable *sortable, void *data) {
     int32 id;
     GtkSortType order;
 
@@ -882,7 +882,7 @@ on_sort_changed(GtkTreeSortable *sortable, gpointer data) {
 }
 
 static void
-on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
+on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, void *data) {
     GtkTreeIter iter;
     CecupRow *row;
 
@@ -903,7 +903,7 @@ on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, gpointer data) {
 }
 
 static void
-on_ignore_clicked(GtkWidget *b, gpointer data) {
+on_ignore_clicked(GtkWidget *b, void *data) {
     GtkWidget *dialog;
     GtkWidget *scroll;
     GtkWidget *view;
@@ -947,7 +947,7 @@ on_ignore_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_fix_clicked(GtkWidget *b, gpointer data) {
+on_fix_clicked(GtkWidget *b, void *data) {
     char *src_path;
     char *dst_path;
     ThreadData *thread_data;
@@ -978,7 +978,7 @@ on_fix_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_invert_clicked(GtkWidget *b, gpointer data) {
+on_invert_clicked(GtkWidget *b, void *data) {
     char path_src[MAX_PATH_LENGTH];
     char path_dst[MAX_PATH_LENGTH];
     char *entry_text;
@@ -999,7 +999,7 @@ on_invert_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_sync_clicked(GtkWidget *b, gpointer data) {
+on_sync_clicked(GtkWidget *b, void *data) {
     char *path_src;
     char *path_dst;
     GtkWidget *dialog;
@@ -1039,7 +1039,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_browse_src(GtkWidget *b, gpointer data) {
+on_browse_src(GtkWidget *b, void *data) {
     GtkWidget *dialog;
 
     (void)data;
@@ -1060,7 +1060,7 @@ on_browse_src(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_browse_dst(GtkWidget *b, gpointer data) {
+on_browse_dst(GtkWidget *b, void *data) {
     GtkWidget *dialog;
 
     (void)data;
@@ -1081,7 +1081,7 @@ on_browse_dst(GtkWidget *b, gpointer data) {
 }
 
 static void
-on_scroll_sync(GtkAdjustment *s, gpointer d) {
+on_scroll_sync(GtkAdjustment *s, void *d) {
     double v;
 
     v = gtk_adjustment_get_value(s);
@@ -1092,7 +1092,7 @@ on_scroll_sync(GtkAdjustment *s, gpointer d) {
 }
 
 static gboolean
-on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
+on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
     int32 side;
     GtkTreePath *path;
 
@@ -1234,7 +1234,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
 
 static gboolean
 on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
-                gpointer d) {
+                void *d) {
     GtkTreePath *path_obj;
     GtkTreeViewColumn *col;
     gint bin_x;
@@ -1370,7 +1370,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 }
 
 static gboolean
-update_ui_handler(gpointer user_data) {
+update_ui_handler(void *user_data) {
     UIUpdateData *data = user_data;
 
     switch (data->type) {

@@ -560,7 +560,7 @@ main(int32 argc, char *argv[]) {
 
 static void
 cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
-               GtkTreeModel *model, GtkTreeIter *iter, gpointer data) {
+               GtkTreeModel *model, GtkTreeIter *iter, void *data) {
     int32 col_id;
     int32 row_idx;
     GtkTreePath *path;

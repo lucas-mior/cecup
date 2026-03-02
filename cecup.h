@@ -240,9 +240,9 @@ typedef struct UIUpdateData {
     enum DataType type;
 } UIUpdateData;
 
-static gboolean update_ui_handler(gpointer user_data);
-static void on_preview_clicked(GtkWidget *b, gpointer data);
+static gboolean update_ui_handler(void * user_data);
+static void on_preview_clicked(GtkWidget *b, void * data);
 static void refresh_ui_list(void);
-static gboolean refresh_ui_timeout_callback(gpointer data);
+static gboolean refresh_ui_timeout_callback(void * data);
 
 #endif /* CECUP_H */

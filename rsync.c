@@ -116,7 +116,7 @@ dispatch_log(char *format, ...) {
 }
 
 static gboolean
-log_error_handler(gpointer user_data) {
+log_error_handler(void *user_data) {
     UIUpdateData *data;
     GtkTextIter end;
     GtkTextTagTable *table;
@@ -392,8 +392,8 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path) {
     return;
 }
 
-static gpointer
-equal_scanner_worker(gpointer user_data) {
+static void *
+equal_scanner_worker(void *user_data) {
     EqualScannerData *data;
 
     data = user_data;
@@ -565,8 +565,8 @@ fix_fs_recursive(char *base_path, char *relative_path) {
     return;
 }
 
-static gpointer
-fix_fs_worker(gpointer user_data) {
+static void *
+fix_fs_worker(void *user_data) {
     ThreadData *thread_data;
     UIUpdateData *ready;
 
@@ -591,8 +591,8 @@ fix_fs_worker(gpointer user_data) {
     return NULL;
 }
 
-static gpointer
-bulk_sync_worker(gpointer user_data) {
+static void *
+bulk_sync_worker(void *user_data) {
     GPtrArray *tasks;
     UIUpdateData *ready;
 
@@ -906,8 +906,8 @@ bulk_sync_worker(gpointer user_data) {
     return NULL;
 }
 
-static gpointer
-sync_worker(gpointer user_data) {
+static void *
+sync_worker(void *user_data) {
     ThreadData *thread_data = (ThreadData *)user_data;
     GThread *scanner_thread = NULL;
     int64 total_files_preview = 0;
