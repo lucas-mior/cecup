@@ -539,11 +539,13 @@ on_menu_copy_full(GtkWidget *m, void *data) {
     char *buffer;
     char *write_pointer;
     int64 remaining_capacity;
+    int64 buffer_size;
 
     (void)m;
-    buffer = xmalloc(1048576);
+    buffer_size = 1048576;
+    buffer = xmalloc(buffer_size);
     write_pointer = buffer;
-    remaining_capacity = (int64)sizeof(buffer) - 1;
+    remaining_capacity = buffer_size - 1;
 
     if ((tasks
          = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
@@ -1518,6 +1520,7 @@ add_row_logic(UIUpdateData *data) {
         fatal(EXIT_FAILURE);
     }
 
+    g_mutex_lock(&cecup.row_arena_mutex);
     row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
     memset64(row, 0, SIZEOF(*row));
     row->src_action = src_action;
@@ -1590,6 +1593,7 @@ add_row_logic(UIUpdateData *data) {
     }
     cecup.rows[cecup.rows_count] = row;
     cecup.rows_count += 1;
+    g_mutex_unlock(&cecup.row_arena_mutex);
     return;
 }
 
@@ -1635,6 +1639,7 @@ update_ui_handler(void *user_data) {
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
+        g_mutex_lock(&cecup.row_arena_mutex);
         for (int32 i = 0; i < cecup.rows_count; i += 1) {
             CecupRow *row = cecup.rows[i];
             if ((row->src_path_len == data->filepath_length && row->src_path
@@ -1649,6 +1654,7 @@ update_ui_handler(void *user_data) {
                 break;
             }
         }
+        g_mutex_unlock(&cecup.row_arena_mutex);
         if (cecup.refresh_id == 0) {
             cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
                                              refresh_ui_timeout_callback, NULL);
@@ -1670,11 +1676,13 @@ update_ui_handler(void *user_data) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
         }
+        g_mutex_lock(&cecup.row_arena_mutex);
         arena_reset(cecup.row_arena);
         cecup.rows = xarena_push(
             cecup.row_arena, ALIGN16(cecup.rows_capacity*SIZEOF(CecupRow *)));
         cecup.visible_rows = xarena_push(
             cecup.row_arena, ALIGN16(cecup.rows_capacity*SIZEOF(CecupRow *)));
+        g_mutex_unlock(&cecup.row_arena_mutex);
 
         cecup.rows_count = 0;
         cecup.visible_count = 0;

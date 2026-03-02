@@ -101,6 +101,7 @@ main(int32 argc, char *argv[]) {
     gtk_init(&argc, &argv);
 
     cecup.row_arena = arena_create(SIZEMB(64));
+    g_mutex_init(&cecup.row_arena_mutex);
     cecup.ui_arena = arena_create(SIZEMB(16));
     g_mutex_init(&cecup.ui_arena_mutex);
 
@@ -548,6 +549,7 @@ main(int32 argc, char *argv[]) {
     gtk_main();
 
     arena_destroy(cecup.row_arena);
+    g_mutex_clear(&cecup.row_arena_mutex);
     arena_destroy(cecup.ui_arena);
     g_mutex_clear(&cecup.ui_arena_mutex);
     exit(EXIT_SUCCESS);

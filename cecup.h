@@ -194,6 +194,7 @@ static struct {
     uint32 refresh_id;
 
     Arena *row_arena;
+    GMutex row_arena_mutex;
     Arena *ui_arena;
     GMutex ui_arena_mutex;
 } cecup;

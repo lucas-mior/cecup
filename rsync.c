@@ -219,6 +219,7 @@ dispatch_tree(int32 side,
     memset64(data, 0, SIZEOF(UIUpdateData));
 
     data->filepath_length = strlen64(path);
+    g_mutex_lock(&cecup.row_arena_mutex);
     data->filepath
         = xarena_push(cecup.row_arena, ALIGN16(data->filepath_length + 1));
     memcpy64(data->filepath, path, data->filepath_length + 1);
@@ -230,6 +231,7 @@ dispatch_tree(int32 side,
             = xarena_push(cecup.row_arena, ALIGN16(target_len + 1));
         memcpy64(data->link_target, link_target, target_len + 1);
     }
+    g_mutex_unlock(&cecup.row_arena_mutex);
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     data->type = DATA_TYPE_TREE_ROW;
@@ -423,9 +425,11 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path,
 
                     g_mutex_lock(&cecup.ui_arena_mutex);
                     item->filepath_length = path_len;
+                    g_mutex_lock(&cecup.row_arena_mutex);
                     item->filepath
-                        = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+                        = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
                     memcpy64(item->filepath, sub_rel, path_len + 1);
+                    g_mutex_unlock(&cecup.row_arena_mutex);
                     g_mutex_unlock(&cecup.ui_arena_mutex);
 
                     item->side = SIDE_LEFT;
