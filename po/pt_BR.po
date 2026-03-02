@@ -303,8 +303,8 @@ msgid "⏩ Apply Changes"
 msgstr "⏩ Aplicar Mudanças"
 
 #: hooks.c:1161
-msgid "✅ Apply"
-msgstr "Aplicar"
+msgid "⏯️ Apply"
+msgstr "⏯️ Aplicar"
 
 #: main.c:422
 msgid "✅ Everything ready"
@@ -312,7 +312,7 @@ msgstr "✅ Tudo pronto"
 
 #: hooks.c:1166
 msgid "💤 Ignore..."
-msgstr "Ignorar..."
+msgstr "💤 Ignorar..."
 
 #: hooks.c:1173
 msgid "📁 Dir"
