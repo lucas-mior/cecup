@@ -709,25 +709,26 @@ on_menu_ignore_dir(GtkWidget *m, gpointer data) {
             == NULL) {
             break;
         }
-        if ((fp = fopen(cecup.ignore_path, "a"))) {
-            for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-                UIUpdateData *task;
-                char *dir;
-
-                task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-                if ((dir = g_path_get_dirname(task->filepath)) != NULL) {
-                    if (strcmp(dir, ".") != 0) {
-                        fprintf(fp, "\n/%s/", dir);
-                    }
-                    g_free(dir);
-                }
-            }
-            fclose(fp);
-            on_preview_clicked(NULL, NULL);
+        if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
+            break;
         }
-        free_task_list(tasks);
+        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+            UIUpdateData *task;
+            char *dir;
+
+            task = (UIUpdateData *)g_ptr_array_index(tasks, i);
+            if ((dir = g_path_get_dirname(task->filepath)) != NULL) {
+                if (strcmp(dir, ".") != 0) {
+                    fprintf(fp, "\n/%s/", dir);
+                }
+                g_free(dir);
+            }
+        }
+        fclose(fp);
+        on_preview_clicked(NULL, NULL);
     } while (0);
 
+    free_task_list(tasks);
     g_mutex_lock(&cecup.ui_arena_mutex);
     arena_pop(cecup.ui_arena, ud->filepath);
     arena_pop(cecup.ui_arena, ud);
