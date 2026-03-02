@@ -334,8 +334,8 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path) {
             equal_scanner_data->processed_files += 1;
             if (equal_scanner_data->total_files > 0) {
                 dispatch_progress(DATA_TYPE_PROGRESS_EQUAL,
-                                  (double)equal_scanner_data->processed_files
-                                      / equal_scanner_data->total_files);
+                                  (double)(equal_scanner_data->processed_files
+                                           / equal_scanner_data->total_files));
             }
 
             if (lstat(dst_full, &stat_dst) == 0) {
@@ -576,10 +576,10 @@ bulk_sync_worker(gpointer user_data) {
         pid_t child_pid;
         struct pollfd pipes[2];
 
-        char output_line_buffer[8192];
-        int32 output_line_pos = 0;
-        char error_line_buffer[8192];
-        int32 error_line_pos = 0;
+        char buffer_output[8192];
+        int32 buffer_output_pos = 0;
+        char buffer_error[8192];
+        int32 buffer_error_pos = 0;
 
         UIUpdateData *remove_data;
 
@@ -721,8 +721,8 @@ bulk_sync_worker(gpointer user_data) {
                     goto read_error_pipe;
                 }
 
-                r = read64(pipe_output[0], output_line_buffer + output_line_pos,
-                           SIZEOF(output_line_buffer) - output_line_pos - 1);
+                r = read64(pipe_output[0], buffer_output + buffer_output_pos,
+                           SIZEOF(buffer_output) - buffer_output_pos - 1);
                 if (r <= 0) {
                     dispatch_log_error("Error reading stdout pipe: %s.\n",
                                        strerror(errno));
@@ -731,32 +731,32 @@ bulk_sync_worker(gpointer user_data) {
                     }
                     goto read_error_pipe;
                 }
-                output_line_pos += (int32)r;
+                buffer_output_pos += (int32)r;
 
-                while (output_line_pos > 0
-                       && ((eol = memchr64(output_line_buffer, '\n',
-                                           output_line_pos))
-                           || (eol = memchr64(output_line_buffer, '\r',
-                                              output_line_pos)))) {
-                    int32 line_len = (int32)(eol - output_line_buffer);
+                while (
+                    buffer_output_pos > 0
+                    && ((eol = memchr64(buffer_output, '\n', buffer_output_pos))
+                        || (eol = memchr64(buffer_output, '\r',
+                                           buffer_output_pos)))) {
+                    int32 line_len = (int32)(eol - buffer_output);
                     int32 remaining;
                     *eol = '\0';
 
-                    if (output_line_buffer[0] != '\0') {
-                        dispatch_log("%s.\n", output_line_buffer);
+                    if (buffer_output[0] != '\0') {
+                        dispatch_log("%s.\n", buffer_output);
                     }
 
-                    remaining = output_line_pos - (line_len + 1);
+                    remaining = buffer_output_pos - (line_len + 1);
                     if (remaining > 0) {
-                        memmove64(output_line_buffer, eol + 1, remaining);
+                        memmove64(buffer_output, eol + 1, remaining);
                     }
-                    output_line_pos = remaining;
+                    buffer_output_pos = remaining;
                 }
 
-                if (output_line_pos >= (int32)SIZEOF(output_line_buffer) - 1) {
-                    output_line_buffer[output_line_pos] = '\0';
-                    dispatch_log("%s.\n", output_line_buffer);
-                    output_line_pos = 0;
+                if (buffer_output_pos >= (int32)SIZEOF(buffer_output) - 1) {
+                    buffer_output[buffer_output_pos] = '\0';
+                    dispatch_log("%s.\n", buffer_output);
+                    buffer_output_pos = 0;
                 }
 
             read_error_pipe:
@@ -768,8 +768,8 @@ bulk_sync_worker(gpointer user_data) {
                     goto check_pipes_or_break;
                 }
 
-                r = read64(pipe_error[0], error_line_buffer + error_line_pos,
-                           SIZEOF(error_line_buffer) - error_line_pos - 1);
+                r = read64(pipe_error[0], buffer_error + buffer_error_pos,
+                           SIZEOF(buffer_error) - buffer_error_pos - 1);
                 if (r <= 0) {
                     dispatch_log_error("Error reading stderr pipe: %s.\n",
                                        strerror(errno));
@@ -778,32 +778,32 @@ bulk_sync_worker(gpointer user_data) {
                     }
                     goto check_pipes_or_break;
                 }
-                error_line_pos += (int32)r;
+                buffer_error_pos += (int32)r;
 
-                while (error_line_pos > 0
-                       && ((eol
-                            = memchr64(error_line_buffer, '\n', error_line_pos))
-                           || (eol = memchr64(error_line_buffer, '\r',
-                                              error_line_pos)))) {
-                    int32 line_len = (int32)(eol - error_line_buffer);
+                while (
+                    buffer_error_pos > 0
+                    && ((eol = memchr64(buffer_error, '\n', buffer_error_pos))
+                        || (eol = memchr64(buffer_error, '\r',
+                                           buffer_error_pos)))) {
+                    int32 line_len = (int32)(eol - buffer_error);
                     int32 remaining;
                     *eol = '\0';
 
-                    if (error_line_buffer[0] != '\0') {
-                        dispatch_log_error(error_line_buffer);
+                    if (buffer_error[0] != '\0') {
+                        dispatch_log_error(buffer_error);
                     }
 
-                    remaining = error_line_pos - (line_len + 1);
+                    remaining = buffer_error_pos - (line_len + 1);
                     if (remaining > 0) {
-                        memmove64(error_line_buffer, eol + 1, remaining);
+                        memmove64(buffer_error, eol + 1, remaining);
                     }
-                    error_line_pos = remaining;
+                    buffer_error_pos = remaining;
                 }
 
-                if (error_line_pos >= (int32)SIZEOF(error_line_buffer) - 1) {
-                    error_line_buffer[error_line_pos] = '\0';
-                    dispatch_log_error(error_line_buffer);
-                    error_line_pos = 0;
+                if (buffer_error_pos >= (int32)SIZEOF(buffer_error) - 1) {
+                    buffer_error[buffer_error_pos] = '\0';
+                    dispatch_log_error(buffer_error);
+                    buffer_error_pos = 0;
                 }
 
             check_pipes_or_break:
@@ -888,10 +888,10 @@ sync_worker(gpointer user_data) {
     int32 pipe_error[2] = {-1, -1};
     pid_t child_pid = -1;
 
-    char output_line_buffer[8192];
-    int32 output_line_pos = 0;
-    char error_line_buffer[8192];
-    int32 error_line_pos = 0;
+    char buffer_output[8192];
+    int32 buffer_output_pos = 0;
+    char buffer_error[8192];
+    int32 buffer_error_pos = 0;
 
     if (thread_data->check_different_fs) {
         struct stat stat_src;
@@ -1087,8 +1087,8 @@ sync_worker(gpointer user_data) {
             goto read_error_pipe;
         }
 
-        r = read64(pipe_output[0], output_line_buffer + output_line_pos,
-                   SIZEOF(output_line_buffer) - output_line_pos - 1);
+        r = read64(pipe_output[0], buffer_output + buffer_output_pos,
+                   SIZEOF(buffer_output) - buffer_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
                 dispatch_log_error("Error reading stdout pipe: %s.\n",
@@ -1097,12 +1097,12 @@ sync_worker(gpointer user_data) {
             }
             goto read_error_pipe;
         }
-        output_line_pos += (int32)r;
+        buffer_output_pos += (int32)r;
 
-        while (output_line_pos > 0
-               && ((eol = memchr64(output_line_buffer, '\n', output_line_pos))
-                   || (eol = memchr64(output_line_buffer, '\r',
-                                      output_line_pos)))) {
+        while (
+            buffer_output_pos > 0
+            && ((eol = memchr64(buffer_output, '\n', buffer_output_pos))
+                || (eol = memchr64(buffer_output, '\r', buffer_output_pos)))) {
             char *percent_pos;
             char *space_pos;
             char *relative_path_entry;
@@ -1113,14 +1113,14 @@ sync_worker(gpointer user_data) {
             struct stat st_path_val;
             int64 sz_path_val = 0;
             int64 mt_path_val = 0;
-            int32 line_len = (int32)(eol - output_line_buffer);
+            int32 line_len = (int32)(eol - buffer_output);
             int32 remaining;
 
             *eol = '\0';
 
-            if ((percent_pos = strstr(output_line_buffer, "%"))) {
+            if ((percent_pos = strstr(buffer_output, "%"))) {
                 char *start_digit = percent_pos;
-                while (start_digit > output_line_buffer
+                while (start_digit > buffer_output
                        && isdigit(*(start_digit - 1))) {
                     start_digit -= 1;
                 }
@@ -1129,9 +1129,9 @@ sync_worker(gpointer user_data) {
             }
 
             if (thread_data->is_preview == 0) {
-                dispatch_log("%s.\n", output_line_buffer);
-            } else if (strncmp(output_line_buffer, "*deleting", 9) == 0) {
-                char *relative_path = output_line_buffer + 10;
+                dispatch_log("%s.\n", buffer_output);
+            } else if (strncmp(buffer_output, "*deleting", 9) == 0) {
+                char *relative_path = buffer_output + 10;
                 char full_src[MAX_PATH_LENGTH];
                 char full_dst[MAX_PATH_LENGTH];
                 struct stat stat_src_local;
@@ -1165,8 +1165,8 @@ sync_worker(gpointer user_data) {
 
                 dispatch_tree(1, UI_ACTION_DELETE, relative_path, NULL,
                               size_val, time_val, deletion_reason);
-            } else if ((space_pos = strchr(output_line_buffer, ' '))) {
-                type_char = output_line_buffer[0];
+            } else if ((space_pos = strchr(buffer_output, ' '))) {
+                type_char = buffer_output[0];
                 if ((type_char == '>') || (type_char == '.')
                     || (type_char == 'h') || (type_char == 'c')
                     || (type_char == 'L')) {
@@ -1188,8 +1188,7 @@ sync_worker(gpointer user_data) {
                             link_target
                                 = sep + strlen64(RSYNC_HARDLINK_NOTATION);
                         }
-                    } else if (type_char == 'L'
-                               || output_line_buffer[1] == 'L') {
+                    } else if (type_char == 'L' || buffer_output[1] == 'L') {
                         char *sep;
                         cecup_action = UI_ACTION_SYMLINK;
 
@@ -1199,9 +1198,8 @@ sync_worker(gpointer user_data) {
                             link_target
                                 = sep + strlen64(RSYNC_SYMLINK_NOTATION);
                         }
-                    } else if (strncmp(output_line_buffer, "cd", 2) == 0
-                               || strncmp(output_line_buffer, ">f+++++", 7)
-                                      == 0) {
+                    } else if (strncmp(buffer_output, "cd", 2) == 0
+                               || strncmp(buffer_output, ">f+++++", 7) == 0) {
                         cecup_action = UI_ACTION_NEW;
                     }
 
@@ -1223,23 +1221,23 @@ sync_worker(gpointer user_data) {
                     processed_files_preview += 1;
                     if (total_files_preview > 0) {
                         dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                          (double)processed_files_preview
-                                              / total_files_preview);
+                                          (double)(processed_files_preview
+                                                   / total_files_preview));
                     }
                 }
             }
 
-            remaining = output_line_pos - (line_len + 1);
+            remaining = buffer_output_pos - (line_len + 1);
             if (remaining > 0) {
-                memmove64(output_line_buffer, eol + 1, remaining);
+                memmove64(buffer_output, eol + 1, remaining);
             }
-            output_line_pos = remaining;
+            buffer_output_pos = remaining;
         }
 
-        if (output_line_pos >= (int32)SIZEOF(output_line_buffer) - 1) {
-            output_line_buffer[output_line_pos] = '\0';
-            dispatch_log("%s.\n", output_line_buffer);
-            output_line_pos = 0;
+        if (buffer_output_pos >= (int32)SIZEOF(buffer_output) - 1) {
+            buffer_output[buffer_output_pos] = '\0';
+            dispatch_log("%s.\n", buffer_output);
+            buffer_output_pos = 0;
         }
 
     read_error_pipe:
@@ -1252,8 +1250,8 @@ sync_worker(gpointer user_data) {
             goto check_pipes_or_break;
         }
 
-        r = read64(pipe_error[0], error_line_buffer + error_line_pos,
-                   SIZEOF(error_line_buffer) - error_line_pos - 1);
+        r = read64(pipe_error[0], buffer_error + buffer_error_pos,
+                   SIZEOF(buffer_error) - buffer_error_pos - 1);
         if (r <= 0) {
             if (r < 0) {
                 dispatch_log_error("Error reading stderr pipe: %s.\n",
@@ -1262,31 +1260,30 @@ sync_worker(gpointer user_data) {
             }
             goto check_pipes_or_break;
         }
-        error_line_pos += (int32)r;
+        buffer_error_pos += (int32)r;
 
-        while (
-            error_line_pos > 0
-            && ((eol = memchr64(error_line_buffer, '\n', error_line_pos))
-                || (eol = memchr64(error_line_buffer, '\r', error_line_pos)))) {
-            int32 line_len = (int32)(eol - error_line_buffer);
+        while (buffer_error_pos > 0
+               && ((eol = memchr64(buffer_error, '\n', buffer_error_pos))
+                   || (eol = memchr64(buffer_error, '\r', buffer_error_pos)))) {
+            int32 line_len = (int32)(eol - buffer_error);
             int32 remaining;
             *eol = '\0';
 
-            if (error_line_buffer[0] != '\0') {
-                dispatch_log_error(error_line_buffer);
+            if (buffer_error[0] != '\0') {
+                dispatch_log_error(buffer_error);
             }
 
-            remaining = error_line_pos - (line_len + 1);
+            remaining = buffer_error_pos - (line_len + 1);
             if (remaining > 0) {
-                memmove64(error_line_buffer, eol + 1, remaining);
+                memmove64(buffer_error, eol + 1, remaining);
             }
-            error_line_pos = remaining;
+            buffer_error_pos = remaining;
         }
 
-        if (error_line_pos >= (int32)SIZEOF(error_line_buffer) - 1) {
-            error_line_buffer[error_line_pos] = '\0';
-            dispatch_log_error(error_line_buffer);
-            error_line_pos = 0;
+        if (buffer_error_pos >= (int32)SIZEOF(buffer_error) - 1) {
+            buffer_error[buffer_error_pos] = '\0';
+            dispatch_log_error(buffer_error);
+            buffer_error_pos = 0;
         }
 
     check_pipes_or_break:
