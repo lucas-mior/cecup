@@ -598,6 +598,7 @@ on_menu_copy_full(GtkWidget *m, void *data) {
     }
 
     free_update_data(ui_update_data);
+    free(buffer);
     return;
 }
 
