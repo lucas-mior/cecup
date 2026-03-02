@@ -345,6 +345,7 @@ main(int32 argc, char *argv[]) {
     for (int32 i = 0; i < NUM_COLS; i += 1) {
         column_types[i] = G_TYPE_INT;
     }
+    column_types[COL_ROW_PTR] = G_TYPE_POINTER;
     cecup.store = gtk_list_store_newv(NUM_COLS, column_types);
 
     v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
