@@ -1098,6 +1098,10 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             char *other_path;
             int64 path_len;
             enum CecupAction action;
+            char extension_label[32];
+            char directory_label[MAX_PATH_LENGTH + 64];
+            char *extension_ptr;
+            char *directory_ptr;
 
             row_idx = gtk_tree_path_get_indices(path)[0];
             row = cecup.visible_rows[row_idx];
@@ -1166,11 +1170,31 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             item = gtk_menu_item_new_with_label(_("💤 Ignore..."));
             sub = gtk_menu_new();
             gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
-            sub_ext = gtk_menu_item_new_with_label(_("🧩 Extension"));
+
+            if ((extension_ptr = strrchr(ui_update_data->filepath, '.'))) {
+                SNPRINTF(extension_label, _("🧩 Extension (*%s)"),
+                         extension_ptr);
+            } else {
+                SNPRINTF(extension_label, "%s", _("🧩 Extension"));
+            }
+            sub_ext = gtk_menu_item_new_with_label(extension_label);
             g_signal_connect(sub_ext, "activate",
                              G_CALLBACK(on_menu_ignore_ext), ui_update_data);
             gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
-            sub_dir = gtk_menu_item_new_with_label(_("📁 Dir"));
+
+            if ((directory_ptr
+                 = g_path_get_dirname(ui_update_data->filepath))) {
+                if (strcmp(directory_ptr, ".") != 0) {
+                    SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
+                             directory_ptr);
+                } else {
+                    SNPRINTF(directory_label, "%s", _("📁 Dir"));
+                }
+                g_free(directory_ptr);
+            } else {
+                SNPRINTF(directory_label, "%s", _("📁 Dir"));
+            }
+            sub_dir = gtk_menu_item_new_with_label(directory_label);
             g_signal_connect(sub_dir, "activate",
                              G_CALLBACK(on_menu_ignore_dir), ui_update_data);
             gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
