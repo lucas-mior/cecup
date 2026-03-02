@@ -1221,7 +1221,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     int32 side;
     int32 view_col_idx;
     int32 number_of_columns;
-    char *tip_text;
+    char *tip_text = NULL;
     char tip_text_buffer[8192];
     int64 tip_text_length;
 
@@ -1238,7 +1238,6 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     idx = gtk_tree_path_get_indices(path_obj)[0];
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
     view_col_idx = -1;
-    tip_text = NULL;
 
     number_of_columns = (int32)gtk_tree_view_get_n_columns(GTK_TREE_VIEW(w));
     for (int32 i = 0; i < number_of_columns; i += 1) {
