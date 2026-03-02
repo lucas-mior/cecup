@@ -1133,7 +1133,6 @@ sync_worker(gpointer user_data) {
                 || (eol = memchr64(buffer_output, '\r', buffer_output_pos)))) {
             char *space_pos;
             char *link_target;
-            char type_char;
             char full_src_path_val[MAX_PATH_LENGTH];
             int64 sz_path_val = 0;
             int64 mt_path_val = 0;
@@ -1194,7 +1193,7 @@ sync_worker(gpointer user_data) {
                 dispatch_tree(1, UI_ACTION_DELETE, relative_path, NULL,
                               size_val, time_val, deletion_reason);
             } else if ((space_pos = strchr(buffer_output, ' '))) {
-                type_char = buffer_output[0];
+                char type_char = buffer_output[0];
                 if ((type_char == RSYNC_CHAR_RECEIVE)
                     || (type_char == RSYNC_CHAR_NO_UPDATE)
                     || (type_char == RSYNC_CHAR_HARDLINK)
