@@ -1132,7 +1132,6 @@ sync_worker(gpointer user_data) {
             && ((eol = memchr64(buffer_output, '\n', buffer_output_pos))
                 || (eol = memchr64(buffer_output, '\r', buffer_output_pos)))) {
             char *space_pos;
-            char *relative_path_entry;
             char *link_target;
             char type_char;
             enum CecupAction cecup_action;
@@ -1204,7 +1203,7 @@ sync_worker(gpointer user_data) {
                     || (type_char == RSYNC_CHAR_CHANGE)
                     || (type_char == RSYNC_CHAR_SYMLINK)) {
 
-                    relative_path_entry = space_pos + 1;
+                    char *relative_path_entry = space_pos + 1;
                     while (isspace(*relative_path_entry)) {
                         relative_path_entry += 1;
                     }
