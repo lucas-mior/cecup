@@ -45,6 +45,7 @@
                              " --links --hard-links --itemize-changes" \
                              " --perms --times --owner --group"
 #define MAX_COMMAND_LENGTH (MAX_PATH_LENGTH*2 + strlen64(RSYNC_UNIVERSAL_ARGS)*2)
+#define ROUND_UP8(n) (((n) + 7) & ~7)
 
 typedef struct EqualScannerData {
     char src_path[MAX_PATH_LENGTH];
@@ -72,11 +73,11 @@ dispatch_log(char *format, ...) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+    data = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
     data->message_len = n;
-    data->message = xarena_push(cecup.ui_arena, n + 1);
+    data->message = xarena_push(cecup.ui_arena, ROUND_UP8(n + 1));
     memcpy64(data->message, buffer, n + 1);
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -127,11 +128,11 @@ dispatch_log_error(char *format, ...) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+    data = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
     data->message_len = n;
-    data->message = xarena_push(cecup.ui_arena, n + 1);
+    data->message = xarena_push(cecup.ui_arena, ROUND_UP8(n + 1));
     memcpy64(data->message, buffer, n + 1);
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -160,7 +161,7 @@ dispatch_progress(enum DataType type, double fraction) {
     last_fractions[index] = fraction;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+    data = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
     memset64(data, 0, SIZEOF(UIUpdateData));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -178,17 +179,19 @@ dispatch_tree(int32 side, enum CecupAction action, char *path,
     int64 target_len;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+    data = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
     data->filepath_length = strlen64(path);
-    data->filepath = xarena_push(cecup.ui_arena, data->filepath_length + 1);
+    data->filepath
+        = xarena_push(cecup.ui_arena, ROUND_UP8(data->filepath_length + 1));
     memcpy64(data->filepath, path, data->filepath_length + 1);
 
     if (link_target) {
         target_len = strlen64(link_target);
         data->link_target_len = target_len;
-        data->link_target = xarena_push(cecup.ui_arena, target_len + 1);
+        data->link_target
+            = xarena_push(cecup.ui_arena, ROUND_UP8(target_len + 1));
         memcpy64(data->link_target, link_target, target_len + 1);
     }
     g_mutex_unlock(&cecup.ui_arena_mutex);
@@ -546,7 +549,7 @@ fix_fs_worker(gpointer user_data) {
     dispatch_log("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    ready = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+    ready = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
     memset64(ready, 0, SIZEOF(UIUpdateData));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -731,8 +734,11 @@ bulk_sync_worker(gpointer user_data) {
                 }
                 output_line_pos += (int32)r;
 
-                while ((eol = memchr64(output_line_buffer, '\n', r))
-                       || (eol = memchr64(output_line_buffer, '\r', r))) {
+                while (output_line_pos > 0
+                       && ((eol = memchr64(output_line_buffer, '\n',
+                                           output_line_pos))
+                           || (eol = memchr64(output_line_buffer, '\r',
+                                              output_line_pos)))) {
                     int32 line_len = (int32)(eol - output_line_buffer);
                     int32 remaining;
                     *eol = '\0';
@@ -759,7 +765,7 @@ bulk_sync_worker(gpointer user_data) {
                     pipes[1].fd = -1;
                     goto check_pipes_or_break;
                 }
-                if (!(pipes[0].revents & POLLIN)) {
+                if (!(pipes[1].revents & POLLIN)) {
                     goto check_pipes_or_break;
                 }
 
@@ -775,9 +781,11 @@ bulk_sync_worker(gpointer user_data) {
                 }
                 error_line_pos += (int32)r;
 
-                while ((eol = memchr64(error_line_buffer, '\n', error_line_pos))
-                       || (eol = memchr64(error_line_buffer, '\r',
-                                          error_line_pos))) {
+                while (error_line_pos > 0
+                       && ((eol
+                            = memchr64(error_line_buffer, '\n', error_line_pos))
+                           || (eol = memchr64(error_line_buffer, '\r',
+                                              error_line_pos)))) {
                     int32 line_len = (int32)(eol - error_line_buffer);
                     int32 remaining;
                     *eol = '\0';
@@ -815,13 +823,14 @@ bulk_sync_worker(gpointer user_data) {
             if (!cecup.cancel_sync) {
                 int64 path_len;
                 g_mutex_lock(&cecup.ui_arena_mutex);
-                remove_data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+                remove_data = xarena_push(cecup.ui_arena,
+                                          ROUND_UP8(SIZEOF(UIUpdateData)));
                 memset64(remove_data, 0, SIZEOF(UIUpdateData));
 
                 path_len = ud->filepath_length;
                 remove_data->filepath_length = path_len;
                 remove_data->filepath
-                    = xarena_push(cecup.ui_arena, path_len + 1);
+                    = xarena_push(cecup.ui_arena, ROUND_UP8(path_len + 1));
                 memcpy64(remove_data->filepath, ud->filepath, path_len + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -854,7 +863,7 @@ bulk_sync_worker(gpointer user_data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    ready = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+    ready = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
     memset64(ready, 0, SIZEOF(UIUpdateData));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -908,7 +917,7 @@ sync_worker(gpointer user_data) {
         UIUpdateData *clear;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        clear = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+        clear = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
         memset64(clear, 0, SIZEOF(UIUpdateData));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -923,7 +932,7 @@ sync_worker(gpointer user_data) {
         EqualScannerData *equal_scanner_data;
         g_mutex_lock(&cecup.ui_arena_mutex);
         equal_scanner_data
-            = xarena_push(cecup.ui_arena, SIZEOF(EqualScannerData));
+            = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(EqualScannerData)));
         memset64(equal_scanner_data, 0, SIZEOF(EqualScannerData));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1091,8 +1100,10 @@ sync_worker(gpointer user_data) {
         }
         output_line_pos += (int32)r;
 
-        while ((eol = memchr64(output_line_buffer, '\n', output_line_pos))
-               || (eol = memchr64(output_line_buffer, '\r', output_line_pos))) {
+        while (output_line_pos > 0
+               && ((eol = memchr64(output_line_buffer, '\n', output_line_pos))
+                   || (eol = memchr64(output_line_buffer, '\r',
+                                      output_line_pos)))) {
             char *percent_pos;
             char *space_pos;
             char *relative_path_entry;
@@ -1254,8 +1265,10 @@ sync_worker(gpointer user_data) {
         }
         error_line_pos += (int32)r;
 
-        while ((eol = memchr64(error_line_buffer, '\n', error_line_pos))
-               || (eol = memchr64(error_line_buffer, '\r', error_line_pos))) {
+        while (
+            error_line_pos > 0
+            && ((eol = memchr64(error_line_buffer, '\n', error_line_pos))
+                || (eol = memchr64(error_line_buffer, '\r', error_line_pos)))) {
             int32 line_len = (int32)(eol - error_line_buffer);
             int32 remaining;
             *eol = '\0';
@@ -1310,7 +1323,8 @@ finalize:
         UIUpdateData *ready_signal;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        ready_signal = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+        ready_signal
+            = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
         memset64(ready_signal, 0, SIZEOF(UIUpdateData));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
