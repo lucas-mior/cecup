@@ -1134,7 +1134,6 @@ sync_worker(gpointer user_data) {
             char *space_pos;
             char *link_target;
             char type_char;
-            enum CecupAction cecup_action;
             char full_src_path_val[MAX_PATH_LENGTH];
             struct stat st_path_val;
             int64 sz_path_val = 0;
@@ -1208,7 +1207,7 @@ sync_worker(gpointer user_data) {
                         relative_path_entry += 1;
                     }
 
-                    cecup_action = UI_ACTION_UPDATE;
+                    enum CecupAction cecup_action = UI_ACTION_UPDATE;
                     link_target = NULL;
                     if (type_char == RSYNC_CHAR_HARDLINK) {
                         char *sep;
