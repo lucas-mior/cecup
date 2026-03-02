@@ -1324,8 +1324,8 @@ sync_worker(void *user_data) {
                     processed_files_preview += 1;
                     if (total_files_preview > 0) {
                         dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                          (double)processed_files_preview
-                                              / (double)total_files_preview);
+                                          (double)(processed_files_preview
+                                                   / total_files_preview));
                     }
                 }
             }
