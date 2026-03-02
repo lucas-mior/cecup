@@ -485,7 +485,7 @@ on_menu_copy_relative(GtkWidget *m, void *data) {
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
             path_length = task->filepath_length;
 
-            if (i > 0 && remaining_capacity > 0) {
+            if ((i > 0) && (remaining_capacity > 0)) {
                 *write_pointer = '\n';
                 write_pointer += 1;
                 remaining_capacity -= 1;
