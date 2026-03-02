@@ -599,7 +599,7 @@ bulk_sync_worker(gpointer user_data) {
     tasks = (GPtrArray *)user_data;
 
     for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-        UIUpdateData *ud;
+        UIUpdateData *ui_update_data;
         char cmd[8192];
         int32 pipe_output[2];
         int32 pipe_error[2];
@@ -613,37 +613,38 @@ bulk_sync_worker(gpointer user_data) {
 
         UIUpdateData *remove_data;
 
-        if ((ud = (UIUpdateData *)g_ptr_array_index(tasks, i))) {
+        if ((ui_update_data = (UIUpdateData *)g_ptr_array_index(tasks, i))) {
             if (cecup.cancel_sync) {
                 g_mutex_lock(&cecup.ui_arena_mutex);
-                if (ud->filepath) {
-                    arena_pop(cecup.ui_arena, ud->filepath);
+                if (ui_update_data->filepath) {
+                    arena_pop(cecup.ui_arena, ui_update_data->filepath);
                 }
-                if (ud->src_base) {
-                    arena_pop(cecup.ui_arena, ud->src_base);
+                if (ui_update_data->src_base) {
+                    arena_pop(cecup.ui_arena, ui_update_data->src_base);
                 }
-                if (ud->dst_base) {
-                    arena_pop(cecup.ui_arena, ud->dst_base);
+                if (ui_update_data->dst_base) {
+                    arena_pop(cecup.ui_arena, ui_update_data->dst_base);
                 }
-                if (ud->term_cmd) {
-                    arena_pop(cecup.ui_arena, ud->term_cmd);
+                if (ui_update_data->term_cmd) {
+                    arena_pop(cecup.ui_arena, ui_update_data->term_cmd);
                 }
-                if (ud->diff_tool) {
-                    arena_pop(cecup.ui_arena, ud->diff_tool);
+                if (ui_update_data->diff_tool) {
+                    arena_pop(cecup.ui_arena, ui_update_data->diff_tool);
                 }
-                if (ud->link_target) {
-                    arena_pop(cecup.ui_arena, ud->link_target);
+                if (ui_update_data->link_target) {
+                    arena_pop(cecup.ui_arena, ui_update_data->link_target);
                 }
-                arena_pop(cecup.ui_arena, ud);
+                arena_pop(cecup.ui_arena, ui_update_data);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
                 continue;
             }
 
-            if (ud->action == UI_ACTION_DELETE) {
+            if (ui_update_data->action == UI_ACTION_DELETE) {
                 char full_dst[MAX_PATH_LENGTH];
                 char *escaped_dst;
 
-                SNPRINTF(full_dst, "%s/%s", ud->dst_base, ud->filepath);
+                SNPRINTF(full_dst, "%s/%s", ui_update_data->dst_base,
+                         ui_update_data->filepath);
                 escaped_dst = shell_escape(full_dst);
                 SNPRINTF(cmd, "rm -rfv '%s'", escaped_dst);
                 free(escaped_dst);
@@ -652,9 +653,9 @@ bulk_sync_worker(gpointer user_data) {
                 char *escaped_dst;
                 char *escaped_file;
 
-                escaped_src = shell_escape(ud->src_base);
-                escaped_dst = shell_escape(ud->dst_base);
-                escaped_file = shell_escape(ud->filepath);
+                escaped_src = shell_escape(ui_update_data->src_base);
+                escaped_dst = shell_escape(ui_update_data->dst_base);
+                escaped_file = shell_escape(ui_update_data->filepath);
 
                 SNPRINTF(cmd,
                          "rsync " RSYNC_UNIVERSAL_ARGS
@@ -725,7 +726,8 @@ bulk_sync_worker(gpointer user_data) {
                         dispatch_log_error("Error kill process group: %s.\n",
                                            strerror(errno));
                     }
-                    dispatch_log_error("Process cancelled: %s\n", ud->filepath);
+                    dispatch_log_error("Process cancelled: %s\n",
+                                       ui_update_data->filepath);
                     break;
                 }
 
@@ -856,11 +858,12 @@ bulk_sync_worker(gpointer user_data) {
                                           ALIGN16(SIZEOF(UIUpdateData)));
                 memset64(remove_data, 0, SIZEOF(UIUpdateData));
 
-                path_len = ud->filepath_length;
+                path_len = ui_update_data->filepath_length;
                 remove_data->filepath_length = path_len;
                 remove_data->filepath
                     = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                memcpy64(remove_data->filepath, ud->filepath, path_len + 1);
+                memcpy64(remove_data->filepath, ui_update_data->filepath,
+                         path_len + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
 
                 remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
@@ -868,25 +871,25 @@ bulk_sync_worker(gpointer user_data) {
             }
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            if (ud->filepath) {
-                arena_pop(cecup.ui_arena, ud->filepath);
+            if (ui_update_data->filepath) {
+                arena_pop(cecup.ui_arena, ui_update_data->filepath);
             }
-            if (ud->src_base) {
-                arena_pop(cecup.ui_arena, ud->src_base);
+            if (ui_update_data->src_base) {
+                arena_pop(cecup.ui_arena, ui_update_data->src_base);
             }
-            if (ud->dst_base) {
-                arena_pop(cecup.ui_arena, ud->dst_base);
+            if (ui_update_data->dst_base) {
+                arena_pop(cecup.ui_arena, ui_update_data->dst_base);
             }
-            if (ud->term_cmd) {
-                arena_pop(cecup.ui_arena, ud->term_cmd);
+            if (ui_update_data->term_cmd) {
+                arena_pop(cecup.ui_arena, ui_update_data->term_cmd);
             }
-            if (ud->diff_tool) {
-                arena_pop(cecup.ui_arena, ud->diff_tool);
+            if (ui_update_data->diff_tool) {
+                arena_pop(cecup.ui_arena, ui_update_data->diff_tool);
             }
-            if (ud->link_target) {
-                arena_pop(cecup.ui_arena, ud->link_target);
+            if (ui_update_data->link_target) {
+                arena_pop(cecup.ui_arena, ui_update_data->link_target);
             }
-            arena_pop(cecup.ui_arena, ud);
+            arena_pop(cecup.ui_arena, ui_update_data);
             g_mutex_unlock(&cecup.ui_arena_mutex);
         }
     }
@@ -1374,21 +1377,22 @@ finalize:
 
 static gpointer
 diff_worker(gpointer user_data) {
-    UIUpdateData *ud;
+    UIUpdateData *ui_update_data;
     char *cmd = xmalloc(MAX_COMMAND_LENGTH);
     char *esc_src;
     char *esc_dst;
     char *esc_file;
 
-    ud = (UIUpdateData *)user_data;
-    esc_src = shell_escape(ud->src_base);
-    esc_dst = shell_escape(ud->dst_base);
-    esc_file = shell_escape(ud->filepath);
+    ui_update_data = (UIUpdateData *)user_data;
+    esc_src = shell_escape(ui_update_data->src_base);
+    esc_dst = shell_escape(ui_update_data->dst_base);
+    esc_file = shell_escape(ui_update_data->filepath);
 
     snprintf2(
         cmd, MAX_COMMAND_LENGTH,
         "%s -e bash -c \"%s '%s/%s' '%s/%s'; read -p 'Press Enter...'\" &",
-        ud->term_cmd, ud->diff_tool, esc_src, esc_file, esc_dst, esc_file);
+        ui_update_data->term_cmd, ui_update_data->diff_tool, esc_src, esc_file,
+        esc_dst, esc_file);
 
     free(esc_src);
     free(esc_dst);
@@ -1399,25 +1403,25 @@ diff_worker(gpointer user_data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    if (ud->filepath) {
-        arena_pop(cecup.ui_arena, ud->filepath);
+    if (ui_update_data->filepath) {
+        arena_pop(cecup.ui_arena, ui_update_data->filepath);
     }
-    if (ud->src_base) {
-        arena_pop(cecup.ui_arena, ud->src_base);
+    if (ui_update_data->src_base) {
+        arena_pop(cecup.ui_arena, ui_update_data->src_base);
     }
-    if (ud->dst_base) {
-        arena_pop(cecup.ui_arena, ud->dst_base);
+    if (ui_update_data->dst_base) {
+        arena_pop(cecup.ui_arena, ui_update_data->dst_base);
     }
-    if (ud->term_cmd) {
-        arena_pop(cecup.ui_arena, ud->term_cmd);
+    if (ui_update_data->term_cmd) {
+        arena_pop(cecup.ui_arena, ui_update_data->term_cmd);
     }
-    if (ud->diff_tool) {
-        arena_pop(cecup.ui_arena, ud->diff_tool);
+    if (ui_update_data->diff_tool) {
+        arena_pop(cecup.ui_arena, ui_update_data->diff_tool);
     }
-    if (ud->link_target) {
-        arena_pop(cecup.ui_arena, ud->link_target);
+    if (ui_update_data->link_target) {
+        arena_pop(cecup.ui_arena, ui_update_data->link_target);
     }
-    arena_pop(cecup.ui_arena, ud);
+    arena_pop(cecup.ui_arena, ui_update_data);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return NULL;
 }
