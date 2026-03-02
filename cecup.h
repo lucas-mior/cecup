@@ -170,6 +170,7 @@ static struct {
     GtkWidget *filter_ignore;
 
     GtkListStore *store;
+    GtkWidget *log_view;
     GtkTextBuffer *log_buffer;
     char ignore_path[MAX_PATH_LENGTH];
     char config_path[MAX_PATH_LENGTH];

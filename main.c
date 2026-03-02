@@ -57,7 +57,6 @@ main(int32 argc, char *argv[]) {
     GtkWidget *r_scroll;
     GtkWidget *r_tree;
     GtkWidget *log_scroll;
-    GtkWidget *log_view;
     GtkWidget *progress_vbox;
     GtkWidget *paths_hbox;
     GtkAdjustment *l_adj;
@@ -383,10 +382,10 @@ main(int32 argc, char *argv[]) {
 
     log_scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(log_scroll, -1, 150);
-    log_view = gtk_text_view_new();
-    gtk_text_view_set_editable(GTK_TEXT_VIEW(log_view), FALSE);
-    cecup.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(log_view));
-    gtk_container_add(GTK_CONTAINER(log_scroll), log_view);
+    cecup.log_view = gtk_text_view_new();
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(cecup.log_view), FALSE);
+    cecup.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(cecup.log_view));
+    gtk_container_add(GTK_CONTAINER(log_scroll), cecup.log_view);
     gtk_paned_pack2(GTK_PANED(v_paned), log_scroll, FALSE, FALSE);
 
     filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);

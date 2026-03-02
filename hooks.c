@@ -1615,6 +1615,9 @@ update_ui_handler(void *user_data) {
         GtkTextIter end;
         gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
         gtk_text_buffer_insert(cecup.log_buffer, &end, data->message, -1);
+        gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
+        gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(cecup.log_view), &end, 0.0,
+                                     FALSE, 0, 0);
         break;
     }
     case DATA_TYPE_PROGRESS_RSYNC:

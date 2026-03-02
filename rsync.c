@@ -136,6 +136,9 @@ log_error_handler(void *user_data) {
     gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
     gtk_text_buffer_insert_with_tags_by_name(
         cecup.log_buffer, &end, data->message, -1, "err_red", NULL);
+    gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
+    gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(cecup.log_view), &end, 0.0,
+                                 FALSE, 0, 0);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     arena_pop(cecup.ui_arena, data->message);
