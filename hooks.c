@@ -249,9 +249,9 @@ refresh_ui_list(void) {
     int64 total_size_bytes = 0;
     int32 current_store_count;
 
-    char pretty_size[16];
-    char stats_text[128];
-    char button_label[64];
+    char pretty_size[SIZE_TEXT_BUFFER_LEN];
+    char stats_text[STATS_TEXT_BUFFER_LEN];
+    char button_label[BUTTON_LABEL_BUFFER_LEN];
 
     bool show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
@@ -404,7 +404,7 @@ static void
 on_menu_open(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
-    char cmd[8192];
+    char cmd[MAX_COMMAND_LENGTH];
 
     (void)m;
 
@@ -482,7 +482,7 @@ static void
 on_menu_copy_relative(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
-    char buffer[1048576];
+    char buffer[PATH_COPY_BUFFER_SIZE];
     char *write_pointer;
     int64 remaining_capacity;
 
@@ -531,9 +531,9 @@ on_menu_copy_full(GtkWidget *m, void *data) {
     int64 remaining_capacity;
 
     (void)m;
-    buffer = xmalloc(1048576);
+    buffer = xmalloc(PATH_COPY_BUFFER_SIZE);
     write_pointer = buffer;
-    remaining_capacity = (int64)sizeof(buffer) - 1;
+    remaining_capacity = (int64)PATH_COPY_BUFFER_SIZE - 1;
 
     if ((tasks
          = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
@@ -587,6 +587,7 @@ on_menu_copy_full(GtkWidget *m, void *data) {
         free_task_list(tasks);
     }
 
+    free(buffer);
     free_update_data(ui_update_data);
     return;
 }
@@ -905,7 +906,8 @@ on_ignore_clicked(GtkWidget *b, void *data) {
         _("Ignore Rules"), GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL,
         _("_Save"), GTK_RESPONSE_ACCEPT, _("_Close"), GTK_RESPONSE_CLOSE, NULL);
     (void)b;
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), DEFAULT_DIALOG_WIDTH,
+                                DEFAULT_DIALOG_HEIGHT);
     scroll = gtk_scrolled_window_new(NULL, NULL);
     view = gtk_text_view_new();
     buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
@@ -1111,8 +1113,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             char *other_path;
             int64 path_len;
             enum CecupAction action;
-            char extension_label[32];
-            char directory_label[MAX_PATH_LENGTH + 64];
+            char extension_label[MTIME_TEXT_BUFFER_LEN];
+            char directory_label[MAX_PATH_LENGTH + BUTTON_LABEL_BUFFER_LEN];
             char *extension_ptr;
             char *directory_ptr;
 
@@ -1259,7 +1261,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     int32 view_col_idx;
     int32 number_of_columns;
     char *tip_text = NULL;
-    char tip_text_buffer[8192];
+    char tip_text_buffer[LOG_MESSAGE_BUFFER_SIZE];
     int64 tip_text_length;
 
     (void)k;
@@ -1390,8 +1392,8 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 static void
 add_row_logic(UIUpdateData *data) {
     CecupRow *row;
-    char *bg_src = "#FFFFFF";
-    char *bg_dst = "#FFFFFF";
+    char *bg_src = COLOR_DEFAULT;
+    char *bg_dst = COLOR_DEFAULT;
     char *src_path_final = data->filepath;
     char *dst_path_final = data->filepath;
     enum CecupAction action_src = data->action;
@@ -1399,33 +1401,33 @@ add_row_logic(UIUpdateData *data) {
 
     switch (data->action) {
     case UI_ACTION_NEW:
-        bg_src = "#D4EDDA";
+        bg_src = COLOR_NEW;
         dst_path_final = NULL;
         break;
     case UI_ACTION_UPDATE:
-        bg_src = "#CCE5FF";
-        bg_dst = "#CCE5FF";
+        bg_src = COLOR_UPDATE;
+        bg_dst = COLOR_UPDATE;
         break;
     case UI_ACTION_HARDLINK:
-        bg_src = "#E2D1F9";
-        bg_dst = "#E2D1F9";
+        bg_src = COLOR_HARDLINK;
+        bg_dst = COLOR_HARDLINK;
         break;
     case UI_ACTION_SYMLINK:
-        bg_src = "#FFD1F9";
-        bg_dst = "#FFD1F9";
+        bg_src = COLOR_SYMLINK;
+        bg_dst = COLOR_SYMLINK;
         break;
     case UI_ACTION_EQUAL:
-        bg_src = "#F0F0F0";
-        bg_dst = "#F0F0F0";
+        bg_src = COLOR_EQUAL;
+        bg_dst = COLOR_EQUAL;
         break;
     case UI_ACTION_DELETE:
         if (data->reason == UI_REASON_IGNORED) {
-            bg_src = "#FFF3CD";
-            bg_dst = "#FFF3CD";
+            bg_src = COLOR_IGNORE;
+            bg_dst = COLOR_IGNORE;
             action_src = UI_ACTION_IGNORE;
             action_dst = UI_ACTION_DELETE;
         } else {
-            bg_dst = "#F8D7DA";
+            bg_dst = COLOR_DELETE;
             action_src = UI_ACTION_DELETED;
             action_dst = UI_ACTION_DELETE;
             src_path_final = NULL;
