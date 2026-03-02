@@ -204,10 +204,13 @@ dispatch_progress(enum DataType type, double fraction) {
     return;
 }
 
+// clang-format off
 static void
-dispatch_tree(int32 side, enum CecupAction action, char *path,
-              char *link_target, int64 size, int64 mtime,
-              enum CecupReason reason) {
+dispatch_tree(int32 side,
+              enum CecupAction action, enum CecupReason reason,
+              char *path, char *link_target,
+              int64 size, int64 mtime) {
+    // clang-format on
     UIUpdateData *data;
     int64 target_len;
 
@@ -1257,8 +1260,12 @@ sync_worker(void *user_data) {
                     deletion_reason = UI_REASON_MISSING;
                 }
 
-                dispatch_tree(SIDE_RIGHT, UI_ACTION_DELETE, relative_path, NULL,
-                              size_val, time_val, deletion_reason);
+                // clang-format off
+                dispatch_tree(SIDE_RIGHT,
+                              UI_ACTION_DELETE, deletion_reason,
+                              relative_path, NULL,
+                              size_val, time_val);
+                // clang-format on
             } else if ((space_pos = strchr(buffer_output, ' '))) {
                 char type_char = buffer_output[0];
                 if ((type_char == RSYNC_CHAR_RECEIVE)
@@ -1317,9 +1324,12 @@ sync_worker(void *user_data) {
                         mt_path_val = (int64)st_path_val.st_mtime;
                     }
 
-                    dispatch_tree(SIDE_LEFT, cecup_action, relative_path_entry,
-                                  link_target, sz_path_val, mt_path_val,
-                                  (enum CecupReason)cecup_action);
+                    // clang-format off
+                    dispatch_tree(SIDE_LEFT,
+                                  cecup_action, (enum CecupReason)cecup_action,
+                                  relative_path_entry, link_target,
+                                  sz_path_val, mt_path_val);
+                    // clang-format on
 
                     processed_files_preview += 1;
                     if (total_files_preview > 0) {
