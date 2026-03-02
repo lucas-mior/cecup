@@ -122,7 +122,7 @@ log_error_handler(void *user_data) {
     GtkTextTagTable *table;
     GtkTextTag *tag;
 
-    data = (UIUpdateData *)user_data;
+    data = user_data;
     table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
     if ((tag = gtk_text_tag_table_lookup(table, "err_red")) == NULL) {
         gtk_text_buffer_create_tag(cecup.log_buffer, "err_red", "foreground",
