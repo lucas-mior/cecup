@@ -48,7 +48,9 @@
 
 typedef struct EqualScannerData {
     char src_path[MAX_PATH_LENGTH];
+    int64 src_path_len;
     char dst_path[MAX_PATH_LENGTH];
+    int64 dst_path_len;
     int64 total_files;
     int64 processed_files;
 } EqualScannerData;
@@ -73,6 +75,7 @@ dispatch_log(char *format, ...) {
     data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
+    data->message_len = n;
     data->message = xarena_push(cecup.ui_arena, n + 1);
     memcpy64(data->message, buffer, n + 1);
     g_mutex_unlock(&cecup.ui_arena_mutex);
@@ -127,6 +130,7 @@ dispatch_log_error(char *format, ...) {
     data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
+    data->message_len = n;
     data->message = xarena_push(cecup.ui_arena, n + 1);
     memcpy64(data->message, buffer, n + 1);
     g_mutex_unlock(&cecup.ui_arena_mutex);
@@ -183,6 +187,7 @@ dispatch_tree(int32 side, enum CecupAction action, char *path,
 
     if (link_target) {
         target_len = strlen64(link_target);
+        data->link_target_len = target_len;
         data->link_target = xarena_push(cecup.ui_arena, target_len + 1);
         memcpy64(data->link_target, link_target, target_len + 1);
     }
@@ -815,7 +820,8 @@ bulk_sync_worker(gpointer user_data) {
                 remove_data = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
                 memset64(remove_data, 0, SIZEOF(UIUpdateData));
 
-                path_len = strlen64(ud->filepath);
+                path_len = ud->filepath_length;
+                remove_data->filepath_length = path_len;
                 remove_data->filepath
                     = xarena_push(cecup.ui_arena, path_len + 1);
                 memcpy64(remove_data->filepath, ud->filepath, path_len + 1);
@@ -925,8 +931,12 @@ sync_worker(gpointer user_data) {
 
         strncpy(equal_scanner_data->src_path, thread_data->src_path,
                 MAX_PATH_LENGTH - 1);
+        equal_scanner_data->src_path_len
+            = strlen64(equal_scanner_data->src_path);
         strncpy(equal_scanner_data->dst_path, thread_data->dst_path,
                 MAX_PATH_LENGTH - 1);
+        equal_scanner_data->dst_path_len
+            = strlen64(equal_scanner_data->dst_path);
         scanner_thread = g_thread_new("equal_scanner", equal_scanner_worker,
                                       equal_scanner_data);
     }

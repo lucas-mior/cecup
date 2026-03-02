@@ -74,19 +74,21 @@ get_target_tasks(int32 side, char *clicked_path,
     GPtrArray *tasks;
     char *shared_src;
     char *shared_dst;
+    int64 src_len;
+    int64 dst_len;
 
     tasks = g_ptr_array_new();
     shared_src = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
     shared_dst = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+    src_len = strlen64(shared_src);
+    dst_len = strlen64(shared_dst);
 
     for (int32 i = 0; i < cecup.rows_count; i += 1) {
         CecupRow *row = cecup.rows[i];
         char *file_path;
+        int64 path_len;
         enum CecupAction action;
         UIUpdateData *task;
-        int64 path_len;
-        int64 src_len;
-        int64 dst_len;
 
         if (!(row->selected)) {
             continue;
@@ -94,9 +96,11 @@ get_target_tasks(int32 side, char *clicked_path,
 
         if (side == 0) {
             file_path = row->src_path;
+            path_len = row->src_path_len;
             action = row->src_action;
         } else {
             file_path = row->dst_path;
+            path_len = row->dst_path_len;
             action = row->dst_action;
         }
 
@@ -108,23 +112,24 @@ get_target_tasks(int32 side, char *clicked_path,
         task = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
         memset64(task, 0, SIZEOF(UIUpdateData));
 
-        path_len = strlen64(file_path) + 1;
-        task->filepath = xarena_push(cecup.ui_arena, path_len);
-        memcpy64(task->filepath, file_path, path_len);
+        task->filepath_length = path_len;
+        task->filepath = xarena_push(cecup.ui_arena, path_len + 1);
+        memcpy64(task->filepath, file_path, path_len + 1);
 
-        src_len = strlen64(shared_src) + 1;
-        task->src_base = xarena_push(cecup.ui_arena, src_len);
-        memcpy64(task->src_base, shared_src, src_len);
+        task->src_base_len = src_len;
+        task->src_base = xarena_push(cecup.ui_arena, src_len + 1);
+        memcpy64(task->src_base, shared_src, src_len + 1);
 
-        dst_len = strlen64(shared_dst) + 1;
-        task->dst_base = xarena_push(cecup.ui_arena, dst_len);
-        memcpy64(task->dst_base, shared_dst, dst_len);
+        task->dst_base_len = dst_len;
+        task->dst_base = xarena_push(cecup.ui_arena, dst_len + 1);
+        memcpy64(task->dst_base, shared_dst, dst_len + 1);
 
         if (row->link_target) {
-            int64 target_len;
-            target_len = strlen64(row->link_target) + 1;
-            task->link_target = xarena_push(cecup.ui_arena, target_len);
-            memcpy64(task->link_target, row->link_target, target_len);
+            task->link_target_len = row->link_target_len;
+            task->link_target
+                = xarena_push(cecup.ui_arena, task->link_target_len + 1);
+            memcpy64(task->link_target, row->link_target,
+                     task->link_target_len + 1);
         }
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -136,24 +141,23 @@ get_target_tasks(int32 side, char *clicked_path,
     if (tasks->len == 0 && clicked_path) {
         UIUpdateData *task;
         int64 path_len;
-        int64 src_len;
-        int64 dst_len;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
         task = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
         memset64(task, 0, SIZEOF(UIUpdateData));
 
-        path_len = strlen64(clicked_path) + 1;
-        task->filepath = xarena_push(cecup.ui_arena, path_len);
-        memcpy64(task->filepath, clicked_path, path_len);
+        path_len = strlen64(clicked_path);
+        task->filepath_length = path_len;
+        task->filepath = xarena_push(cecup.ui_arena, path_len + 1);
+        memcpy64(task->filepath, clicked_path, path_len + 1);
 
-        src_len = strlen64(shared_src) + 1;
-        task->src_base = xarena_push(cecup.ui_arena, src_len);
-        memcpy64(task->src_base, shared_src, src_len);
+        task->src_base_len = src_len;
+        task->src_base = xarena_push(cecup.ui_arena, src_len + 1);
+        memcpy64(task->src_base, shared_src, src_len + 1);
 
-        dst_len = strlen64(shared_dst) + 1;
-        task->dst_base = xarena_push(cecup.ui_arena, dst_len);
-        memcpy64(task->dst_base, shared_dst, dst_len);
+        task->dst_base_len = dst_len;
+        task->dst_base = xarena_push(cecup.ui_arena, dst_len + 1);
+        memcpy64(task->dst_base, shared_dst, dst_len + 1);
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         task->action = clicked_action;
@@ -501,7 +505,7 @@ on_menu_copy_relative(GtkWidget *m, gpointer data) {
             int64 path_length;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-            path_length = strlen64(task->filepath);
+            path_length = task->filepath_length;
 
             if (i > 0 && remaining_capacity > 0) {
                 *write_pointer = '\n';
@@ -648,11 +652,15 @@ on_menu_diff(GtkWidget *m, gpointer data) {
     GPtrArray *tasks;
     char *diff_tool;
     char *term_cmd;
+    int64 diff_len;
+    int64 term_len;
 
     (void)m;
     ud = (UIUpdateData *)data;
     diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.diff_entry));
     term_cmd = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.term_entry));
+    diff_len = strlen64(diff_tool);
+    term_len = strlen64(term_cmd);
 
     do {
         if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))
@@ -661,18 +669,16 @@ on_menu_diff(GtkWidget *m, gpointer data) {
         }
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
-            int64 diff_len;
-            int64 term_len;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
             g_mutex_lock(&cecup.ui_arena_mutex);
-            diff_len = strlen64(diff_tool) + 1;
-            task->diff_tool = xarena_push(cecup.ui_arena, diff_len);
-            memcpy64(task->diff_tool, diff_tool, diff_len);
+            task->diff_tool_len = diff_len;
+            task->diff_tool = xarena_push(cecup.ui_arena, diff_len + 1);
+            memcpy64(task->diff_tool, diff_tool, diff_len + 1);
 
-            term_len = strlen64(term_cmd) + 1;
-            task->term_cmd = xarena_push(cecup.ui_arena, term_len);
-            memcpy64(task->term_cmd, term_cmd, term_len);
+            task->term_cmd_len = term_len;
+            task->term_cmd = xarena_push(cecup.ui_arena, term_len + 1);
+            memcpy64(task->term_cmd, term_cmd, term_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
             g_thread_new("diff_worker", diff_worker, task);
@@ -1140,10 +1146,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
 
             if (side == 0) {
                 file_path = row->src_path;
+                path_len = row->src_path_len;
                 other_path = row->dst_path;
                 action = row->src_action;
             } else {
                 file_path = row->dst_path;
+                path_len = row->dst_path_len;
                 other_path = row->src_path;
                 action = row->dst_action;
             }
@@ -1152,9 +1160,9 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             ud = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
             memset64(ud, 0, SIZEOF(UIUpdateData));
 
-            path_len = strlen64(file_path) + 1;
-            ud->filepath = xarena_push(cecup.ui_arena, path_len);
-            memcpy64(ud->filepath, file_path, path_len);
+            ud->filepath_length = path_len;
+            ud->filepath = xarena_push(cecup.ui_arena, path_len + 1);
+            memcpy64(ud->filepath, file_path, path_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
             ud->action = action;
@@ -1458,11 +1466,17 @@ update_ui_handler(gpointer user_data) {
         row->reason = data->reason;
 
         if (data->link_target) {
-            int64 target_len;
-            target_len = strlen64(data->link_target) + 1;
-            row->link_target = xarena_push(cecup.row_arena, target_len);
-            memcpy64(row->link_target, data->link_target, target_len);
+            row->link_target_len = data->link_target_len;
+            row->link_target
+                = xarena_push(cecup.row_arena, row->link_target_len + 1);
+            memcpy64(row->link_target, data->link_target,
+                     row->link_target_len + 1);
         }
+
+        row->src_path_len
+            = (src_path_final == NULL) ? 0 : data->filepath_length;
+        row->dst_path_len
+            = (dst_path_final == NULL) ? 0 : data->filepath_length;
 
         if (src_path_final == NULL) {
             int64 path_len = data->filepath_length;
@@ -1517,8 +1531,9 @@ update_ui_handler(gpointer user_data) {
     case DATA_TYPE_REMOVE_TREE_ROW: {
         for (int32 i = 0; i < cecup.rows_count; i += 1) {
             CecupRow *row = cecup.rows[i];
-            if ((row->src_path && strcmp(row->src_path, data->filepath) == 0)
-                || (row->dst_path
+            if ((row->src_path_len == data->filepath_length && row->src_path
+                 && strcmp(row->src_path, data->filepath) == 0)
+                || (row->dst_path_len == data->filepath_length && row->dst_path
                     && strcmp(row->dst_path, data->filepath) == 0)) {
                 for (int32 j_idx = i; j_idx < cecup.rows_count - 1;
                      j_idx += 1) {

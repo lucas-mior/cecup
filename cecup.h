@@ -118,7 +118,7 @@ enum {
     COL_SRC_COLOR,
     COL_DST_COLOR,
     COL_REASON,
-    COL_ROW_PTR, // New column to store the CecupRow pointer safely
+    COL_ROW_PTR,
     NUM_COLS
 };
 
@@ -127,8 +127,11 @@ typedef struct CecupRow {
     enum CecupAction src_action;
     enum CecupAction dst_action;
     char *src_path;
+    int64 src_path_len;
     char *dst_path;
+    int64 dst_path_len;
     char *link_target;
+    int64 link_target_len;
     char size_text[32];
     int64 size_raw;
     char mtime_text[32];
@@ -214,15 +217,21 @@ enum DataType {
 
 typedef struct UIUpdateData {
     char *message;
+    int64 message_len;
     enum CecupAction action;
     char *filepath;
     int64 filepath_length;
     char *link_target;
+    int64 link_target_len;
     enum CecupReason reason;
     char *src_base;
+    int64 src_base_len;
     char *dst_base;
+    int64 dst_base_len;
     char *diff_tool;
+    int64 diff_tool_len;
     char *term_cmd;
+    int64 term_cmd_len;
     int64 size;
     int64 mtime;
     int32 side;
