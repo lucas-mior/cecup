@@ -383,11 +383,7 @@ on_menu_open(GtkWidget *m, gpointer data) {
     (void)m;
     ud = (UIUpdateData *)data;
 
-    do {
-        if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))
-            == NULL) {
-            break;
-        }
+    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
             char full_path[MAX_PATH_LENGTH];
@@ -408,7 +404,7 @@ on_menu_open(GtkWidget *m, gpointer data) {
             free(escaped);
         }
         free_task_list(tasks);
-    } while (0);
+    }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     arena_pop(cecup.ui_arena, ud->filepath);
@@ -473,11 +469,7 @@ on_menu_copy_relative(GtkWidget *m, gpointer data) {
     write_pointer = buffer;
     remaining_capacity = (int64)sizeof(buffer) - 1;
 
-    do {
-        if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))
-            == NULL) {
-            break;
-        }
+    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
             int64 path_length;
@@ -501,7 +493,7 @@ on_menu_copy_relative(GtkWidget *m, gpointer data) {
         gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
                                buffer, -1);
         free_task_list(tasks);
-    } while (0);
+    }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     arena_pop(cecup.ui_arena, ud->filepath);
@@ -523,11 +515,7 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
     write_pointer = buffer;
     remaining_capacity = (int64)sizeof(buffer) - 1;
 
-    do {
-        if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))
-            == NULL) {
-            break;
-        }
+    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
             char raw_path[MAX_PATH_LENGTH];
@@ -575,7 +563,7 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
         gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
                                buffer, -1);
         free_task_list(tasks);
-    } while (0);
+    }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     arena_pop(cecup.ui_arena, ud->filepath);
@@ -640,11 +628,7 @@ on_menu_diff(GtkWidget *m, gpointer data) {
     diff_len = strlen64(diff_tool);
     term_len = strlen64(term_cmd);
 
-    do {
-        if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))
-            == NULL) {
-            break;
-        }
+    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
 
@@ -663,7 +647,7 @@ on_menu_diff(GtkWidget *m, gpointer data) {
             g_thread_new("diff_worker", diff_worker, task);
         }
         g_ptr_array_unref(tasks);
-    } while (0);
+    }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     arena_pop(cecup.ui_arena, ud->filepath);
