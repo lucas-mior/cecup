@@ -271,28 +271,38 @@ refresh_ui_list(void) {
         CecupRow *row = cecup.rows[i];
         bool visible = false;
 
-        if (row->src_action == UI_ACTION_NEW) {
+        switch (row->src_action) {
+        case UI_ACTION_NEW:
             visible = show_new;
             count_new += 1;
             total_size_bytes += row->size_raw;
-        } else if (row->src_action == UI_ACTION_HARDLINK
-                   || row->src_action == UI_ACTION_SYMLINK) {
+            break;
+        case UI_ACTION_HARDLINK:
+        case UI_ACTION_SYMLINK:
             visible = show_hard;
             count_hard += 1;
             total_size_bytes += row->size_raw;
-        } else if (row->src_action == UI_ACTION_UPDATE) {
+            break;
+        case UI_ACTION_UPDATE:
             visible = show_update;
             count_update += 1;
             total_size_bytes += row->size_raw;
-        } else if (row->src_action == UI_ACTION_EQUAL) {
+            break;
+        case UI_ACTION_EQUAL:
             visible = show_equal;
             count_equal += 1;
-        } else if (row->src_action == UI_ACTION_DELETED) {
+            break;
+        case UI_ACTION_DELETED:
             visible = show_delete;
             count_delete += 1;
-        } else if (row->src_action == UI_ACTION_IGNORE) {
+            break;
+        case UI_ACTION_IGNORE:
             visible = show_ignore;
             count_ignore += 1;
+            break;
+        default:
+            error("Invalid row->src_action: %d\n", row->src_action);
+            fatal(EXIT_FAILURE);
         }
 
         if (visible) {
