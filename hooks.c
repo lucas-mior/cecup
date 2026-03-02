@@ -1283,6 +1283,10 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             }
         }
 
+        if (file_path == NULL) {
+            file_path = "";
+        }
+
         switch (view_col_idx) {
         case 1: {
             char **strings;
