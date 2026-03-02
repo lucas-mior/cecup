@@ -971,7 +971,7 @@ on_fix_clicked(GtkWidget *b, void *data) {
     src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
     dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
 
-    if (strlen64(src_path) < 1 || strlen64(dst_path) < 1) {
+    if ((strlen64(src_path) <= 0) || (strlen64(dst_path) <= 0)) {
         return;
     }
 
