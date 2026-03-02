@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-02 17:04-0300\n"
+"POT-Creation-Date: 2026-03-02 17:06-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -244,10 +244,6 @@ msgstr "Original"
 msgid "Start copying and updating the selected files"
 msgstr "Iniciar a cópia e atualização dos arquivos selecionados"
 
-#: main.c:180
-msgid "Stop"
-msgstr "Parar"
-
 #: cecup.h:105
 msgid "Symlink in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
@@ -315,6 +311,10 @@ msgstr "⏩ Aplicar Mudanças"
 msgid "⏯️ Apply"
 msgstr "⏯️ Aplicar"
 
+#: main.c:180
+msgid "⏹️ Stop"
+msgstr "⏹️ Parar"
+
 #: main.c:422
 msgid "✅ Everything ready"
 msgstr "✅ Tudo pronto"
@@ -363,3 +363,6 @@ msgstr "🗑️ Excluir"
 #: main.c:176
 msgid "🛠️ Rename problematic files"
 msgstr "🛠️ Corrigir nomes problemáticos"
+
+#~ msgid "Stop"
+#~ msgstr "Parar"
