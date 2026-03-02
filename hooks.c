@@ -422,7 +422,6 @@ on_menu_open(GtkWidget *m, void *data) {
 static void
 on_menu_open_dir(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data = data;
-    ;
     GPtrArray *tasks;
 
     (void)m;
