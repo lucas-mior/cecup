@@ -1127,10 +1127,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         char *other_path;
         int64 path_len;
         enum CecupAction action;
-        char extension_label[32];
-        char directory_label[MAX_PATH_LENGTH + 64];
-        char *extension_ptr;
-        char *directory_ptr;
 
         if (!gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
                                            (gint)event->x, (gint)event->y,
@@ -1211,6 +1207,11 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             GtkWidget *sub = gtk_menu_new();
             GtkWidget *sub_ext;
             GtkWidget *sub_dir;
+            char extension_label[32];
+            char directory_label[MAX_PATH_LENGTH + 64];
+            char *extension_ptr;
+            char *directory_ptr;
+
             gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
 
             if ((extension_ptr = strrchr(ui_update_data->filepath, '.'))) {
