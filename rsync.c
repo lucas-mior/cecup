@@ -400,10 +400,9 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path,
         if (S_ISREG(stat_srt.st_mode) || S_ISLNK(stat_srt.st_mode)) {
             equal_scanner_data->processed_files += 1;
             if (equal_scanner_data->total_files > 0) {
-                dispatch_progress(
-                    DATA_TYPE_PROGRESS_EQUAL,
-                    (double)equal_scanner_data->processed_files
-                        / (double)equal_scanner_data->total_files);
+                dispatch_progress(DATA_TYPE_PROGRESS_EQUAL,
+                                  (double)(equal_scanner_data->processed_files
+                                           / equal_scanner_data->total_files));
             }
 
             if (lstat(dst_full, &stat_dst) == 0) {
