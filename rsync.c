@@ -1131,7 +1131,6 @@ sync_worker(gpointer user_data) {
             buffer_output_pos > 0
             && ((eol = memchr64(buffer_output, '\n', buffer_output_pos))
                 || (eol = memchr64(buffer_output, '\r', buffer_output_pos)))) {
-            char *percent_pos;
             char *space_pos;
             char *relative_path_entry;
             char *link_target;
@@ -1146,14 +1145,17 @@ sync_worker(gpointer user_data) {
 
             *eol = '\0';
 
-            if ((percent_pos = strstr(buffer_output, "%"))) {
-                char *start_digit = percent_pos;
-                while (start_digit > buffer_output
-                       && isdigit(*(start_digit - 1))) {
-                    start_digit -= 1;
+            {
+                char *percent_pos;
+                if ((percent_pos = strstr(buffer_output, "%"))) {
+                    char *start_digit = percent_pos;
+                    while (start_digit > buffer_output
+                           && isdigit(*(start_digit - 1))) {
+                        start_digit -= 1;
+                    }
+                    dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
+                                      atof(start_digit) / 100.0);
                 }
-                dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
-                                  atof(start_digit) / 100.0);
             }
 
             if (thread_data->is_preview == 0) {
