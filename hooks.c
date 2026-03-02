@@ -357,13 +357,15 @@ refresh_ui_timeout_callback(gpointer data) {
 
 static void
 on_menu_apply(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
+    UIUpdateData *ui_update_data;
     GPtrArray *tasks;
 
     (void)m;
-    ud = (UIUpdateData *)data;
+    ui_update_data = (UIUpdateData *)data;
 
-    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
+    if ((tasks
+         = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
+                            ui_update_data->action))) {
         cecup.cancel_sync = 0;
         gtk_widget_set_sensitive(cecup.preview_button, FALSE);
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
@@ -372,22 +374,24 @@ on_menu_apply(GtkWidget *m, gpointer data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ud->filepath);
-    arena_pop(cecup.ui_arena, ud);
+    arena_pop(cecup.ui_arena, ui_update_data->filepath);
+    arena_pop(cecup.ui_arena, ui_update_data);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
 static void
 on_menu_open(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
+    UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     char cmd[8192];
 
     (void)m;
-    ud = (UIUpdateData *)data;
+    ui_update_data = (UIUpdateData *)data;
 
-    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
+    if ((tasks
+         = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
+                            ui_update_data->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
             char full_path[MAX_PATH_LENGTH];
@@ -395,7 +399,7 @@ on_menu_open(GtkWidget *m, gpointer data) {
             char *escaped;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-            if (ud->side == 0) {
+            if (ui_update_data->side == 0) {
                 base_path = task->src_base;
             } else {
                 base_path = task->dst_base;
@@ -411,21 +415,23 @@ on_menu_open(GtkWidget *m, gpointer data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ud->filepath);
-    arena_pop(cecup.ui_arena, ud);
+    arena_pop(cecup.ui_arena, ui_update_data->filepath);
+    arena_pop(cecup.ui_arena, ui_update_data);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
 static void
 on_menu_open_dir(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
+    UIUpdateData *ui_update_data;
     GPtrArray *tasks;
 
     (void)m;
-    ud = (UIUpdateData *)data;
+    ui_update_data = (UIUpdateData *)data;
 
-    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
+    if ((tasks
+         = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
+                            ui_update_data->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
             char full_path[MAX_PATH_LENGTH];
@@ -433,7 +439,7 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
             char *base_path;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-            if (ud->side == 0) {
+            if (ui_update_data->side == 0) {
                 base_path = task->src_base;
             } else {
                 base_path = task->dst_base;
@@ -454,26 +460,28 @@ on_menu_open_dir(GtkWidget *m, gpointer data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ud->filepath);
-    arena_pop(cecup.ui_arena, ud);
+    arena_pop(cecup.ui_arena, ui_update_data->filepath);
+    arena_pop(cecup.ui_arena, ui_update_data);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
 static void
 on_menu_copy_relative(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
+    UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     char buffer[1048576];
     char *write_pointer;
     int64 remaining_capacity;
 
     (void)m;
-    ud = (UIUpdateData *)data;
+    ui_update_data = (UIUpdateData *)data;
     write_pointer = buffer;
     remaining_capacity = (int64)sizeof(buffer) - 1;
 
-    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
+    if ((tasks
+         = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
+                            ui_update_data->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
             int64 path_length;
@@ -500,26 +508,28 @@ on_menu_copy_relative(GtkWidget *m, gpointer data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ud->filepath);
-    arena_pop(cecup.ui_arena, ud);
+    arena_pop(cecup.ui_arena, ui_update_data->filepath);
+    arena_pop(cecup.ui_arena, ui_update_data);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
 static void
 on_menu_copy_full(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
+    UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     char buffer[1048576];
     char *write_pointer;
     int64 remaining_capacity;
 
     (void)m;
-    ud = (UIUpdateData *)data;
+    ui_update_data = (UIUpdateData *)data;
     write_pointer = buffer;
     remaining_capacity = (int64)sizeof(buffer) - 1;
 
-    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
+    if ((tasks
+         = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
+                            ui_update_data->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
             char raw_path[MAX_PATH_LENGTH];
@@ -528,7 +538,7 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
             int64 path_length;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-            if (ud->side == 0) {
+            if (ui_update_data->side == 0) {
                 base_path = task->src_base;
             } else {
                 base_path = task->dst_base;
@@ -570,23 +580,25 @@ on_menu_copy_full(GtkWidget *m, gpointer data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ud->filepath);
-    arena_pop(cecup.ui_arena, ud);
+    arena_pop(cecup.ui_arena, ui_update_data->filepath);
+    arena_pop(cecup.ui_arena, ui_update_data);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
 static void
 on_menu_delete(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
+    UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     GtkWidget *dialog;
     int32 count;
 
     (void)m;
-    ud = (UIUpdateData *)data;
+    ui_update_data = (UIUpdateData *)data;
 
-    if ((tasks = get_target_tasks(ud->side, ud->filepath, UI_ACTION_DELETE))) {
+    if ((tasks
+         = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
+                            UI_ACTION_DELETE))) {
         count = (int32)tasks->len;
         dialog = gtk_message_dialog_new(
             GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
@@ -605,15 +617,15 @@ on_menu_delete(GtkWidget *m, gpointer data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ud->filepath);
-    arena_pop(cecup.ui_arena, ud);
+    arena_pop(cecup.ui_arena, ui_update_data->filepath);
+    arena_pop(cecup.ui_arena, ui_update_data);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
 static void
 on_menu_diff(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
+    UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     char *diff_tool;
     char *term_cmd;
@@ -621,13 +633,15 @@ on_menu_diff(GtkWidget *m, gpointer data) {
     int64 term_len;
 
     (void)m;
-    ud = (UIUpdateData *)data;
+    ui_update_data = (UIUpdateData *)data;
     diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.diff_entry));
     term_cmd = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.term_entry));
     diff_len = strlen64(diff_tool);
     term_len = strlen64(term_cmd);
 
-    if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))) {
+    if ((tasks
+         = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
+                            ui_update_data->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
 
@@ -649,23 +663,25 @@ on_menu_diff(GtkWidget *m, gpointer data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ud->filepath);
-    arena_pop(cecup.ui_arena, ud);
+    arena_pop(cecup.ui_arena, ui_update_data->filepath);
+    arena_pop(cecup.ui_arena, ui_update_data);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
 static void
 on_menu_ignore_ext(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
+    UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     FILE *fp;
 
     (void)m;
-    ud = (UIUpdateData *)data;
+    ui_update_data = (UIUpdateData *)data;
 
     do {
-        if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))
+        if ((tasks
+             = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
+                                ui_update_data->action))
             == NULL) {
             break;
         }
@@ -689,23 +705,25 @@ on_menu_ignore_ext(GtkWidget *m, gpointer data) {
     } while (0);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ud->filepath);
-    arena_pop(cecup.ui_arena, ud);
+    arena_pop(cecup.ui_arena, ui_update_data->filepath);
+    arena_pop(cecup.ui_arena, ui_update_data);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
 
 static void
 on_menu_ignore_dir(GtkWidget *m, gpointer data) {
-    UIUpdateData *ud;
+    UIUpdateData *ui_update_data;
     GPtrArray *tasks;
     FILE *fp;
 
     (void)m;
-    ud = (UIUpdateData *)data;
+    ui_update_data = (UIUpdateData *)data;
 
     do {
-        if ((tasks = get_target_tasks(ud->side, ud->filepath, ud->action))
+        if ((tasks
+             = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
+                                ui_update_data->action))
             == NULL) {
             break;
         }
@@ -730,8 +748,8 @@ on_menu_ignore_dir(GtkWidget *m, gpointer data) {
 
     free_task_list(tasks);
     g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ud->filepath);
-    arena_pop(cecup.ui_arena, ud);
+    arena_pop(cecup.ui_arena, ui_update_data->filepath);
+    arena_pop(cecup.ui_arena, ui_update_data);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
@@ -1092,7 +1110,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                                           NULL)) {
             int32 row_idx;
             CecupRow *row;
-            UIUpdateData *ud;
+            UIUpdateData *ui_update_data;
             GtkWidget *menu;
             GtkWidget *item;
             GtkWidget *sub;
@@ -1120,25 +1138,28 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             }
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            ud = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-            memset64(ud, 0, SIZEOF(UIUpdateData));
+            ui_update_data
+                = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
+            memset64(ui_update_data, 0, SIZEOF(UIUpdateData));
 
-            ud->filepath_length = path_len;
-            ud->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-            memcpy64(ud->filepath, file_path, path_len + 1);
+            ui_update_data->filepath_length = path_len;
+            ui_update_data->filepath
+                = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+            memcpy64(ui_update_data->filepath, file_path, path_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
-            ud->action = action;
-            ud->side = side;
+            ui_update_data->action = action;
+            ui_update_data->side = side;
 
             menu = gtk_menu_new();
             item = gtk_menu_item_new_with_label(_("Open File"));
-            g_signal_connect(item, "activate", G_CALLBACK(on_menu_open), ud);
+            g_signal_connect(item, "activate", G_CALLBACK(on_menu_open),
+                             ui_update_data);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label(_("Open Folder"));
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_open_dir),
-                             ud);
+                             ui_update_data);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label(_("Copy Relative Path"));
@@ -1146,7 +1167,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
                 g_signal_connect(item, "activate",
-                                 G_CALLBACK(on_menu_copy_relative), ud);
+                                 G_CALLBACK(on_menu_copy_relative),
+                                 ui_update_data);
             }
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
@@ -1155,12 +1177,13 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
                 g_signal_connect(item, "activate",
-                                 G_CALLBACK(on_menu_copy_full), ud);
+                                 G_CALLBACK(on_menu_copy_full), ui_update_data);
             }
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label(_("Apply"));
-            g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply), ud);
+            g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply),
+                             ui_update_data);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
             item = gtk_menu_item_new_with_label(_("Ignore..."));
@@ -1168,11 +1191,11 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
             sub_ext = gtk_menu_item_new_with_label(_("Extension"));
             g_signal_connect(sub_ext, "activate",
-                             G_CALLBACK(on_menu_ignore_ext), ud);
+                             G_CALLBACK(on_menu_ignore_ext), ui_update_data);
             gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
             sub_dir = gtk_menu_item_new_with_label(_("Dir"));
             g_signal_connect(sub_dir, "activate",
-                             G_CALLBACK(on_menu_ignore_dir), ud);
+                             G_CALLBACK(on_menu_ignore_dir), ui_update_data);
             gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
@@ -1184,7 +1207,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
-                                 ud);
+                                 ui_update_data);
             }
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
@@ -1193,7 +1216,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
                 gtk_widget_set_sensitive(item, FALSE);
             } else {
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_delete),
-                                 ud);
+                                 ui_update_data);
             }
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
