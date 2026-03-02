@@ -536,9 +536,9 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(cecup.dst_entry, "changed",
                      G_CALLBACK(on_config_changed), NULL);
     g_signal_connect(cecup.check_fs, "toggled",
-                     G_CALLBACK(on_config_changed), NULL);
+                     G_CALLBACK(on_preview_setting_toggled), NULL);
     g_signal_connect(cecup.check_equal, "toggled",
-                     G_CALLBACK(on_config_changed), NULL);
+                     G_CALLBACK(on_preview_setting_toggled), NULL);
     g_signal_connect(cecup.delete_excluded, "toggled",
                      G_CALLBACK(on_delete_excluded_toggled), NULL);
     g_signal_connect(cecup.delete_after, "toggled",

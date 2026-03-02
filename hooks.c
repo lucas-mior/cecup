@@ -765,6 +765,15 @@ on_config_changed(GtkWidget *widget, void *data) {
 }
 
 static void
+on_preview_setting_toggled(GtkToggleButton *b, void *data) {
+    (void)b;
+    (void)data;
+    save_config();
+    on_preview_clicked(NULL, NULL);
+    return;
+}
+
+static void
 on_delete_after_toggled(GtkToggleButton *b, void *data) {
     (void)data;
 
