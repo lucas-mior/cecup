@@ -1262,7 +1262,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
         }
 
         if (file_path == NULL) {
-            if (side == 0) {
+            if (side == SIDE_LEFT) {
                 file_path = row->dst_path;
             } else {
                 file_path = row->src_path;
