@@ -1523,7 +1523,7 @@ update_ui_handler(void *user_data) {
                  && strcmp(row->src_path, data->filepath) == 0)
                 || (row->dst_path_len == data->filepath_length && row->dst_path
                     && strcmp(row->dst_path, data->filepath) == 0)) {
-                for (int32 j = i; j < cecup.rows_count - 1; j += 1) {
+                for (int32 j = i; j < (cecup.rows_count - 1); j += 1) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }
                 cecup.rows_count -= 1;
