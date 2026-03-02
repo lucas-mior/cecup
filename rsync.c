@@ -426,7 +426,8 @@ fix_fs_recursive(char *base_path, char *relative_path) {
     }
 
     if ((dir = opendir(full_path)) == NULL) {
-        return;
+        error("Error opening directory %s: %s.\n", full_path, strerror(errno));
+        fatal(EXIT_FAILURE);
     }
 
     name_list = xmalloc(capacity*SIZEOF(char *));
