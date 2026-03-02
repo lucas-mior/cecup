@@ -249,7 +249,7 @@ refresh_ui_list(void) {
     int64 total_size_bytes = 0;
     int32 current_store_count;
 
-    char pretty_size[32];
+    char pretty_size[16];
     char stats_text[128];
     char button_label[64];
 
