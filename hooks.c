@@ -35,6 +35,15 @@
 #define UI_INTERVAL_MS 100
 
 static void
+free_update_data(UIUpdateData *ui_update_data) {
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    arena_pop(cecup.ui_arena, ui_update_data->filepath);
+    arena_pop(cecup.ui_arena, ui_update_data);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
+    return;
+}
+
+static void
 free_task_list(GPtrArray *tasks) {
     if (tasks == NULL) {
         return;
@@ -374,10 +383,7 @@ on_menu_apply(GtkWidget *m, void *data) {
         g_thread_new("bulk_sync", bulk_sync_worker, tasks);
     }
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ui_update_data->filepath);
-    arena_pop(cecup.ui_arena, ui_update_data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free_update_data(ui_update_data);
     return;
 }
 
@@ -414,10 +420,7 @@ on_menu_open(GtkWidget *m, void *data) {
         free_task_list(tasks);
     }
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ui_update_data->filepath);
-    arena_pop(cecup.ui_arena, ui_update_data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free_update_data(ui_update_data);
     return;
 }
 
@@ -458,10 +461,7 @@ on_menu_open_dir(GtkWidget *m, void *data) {
         free_task_list(tasks);
     }
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ui_update_data->filepath);
-    arena_pop(cecup.ui_arena, ui_update_data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free_update_data(ui_update_data);
     return;
 }
 
@@ -505,10 +505,7 @@ on_menu_copy_relative(GtkWidget *m, void *data) {
         free_task_list(tasks);
     }
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ui_update_data->filepath);
-    arena_pop(cecup.ui_arena, ui_update_data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free_update_data(ui_update_data);
     return;
 }
 
@@ -576,10 +573,7 @@ on_menu_copy_full(GtkWidget *m, void *data) {
         free_task_list(tasks);
     }
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ui_update_data->filepath);
-    arena_pop(cecup.ui_arena, ui_update_data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free_update_data(ui_update_data);
     return;
 }
 
@@ -612,10 +606,7 @@ on_menu_delete(GtkWidget *m, void *data) {
         gtk_widget_destroy(dialog);
     }
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ui_update_data->filepath);
-    arena_pop(cecup.ui_arena, ui_update_data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free_update_data(ui_update_data);
     return;
 }
 
@@ -657,10 +648,7 @@ on_menu_diff(GtkWidget *m, void *data) {
         g_ptr_array_unref(tasks);
     }
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ui_update_data->filepath);
-    arena_pop(cecup.ui_arena, ui_update_data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free_update_data(ui_update_data);
     return;
 }
 
@@ -698,10 +686,7 @@ on_menu_ignore_ext(GtkWidget *m, void *data) {
         free_task_list(tasks);
     } while (0);
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ui_update_data->filepath);
-    arena_pop(cecup.ui_arena, ui_update_data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free_update_data(ui_update_data);
     return;
 }
 
@@ -740,10 +725,7 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
     } while (0);
 
     free_task_list(tasks);
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ui_update_data->filepath);
-    arena_pop(cecup.ui_arena, ui_update_data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free_update_data(ui_update_data);
     return;
 }
 
