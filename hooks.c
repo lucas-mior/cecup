@@ -763,8 +763,22 @@ on_config_changed(GtkWidget *widget, void *data) {
 
 static void
 on_delete_after_toggled(GtkToggleButton *b, void *data) {
-    (void)b;
     (void)data;
+
+    if (gtk_toggle_button_get_active(b)) {
+        GtkWidget *dialog;
+
+        dialog = gtk_message_dialog_new(
+            GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
+            GTK_BUTTONS_OK,
+            _("Warning: 'Sync 100%%' (delete-after) is enabled."
+              " Files in the backup folder"
+              " that do not exist in the source folder"
+              " will be PERMANENTLY DELETED."));
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+    }
+
     save_config();
     on_preview_clicked(NULL, NULL);
     return;

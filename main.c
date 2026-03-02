@@ -481,12 +481,6 @@ main(int32 argc, char *argv[]) {
                     GTK_TOGGLE_BUTTON(cecup.check_fs),
                     g_key_file_get_boolean(key, "Options", "check_fs", NULL));
             }
-            if (g_key_file_has_key(key, "Options", "delete_after", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup.delete_after),
-                    g_key_file_get_boolean(key, "Options", "delete_after",
-                                           NULL));
-            }
             if (g_key_file_has_key(key, "Options", "delete_excluded", NULL)) {
                 gtk_toggle_button_set_active(
                     GTK_TOGGLE_BUTTON(cecup.delete_excluded),
