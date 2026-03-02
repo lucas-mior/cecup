@@ -1359,6 +1359,7 @@ add_row_logic(UIUpdateData *data) {
     char *dst_path_final = data->filepath;
     enum CecupAction action_src = data->action;
     enum CecupAction action_dst = data->action;
+    int64 path_len;
 
     if (data->action == UI_ACTION_NEW) {
         bg_src = "#D4EDDA";
@@ -1432,21 +1433,16 @@ add_row_logic(UIUpdateData *data) {
         row->dst_path_len = 0;
     }
 
+    path_len = data->filepath_length;
     if (src_path_final == NULL) {
-        int64 path_len = data->filepath_length;
-
         row->src_path = NULL;
         row->dst_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
         memcpy64(row->dst_path, data->filepath, path_len + 1);
     } else if (dst_path_final == NULL) {
-        int64 path_len = data->filepath_length;
-
         row->src_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
         memcpy64(row->src_path, data->filepath, path_len + 1);
         row->dst_path = NULL;
     } else {
-        int64 path_len = data->filepath_length;
-
         row->src_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
         memcpy64(row->src_path, data->filepath, path_len + 1);
         row->dst_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
