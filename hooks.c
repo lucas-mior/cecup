@@ -1527,6 +1527,7 @@ update_ui_handler(void *user_data) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }
                 cecup.rows_count -= 1;
+                arena_pop(cecup.row_arena, row);
                 break;
             }
         }
