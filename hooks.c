@@ -582,12 +582,7 @@ on_menu_delete(GtkWidget *m, gpointer data) {
     (void)m;
     ud = (UIUpdateData *)data;
 
-    do {
-        if ((tasks = get_target_tasks(ud->side, ud->filepath, UI_ACTION_DELETE))
-            == NULL) {
-            break;
-        }
-
+    if ((tasks = get_target_tasks(ud->side, ud->filepath, UI_ACTION_DELETE))) {
         count = (int32)tasks->len;
         dialog = gtk_message_dialog_new(
             GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
@@ -603,7 +598,7 @@ on_menu_delete(GtkWidget *m, gpointer data) {
             free_task_list(tasks);
         }
         gtk_widget_destroy(dialog);
-    } while (0);
+    }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     arena_pop(cecup.ui_arena, ud->filepath);
