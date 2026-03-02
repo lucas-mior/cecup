@@ -218,29 +218,33 @@ enum DataType {
 };
 
 typedef struct UIUpdateData {
+    struct UIUpdateData *batch;
+    int32 batch_count;
+    enum DataType type;
+    enum CecupAction action;
+    enum CecupReason reason;
+
     char *message;
     int64 message_len;
-    enum CecupAction action;
+
     char *filepath;
     int64 filepath_length;
     char *link_target;
     int64 link_target_len;
-    enum CecupReason reason;
     char *src_base;
     int64 src_base_len;
     char *dst_base;
     int64 dst_base_len;
+    int64 size;
+    int64 mtime;
+
     char *diff_tool;
     int64 diff_tool_len;
     char *term_cmd;
     int64 term_cmd_len;
-    int64 size;
-    int64 mtime;
+
     int32 side;
     double fraction;
-    enum DataType type;
-    struct UIUpdateData *batch;
-    int32 batch_count;
 } UIUpdateData;
 
 static gboolean update_ui_handler(void * user_data);
