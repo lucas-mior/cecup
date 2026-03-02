@@ -206,31 +206,13 @@ cecup_row_compare(const void *a, const void *b) {
         }
         break;
     case COL_SIZE_RAW:
-        if (row_a->size_raw > row_b->size_raw) {
-            result = 1;
-        } else if (row_a->size_raw < row_b->size_raw) {
-            result = -1;
-        } else {
-            result = 0;
-        }
+        result = row_a->size_raw - row_b->size_raw;
         break;
     case COL_MTIME_RAW:
-        if (row_a->mtime_raw > row_b->mtime_raw) {
-            result = 1;
-        } else if (row_a->mtime_raw < row_b->mtime_raw) {
-            result = -1;
-        } else {
-            result = 0;
-        }
+        result = row_a->mtime_raw - row_b->mtime_raw;
         break;
     default:
-        if (row_a->src_action > row_b->src_action) {
-            result = 1;
-        } else if (row_a->src_action < row_b->src_action) {
-            result = -1;
-        } else {
-            result = 0;
-        }
+        result = row_a->src_action - row_b->src_action;
         break;
     }
 
