@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-02 18:17-0300\n"
+"POT-Creation-Date: 2026-03-02 18:25-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -86,7 +86,7 @@ msgstr "Identifica o que já está igual (apenas para referência)"
 msgid "Diff Tool:"
 msgstr "Ferramenta de comparação"
 
-#: hooks.c:1069
+#: hooks.c:1083
 msgid "Dst"
 msgstr "Backup"
 
@@ -126,11 +126,11 @@ msgstr "Pasta onde o backup será guardado"
 msgid "Hardlinked file in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
 
-#: hooks.c:915 main.c:172
+#: hooks.c:929 main.c:172
 msgid "Ignore Rules"
 msgstr "Regras de Ignorados"
 
-#: main.c:646
+#: main.c:640
 msgid "Intended Task"
 msgstr "Tarefa"
 
@@ -142,11 +142,11 @@ msgstr "Inverter original e backup"
 msgid "Matches an ignore rule"
 msgstr "Ignorado por regra de exclusão"
 
-#: main.c:677
+#: main.c:671
 msgid "Modification Time"
 msgstr "Data de modificação"
 
-#: main.c:656
+#: main.c:650
 msgid "Name"
 msgstr "Nome do arquivo"
 
@@ -224,7 +224,7 @@ msgstr "Mostrar iguais"
 msgid "Show links"
 msgstr "Mostrar links"
 
-#: main.c:666
+#: main.c:660
 msgid "Size"
 msgstr "Tamanho"
 
@@ -232,7 +232,7 @@ msgstr "Tamanho"
 msgid "Skip"
 msgstr "Pular"
 
-#: hooks.c:1048
+#: hooks.c:1062
 msgid "Src"
 msgstr "Original"
 
@@ -244,7 +244,7 @@ msgstr "Iniciar a cópia e atualização dos arquivos selecionados"
 msgid "Symlink in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
 
-#: hooks.c:1012
+#: hooks.c:1026
 #, c-format
 msgid "Sync %s -> %s?"
 msgstr "Sincronizar %s -> %s?"
@@ -270,10 +270,9 @@ msgstr "O arquivo original é mais recente"
 msgid "Total Transfer Size: 📦 %s"
 msgstr "Tamanho total a copiar: 📦 %s"
 
-#: hooks.c:1467
-#, fuzzy
+#: hooks.c:1481
 msgid "Unknown modification time"
-msgstr "Data de modificação"
+msgstr "Data de modificação desconhecida"
 
 #: cecup.h:79
 msgid "Update file in backup"
@@ -283,27 +282,36 @@ msgstr "Atualizar arquivo no backup"
 msgid "Update from original"
 msgstr "Atualizar conforme arquivo da pasta original"
 
-#: hooks.c:1049 hooks.c:1070
+#: hooks.c:774
+msgid ""
+"Warning: 'Sync 100%%' (delete-after) is enabled. Files in the backup folder"
+" that do not exist in the source folder will be PERMANENTLY DELETED."
+msgstr ""
+"Atenção: 'Sincronia 100%%' (delete-after) está ativada. Arquivos na pasta de"
+" backup que não existem na pasta original serão EXCLUÍDOS PERMANENTEMENTE."
+""
+
+#: hooks.c:1063 hooks.c:1084
 msgid "_Cancel"
 msgstr ""
 
-#: hooks.c:916
+#: hooks.c:930
 msgid "_Close"
 msgstr ""
 
-#: hooks.c:916
+#: hooks.c:930
 msgid "_Save"
 msgstr ""
 
-#: hooks.c:1050 hooks.c:1071
+#: hooks.c:1064 hooks.c:1085
 msgid "_Select"
 msgstr "Selecionar Pasta"
 
-#: hooks.c:1201
+#: hooks.c:1215
 msgid "by extension"
 msgstr "pela extensão"
 
-#: hooks.c:1198
+#: hooks.c:1212
 #, c-format
 msgid "by extension (*%s)"
 msgstr "pela extensão (*%s)"
@@ -312,7 +320,7 @@ msgstr "pela extensão (*%s)"
 msgid "⏩ Apply Changes"
 msgstr "⏩ Aplicar Mudanças"
 
-#: hooks.c:1188
+#: hooks.c:1202
 msgid "⏯️ Apply"
 msgstr "⏯️ Aplicar"
 
@@ -324,36 +332,35 @@ msgstr "⏹️ Parar"
 msgid "✅ Everything ready"
 msgstr "✅ Tudo pronto"
 
-#: hooks.c:1193
+#: hooks.c:1207
 msgid "💤 Ignore..."
 msgstr "💤 Ignorar..."
 
-#: hooks.c:1214 hooks.c:1218
+#: hooks.c:1228 hooks.c:1232
 msgid "📁 Dir"
 msgstr "📁 Pasta"
 
-#: hooks.c:1211
-#, fuzzy, c-format
+#: hooks.c:1225
 msgid "📁 Dir (/%s/)"
 msgstr "📁 Pasta (/%s/)"
 
-#: hooks.c:1164
+#: hooks.c:1178
 msgid "📂 Open Folder"
 msgstr "📂 Abrir Pasta"
 
-#: hooks.c:1159
+#: hooks.c:1173
 msgid "📄 Open File"
 msgstr "📄 Abrir arquivo"
 
-#: hooks.c:1169
+#: hooks.c:1183
 msgid "📋 Copy Relative Path"
 msgstr "📋 Copiar caminho relativo"
 
-#: hooks.c:1179
+#: hooks.c:1193
 msgid "📍 Copy Full Path"
 msgstr "📍 Copiar caminho completo"
 
-#: hooks.c:1226
+#: hooks.c:1240
 msgid "🔍 Diff"
 msgstr "🔍 Comparar"
 
@@ -361,7 +368,7 @@ msgstr "🔍 Comparar"
 msgid "🔎 Analyze changes between folders"
 msgstr "🔎 Analisar mudanças entre as pastas"
 
-#: hooks.c:1238
+#: hooks.c:1252
 msgid "🗑️ Delete"
 msgstr "🗑️ Excluir"
 
