@@ -1203,11 +1203,12 @@ sync_worker(gpointer user_data) {
                     || (type_char == RSYNC_CHAR_SYMLINK)) {
 
                     char *relative_path_entry = space_pos + 1;
+                    enum CecupAction cecup_action = UI_ACTION_UPDATE;
+
                     while (isspace(*relative_path_entry)) {
                         relative_path_entry += 1;
                     }
 
-                    enum CecupAction cecup_action = UI_ACTION_UPDATE;
                     link_target = NULL;
                     if (type_char == RSYNC_CHAR_HARDLINK) {
                         char *sep;
