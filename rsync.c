@@ -1158,7 +1158,8 @@ sync_worker(gpointer user_data) {
 
             if (thread_data->is_preview == 0) {
                 dispatch_log("%s.\n", buffer_output);
-            } else if (strncmp(buffer_output, "*deleting", 9) == 0) {
+            } else if (buffer_output[0] == RSYNC_CHAR_MESSAGE
+                       && strncmp(buffer_output + 1, "deleting", 8) == 0) {
                 char *relative_path = buffer_output + 10;
                 char full_src[MAX_PATH_LENGTH];
                 char full_dst[MAX_PATH_LENGTH];
@@ -1195,9 +1196,11 @@ sync_worker(gpointer user_data) {
                               size_val, time_val, deletion_reason);
             } else if ((space_pos = strchr(buffer_output, ' '))) {
                 type_char = buffer_output[0];
-                if ((type_char == '>') || (type_char == '.')
-                    || (type_char == 'h') || (type_char == 'c')
-                    || (type_char == 'L')) {
+                if ((type_char == RSYNC_CHAR_RECEIVE)
+                    || (type_char == RSYNC_CHAR_NO_UPDATE)
+                    || (type_char == RSYNC_CHAR_HARDLINK)
+                    || (type_char == RSYNC_CHAR_CHANGE)
+                    || (type_char == RSYNC_CHAR_SYMLINK)) {
 
                     relative_path_entry = space_pos + 1;
                     while (isspace(*relative_path_entry)) {
@@ -1206,7 +1209,7 @@ sync_worker(gpointer user_data) {
 
                     cecup_action = UI_ACTION_UPDATE;
                     link_target = NULL;
-                    if (type_char == 'h') {
+                    if (type_char == RSYNC_CHAR_HARDLINK) {
                         char *sep;
                         cecup_action = UI_ACTION_HARDLINK;
 
@@ -1216,7 +1219,8 @@ sync_worker(gpointer user_data) {
                             link_target
                                 = sep + strlen64(RSYNC_HARDLINK_NOTATION);
                         }
-                    } else if (type_char == 'L' || buffer_output[1] == 'L') {
+                    } else if (type_char == RSYNC_CHAR_SYMLINK
+                               || buffer_output[1] == RSYNC_CHAR_SYMLINK) {
                         char *sep;
                         cecup_action = UI_ACTION_SYMLINK;
 
@@ -1226,8 +1230,12 @@ sync_worker(gpointer user_data) {
                             link_target
                                 = sep + strlen64(RSYNC_SYMLINK_NOTATION);
                         }
-                    } else if (strncmp(buffer_output, "cd", 2) == 0
-                               || strncmp(buffer_output, ">f+++++", 7) == 0) {
+                    } else if ((buffer_output[0] == RSYNC_CHAR_CHANGE
+                                && buffer_output[1] == RSYNC_CHAR_DIR)
+                               || (buffer_output[0] == RSYNC_CHAR_RECEIVE
+                                   && buffer_output[1] == RSYNC_CHAR_FILE
+                                   && strncmp(buffer_output + 2, "+++++", 5)
+                                          == 0)) {
                         cecup_action = UI_ACTION_NEW;
                     }
 
