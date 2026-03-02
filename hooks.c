@@ -1432,6 +1432,10 @@ add_row_logic(UIUpdateData *data) {
             src_path_final = NULL;
         }
         break;
+    case UI_ACTION_NONE:
+    case UI_ACTION_DELETED:
+    case UI_ACTION_IGNORE:
+    case NUM_UI_ACTIONS:
     default:
         error("Invalid data->action: %u\n", data->action);
         fatal(EXIT_FAILURE);
