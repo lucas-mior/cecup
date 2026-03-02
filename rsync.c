@@ -566,10 +566,9 @@ fix_fs_recursive(char *base_path, char *relative_path) {
 
 static void *
 fix_fs_worker(void *user_data) {
-    ThreadData *thread_data;
+    ThreadData *thread_data = user_data;
     UIUpdateData *ready;
 
-    thread_data = (ThreadData *)user_data;
     dispatch_log("Checking for problematic names in the original folder...\n");
     fix_fs_recursive(thread_data->src_path, "");
     dispatch_log("Checking for problematic names in the backup folder...\n");
@@ -592,10 +591,8 @@ fix_fs_worker(void *user_data) {
 
 static void *
 bulk_sync_worker(void *user_data) {
-    GPtrArray *tasks;
+    GPtrArray *tasks = user_data;
     UIUpdateData *ready;
-
-    tasks = (GPtrArray *)user_data;
 
     for (int32 i = 0; i < (int32)tasks->len; i += 1) {
         UIUpdateData *ui_update_data;
@@ -907,7 +904,7 @@ bulk_sync_worker(void *user_data) {
 
 static void *
 sync_worker(void *user_data) {
-    ThreadData *thread_data = (ThreadData *)user_data;
+    ThreadData *thread_data = user_data;
     GThread *scanner_thread = NULL;
     int64 total_files_preview = 0;
     int64 processed_files_preview = 0;
