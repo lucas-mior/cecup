@@ -1123,7 +1123,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         UIUpdateData *ui_update_data;
         GtkWidget *menu;
         GtkWidget *item;
-        GtkWidget *sub;
         GtkWidget *sub_ext;
         GtkWidget *sub_dir;
         int32 is_disabled;
@@ -1211,33 +1210,38 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
         item = gtk_menu_item_new_with_label(_("💤 Ignore..."));
-        sub = gtk_menu_new();
-        gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
+        {
+            GtkWidget *sub = gtk_menu_new();
+            gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
 
-        if ((extension_ptr = strrchr(ui_update_data->filepath, '.'))) {
-            SNPRINTF(extension_label, _("by extension (*%s)"), extension_ptr);
-        } else {
-            SNPRINTF(extension_label, "%s", _("by extension"));
-        }
-        sub_ext = gtk_menu_item_new_with_label(extension_label);
-        g_signal_connect(sub_ext, "activate", G_CALLBACK(on_menu_ignore_ext),
-                         ui_update_data);
-        gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
+            if ((extension_ptr = strrchr(ui_update_data->filepath, '.'))) {
+                SNPRINTF(extension_label, _("by extension (*%s)"),
+                         extension_ptr);
+            } else {
+                SNPRINTF(extension_label, "%s", _("by extension"));
+            }
+            sub_ext = gtk_menu_item_new_with_label(extension_label);
+            g_signal_connect(sub_ext, "activate",
+                             G_CALLBACK(on_menu_ignore_ext), ui_update_data);
+            gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
 
-        if ((directory_ptr = g_path_get_dirname(ui_update_data->filepath))) {
-            if (strcmp(directory_ptr, ".") != 0) {
-                SNPRINTF(directory_label, _("📁 Dir (/%s/)"), directory_ptr);
+            if ((directory_ptr
+                 = g_path_get_dirname(ui_update_data->filepath))) {
+                if (strcmp(directory_ptr, ".") != 0) {
+                    SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
+                             directory_ptr);
+                } else {
+                    SNPRINTF(directory_label, "%s", _("📁 Dir"));
+                }
+                g_free(directory_ptr);
             } else {
                 SNPRINTF(directory_label, "%s", _("📁 Dir"));
             }
-            g_free(directory_ptr);
-        } else {
-            SNPRINTF(directory_label, "%s", _("📁 Dir"));
+            sub_dir = gtk_menu_item_new_with_label(directory_label);
+            g_signal_connect(sub_dir, "activate",
+                             G_CALLBACK(on_menu_ignore_dir), ui_update_data);
+            gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
         }
-        sub_dir = gtk_menu_item_new_with_label(directory_label);
-        g_signal_connect(sub_dir, "activate", G_CALLBACK(on_menu_ignore_dir),
-                         ui_update_data);
-        gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
         item = gtk_menu_item_new_with_label(_("🔍 Diff"));
