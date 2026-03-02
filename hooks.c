@@ -1472,7 +1472,7 @@ add_row_logic(UIUpdateData *data) {
     char *bg_dst = "#FFFFFF";
     char *src_path_final = data->filepath;
     char *dst_path_final = data->filepath;
-    enum CecupAction action_src = data->action;
+    enum CecupAction src_action = data->action;
     enum CecupAction action_dst = data->action;
 
     switch (data->action) {
@@ -1500,11 +1500,11 @@ add_row_logic(UIUpdateData *data) {
         if (data->reason == UI_REASON_IGNORED) {
             bg_src = "#FFF3CD";
             bg_dst = "#FFF3CD";
-            action_src = UI_ACTION_IGNORE;
+            src_action = UI_ACTION_IGNORE;
             action_dst = UI_ACTION_DELETE;
         } else {
             bg_dst = "#F8D7DA";
-            action_src = UI_ACTION_DELETED;
+            src_action = UI_ACTION_DELETED;
             action_dst = UI_ACTION_DELETE;
             src_path_final = NULL;
         }
@@ -1520,7 +1520,7 @@ add_row_logic(UIUpdateData *data) {
 
     row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
     memset64(row, 0, SIZEOF(*row));
-    row->src_action = action_src;
+    row->src_action = src_action;
     row->dst_action = action_dst;
 
     bytes_pretty(row->size_text, data->size);
