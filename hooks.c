@@ -1114,11 +1114,60 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
     (void)data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
 
-    if (event->type != GDK_BUTTON_PRESS) {
+    if (event->type != GDK_BUTTON_PRESS && event->type != GDK_2BUTTON_PRESS) {
         return FALSE;
     }
 
     switch (event->button) {
+    case GDK_BUTTON_PRIMARY: {
+        if (event->type == GDK_2BUTTON_PRESS) {
+            if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
+                                              (gint)event->x, (gint)event->y,
+                                              &path, NULL, NULL, NULL)) {
+                UIUpdateData *ui_update_data;
+                CecupRow *row;
+                int32 row_idx;
+                char *file_path;
+                int64 path_len;
+                enum CecupAction action;
+
+                row_idx = gtk_tree_path_get_indices(path)[0];
+                row = cecup.visible_rows[row_idx];
+
+                if (side == 0) {
+                    file_path = row->src_path;
+                    path_len = row->src_path_len;
+                    action = row->src_action;
+                } else {
+                    file_path = row->dst_path;
+                    path_len = row->dst_path_len;
+                    action = row->dst_action;
+                }
+
+                if (file_path) {
+                    g_mutex_lock(&cecup.ui_arena_mutex);
+                    ui_update_data = xarena_push(
+                        cecup.ui_arena, ALIGN16(SIZEOF(*ui_update_data)));
+                    memset64(ui_update_data, 0, SIZEOF(*ui_update_data));
+
+                    ui_update_data->filepath_length = path_len;
+                    ui_update_data->filepath
+                        = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+                    memcpy64(ui_update_data->filepath, file_path, path_len + 1);
+                    g_mutex_unlock(&cecup.ui_arena_mutex);
+
+                    ui_update_data->action = action;
+                    ui_update_data->side = side;
+
+                    on_menu_open(NULL, ui_update_data);
+                }
+
+                gtk_tree_path_free(path);
+                return TRUE;
+            }
+        }
+        break;
+    }
     case GDK_BUTTON_SECONDARY: {
         UIUpdateData *ui_update_data;
         GtkWidget *menu;
