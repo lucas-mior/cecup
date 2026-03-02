@@ -1375,8 +1375,8 @@ finalize:
     return NULL;
 }
 
-static gpointer
-diff_worker(gpointer user_data) {
+static void *
+diff_worker(void *user_data) {
     UIUpdateData *ui_update_data;
     char *cmd = xmalloc(MAX_COMMAND_LENGTH);
     char *esc_src;
