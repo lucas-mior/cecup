@@ -113,8 +113,8 @@ get_target_tasks(int32 side, char *clicked_path,
         }
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        task = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-        memset64(task, 0, SIZEOF(UIUpdateData));
+        task = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*task)));
+        memset64(task, 0, SIZEOF(*task));
 
         task->filepath_length = path_len;
         task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
@@ -831,8 +831,8 @@ on_preview_clicked(GtkWidget *b, void *data) {
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(ThreadData)));
-    memset64(thread_data, 0, SIZEOF(ThreadData));
+    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
+    memset64(thread_data, 0, SIZEOF(*thread_data));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     thread_data->is_preview = 1;
@@ -959,8 +959,8 @@ on_fix_clicked(GtkWidget *b, void *data) {
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(ThreadData)));
-    memset64(thread_data, 0, SIZEOF(ThreadData));
+    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
+    memset64(thread_data, 0, SIZEOF(*thread_data));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
@@ -1012,8 +1012,9 @@ on_sync_clicked(GtkWidget *b, void *data) {
         gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(ThreadData)));
-        memset64(thread_data, 0, SIZEOF(ThreadData));
+        thread_data
+            = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
+        memset64(thread_data, 0, SIZEOF(*thread_data));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         thread_data->is_preview = 0;
@@ -1131,8 +1132,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
             g_mutex_lock(&cecup.ui_arena_mutex);
             ui_update_data
-                = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-            memset64(ui_update_data, 0, SIZEOF(UIUpdateData));
+                = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*ui_update_data)));
+            memset64(ui_update_data, 0, SIZEOF(*ui_update_data));
 
             ui_update_data->filepath_length = path_len;
             ui_update_data->filepath
@@ -1422,8 +1423,8 @@ update_ui_handler(void *user_data) {
             }
         }
 
-        row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(CecupRow)));
-        memset64(row, 0, SIZEOF(CecupRow));
+        row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
+        memset64(row, 0, SIZEOF(*row));
         row->src_action = action_src;
         row->dst_action = action_dst;
 
