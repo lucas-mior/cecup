@@ -300,6 +300,8 @@ refresh_ui_list(void) {
             visible = show_ignore;
             count_ignore += 1;
             break;
+        case UI_ACTION_NONE:
+        case NUM_UI_ACTIONS:
         default:
             error("Invalid row->src_action: %u\n", row->src_action);
             fatal(EXIT_FAILURE);
