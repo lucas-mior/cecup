@@ -147,8 +147,8 @@ get_target_tasks(int32 side, char *clicked_path,
         int64 path_len;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        task = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-        memset64(task, 0, SIZEOF(UIUpdateData));
+        task = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*task)));
+        memset64(task, 0, SIZEOF(*task));
 
         path_len = strlen64(clicked_path);
         task->filepath_length = path_len;
