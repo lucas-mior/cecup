@@ -121,32 +121,6 @@ dispatch_log(char *format, ...) {
     return;
 }
 
-static gboolean
-log_error_handler(void *user_data) {
-    UIUpdateData *data = user_data;
-    GtkTextIter end;
-    GtkTextTagTable *table;
-
-    table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
-    if ((gtk_text_tag_table_lookup(table, "err_red")) == NULL) {
-        gtk_text_buffer_create_tag(cecup.log_buffer, "err_red", "foreground",
-                                   "red", NULL);
-    }
-
-    gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
-    gtk_text_buffer_insert_with_tags_by_name(
-        cecup.log_buffer, &end, data->message, -1, "err_red", NULL);
-    gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
-    gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(cecup.log_view), &end, 0.0,
-                                 FALSE, 0, 0);
-
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, data->message);
-    arena_pop(cecup.ui_arena, data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
-    return G_SOURCE_REMOVE;
-}
-
 static void
 dispatch_log_error(char *format, ...) {
     UIUpdateData *data;
@@ -172,7 +146,8 @@ dispatch_log_error(char *format, ...) {
     memcpy64(data->message, buffer, n + 1);
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    g_idle_add(log_error_handler, data);
+    data->type = DATA_TYPE_LOG_ERROR;
+    g_idle_add(update_ui_handler, data);
     return;
 }
 

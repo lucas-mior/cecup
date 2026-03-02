@@ -1606,18 +1606,58 @@ add_row_logic(UIUpdateData *data) {
     return;
 }
 
+static int32
+scroll_to_bottom_callback(void *user_data) {
+    GtkTextView *log_view = GTK_TEXT_VIEW(user_data);
+    GtkTextBuffer *log_buffer = gtk_text_view_get_buffer(log_view);
+    GtkTextIter end;
+
+    gtk_text_buffer_get_end_iter(log_buffer, &end);
+    gtk_text_view_scroll_to_iter(log_view, &end, 0.0, FALSE, 0, 0);
+    return 0;
+}
+
 static gboolean
 update_ui_handler(void *user_data) {
     UIUpdateData *data = user_data;
 
     switch (data->type) {
-    case DATA_TYPE_LOG: {
+    case DATA_TYPE_LOG:
+    case DATA_TYPE_LOG_ERROR: {
         GtkTextIter end;
+        GtkAdjustment *v_adj;
+        double val;
+        double upper;
+        double page;
+        int32 at_bottom;
+
+        if ((v_adj = gtk_scrolled_window_get_vadjustment(
+                 GTK_SCROLLED_WINDOW(gtk_widget_get_parent(cecup.log_view))))) {
+            val = gtk_adjustment_get_value(v_adj);
+            upper = gtk_adjustment_get_upper(v_adj);
+            page = gtk_adjustment_get_page_size(v_adj);
+            at_bottom = ((upper - val - page) < 1.0);
+        } else {
+            at_bottom = 0;
+        }
+
         gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
-        gtk_text_buffer_insert(cecup.log_buffer, &end, data->message, -1);
-        gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
-        gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(cecup.log_view), &end, 0.0,
-                                     FALSE, 0, 0);
+        if (data->type == DATA_TYPE_LOG_ERROR) {
+            GtkTextTagTable *table;
+            table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
+            if (gtk_text_tag_table_lookup(table, "err_red") == NULL) {
+                gtk_text_buffer_create_tag(cecup.log_buffer, "err_red",
+                                           "foreground", "red", NULL);
+            }
+            gtk_text_buffer_insert_with_tags_by_name(
+                cecup.log_buffer, &end, data->message, -1, "err_red", NULL);
+        } else {
+            gtk_text_buffer_insert(cecup.log_buffer, &end, data->message, -1);
+        }
+
+        if (at_bottom != 0) {
+            g_idle_add(scroll_to_bottom_callback, cecup.log_view);
+        }
         break;
     }
     case DATA_TYPE_PROGRESS_RSYNC:
