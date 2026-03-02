@@ -341,7 +341,7 @@ msgstr "📍 Copiar caminho completo"
 
 #: hooks.c:1203
 msgid "🔍 Diff"
-msgstr "Diff"
+msgstr "🔍 Comparar"
 
 #: main.c:168
 msgid "🔎 Analyze changes between folders"
