@@ -190,8 +190,8 @@ dispatch_progress(enum DataType type, double fraction) {
         index = 3;
     }
 
-    if (fraction < 1.0 && (fraction - last_fractions[index] < 0.001)
-        && (fraction - last_fractions[index] > -0.001)) {
+    if ((fraction < 1.0) && ((fraction - last_fractions[index]) < 0.001)
+        && ((fraction - last_fractions[index]) > -0.001)) {
         return;
     }
     last_fractions[index] = fraction;
