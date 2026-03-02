@@ -73,6 +73,8 @@ enum RsyncCharAttribute {
                              " --links --hard-links --itemize-changes" \
                              " --perms --times --owner --group"
 #define MAX_COMMAND_LENGTH (MAX_PATH_LENGTH*2 + strlen64(RSYNC_UNIVERSAL_ARGS)*2)
+#define SIDE_LEFT 0
+#define SIDE_RIGHT 1
 
 typedef struct EqualScannerData {
     char src_path[MAX_PATH_LENGTH];
@@ -369,7 +371,7 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path) {
             if (lstat(dst_full, &stat_dst) == 0) {
                 if (stat_srt.st_size == stat_dst.st_size
                     && stat_srt.st_mtime == stat_dst.st_mtime) {
-                    dispatch_tree(0, UI_ACTION_EQUAL, sub_rel, NULL,
+                    dispatch_tree(SIDE_LEFT, UI_ACTION_EQUAL, sub_rel, NULL,
                                   stat_srt.st_size, (int64)stat_srt.st_mtime,
                                   UI_REASON_EQUAL);
                 }
@@ -1190,7 +1192,7 @@ sync_worker(gpointer user_data) {
                     deletion_reason = UI_REASON_MISSING;
                 }
 
-                dispatch_tree(1, UI_ACTION_DELETE, relative_path, NULL,
+                dispatch_tree(SIDE_RIGHT, UI_ACTION_DELETE, relative_path, NULL,
                               size_val, time_val, deletion_reason);
             } else if ((space_pos = strchr(buffer_output, ' '))) {
                 char type_char = buffer_output[0];
@@ -1250,7 +1252,7 @@ sync_worker(gpointer user_data) {
                         mt_path_val = (int64)st_path_val.st_mtime;
                     }
 
-                    dispatch_tree(0, cecup_action, relative_path_entry,
+                    dispatch_tree(SIDE_LEFT, cecup_action, relative_path_entry,
                                   link_target, sz_path_val, mt_path_val,
                                   (enum CecupReason)cecup_action);
 
