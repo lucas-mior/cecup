@@ -1383,7 +1383,7 @@ diff_worker(gpointer user_data) {
     char *esc_dst;
     char *esc_file;
 
-    ui_update_data = (UIUpdateData *)user_data;
+    ui_update_data = user_data;
     esc_src = shell_escape(ui_update_data->src_base);
     esc_dst = shell_escape(ui_update_data->dst_base);
     esc_file = shell_escape(ui_update_data->filepath);
