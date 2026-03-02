@@ -1135,7 +1135,6 @@ sync_worker(gpointer user_data) {
             char *link_target;
             char type_char;
             char full_src_path_val[MAX_PATH_LENGTH];
-            struct stat st_path_val;
             int64 sz_path_val = 0;
             int64 mt_path_val = 0;
             int32 line_len = (int32)(eol - buffer_output);
@@ -1204,6 +1203,7 @@ sync_worker(gpointer user_data) {
 
                     char *relative_path_entry = space_pos + 1;
                     enum CecupAction cecup_action = UI_ACTION_UPDATE;
+                    struct stat st_path_val;
 
                     while (isspace(*relative_path_entry)) {
                         relative_path_entry += 1;
