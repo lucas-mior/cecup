@@ -301,7 +301,7 @@ refresh_ui_list(void) {
             count_ignore += 1;
             break;
         default:
-            error("Invalid row->src_action: %d\n", row->src_action);
+            error("Invalid row->src_action: %u\n", row->src_action);
             fatal(EXIT_FAILURE);
         }
 
