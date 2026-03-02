@@ -217,10 +217,10 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(
         cecup.delete_excluded,
         _("Remove files from backup if they were added to the ignore list"));
-    cecup.delete_after = gtk_check_button_new_with_label(_("Safe deletion"));
+    cecup.delete_after = gtk_check_button_new_with_label(_("Sync 100%"));
     gtk_widget_set_tooltip_text(
         cecup.delete_after,
-        _("Delete old files only after the new ones are successfully copied"));
+        _("Delete files in backup that do not exist in the original"));
     cecup.diff_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.diff_entry,
                                 _("Executable used for comparing files"));

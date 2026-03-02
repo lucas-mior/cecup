@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-02 17:06-0300\n"
+"POT-Creation-Date: 2026-03-02 18:17-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -75,8 +75,8 @@ msgid "Defaults"
 msgstr "Padrão"
 
 #: main.c:223
-msgid "Delete old files only after the new ones are successfully copied"
-msgstr "Apaga arquivos antigos apenas após a cópia bem-sucedida dos novos"
+msgid "Delete files in backup that do not exist in the original"
+msgstr "Deletar arquivos do backup que não existem no original"
 
 #: main.c:213
 msgid "Detect files that are already the same (only for reference)"
@@ -86,7 +86,7 @@ msgstr "Identifica o que já está igual (apenas para referência)"
 msgid "Diff Tool:"
 msgstr "Ferramenta de comparação"
 
-#: hooks.c:1046
+#: hooks.c:1069
 msgid "Dst"
 msgstr "Backup"
 
@@ -126,7 +126,7 @@ msgstr "Pasta onde o backup será guardado"
 msgid "Hardlinked file in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
 
-#: hooks.c:892 main.c:172
+#: hooks.c:915 main.c:172
 msgid "Ignore Rules"
 msgstr "Regras de Ignorados"
 
@@ -158,7 +158,7 @@ msgstr "Novo arquivo encontrado na pasta original"
 msgid "Not found in original"
 msgstr "Não encontrado na pasta original"
 
-#: hooks.c:596
+#: hooks.c:619
 #, c-format
 msgid "Permanently delete %d item(s)?"
 msgstr "Excluir permanentemente %d arquivo(s)?"
@@ -196,10 +196,6 @@ msgstr "Restaurar configurações originais"
 msgid "Rsync transfer progress"
 msgstr "Progresso de transferência do rsync"
 
-#: main.c:220
-msgid "Safe deletion"
-msgstr "Exclusão segura"
-
 #: main.c:318 main.c:340
 msgid "Select Folder"
 msgstr "Selecionar Pasta"
@@ -236,7 +232,7 @@ msgstr "Tamanho"
 msgid "Skip"
 msgstr "Pular"
 
-#: hooks.c:1025
+#: hooks.c:1048
 msgid "Src"
 msgstr "Original"
 
@@ -248,10 +244,14 @@ msgstr "Iniciar a cópia e atualização dos arquivos selecionados"
 msgid "Symlink in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
 
-#: hooks.c:989
+#: hooks.c:1012
 #, c-format
 msgid "Sync %s -> %s?"
 msgstr "Sincronizar %s -> %s?"
+
+#: main.c:220
+msgid "Sync 100%"
+msgstr "Sincronia 100%"
 
 #: main.c:229
 msgid "Terminal emulator used to launch the diff tool"
@@ -265,10 +265,15 @@ msgstr "Terminal:"
 msgid "The original file is newer"
 msgstr "O arquivo original é mais recente"
 
-#: hooks.c:318
+#: hooks.c:341
 #, c-format
 msgid "Total Transfer Size: 📦 %s"
 msgstr "Tamanho total a copiar: 📦 %s"
+
+#: hooks.c:1467
+#, fuzzy
+msgid "Unknown modification time"
+msgstr "Data de modificação"
 
 #: cecup.h:79
 msgid "Update file in backup"
@@ -278,27 +283,27 @@ msgstr "Atualizar arquivo no backup"
 msgid "Update from original"
 msgstr "Atualizar conforme arquivo da pasta original"
 
-#: hooks.c:1026 hooks.c:1047
+#: hooks.c:1049 hooks.c:1070
 msgid "_Cancel"
 msgstr ""
 
-#: hooks.c:893
+#: hooks.c:916
 msgid "_Close"
 msgstr ""
 
-#: hooks.c:893
+#: hooks.c:916
 msgid "_Save"
 msgstr ""
 
-#: hooks.c:1027 hooks.c:1048
+#: hooks.c:1050 hooks.c:1071
 msgid "_Select"
 msgstr "Selecionar Pasta"
 
-#: hooks.c:1178
+#: hooks.c:1201
 msgid "by extension"
 msgstr "pela extensão"
 
-#: hooks.c:1175
+#: hooks.c:1198
 #, c-format
 msgid "by extension (*%s)"
 msgstr "pela extensão (*%s)"
@@ -307,7 +312,7 @@ msgstr "pela extensão (*%s)"
 msgid "⏩ Apply Changes"
 msgstr "⏩ Aplicar Mudanças"
 
-#: hooks.c:1165
+#: hooks.c:1188
 msgid "⏯️ Apply"
 msgstr "⏯️ Aplicar"
 
@@ -319,36 +324,36 @@ msgstr "⏹️ Parar"
 msgid "✅ Everything ready"
 msgstr "✅ Tudo pronto"
 
-#: hooks.c:1170
+#: hooks.c:1193
 msgid "💤 Ignore..."
 msgstr "💤 Ignorar..."
 
-#: hooks.c:1191 hooks.c:1195
+#: hooks.c:1214 hooks.c:1218
 msgid "📁 Dir"
 msgstr "📁 Pasta"
 
-#: hooks.c:1188
+#: hooks.c:1211
 #, fuzzy, c-format
 msgid "📁 Dir (/%s/)"
 msgstr "📁 Pasta (/%s/)"
 
-#: hooks.c:1141
+#: hooks.c:1164
 msgid "📂 Open Folder"
 msgstr "📂 Abrir Pasta"
 
-#: hooks.c:1136
+#: hooks.c:1159
 msgid "📄 Open File"
 msgstr "📄 Abrir arquivo"
 
-#: hooks.c:1146
+#: hooks.c:1169
 msgid "📋 Copy Relative Path"
 msgstr "📋 Copiar caminho relativo"
 
-#: hooks.c:1156
+#: hooks.c:1179
 msgid "📍 Copy Full Path"
 msgstr "📍 Copiar caminho completo"
 
-#: hooks.c:1203
+#: hooks.c:1226
 msgid "🔍 Diff"
 msgstr "🔍 Comparar"
 
@@ -356,7 +361,7 @@ msgstr "🔍 Comparar"
 msgid "🔎 Analyze changes between folders"
 msgstr "🔎 Analisar mudanças entre as pastas"
 
-#: hooks.c:1215
+#: hooks.c:1238
 msgid "🗑️ Delete"
 msgstr "🗑️ Excluir"
 
