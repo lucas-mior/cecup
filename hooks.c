@@ -1119,152 +1119,150 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
     }
 
     switch (event->button) {
-    case GDK_BUTTON_SECONDARY:
-        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), (gint)event->x,
-                                          (gint)event->y, &path, NULL, NULL,
-                                          NULL)) {
-            int32 row_idx;
-            CecupRow *row;
-            UIUpdateData *ui_update_data;
-            GtkWidget *menu;
-            GtkWidget *item;
-            GtkWidget *sub;
-            GtkWidget *sub_ext;
-            GtkWidget *sub_dir;
-            int32 is_disabled;
-            char *file_path;
-            char *other_path;
-            int64 path_len;
-            enum CecupAction action;
-            char extension_label[32];
-            char directory_label[MAX_PATH_LENGTH + 64];
-            char *extension_ptr;
-            char *directory_ptr;
+    case GDK_BUTTON_SECONDARY: {
+        int32 row_idx;
+        CecupRow *row;
+        UIUpdateData *ui_update_data;
+        GtkWidget *menu;
+        GtkWidget *item;
+        GtkWidget *sub;
+        GtkWidget *sub_ext;
+        GtkWidget *sub_dir;
+        int32 is_disabled;
+        char *file_path;
+        char *other_path;
+        int64 path_len;
+        enum CecupAction action;
+        char extension_label[32];
+        char directory_label[MAX_PATH_LENGTH + 64];
+        char *extension_ptr;
+        char *directory_ptr;
 
-            row_idx = gtk_tree_path_get_indices(path)[0];
-            row = cecup.visible_rows[row_idx];
+        if (!gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
+                                           (gint)event->x, (gint)event->y,
+                                           &path, NULL, NULL, NULL)) {
+            break;
+        }
 
-            if (side == 0) {
-                file_path = row->src_path;
-                path_len = row->src_path_len;
-                other_path = row->dst_path;
-                action = row->src_action;
-            } else {
-                file_path = row->dst_path;
-                path_len = row->dst_path_len;
-                other_path = row->src_path;
-                action = row->dst_action;
-            }
+        row_idx = gtk_tree_path_get_indices(path)[0];
+        row = cecup.visible_rows[row_idx];
 
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            ui_update_data
-                = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*ui_update_data)));
-            memset64(ui_update_data, 0, SIZEOF(*ui_update_data));
+        if (side == 0) {
+            file_path = row->src_path;
+            path_len = row->src_path_len;
+            other_path = row->dst_path;
+            action = row->src_action;
+        } else {
+            file_path = row->dst_path;
+            path_len = row->dst_path_len;
+            other_path = row->src_path;
+            action = row->dst_action;
+        }
 
-            ui_update_data->filepath_length = path_len;
-            ui_update_data->filepath
-                = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-            memcpy64(ui_update_data->filepath, file_path, path_len + 1);
-            g_mutex_unlock(&cecup.ui_arena_mutex);
+        g_mutex_lock(&cecup.ui_arena_mutex);
+        ui_update_data
+            = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*ui_update_data)));
+        memset64(ui_update_data, 0, SIZEOF(*ui_update_data));
 
-            ui_update_data->action = action;
-            ui_update_data->side = side;
+        ui_update_data->filepath_length = path_len;
+        ui_update_data->filepath
+            = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+        memcpy64(ui_update_data->filepath, file_path, path_len + 1);
+        g_mutex_unlock(&cecup.ui_arena_mutex);
 
-            menu = gtk_menu_new();
-            item = gtk_menu_item_new_with_label(_("📄 Open File"));
-            g_signal_connect(item, "activate", G_CALLBACK(on_menu_open),
+        ui_update_data->action = action;
+        ui_update_data->side = side;
+
+        menu = gtk_menu_new();
+        item = gtk_menu_item_new_with_label(_("📄 Open File"));
+        g_signal_connect(item, "activate", G_CALLBACK(on_menu_open),
+                         ui_update_data);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+        item = gtk_menu_item_new_with_label(_("📂 Open Folder"));
+        g_signal_connect(item, "activate", G_CALLBACK(on_menu_open_dir),
+                         ui_update_data);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+        item = gtk_menu_item_new_with_label(_("📋 Copy Relative Path"));
+        if (file_path == NULL) {
+            gtk_widget_set_sensitive(item, FALSE);
+        } else {
+            g_signal_connect(item, "activate",
+                             G_CALLBACK(on_menu_copy_relative), ui_update_data);
+        }
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+        item = gtk_menu_item_new_with_label(_("📍 Copy Full Path"));
+        if (file_path == NULL) {
+            gtk_widget_set_sensitive(item, FALSE);
+        } else {
+            g_signal_connect(item, "activate", G_CALLBACK(on_menu_copy_full),
                              ui_update_data);
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        }
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-            item = gtk_menu_item_new_with_label(_("📂 Open Folder"));
-            g_signal_connect(item, "activate", G_CALLBACK(on_menu_open_dir),
-                             ui_update_data);
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        item = gtk_menu_item_new_with_label(_("⏯️ Apply"));
+        g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply),
+                         ui_update_data);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-            item = gtk_menu_item_new_with_label(_("📋 Copy Relative Path"));
-            if (file_path == NULL) {
-                gtk_widget_set_sensitive(item, FALSE);
-            } else {
-                g_signal_connect(item, "activate",
-                                 G_CALLBACK(on_menu_copy_relative),
-                                 ui_update_data);
-            }
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        item = gtk_menu_item_new_with_label(_("💤 Ignore..."));
+        sub = gtk_menu_new();
+        gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
 
-            item = gtk_menu_item_new_with_label(_("📍 Copy Full Path"));
-            if (file_path == NULL) {
-                gtk_widget_set_sensitive(item, FALSE);
-            } else {
-                g_signal_connect(item, "activate",
-                                 G_CALLBACK(on_menu_copy_full), ui_update_data);
-            }
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        if ((extension_ptr = strrchr(ui_update_data->filepath, '.'))) {
+            SNPRINTF(extension_label, _("by extension (*%s)"), extension_ptr);
+        } else {
+            SNPRINTF(extension_label, "%s", _("by extension"));
+        }
+        sub_ext = gtk_menu_item_new_with_label(extension_label);
+        g_signal_connect(sub_ext, "activate", G_CALLBACK(on_menu_ignore_ext),
+                         ui_update_data);
+        gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
 
-            item = gtk_menu_item_new_with_label(_("⏯️ Apply"));
-            g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply),
-                             ui_update_data);
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-
-            item = gtk_menu_item_new_with_label(_("💤 Ignore..."));
-            sub = gtk_menu_new();
-            gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
-
-            if ((extension_ptr = strrchr(ui_update_data->filepath, '.'))) {
-                SNPRINTF(extension_label, _("by extension (*%s)"),
-                         extension_ptr);
-            } else {
-                SNPRINTF(extension_label, "%s", _("by extension"));
-            }
-            sub_ext = gtk_menu_item_new_with_label(extension_label);
-            g_signal_connect(sub_ext, "activate",
-                             G_CALLBACK(on_menu_ignore_ext), ui_update_data);
-            gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
-
-            if ((directory_ptr
-                 = g_path_get_dirname(ui_update_data->filepath))) {
-                if (strcmp(directory_ptr, ".") != 0) {
-                    SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
-                             directory_ptr);
-                } else {
-                    SNPRINTF(directory_label, "%s", _("📁 Dir"));
-                }
-                g_free(directory_ptr);
+        if ((directory_ptr = g_path_get_dirname(ui_update_data->filepath))) {
+            if (strcmp(directory_ptr, ".") != 0) {
+                SNPRINTF(directory_label, _("📁 Dir (/%s/)"), directory_ptr);
             } else {
                 SNPRINTF(directory_label, "%s", _("📁 Dir"));
             }
-            sub_dir = gtk_menu_item_new_with_label(directory_label);
-            g_signal_connect(sub_dir, "activate",
-                             G_CALLBACK(on_menu_ignore_dir), ui_update_data);
-            gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-
-            item = gtk_menu_item_new_with_label(_("🔍 Diff"));
-            is_disabled = (file_path == NULL || other_path == NULL
-                           || action == UI_ACTION_HARDLINK
-                           || action == UI_ACTION_SYMLINK);
-            if (is_disabled) {
-                gtk_widget_set_sensitive(item, FALSE);
-            } else {
-                g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
-                                 ui_update_data);
-            }
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-
-            item = gtk_menu_item_new_with_label(_("🗑️ Delete"));
-            if (file_path == NULL) {
-                gtk_widget_set_sensitive(item, FALSE);
-            } else {
-                g_signal_connect(item, "activate", G_CALLBACK(on_menu_delete),
-                                 ui_update_data);
-            }
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-
-            gtk_widget_show_all(menu);
-            gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
-            gtk_tree_path_free(path);
-            return TRUE;
+            g_free(directory_ptr);
+        } else {
+            SNPRINTF(directory_label, "%s", _("📁 Dir"));
         }
-        break;
+        sub_dir = gtk_menu_item_new_with_label(directory_label);
+        g_signal_connect(sub_dir, "activate", G_CALLBACK(on_menu_ignore_dir),
+                         ui_update_data);
+        gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+        item = gtk_menu_item_new_with_label(_("🔍 Diff"));
+        is_disabled
+            = (file_path == NULL || other_path == NULL
+               || action == UI_ACTION_HARDLINK || action == UI_ACTION_SYMLINK);
+        if (is_disabled) {
+            gtk_widget_set_sensitive(item, FALSE);
+        } else {
+            g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
+                             ui_update_data);
+        }
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+        item = gtk_menu_item_new_with_label(_("🗑️ Delete"));
+        if (file_path == NULL) {
+            gtk_widget_set_sensitive(item, FALSE);
+        } else {
+            g_signal_connect(item, "activate", G_CALLBACK(on_menu_delete),
+                             ui_update_data);
+        }
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+        gtk_widget_show_all(menu);
+        gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
+        gtk_tree_path_free(path);
+        return TRUE;
+    }
     default:
         break;
     }
