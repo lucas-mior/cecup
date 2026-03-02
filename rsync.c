@@ -998,9 +998,20 @@ sync_worker(void *user_data) {
         if (stat(thread_data->src_path, &stat_src) == 0
             && stat(thread_data->dst_path, &stat_dst) == 0) {
             if (stat_src.st_dev == stat_dst.st_dev) {
+                UIUpdateData *clear_signal;
                 dispatch_log_error(
                     "Safety stop: Original and Backup are on the same disk "
                     "partition. Change settings to ignore this.\n");
+
+                g_mutex_lock(&cecup.ui_arena_mutex);
+                clear_signal = xarena_push(cecup.ui_arena,
+                                           ALIGN16(SIZEOF(UIUpdateData)));
+                memset64(clear_signal, 0, SIZEOF(UIUpdateData));
+                g_mutex_unlock(&cecup.ui_arena_mutex);
+
+                clear_signal->type = DATA_TYPE_CLEAR_TREES;
+                g_idle_add(update_ui_handler, clear_signal);
+
                 goto finalize;
             }
         } else {
