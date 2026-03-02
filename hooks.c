@@ -32,6 +32,8 @@
 #define TESTING_hooks 0
 #endif
 
+#define UI_INTERVAL_MS 100
+
 static void
 free_task_list(GPtrArray *tasks) {
     if (tasks == NULL) {
@@ -1520,16 +1522,16 @@ update_ui_handler(void *user_data) {
             add_row_logic(&data->batch[i]);
         }
         if (cecup.refresh_id == 0) {
-            cecup.refresh_id
-                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
+            cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
+                                             refresh_ui_timeout_callback, NULL);
         }
         break;
     }
     case DATA_TYPE_TREE_ROW: {
         add_row_logic(data);
         if (cecup.refresh_id == 0) {
-            cecup.refresh_id
-                = g_timeout_add(100, refresh_ui_timeout_callback, NULL);
+            cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
+                                             refresh_ui_timeout_callback, NULL);
         }
         break;
     }
@@ -1549,8 +1551,8 @@ update_ui_handler(void *user_data) {
             }
         }
         if (cecup.refresh_id == 0) {
-            cecup.refresh_id
-                = g_timeout_add(50, refresh_ui_timeout_callback, NULL);
+            cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
+                                             refresh_ui_timeout_callback, NULL);
         }
         break;
     }
