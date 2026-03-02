@@ -119,6 +119,10 @@ static void __attribute__((format(printf, 1, 2))) error(char *format, ...);
 #define SNPRINTF(BUFFER, FORMAT, ...)                                          \
     snprintf2(BUFFER, sizeof(BUFFER), FORMAT, __VA_ARGS__)
 #endif
+#if !defined(STRFTIME)
+#define STRFTIME(BUFFER, FORMAT, TIME) \
+    strftime2(BUFFER, sizeof(BUFFER), FORMAT, TIME)
+#endif
 
 #define STRING_FROM_ARRAY(BUFFER, SEP, ARRAY, LENGTH) \
 _Generic((ARRAY), \
@@ -764,6 +768,18 @@ snprintf2(char *buffer, int64 size, char *format, ...) {
     }
     if (n >= size) {
         error("Error in snprintf %s: Buffer is too small.\n", format);
+        fatal(EXIT_FAILURE);
+    }
+    return n;
+}
+
+static int64
+strftime2(char *buffer, int64 size, char *format, struct tm *time_info) {
+    int64 n;
+
+    n = (int64)strftime(buffer, (size_t)size, format, time_info);
+    if ((n <= 0) || (n >= size)) {
+        error("Error in strftime(%s) (n = %lld).\n", format, (llong)n);
         fatal(EXIT_FAILURE);
     }
     return n;

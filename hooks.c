@@ -173,11 +173,11 @@ get_target_tasks(int32 side, char *clicked_path,
     return tasks;
 }
 
-static int
+static int32
 cecup_row_compare(const void *a, const void *b) {
     CecupRow *row_a;
     CecupRow *row_b;
-    int32 result;
+    int64 result;
 
     row_a = *(CecupRow **)a;
     row_b = *(CecupRow **)b;
@@ -206,13 +206,13 @@ cecup_row_compare(const void *a, const void *b) {
         }
         break;
     case COL_SIZE_RAW:
-        result = row_a->size_raw - row_b->size_raw;
+        result = (int64)row_a->size_raw - (int64)row_b->size_raw;
         break;
     case COL_MTIME_RAW:
-        result = row_a->mtime_raw - row_b->mtime_raw;
+        result = (int64)row_a->mtime_raw - (int64)row_b->mtime_raw;
         break;
     default:
-        result = row_a->src_action - row_b->src_action;
+        result = (int64)row_a->src_action - (int64)row_b->src_action;
         break;
     }
 
@@ -220,7 +220,7 @@ cecup_row_compare(const void *a, const void *b) {
         result *= -1;
     }
 
-    return result;
+    return (int32)result;
 }
 
 static void
@@ -1440,8 +1440,7 @@ update_ui_handler(gpointer user_data) {
             time_t t = (time_t)data->mtime;
             struct tm *tm_info = localtime(&t);
             char buffer[32];
-            int64 n;
-            n = strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
+            int64 n = STRFTIME(buffer, "%Y-%m-%d %H:%M:%S", tm_info);
             row->mtime_raw = data->mtime;
             row->mtime_text = xarena_push(cecup.row_arena, ALIGN16(n + 1));
             memcpy64(row->mtime_text, buffer, n + 1);
