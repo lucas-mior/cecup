@@ -168,7 +168,7 @@ msgstr "Ignorado por regra de exclusão"
 
 #: main.c:152
 msgid "Modification Time"
-msgstr ""
+msgstr "Data de modificação"
 
 #: main.c:131
 msgid "Name"
