@@ -33,14 +33,6 @@
 #define FILL_TRUE true
 #define EXPAND_TRUE true
 
-#define ROW_ARENA_SIZE SIZEMB(64)
-#define UI_ARENA_SIZE SIZEMB(16)
-#define INITIAL_ROWS_CAPACITY 4096
-
-#define COL_WIDTH_TASK 80
-#define COL_WIDTH_SIZE 100
-#define COL_WIDTH_MTIME 150
-
 static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path);
 
 int32
@@ -77,9 +69,9 @@ main(int32 argc, char *argv[]) {
     char *default_dst;
 
     GType column_types[NUM_COLS];
-    char source_path_buffer[MAX_PATH_LENGTH];
+    char source_path_buffer[4096];
     int64 source_path_length;
-    char destination_path_buffer[MAX_PATH_LENGTH];
+    char destination_path_buffer[4096];
     int64 destination_path_length;
 
     {
@@ -108,15 +100,15 @@ main(int32 argc, char *argv[]) {
 
     gtk_init(&argc, &argv);
 
-    cecup.row_arena = arena_create(ROW_ARENA_SIZE);
-    cecup.ui_arena = arena_create(UI_ARENA_SIZE);
+    cecup.row_arena = arena_create(SIZEMB(64));
+    cecup.ui_arena = arena_create(SIZEMB(16));
     g_mutex_init(&cecup.ui_arena_mutex);
 
     {
         int64 rows_size;
 
         cecup.rows_count = 0;
-        cecup.rows_capacity = INITIAL_ROWS_CAPACITY;
+        cecup.rows_capacity = 4096;
         rows_size = cecup.rows_capacity*SIZEOF(CecupRow *);
         cecup.rows = xarena_push(cecup.row_arena, ALIGN16(rows_size));
         cecup.visible_rows = xarena_push(cecup.row_arena, ALIGN16(rows_size));
@@ -143,7 +135,7 @@ main(int32 argc, char *argv[]) {
         SNPRINTF(config_base, "%s/cecup", XDG_CONFIG_HOME);
 
         if (access(config_base, F_OK) == -1) {
-            char cmd[MAX_PATH_LENGTH];
+            char cmd[4096];
             g_mkdir_with_parents(config_base, 0755);
 
             SNPRINTF(cmd, "cp -r /etc/cecup/* '%s/'", config_base);
@@ -657,7 +649,7 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
         column, renderer_text, cell_data_func, GINT_TO_POINTER(col_act), NULL);
     gtk_tree_view_column_set_sort_column_id(column, col_act);
     gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_min_width(column, COL_WIDTH_TASK);
+    gtk_tree_view_column_set_min_width(column, 80);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     column = gtk_tree_view_column_new();
@@ -678,7 +670,7 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
         NULL);
     gtk_tree_view_column_set_sort_column_id(column, COL_SIZE_RAW);
     gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_min_width(column, COL_WIDTH_SIZE);
+    gtk_tree_view_column_set_min_width(column, 100);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     column = gtk_tree_view_column_new();
@@ -689,7 +681,7 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
         NULL);
     gtk_tree_view_column_set_sort_column_id(column, COL_MTIME_RAW);
     gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_min_width(column, COL_WIDTH_MTIME);
+    gtk_tree_view_column_set_min_width(column, 150);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     gtk_widget_set_has_tooltip(tree, TRUE);

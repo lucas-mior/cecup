@@ -38,12 +38,6 @@
 #define TESTING_rsync 0
 #endif
 
-#define FS_FIX_INITIAL_CAPACITY 1024
-#define FS_FIX_BUFFER_SAFETY_MARGIN 100
-#define RSYNC_LOG_LINE_WRAP_LIMIT 120
-#define RSYNC_LOG_INDENT_SIZE 4
-#define UI_POLL_TIMEOUT_MS 100
-
 enum RsyncCharAction {
     RSYNC_CHAR_SEND = '<',
     RSYNC_CHAR_RECEIVE = '>',
@@ -93,7 +87,7 @@ typedef struct EqualScannerData {
 } EqualScannerData;
 
 typedef struct RowBatch {
-    UIUpdateData items[BATCH_SIZE];
+    UIUpdateData items[128];
     int32 count;
 } RowBatch;
 
@@ -101,7 +95,7 @@ static void
 dispatch_log(char *format, ...) {
     UIUpdateData *data;
     va_list va_args;
-    char buffer[LOG_MESSAGE_BUFFER_SIZE];
+    char buffer[8192];
     int64 n;
 
     va_start(va_args, format);
@@ -155,7 +149,7 @@ static void
 dispatch_log_error(char *format, ...) {
     UIUpdateData *data;
     va_list va_args;
-    char buffer[LOG_MESSAGE_BUFFER_SIZE];
+    char buffer[8192];
     int64 n;
 
     va_start(va_args, format);
@@ -183,11 +177,15 @@ dispatch_log_error(char *format, ...) {
 static void
 dispatch_progress(enum DataType type, double fraction) {
     UIUpdateData *data;
-    static double last_fractions[NUM_DATA_TYPES] = {0};
-    int32 index = (int32)type;
+    static double last_fractions[4] = {0, 0, 0, 0};
+    int32 index = 0;
 
-    if (index < 0 || index >= NUM_DATA_TYPES) {
-        return;
+    if (type == DATA_TYPE_PROGRESS_RSYNC) {
+        index = 1;
+    } else if (type == DATA_TYPE_PROGRESS_EQUAL) {
+        index = 2;
+    } else if (type == DATA_TYPE_PROGRESS_PREVIEW) {
+        index = 3;
     }
 
     if (fraction < 1.0 && (fraction - last_fractions[index] < 0.001)
@@ -480,7 +478,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
     char full_path[MAX_PATH_LENGTH];
     char **name_list;
     int32 count = 0;
-    int32 capacity = FS_FIX_INITIAL_CAPACITY;
+    int32 capacity = 1024;
 
     if (cecup.cancel_sync) {
         return;
@@ -541,76 +539,54 @@ fix_fs_recursive(char *base_path, char *relative_path) {
         }
 
         for (int32 k = 0; k < (int32)strlen64(d_name); k += 1) {
-            if (j >= (MAX_PATH_LENGTH - FS_FIX_BUFFER_SAFETY_MARGIN)) {
+            if (j >= 250) {
                 break;
             }
             if (d_name[k] == '=' && d_name[k + 1] == '>') {
-                char *replace = "_equal_arrow_in_filename_";
-                int64 r_len = strlen64(replace);
-                memcpy64(new_name + j, replace, r_len);
-                j += r_len;
+                memcpy64(new_name + j, "_equal_arrow_in_filename_", 25);
+                j += 25;
                 k += 1;
                 changed = 1;
             } else if (d_name[k] == '-' && d_name[k + 1] == '>') {
-                char *replace = "_symlink_arrow_in_filename_";
-                int64 r_len = strlen64(replace);
-                memcpy64(new_name + j, replace, r_len);
-                j += r_len;
+                memcpy64(new_name + j, "_symlink_arrow_in_filename_", 27);
+                j += 27;
                 k += 1;
                 changed = 1;
             } else if (d_name[k] == '\\') {
-                char *replace = "_backslash_in_filename_";
-                int64 r_len = strlen64(replace);
-                memcpy64(new_name + j, replace, r_len);
-                j += r_len;
+                memcpy64(new_name + j, "_backslash_in_filename_", 23);
+                j += 23;
                 changed = 1;
             } else if (d_name[k] == '\n') {
-                char *replace = "_newline_in_filename_";
-                int64 r_len = strlen64(replace);
-                memcpy64(new_name + j, replace, r_len);
-                j += r_len;
+                memcpy64(new_name + j, "_newline_in_filename_", 21);
+                j += 21;
                 changed = 1;
             } else if (d_name[k] == '<') {
-                char *replace = "_less_than_in_filename_";
-                int64 r_len = strlen64(replace);
-                memcpy64(new_name + j, replace, r_len);
-                j += r_len;
+                memcpy64(new_name + j, "_less_than_in_filename_", 23);
+                j += 23;
                 changed = 1;
             } else if (d_name[k] == '>') {
-                char *replace = "_greater_than_in_filename_";
-                int64 r_len = strlen64(replace);
-                memcpy64(new_name + j, replace, r_len);
-                j += r_len;
+                memcpy64(new_name + j, "_greater_than_in_filename_", 26);
+                j += 26;
                 changed = 1;
             } else if (d_name[k] == ':') {
-                char *replace = "_colon_in_filename_";
-                int64 r_len = strlen64(replace);
-                memcpy64(new_name + j, replace, r_len);
-                j += r_len;
+                memcpy64(new_name + j, "_colon_in_filename_", 19);
+                j += 19;
                 changed = 1;
             } else if (d_name[k] == '\"') {
-                char *replace = "_double_quote_in_filename_";
-                int64 r_len = strlen64(replace);
-                memcpy64(new_name + j, replace, r_len);
-                j += r_len;
+                memcpy64(new_name + j, "_double_quote_in_filename_", 26);
+                j += 26;
                 changed = 1;
             } else if (d_name[k] == '|') {
-                char *replace = "_pipe_in_filename_";
-                int64 r_len = strlen64(replace);
-                memcpy64(new_name + j, replace, r_len);
-                j += r_len;
+                memcpy64(new_name + j, "_pipe_in_filename_", 18);
+                j += 18;
                 changed = 1;
             } else if (d_name[k] == '?') {
-                char *replace = "_question_mark_in_filename_";
-                int64 r_len = strlen64(replace);
-                memcpy64(new_name + j, replace, r_len);
-                j += r_len;
+                memcpy64(new_name + j, "_question_mark_in_filename_", 27);
+                j += 27;
                 changed = 1;
             } else if (d_name[k] == '*') {
-                char *replace = "_asterisk_in_filename_";
-                int64 r_len = strlen64(replace);
-                memcpy64(new_name + j, replace, r_len);
-                j += r_len;
+                memcpy64(new_name + j, "_asterisk_in_filename_", 22);
+                j += 22;
                 changed = 1;
             } else {
                 new_name[j] = d_name[k];
@@ -686,15 +662,15 @@ bulk_sync_worker(void *user_data) {
 
     for (int32 i = 0; i < (int32)tasks->len; i += 1) {
         UIUpdateData *ui_update_data;
-        char cmd[MAX_COMMAND_LENGTH];
+        char cmd[8192];
         int32 pipe_output[2];
         int32 pipe_error[2];
         pid_t child_pid;
         struct pollfd pipes[2];
 
-        char buffer_output[LOG_MESSAGE_BUFFER_SIZE];
+        char buffer_output[8192];
         int32 buffer_output_pos = 0;
-        char buffer_error[LOG_MESSAGE_BUFFER_SIZE];
+        char buffer_error[8192];
         int32 buffer_error_pos = 0;
 
         UIUpdateData *remove_data;
@@ -817,7 +793,7 @@ bulk_sync_worker(void *user_data) {
                     break;
                 }
 
-                switch (poll(pipes, 2, UI_POLL_TIMEOUT_MS)) {
+                switch (poll(pipes, 2, 100)) {
                 case -1:
                     if (errno != EINTR) {
                         dispatch_log_error("Error in poll: %s.\n",
@@ -1007,9 +983,9 @@ sync_worker(void *user_data) {
     int32 pipe_error[2] = {-1, -1};
     pid_t child_pid = -1;
 
-    char buffer_output[LOG_MESSAGE_BUFFER_SIZE];
+    char buffer_output[8192];
     int32 buffer_output_pos = 0;
-    char buffer_error[LOG_MESSAGE_BUFFER_SIZE];
+    char buffer_error[8192];
     int32 buffer_error_pos = 0;
 
     if (thread_data->check_different_fs) {
@@ -1095,7 +1071,7 @@ sync_worker(void *user_data) {
     free(esc_dst);
 
     {
-        char log_cmd[LOG_MESSAGE_BUFFER_SIZE];
+        char log_cmd[8192];
         int32 i = 0;
         int32 j = 0;
         int32 line_len = 0;
@@ -1106,19 +1082,19 @@ sync_worker(void *user_data) {
                 last_space_index = j;
             }
             line_len += 1;
-            if (line_len > RSYNC_LOG_LINE_WRAP_LIMIT
-                && last_space_index != -1) {
+            if (line_len > 120 && last_space_index != -1) {
                 int32 word_len = j - last_space_index;
 
                 log_cmd[last_space_index] = '\n';
                 for (int32 k = 0; k < word_len; k += 1) {
-                    log_cmd[j + RSYNC_LOG_INDENT_SIZE - k] = log_cmd[j - k];
+                    log_cmd[j + 4 - k] = log_cmd[j - k];
                 }
-                for (int32 k = 1; k <= RSYNC_LOG_INDENT_SIZE; k += 1) {
-                    log_cmd[last_space_index + k] = ' ';
-                }
-                j += RSYNC_LOG_INDENT_SIZE;
-                line_len = word_len + RSYNC_LOG_INDENT_SIZE;
+                log_cmd[last_space_index + 1] = ' ';
+                log_cmd[last_space_index + 2] = ' ';
+                log_cmd[last_space_index + 3] = ' ';
+                log_cmd[last_space_index + 4] = ' ';
+                j += 4;
+                line_len = word_len + 4;
                 last_space_index = -1;
             }
             i += 1;
@@ -1189,7 +1165,7 @@ sync_worker(void *user_data) {
             break;
         }
 
-        switch (poll(pipes, 2, UI_POLL_TIMEOUT_MS)) {
+        switch (poll(pipes, 2, 100)) {
         case -1:
             if (errno != EINTR) {
                 dispatch_log_error("Error in poll: %s.\n", strerror(errno));
@@ -1498,8 +1474,6 @@ diff_worker(void *user_data) {
     if (system(cmd) < 0) {
         dispatch_log_error("Error system call: %s.\n", strerror(errno));
     }
-
-    free(cmd);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     if (ui_update_data->filepath) {

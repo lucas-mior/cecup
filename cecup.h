@@ -32,30 +32,7 @@
 #define EMOJI_IGNORE "💤"
 
 #define MAX_PATH_LENGTH 4096
-#define ALIGNMENT_FACTOR 16
-#define ALIGN16(n) (((n) + (ALIGNMENT_FACTOR - 1)) & ~(ALIGNMENT_FACTOR - 1))
-
-#define SIZE_TEXT_BUFFER_LEN 16
-#define MTIME_TEXT_BUFFER_LEN 32
-#define STATS_TEXT_BUFFER_LEN 128
-#define BUTTON_LABEL_BUFFER_LEN 64
-#define LOG_MESSAGE_BUFFER_SIZE 8192
-#define PATH_COPY_BUFFER_SIZE 1048576
-
-#define COLOR_NEW "#D4EDDA"
-#define COLOR_UPDATE "#CCE5FF"
-#define COLOR_HARDLINK "#E2D1F9"
-#define COLOR_SYMLINK "#FFD1F9"
-#define COLOR_EQUAL "#F0F0F0"
-#define COLOR_IGNORE "#FFF3CD"
-#define COLOR_DELETE "#F8D7DA"
-#define COLOR_DEFAULT "#FFFFFF"
-
-#define DEFAULT_WINDOW_WIDTH 1100
-#define DEFAULT_WINDOW_HEIGHT 800
-#define DEFAULT_DIALOG_WIDTH 600
-#define DEFAULT_DIALOG_HEIGHT 500
-#define LOG_VIEW_MIN_HEIGHT 150
+#define ALIGN16(n) (((n) + 15) & ~15)
 
 enum CecupAction {
     UI_ACTION_NONE = 0,
@@ -156,9 +133,9 @@ typedef struct CecupRow {
     int64 dst_path_len;
     char *link_target;
     int64 link_target_len;
-    char size_text[SIZE_TEXT_BUFFER_LEN];
+    char size_text[16];
     int64 size_raw;
-    char mtime_text[MTIME_TEXT_BUFFER_LEN];
+    char mtime_text[32];
     int64 mtime_raw;
     char *src_color;
     char *dst_color;
@@ -237,8 +214,7 @@ enum DataType {
     DATA_TYPE_CLEAR_TREES,
     DATA_TYPE_PROGRESS_RSYNC,
     DATA_TYPE_PROGRESS_EQUAL,
-    DATA_TYPE_PROGRESS_PREVIEW,
-    NUM_DATA_TYPES
+    DATA_TYPE_PROGRESS_PREVIEW
 };
 
 typedef struct UIUpdateData {
