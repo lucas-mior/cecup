@@ -1123,7 +1123,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         UIUpdateData *ui_update_data;
         GtkWidget *menu;
         GtkWidget *item;
-        int32 is_disabled;
         char *file_path;
         char *other_path;
         int64 path_len;
@@ -1245,10 +1244,9 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
         item = gtk_menu_item_new_with_label(_("🔍 Diff"));
-        is_disabled
-            = (file_path == NULL || other_path == NULL
-               || action == UI_ACTION_HARDLINK || action == UI_ACTION_SYMLINK);
-        if (is_disabled) {
+        if ((file_path == NULL) || (other_path == NULL)
+            || (action == UI_ACTION_HARDLINK)
+            || (action == UI_ACTION_SYMLINK)) {
             gtk_widget_set_sensitive(item, FALSE);
         } else {
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
