@@ -85,6 +85,11 @@ typedef struct EqualScannerData {
     int64 processed_files;
 } EqualScannerData;
 
+typedef struct RowBatch {
+    UIUpdateData items[128];
+    int32 count;
+} RowBatch;
+
 static void
 dispatch_log(char *format, ...) {
     UIUpdateData *data;
@@ -234,12 +239,40 @@ dispatch_tree(int32 side, enum CecupAction action, char *path,
     return;
 }
 
+static void
+flush_batch(RowBatch *batch) {
+    UIUpdateData *data;
+
+    if (batch->count == 0) {
+        return;
+    }
+
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
+    memset64(data, 0, SIZEOF(UIUpdateData));
+
+    data->batch = xarena_push(cecup.ui_arena,
+                              ALIGN16(batch->count*SIZEOF(UIUpdateData)));
+    memcpy64(data->batch, batch->items, batch->count*SIZEOF(UIUpdateData));
+    data->batch_count = batch->count;
+    g_mutex_unlock(&cecup.ui_arena_mutex);
+
+    data->type = DATA_TYPE_TREE_ROW_BATCH;
+    g_idle_add(update_ui_handler, data);
+    batch->count = 0;
+    return;
+}
+
 static int64
 count_files_recursive(char *base_path, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
     char full_path[MAX_PATH_LENGTH];
     int64 count;
+
+    if (cecup.cancel_sync) {
+        return 0;
+    }
 
     count = 0;
     if (relative_path[0] == '\0') {
@@ -259,6 +292,10 @@ count_files_recursive(char *base_path, char *relative_path) {
         char *name;
         char sub_rel[MAX_PATH_LENGTH];
         struct stat st;
+
+        if (cecup.cancel_sync) {
+            break;
+        }
 
         name = entry->d_name;
         if (name[0] == '.'
@@ -299,7 +336,8 @@ count_files_recursive(char *base_path, char *relative_path) {
 }
 
 static void
-find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path) {
+find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path,
+                 RowBatch *batch) {
     DIR *dir;
     struct dirent *entry;
     char src_full[MAX_PATH_LENGTH];
@@ -355,24 +393,45 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path) {
         }
 
         if (S_ISDIR(stat_srt.st_mode)) {
-            find_equal_files(equal_scanner_data, sub_rel);
+            find_equal_files(equal_scanner_data, sub_rel, batch);
             continue;
         }
 
         if (S_ISREG(stat_srt.st_mode) || S_ISLNK(stat_srt.st_mode)) {
             equal_scanner_data->processed_files += 1;
             if (equal_scanner_data->total_files > 0) {
-                dispatch_progress(DATA_TYPE_PROGRESS_EQUAL,
-                                  (double)(equal_scanner_data->processed_files
-                                           / equal_scanner_data->total_files));
+                dispatch_progress(
+                    DATA_TYPE_PROGRESS_EQUAL,
+                    (double)equal_scanner_data->processed_files
+                        / (double)equal_scanner_data->total_files);
             }
 
             if (lstat(dst_full, &stat_dst) == 0) {
                 if (stat_srt.st_size == stat_dst.st_size
                     && stat_srt.st_mtime == stat_dst.st_mtime) {
-                    dispatch_tree(SIDE_LEFT, UI_ACTION_EQUAL, sub_rel, NULL,
-                                  stat_srt.st_size, (int64)stat_srt.st_mtime,
-                                  UI_REASON_EQUAL);
+                    UIUpdateData *item;
+                    int64 path_len = strlen64(sub_rel);
+
+                    if (batch->count >= 128) {
+                        flush_batch(batch);
+                    }
+
+                    item = &batch->items[batch->count];
+                    memset64(item, 0, SIZEOF(UIUpdateData));
+
+                    g_mutex_lock(&cecup.ui_arena_mutex);
+                    item->filepath_length = path_len;
+                    item->filepath
+                        = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+                    memcpy64(item->filepath, sub_rel, path_len + 1);
+                    g_mutex_unlock(&cecup.ui_arena_mutex);
+
+                    item->side = SIDE_LEFT;
+                    item->action = UI_ACTION_EQUAL;
+                    item->reason = UI_REASON_EQUAL;
+                    item->size = stat_srt.st_size;
+                    item->mtime = (int64)stat_srt.st_mtime;
+                    batch->count += 1;
                 }
             }
         }
@@ -394,10 +453,13 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path) {
 static void *
 equal_scanner_worker(void *user_data) {
     EqualScannerData *data;
+    RowBatch batch;
 
     data = user_data;
+    batch.count = 0;
     data->total_files = count_files_recursive(data->src_path, "");
-    find_equal_files(data, "");
+    find_equal_files(data, "", &batch);
+    flush_batch(&batch);
     dispatch_progress(DATA_TYPE_PROGRESS_EQUAL, 1.0);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
@@ -957,6 +1019,10 @@ sync_worker(void *user_data) {
         total_files_preview = count_files_recursive(thread_data->src_path, "");
     }
 
+    if (cecup.cancel_sync) {
+        goto finalize;
+    }
+
     if (thread_data->is_preview && thread_data->scan_equal) {
         EqualScannerData *equal_scanner_data;
         g_mutex_lock(&cecup.ui_arena_mutex);
@@ -1259,8 +1325,8 @@ sync_worker(void *user_data) {
                     processed_files_preview += 1;
                     if (total_files_preview > 0) {
                         dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                          (double)(processed_files_preview
-                                                   / total_files_preview));
+                                          (double)processed_files_preview
+                                              / (double)total_files_preview);
                     }
                 }
             }

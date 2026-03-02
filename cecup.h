@@ -208,6 +208,7 @@ typedef struct ThreadData {
 enum DataType {
     DATA_TYPE_LOG,
     DATA_TYPE_TREE_ROW,
+    DATA_TYPE_TREE_ROW_BATCH,
     DATA_TYPE_REMOVE_TREE_ROW,
     DATA_TYPE_ENABLE_BUTTONS,
     DATA_TYPE_CLEAR_TREES,
@@ -238,6 +239,8 @@ typedef struct UIUpdateData {
     int32 side;
     double fraction;
     enum DataType type;
+    struct UIUpdateData *batch;
+    int32 batch_count;
 } UIUpdateData;
 
 static gboolean update_ui_handler(void * user_data);
