@@ -1123,8 +1123,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         UIUpdateData *ui_update_data;
         GtkWidget *menu;
         GtkWidget *item;
-        GtkWidget *sub_ext;
-        GtkWidget *sub_dir;
         int32 is_disabled;
         char *file_path;
         char *other_path;
@@ -1212,6 +1210,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         item = gtk_menu_item_new_with_label(_("💤 Ignore..."));
         {
             GtkWidget *sub = gtk_menu_new();
+            GtkWidget *sub_ext;
+            GtkWidget *sub_dir;
             gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
 
             if ((extension_ptr = strrchr(ui_update_data->filepath, '.'))) {
