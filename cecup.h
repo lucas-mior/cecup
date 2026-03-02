@@ -32,6 +32,7 @@
 #define EMOJI_IGNORE "💤"
 
 #define MAX_PATH_LENGTH 4096
+#define ALIGN16(n) (((n) + 15) & ~15)
 
 enum CecupAction {
     UI_ACTION_NONE = 0,

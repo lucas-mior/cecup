@@ -109,25 +109,25 @@ get_target_tasks(int32 side, char *clicked_path,
         }
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        task = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+        task = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
         memset64(task, 0, SIZEOF(UIUpdateData));
 
         task->filepath_length = path_len;
-        task->filepath = xarena_push(cecup.ui_arena, path_len + 1);
+        task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
         memcpy64(task->filepath, file_path, path_len + 1);
 
         task->src_base_len = src_len;
-        task->src_base = xarena_push(cecup.ui_arena, src_len + 1);
+        task->src_base = xarena_push(cecup.ui_arena, ALIGN16(src_len + 1));
         memcpy64(task->src_base, shared_src, src_len + 1);
 
         task->dst_base_len = dst_len;
-        task->dst_base = xarena_push(cecup.ui_arena, dst_len + 1);
+        task->dst_base = xarena_push(cecup.ui_arena, ALIGN16(dst_len + 1));
         memcpy64(task->dst_base, shared_dst, dst_len + 1);
 
         if (row->link_target) {
             task->link_target_len = row->link_target_len;
-            task->link_target
-                = xarena_push(cecup.ui_arena, task->link_target_len + 1);
+            task->link_target = xarena_push(cecup.ui_arena,
+                                            ALIGN16(task->link_target_len + 1));
             memcpy64(task->link_target, row->link_target,
                      task->link_target_len + 1);
         }
@@ -143,20 +143,20 @@ get_target_tasks(int32 side, char *clicked_path,
         int64 path_len;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        task = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+        task = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
         memset64(task, 0, SIZEOF(UIUpdateData));
 
         path_len = strlen64(clicked_path);
         task->filepath_length = path_len;
-        task->filepath = xarena_push(cecup.ui_arena, path_len + 1);
+        task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
         memcpy64(task->filepath, clicked_path, path_len + 1);
 
         task->src_base_len = src_len;
-        task->src_base = xarena_push(cecup.ui_arena, src_len + 1);
+        task->src_base = xarena_push(cecup.ui_arena, ALIGN16(src_len + 1));
         memcpy64(task->src_base, shared_src, src_len + 1);
 
         task->dst_base_len = dst_len;
-        task->dst_base = xarena_push(cecup.ui_arena, dst_len + 1);
+        task->dst_base = xarena_push(cecup.ui_arena, ALIGN16(dst_len + 1));
         memcpy64(task->dst_base, shared_dst, dst_len + 1);
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -673,11 +673,12 @@ on_menu_diff(GtkWidget *m, gpointer data) {
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
             g_mutex_lock(&cecup.ui_arena_mutex);
             task->diff_tool_len = diff_len;
-            task->diff_tool = xarena_push(cecup.ui_arena, diff_len + 1);
+            task->diff_tool
+                = xarena_push(cecup.ui_arena, ALIGN16(diff_len + 1));
             memcpy64(task->diff_tool, diff_tool, diff_len + 1);
 
             task->term_cmd_len = term_len;
-            task->term_cmd = xarena_push(cecup.ui_arena, term_len + 1);
+            task->term_cmd = xarena_push(cecup.ui_arena, ALIGN16(term_len + 1));
             memcpy64(task->term_cmd, term_cmd, term_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -858,7 +859,7 @@ on_preview_clicked(GtkWidget *b, gpointer data) {
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = xarena_push(cecup.ui_arena, SIZEOF(ThreadData));
+    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(ThreadData)));
     memset64(thread_data, 0, SIZEOF(ThreadData));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -986,7 +987,7 @@ on_fix_clicked(GtkWidget *b, gpointer data) {
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = xarena_push(cecup.ui_arena, SIZEOF(ThreadData));
+    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(ThreadData)));
     memset64(thread_data, 0, SIZEOF(ThreadData));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1039,7 +1040,7 @@ on_sync_clicked(GtkWidget *b, gpointer data) {
         gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        thread_data = xarena_push(cecup.ui_arena, SIZEOF(ThreadData));
+        thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(ThreadData)));
         memset64(thread_data, 0, SIZEOF(ThreadData));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1157,11 +1158,11 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
             }
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            ud = xarena_push(cecup.ui_arena, SIZEOF(UIUpdateData));
+            ud = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
             memset64(ud, 0, SIZEOF(UIUpdateData));
 
             ud->filepath_length = path_len;
-            ud->filepath = xarena_push(cecup.ui_arena, path_len + 1);
+            ud->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
             memcpy64(ud->filepath, file_path, path_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1322,7 +1323,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             string_len = strlen64(translated_action);
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = xarena_push(cecup.ui_arena, string_len + 1);
+            tip_text = xarena_push(cecup.ui_arena, ALIGN16(string_len + 1));
             g_mutex_unlock(&cecup.ui_arena_mutex);
             memcpy64(tip_text, translated_action, string_len + 1);
             break;
@@ -1340,7 +1341,8 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                                            translated_reason);
             }
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
+            tip_text
+                = xarena_push(cecup.ui_arena, ALIGN16(tip_text_length + 1));
             g_mutex_unlock(&cecup.ui_arena_mutex);
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
@@ -1349,7 +1351,8 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             tip_text_length = SNPRINTF(tip_text_buffer, "%s: %lld bytes",
                                        file_path, (llong)row->size_raw);
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
+            tip_text
+                = xarena_push(cecup.ui_arena, ALIGN16(tip_text_length + 1));
             g_mutex_unlock(&cecup.ui_arena_mutex);
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
@@ -1358,7 +1361,8 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", file_path,
                                        row->mtime_text);
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
+            tip_text
+                = xarena_push(cecup.ui_arena, ALIGN16(tip_text_length + 1));
             g_mutex_unlock(&cecup.ui_arena_mutex);
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
@@ -1442,7 +1446,7 @@ update_ui_handler(gpointer user_data) {
             }
         }
 
-        row = xarena_push(cecup.row_arena, SIZEOF(CecupRow));
+        row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(CecupRow)));
         memset64(row, 0, SIZEOF(CecupRow));
         row->src_action = action_src;
         row->dst_action = action_dst;
@@ -1467,8 +1471,8 @@ update_ui_handler(gpointer user_data) {
 
         if (data->link_target) {
             row->link_target_len = data->link_target_len;
-            row->link_target
-                = xarena_push(cecup.row_arena, row->link_target_len + 1);
+            row->link_target = xarena_push(cecup.row_arena,
+                                           ALIGN16(row->link_target_len + 1));
             memcpy64(row->link_target, data->link_target,
                      row->link_target_len + 1);
         }
@@ -1482,20 +1486,20 @@ update_ui_handler(gpointer user_data) {
             int64 path_len = data->filepath_length;
 
             row->src_path = NULL;
-            row->dst_path = xarena_push(cecup.row_arena, path_len + 1);
+            row->dst_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
             memcpy64(row->dst_path, data->filepath, path_len + 1);
         } else if (dst_path_final == NULL) {
             int64 path_len = data->filepath_length;
 
-            row->src_path = xarena_push(cecup.row_arena, path_len + 1);
+            row->src_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
             memcpy64(row->src_path, data->filepath, path_len + 1);
             row->dst_path = NULL;
         } else {
             int64 path_len = data->filepath_length;
 
-            row->src_path = xarena_push(cecup.row_arena, path_len + 1);
+            row->src_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
             memcpy64(row->src_path, data->filepath, path_len + 1);
-            row->dst_path = xarena_push(cecup.row_arena, path_len + 1);
+            row->dst_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
             memcpy64(row->dst_path, data->filepath, path_len + 1);
         }
 
@@ -1506,9 +1510,9 @@ update_ui_handler(gpointer user_data) {
 
             new_capacity = cecup.rows_capacity*2;
             new_rows = xarena_push(cecup.row_arena,
-                                   new_capacity*SIZEOF(CecupRow *));
-            new_visible = xarena_push(cecup.row_arena,
-                                      new_capacity*SIZEOF(CecupRow *));
+                                   ALIGN16(new_capacity*SIZEOF(CecupRow *)));
+            new_visible = xarena_push(
+                cecup.row_arena, ALIGN16(new_capacity*SIZEOF(CecupRow *)));
 
             memcpy64(new_rows, cecup.rows,
                      cecup.rows_count*SIZEOF(CecupRow *));
@@ -1565,10 +1569,10 @@ update_ui_handler(gpointer user_data) {
             cecup.refresh_id = 0;
         }
         arena_reset(cecup.row_arena);
-        cecup.rows = xarena_push(cecup.row_arena,
-                                 cecup.rows_capacity*SIZEOF(CecupRow *));
+        cecup.rows = xarena_push(
+            cecup.row_arena, ALIGN16(cecup.rows_capacity*SIZEOF(CecupRow *)));
         cecup.visible_rows = xarena_push(
-            cecup.row_arena, cecup.rows_capacity*SIZEOF(CecupRow *));
+            cecup.row_arena, ALIGN16(cecup.rows_capacity*SIZEOF(CecupRow *)));
 
         cecup.rows_count = 0;
         cecup.visible_count = 0;

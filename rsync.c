@@ -45,7 +45,6 @@
                              " --links --hard-links --itemize-changes" \
                              " --perms --times --owner --group"
 #define MAX_COMMAND_LENGTH (MAX_PATH_LENGTH*2 + strlen64(RSYNC_UNIVERSAL_ARGS)*2)
-#define ROUND_UP8(n) (((n) + 7) & ~7)
 
 typedef struct EqualScannerData {
     char src_path[MAX_PATH_LENGTH];
@@ -73,11 +72,11 @@ dispatch_log(char *format, ...) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
+    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
     data->message_len = n;
-    data->message = xarena_push(cecup.ui_arena, ROUND_UP8(n + 1));
+    data->message = xarena_push(cecup.ui_arena, ALIGN16(n + 1));
     memcpy64(data->message, buffer, n + 1);
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -128,11 +127,11 @@ dispatch_log_error(char *format, ...) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
+    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
     data->message_len = n;
-    data->message = xarena_push(cecup.ui_arena, ROUND_UP8(n + 1));
+    data->message = xarena_push(cecup.ui_arena, ALIGN16(n + 1));
     memcpy64(data->message, buffer, n + 1);
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -161,7 +160,7 @@ dispatch_progress(enum DataType type, double fraction) {
     last_fractions[index] = fraction;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
+    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
     memset64(data, 0, SIZEOF(UIUpdateData));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -179,19 +178,19 @@ dispatch_tree(int32 side, enum CecupAction action, char *path,
     int64 target_len;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
+    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
     memset64(data, 0, SIZEOF(UIUpdateData));
 
     data->filepath_length = strlen64(path);
     data->filepath
-        = xarena_push(cecup.ui_arena, ROUND_UP8(data->filepath_length + 1));
+        = xarena_push(cecup.ui_arena, ALIGN16(data->filepath_length + 1));
     memcpy64(data->filepath, path, data->filepath_length + 1);
 
     if (link_target) {
         target_len = strlen64(link_target);
         data->link_target_len = target_len;
         data->link_target
-            = xarena_push(cecup.ui_arena, ROUND_UP8(target_len + 1));
+            = xarena_push(cecup.ui_arena, ALIGN16(target_len + 1));
         memcpy64(data->link_target, link_target, target_len + 1);
     }
     g_mutex_unlock(&cecup.ui_arena_mutex);
@@ -549,7 +548,7 @@ fix_fs_worker(gpointer user_data) {
     dispatch_log("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    ready = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
+    ready = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
     memset64(ready, 0, SIZEOF(UIUpdateData));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -824,13 +823,13 @@ bulk_sync_worker(gpointer user_data) {
                 int64 path_len;
                 g_mutex_lock(&cecup.ui_arena_mutex);
                 remove_data = xarena_push(cecup.ui_arena,
-                                          ROUND_UP8(SIZEOF(UIUpdateData)));
+                                          ALIGN16(SIZEOF(UIUpdateData)));
                 memset64(remove_data, 0, SIZEOF(UIUpdateData));
 
                 path_len = ud->filepath_length;
                 remove_data->filepath_length = path_len;
                 remove_data->filepath
-                    = xarena_push(cecup.ui_arena, ROUND_UP8(path_len + 1));
+                    = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
                 memcpy64(remove_data->filepath, ud->filepath, path_len + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -863,7 +862,7 @@ bulk_sync_worker(gpointer user_data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    ready = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
+    ready = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
     memset64(ready, 0, SIZEOF(UIUpdateData));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -917,7 +916,7 @@ sync_worker(gpointer user_data) {
         UIUpdateData *clear;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        clear = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
+        clear = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
         memset64(clear, 0, SIZEOF(UIUpdateData));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -932,7 +931,7 @@ sync_worker(gpointer user_data) {
         EqualScannerData *equal_scanner_data;
         g_mutex_lock(&cecup.ui_arena_mutex);
         equal_scanner_data
-            = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(EqualScannerData)));
+            = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(EqualScannerData)));
         memset64(equal_scanner_data, 0, SIZEOF(EqualScannerData));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1324,7 +1323,7 @@ finalize:
 
         g_mutex_lock(&cecup.ui_arena_mutex);
         ready_signal
-            = xarena_push(cecup.ui_arena, ROUND_UP8(SIZEOF(UIUpdateData)));
+            = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
         memset64(ready_signal, 0, SIZEOF(UIUpdateData));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
