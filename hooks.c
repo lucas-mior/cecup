@@ -1120,7 +1120,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
     switch (event->button) {
     case GDK_BUTTON_SECONDARY: {
-        CecupRow *row;
         UIUpdateData *ui_update_data;
         GtkWidget *menu;
         GtkWidget *item;
@@ -1145,20 +1144,22 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
         {
             int32 row_idx;
+            CecupRow *row;
+
             row_idx = gtk_tree_path_get_indices(path)[0];
             row = cecup.visible_rows[row_idx];
-        }
 
-        if (side == 0) {
-            file_path = row->src_path;
-            path_len = row->src_path_len;
-            other_path = row->dst_path;
-            action = row->src_action;
-        } else {
-            file_path = row->dst_path;
-            path_len = row->dst_path_len;
-            other_path = row->src_path;
-            action = row->dst_action;
+            if (side == 0) {
+                file_path = row->src_path;
+                path_len = row->src_path_len;
+                other_path = row->dst_path;
+                action = row->src_action;
+            } else {
+                file_path = row->dst_path;
+                path_len = row->dst_path_len;
+                other_path = row->src_path;
+                action = row->dst_action;
+            }
         }
 
         g_mutex_lock(&cecup.ui_arena_mutex);
