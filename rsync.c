@@ -75,6 +75,7 @@ enum RsyncCharAttribute {
 #define MAX_COMMAND_LENGTH (MAX_PATH_LENGTH*2 + strlen64(RSYNC_UNIVERSAL_ARGS)*2)
 #define SIDE_LEFT 0
 #define SIDE_RIGHT 1
+#define BATCH_SIZE 256
 
 typedef struct EqualScannerData {
     char src_path[MAX_PATH_LENGTH];
@@ -414,7 +415,7 @@ find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path,
                     UIUpdateData *item;
                     int64 path_len = strlen64(sub_rel);
 
-                    if (batch->count >= 128) {
+                    if (batch->count >= BATCH_SIZE) {
                         flush_batch(batch);
                     }
 
