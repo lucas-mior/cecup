@@ -1398,22 +1398,28 @@ add_row_logic(UIUpdateData *data) {
     enum CecupAction action_dst = data->action;
     int64 path_len;
 
-    if (data->action == UI_ACTION_NEW) {
+    switch (data->action) {
+    case UI_ACTION_NEW:
         bg_src = "#D4EDDA";
         dst_path_final = NULL;
-    } else if (data->action == UI_ACTION_UPDATE) {
+        break;
+    case UI_ACTION_UPDATE:
         bg_src = "#CCE5FF";
         bg_dst = "#CCE5FF";
-    } else if (data->action == UI_ACTION_HARDLINK) {
+        break;
+    case UI_ACTION_HARDLINK:
         bg_src = "#E2D1F9";
         bg_dst = "#E2D1F9";
-    } else if (data->action == UI_ACTION_SYMLINK) {
+        break;
+    case UI_ACTION_SYMLINK:
         bg_src = "#FFD1F9";
         bg_dst = "#FFD1F9";
-    } else if (data->action == UI_ACTION_EQUAL) {
+        break;
+    case UI_ACTION_EQUAL:
         bg_src = "#F0F0F0";
         bg_dst = "#F0F0F0";
-    } else if (data->action == UI_ACTION_DELETE) {
+        break;
+    case UI_ACTION_DELETE:
         if (data->reason == UI_REASON_IGNORED) {
             bg_src = "#FFF3CD";
             bg_dst = "#FFF3CD";
@@ -1425,6 +1431,10 @@ add_row_logic(UIUpdateData *data) {
             action_dst = UI_ACTION_DELETE;
             src_path_final = NULL;
         }
+        break;
+    default:
+        error("Invalid data->action: %u\n", data->action);
+        fatal(EXIT_FAILURE);
     }
 
     row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
