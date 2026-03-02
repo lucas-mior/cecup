@@ -64,7 +64,6 @@ option_remove() {
 }
 
 compile_locales() {
-    set -x
     if [ ! -d "po" ]; then
         return
     fi
@@ -74,7 +73,6 @@ compile_locales() {
             msgfmt "po/$lang.po" -o "po/$lang/LC_MESSAGES/$program.mo"
         fi
     done
-    set +x
 }
 
 case "$target" in
@@ -108,7 +106,6 @@ case "$target" in
     CFLAGS="$CFLAGS $GNUSOURCE -O2 -flto -march=native -ftree-vectorize"
     ;;
 "po")
-    trace_on
     mkdir -p po
 
     xgettext \
@@ -224,7 +221,9 @@ case "$target" in
     exit
     ;;
 "assembly")
+    trace_on
     $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "$main"
+    trace_off
     exit
     ;;
 "test")
