@@ -1457,11 +1457,12 @@ update_ui_handler(gpointer user_data) {
         if (data->mtime > 0) {
             time_t t = (time_t)data->mtime;
             struct tm *tm_info = localtime(&t);
-            strftime(row->mtime_text, sizeof(row->mtime_text),
-                     "%Y-%m-%d %H:%M:%S", tm_info);
+            char buffer[32];
+            strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
             row->mtime_raw = data->mtime;
+            row->mtime_text = xstrdup(buffer);
         } else {
-            memcpy64(row->mtime_text, "-", 2);
+            row->mtime_text = NULL;
             row->mtime_raw = 0;
         }
 
