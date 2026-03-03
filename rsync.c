@@ -558,7 +558,7 @@ bulk_sync_worker(void *user_data) {
                     args[a++] = "-rfv";
                     args[a++] = full_dst;
                     args[a++] = NULL;
-                    execvp("rm", args);
+                    execvp(args[0], args);
                 } else {
                     SNPRINTF(relative_source, "%s/./%s",
                              ui_update_data->src_base,
@@ -583,7 +583,7 @@ bulk_sync_worker(void *user_data) {
                     args[a++] = relative_source;
                     args[a++] = dst_dir;
                     args[a++] = NULL;
-                    execvp("rsync", args);
+                    execvp(args[0], args);
                 }
                 fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
                 exit(EXIT_FAILURE);
