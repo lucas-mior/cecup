@@ -838,6 +838,8 @@ sync_worker(void *user_data) {
 
         dispatch_log("Counting files to prepare analysis...\n");
         total_files_preview = count_files_recursive(thread_data->src_path, "");
+        dispatch_log("Found %lld files to analyse...\n",
+                     (llong)total_files_preview);
     }
 
     if (cecup.cancel_sync) {
