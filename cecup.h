@@ -106,7 +106,7 @@ static char *reason_strings[] = {
     [UI_REASON_UPDATE]   = N_("The original file is newer"),
 };
 
-enum CecupColumn : int {
+enum CecupColumn {
     COL_SELECTED = 0,
     COL_SRC_ACTION,
     COL_DST_ACTION,

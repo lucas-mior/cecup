@@ -904,12 +904,12 @@ on_filter_toggled(GtkToggleButton *b, void *data) {
 
 static void
 on_sort_changed(GtkTreeSortable *sortable, void *data) {
-    enum CecupColumn id;
+    int32 id;
     GtkSortType order;
 
     (void)data;
     if (gtk_tree_sortable_get_sort_column_id(sortable, &id, &order)) {
-        cecup.sort_col = id;
+        cecup.sort_col = (enum CecupColumn)id;
         cecup.sort_order = order;
         refresh_ui_list();
     }
@@ -944,7 +944,6 @@ on_ignore_clicked(GtkWidget *b, void *data) {
     GtkWidget *view;
     GtkTextBuffer *buffer;
     char *text;
-    gsize len;
 
     (void)data;
     dialog = gtk_dialog_new_with_buttons(
@@ -956,7 +955,7 @@ on_ignore_clicked(GtkWidget *b, void *data) {
     view = gtk_text_view_new();
     buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 
-    if (g_file_get_contents(cecup.ignore_path, &text, &len, NULL)) {
+    if (g_file_get_contents(cecup.ignore_path, &text, NULL, NULL)) {
         gtk_text_buffer_set_text(buffer, text, -1);
         g_free(text);
     }
