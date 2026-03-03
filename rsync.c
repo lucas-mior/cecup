@@ -1221,16 +1221,12 @@ sync_worker(void *user_data) {
         }
     }
 
-    if (child_pid != -1) {
-        if (waitpid(child_pid, NULL, 0) < 0) {
-            dispatch_log_error("Error waiting for child: %s.\n",
-                               strerror(errno));
-        }
+    if (waitpid(child_pid, NULL, 0) < 0) {
+        dispatch_log_error("Error waiting for child: %s.\n", strerror(errno));
+    }
 
-        if (!cecup.cancel_sync) {
-            dispatch_log(
-                "Analysis complete. Review the list and click Apply.\n");
-        }
+    if (!cecup.cancel_sync) {
+        dispatch_log("Analysis complete. Review the list and click Apply.\n");
     }
 
     XCLOSE(&pipe_output[0]);
