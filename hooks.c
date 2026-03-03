@@ -572,8 +572,8 @@ on_menu_copy_full(GtkWidget *m, void *data) {
                             ui_update_data->action))) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
-            char raw_path[MAX_PATH_LENGTH];
-            char full_path[MAX_PATH_LENGTH];
+            char path_relative[MAX_PATH_LENGTH];
+            char path_full[MAX_PATH_LENGTH];
             char *base_path;
             int64 path_length;
 
@@ -584,14 +584,14 @@ on_menu_copy_full(GtkWidget *m, void *data) {
                 base_path = task->dst_base;
             }
 
-            SNPRINTF(raw_path, "%s/%s", base_path, task->filepath);
-            if (realpath(raw_path, full_path) == NULL) {
+            SNPRINTF(path_relative, "%s/%s", base_path, task->filepath);
+            if (realpath(path_relative, path_full) == NULL) {
                 dispatch_log_error("Error resolving full path of %s: %s.\n",
-                                   raw_path, strerror(errno));
+                                   path_relative, strerror(errno));
                 continue;
             }
 
-            path_length = strlen64(full_path);
+            path_length = strlen64(path_full);
 
             if (i > 0 && remaining_capacity > 0) {
                 *write_pointer = '\n';
@@ -600,7 +600,7 @@ on_menu_copy_full(GtkWidget *m, void *data) {
             }
 
             if (remaining_capacity >= path_length) {
-                memcpy64(write_pointer, full_path, path_length);
+                memcpy64(write_pointer, path_full, path_length);
                 write_pointer += path_length;
                 remaining_capacity -= path_length;
             }
