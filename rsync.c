@@ -383,8 +383,8 @@ fix_fs_recursive(char *base_path, char *relative_path) {
                 int64 search_len = strlen64(search);
                 char *match;
 
-                if ((match = memmem(&d_name[k], (size_t)(name_len - k), search,
-                                    (size_t)search_len))) {
+                if ((match = memmem64(&d_name[k], name_len - k, search,
+                                      search_len))) {
                     if (earliest_match == NULL || match < earliest_match) {
                         earliest_match = match;
                         replacement_index = r;
