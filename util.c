@@ -763,12 +763,8 @@ snprintf2(char *buffer, int64 size, char *format, ...) {
     n = vsnprintf(buffer, (size_t)size, format, args);
     va_end(args);
 
-    if (n <= 0) {
-        error("Error in snprintf(%s).\n", format);
-        fatal(EXIT_FAILURE);
-    }
-    if (n >= size) {
-        error("Error in snprintf(%s): Buffer is too small.\n", format);
+    if ((n < 0) || (n >= size)) {
+        fprintf(stderr, "Error in vsnprintf(%s) (n = %lld\n", format, (llong)n);
         fatal(EXIT_FAILURE);
     }
     return n;
@@ -1147,10 +1143,7 @@ util_die_notify(char *program_name, char *format, ...) {
     n = vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
 
-    if (n < 0) {
-        fatal(EXIT_FAILURE);
-    }
-    if (n >= SIZEOF(buffer)) {
+    if ((n < 0) || (n >= SIZEOF(buffer))) {
         fatal(EXIT_FAILURE);
     }
 
