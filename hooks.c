@@ -563,7 +563,6 @@ on_menu_copy_full(GtkWidget *m, void *data) {
     char *write_pointer;
     int64 remaining_capacity;
     int64 buffer_size = SIZEMB(2);
-    ;
 
     (void)m;
     buffer = xmalloc(buffer_size);
