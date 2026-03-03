@@ -870,17 +870,55 @@ sync_worker(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
+    char src_dir[MAX_PATH_LENGTH];
+    char dst_dir[MAX_PATH_LENGTH];
+    char cmd[MAX_PATH_LENGTH*2];
+    char *args[32];
+    int32 a = 0;
+
+    args[a++] = "rsync";
+    args[a++] = "--verbose";
+    args[a++] = "--update";
+    args[a++] = "--recursive";
+    args[a++] = "--partial";
+    args[a++] = "--progress";
+    args[a++] = "--info=progress2";
+    args[a++] = "--links";
+    args[a++] = "--hard-links";
+    args[a++] = "--itemize-changes";
+    args[a++] = "--perms";
+    args[a++] = "--times";
+    args[a++] = "--owner";
+    args[a++] = "--group";
+
+    if (thread_data->delete_excluded) {
+        args[a++] = "--delete-excluded";
+    }
+    if (thread_data->delete_after) {
+        args[a++] = "--delete-after";
+    }
+    if (thread_data->is_preview) {
+        args[a++] = "--dry-run";
+    }
+    if (access(cecup.ignore_path, F_OK) != -1) {
+        args[a++] = "--exclude-from";
+        args[a++] = cecup.ignore_path;
+    }
+
+    SNPRINTF(src_dir, "%s/", thread_data->src_path);
+    SNPRINTF(dst_dir, "%s/", thread_data->dst_path);
+    args[a++] = src_dir;
+    args[a++] = dst_dir;
+    args[a++] = NULL;
+
+    STRING_FROM_ARRAY(cmd, " ", args, a);
+    dispatch_log("+ %s\n", cmd);
+
     switch (child_pid = fork()) {
     case -1:
         error("Error forking: %s.\n", strerror(errno));
         exit(EXIT_FAILURE);
-    case 0: {
-        char src_dir[MAX_PATH_LENGTH];
-        char dst_dir[MAX_PATH_LENGTH];
-        char *args[32];
-        int32 a = 0;
-        char cmd[MAX_PATH_LENGTH*2];
-
+    case 0:
         if (setpgid(0, 0) < 0) {
             fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
@@ -899,48 +937,9 @@ sync_worker(void *user_data) {
         XCLOSE(&pipe_output[1]);
         XCLOSE(&pipe_error[1]);
 
-        args[a++] = "rsync";
-        args[a++] = "--verbose";
-        args[a++] = "--update";
-        args[a++] = "--recursive";
-        args[a++] = "--partial";
-        args[a++] = "--progress";
-        args[a++] = "--info=progress2";
-        args[a++] = "--links";
-        args[a++] = "--hard-links";
-        args[a++] = "--itemize-changes";
-        args[a++] = "--perms";
-        args[a++] = "--times";
-        args[a++] = "--owner";
-        args[a++] = "--group";
-
-        if (thread_data->delete_excluded) {
-            args[a++] = "--delete-excluded";
-        }
-        if (thread_data->delete_after) {
-            args[a++] = "--delete-after";
-        }
-        if (thread_data->is_preview) {
-            args[a++] = "--dry-run";
-        }
-        if (access(cecup.ignore_path, F_OK) != -1) {
-            args[a++] = "--exclude-from";
-            args[a++] = cecup.ignore_path;
-        }
-
-        SNPRINTF(src_dir, "%s/", thread_data->src_path);
-        SNPRINTF(dst_dir, "%s/", thread_data->dst_path);
-        args[a++] = src_dir;
-        args[a++] = dst_dir;
-        args[a++] = NULL;
-
-        STRING_FROM_ARRAY(cmd, " ", args, a);
-        dispatch_log("+ %s\n", cmd);
-
         execvp("rsync", args);
         fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
         exit(EXIT_FAILURE);
-    }
     default:
         break;
     }
