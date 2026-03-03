@@ -87,7 +87,7 @@ typedef struct EqualScannerData {
 } EqualScannerData;
 
 typedef struct RowBatch {
-    UIUpdateData items[128];
+    UIUpdateData items[BATCH_SIZE];
     int32 count;
 } RowBatch;
 
