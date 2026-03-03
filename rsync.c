@@ -444,8 +444,8 @@ fix_fs_recursive(char *base_path, char *relative_path) {
                     }
                 }
             } else {
-                dispatch_log_error("Failed to rename %s: %s\n", d_name,
-                                   strerror(errno));
+                dispatch_log_error("Error renaming %s to %s: %s\n", old_full,
+                                   new_full, strerror(errno));
             }
         }
 
