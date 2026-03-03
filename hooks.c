@@ -489,7 +489,6 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     int64 remaining_capacity;
     char *base_path;
 
-    char *label = (char *)gtk_menu_item_get_label(GTK_MENU_ITEM(m));
     buffer = xmalloc(buffer_size);
     write_pointer = buffer;
     remaining_capacity = buffer_size - 1;
@@ -508,11 +507,11 @@ on_menu_copy_path(GtkWidget *m, void *data) {
             int64 path_length;
             char path_full[MAX_PATH_LENGTH];
             char *path;
+            char *path_type = g_object_get_data(G_OBJECT(m), "path_type");
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
 
-            if (!memmem64(label, strlen64(label), "Relative",
-                          strlen64("Relative"))) {
+            if (!strcmp(path_type, "absolute")) {
                 char path_relative[MAX_PATH_LENGTH];
 
                 task = (UIUpdateData *)g_ptr_array_index(tasks, i);
@@ -1192,6 +1191,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         if (file_path == NULL) {
             gtk_widget_set_sensitive(item, FALSE);
         } else {
+            g_object_set_data(G_OBJECT(item), "path_type", "relative");
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_copy_path),
                              ui_update_data);
         }
@@ -1201,6 +1201,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         if (file_path == NULL) {
             gtk_widget_set_sensitive(item, FALSE);
         } else {
+            g_object_set_data(G_OBJECT(item), "path_type", "absolute");
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_copy_path),
                              ui_update_data);
         }
