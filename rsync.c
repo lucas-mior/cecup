@@ -809,6 +809,12 @@ sync_worker(void *user_data) {
     char buffer_error[8192];
     int32 buffer_error_pos = 0;
 
+    char src_dir[MAX_PATH_LENGTH];
+    char dst_dir[MAX_PATH_LENGTH];
+    char cmd[MAX_PATH_LENGTH*2];
+    char *args[32];
+    int32 a = 0;
+
     if (thread_data->check_different_fs) {
         struct stat stat_src;
         struct stat stat_dst;
@@ -869,12 +875,6 @@ sync_worker(void *user_data) {
         error("Error creating pipe for stderr: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
     }
-
-    char src_dir[MAX_PATH_LENGTH];
-    char dst_dir[MAX_PATH_LENGTH];
-    char cmd[MAX_PATH_LENGTH*2];
-    char *args[32];
-    int32 a = 0;
 
     args[a++] = "rsync";
     args[a++] = "--verbose";
