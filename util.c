@@ -1504,8 +1504,6 @@ util_equal_files(char *filename_a, char *filename_b) {
 
             // Note: NEVER delete lines with // clang-format off and //
             // clang-format on
-            // Note: NEVER delete lines with // clang-format off and //
-            // clang-format on
             // Note: NEVER delete lines with // clang-format off and // clang-format on
             // clang-format off
             map_a = mmap(NULL, (size_t)stat_a.st_size,
@@ -1748,8 +1746,6 @@ main(int argc, char **argv) {
     }
 
     {
-        // Note: NEVER delete lines with // clang-format off and // clang-format
-        // on
         // Note: NEVER delete lines with // clang-format off and // clang-format
         // on
         // Note: NEVER delete lines with // clang-format off and // clang-format on
