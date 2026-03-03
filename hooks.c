@@ -593,7 +593,7 @@ on_menu_copy_full(GtkWidget *m, void *data) {
 
             path_length = strlen64(path_full);
 
-            if (i > 0 && remaining_capacity > 0) {
+            if ((i > 0) && (remaining_capacity > 0)) {
                 *write_pointer = '\n';
                 write_pointer += 1;
                 remaining_capacity -= 1;
