@@ -819,7 +819,7 @@ sync_worker(void *user_data) {
 
     int32 pipe_output[2] = {-1, -1};
     int32 pipe_error[2] = {-1, -1};
-    pid_t child_pid = -1;
+    pid_t child_pid;
 
     char buffer_output[8192];
     int32 buffer_output_pos = 0;
