@@ -556,6 +556,7 @@ bulk_sync_worker(void *user_data) {
                     fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
+                putenv("LC_ALL=C");
                 XCLOSE(&pipe_output[0]);
                 XCLOSE(&pipe_error[0]);
                 if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
@@ -924,6 +925,7 @@ sync_worker(void *user_data) {
             fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
+        putenv("LC_ALL=C");
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_error[0]);
         if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
