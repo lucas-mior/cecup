@@ -474,7 +474,6 @@ bulk_sync_worker(void *user_data) {
 
     for (int32 i = 0; i < (int32)tasks->len; i += 1) {
         UIUpdateData *ui_update_data;
-        char cmd[8192];
         int32 pipe_output[2];
         int32 pipe_error[2];
         pid_t child_pid;
@@ -511,36 +510,6 @@ bulk_sync_worker(void *user_data) {
                 continue;
             }
 
-            if (ui_update_data->action == UI_ACTION_DELETE) {
-                char full_dst[MAX_PATH_LENGTH];
-                char *escaped_dst;
-
-                SNPRINTF(full_dst, "%s/%s", ui_update_data->dst_base,
-                         ui_update_data->filepath);
-                escaped_dst = shell_escape(full_dst);
-                SNPRINTF(cmd, "rm -rfv '%s'", escaped_dst);
-                free(escaped_dst);
-            } else {
-                char *escaped_src;
-                char *escaped_dst;
-                char *escaped_file;
-
-                escaped_src = shell_escape(ui_update_data->src_base);
-                escaped_dst = shell_escape(ui_update_data->dst_base);
-                escaped_file = shell_escape(ui_update_data->filepath);
-
-                SNPRINTF(cmd,
-                         "rsync " RSYNC_UNIVERSAL_ARGS
-                         " --relative '%s/./%s' '%s/'",
-                         escaped_src, escaped_file, escaped_dst);
-
-                free(escaped_src);
-                free(escaped_dst);
-                free(escaped_file);
-            }
-
-            dispatch_log("+ %s\n", cmd);
-
             if (pipe(pipe_output) < 0) {
                 error("Error creating pipe for stdout: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
@@ -555,7 +524,13 @@ bulk_sync_worker(void *user_data) {
             case -1:
                 error("Error forking: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
-            case 0:
+            case 0: {
+                char full_dst[MAX_PATH_LENGTH];
+                char relative_source[MAX_PATH_LENGTH];
+                char dst_dir[MAX_PATH_LENGTH];
+                char *args[32];
+                int32 a = 0;
+
                 if (setpgid(0, 0) < 0) {
                     fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
                     exit(EXIT_FAILURE);
@@ -566,18 +541,53 @@ bulk_sync_worker(void *user_data) {
                 if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
                     fprintf(stderr, "Error dup2 stdout: %s.\n",
                             strerror(errno));
-                    fatal(EXIT_FAILURE);
+                    exit(EXIT_FAILURE);
                 }
                 if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
                     fprintf(stderr, "Error dup2 stderr: %s.\n",
                             strerror(errno));
-                    fatal(EXIT_FAILURE);
+                    exit(EXIT_FAILURE);
                 }
                 XCLOSE(&pipe_output[1]);
                 XCLOSE(&pipe_error[1]);
-                execl("/bin/sh", "sh", "-c", cmd, NULL);
-                fprintf(stderr, "Error: execl failed: %s.\n", strerror(errno));
+
+                if (ui_update_data->action == UI_ACTION_DELETE) {
+                    SNPRINTF(full_dst, "%s/%s", ui_update_data->dst_base,
+                             ui_update_data->filepath);
+                    args[a++] = "rm";
+                    args[a++] = "-rfv";
+                    args[a++] = full_dst;
+                    args[a++] = NULL;
+                    execvp("rm", args);
+                } else {
+                    SNPRINTF(relative_source, "%s/./%s",
+                             ui_update_data->src_base,
+                             ui_update_data->filepath);
+                    SNPRINTF(dst_dir, "%s/", ui_update_data->dst_base);
+
+                    args[a++] = "rsync";
+                    args[a++] = "--verbose";
+                    args[a++] = "--update";
+                    args[a++] = "--recursive";
+                    args[a++] = "--partial";
+                    args[a++] = "--progress";
+                    args[a++] = "--info=progress2";
+                    args[a++] = "--links";
+                    args[a++] = "--hard-links";
+                    args[a++] = "--itemize-changes";
+                    args[a++] = "--perms";
+                    args[a++] = "--times";
+                    args[a++] = "--owner";
+                    args[a++] = "--group";
+                    args[a++] = "--relative";
+                    args[a++] = relative_source;
+                    args[a++] = dst_dir;
+                    args[a++] = NULL;
+                    execvp("rsync", args);
+                }
+                fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
                 exit(EXIT_FAILURE);
+            }
             default:
                 break;
             }
@@ -629,11 +639,11 @@ bulk_sync_worker(void *user_data) {
                 r = read64(pipe_output[0], buffer_output + buffer_output_pos,
                            SIZEOF(buffer_output) - buffer_output_pos - 1);
                 if (r <= 0) {
-                    dispatch_log_error("Error reading stdout pipe: %s.\n",
-                                       strerror(errno));
                     if (r < 0) {
-                        pipes[0].fd = -1;
+                        dispatch_log_error("Error reading stdout pipe: %s.\n",
+                                           strerror(errno));
                     }
+                    pipes[0].fd = -1;
                     goto read_error_pipe;
                 }
                 buffer_output_pos += (int32)r;
@@ -676,11 +686,11 @@ bulk_sync_worker(void *user_data) {
                 r = read64(pipe_error[0], buffer_error + buffer_error_pos,
                            SIZEOF(buffer_error) - buffer_error_pos - 1);
                 if (r <= 0) {
-                    dispatch_log_error("Error reading stderr pipe: %s.\n",
-                                       strerror(errno));
                     if (r < 0) {
-                        pipes[1].fd = -1;
+                        dispatch_log_error("Error reading stderr pipe: %s.\n",
+                                           strerror(errno));
                     }
+                    pipes[1].fd = -1;
                     goto check_pipes_or_break;
                 }
                 buffer_error_pos += (int32)r;
@@ -717,8 +727,8 @@ bulk_sync_worker(void *user_data) {
                 }
             }
 
-            XCLOSE(&pipe_output[0], "pipe_output");
-            XCLOSE(&pipe_error[0], "pipe_error");
+            XCLOSE(&pipe_output[0]);
+            XCLOSE(&pipe_error[0]);
             if (waitpid(child_pid, NULL, 0) < 0) {
                 dispatch_log_error("Error waiting for child: %s.\n",
                                    strerror(errno));
@@ -786,10 +796,6 @@ sync_worker(void *user_data) {
     ThreadData *thread_data = user_data;
     int64 total_files_preview = 0;
     int64 processed_files_preview = 0;
-    char exclude_arg[MAX_PATH_LENGTH];
-    char *cmd;
-    char *esc_src;
-    char *esc_dst;
 
     int32 pipe_output[2] = {-1, -1};
     int32 pipe_error[2] = {-1, -1};
@@ -851,65 +857,6 @@ sync_worker(void *user_data) {
         goto finalize;
     }
 
-    if (access(cecup.ignore_path, F_OK) != -1) {
-        SNPRINTF(exclude_arg, "--exclude-from='%s'", cecup.ignore_path);
-    } else {
-        if (errno != ENOENT) {
-            dispatch_log_error("Error access %s: %s.\n", cecup.ignore_path,
-                               strerror(errno));
-        }
-        strcpy(exclude_arg, "");
-    }
-
-    cmd = xmalloc(MAX_COMMAND_LENGTH);
-    esc_src = shell_escape(thread_data->src_path);
-    esc_dst = shell_escape(thread_data->dst_path);
-
-    snprintf2(cmd, MAX_COMMAND_LENGTH,
-              "rsync " RSYNC_UNIVERSAL_ARGS " %s %s %s %s '%s/' '%s/'",
-              thread_data->delete_excluded ? "--delete-excluded" : "",
-              thread_data->delete_after ? "--delete-after" : "",
-              thread_data->is_preview ? "--dry-run" : "", exclude_arg, esc_src,
-              esc_dst);
-
-    free(esc_src);
-    free(esc_dst);
-
-    {
-        char *log_cmd = xmalloc(MAX_COMMAND_LENGTH*2);
-        int32 i = 0;
-        int32 j = 0;
-        int32 line_len = 0;
-        int32 last_space_index = -1;
-        while (cmd[i] != '\0') {
-            log_cmd[j] = cmd[i];
-            if (cmd[i] == ' ') {
-                last_space_index = j;
-            }
-            line_len += 1;
-            if (line_len > 120 && last_space_index != -1) {
-                int32 word_len = j - last_space_index;
-
-                log_cmd[last_space_index] = '\n';
-                for (int32 k = 0; k < word_len; k += 1) {
-                    log_cmd[j + 4 - k] = log_cmd[j - k];
-                }
-                log_cmd[last_space_index + 1] = ' ';
-                log_cmd[last_space_index + 2] = ' ';
-                log_cmd[last_space_index + 3] = ' ';
-                log_cmd[last_space_index + 4] = ' ';
-                j += 4;
-                line_len = word_len + 4;
-                last_space_index = -1;
-            }
-            i += 1;
-            j += 1;
-        }
-        log_cmd[j] = '\0';
-        dispatch_log("+ %s\n", log_cmd);
-        free(log_cmd);
-    }
-
     if (pipe(pipe_output) < 0) {
         error("Error creating pipe for stdout: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
@@ -924,10 +871,15 @@ sync_worker(void *user_data) {
     case -1:
         error("Error forking: %s.\n", strerror(errno));
         exit(EXIT_FAILURE);
-    case 0:
+    case 0: {
+        char src_dir[MAX_PATH_LENGTH];
+        char dst_dir[MAX_PATH_LENGTH];
+        char *args[32];
+        int32 a = 0;
+
         if (setpgid(0, 0) < 0) {
             fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
+            exit(EXIT_FAILURE);
         }
         putenv("LC_ALL=C");
         XCLOSE(&pipe_output[0]);
@@ -942,14 +894,50 @@ sync_worker(void *user_data) {
         }
         XCLOSE(&pipe_output[1]);
         XCLOSE(&pipe_error[1]);
-        execl("/bin/sh", "sh", "-c", cmd, NULL);
-        fprintf(stderr, "Error: execl failed: %s.\n", strerror(errno));
+
+        args[a++] = "rsync";
+        args[a++] = "--verbose";
+        args[a++] = "--update";
+        args[a++] = "--recursive";
+        args[a++] = "--partial";
+        args[a++] = "--progress";
+        args[a++] = "--info=progress2";
+        args[a++] = "--links";
+        args[a++] = "--hard-links";
+        args[a++] = "--itemize-changes";
+        args[a++] = "--perms";
+        args[a++] = "--times";
+        args[a++] = "--owner";
+        args[a++] = "--group";
+
+        if (thread_data->delete_excluded) {
+            args[a++] = "--delete-excluded";
+        }
+        if (thread_data->delete_after) {
+            args[a++] = "--delete-after";
+        }
+        if (thread_data->is_preview) {
+            args[a++] = "--dry-run";
+        }
+        if (access(cecup.ignore_path, F_OK) != -1) {
+            args[a++] = "--exclude-from";
+            args[a++] = cecup.ignore_path;
+        }
+
+        SNPRINTF(src_dir, "%s/", thread_data->src_path);
+        SNPRINTF(dst_dir, "%s/", thread_data->dst_path);
+        args[a++] = src_dir;
+        args[a++] = dst_dir;
+        args[a++] = NULL;
+
+        execvp("rsync", args);
+        fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
         exit(EXIT_FAILURE);
+    }
     default:
         break;
     }
 
-    free(cmd);
     XCLOSE(&pipe_output[1]);
     XCLOSE(&pipe_error[1]);
 
