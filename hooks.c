@@ -1633,24 +1633,11 @@ update_ui_handler(void *user_data) {
         }
 
         if (cecup.rows_count >= cecup.rows_capacity) {
-            int32 new_capacity;
-            CecupRow **new_rows;
-            CecupRow **new_visible;
-
-            new_capacity = cecup.rows_capacity*2;
-            new_rows = xarena_push(cecup.row_arena,
-                                   ALIGN16(new_capacity*SIZEOF(CecupRow *)));
-            new_visible = xarena_push(
-                cecup.row_arena, ALIGN16(new_capacity*SIZEOF(CecupRow *)));
-
-            memcpy64(new_rows, cecup.rows,
-                     cecup.rows_count*SIZEOF(CecupRow *));
-            memcpy64(new_visible, cecup.visible_rows,
-                     cecup.rows_count*SIZEOF(CecupRow *));
-
-            cecup.rows = new_rows;
-            cecup.visible_rows = new_visible;
-            cecup.rows_capacity = new_capacity;
+            cecup.rows_capacity *= 2;
+            cecup.rows = xrealloc(cecup.rows,
+                                  cecup.rows_capacity*SIZEOF(CecupRow *));
+            cecup.visible_rows = xrealloc(
+                cecup.visible_rows, cecup.rows_capacity*SIZEOF(CecupRow *));
         }
         cecup.rows[cecup.rows_count] = row;
         cecup.rows_count += 1;
@@ -1702,10 +1689,6 @@ update_ui_handler(void *user_data) {
         }
         g_mutex_lock(&cecup.row_arena_mutex);
         arena_reset(cecup.row_arena);
-        cecup.rows = xarena_push(
-            cecup.row_arena, ALIGN16(cecup.rows_capacity*SIZEOF(CecupRow *)));
-        cecup.visible_rows = xarena_push(
-            cecup.row_arena, ALIGN16(cecup.rows_capacity*SIZEOF(CecupRow *)));
         g_mutex_unlock(&cecup.row_arena_mutex);
 
         cecup.rows_count = 0;

@@ -105,13 +105,10 @@ main(int32 argc, char *argv[]) {
     g_mutex_init(&cecup.ui_arena_mutex);
 
     {
-        int64 rows_size;
-
         cecup.rows_count = 0;
         cecup.rows_capacity = 4096;
-        rows_size = cecup.rows_capacity*SIZEOF(CecupRow *);
-        cecup.rows = xarena_push(cecup.row_arena, ALIGN16(rows_size));
-        cecup.visible_rows = xarena_push(cecup.row_arena, ALIGN16(rows_size));
+        cecup.rows = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
+        cecup.visible_rows = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
     }
 
     cecup.sort_col = COL_SRC_PATH;
@@ -537,6 +534,10 @@ main(int32 argc, char *argv[]) {
     g_mutex_clear(&cecup.row_arena_mutex);
     arena_destroy(cecup.ui_arena);
     g_mutex_clear(&cecup.ui_arena_mutex);
+
+    free(cecup.rows);
+    free(cecup.visible_rows);
+
     exit(EXIT_SUCCESS);
 }
 

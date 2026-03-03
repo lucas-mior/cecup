@@ -1061,6 +1061,8 @@ sync_worker(void *user_data) {
 
                 // Note: NEVER delete lines with // clang-format off and //
                 // clang-format on
+                // Note: NEVER delete lines with // clang-format off and //
+                // clang-format on
                 // Note: NEVER delete lines with // clang-format off and // clang-format on
                 // clang-format off
                 dispatch_tree(SIDE_RIGHT,
@@ -1126,6 +1128,8 @@ sync_worker(void *user_data) {
                         mt_path_val = (int64)st_path_val.st_mtime;
                     }
 
+                    // Note: NEVER delete lines with // clang-format off and //
+                    // clang-format on
                     // Note: NEVER delete lines with // clang-format off and //
                     // clang-format on
                     // Note: NEVER delete lines with // clang-format off and // clang-format on
