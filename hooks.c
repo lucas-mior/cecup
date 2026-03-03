@@ -427,7 +427,6 @@ static void
 on_menu_open(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
-    char cmd[8192];
 
     (void)m;
 
@@ -438,7 +437,7 @@ on_menu_open(GtkWidget *m, void *data) {
             UIUpdateData *task;
             char full_path[MAX_PATH_LENGTH];
             char *base_path;
-            char *escaped;
+            pid_t child;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
             if (ui_update_data->side == 0) {
@@ -448,10 +447,18 @@ on_menu_open(GtkWidget *m, void *data) {
             }
 
             SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
-            escaped = shell_escape(full_path);
-            SNPRINTF(cmd, "xdg-open '%s' &", escaped);
-            system(cmd);
-            free(escaped);
+
+            switch (child = fork()) {
+            case -1:
+                error("Error forking: %s.\n", strerror(errno));
+                fatal(EXIT_FAILURE);
+            case 0:
+                execlp("xdg-open", "xdg-open", full_path, (char *)NULL);
+                error("Error executing xdg-open: %s.\n", strerror(errno));
+                _exit(EXIT_FAILURE);
+            default:
+                break;
+            }
         }
         free_task_list(tasks);
     }
