@@ -324,6 +324,21 @@ fix_fs_recursive(char *base_path, char *relative_path) {
 
     closedir(dir);
 
+    char *replacements[][2] = {
+        {"=>", "_equal_arrow_in_filename_"},
+        {"->", "_symlink_arrow_in_filename_"},
+        {"\\", "_backslash_in_filename_"},
+        {"\n", "_newline_in_filename_"},
+        {"\"", "_double_quote_in_filename_"},
+        {"\'", "_single_quote_in_filename_"},
+        {"<", "_less_than_in_filename_"},
+        {">", "_greater_than_in_filename_"},
+        {":", "_colon_in_filename_"},
+        {"|", "_pipe_in_filename_"},
+        {"?", "_question_mark_in_filename_"},
+        {"*", "_asterisk_in_filename_"},
+    };
+
     for (int32 i = 0; i < count; i += 1) {
         char *d_name = name_list[i];
         char sub_rel[MAX_PATH_LENGTH];
@@ -333,6 +348,9 @@ fix_fs_recursive(char *base_path, char *relative_path) {
         struct stat st;
         int32 changed = 0;
         int64 j = 0;
+        int64 k = 0;
+        int64 name_len = strlen64(d_name);
+        int64 num_replacements = SIZEOF(replacements) / SIZEOF(replacements[0]);
 
         if (relative_path[0] != '\0') {
             SNPRINTF(sub_rel, "%s/%s", relative_path, d_name);
@@ -346,59 +364,45 @@ fix_fs_recursive(char *base_path, char *relative_path) {
             continue;
         }
 
-        for (int32 k = 0; k < (int32)strlen64(d_name); k += 1) {
-            if (j >= 250) {
-                break;
+        while (k < name_len) {
+            char *earliest_match = NULL;
+            int32 replacement_index = -1;
+
+            for (int32 r = 0; r < (int32)num_replacements; r += 1) {
+                char *search = replacements[r][0];
+                int64 search_len = strlen64(search);
+                char *match;
+
+                if ((match = memmem(&d_name[k], (size_t)(name_len - k), search,
+                                    (size_t)search_len))) {
+                    if (earliest_match == NULL || match < earliest_match) {
+                        earliest_match = match;
+                        replacement_index = r;
+                    }
+                }
             }
-            if (d_name[k] == '=' && d_name[k + 1] == '>') {
-                memcpy64(new_name + j, "_equal_arrow_in_filename_", 25);
-                j += 25;
-                k += 1;
-                changed = 1;
-            } else if (d_name[k] == '-' && d_name[k + 1] == '>') {
-                memcpy64(new_name + j, "_symlink_arrow_in_filename_", 27);
-                j += 27;
-                k += 1;
-                changed = 1;
-            } else if (d_name[k] == '\\') {
-                memcpy64(new_name + j, "_backslash_in_filename_", 23);
-                j += 23;
-                changed = 1;
-            } else if (d_name[k] == '\n') {
-                memcpy64(new_name + j, "_newline_in_filename_", 21);
-                j += 21;
-                changed = 1;
-            } else if (d_name[k] == '<') {
-                memcpy64(new_name + j, "_less_than_in_filename_", 23);
-                j += 23;
-                changed = 1;
-            } else if (d_name[k] == '>') {
-                memcpy64(new_name + j, "_greater_than_in_filename_", 26);
-                j += 26;
-                changed = 1;
-            } else if (d_name[k] == ':') {
-                memcpy64(new_name + j, "_colon_in_filename_", 19);
-                j += 19;
-                changed = 1;
-            } else if (d_name[k] == '\"') {
-                memcpy64(new_name + j, "_double_quote_in_filename_", 26);
-                j += 26;
-                changed = 1;
-            } else if (d_name[k] == '|') {
-                memcpy64(new_name + j, "_pipe_in_filename_", 18);
-                j += 18;
-                changed = 1;
-            } else if (d_name[k] == '?') {
-                memcpy64(new_name + j, "_question_mark_in_filename_", 27);
-                j += 27;
-                changed = 1;
-            } else if (d_name[k] == '*') {
-                memcpy64(new_name + j, "_asterisk_in_filename_", 22);
-                j += 22;
+
+            if (earliest_match != NULL) {
+                int64 prefix_len = (int64)(earliest_match - &d_name[k]);
+
+                if (prefix_len > 0) {
+                    memcpy64(&new_name[j], &d_name[k], prefix_len);
+                    j += prefix_len;
+                    k += prefix_len;
+                }
+
+                char *replace_str = replacements[replacement_index][1];
+                int64 replace_len = strlen64(replace_str);
+                memcpy64(&new_name[j], replace_str, replace_len);
+
+                j += replace_len;
+                k += strlen64(replacements[replacement_index][0]);
                 changed = 1;
             } else {
-                new_name[j] = d_name[k];
-                j += 1;
+                int64 remaining = name_len - k;
+                memcpy64(&new_name[j], &d_name[k], remaining);
+                j += remaining;
+                k += remaining;
             }
         }
         new_name[j] = '\0';
@@ -434,6 +438,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
         }
         free(d_name);
     }
+
     free(name_list);
     return;
 }
