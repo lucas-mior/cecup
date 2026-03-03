@@ -96,10 +96,10 @@
 #define TESTING_util 0
 #endif
 
-#if TESTING_util
-static char *program = __FILE__;
-#else
+#if !TESTING_util
 static char *program;
+#else
+static char *program = __FILE__;
 #endif
 
 static void __attribute__((format(printf, 1, 2))) error(char *format, ...);
