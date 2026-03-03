@@ -560,6 +560,7 @@ bulk_sync_worker(void *user_data) {
                     args[a++] = NULL;
                     execvp(args[0], args);
                 } else {
+                    char *cmd = xmalloc(MAX_COMMAND_LENGTH);
                     SNPRINTF(relative_source, "%s/./%s",
                              ui_update_data->src_base,
                              ui_update_data->filepath);
@@ -583,6 +584,9 @@ bulk_sync_worker(void *user_data) {
                     args[a++] = relative_source;
                     args[a++] = dst_dir;
                     args[a++] = NULL;
+                    STRING_FROM_ARRAY(cmd, " ", args, a);
+                    dispatch_log("+ %s\n", cmd);
+                    free(cmd);
                     execvp(args[0], args);
                 }
                 fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
@@ -909,6 +913,7 @@ sync_worker(void *user_data) {
         args[a++] = "--times";
         args[a++] = "--owner";
         args[a++] = "--group";
+        args[a++] = "--relative";
 
         if (thread_data->delete_excluded) {
             args[a++] = "--delete-excluded";
