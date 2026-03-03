@@ -1113,12 +1113,7 @@ sync_worker(void *user_data) {
                             link_target
                                 = sep + strlen64(RSYNC_SYMLINK_NOTATION);
                         }
-                    } else if ((buffer_output[0] == RSYNC_CHAR_CHANGE
-                                && buffer_output[1] == RSYNC_CHAR_DIR)
-                               || (buffer_output[0] == RSYNC_CHAR_RECEIVE
-                                   && buffer_output[1] == RSYNC_CHAR_FILE
-                                   && strncmp(buffer_output + 2, "+++++", 5)
-                                          == 0)) {
+                    } else if (buffer_output[2] == '+') {
                         cecup_action = UI_ACTION_NEW;
                     }
 
