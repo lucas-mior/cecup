@@ -381,7 +381,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
                 }
             }
 
-            if (earliest_match != NULL) {
+            if (earliest_match) {
                 int64 prefix_len = (int64)(earliest_match - &d_name[k]);
                 char *replace_str = replacements[replacement_index][1];
                 int64 replace_len = strlen64(replace_str);
