@@ -496,8 +496,7 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_reset_clicked), NULL);
 
     g_signal_connect(cecup.filter_new, "toggled",
-                     G_CALLBACK(on_filter_toggled),
-                     NULL);
+                     G_CALLBACK(on_filter_toggled), NULL);
     g_signal_connect(cecup.filter_hard, "toggled",
                      G_CALLBACK(on_filter_toggled), NULL);
     g_signal_connect(cecup.filter_update, "toggled",
