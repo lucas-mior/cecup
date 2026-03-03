@@ -221,10 +221,22 @@ cecup_row_compare(const void *a, const void *b) {
         }
         break;
     case COL_SIZE_RAW:
-        result = (int64)row_a->size_raw - (int64)row_b->size_raw;
+        if (row_a->size_raw > row_b->size_raw) {
+            result = 1;
+        } else if (row_a->size_raw < row_b->size_raw) {
+            result = -1;
+        } else {
+            result = 0;
+        }
         break;
     case COL_MTIME_RAW:
-        result = (int64)row_a->mtime_raw - (int64)row_b->mtime_raw;
+        if (row_a->mtime_raw > row_b->mtime_raw) {
+            result = 1;
+        } else if (row_a->mtime_raw < row_b->mtime_raw) {
+            result = -1;
+        } else {
+            result = 0;
+        }
         break;
     case COL_DST_ACTION:
     case COL_DST_COLOR:
@@ -237,7 +249,13 @@ cecup_row_compare(const void *a, const void *b) {
     case COL_SRC_COLOR:
     case NUM_COLS:
     default:
-        result = (int64)row_a->src_action - (int64)row_b->src_action;
+        if (row_a->src_action > row_b->src_action) {
+            result = 1;
+        } else if (row_a->src_action < row_b->src_action) {
+            result = -1;
+        } else {
+            result = 0;
+        }
         break;
     }
 
