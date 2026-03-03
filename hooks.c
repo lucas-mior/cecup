@@ -512,13 +512,15 @@ static void
 on_menu_copy_relative(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
-    char buffer[1048576];
+    char *buffer;
+    int64 buffer_size = SIZEMB(2);
     char *write_pointer;
     int64 remaining_capacity;
 
     (void)m;
+    buffer = xmalloc(buffer_size);
     write_pointer = buffer;
-    remaining_capacity = (int64)sizeof(buffer) - 1;
+    remaining_capacity = buffer_size - 1;
 
     if ((tasks
          = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
@@ -548,6 +550,7 @@ on_menu_copy_relative(GtkWidget *m, void *data) {
         free_task_list(tasks);
     }
 
+    free(buffer);
     free_update_data(ui_update_data);
     return;
 }
