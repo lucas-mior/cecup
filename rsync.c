@@ -384,6 +384,8 @@ fix_fs_recursive(char *base_path, char *relative_path) {
 
             if (earliest_match != NULL) {
                 int64 prefix_len = (int64)(earliest_match - &d_name[k]);
+                char *replace_str = replacements[replacement_index][1];
+                int64 replace_len = strlen64(replace_str);
 
                 if (prefix_len > 0) {
                     memcpy64(&new_name[j], &d_name[k], prefix_len);
@@ -391,8 +393,6 @@ fix_fs_recursive(char *base_path, char *relative_path) {
                     k += prefix_len;
                 }
 
-                char *replace_str = replacements[replacement_index][1];
-                int64 replace_len = strlen64(replace_str);
                 memcpy64(&new_name[j], replace_str, replace_len);
 
                 j += replace_len;

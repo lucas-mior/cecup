@@ -1,3 +1,0 @@
-file1 content
-some new content!
-yet new content!
