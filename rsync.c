@@ -226,7 +226,7 @@ count_files_recursive(char *base_path, char *relative_path) {
     }
 
     if ((dir = opendir(full_path)) == NULL) {
-        dispatch_log_error("Error opendir %s: %s.\n", full_path,
+        dispatch_log_error("Error opening directory %s: %s.\n", full_path,
                            strerror(errno));
         return 0;
     }
