@@ -68,10 +68,10 @@ main(int32 argc, char *argv[]) {
     char *default_dst;
 
     GType column_types[NUM_COLS];
-    char source_path_buffer[4096];
-    int64 source_path_length;
-    char destination_path_buffer[4096];
-    int64 destination_path_length;
+    char src_path_buffer[4096];
+    int64 src_path_length;
+    char dst_path_buffer[4096];
+    int64 dst_path_length;
 
     {
         char *locale_devel = "./po";
@@ -280,14 +280,13 @@ main(int32 argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    source_path_length = SNPRINTF(source_path_buffer, "%s/a/", cwd);
-    default_src = xarena_push(cecup.ui_arena, ALIGN16(source_path_length + 1));
-    memcpy64(default_src, source_path_buffer, source_path_length + 1);
+    src_path_length = SNPRINTF(src_path_buffer, "%s/a/", cwd);
+    default_src = xarena_push(cecup.ui_arena, ALIGN16(src_path_length + 1));
+    memcpy64(default_src, src_path_buffer, src_path_length + 1);
 
-    destination_path_length = SNPRINTF(destination_path_buffer, "%s/b/", cwd);
-    default_dst
-        = xarena_push(cecup.ui_arena, ALIGN16(destination_path_length + 1));
-    memcpy64(default_dst, destination_path_buffer, destination_path_length + 1);
+    dst_path_length = SNPRINTF(dst_path_buffer, "%s/b/", cwd);
+    default_dst = xarena_push(cecup.ui_arena, ALIGN16(dst_path_length + 1));
+    memcpy64(default_dst, dst_path_buffer, dst_path_length + 1);
 
     paths_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_container_set_border_width(GTK_CONTAINER(paths_hbox), 10);
