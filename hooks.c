@@ -489,7 +489,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     int64 remaining_capacity;
     char *base_path;
 
-    char *label = (char *)gtk_button_get_label(GTK_BUTTON(m));
+    char *label = (char *)gtk_menu_item_get_label(GTK_MENU_ITEM(m));
     buffer = xmalloc(buffer_size);
     write_pointer = buffer;
     remaining_capacity = buffer_size - 1;
