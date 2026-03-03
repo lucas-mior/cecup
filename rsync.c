@@ -480,8 +480,6 @@ bulk_sync_worker(void *user_data) {
         char buffer_error[8192];
         int32 buffer_error_pos = 0;
 
-        UIUpdateData *remove_data;
-
         if ((ui_update_data = (UIUpdateData *)g_ptr_array_index(tasks, i))) {
             if (cecup.cancel_sync) {
                 g_mutex_lock(&cecup.ui_arena_mutex);
@@ -722,6 +720,8 @@ bulk_sync_worker(void *user_data) {
 
             if (!cecup.cancel_sync) {
                 int64 path_len;
+                UIUpdateData *remove_data;
+
                 g_mutex_lock(&cecup.ui_arena_mutex);
                 remove_data = xarena_push(cecup.ui_arena,
                                           ALIGN16(SIZEOF(UIUpdateData)));
