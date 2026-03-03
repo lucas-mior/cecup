@@ -586,17 +586,9 @@ on_menu_copy_full(GtkWidget *m, void *data) {
 
             SNPRINTF(raw_path, "%s/%s", base_path, task->filepath);
             if (realpath(raw_path, full_path) == NULL) {
-                if (raw_path[0] != '/') {
-                    char cwd[MAX_PATH_LENGTH];
-
-                    if (getcwd(cwd, SIZEOF(cwd))) {
-                        SNPRINTF(full_path, "%s/%s", cwd, raw_path);
-                    } else {
-                        memcpy64(full_path, raw_path, MAX_PATH_LENGTH);
-                    }
-                } else {
-                    memcpy64(full_path, raw_path, MAX_PATH_LENGTH);
-                }
+                dispatch_log_error("Error resolving full path of %s: %s.\n",
+                                   raw_path, strerror(errno));
+                continue;
             }
 
             path_length = strlen64(full_path);
