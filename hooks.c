@@ -1528,45 +1528,45 @@ update_ui_handler(void *user_data) {
         break;
     case DATA_TYPE_TREE_ROW: {
         CecupRow *row;
-        char *source_background_color = "#FFFFFF";
-        char *destination_background_color = "#FFFFFF";
-        char *source_path_final = data->filepath;
-        char *destination_path_final = data->filepath;
-        enum CecupAction source_action = data->action;
-        enum CecupAction destination_action = data->action;
+        char *src_background_color = "#FFFFFF";
+        char *dst_background_color = "#FFFFFF";
+        char *src_path_final = data->filepath;
+        char *dst_path_final = data->filepath;
+        enum CecupAction src_action = data->action;
+        enum CecupAction dst_action = data->action;
 
         switch (data->action) {
         case UI_ACTION_NEW:
-            source_background_color = "#D4EDDA";
-            destination_path_final = NULL;
+            src_background_color = "#D4EDDA";
+            dst_path_final = NULL;
             break;
         case UI_ACTION_UPDATE:
-            source_background_color = "#CCE5FF";
-            destination_background_color = "#CCE5FF";
+            src_background_color = "#CCE5FF";
+            dst_background_color = "#CCE5FF";
             break;
         case UI_ACTION_HARDLINK:
-            source_background_color = "#E2D1F9";
-            destination_background_color = "#E2D1F9";
+            src_background_color = "#E2D1F9";
+            dst_background_color = "#E2D1F9";
             break;
         case UI_ACTION_SYMLINK:
-            source_background_color = "#FFD1F9";
-            destination_background_color = "#FFD1F9";
+            src_background_color = "#FFD1F9";
+            dst_background_color = "#FFD1F9";
             break;
         case UI_ACTION_EQUAL:
-            source_background_color = "#F0F0F0";
-            destination_background_color = "#F0F0F0";
+            src_background_color = "#F0F0F0";
+            dst_background_color = "#F0F0F0";
             break;
         case UI_ACTION_DELETE:
             if (data->reason == UI_REASON_IGNORED) {
-                source_background_color = "#FFF3CD";
-                destination_background_color = "#FFF3CD";
-                source_action = UI_ACTION_IGNORE;
-                destination_action = UI_ACTION_DELETE;
+                src_background_color = "#FFF3CD";
+                dst_background_color = "#FFF3CD";
+                src_action = UI_ACTION_IGNORE;
+                dst_action = UI_ACTION_DELETE;
             } else {
-                destination_background_color = "#F8D7DA";
-                source_action = UI_ACTION_DELETED;
-                destination_action = UI_ACTION_DELETE;
-                source_path_final = NULL;
+                dst_background_color = "#F8D7DA";
+                src_action = UI_ACTION_DELETED;
+                dst_action = UI_ACTION_DELETE;
+                src_path_final = NULL;
             }
             break;
         case UI_ACTION_NONE:
@@ -1581,8 +1581,8 @@ update_ui_handler(void *user_data) {
         g_mutex_lock(&cecup.row_arena_mutex);
         row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
         memset64(row, 0, SIZEOF(*row));
-        row->src_action = source_action;
-        row->dst_action = destination_action;
+        row->src_action = src_action;
+        row->dst_action = dst_action;
 
         bytes_pretty(row->size_text, data->size);
         row->size_raw = data->size;
@@ -1598,8 +1598,8 @@ update_ui_handler(void *user_data) {
             row->mtime_raw = 0;
         }
 
-        row->src_color = source_background_color;
-        row->dst_color = destination_background_color;
+        row->src_color = src_background_color;
+        row->dst_color = dst_background_color;
         row->reason = data->reason;
 
         if (data->link_target) {
@@ -1610,21 +1610,21 @@ update_ui_handler(void *user_data) {
                      row->link_target_len + 1);
         }
 
-        if (source_path_final) {
+        if (src_path_final) {
             row->src_path_len = data->filepath_length;
         } else {
             row->src_path_len = 0;
         }
-        if (destination_path_final) {
+        if (dst_path_final) {
             row->dst_path_len = data->filepath_length;
         } else {
             row->dst_path_len = 0;
         }
 
-        if (source_path_final == NULL) {
+        if (src_path_final == NULL) {
             row->src_path = NULL;
             row->dst_path = data->filepath;
-        } else if (destination_path_final == NULL) {
+        } else if (dst_path_final == NULL) {
             row->src_path = data->filepath;
             row->dst_path = NULL;
         } else {
