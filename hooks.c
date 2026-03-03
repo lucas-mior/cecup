@@ -197,14 +197,15 @@ cecup_row_compare(const void *a, const void *b) {
     row_a = *(CecupRow **)a;
     row_b = *(CecupRow **)b;
 
-#define COMPARE(A, B) \
+#define COMPARE(A, B) do { \
     if (A > B) { \
         result = 1; \
     } else if (A < B) { \
         result = -1; \
     } else { \
         result = 0; \
-    }
+    } \
+} while (0)
 
     switch (cecup.sort_col) {
     case COL_SRC_PATH:
@@ -230,10 +231,10 @@ cecup_row_compare(const void *a, const void *b) {
         }
         break;
     case COL_SIZE_RAW:
-        COMPARE(row_a->size_raw, row_b->size_raw)
+        COMPARE(row_a->size_raw, row_b->size_raw);
         break;
     case COL_MTIME_RAW:
-        COMPARE(row_a->mtime_raw, row_b->mtime_raw)
+        COMPARE(row_a->mtime_raw, row_b->mtime_raw);
         break;
     case COL_DST_ACTION:
     case COL_DST_COLOR:
@@ -246,7 +247,7 @@ cecup_row_compare(const void *a, const void *b) {
     case COL_SRC_COLOR:
     case NUM_COLS:
     default:
-        COMPARE(row_a->src_action, row_b->src_action)
+        COMPARE(row_a->src_action, row_b->src_action);
         break;
     }
 
