@@ -57,12 +57,6 @@ free_task_list(GPtrArray *tasks) {
         if (task->filepath) {
             arena_pop(cecup.ui_arena, task->filepath);
         }
-        if (task->src_base) {
-            arena_pop(cecup.ui_arena, task->src_base);
-        }
-        if (task->dst_base) {
-            arena_pop(cecup.ui_arena, task->dst_base);
-        }
         if (task->term_cmd) {
             arena_pop(cecup.ui_arena, task->term_cmd);
         }
@@ -418,9 +412,9 @@ on_menu_open(GtkWidget *m, void *data) {
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
             if (ui_update_data->side == 0) {
-                base_path = task->src_base;
+                base_path = cecup.src_base;
             } else {
-                base_path = task->dst_base;
+                base_path = cecup.dst_base;
             }
 
             SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
@@ -462,9 +456,9 @@ on_menu_open_dir(GtkWidget *m, void *data) {
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
             if (ui_update_data->side == 0) {
-                base_path = task->src_base;
+                base_path = cecup.src_base;
             } else {
-                base_path = task->dst_base;
+                base_path = cecup.dst_base;
             }
 
             SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
@@ -495,15 +489,15 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     int64 remaining_capacity;
     char *base_path;
 
-    (void)m;
+    char *label = (char *)gtk_button_get_label(GTK_BUTTON(m));
     buffer = xmalloc(buffer_size);
     write_pointer = buffer;
     remaining_capacity = buffer_size - 1;
 
     if (ui_update_data->side == 0) {
-        base_path = ui_update_data->src_base;
+        base_path = cecup.src_base;
     } else {
-        base_path = ui_update_data->dst_base;
+        base_path = cecup.dst_base;
     }
 
     if ((tasks
@@ -517,7 +511,8 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
 
-            if (ui_update_data->path_type == PATH_ABSOLUTE) {
+            if (!memmem64(label, strlen64(label), "Relative",
+                          strlen64("Relative"))) {
                 char path_relative[MAX_PATH_LENGTH];
 
                 task = (UIUpdateData *)g_ptr_array_index(tasks, i);
@@ -1197,7 +1192,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         if (file_path == NULL) {
             gtk_widget_set_sensitive(item, FALSE);
         } else {
-            ui_update_data->path_type = PATH_RELATIVE;
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_copy_path),
                              ui_update_data);
         }
@@ -1207,7 +1201,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         if (file_path == NULL) {
             gtk_widget_set_sensitive(item, FALSE);
         } else {
-            ui_update_data->path_type = PATH_ABSOLUTE;
             g_signal_connect(item, "activate", G_CALLBACK(on_menu_copy_path),
                              ui_update_data);
         }

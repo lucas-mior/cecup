@@ -507,12 +507,6 @@ bulk_sync_worker(void *user_data) {
                 if (ui_update_data->filepath) {
                     arena_pop(cecup.ui_arena, ui_update_data->filepath);
                 }
-                if (ui_update_data->src_base) {
-                    arena_pop(cecup.ui_arena, ui_update_data->src_base);
-                }
-                if (ui_update_data->dst_base) {
-                    arena_pop(cecup.ui_arena, ui_update_data->dst_base);
-                }
                 if (ui_update_data->term_cmd) {
                     arena_pop(cecup.ui_arena, ui_update_data->term_cmd);
                 }
@@ -569,7 +563,7 @@ bulk_sync_worker(void *user_data) {
                 XCLOSE(&pipe_error[1]);
 
                 if (ui_update_data->action == UI_ACTION_DELETE) {
-                    SNPRINTF(full_dst, "%s/%s", ui_update_data->dst_base,
+                    SNPRINTF(full_dst, "%s/%s", cecup.dst_base,
                              ui_update_data->filepath);
                     args[a++] = "rm";
                     args[a++] = "-rfv";
@@ -578,10 +572,9 @@ bulk_sync_worker(void *user_data) {
                     execvp(args[0], args);
                 } else {
                     char cmd[MAX_PATH_LENGTH*2];
-                    SNPRINTF(relative_source, "%s/./%s",
-                             ui_update_data->src_base,
+                    SNPRINTF(relative_source, "%s/./%s", cecup.src_base,
                              ui_update_data->filepath);
-                    SNPRINTF(dst_dir, "%s/", ui_update_data->dst_base);
+                    SNPRINTF(dst_dir, "%s/", cecup.dst_base);
 
                     args[a++] = "rsync";
                     args[a++] = "--verbose";
@@ -778,12 +771,6 @@ bulk_sync_worker(void *user_data) {
             g_mutex_lock(&cecup.ui_arena_mutex);
             if (ui_update_data->filepath) {
                 arena_pop(cecup.ui_arena, ui_update_data->filepath);
-            }
-            if (ui_update_data->src_base) {
-                arena_pop(cecup.ui_arena, ui_update_data->src_base);
-            }
-            if (ui_update_data->dst_base) {
-                arena_pop(cecup.ui_arena, ui_update_data->dst_base);
             }
             if (ui_update_data->term_cmd) {
                 arena_pop(cecup.ui_arena, ui_update_data->term_cmd);
@@ -1265,10 +1252,10 @@ diff_worker(void *user_data) {
     int64 size_src;
 
     ui_update_data = user_data;
-    size_src = strlen64(ui_update_data->src_base)
-               + strlen64(ui_update_data->filepath) + 2;
-    size_dst = strlen64(ui_update_data->dst_base)
-               + strlen64(ui_update_data->filepath) + 2;
+    size_src
+        = strlen64(cecup.src_base) + strlen64(ui_update_data->filepath) + 2;
+    size_dst
+        = strlen64(cecup.dst_base) + strlen64(ui_update_data->filepath) + 2;
 
     path_src = xmalloc(size_src);
     path_dst = xmalloc(size_dst);
@@ -1276,9 +1263,9 @@ diff_worker(void *user_data) {
     // Note: NEVER delete lines with // clang-format
     // clang-format off
     snprintf2(path_src, size_src,
-              "%s/%s", ui_update_data->src_base, ui_update_data->filepath);
+              "%s/%s", cecup.src_base, ui_update_data->filepath);
     snprintf2(path_dst, size_dst,
-              "%s/%s", ui_update_data->dst_base, ui_update_data->filepath);
+              "%s/%s", cecup.dst_base, ui_update_data->filepath);
 
     switch (child = fork()) {
     case -1:
@@ -1301,12 +1288,6 @@ diff_worker(void *user_data) {
     g_mutex_lock(&cecup.ui_arena_mutex);
     if (ui_update_data->filepath) {
         arena_pop(cecup.ui_arena, ui_update_data->filepath);
-    }
-    if (ui_update_data->src_base) {
-        arena_pop(cecup.ui_arena, ui_update_data->src_base);
-    }
-    if (ui_update_data->dst_base) {
-        arena_pop(cecup.ui_arena, ui_update_data->dst_base);
     }
     if (ui_update_data->term_cmd) {
         arena_pop(cecup.ui_arena, ui_update_data->term_cmd);

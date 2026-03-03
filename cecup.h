@@ -244,10 +244,6 @@ typedef struct UIUpdateData {
     int64 filepath_length;
     char *link_target;
     int64 link_target_len;
-    char *src_base;
-    int64 src_base_len;
-    char *dst_base;
-    int64 dst_base_len;
     int64 size;
     int64 mtime;
 
