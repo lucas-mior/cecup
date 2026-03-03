@@ -197,6 +197,15 @@ cecup_row_compare(const void *a, const void *b) {
     row_a = *(CecupRow **)a;
     row_b = *(CecupRow **)b;
 
+#define COMPARE(A, B) \
+    if (A > B) { \
+        result = 1; \
+    } else if (A < B) { \
+        result = -1; \
+    } else { \
+        result = 0; \
+    }
+
     switch (cecup.sort_col) {
     case COL_SRC_PATH:
         if (row_a->src_path == NULL && row_b->src_path == NULL) {
@@ -221,22 +230,10 @@ cecup_row_compare(const void *a, const void *b) {
         }
         break;
     case COL_SIZE_RAW:
-        if (row_a->size_raw > row_b->size_raw) {
-            result = 1;
-        } else if (row_a->size_raw < row_b->size_raw) {
-            result = -1;
-        } else {
-            result = 0;
-        }
+        COMPARE(row_a->size_raw, row_b->size_raw)
         break;
     case COL_MTIME_RAW:
-        if (row_a->mtime_raw > row_b->mtime_raw) {
-            result = 1;
-        } else if (row_a->mtime_raw < row_b->mtime_raw) {
-            result = -1;
-        } else {
-            result = 0;
-        }
+        COMPARE(row_a->mtime_raw, row_b->mtime_raw)
         break;
     case COL_DST_ACTION:
     case COL_DST_COLOR:
@@ -249,15 +246,11 @@ cecup_row_compare(const void *a, const void *b) {
     case COL_SRC_COLOR:
     case NUM_COLS:
     default:
-        if (row_a->src_action > row_b->src_action) {
-            result = 1;
-        } else if (row_a->src_action < row_b->src_action) {
-            result = -1;
-        } else {
-            result = 0;
-        }
+        COMPARE(row_a->src_action, row_b->src_action)
         break;
     }
+
+#undef COMPARE
 
     if (cecup.sort_order == GTK_SORT_DESCENDING) {
         result *= -1;
