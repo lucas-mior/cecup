@@ -199,6 +199,11 @@ static struct {
     Arena *ui_arena;
     GMutex row_arena_mutex;
     GMutex ui_arena_mutex;
+
+    char *src_base;
+    int64 src_base_len;
+    char *dst_base;
+    int64 dst_base_len;
 } cecup;
 
 typedef struct ThreadData {
@@ -221,10 +226,16 @@ enum DataType {
     DATA_TYPE_PROGRESS_PREVIEW
 };
 
+enum PathType {
+    PATH_RELATIVE,
+    PATH_ABSOLUTE,
+};
+
 typedef struct UIUpdateData {
     enum DataType type;
     enum CecupAction action;
     enum CecupReason reason;
+    enum PathType path_type;
 
     char *message;
     int64 message_len;

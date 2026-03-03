@@ -87,16 +87,8 @@ static GPtrArray *
 get_target_tasks(int32 side, char *clicked_path,
                  enum CecupAction clicked_action) {
     GPtrArray *tasks;
-    char *shared_src;
-    char *shared_dst;
-    int64 src_len;
-    int64 dst_len;
 
     tasks = g_ptr_array_new();
-    shared_src = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
-    shared_dst = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
-    src_len = strlen64(shared_src);
-    dst_len = strlen64(shared_dst);
 
     for (int32 i = 0; i < cecup.rows_count; i += 1) {
         CecupRow *row = cecup.rows[i];
@@ -131,14 +123,6 @@ get_target_tasks(int32 side, char *clicked_path,
         task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
         memcpy64(task->filepath, file_path, path_len + 1);
 
-        task->src_base_len = src_len;
-        task->src_base = xarena_push(cecup.ui_arena, ALIGN16(src_len + 1));
-        memcpy64(task->src_base, shared_src, src_len + 1);
-
-        task->dst_base_len = dst_len;
-        task->dst_base = xarena_push(cecup.ui_arena, ALIGN16(dst_len + 1));
-        memcpy64(task->dst_base, shared_dst, dst_len + 1);
-
         if (row->link_target) {
             task->link_target_len = row->link_target_len;
             task->link_target = xarena_push(cecup.ui_arena,
@@ -166,13 +150,6 @@ get_target_tasks(int32 side, char *clicked_path,
         task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
         memcpy64(task->filepath, clicked_path, path_len + 1);
 
-        task->src_base_len = src_len;
-        task->src_base = xarena_push(cecup.ui_arena, ALIGN16(src_len + 1));
-        memcpy64(task->src_base, shared_src, src_len + 1);
-
-        task->dst_base_len = dst_len;
-        task->dst_base = xarena_push(cecup.ui_arena, ALIGN16(dst_len + 1));
-        memcpy64(task->dst_base, shared_dst, dst_len + 1);
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         task->action = clicked_action;
@@ -509,18 +486,25 @@ on_menu_open_dir(GtkWidget *m, void *data) {
 }
 
 static void
-on_menu_copy_relative(GtkWidget *m, void *data) {
+on_menu_copy_path(GtkWidget *m, void *data) {
     UIUpdateData *ui_update_data = data;
     GPtrArray *tasks;
     char *buffer;
     int64 buffer_size = SIZEMB(2);
     char *write_pointer;
     int64 remaining_capacity;
+    char *base_path;
 
     (void)m;
     buffer = xmalloc(buffer_size);
     write_pointer = buffer;
     remaining_capacity = buffer_size - 1;
+
+    if (ui_update_data->side == 0) {
+        base_path = ui_update_data->src_base;
+    } else {
+        base_path = ui_update_data->dst_base;
+    }
 
     if ((tasks
          = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
@@ -528,72 +512,28 @@ on_menu_copy_relative(GtkWidget *m, void *data) {
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {
             UIUpdateData *task;
             int64 path_length;
-
-            task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-            path_length = task->filepath_length;
-
-            if ((i > 0) && (remaining_capacity > 0)) {
-                *write_pointer = '\n';
-                write_pointer += 1;
-                remaining_capacity -= 1;
-            }
-
-            if (remaining_capacity >= path_length) {
-                memcpy64(write_pointer, task->filepath, path_length);
-                write_pointer += path_length;
-                remaining_capacity -= path_length;
-            }
-        }
-        *write_pointer = '\0';
-        gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
-                               buffer, -1);
-        free_task_list(tasks);
-    }
-
-    free(buffer);
-    free_update_data(ui_update_data);
-    return;
-}
-
-static void
-on_menu_copy_full(GtkWidget *m, void *data) {
-    UIUpdateData *ui_update_data = data;
-    GPtrArray *tasks;
-    char *buffer;
-    char *write_pointer;
-    int64 remaining_capacity;
-    int64 buffer_size = SIZEMB(2);
-
-    (void)m;
-    buffer = xmalloc(buffer_size);
-    write_pointer = buffer;
-    remaining_capacity = buffer_size - 1;
-
-    if ((tasks
-         = get_target_tasks(ui_update_data->side, ui_update_data->filepath,
-                            ui_update_data->action))) {
-        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-            UIUpdateData *task;
-            char path_relative[MAX_PATH_LENGTH];
             char path_full[MAX_PATH_LENGTH];
-            char *base_path;
-            int64 path_length;
+            char *path;
 
             task = (UIUpdateData *)g_ptr_array_index(tasks, i);
-            if (ui_update_data->side == 0) {
-                base_path = task->src_base;
+
+            if (ui_update_data->path_type == PATH_ABSOLUTE) {
+                char path_relative[MAX_PATH_LENGTH];
+
+                task = (UIUpdateData *)g_ptr_array_index(tasks, i);
+
+                SNPRINTF(path_relative, "%s/%s", base_path, task->filepath);
+                if (realpath(path_relative, path_full) == NULL) {
+                    dispatch_log_error("Error resolving full path of %s: %s.\n",
+                                       path_relative, strerror(errno));
+                    continue;
+                }
+                path = path_full;
+                path_length = strlen64(path_full);
             } else {
-                base_path = task->dst_base;
+                path = task->filepath;
+                path_length = task->filepath_length;
             }
-
-            SNPRINTF(path_relative, "%s/%s", base_path, task->filepath);
-            if (realpath(path_relative, path_full) == NULL) {
-                dispatch_log_error("Error resolving full path of %s: %s.\n",
-                                   path_relative, strerror(errno));
-                continue;
-            }
-
-            path_length = strlen64(path_full);
 
             if ((i > 0) && (remaining_capacity > 0)) {
                 *write_pointer = '\n';
@@ -602,7 +542,7 @@ on_menu_copy_full(GtkWidget *m, void *data) {
             }
 
             if (remaining_capacity >= path_length) {
-                memcpy64(write_pointer, path_full, path_length);
+                memcpy64(write_pointer, path, path_length);
                 write_pointer += path_length;
                 remaining_capacity -= path_length;
             }
@@ -613,8 +553,8 @@ on_menu_copy_full(GtkWidget *m, void *data) {
         free_task_list(tasks);
     }
 
-    free_update_data(ui_update_data);
     free(buffer);
+    free_update_data(ui_update_data);
     return;
 }
 
@@ -774,6 +714,10 @@ static void
 on_config_changed(GtkWidget *widget, void *data) {
     (void)widget;
     (void)data;
+    cecup.src_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
+    cecup.dst_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+    cecup.src_base_len = strlen64(cecup.src_base);
+    cecup.dst_base_len = strlen64(cecup.dst_base);
     save_config();
     return;
 }
@@ -1253,8 +1197,9 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         if (file_path == NULL) {
             gtk_widget_set_sensitive(item, FALSE);
         } else {
-            g_signal_connect(item, "activate",
-                             G_CALLBACK(on_menu_copy_relative), ui_update_data);
+            ui_update_data->path_type = PATH_RELATIVE;
+            g_signal_connect(item, "activate", G_CALLBACK(on_menu_copy_path),
+                             ui_update_data);
         }
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
@@ -1262,7 +1207,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         if (file_path == NULL) {
             gtk_widget_set_sensitive(item, FALSE);
         } else {
-            g_signal_connect(item, "activate", G_CALLBACK(on_menu_copy_full),
+            ui_update_data->path_type = PATH_ABSOLUTE;
+            g_signal_connect(item, "activate", G_CALLBACK(on_menu_copy_path),
                              ui_update_data);
         }
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
