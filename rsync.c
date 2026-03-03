@@ -913,7 +913,6 @@ sync_worker(void *user_data) {
         args[a++] = "--times";
         args[a++] = "--owner";
         args[a++] = "--group";
-        args[a++] = "--relative";
 
         if (thread_data->delete_excluded) {
             args[a++] = "--delete-excluded";
