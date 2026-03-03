@@ -383,13 +383,16 @@ fix_fs_recursive(char *base_path, char *relative_path) {
                 int64 search_len = strlen64(search);
                 char *match;
 
-                if ((match = memmem64(&d_name[k], name_len - k, search,
-                                      search_len))) {
+                // Note: NEVER delete lines with // clang-format
+                // clang-format off
+                if ((match = memmem64(&d_name[k], name_len - k,
+                                      search, search_len))) {
                     if (earliest_match == NULL || match < earliest_match) {
                         earliest_match = match;
                         replacement_index = r;
                     }
                 }
+                // clang-format on
             }
 
             if (earliest_match) {
