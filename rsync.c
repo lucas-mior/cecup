@@ -421,12 +421,15 @@ fix_fs_recursive(char *base_path, char *relative_path) {
         new_name[j] = '\0';
 
         if (changed) {
+            // Note: NEVER delete lines with // clang-format
+            // clang-format off
             if (relative_path[0] != '\0') {
-                SNPRINTF(new_full, "%s/%s/%s", base_path, relative_path,
-                         new_name);
+                SNPRINTF(new_full,
+                         "%s/%s/%s", base_path, relative_path, new_name);
             } else {
                 SNPRINTF(new_full, "%s/%s", base_path, new_name);
             }
+            // clang-format on
 
             if (access(new_full, F_OK) == 0) {
                 dispatch_log_error("Skip rename: %s already exists.\n",
