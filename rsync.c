@@ -560,7 +560,7 @@ bulk_sync_worker(void *user_data) {
                     args[a++] = NULL;
                     execvp(args[0], args);
                 } else {
-                    char *cmd = xmalloc(MAX_COMMAND_LENGTH);
+                    char cmd[MAX_PATH_LENGTH*2];
                     SNPRINTF(relative_source, "%s/./%s",
                              ui_update_data->src_base,
                              ui_update_data->filepath);
@@ -586,7 +586,6 @@ bulk_sync_worker(void *user_data) {
                     args[a++] = NULL;
                     STRING_FROM_ARRAY(cmd, " ", args, a);
                     dispatch_log("+ %s\n", cmd);
-                    free(cmd);
                     execvp(args[0], args);
                 }
                 fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
@@ -880,10 +879,11 @@ sync_worker(void *user_data) {
         char dst_dir[MAX_PATH_LENGTH];
         char *args[32];
         int32 a = 0;
+        char cmd[MAX_PATH_LENGTH*2];
 
         if (setpgid(0, 0) < 0) {
             fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
-            exit(EXIT_FAILURE);
+            fatal(EXIT_FAILURE);
         }
         putenv("LC_ALL=C");
         XCLOSE(&pipe_output[0]);
@@ -933,6 +933,9 @@ sync_worker(void *user_data) {
         args[a++] = src_dir;
         args[a++] = dst_dir;
         args[a++] = NULL;
+
+        STRING_FROM_ARRAY(cmd, " ", args, a);
+        dispatch_log("+ %s\n", cmd);
 
         execvp("rsync", args);
         fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
@@ -1180,7 +1183,7 @@ sync_worker(void *user_data) {
             *eol = '\0';
 
             if (buffer_error[0] != '\0') {
-                dispatch_log_error(buffer_error);
+                dispatch_log_error("%s\n", buffer_error);
             }
 
             remaining = buffer_error_pos - (line_len + 1);
@@ -1192,7 +1195,7 @@ sync_worker(void *user_data) {
 
         if (buffer_error_pos >= (int32)SIZEOF(buffer_error) - 1) {
             buffer_error[buffer_error_pos] = '\0';
-            dispatch_log_error(buffer_error);
+            dispatch_log_error("%s\n", buffer_error);
             buffer_error_pos = 0;
         }
 
