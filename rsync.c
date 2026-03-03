@@ -290,7 +290,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
 
     char *replacements[][2] = {
         {"=>", "_equal_arrow_in_filename_"},
-        {"->", "_symlink_arrow_in_filename_"},
+        {"->", "_dash_arrow_in_filename_"},
         {"\\", "_backslash_in_filename_"},
         {"\n", "_newline_in_filename_"},
         {"\"", "_double_quote_in_filename_"},
