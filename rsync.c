@@ -964,7 +964,7 @@ sync_worker(void *user_data) {
     XCLOSE(&pipe_output[1]);
     XCLOSE(&pipe_error[1]);
 
-    while (1) {
+    while (true) {
         struct pollfd pipes[2];
         int64 r;
         char *eol;
