@@ -197,15 +197,16 @@ cecup_row_compare(const void *a, const void *b) {
     row_a = *(CecupRow **)a;
     row_b = *(CecupRow **)b;
 
-#define COMPARE(A, B) do { \
-    if (A > B) { \
-        result = 1; \
-    } else if (A < B) { \
-        result = -1; \
-    } else { \
-        result = 0; \
-    } \
-} while (0)
+#define COMPARE(A, B) \
+    do { \
+        if (A > B) { \
+            result = 1; \
+        } else if (A < B) { \
+            result = -1; \
+        } else { \
+            result = 0; \
+        } \
+    } while (0)
 
     switch (cecup.sort_col) {
     case COL_SRC_PATH:
@@ -638,7 +639,7 @@ on_menu_delete(GtkWidget *m, void *data) {
             gtk_widget_set_sensitive(cecup.preview_button, FALSE);
             gtk_widget_set_sensitive(cecup.sync_button, FALSE);
             gtk_widget_set_sensitive(cecup.stop_button, TRUE);
-            g_thread_new("bulk_delete", bulk_sync_worker, tasks);
+            g_thread_new("bulk_sync", bulk_sync_worker, tasks);
         } else {
             free_task_list(tasks);
         }
@@ -1145,21 +1146,21 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                                               &path, NULL, NULL, NULL)) {
                 UIUpdateData *ui_update_data;
                 CecupRow *row;
-                int32 row_idx;
+                int32 row_index;
                 char *file_path;
-                int64 path_len;
+                int64 path_length;
                 enum CecupAction action;
 
-                row_idx = gtk_tree_path_get_indices(path)[0];
-                row = cecup.visible_rows[row_idx];
+                row_index = gtk_tree_path_get_indices(path)[0];
+                row = cecup.visible_rows[row_index];
 
                 if (side == 0) {
                     file_path = row->src_path;
-                    path_len = row->src_path_len;
+                    path_length = row->src_path_len;
                     action = row->src_action;
                 } else {
                     file_path = row->dst_path;
-                    path_len = row->dst_path_len;
+                    path_length = row->dst_path_len;
                     action = row->dst_action;
                 }
 
@@ -1169,10 +1170,11 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                         cecup.ui_arena, ALIGN16(SIZEOF(*ui_update_data)));
                     memset64(ui_update_data, 0, SIZEOF(*ui_update_data));
 
-                    ui_update_data->filepath_length = path_len;
+                    ui_update_data->filepath_length = path_length;
                     ui_update_data->filepath
-                        = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                    memcpy64(ui_update_data->filepath, file_path, path_len + 1);
+                        = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
+                    memcpy64(ui_update_data->filepath, file_path,
+                             path_length + 1);
                     g_mutex_unlock(&cecup.ui_arena_mutex);
 
                     ui_update_data->action = action;
@@ -1193,7 +1195,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         GtkWidget *item;
         char *file_path;
         char *other_path;
-        int64 path_len;
+        int64 path_length;
         enum CecupAction action;
 
         if (!gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
@@ -1203,20 +1205,20 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         }
 
         {
-            int32 row_idx;
+            int32 row_index;
             CecupRow *row;
 
-            row_idx = gtk_tree_path_get_indices(path)[0];
-            row = cecup.visible_rows[row_idx];
+            row_index = gtk_tree_path_get_indices(path)[0];
+            row = cecup.visible_rows[row_index];
 
             if (side == 0) {
                 file_path = row->src_path;
-                path_len = row->src_path_len;
+                path_length = row->src_path_len;
                 other_path = row->dst_path;
                 action = row->src_action;
             } else {
                 file_path = row->dst_path;
-                path_len = row->dst_path_len;
+                path_length = row->dst_path_len;
                 other_path = row->src_path;
                 action = row->dst_action;
             }
@@ -1227,10 +1229,10 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*ui_update_data)));
         memset64(ui_update_data, 0, SIZEOF(*ui_update_data));
 
-        ui_update_data->filepath_length = path_len;
+        ui_update_data->filepath_length = path_length;
         ui_update_data->filepath
-            = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-        memcpy64(ui_update_data->filepath, file_path, path_len + 1);
+            = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
+        memcpy64(ui_update_data->filepath, file_path, path_length + 1);
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         ui_update_data->action = action;
@@ -1280,11 +1282,11 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             char *extension_ptr;
             char *directory_ptr;
             char *name = basename(ui_update_data->filepath);
-            int64 len = strlen64(name);
+            int64 length = strlen64(name);
 
             gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
 
-            if ((extension_ptr = memchr(name, '.', len))) {
+            if ((extension_ptr = memchr(name, '.', length))) {
                 extension_ptr = strrchr(extension_ptr, '.');
                 SNPRINTF(extension_label, _("by extension (*%s)"),
                          extension_ptr);
@@ -1354,9 +1356,9 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     gint bin_x;
     gint bin_y;
 
-    int32 idx;
+    int32 index;
     int32 side;
-    int32 view_col_idx;
+    int32 view_column_index;
     int32 number_of_columns;
     char *tip_text = NULL;
     char tip_text_buffer[8192];
@@ -1372,20 +1374,20 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
         return FALSE;
     }
 
-    idx = gtk_tree_path_get_indices(path_obj)[0];
+    index = gtk_tree_path_get_indices(path_obj)[0];
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
-    view_col_idx = -1;
+    view_column_index = -1;
 
     number_of_columns = (int32)gtk_tree_view_get_n_columns(GTK_TREE_VIEW(w));
     for (int32 i = 0; i < number_of_columns; i += 1) {
         if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(w), i)) {
-            view_col_idx = i;
+            view_column_index = i;
             break;
         }
     }
 
-    if ((idx >= 0) && (idx < cecup.visible_count)) {
-        CecupRow *row = cecup.visible_rows[idx];
+    if ((index >= 0) && (index < cecup.visible_count)) {
+        CecupRow *row = cecup.visible_rows[index];
         char *file_path;
         enum CecupAction action;
 
@@ -1409,11 +1411,11 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             file_path = "";
         }
 
-        switch (view_col_idx) {
+        switch (view_column_index) {
         case 1: {
             char **strings;
             char *translated_action;
-            int64 string_len;
+            int64 string_length;
 
             if (side == 0) {
                 strings = src_action_strings;
@@ -1422,12 +1424,12 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             }
 
             translated_action = _(strings[action]);
-            string_len = strlen64(translated_action);
+            string_length = strlen64(translated_action);
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = xarena_push(cecup.ui_arena, ALIGN16(string_len + 1));
+            tip_text = xarena_push(cecup.ui_arena, ALIGN16(string_length + 1));
             g_mutex_unlock(&cecup.ui_arena_mutex);
-            memcpy64(tip_text, translated_action, string_len + 1);
+            memcpy64(tip_text, translated_action, string_length + 1);
             break;
         }
         case 2: {
@@ -1487,147 +1489,6 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     return FALSE;
 }
 
-static void
-add_row_logic(UIUpdateData *data) {
-    CecupRow *row;
-    char *bg_src = "#FFFFFF";
-    char *bg_dst = "#FFFFFF";
-    char *src_path_final = data->filepath;
-    char *dst_path_final = data->filepath;
-    enum CecupAction src_action = data->action;
-    enum CecupAction action_dst = data->action;
-
-    switch (data->action) {
-    case UI_ACTION_NEW:
-        bg_src = "#D4EDDA";
-        dst_path_final = NULL;
-        break;
-    case UI_ACTION_UPDATE:
-        bg_src = "#CCE5FF";
-        bg_dst = "#CCE5FF";
-        break;
-    case UI_ACTION_HARDLINK:
-        bg_src = "#E2D1F9";
-        bg_dst = "#E2D1F9";
-        break;
-    case UI_ACTION_SYMLINK:
-        bg_src = "#FFD1F9";
-        bg_dst = "#FFD1F9";
-        break;
-    case UI_ACTION_EQUAL:
-        bg_src = "#F0F0F0";
-        bg_dst = "#F0F0F0";
-        break;
-    case UI_ACTION_DELETE:
-        if (data->reason == UI_REASON_IGNORED) {
-            bg_src = "#FFF3CD";
-            bg_dst = "#FFF3CD";
-            src_action = UI_ACTION_IGNORE;
-            action_dst = UI_ACTION_DELETE;
-        } else {
-            bg_dst = "#F8D7DA";
-            src_action = UI_ACTION_DELETED;
-            action_dst = UI_ACTION_DELETE;
-            src_path_final = NULL;
-        }
-        break;
-    case UI_ACTION_NONE:
-    case UI_ACTION_DELETED:
-    case UI_ACTION_IGNORE:
-    case NUM_UI_ACTIONS:
-    default:
-        error("Invalid data->action: %u\n", data->action);
-        fatal(EXIT_FAILURE);
-    }
-
-    g_mutex_lock(&cecup.row_arena_mutex);
-    row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
-    memset64(row, 0, SIZEOF(*row));
-    row->src_action = src_action;
-    row->dst_action = action_dst;
-
-    bytes_pretty(row->size_text, data->size);
-    row->size_raw = data->size;
-
-    if (data->mtime > 0) {
-        time_t t = (time_t)data->mtime;
-        struct tm *tm_info = localtime(&t);
-        STRFTIME(row->mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
-        row->mtime_raw = data->mtime;
-    } else {
-        strcpy(row->mtime_text, _("Unknown modification time"));
-        row->mtime_raw = 0;
-    }
-
-    row->src_color = bg_src;
-    row->dst_color = bg_dst;
-    row->reason = data->reason;
-
-    if (data->link_target) {
-        row->link_target_len = data->link_target_len;
-        row->link_target
-            = xarena_push(cecup.row_arena, ALIGN16(row->link_target_len + 1));
-        memcpy64(row->link_target, data->link_target, row->link_target_len + 1);
-    }
-
-    if (src_path_final) {
-        row->src_path_len = data->filepath_length;
-    } else {
-        row->src_path_len = 0;
-    }
-    if (dst_path_final) {
-        row->dst_path_len = data->filepath_length;
-    } else {
-        row->dst_path_len = 0;
-    }
-
-    if (src_path_final == NULL) {
-        row->src_path = NULL;
-        row->dst_path = data->filepath;
-    } else if (dst_path_final == NULL) {
-        row->src_path = data->filepath;
-        row->dst_path = NULL;
-    } else {
-        row->src_path = data->filepath;
-        row->dst_path = data->filepath;
-    }
-
-    if (cecup.rows_count >= cecup.rows_capacity) {
-        int32 new_capacity;
-        CecupRow **new_rows;
-        CecupRow **new_visible;
-
-        new_capacity = cecup.rows_capacity*2;
-        new_rows = xarena_push(cecup.row_arena,
-                               ALIGN16(new_capacity*SIZEOF(CecupRow *)));
-        new_visible = xarena_push(cecup.row_arena,
-                                  ALIGN16(new_capacity*SIZEOF(CecupRow *)));
-
-        memcpy64(new_rows, cecup.rows, cecup.rows_count*SIZEOF(CecupRow *));
-        memcpy64(new_visible, cecup.visible_rows,
-                 cecup.rows_count*SIZEOF(CecupRow *));
-
-        cecup.rows = new_rows;
-        cecup.visible_rows = new_visible;
-        cecup.rows_capacity = new_capacity;
-    }
-    cecup.rows[cecup.rows_count] = row;
-    cecup.rows_count += 1;
-    g_mutex_unlock(&cecup.row_arena_mutex);
-    return;
-}
-
-static int32
-scroll_to_bottom_callback(void *user_data) {
-    GtkTextView *log_view = GTK_TEXT_VIEW(user_data);
-    GtkTextBuffer *log_buffer = gtk_text_view_get_buffer(log_view);
-    GtkTextIter end;
-
-    gtk_text_buffer_get_end_iter(log_buffer, &end);
-    gtk_text_view_scroll_to_iter(log_view, &end, 0.0, FALSE, 0, 0);
-    return 0;
-}
-
 static gboolean
 update_ui_handler(void *user_data) {
     UIUpdateData *data = user_data;
@@ -1636,25 +1497,11 @@ update_ui_handler(void *user_data) {
     case DATA_TYPE_LOG:
     case DATA_TYPE_LOG_ERROR: {
         GtkTextIter end;
-        GtkAdjustment *v_adj;
-        double val;
-        double upper;
-        double page;
-        int32 at_bottom;
-
-        if ((v_adj = gtk_scrolled_window_get_vadjustment(
-                 GTK_SCROLLED_WINDOW(gtk_widget_get_parent(cecup.log_view))))) {
-            val = gtk_adjustment_get_value(v_adj);
-            upper = gtk_adjustment_get_upper(v_adj);
-            page = gtk_adjustment_get_page_size(v_adj);
-            at_bottom = ((upper - val - page) < 1.0);
-        } else {
-            at_bottom = 0;
-        }
 
         gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
         if (data->type == DATA_TYPE_LOG_ERROR) {
             GtkTextTagTable *table;
+
             table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
             if (gtk_text_tag_table_lookup(table, "err_red") == NULL) {
                 gtk_text_buffer_create_tag(cecup.log_buffer, "err_red",
@@ -1666,9 +1513,9 @@ update_ui_handler(void *user_data) {
             gtk_text_buffer_insert(cecup.log_buffer, &end, data->message, -1);
         }
 
-        if (at_bottom != 0) {
-            g_idle_add(scroll_to_bottom_callback, cecup.log_view);
-        }
+        gtk_text_view_scroll_to_mark(
+            GTK_TEXT_VIEW(cecup.log_view),
+            gtk_text_buffer_get_insert(cecup.log_buffer), 0.0, FALSE, 0.0, 0.0);
         break;
     }
     case DATA_TYPE_PROGRESS_RSYNC:
@@ -1680,7 +1527,135 @@ update_ui_handler(void *user_data) {
                                       data->fraction);
         break;
     case DATA_TYPE_TREE_ROW: {
-        add_row_logic(data);
+        CecupRow *row;
+        char *source_background_color = "#FFFFFF";
+        char *destination_background_color = "#FFFFFF";
+        char *source_path_final = data->filepath;
+        char *destination_path_final = data->filepath;
+        enum CecupAction source_action = data->action;
+        enum CecupAction destination_action = data->action;
+
+        switch (data->action) {
+        case UI_ACTION_NEW:
+            source_background_color = "#D4EDDA";
+            destination_path_final = NULL;
+            break;
+        case UI_ACTION_UPDATE:
+            source_background_color = "#CCE5FF";
+            destination_background_color = "#CCE5FF";
+            break;
+        case UI_ACTION_HARDLINK:
+            source_background_color = "#E2D1F9";
+            destination_background_color = "#E2D1F9";
+            break;
+        case UI_ACTION_SYMLINK:
+            source_background_color = "#FFD1F9";
+            destination_background_color = "#FFD1F9";
+            break;
+        case UI_ACTION_EQUAL:
+            source_background_color = "#F0F0F0";
+            destination_background_color = "#F0F0F0";
+            break;
+        case UI_ACTION_DELETE:
+            if (data->reason == UI_REASON_IGNORED) {
+                source_background_color = "#FFF3CD";
+                destination_background_color = "#FFF3CD";
+                source_action = UI_ACTION_IGNORE;
+                destination_action = UI_ACTION_DELETE;
+            } else {
+                destination_background_color = "#F8D7DA";
+                source_action = UI_ACTION_DELETED;
+                destination_action = UI_ACTION_DELETE;
+                source_path_final = NULL;
+            }
+            break;
+        case UI_ACTION_NONE:
+        case UI_ACTION_DELETED:
+        case UI_ACTION_IGNORE:
+        case NUM_UI_ACTIONS:
+        default:
+            error("Invalid data->action: %u\n", data->action);
+            fatal(EXIT_FAILURE);
+        }
+
+        g_mutex_lock(&cecup.row_arena_mutex);
+        row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
+        memset64(row, 0, SIZEOF(*row));
+        row->src_action = source_action;
+        row->dst_action = destination_action;
+
+        bytes_pretty(row->size_text, data->size);
+        row->size_raw = data->size;
+
+        if (data->mtime > 0) {
+            time_t t = (time_t)data->mtime;
+            struct tm *tm_info = localtime(&t);
+
+            STRFTIME(row->mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
+            row->mtime_raw = data->mtime;
+        } else {
+            strcpy(row->mtime_text, _("Unknown modification time"));
+            row->mtime_raw = 0;
+        }
+
+        row->src_color = source_background_color;
+        row->dst_color = destination_background_color;
+        row->reason = data->reason;
+
+        if (data->link_target) {
+            row->link_target_len = data->link_target_len;
+            row->link_target = xarena_push(cecup.row_arena,
+                                           ALIGN16(row->link_target_len + 1));
+            memcpy64(row->link_target, data->link_target,
+                     row->link_target_len + 1);
+        }
+
+        if (source_path_final) {
+            row->src_path_len = data->filepath_length;
+        } else {
+            row->src_path_len = 0;
+        }
+        if (destination_path_final) {
+            row->dst_path_len = data->filepath_length;
+        } else {
+            row->dst_path_len = 0;
+        }
+
+        if (source_path_final == NULL) {
+            row->src_path = NULL;
+            row->dst_path = data->filepath;
+        } else if (destination_path_final == NULL) {
+            row->src_path = data->filepath;
+            row->dst_path = NULL;
+        } else {
+            row->src_path = data->filepath;
+            row->dst_path = data->filepath;
+        }
+
+        if (cecup.rows_count >= cecup.rows_capacity) {
+            int32 new_capacity;
+            CecupRow **new_rows;
+            CecupRow **new_visible;
+
+            new_capacity = cecup.rows_capacity*2;
+            new_rows = xarena_push(cecup.row_arena,
+                                   ALIGN16(new_capacity*SIZEOF(CecupRow *)));
+            new_visible = xarena_push(
+                cecup.row_arena, ALIGN16(new_capacity*SIZEOF(CecupRow *)));
+
+            memcpy64(new_rows, cecup.rows,
+                     cecup.rows_count*SIZEOF(CecupRow *));
+            memcpy64(new_visible, cecup.visible_rows,
+                     cecup.rows_count*SIZEOF(CecupRow *));
+
+            cecup.rows = new_rows;
+            cecup.visible_rows = new_visible;
+            cecup.rows_capacity = new_capacity;
+        }
+        cecup.rows[cecup.rows_count] = row;
+        cecup.rows_count += 1;
+        g_mutex_unlock(&cecup.row_arena_mutex);
+
         if (cecup.refresh_id == 0) {
             cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
                                              refresh_ui_timeout_callback, NULL);
@@ -1756,8 +1731,8 @@ update_ui_handler(void *user_data) {
 
 #if TESTING_hooks
 #include <assert.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 int
 main(void) {
