@@ -140,7 +140,7 @@ dispatch_log_error(char *format, ...) {
 static void
 dispatch_progress(enum DataType type, double fraction) {
     UIUpdateData *data;
-    static double last_fractions[4] = {0, 0, 0, 0};
+    static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index = 0;
 
     if (type == DATA_TYPE_PROGRESS_RSYNC) {
