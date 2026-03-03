@@ -350,7 +350,6 @@ fix_fs_recursive(char *base_path, char *relative_path) {
         int64 j = 0;
         int64 k = 0;
         int64 name_len = strlen64(d_name);
-        int64 num_replacements = SIZEOF(replacements) / SIZEOF(replacements[0]);
 
         if (relative_path[0] != '\0') {
             SNPRINTF(sub_rel, "%s/%s", relative_path, d_name);
@@ -368,7 +367,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
             char *earliest_match = NULL;
             int32 replacement_index = -1;
 
-            for (int32 r = 0; r < (int32)num_replacements; r += 1) {
+            for (int32 r = 0; r < LENGTH(replacements); r += 1) {
                 char *search = replacements[r][0];
                 int64 search_len = strlen64(search);
                 char *match;
