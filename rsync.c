@@ -1252,29 +1252,45 @@ finalize:
 static void *
 diff_worker(void *user_data) {
     UIUpdateData *ui_update_data;
-    char *cmd = xmalloc(MAX_COMMAND_LENGTH);
-    char *esc_src;
-    char *esc_dst;
-    char *esc_file;
+    pid_t child;
+    char *path_src;
+    char *path_dst;
+    int64 size_dst;
+    int64 size_src;
 
     ui_update_data = user_data;
-    esc_src = shell_escape(ui_update_data->src_base);
-    esc_dst = shell_escape(ui_update_data->dst_base);
-    esc_file = shell_escape(ui_update_data->filepath);
+    size_src = strlen64(ui_update_data->src_base)
+               + strlen64(ui_update_data->filepath) + 2;
+    size_dst = strlen64(ui_update_data->dst_base)
+               + strlen64(ui_update_data->filepath) + 2;
 
-    snprintf2(
-        cmd, MAX_COMMAND_LENGTH,
-        "%s -e bash -c \"%s '%s/%s' '%s/%s'; read -p 'Press Enter...'\" &",
-        ui_update_data->term_cmd, ui_update_data->diff_tool, esc_src, esc_file,
-        esc_dst, esc_file);
+    path_src = xmalloc(size_src);
+    path_dst = xmalloc(size_dst);
 
-    free(esc_src);
-    free(esc_dst);
-    free(esc_file);
+    // Note: NEVER delete lines with // clang-format
+    // clang-format off
+    snprintf2(path_src, size_src,
+              "%s/%s", ui_update_data->src_base, ui_update_data->filepath);
+    snprintf2(path_dst, size_dst,
+              "%s/%s", ui_update_data->dst_base, ui_update_data->filepath);
 
-    if (system(cmd) < 0) {
-        dispatch_log_error("Error system call: %s.\n", strerror(errno));
+    switch (child = fork()) {
+    case -1:
+        error("Error forking: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    case 0:
+        execlp(ui_update_data->term_cmd,
+               ui_update_data->term_cmd,
+               "-e", ui_update_data->diff_tool, path_src, path_dst,
+               (char *)NULL);
+        _exit(1);
+    default:
+        break;
     }
+    // clang-format on
+
+    free(path_src);
+    free(path_dst);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     if (ui_update_data->filepath) {
