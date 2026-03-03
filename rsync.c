@@ -346,7 +346,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
         char new_full[MAX_PATH_LENGTH];
         char new_name[MAX_PATH_LENGTH];
         struct stat st;
-        int32 changed = 0;
+        bool changed = false;
         int64 j = 0;
         int64 k = 0;
         int64 name_len = strlen64(d_name);
@@ -396,7 +396,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
 
                 j += replace_len;
                 k += strlen64(replacements[replacement_index][0]);
-                changed = 1;
+                changed = true;
             } else {
                 int64 remaining = name_len - k;
                 memcpy64(&new_name[j], &d_name[k], remaining);
