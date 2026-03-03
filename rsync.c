@@ -871,7 +871,7 @@ sync_worker(void *user_data) {
     free(esc_dst);
 
     {
-        char log_cmd[8192];
+        char *log_cmd = xmalloc(MAX_COMMAND_LENGTH*2);
         int32 i = 0;
         int32 j = 0;
         int32 line_len = 0;
@@ -902,6 +902,7 @@ sync_worker(void *user_data) {
         }
         log_cmd[j] = '\0';
         dispatch_log("+ %s\n", log_cmd);
+        free(log_cmd);
     }
 
     if (pipe(pipe_output) < 0) {
