@@ -288,6 +288,21 @@ fix_fs_recursive(char *base_path, char *relative_path) {
     int32 count = 0;
     int32 capacity = 1024;
 
+    char *replacements[][2] = {
+        {"=>", "_equal_arrow_in_filename_"},
+        {"->", "_symlink_arrow_in_filename_"},
+        {"\\", "_backslash_in_filename_"},
+        {"\n", "_newline_in_filename_"},
+        {"\"", "_double_quote_in_filename_"},
+        {"\'", "_single_quote_in_filename_"},
+        {"<", "_less_than_in_filename_"},
+        {">", "_greater_than_in_filename_"},
+        {":", "_colon_in_filename_"},
+        {"|", "_pipe_in_filename_"},
+        {"?", "_question_mark_in_filename_"},
+        {"*", "_asterisk_in_filename_"},
+    };
+
     if (cecup.cancel_sync) {
         return;
     }
@@ -323,21 +338,6 @@ fix_fs_recursive(char *base_path, char *relative_path) {
     }
 
     closedir(dir);
-
-    char *replacements[][2] = {
-        {"=>", "_equal_arrow_in_filename_"},
-        {"->", "_symlink_arrow_in_filename_"},
-        {"\\", "_backslash_in_filename_"},
-        {"\n", "_newline_in_filename_"},
-        {"\"", "_double_quote_in_filename_"},
-        {"\'", "_single_quote_in_filename_"},
-        {"<", "_less_than_in_filename_"},
-        {">", "_greater_than_in_filename_"},
-        {":", "_colon_in_filename_"},
-        {"|", "_pipe_in_filename_"},
-        {"?", "_question_mark_in_filename_"},
-        {"*", "_asterisk_in_filename_"},
-    };
 
     for (int32 i = 0; i < count; i += 1) {
         char *d_name = name_list[i];
