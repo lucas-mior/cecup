@@ -711,8 +711,8 @@ bulk_sync_worker(void *user_data) {
                 }
             }
 
-            XCLOSE(&pipe_output[0]);
-            XCLOSE(&pipe_error[0]);
+            XCLOSE(&pipe_output[0], "pipe_output");
+            XCLOSE(&pipe_error[0], "pipe_error");
             if (waitpid(child_pid, NULL, 0) < 0) {
                 dispatch_log_error("Error waiting for child: %s.\n",
                                    strerror(errno));
