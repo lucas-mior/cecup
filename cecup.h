@@ -125,8 +125,11 @@ enum CecupColumn : int {
 
 typedef struct CecupRow {
     int32 selected;
+
     enum CecupAction src_action;
     enum CecupAction dst_action;
+    enum CecupReason reason;
+
     char *src_path;
     int64 src_path_len;
     char *dst_path;
@@ -137,9 +140,9 @@ typedef struct CecupRow {
     int64 size_raw;
     char mtime_text[32];
     int64 mtime_raw;
+
     char *src_color;
     char *dst_color;
-    enum CecupReason reason;
 } CecupRow;
 
 static struct {
