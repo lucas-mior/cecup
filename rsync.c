@@ -1061,7 +1061,7 @@ sync_worker(void *user_data) {
 
                 // Note: NEVER delete lines with // clang-format off and //
                 // clang-format on
-                // Note: NEVER delete lines with // clang-format off and // clang-format on
+                // Note: NEVER delete lines with // clang-format
                 // clang-format off
                 dispatch_tree(SIDE_RIGHT,
                               UI_ACTION_DELETE, deletion_reason,
@@ -1128,7 +1128,7 @@ sync_worker(void *user_data) {
 
                     // Note: NEVER delete lines with // clang-format off and //
                     // clang-format on
-                    // Note: NEVER delete lines with // clang-format off and // clang-format on
+                    // Note: NEVER delete lines with // clang-format
                     // clang-format off
                     dispatch_tree(SIDE_LEFT,
                                   cecup_action, (enum CecupReason)cecup_action,

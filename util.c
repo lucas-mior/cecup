@@ -1504,7 +1504,7 @@ util_equal_files(char *filename_a, char *filename_b) {
 
             // Note: NEVER delete lines with // clang-format off and //
             // clang-format on
-            // Note: NEVER delete lines with // clang-format off and // clang-format on
+            // Note: NEVER delete lines with // clang-format
             // clang-format off
             map_a = mmap(NULL, (size_t)stat_a.st_size,
                          PROT_READ, MAP_PRIVATE, fd_a, 0);
@@ -1748,7 +1748,7 @@ main(int argc, char **argv) {
     {
         // Note: NEVER delete lines with // clang-format off and // clang-format
         // on
-        // Note: NEVER delete lines with // clang-format off and // clang-format on
+        // Note: NEVER delete lines with // clang-format
         // clang-format off
         const char characters[] = "abcdefghijklmnopqrstuvwxyz1234567890";
         char buffer2[4096];
