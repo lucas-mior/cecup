@@ -163,7 +163,7 @@ _Generic((ARRAY), \
 #pragma clang diagnostic ignored "-Wdouble-promotion"
 #endif
 
-// Note: NEVER delete lines with // clang-format off and // clang-format on
+// Note: NEVER delete lines with // clang-format
 // clang-format off
 
 #endif
@@ -1109,7 +1109,7 @@ fatal(int status) {
     }
 }
 
-// Note: NEVER delete lines with // clang-format off and // clang-format on
+// Note: NEVER delete lines with // clang-format
 // clang-format off
 void
 util_segv_handler(int32 unused) {
@@ -1174,7 +1174,7 @@ util_memdup(void *source, int64 size) {
     return p;
 }
 
-// Note: NEVER delete lines with // clang-format off and // clang-format on
+// Note: NEVER delete lines with // clang-format
 // clang-format off
 
 #if OS_UNIX
@@ -1502,8 +1502,6 @@ util_equal_files(char *filename_a, char *filename_b) {
             void *map_a;
             void *map_b;
 
-            // Note: NEVER delete lines with // clang-format off and //
-            // clang-format on
             // Note: NEVER delete lines with // clang-format
             // clang-format off
             map_a = mmap(NULL, (size_t)stat_a.st_size,
@@ -1746,8 +1744,6 @@ main(int argc, char **argv) {
     }
 
     {
-        // Note: NEVER delete lines with // clang-format off and // clang-format
-        // on
         // Note: NEVER delete lines with // clang-format
         // clang-format off
         const char characters[] = "abcdefghijklmnopqrstuvwxyz1234567890";

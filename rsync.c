@@ -166,7 +166,7 @@ dispatch_progress(enum DataType type, double fraction) {
     return;
 }
 
-// Note: NEVER delete lines with // clang-format off and // clang-format on
+// Note: NEVER delete lines with // clang-format
 // clang-format off
 static void
 dispatch_tree(int32 side,
@@ -1059,8 +1059,6 @@ sync_worker(void *user_data) {
                     deletion_reason = UI_REASON_MISSING;
                 }
 
-                // Note: NEVER delete lines with // clang-format off and //
-                // clang-format on
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
                 dispatch_tree(SIDE_RIGHT,
@@ -1126,8 +1124,6 @@ sync_worker(void *user_data) {
                         mt_path_val = (int64)st_path_val.st_mtime;
                     }
 
-                    // Note: NEVER delete lines with // clang-format off and //
-                    // clang-format on
                     // Note: NEVER delete lines with // clang-format
                     // clang-format off
                     dispatch_tree(SIDE_LEFT,
