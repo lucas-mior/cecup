@@ -268,12 +268,12 @@ count_files_recursive(char *base_path, char *relative_path) {
     }
 
     if (errno) {
-        dispatch_log_error("Error readdir in %s: %s.\n", full_path,
-                           strerror(errno));
+        dispatch_log_error("Error reading directory entry in %s: %s.\n",
+                           full_path, strerror(errno));
     }
 
     if (closedir(dir) < 0) {
-        dispatch_log_error("Error closedir %s: %s.\n", full_path,
+        dispatch_log_error("Error closing directory %s: %s.\n", full_path,
                            strerror(errno));
     }
     return count;
