@@ -77,20 +77,6 @@ enum RsyncCharAttribute {
 #define SIDE_RIGHT 1
 #define BATCH_SIZE 256
 
-typedef struct EqualScannerData {
-    char src_path[MAX_PATH_LENGTH];
-    int64 src_path_len;
-    char dst_path[MAX_PATH_LENGTH];
-    int64 dst_path_len;
-    int64 total_files;
-    int64 processed_files;
-} EqualScannerData;
-
-typedef struct RowBatch {
-    UIUpdateData items[BATCH_SIZE];
-    int32 count;
-} RowBatch;
-
 static void
 dispatch_log(char *format, ...) {
     UIUpdateData *data;
@@ -159,8 +145,6 @@ dispatch_progress(enum DataType type, double fraction) {
 
     if (type == DATA_TYPE_PROGRESS_RSYNC) {
         index = 1;
-    } else if (type == DATA_TYPE_PROGRESS_EQUAL) {
-        index = 2;
     } else if (type == DATA_TYPE_PROGRESS_PREVIEW) {
         index = 3;
     }
@@ -219,30 +203,6 @@ dispatch_tree(int32 side,
     data->size = size;
     data->mtime = mtime;
     g_idle_add(update_ui_handler, data);
-    return;
-}
-
-static void
-flush_batch(RowBatch *batch) {
-    UIUpdateData *data;
-
-    if (batch->count == 0) {
-        return;
-    }
-
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-    memset64(data, 0, SIZEOF(UIUpdateData));
-
-    data->batch = xarena_push(cecup.ui_arena,
-                              ALIGN16(batch->count*SIZEOF(UIUpdateData)));
-    memcpy64(data->batch, batch->items, batch->count*SIZEOF(UIUpdateData));
-    data->batch_count = batch->count;
-    g_mutex_unlock(&cecup.ui_arena_mutex);
-
-    data->type = DATA_TYPE_TREE_ROW_BATCH;
-    g_idle_add(update_ui_handler, data);
-    batch->count = 0;
     return;
 }
 
@@ -316,140 +276,6 @@ count_files_recursive(char *base_path, char *relative_path) {
                            strerror(errno));
     }
     return count;
-}
-
-static void
-find_equal_files(EqualScannerData *equal_scanner_data, char *relative_path,
-                 RowBatch *batch) {
-    DIR *dir;
-    struct dirent *entry;
-    char src_full[MAX_PATH_LENGTH];
-    char dst_full[MAX_PATH_LENGTH];
-
-    if (cecup.cancel_sync) {
-        return;
-    }
-
-    if (relative_path[0] == '\0') {
-        SNPRINTF(src_full, "%s", equal_scanner_data->src_path);
-    } else {
-        SNPRINTF(src_full, "%s/%s", equal_scanner_data->src_path,
-                 relative_path);
-    }
-
-    if ((dir = opendir(src_full)) == NULL) {
-        dispatch_log_error("Error opendir %s: %s.\n", src_full,
-                           strerror(errno));
-        return;
-    }
-
-    errno = 0;
-    while ((entry = readdir(dir))) {
-        struct stat stat_srt;
-        struct stat stat_dst;
-        char sub_rel[MAX_PATH_LENGTH];
-        char *name;
-
-        if (cecup.cancel_sync) {
-            break;
-        }
-
-        name = entry->d_name;
-        if (name[0] == '.'
-            && (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'))) {
-            continue;
-        }
-
-        if (relative_path[0] != '\0') {
-            SNPRINTF(sub_rel, "%s/%s", relative_path, name);
-        } else {
-            SNPRINTF(sub_rel, "%s", name);
-        }
-
-        SNPRINTF(src_full, "%s/%s", equal_scanner_data->src_path, sub_rel);
-        SNPRINTF(dst_full, "%s/%s", equal_scanner_data->dst_path, sub_rel);
-
-        if (lstat(src_full, &stat_srt) != 0) {
-            dispatch_log_error("Error lstat %s: %s.\n", src_full,
-                               strerror(errno));
-            continue;
-        }
-
-        if (S_ISDIR(stat_srt.st_mode)) {
-            find_equal_files(equal_scanner_data, sub_rel, batch);
-            continue;
-        }
-
-        if (S_ISREG(stat_srt.st_mode) || S_ISLNK(stat_srt.st_mode)) {
-            equal_scanner_data->processed_files += 1;
-            if (equal_scanner_data->total_files > 0) {
-                dispatch_progress(DATA_TYPE_PROGRESS_EQUAL,
-                                  (double)(equal_scanner_data->processed_files
-                                           / equal_scanner_data->total_files));
-            }
-
-            if (lstat(dst_full, &stat_dst) == 0) {
-                if (stat_srt.st_size == stat_dst.st_size
-                    && stat_srt.st_mtime == stat_dst.st_mtime) {
-                    UIUpdateData *item;
-                    int64 path_len = strlen64(sub_rel);
-
-                    if (batch->count >= BATCH_SIZE) {
-                        flush_batch(batch);
-                    }
-
-                    item = &batch->items[batch->count];
-                    memset64(item, 0, SIZEOF(UIUpdateData));
-
-                    g_mutex_lock(&cecup.ui_arena_mutex);
-                    item->filepath_length = path_len;
-                    g_mutex_lock(&cecup.row_arena_mutex);
-                    item->filepath
-                        = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
-                    memcpy64(item->filepath, sub_rel, path_len + 1);
-                    g_mutex_unlock(&cecup.row_arena_mutex);
-                    g_mutex_unlock(&cecup.ui_arena_mutex);
-
-                    item->side = SIDE_LEFT;
-                    item->action = UI_ACTION_EQUAL;
-                    item->reason = UI_REASON_EQUAL;
-                    item->size = stat_srt.st_size;
-                    item->mtime = (int64)stat_srt.st_mtime;
-                    batch->count += 1;
-                }
-            }
-        }
-        errno = 0;
-    }
-
-    if (errno != 0) {
-        dispatch_log_error("Error readdir in %s: %s.\n", src_full,
-                           strerror(errno));
-    }
-
-    if (closedir(dir) < 0) {
-        dispatch_log_error("Error closedir %s: %s.\n", src_full,
-                           strerror(errno));
-    }
-    return;
-}
-
-static void *
-equal_scanner_worker(void *user_data) {
-    EqualScannerData *data;
-    RowBatch batch;
-
-    data = user_data;
-    batch.count = 0;
-    data->total_files = count_files_recursive(data->src_path, "");
-    find_equal_files(data, "", &batch);
-    flush_batch(&batch);
-    dispatch_progress(DATA_TYPE_PROGRESS_EQUAL, 1.0);
-
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
-    return NULL;
 }
 
 static void
@@ -952,7 +778,6 @@ bulk_sync_worker(void *user_data) {
 static void *
 sync_worker(void *user_data) {
     ThreadData *thread_data = user_data;
-    GThread *scanner_thread = NULL;
     int64 total_files_preview = 0;
     int64 processed_files_preview = 0;
     char exclude_arg[MAX_PATH_LENGTH];
@@ -1016,26 +841,6 @@ sync_worker(void *user_data) {
 
     if (cecup.cancel_sync) {
         goto finalize;
-    }
-
-    if (thread_data->is_preview && thread_data->scan_equal) {
-        EqualScannerData *equal_scanner_data;
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        equal_scanner_data
-            = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(EqualScannerData)));
-        memset64(equal_scanner_data, 0, SIZEOF(EqualScannerData));
-        g_mutex_unlock(&cecup.ui_arena_mutex);
-
-        strncpy(equal_scanner_data->src_path, thread_data->src_path,
-                MAX_PATH_LENGTH - 1);
-        equal_scanner_data->src_path_len
-            = strlen64(equal_scanner_data->src_path);
-        strncpy(equal_scanner_data->dst_path, thread_data->dst_path,
-                MAX_PATH_LENGTH - 1);
-        equal_scanner_data->dst_path_len
-            = strlen64(equal_scanner_data->dst_path);
-        scanner_thread = g_thread_new("equal_scanner", equal_scanner_worker,
-                                      equal_scanner_data);
     }
 
     if (access(cecup.ignore_path, F_OK) != -1) {
@@ -1412,10 +1217,6 @@ sync_worker(void *user_data) {
 
     XCLOSE(&pipe_output[0]);
     XCLOSE(&pipe_error[0]);
-
-    if (scanner_thread) {
-        g_thread_join(scanner_thread);
-    }
 
 finalize:
     dispatch_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);

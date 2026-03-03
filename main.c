@@ -206,12 +206,6 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(
         cecup.check_fs,
         _("Prevent copying if original and backup are on the same disk"));
-    cecup.check_equal
-        = gtk_check_button_new_with_label(_("Compare identical files"));
-    gtk_widget_set_tooltip_text(
-        cecup.check_equal,
-        _("Detect files that are already the same (only for reference)"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.check_equal), TRUE);
     cecup.delete_excluded
         = gtk_check_button_new_with_label(_("Remove ignored items"));
     gtk_widget_set_tooltip_text(
@@ -232,8 +226,6 @@ main(int32 argc, char *argv[]) {
 
     // clang-format off
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_fs,
-                       EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
-    gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_equal,
                        EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_excluded,
                        EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
@@ -260,9 +252,6 @@ main(int32 argc, char *argv[]) {
     cecup.progress_rsync = gtk_progress_bar_new();
     gtk_widget_set_tooltip_text(cecup.progress_rsync,
                                 _("Rsync transfer progress"));
-    cecup.progress_equal = gtk_progress_bar_new();
-    gtk_widget_set_tooltip_text(cecup.progress_equal,
-                                _("Equality scanner progress"));
     cecup.progress_preview = gtk_progress_bar_new();
     gtk_widget_set_tooltip_text(cecup.progress_preview,
                                 _("Preview analysis progress"));
@@ -271,10 +260,6 @@ main(int32 argc, char *argv[]) {
                                    TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_rsync),
                               _("Copying files"));
-    gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_equal),
-                                   TRUE);
-    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_equal),
-                              _("Comparing folders"));
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_preview),
                                    TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_preview),
@@ -282,8 +267,6 @@ main(int32 argc, char *argv[]) {
 
     // clang-format off
     gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_rsync,
-                       EXPAND_FALSE, FILL_FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_equal,
                        EXPAND_FALSE, FILL_FALSE, 0);
     gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_preview,
                        EXPAND_FALSE, FILL_FALSE, 0);
@@ -535,8 +518,6 @@ main(int32 argc, char *argv[]) {
     g_signal_connect(cecup.dst_entry, "changed",
                      G_CALLBACK(on_config_changed), NULL);
     g_signal_connect(cecup.check_fs, "toggled",
-                     G_CALLBACK(on_preview_setting_toggled), NULL);
-    g_signal_connect(cecup.check_equal, "toggled",
                      G_CALLBACK(on_preview_setting_toggled), NULL);
     g_signal_connect(cecup.delete_excluded, "toggled",
                      G_CALLBACK(on_delete_excluded_toggled), NULL);

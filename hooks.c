@@ -824,7 +824,6 @@ on_reset_clicked(GtkWidget *b, void *data) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.check_fs), FALSE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.check_equal), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.delete_excluded),
                                  FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.delete_after), FALSE);
@@ -869,8 +868,6 @@ on_preview_clicked(GtkWidget *b, void *data) {
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     thread_data->is_preview = 1;
-    thread_data->scan_equal
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_equal));
     thread_data->check_different_fs
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
     thread_data->delete_excluded = gtk_toggle_button_get_active(
@@ -1051,7 +1048,6 @@ on_sync_clicked(GtkWidget *b, void *data) {
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         thread_data->is_preview = 0;
-        thread_data->scan_equal = 0;
         thread_data->check_different_fs
             = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
         thread_data->delete_after = gtk_toggle_button_get_active(
@@ -1271,10 +1267,13 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             char directory_label[MAX_PATH_LENGTH + 64];
             char *extension_ptr;
             char *directory_ptr;
+            char *name = basename(ui_update_data->filepath);
+            int64 len = strlen64(name);
 
             gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
 
-            if ((extension_ptr = strrchr(ui_update_data->filepath, '.'))) {
+            if ((extension_ptr = memchr(name, '.', len))) {
+                extension_ptr = strrchr(extension_ptr, '.');
                 SNPRINTF(extension_label, _("by extension (*%s)"),
                          extension_ptr);
             } else {
@@ -1664,24 +1663,10 @@ update_ui_handler(void *user_data) {
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_rsync),
                                       data->fraction);
         break;
-    case DATA_TYPE_PROGRESS_EQUAL:
-        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_equal),
-                                      data->fraction);
-        break;
     case DATA_TYPE_PROGRESS_PREVIEW:
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       data->fraction);
         break;
-    case DATA_TYPE_TREE_ROW_BATCH: {
-        for (int32 i = 0; i < data->batch_count; i += 1) {
-            add_row_logic(&data->batch[i]);
-        }
-        if (cecup.refresh_id == 0) {
-            cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
-                                             refresh_ui_timeout_callback, NULL);
-        }
-        break;
-    }
     case DATA_TYPE_TREE_ROW: {
         add_row_logic(data);
         if (cecup.refresh_id == 0) {
@@ -1741,8 +1726,6 @@ update_ui_handler(void *user_data) {
         gtk_list_store_clear(cecup.store);
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_rsync),
                                       0.0);
-        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_equal),
-                                      0.0);
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       0.0);
         break;
@@ -1751,9 +1734,6 @@ update_ui_handler(void *user_data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    if (data->type == DATA_TYPE_TREE_ROW_BATCH) {
-        arena_pop(cecup.ui_arena, data->batch);
-    }
     if (data->message) {
         arena_pop(cecup.ui_arena, data->message);
     }

@@ -158,7 +158,6 @@ static struct {
     GtkWidget *fix_button;
 
     GtkWidget *check_fs;
-    GtkWidget *check_equal;
     GtkWidget *delete_excluded;
     GtkWidget *delete_after;
     
@@ -180,7 +179,6 @@ static struct {
     GtkWidget *stats_label;
 
     GtkWidget *progress_rsync;
-    GtkWidget *progress_equal;
     GtkWidget *progress_preview;
 
     CecupRow **rows;
@@ -207,25 +205,20 @@ typedef struct ThreadData {
     bool check_different_fs;
     bool delete_excluded;
     bool delete_after;
-    bool scan_equal;
 } ThreadData;
 
 enum DataType {
     DATA_TYPE_LOG,
     DATA_TYPE_LOG_ERROR,
     DATA_TYPE_TREE_ROW,
-    DATA_TYPE_TREE_ROW_BATCH,
     DATA_TYPE_REMOVE_TREE_ROW,
     DATA_TYPE_ENABLE_BUTTONS,
     DATA_TYPE_CLEAR_TREES,
     DATA_TYPE_PROGRESS_RSYNC,
-    DATA_TYPE_PROGRESS_EQUAL,
     DATA_TYPE_PROGRESS_PREVIEW
 };
 
 typedef struct UIUpdateData {
-    struct UIUpdateData *batch;
-    int32 batch_count;
     enum DataType type;
     enum CecupAction action;
     enum CecupReason reason;
