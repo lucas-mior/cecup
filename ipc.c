@@ -125,10 +125,10 @@ dispatch_progress(enum DataType type, double fraction) {
 // Note: NEVER delete lines with // clang-format
 // clang-format off
 static void
-dispatch_tree(int32 side,
-              enum CecupAction action, enum CecupReason reason,
-              char *path, char *link_target,
-              int64 size, int64 mtime) {
+ipc_dispatch_tree(int32 side,
+                  enum CecupAction action, enum CecupReason reason,
+                  char *path, char *link_target,
+                  int64 size, int64 mtime) {
     // clang-format on
     Message *data;
     int64 target_len;

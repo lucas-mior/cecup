@@ -933,10 +933,10 @@ work_rsync(void *user_data) {
 
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
-                dispatch_tree(SIDE_RIGHT,
-                              UI_ACTION_DELETE, deletion_reason,
-                              relative_path, NULL,
-                              size_val, time_val);
+                ipc_dispatch_tree(SIDE_RIGHT,
+                                  UI_ACTION_DELETE, deletion_reason,
+                                  relative_path, NULL,
+                                  size_val, time_val);
                 // clang-format on
             } else if ((space_pos = strchr(buffer_output, ' '))) {
                 char type_char = buffer_output[0];
@@ -994,10 +994,10 @@ work_rsync(void *user_data) {
 
                     // Note: NEVER delete lines with // clang-format
                     // clang-format off
-                    dispatch_tree(SIDE_LEFT,
-                                  cecup_action, (enum CecupReason)cecup_action,
-                                  relative_path_entry, link_target,
-                                  sz_path_val, mt_path_val);
+                    ipc_dispatch_tree(SIDE_LEFT,
+                                      cecup_action, (enum CecupReason)cecup_action,
+                                      relative_path_entry, link_target,
+                                      sz_path_val, mt_path_val);
                     // clang-format on
 
                     processed_files_preview += 1;
