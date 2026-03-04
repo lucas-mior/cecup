@@ -345,7 +345,7 @@ work_fix_fs_worker(void *user_data) {
 }
 
 static void *
-work_bulk_sync_worker(void *user_data) {
+work_rsync_bulk(void *user_data) {
     GPtrArray *tasks = user_data;
     Message *ready;
 
@@ -659,7 +659,7 @@ work_bulk_sync_worker(void *user_data) {
 }
 
 static void *
-work_sync_worker(void *user_data) {
+work_rsync(void *user_data) {
     ThreadData *thread_data = user_data;
     int64 total_files_preview = 0;
     int64 processed_files_preview = 0;

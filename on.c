@@ -17,7 +17,7 @@ on_menu_apply(GtkWidget *m, void *data) {
         gtk_widget_set_sensitive(cecup.preview_button, FALSE);
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
         gtk_widget_set_sensitive(cecup.stop_button, TRUE);
-        g_thread_new("bulk_sync", work_bulk_sync_worker, tasks);
+        g_thread_new("bulk_sync", work_rsync_bulk, tasks);
     }
 
     free_update_data(message);
@@ -200,7 +200,7 @@ on_menu_delete(GtkWidget *m, void *data) {
             gtk_widget_set_sensitive(cecup.preview_button, FALSE);
             gtk_widget_set_sensitive(cecup.sync_button, FALSE);
             gtk_widget_set_sensitive(cecup.stop_button, TRUE);
-            g_thread_new("bulk_sync", work_bulk_sync_worker, tasks);
+            g_thread_new("bulk_sync", work_rsync_bulk, tasks);
         } else {
             free_task_list(tasks);
         }
@@ -451,7 +451,7 @@ on_preview_clicked(GtkWidget *b, void *data) {
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.delete_after));
     strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
     strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
-    g_thread_new("worker", work_sync_worker, thread_data);
+    g_thread_new("worker", work_rsync, thread_data);
     return;
 }
 
@@ -628,7 +628,7 @@ on_sync_clicked(GtkWidget *b, void *data) {
             GTK_TOGGLE_BUTTON(cecup.delete_after));
         strncpy(thread_data->src_path, path_src, MAX_PATH_LENGTH - 1);
         strncpy(thread_data->dst_path, path_dst, MAX_PATH_LENGTH - 1);
-        g_thread_new("worker", work_sync_worker, thread_data);
+        g_thread_new("worker", work_rsync, thread_data);
     }
     gtk_widget_destroy(dialog);
     return;
