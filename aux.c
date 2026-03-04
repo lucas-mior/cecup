@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined(HOOKS_C)
-#define HOOKS_C
+#if !defined(AUX_C)
+#define AUX_C
 
 #include <gtk/gtk.h>
 #include <stdlib.h>
@@ -25,9 +25,9 @@
 #include "util.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
-#define TESTING_hooks 1
-#elif !defined(TESTING_hooks)
-#define TESTING_hooks 0
+#define TESTING_aux 1
+#elif !defined(TESTING_aux)
+#define TESTING_aux 0
 #endif
 
 #define UI_INTERVAL_MS 100
@@ -594,7 +594,7 @@ update_ui_handler(void *user_data) {
     return G_SOURCE_REMOVE;
 }
 
-#if TESTING_hooks
+#if TESTING_aux
 #include <assert.h>
 #include <string.h>
 
@@ -606,4 +606,4 @@ main(void) {
 
 #endif
 
-#endif /* HOOKS_C */
+#endif /* AUX_C */

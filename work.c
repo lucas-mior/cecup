@@ -32,7 +32,7 @@
 #include "cecup.h"
 #include "util.c"
 #include "ipc.c"
-#include "hooks.c"
+#include "aux.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_work 1
