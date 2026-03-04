@@ -151,7 +151,7 @@ work_count_files_recursive(char *base_path, char *relative_path) {
 }
 
 static void
-fix_fs_recursive(char *base_path, char *relative_path) {
+work_fix_fs_recursive(char *base_path, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
     char full_path[MAX_PATH_LENGTH];
@@ -310,7 +310,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
         }
 
         if (S_ISDIR(st.st_mode)) {
-            fix_fs_recursive(base_path, sub_rel);
+            work_fix_fs_recursive(base_path, sub_rel);
         }
         free(d_name);
     }
@@ -325,9 +325,9 @@ fix_fs_worker(void *user_data) {
     Message *ready;
 
     dispatch_log("Checking for problematic names in the original folder...\n");
-    fix_fs_recursive(thread_data->src_path, "");
+    work_fix_fs_recursive(thread_data->src_path, "");
     dispatch_log("Checking for problematic names in the backup folder...\n");
-    fix_fs_recursive(thread_data->dst_path, "");
+    work_fix_fs_recursive(thread_data->dst_path, "");
     dispatch_log("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
