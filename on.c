@@ -293,10 +293,9 @@ on_menu_ignore_ext(GtkWidget *m, void *data) {
             break;
         }
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task;
+            Message *task = tasks->items[i];
             char *ext;
 
-            task = tasks->items[i];
             if ((ext = strrchr(task->filepath, '.')) != NULL) {
                 fprintf(fp, "\n*%s", ext);
             }
