@@ -22,7 +22,6 @@
 
 #include "util.c"
 #include "on.c"
-#include "hooks.c"
 #include "i18n.h"
 
 #define BUTTON_PADDING 5
