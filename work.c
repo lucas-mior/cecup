@@ -34,9 +34,9 @@
 #include "ipc.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
-#define TESTING_rsync 1
-#elif !defined(TESTING_rsync)
-#define TESTING_rsync 0
+#define TESTING_work 1
+#elif !defined(TESTING_work)
+#define TESTING_work 0
 #endif
 
 enum RsyncCharAction {
@@ -1159,7 +1159,7 @@ diff_worker(void *user_data) {
     return NULL;
 }
 
-#if TESTING_rsync
+#if TESTING_work
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
