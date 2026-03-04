@@ -34,12 +34,11 @@ on_menu_open(GtkWidget *m, void *data) {
     if ((tasks = get_target_tasks(message->side, message->filepath,
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task;
+            Message *task = tasks->items[i];
             char full_path[MAX_PATH_LENGTH];
             char *base_path;
             pid_t child;
 
-            task = tasks->items[i];
             if (message->side == 0) {
                 base_path = cecup.src_base;
             } else {
@@ -77,12 +76,11 @@ on_menu_open_dir(GtkWidget *m, void *data) {
     if ((tasks = get_target_tasks(message->side, message->filepath,
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task;
+            Message *task = tasks->items[i];
             char full_path[MAX_PATH_LENGTH];
             char *dir_path;
             char *base_path;
 
-            task = tasks->items[i];
             if (message->side == 0) {
                 base_path = cecup.src_base;
             } else {
@@ -130,13 +128,11 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     if ((tasks = get_target_tasks(message->side, message->filepath,
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task;
+            Message *task = tasks->items[i];
             int64 path_length;
             char path_full[MAX_PATH_LENGTH];
             char *path;
             char *path_type = g_object_get_data(G_OBJECT(m), "path_type");
-
-            task = tasks->items[i];
 
             if (!strcmp(path_type, "absolute")) {
                 char path_relative[MAX_PATH_LENGTH];
@@ -327,10 +323,9 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
             break;
         }
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task;
+            Message *task = tasks->items[i];
             char *dir;
 
-            task = tasks->items[i];
             if ((dir = g_path_get_dirname(task->filepath)) != NULL) {
                 if (strcmp(dir, ".") != 0) {
                     fprintf(fp, "\n/%s/", dir);
