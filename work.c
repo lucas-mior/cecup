@@ -345,7 +345,7 @@ work_fix_fs_worker(void *user_data) {
 }
 
 static void *
-bulk_sync_worker(void *user_data) {
+work_bulk_sync_worker(void *user_data) {
     GPtrArray *tasks = user_data;
     Message *ready;
 

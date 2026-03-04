@@ -17,7 +17,7 @@ on_menu_apply(GtkWidget *m, void *data) {
         gtk_widget_set_sensitive(cecup.preview_button, FALSE);
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
         gtk_widget_set_sensitive(cecup.stop_button, TRUE);
-        g_thread_new("bulk_sync", bulk_sync_worker, tasks);
+        g_thread_new("bulk_sync", work_bulk_sync_worker, tasks);
     }
 
     free_update_data(message);
@@ -200,7 +200,7 @@ on_menu_delete(GtkWidget *m, void *data) {
             gtk_widget_set_sensitive(cecup.preview_button, FALSE);
             gtk_widget_set_sensitive(cecup.sync_button, FALSE);
             gtk_widget_set_sensitive(cecup.stop_button, TRUE);
-            g_thread_new("bulk_sync", bulk_sync_worker, tasks);
+            g_thread_new("bulk_sync", work_bulk_sync_worker, tasks);
         } else {
             free_task_list(tasks);
         }
