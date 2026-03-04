@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined(RSYNC_C)
-#define RSYNC_C
+#if !defined(WORK_C)
+#define WORK_C
 
 #include <gtk/gtk.h>
 #include <ctype.h>
@@ -1315,4 +1315,4 @@ main(void) {
 
 #endif
 
-#endif /* RSYNC_C */
+#endif /* WORK_C */

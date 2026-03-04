@@ -23,7 +23,7 @@
 #include "i18n.h"
 #include "cecup.h"
 #include "util.c"
-#include "rsync.c"
+#include "work.c"
 #include "config.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
