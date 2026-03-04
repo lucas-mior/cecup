@@ -218,33 +218,54 @@ on_menu_diff(GtkWidget *m, void *data) {
     TaskList *tasks;
     char *diff_tool;
     char *term_cmd;
-    int64 diff_len;
-    int64 term_len;
 
     (void)m;
     diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.diff_entry));
     term_cmd = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.term_entry));
-    diff_len = strlen64(diff_tool);
-    term_len = strlen64(term_cmd);
 
     if ((tasks = get_target_tasks(message->side, message->filepath,
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task;
+            Message *task = tasks->items[i];
+            char *path_src;
+            char *path_dst;
+            int64 size_dst;
+            int64 size_src;
 
-            task = tasks->items[i];
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            task->diff_tool_len = diff_len;
-            task->diff_tool
-                = xarena_push(cecup.ui_arena, ALIGN16(diff_len + 1));
-            memcpy64(task->diff_tool, diff_tool, diff_len + 1);
+            switch (fork()) {
+            case -1:
+                ipc_dispatch_log_error("Error forking: %s.\n", strerror(errno));
+                break;
+            case 0:
+                size_src
+                    = strlen64(cecup.src_base) + strlen64(task->filepath) + 2;
+                size_dst
+                    = strlen64(cecup.dst_base) + strlen64(task->filepath) + 2;
 
-            task->term_cmd_len = term_len;
-            task->term_cmd = xarena_push(cecup.ui_arena, ALIGN16(term_len + 1));
-            memcpy64(task->term_cmd, term_cmd, term_len + 1);
-            g_mutex_unlock(&cecup.ui_arena_mutex);
+                path_src = xmalloc(size_src);
+                path_dst = xmalloc(size_dst);
 
-            g_thread_new("diff_worker", work_diff_worker, task);
+                snprintf2(path_src, size_src, "%s/%s", cecup.src_base,
+                          task->filepath);
+                snprintf2(path_dst, size_dst, "%s/%s", cecup.dst_base,
+                          task->filepath);
+
+                {
+                    char buffer[MAX_PATH_LENGTH*2];
+                    char *diff_command[] = {
+                        term_cmd, "-e", diff_tool, path_src, path_dst, NULL,
+                    };
+
+                    execvp(diff_command[0], diff_command);
+                    STRING_FROM_ARRAY(buffer, " ", diff_command,
+                                      LENGTH(diff_command));
+                    error("Error executing\n%s\n%s.\n", buffer,
+                          strerror(errno));
+                    _exit(1);
+                }
+            default:
+                break;
+            }
         }
 
         free(tasks);

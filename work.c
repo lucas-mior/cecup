@@ -1101,61 +1101,6 @@ work_rsync_bulk(void *user_data) {
     return NULL;
 }
 
-static void *
-work_diff_worker(void *user_data) {
-    Message *message;
-    pid_t child;
-    char *path_src;
-    char *path_dst;
-    int64 size_dst;
-    int64 size_src;
-
-    message = user_data;
-    size_src = strlen64(cecup.src_base) + strlen64(message->filepath) + 2;
-    size_dst = strlen64(cecup.dst_base) + strlen64(message->filepath) + 2;
-
-    path_src = xmalloc(size_src);
-    path_dst = xmalloc(size_dst);
-
-    snprintf2(path_src, size_src, "%s/%s", cecup.src_base, message->filepath);
-    snprintf2(path_dst, size_dst, "%s/%s", cecup.dst_base, message->filepath);
-
-    switch (child = fork()) {
-    case -1:
-        error("Error forking: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    case 0:
-        execlp(message->term_cmd, message->term_cmd, "-e", message->diff_tool,
-               path_src, path_dst, (char *)NULL);
-        _exit(1);
-    default:
-        break;
-    }
-
-    free(path_src);
-    free(path_dst);
-
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    if (message->link_target) {
-        arena_pop(cecup.ui_arena, message->link_target);
-    }
-    if (message->message) {
-        arena_pop(cecup.ui_arena, message->message);
-    }
-    if (message->diff_tool) {
-        arena_pop(cecup.ui_arena, message->diff_tool);
-    }
-    if (message->term_cmd) {
-        arena_pop(cecup.ui_arena, message->term_cmd);
-    }
-    if (message->filepath) {
-        arena_pop(cecup.ui_arena, message->filepath);
-    }
-    arena_pop(cecup.ui_arena, message);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
-    return NULL;
-}
-
 #if TESTING_work
 #include <assert.h>
 #include <string.h>
