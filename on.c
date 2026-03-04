@@ -816,45 +816,60 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         menu = gtk_menu_new();
 
         item_open = gtk_menu_item_new_with_label(_("📄 Open File"));
-        g_signal_connect(item_open, "activate", G_CALLBACK(on_menu_open),
-                         message);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_open);
-
         item_dir = gtk_menu_item_new_with_label(_("📂 Open Folder"));
-        g_signal_connect(item_dir, "activate", G_CALLBACK(on_menu_open_dir),
-                         message);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_dir);
-
+        item_apply = gtk_menu_item_new_with_label(_("⏯️ Apply"));
         item_copy_relative
             = gtk_menu_item_new_with_label(_("📋 Copy Relative Path"));
-        if (file_path == NULL) {
-            gtk_widget_set_sensitive(item_copy_relative, FALSE);
-        } else {
-            g_object_set_data(G_OBJECT(item_copy_relative), "path_type",
-                              "relative");
-            g_signal_connect(item_copy_relative, "activate",
-                             G_CALLBACK(on_menu_copy_path), message);
-        }
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_copy_relative);
-
         item_copy_absolute
             = gtk_menu_item_new_with_label(_("📍 Copy Full Path"));
-        if (file_path == NULL) {
-            gtk_widget_set_sensitive(item_copy_absolute, FALSE);
-        } else {
-            g_object_set_data(G_OBJECT(item_copy_absolute), "path_type",
-                              "absolute");
-            g_signal_connect(item_copy_absolute, "activate",
-                             G_CALLBACK(on_menu_copy_path), message);
-        }
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_copy_absolute);
+        item_ignore = gtk_menu_item_new_with_label(_("💤 Ignore..."));
+        item_diff = gtk_menu_item_new_with_label(_("🔍 Diff"));
+        item_delete = gtk_menu_item_new_with_label(_("🗑️ Delete"));
 
-        item_apply = gtk_menu_item_new_with_label(_("⏯️ Apply"));
         g_signal_connect(item_apply, "activate", G_CALLBACK(on_menu_apply),
                          message);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_apply);
 
-        item_ignore = gtk_menu_item_new_with_label(_("💤 Ignore..."));
+        if ((file_path == NULL) || (other_path == NULL)) {
+            gtk_widget_set_sensitive(item_diff, FALSE);
+        } else {
+            g_signal_connect(item_diff, "activate", G_CALLBACK(on_menu_diff),
+                             message);
+        }
+
+        if (file_path == NULL) {
+            gtk_widget_set_sensitive(item_open, FALSE);
+            gtk_widget_set_sensitive(item_dir, FALSE);
+            gtk_widget_set_sensitive(item_copy_relative, FALSE);
+            gtk_widget_set_sensitive(item_copy_absolute, FALSE);
+            gtk_widget_set_sensitive(item_delete, FALSE);
+        } else {
+            g_signal_connect(item_open, "activate", G_CALLBACK(on_menu_open),
+                             message);
+            g_signal_connect(item_dir, "activate", G_CALLBACK(on_menu_open_dir),
+                             message);
+
+            g_object_set_data(G_OBJECT(item_copy_relative), "path_type",
+                              "relative");
+            g_object_set_data(G_OBJECT(item_copy_absolute), "path_type",
+                              "absolute");
+
+            g_signal_connect(item_copy_relative, "activate",
+                             G_CALLBACK(on_menu_copy_path), message);
+            g_signal_connect(item_copy_absolute, "activate",
+                             G_CALLBACK(on_menu_copy_path), message);
+            g_signal_connect(item_delete, "activate",
+                             G_CALLBACK(on_menu_delete), message);
+        }
+
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_open);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_dir);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_copy_relative);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_copy_absolute);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_apply);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_diff);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_delete);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_ignore);
+
         {
             GtkWidget *sub = gtk_menu_new();
             GtkWidget *sub_ext;
@@ -896,27 +911,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                              G_CALLBACK(on_menu_ignore_dir), message);
             gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
         }
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_ignore);
-
-        item_diff = gtk_menu_item_new_with_label(_("🔍 Diff"));
-        if ((file_path == NULL) || (other_path == NULL)
-            || (action == UI_ACTION_HARDLINK)
-            || (action == UI_ACTION_SYMLINK)) {
-            gtk_widget_set_sensitive(item_diff, FALSE);
-        } else {
-            g_signal_connect(item_diff, "activate", G_CALLBACK(on_menu_diff),
-                             message);
-        }
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_diff);
-
-        item_delete = gtk_menu_item_new_with_label(_("🗑️ Delete"));
-        if (file_path == NULL) {
-            gtk_widget_set_sensitive(item_delete, FALSE);
-        } else {
-            g_signal_connect(item_delete, "activate",
-                             G_CALLBACK(on_menu_delete), message);
-        }
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_delete);
 
         gtk_widget_show_all(menu);
         gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
