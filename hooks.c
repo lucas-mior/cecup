@@ -23,9 +23,6 @@
 #include "i18n.h"
 #include "cecup.h"
 #include "util.c"
-#include "work.c"
-#include "config.c"
-#include "on.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_hooks 1
