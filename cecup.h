@@ -181,8 +181,8 @@ typedef struct Message {
 } Message;
 
 typedef struct TaskList {
-    Message **items;
     int32 count;
+    Message *items[];
 } TaskList;
 
 static struct {

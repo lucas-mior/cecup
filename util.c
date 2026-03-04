@@ -124,6 +124,11 @@ static void __attribute__((format(printf, 1, 2))) error(char *format, ...);
     strftime2(BUFFER, sizeof(BUFFER), FORMAT, TIME)
 #endif
 
+#define STRUCT_ARRAY_SIZE(struct_object, ArrayType, array_length) \
+    (uint32)(SIZEOF(*(struct_object)) + (array_length*SIZEOF(ArrayType)))
+
+#define SWAP(x, y) do { __typeof__(x) SWAP = x; x = y; y = SWAP; } while (0)
+
 #define STRING_FROM_ARRAY(BUFFER, SEP, ARRAY, LENGTH) \
 _Generic((ARRAY), \
     double *: string_from_doubles, \

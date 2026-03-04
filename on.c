@@ -247,7 +247,6 @@ on_menu_diff(GtkWidget *m, void *data) {
             g_thread_new("diff_worker", work_diff_worker, task);
         }
 
-        free(tasks->items);
         free(tasks);
     }
 

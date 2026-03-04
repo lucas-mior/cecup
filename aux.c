@@ -71,7 +71,6 @@ free_task_list(TaskList *tasks) {
     }
 
     g_mutex_unlock(&cecup.ui_arena_mutex);
-    free(tasks->items);
     free(tasks);
     return;
 }
@@ -81,9 +80,8 @@ get_target_tasks(int32 side, char *clicked_path,
                  enum CecupAction clicked_action) {
     TaskList *tasks;
 
-    tasks = xmalloc(SIZEOF(*tasks));
+    tasks = xmalloc(STRUCT_ARRAY_SIZE(tasks, Message *, cecup.rows_count));
     tasks->count = 0;
-    tasks->items = xmalloc(SIZEOF(Message *)*(cecup.rows_count + 1));
 
     for (int32 i = 0; i < cecup.rows_count; i += 1) {
         CecupRow *row = cecup.rows[i];
@@ -157,7 +155,6 @@ get_target_tasks(int32 side, char *clicked_path,
     }
 
     if (tasks->count == 0) {
-        free(tasks->items);
         free(tasks);
         return NULL;
     }
