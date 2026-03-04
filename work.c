@@ -79,7 +79,7 @@ enum RsyncCharAttribute {
 #define BATCH_SIZE 256
 
 static int64
-count_files_recursive(char *base_path, char *relative_path) {
+work_count_files_recursive(char *base_path, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
     char full_path[MAX_PATH_LENGTH];
@@ -127,7 +127,7 @@ count_files_recursive(char *base_path, char *relative_path) {
         SNPRINTF(full_path, "%s/%s", base_path, sub_rel);
         if (lstat(full_path, &st) == 0) {
             if (S_ISDIR(st.st_mode)) {
-                count += count_files_recursive(base_path, sub_rel);
+                count += work_count_files_recursive(base_path, sub_rel);
             } else {
                 count += 1;
             }
@@ -720,7 +720,8 @@ sync_worker(void *user_data) {
         g_idle_add(update_ui_handler, clear);
 
         dispatch_log("Counting files to prepare analysis...\n");
-        total_files_preview = count_files_recursive(thread_data->src_path, "");
+        total_files_preview
+            = work_count_files_recursive(thread_data->src_path, "");
         dispatch_log("Found %lld files to analyse...\n",
                      (llong)total_files_preview);
     }
