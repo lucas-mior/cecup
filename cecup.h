@@ -235,7 +235,6 @@ typedef struct Message {
     enum DataType type;
     enum CecupAction action;
     enum CecupReason reason;
-    enum PathType path_type;
 
     char *message;
     int64 message_len;
