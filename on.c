@@ -145,8 +145,9 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 
                 SNPRINTF(path_relative, "%s/%s", base_path, task->filepath);
                 if (realpath(path_relative, path_full) == NULL) {
-                    dispatch_log_error("Error resolving full path of %s: %s.\n",
-                                       path_relative, strerror(errno));
+                    ipc_dispatch_log_error(
+                        "Error resolving full path of %s: %s.\n", path_relative,
+                        strerror(errno));
                     continue;
                 }
                 path = path_full;
@@ -267,8 +268,8 @@ on_menu_ignore_ext(GtkWidget *m, void *data) {
             break;
         }
         if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
-            dispatch_log_error("Error opening %s: %s.\n", cecup.ignore_path,
-                               strerror(errno));
+            ipc_dispatch_log_error("Error opening %s: %s.\n", cecup.ignore_path,
+                                   strerror(errno));
             break;
         }
         for (int32 i = 0; i < (int32)tasks->len; i += 1) {

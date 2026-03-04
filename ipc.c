@@ -23,7 +23,7 @@
 #include "cecup.h"
 
 static void
-dispatch_log_internal(enum DataType type, char *format, va_list va_args) {
+ipc_dispatch_log_internal(enum DataType type, char *format, va_list va_args) {
     Message *data;
     char buffer[8192];
     int64 n;
@@ -74,21 +74,21 @@ dispatch_log_internal(enum DataType type, char *format, va_list va_args) {
 }
 
 static void
-dispatch_log(char *format, ...) {
+ipc_dispatch_log(char *format, ...) {
     va_list va_args;
 
     va_start(va_args, format);
-    dispatch_log_internal(DATA_TYPE_LOG, format, va_args);
+    ipc_dispatch_log_internal(DATA_TYPE_LOG, format, va_args);
     va_end(va_args);
     return;
 }
 
 static void
-dispatch_log_error(char *format, ...) {
+ipc_dispatch_log_error(char *format, ...) {
     va_list va_args;
 
     va_start(va_args, format);
-    dispatch_log_internal(DATA_TYPE_LOG_ERROR, format, va_args);
+    ipc_dispatch_log_internal(DATA_TYPE_LOG_ERROR, format, va_args);
     va_end(va_args);
     return;
 }
