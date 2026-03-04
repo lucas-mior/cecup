@@ -250,7 +250,7 @@ refresh_ui_list(void) {
 
     bool show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
-    bool show_hard
+    bool show_link
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
     bool show_update
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
@@ -274,7 +274,7 @@ refresh_ui_list(void) {
             break;
         case UI_ACTION_HARDLINK:
         case UI_ACTION_SYMLINK:
-            visible = show_hard;
+            visible = show_link;
             count_hard += 1;
             total_size_bytes += row->size_raw;
             break;
