@@ -232,15 +232,14 @@ on_menu_diff(GtkWidget *m, void *data) {
             int64 size_dst;
             int64 size_src;
 
+            size_src = strlen64(cecup.src_base) + strlen64(task->filepath) + 2;
+            size_dst = strlen64(cecup.dst_base) + strlen64(task->filepath) + 2;
+
             switch (fork()) {
             case -1:
                 ipc_dispatch_log_error("Error forking: %s.\n", strerror(errno));
                 break;
             case 0:
-                size_src
-                    = strlen64(cecup.src_base) + strlen64(task->filepath) + 2;
-                size_dst
-                    = strlen64(cecup.dst_base) + strlen64(task->filepath) + 2;
 
                 path_src = xmalloc(size_src);
                 path_dst = xmalloc(size_dst);
