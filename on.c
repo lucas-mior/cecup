@@ -243,7 +243,7 @@ on_menu_diff(GtkWidget *m, void *data) {
             memcpy64(task->term_cmd, term_cmd, term_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
-            g_thread_new("diff_worker", diff_worker, task);
+            g_thread_new("diff_worker", work_diff_worker, task);
         }
         g_ptr_array_unref(tasks);
     }

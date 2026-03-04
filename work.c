@@ -1102,7 +1102,7 @@ finalize:
 }
 
 static void *
-diff_worker(void *user_data) {
+work_diff_worker(void *user_data) {
     Message *message;
     pid_t child;
     char *path_src;
