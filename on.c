@@ -227,6 +227,8 @@ on_menu_diff(GtkWidget *m, void *data) {
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task = tasks->items[i];
+            char *path_src;
+            char *path_dst;
             int64 size_dst;
             int64 size_src;
 
@@ -238,8 +240,8 @@ on_menu_diff(GtkWidget *m, void *data) {
                 ipc_dispatch_log_error("Error forking: %s.\n", strerror(errno));
                 break;
             case 0:
-                char *path_src = xmalloc(size_src);
-                char *path_dst = xmalloc(size_dst);
+                path_src = xmalloc(size_src);
+                path_dst = xmalloc(size_dst);
 
                 snprintf2(path_src, size_src, "%s/%s", cecup.src_base,
                           task->filepath);
