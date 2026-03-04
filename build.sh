@@ -179,7 +179,7 @@ case "$target" in
     $CC $CPPFLAGS $CFLAGS main.c -o "$exe" $LDFLAGS
 
     if [ $target = "debug" ]; then
-        gdb $exe -ex run
+        gdb $exe -ex run | tee "gdb_output_$(data +%s).txt"
     fi
 
     trace_off
