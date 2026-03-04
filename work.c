@@ -244,16 +244,13 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
                 int64 search_len = strlen64(search);
                 char *match;
 
-                // Note: NEVER delete lines with // clang-format
-                // clang-format off
-                if ((match = memmem64(&d_name[k], name_len - k,
-                                      search, search_len))) {
+                if ((match = memmem64(&d_name[k], name_len - k, search,
+                                      search_len))) {
                     if (earliest_match == NULL || match < earliest_match) {
                         earliest_match = match;
                         replacement_index = r;
                     }
                 }
-                // clang-format on
             }
 
             if (earliest_match) {
@@ -282,15 +279,12 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         new_name[j] = '\0';
 
         if (changed) {
-            // Note: NEVER delete lines with // clang-format
-            // clang-format off
             if (relative_path[0] != '\0') {
-                SNPRINTF(new_full,
-                         "%s/%s/%s", base_path, relative_path, new_name);
+                SNPRINTF(new_full, "%s/%s/%s", base_path, relative_path,
+                         new_name);
             } else {
                 SNPRINTF(new_full, "%s/%s", base_path, new_name);
             }
-            // clang-format on
 
             if (access(new_full, F_OK) == 0) {
                 ipc_dispatch_log_error("Skip rename: %s already exists.\n",
@@ -615,13 +609,8 @@ work_rsync(void *user_data) {
                     deletion_reason = UI_REASON_MISSING;
                 }
 
-                // Note: NEVER delete lines with // clang-format
-                // clang-format off
-                ipc_dispatch_tree(SIDE_RIGHT,
-                                  UI_ACTION_DELETE, deletion_reason,
-                                  relative_path, NULL,
-                                  size_val, time_val);
-                // clang-format on
+                ipc_dispatch_tree(SIDE_RIGHT, UI_ACTION_DELETE, deletion_reason,
+                                  relative_path, NULL, size_val, time_val);
             } else if ((space_pos = strchr(buffer_output, ' '))) {
                 char type_char = buffer_output[0];
                 if ((type_char == RSYNC_CHAR_RECEIVE)
@@ -676,13 +665,10 @@ work_rsync(void *user_data) {
                         mt_path_val = (int64)st_path_val.st_mtime;
                     }
 
-                    // Note: NEVER delete lines with // clang-format
-                    // clang-format off
-                    ipc_dispatch_tree(SIDE_LEFT,
-                                      cecup_action, (enum CecupReason)cecup_action,
+                    ipc_dispatch_tree(SIDE_LEFT, cecup_action,
+                                      (enum CecupReason)cecup_action,
                                       relative_path_entry, link_target,
                                       sz_path_val, mt_path_val);
-                    // clang-format on
 
                     processed_files_preview += 1;
                     if (total_files_preview > 0) {
@@ -795,10 +781,10 @@ finalize:
 
 static void *
 work_rsync_bulk(void *user_data) {
-    GPtrArray *tasks = user_data;
+    TaskList *tasks = user_data;
     Message *ready;
 
-    for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+    for (int32 i = 0; i < tasks->count; i += 1) {
         char cmd[MAX_PATH_LENGTH*2];
         Message *message;
         int32 pipe_output[2];
@@ -816,20 +802,23 @@ work_rsync_bulk(void *user_data) {
         char buffer_error[8192];
         int32 buffer_error_pos = 0;
 
-        if ((message = (Message *)g_ptr_array_index(tasks, i))) {
+        if ((message = tasks->items[i])) {
             if (cecup.cancel_sync) {
                 g_mutex_lock(&cecup.ui_arena_mutex);
-                if (message->filepath) {
-                    arena_pop(cecup.ui_arena, message->filepath);
+                if (message->link_target) {
+                    arena_pop(cecup.ui_arena, message->link_target);
                 }
-                if (message->term_cmd) {
-                    arena_pop(cecup.ui_arena, message->term_cmd);
+                if (message->message) {
+                    arena_pop(cecup.ui_arena, message->message);
                 }
                 if (message->diff_tool) {
                     arena_pop(cecup.ui_arena, message->diff_tool);
                 }
-                if (message->link_target) {
-                    arena_pop(cecup.ui_arena, message->link_target);
+                if (message->term_cmd) {
+                    arena_pop(cecup.ui_arena, message->term_cmd);
+                }
+                if (message->filepath) {
+                    arena_pop(cecup.ui_arena, message->filepath);
                 }
                 arena_pop(cecup.ui_arena, message);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
@@ -1080,17 +1069,20 @@ work_rsync_bulk(void *user_data) {
             }
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            if (message->filepath) {
-                arena_pop(cecup.ui_arena, message->filepath);
+            if (message->link_target) {
+                arena_pop(cecup.ui_arena, message->link_target);
             }
-            if (message->term_cmd) {
-                arena_pop(cecup.ui_arena, message->term_cmd);
+            if (message->message) {
+                arena_pop(cecup.ui_arena, message->message);
             }
             if (message->diff_tool) {
                 arena_pop(cecup.ui_arena, message->diff_tool);
             }
-            if (message->link_target) {
-                arena_pop(cecup.ui_arena, message->link_target);
+            if (message->term_cmd) {
+                arena_pop(cecup.ui_arena, message->term_cmd);
+            }
+            if (message->filepath) {
+                arena_pop(cecup.ui_arena, message->filepath);
             }
             arena_pop(cecup.ui_arena, message);
             g_mutex_unlock(&cecup.ui_arena_mutex);
@@ -1105,7 +1097,7 @@ work_rsync_bulk(void *user_data) {
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, ready);
 
-    g_ptr_array_unref(tasks);
+    free_task_list(tasks);
     return NULL;
 }
 
@@ -1125,43 +1117,39 @@ work_diff_worker(void *user_data) {
     path_src = xmalloc(size_src);
     path_dst = xmalloc(size_dst);
 
-    // Note: NEVER delete lines with // clang-format
-    // clang-format off
-    snprintf2(path_src, size_src,
-              "%s/%s", cecup.src_base, message->filepath);
-    snprintf2(path_dst, size_dst,
-              "%s/%s", cecup.dst_base, message->filepath);
+    snprintf2(path_src, size_src, "%s/%s", cecup.src_base, message->filepath);
+    snprintf2(path_dst, size_dst, "%s/%s", cecup.dst_base, message->filepath);
 
     switch (child = fork()) {
     case -1:
         error("Error forking: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
     case 0:
-        execlp(message->term_cmd,
-               message->term_cmd,
-               "-e", message->diff_tool, path_src, path_dst,
-               (char *)NULL);
+        execlp(message->term_cmd, message->term_cmd, "-e", message->diff_tool,
+               path_src, path_dst, (char *)NULL);
         _exit(1);
     default:
         break;
     }
-    // clang-format on
 
     free(path_src);
     free(path_dst);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    if (message->filepath) {
-        arena_pop(cecup.ui_arena, message->filepath);
+    if (message->link_target) {
+        arena_pop(cecup.ui_arena, message->link_target);
     }
-    if (message->term_cmd) {
-        arena_pop(cecup.ui_arena, message->term_cmd);
+    if (message->message) {
+        arena_pop(cecup.ui_arena, message->message);
     }
     if (message->diff_tool) {
         arena_pop(cecup.ui_arena, message->diff_tool);
     }
-    if (message->link_target) {
-        arena_pop(cecup.ui_arena, message->link_target);
+    if (message->term_cmd) {
+        arena_pop(cecup.ui_arena, message->term_cmd);
+    }
+    if (message->filepath) {
+        arena_pop(cecup.ui_arena, message->filepath);
     }
     arena_pop(cecup.ui_arena, message);
     g_mutex_unlock(&cecup.ui_arena_mutex);

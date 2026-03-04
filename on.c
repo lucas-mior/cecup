@@ -7,7 +7,7 @@
 static void
 on_menu_apply(GtkWidget *m, void *data) {
     Message *message = data;
-    GPtrArray *tasks;
+    TaskList *tasks;
 
     (void)m;
 
@@ -27,19 +27,19 @@ on_menu_apply(GtkWidget *m, void *data) {
 static void
 on_menu_open(GtkWidget *m, void *data) {
     Message *message = data;
-    GPtrArray *tasks;
+    TaskList *tasks;
 
     (void)m;
 
     if ((tasks = get_target_tasks(message->side, message->filepath,
                                   message->action))) {
-        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+        for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task;
             char full_path[MAX_PATH_LENGTH];
             char *base_path;
             pid_t child;
 
-            task = (Message *)g_ptr_array_index(tasks, i);
+            task = tasks->items[i];
             if (message->side == 0) {
                 base_path = cecup.src_base;
             } else {
@@ -70,19 +70,19 @@ on_menu_open(GtkWidget *m, void *data) {
 static void
 on_menu_open_dir(GtkWidget *m, void *data) {
     Message *message = data;
-    GPtrArray *tasks;
+    TaskList *tasks;
 
     (void)m;
 
     if ((tasks = get_target_tasks(message->side, message->filepath,
                                   message->action))) {
-        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+        for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task;
             char full_path[MAX_PATH_LENGTH];
             char *dir_path;
             char *base_path;
 
-            task = (Message *)g_ptr_array_index(tasks, i);
+            task = tasks->items[i];
             if (message->side == 0) {
                 base_path = cecup.src_base;
             } else {
@@ -110,7 +110,7 @@ on_menu_open_dir(GtkWidget *m, void *data) {
 static void
 on_menu_copy_path(GtkWidget *m, void *data) {
     Message *message = data;
-    GPtrArray *tasks;
+    TaskList *tasks;
     char *buffer;
     int64 buffer_size = SIZEMB(2);
     char *write_pointer;
@@ -129,19 +129,19 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 
     if ((tasks = get_target_tasks(message->side, message->filepath,
                                   message->action))) {
-        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+        for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task;
             int64 path_length;
             char path_full[MAX_PATH_LENGTH];
             char *path;
             char *path_type = g_object_get_data(G_OBJECT(m), "path_type");
 
-            task = (Message *)g_ptr_array_index(tasks, i);
+            task = tasks->items[i];
 
             if (!strcmp(path_type, "absolute")) {
                 char path_relative[MAX_PATH_LENGTH];
 
-                task = (Message *)g_ptr_array_index(tasks, i);
+                task = tasks->items[i];
 
                 SNPRINTF(path_relative, "%s/%s", base_path, task->filepath);
                 if (realpath(path_relative, path_full) == NULL) {
@@ -183,7 +183,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 static void
 on_menu_delete(GtkWidget *m, void *data) {
     Message *message = data;
-    GPtrArray *tasks;
+    TaskList *tasks;
     GtkWidget *dialog;
     int32 count;
 
@@ -191,7 +191,7 @@ on_menu_delete(GtkWidget *m, void *data) {
 
     if ((tasks = get_target_tasks(message->side, message->filepath,
                                   UI_ACTION_DELETE))) {
-        count = (int32)tasks->len;
+        count = tasks->count;
         dialog = gtk_message_dialog_new(
             GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
             GTK_BUTTONS_YES_NO, _("Permanently delete %d item(s)?"), count);
@@ -215,7 +215,7 @@ on_menu_delete(GtkWidget *m, void *data) {
 static void
 on_menu_diff(GtkWidget *m, void *data) {
     Message *message = data;
-    GPtrArray *tasks;
+    TaskList *tasks;
     char *diff_tool;
     char *term_cmd;
     int64 diff_len;
@@ -229,10 +229,10 @@ on_menu_diff(GtkWidget *m, void *data) {
 
     if ((tasks = get_target_tasks(message->side, message->filepath,
                                   message->action))) {
-        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+        for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task;
 
-            task = (Message *)g_ptr_array_index(tasks, i);
+            task = tasks->items[i];
             g_mutex_lock(&cecup.ui_arena_mutex);
             task->diff_tool_len = diff_len;
             task->diff_tool
@@ -246,7 +246,9 @@ on_menu_diff(GtkWidget *m, void *data) {
 
             g_thread_new("diff_worker", work_diff_worker, task);
         }
-        g_ptr_array_unref(tasks);
+
+        free(tasks->items);
+        free(tasks);
     }
 
     free_update_data(message);
@@ -256,7 +258,7 @@ on_menu_diff(GtkWidget *m, void *data) {
 static void
 on_menu_ignore_ext(GtkWidget *m, void *data) {
     Message *message = data;
-    GPtrArray *tasks;
+    TaskList *tasks;
     FILE *fp;
 
     (void)m;
@@ -272,11 +274,11 @@ on_menu_ignore_ext(GtkWidget *m, void *data) {
                                    strerror(errno));
             break;
         }
-        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+        for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task;
             char *ext;
 
-            task = (Message *)g_ptr_array_index(tasks, i);
+            task = tasks->items[i];
             if ((ext = strrchr(task->filepath, '.')) != NULL) {
                 fprintf(fp, "\n*%s", ext);
             }
@@ -293,7 +295,7 @@ on_menu_ignore_ext(GtkWidget *m, void *data) {
 static void
 on_menu_ignore_dir(GtkWidget *m, void *data) {
     Message *message = data;
-    GPtrArray *tasks;
+    TaskList *tasks;
     FILE *fp;
 
     (void)m;
@@ -307,11 +309,11 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
         if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
             break;
         }
-        for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+        for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task;
             char *dir;
 
-            task = (Message *)g_ptr_array_index(tasks, i);
+            task = tasks->items[i];
             if ((dir = g_path_get_dirname(task->filepath)) != NULL) {
                 if (strcmp(dir, ".") != 0) {
                     fprintf(fp, "\n/%s/", dir);
@@ -323,7 +325,9 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
         on_preview_clicked(NULL, NULL);
     } while (0);
 
-    free_task_list(tasks);
+    if (tasks) {
+        free_task_list(tasks);
+    }
     free_update_data(message);
     return;
 }

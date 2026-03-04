@@ -42,45 +42,48 @@ free_update_data(Message *message) {
 }
 
 static void
-free_task_list(GPtrArray *tasks) {
+free_task_list(TaskList *tasks) {
     if (tasks == NULL) {
         return;
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
 
-    for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-        Message *task = (Message *)g_ptr_array_index(tasks, i);
+    for (int32 i = 0; i < tasks->count; i += 1) {
+        Message *task = tasks->items[i];
 
-        if (task->filepath) {
-            arena_pop(cecup.ui_arena, task->filepath);
-        }
-        if (task->term_cmd) {
-            arena_pop(cecup.ui_arena, task->term_cmd);
-        }
-        if (task->diff_tool) {
-            arena_pop(cecup.ui_arena, task->diff_tool);
+        if (task->link_target) {
+            arena_pop(cecup.ui_arena, task->link_target);
         }
         if (task->message) {
             arena_pop(cecup.ui_arena, task->message);
         }
-        if (task->link_target) {
-            arena_pop(cecup.ui_arena, task->link_target);
+        if (task->diff_tool) {
+            arena_pop(cecup.ui_arena, task->diff_tool);
+        }
+        if (task->term_cmd) {
+            arena_pop(cecup.ui_arena, task->term_cmd);
+        }
+        if (task->filepath) {
+            arena_pop(cecup.ui_arena, task->filepath);
         }
         arena_pop(cecup.ui_arena, task);
     }
 
     g_mutex_unlock(&cecup.ui_arena_mutex);
-    g_ptr_array_unref(tasks);
+    free(tasks->items);
+    free(tasks);
     return;
 }
 
-static GPtrArray *
+static TaskList *
 get_target_tasks(int32 side, char *clicked_path,
                  enum CecupAction clicked_action) {
-    GPtrArray *tasks;
+    TaskList *tasks;
 
-    tasks = g_ptr_array_new();
+    tasks = xmalloc(SIZEOF(*tasks));
+    tasks->count = 0;
+    tasks->items = xmalloc(SIZEOF(Message *)*(cecup.rows_count + 1));
 
     for (int32 i = 0; i < cecup.rows_count; i += 1) {
         CecupRow *row = cecup.rows[i];
@@ -126,10 +129,12 @@ get_target_tasks(int32 side, char *clicked_path,
 
         task->action = action;
         task->side = side;
-        g_ptr_array_add(tasks, task);
+
+        tasks->items[tasks->count] = task;
+        tasks->count += 1;
     }
 
-    if ((tasks->len == 0) && clicked_path) {
+    if ((tasks->count == 0) && clicked_path) {
         Message *task;
         int64 path_len;
 
@@ -146,11 +151,14 @@ get_target_tasks(int32 side, char *clicked_path,
 
         task->action = clicked_action;
         task->side = side;
-        g_ptr_array_add(tasks, task);
+
+        tasks->items[tasks->count] = task;
+        tasks->count += 1;
     }
 
-    if (tasks->len == 0) {
-        g_ptr_array_unref(tasks);
+    if (tasks->count == 0) {
+        free(tasks->items);
+        free(tasks);
         return NULL;
     }
 
