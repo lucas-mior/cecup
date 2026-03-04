@@ -793,10 +793,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*message)));
         memset64(message, 0, SIZEOF(*message));
 
-        message->filepath_length = path_length;
-        message->filepath
-            = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
-        memcpy64(message->filepath, file_path, path_length + 1);
+        if (file_path) {
+            message->filepath_length = path_length;
+            message->filepath
+                = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
+            memcpy64(message->filepath, file_path, path_length + 1);
+        }
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         message->action = action;
