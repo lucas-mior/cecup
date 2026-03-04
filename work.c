@@ -1176,6 +1176,7 @@ work_diff_worker(void *user_data) {
 int
 main(void) {
     ASSERT(true);
+    exit(EXIT_SUCCESS);
 }
 
 #endif
