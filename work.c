@@ -322,7 +322,7 @@ fix_fs_recursive(char *base_path, char *relative_path) {
 static void *
 fix_fs_worker(void *user_data) {
     ThreadData *thread_data = user_data;
-    UIUpdateData *ready;
+    Message *ready;
 
     dispatch_log("Checking for problematic names in the original folder...\n");
     fix_fs_recursive(thread_data->src_path, "");
@@ -331,8 +331,8 @@ fix_fs_worker(void *user_data) {
     dispatch_log("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    ready = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-    memset64(ready, 0, SIZEOF(UIUpdateData));
+    ready = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(ready, 0, SIZEOF(Message));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
@@ -347,10 +347,10 @@ fix_fs_worker(void *user_data) {
 static void *
 bulk_sync_worker(void *user_data) {
     GPtrArray *tasks = user_data;
-    UIUpdateData *ready;
+    Message *ready;
 
     for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-        UIUpdateData *ui_update_data;
+        Message *message;
         int32 pipe_output[2];
         int32 pipe_error[2];
         pid_t child_pid;
@@ -361,22 +361,22 @@ bulk_sync_worker(void *user_data) {
         char buffer_error[8192];
         int32 buffer_error_pos = 0;
 
-        if ((ui_update_data = (UIUpdateData *)g_ptr_array_index(tasks, i))) {
+        if ((message = (Message *)g_ptr_array_index(tasks, i))) {
             if (cecup.cancel_sync) {
                 g_mutex_lock(&cecup.ui_arena_mutex);
-                if (ui_update_data->filepath) {
-                    arena_pop(cecup.ui_arena, ui_update_data->filepath);
+                if (message->filepath) {
+                    arena_pop(cecup.ui_arena, message->filepath);
                 }
-                if (ui_update_data->term_cmd) {
-                    arena_pop(cecup.ui_arena, ui_update_data->term_cmd);
+                if (message->term_cmd) {
+                    arena_pop(cecup.ui_arena, message->term_cmd);
                 }
-                if (ui_update_data->diff_tool) {
-                    arena_pop(cecup.ui_arena, ui_update_data->diff_tool);
+                if (message->diff_tool) {
+                    arena_pop(cecup.ui_arena, message->diff_tool);
                 }
-                if (ui_update_data->link_target) {
-                    arena_pop(cecup.ui_arena, ui_update_data->link_target);
+                if (message->link_target) {
+                    arena_pop(cecup.ui_arena, message->link_target);
                 }
-                arena_pop(cecup.ui_arena, ui_update_data);
+                arena_pop(cecup.ui_arena, message);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
                 continue;
             }
@@ -422,9 +422,9 @@ bulk_sync_worker(void *user_data) {
                 XCLOSE(&pipe_output[1]);
                 XCLOSE(&pipe_error[1]);
 
-                if (ui_update_data->action == UI_ACTION_DELETE) {
+                if (message->action == UI_ACTION_DELETE) {
                     SNPRINTF(full_dst, "%s/%s", cecup.dst_base,
-                             ui_update_data->filepath);
+                             message->filepath);
                     args[a++] = "rm";
                     args[a++] = "-rfv";
                     args[a++] = full_dst;
@@ -433,7 +433,7 @@ bulk_sync_worker(void *user_data) {
                 } else {
                     char cmd[MAX_PATH_LENGTH*2];
                     SNPRINTF(relative_source, "%s/./%s", cecup.src_base,
-                             ui_update_data->filepath);
+                             message->filepath);
                     SNPRINTF(dst_dir, "%s/", cecup.dst_base);
 
                     args[a++] = "rsync";
@@ -483,7 +483,7 @@ bulk_sync_worker(void *user_data) {
                                            strerror(errno));
                     }
                     dispatch_log_error("Process cancelled: %s\n",
-                                       ui_update_data->filepath);
+                                       message->filepath);
                     break;
                 }
 
@@ -609,18 +609,18 @@ bulk_sync_worker(void *user_data) {
 
             if (!cecup.cancel_sync) {
                 int64 path_len;
-                UIUpdateData *remove_data;
+                Message *remove_data;
 
                 g_mutex_lock(&cecup.ui_arena_mutex);
-                remove_data = xarena_push(cecup.ui_arena,
-                                          ALIGN16(SIZEOF(UIUpdateData)));
-                memset64(remove_data, 0, SIZEOF(UIUpdateData));
+                remove_data
+                    = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+                memset64(remove_data, 0, SIZEOF(Message));
 
-                path_len = ui_update_data->filepath_length;
+                path_len = message->filepath_length;
                 remove_data->filepath_length = path_len;
                 remove_data->filepath
                     = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                memcpy64(remove_data->filepath, ui_update_data->filepath,
+                memcpy64(remove_data->filepath, message->filepath,
                          path_len + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -629,26 +629,26 @@ bulk_sync_worker(void *user_data) {
             }
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            if (ui_update_data->filepath) {
-                arena_pop(cecup.ui_arena, ui_update_data->filepath);
+            if (message->filepath) {
+                arena_pop(cecup.ui_arena, message->filepath);
             }
-            if (ui_update_data->term_cmd) {
-                arena_pop(cecup.ui_arena, ui_update_data->term_cmd);
+            if (message->term_cmd) {
+                arena_pop(cecup.ui_arena, message->term_cmd);
             }
-            if (ui_update_data->diff_tool) {
-                arena_pop(cecup.ui_arena, ui_update_data->diff_tool);
+            if (message->diff_tool) {
+                arena_pop(cecup.ui_arena, message->diff_tool);
             }
-            if (ui_update_data->link_target) {
-                arena_pop(cecup.ui_arena, ui_update_data->link_target);
+            if (message->link_target) {
+                arena_pop(cecup.ui_arena, message->link_target);
             }
-            arena_pop(cecup.ui_arena, ui_update_data);
+            arena_pop(cecup.ui_arena, message);
             g_mutex_unlock(&cecup.ui_arena_mutex);
         }
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    ready = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-    memset64(ready, 0, SIZEOF(UIUpdateData));
+    ready = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(ready, 0, SIZEOF(Message));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     ready->type = DATA_TYPE_ENABLE_BUTTONS;
@@ -686,19 +686,18 @@ sync_worker(void *user_data) {
         if (stat(thread_data->src_path, &stat_src) == 0
             && stat(thread_data->dst_path, &stat_dst) == 0) {
             if (stat_src.st_dev == stat_dst.st_dev) {
-                UIUpdateData *ui_update_data;
+                Message *message;
                 dispatch_log_error(
                     "Safety stop: Original and Backup are on the same disk "
                     "partition. Change settings to ignore this.\n");
 
                 g_mutex_lock(&cecup.ui_arena_mutex);
-                ui_update_data = xarena_push(cecup.ui_arena,
-                                             ALIGN16(SIZEOF(UIUpdateData)));
-                memset64(ui_update_data, 0, SIZEOF(UIUpdateData));
+                message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+                memset64(message, 0, SIZEOF(Message));
                 g_mutex_unlock(&cecup.ui_arena_mutex);
 
-                ui_update_data->type = DATA_TYPE_CLEAR_TREES;
-                g_idle_add(update_ui_handler, ui_update_data);
+                message->type = DATA_TYPE_CLEAR_TREES;
+                g_idle_add(update_ui_handler, message);
 
                 goto finalize;
             }
@@ -710,11 +709,11 @@ sync_worker(void *user_data) {
     }
 
     if (thread_data->is_preview) {
-        UIUpdateData *clear;
+        Message *clear;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        clear = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-        memset64(clear, 0, SIZEOF(UIUpdateData));
+        clear = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        memset64(clear, 0, SIZEOF(Message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         clear->type = DATA_TYPE_CLEAR_TREES;
@@ -1084,12 +1083,11 @@ finalize:
     dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
     {
-        UIUpdateData *ready_signal;
+        Message *ready_signal;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        ready_signal
-            = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-        memset64(ready_signal, 0, SIZEOF(UIUpdateData));
+        ready_signal = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        memset64(ready_signal, 0, SIZEOF(Message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         ready_signal->type = DATA_TYPE_ENABLE_BUTTONS;
@@ -1104,18 +1102,16 @@ finalize:
 
 static void *
 diff_worker(void *user_data) {
-    UIUpdateData *ui_update_data;
+    Message *message;
     pid_t child;
     char *path_src;
     char *path_dst;
     int64 size_dst;
     int64 size_src;
 
-    ui_update_data = user_data;
-    size_src
-        = strlen64(cecup.src_base) + strlen64(ui_update_data->filepath) + 2;
-    size_dst
-        = strlen64(cecup.dst_base) + strlen64(ui_update_data->filepath) + 2;
+    message = user_data;
+    size_src = strlen64(cecup.src_base) + strlen64(message->filepath) + 2;
+    size_dst = strlen64(cecup.dst_base) + strlen64(message->filepath) + 2;
 
     path_src = xmalloc(size_src);
     path_dst = xmalloc(size_dst);
@@ -1123,18 +1119,18 @@ diff_worker(void *user_data) {
     // Note: NEVER delete lines with // clang-format
     // clang-format off
     snprintf2(path_src, size_src,
-              "%s/%s", cecup.src_base, ui_update_data->filepath);
+              "%s/%s", cecup.src_base, message->filepath);
     snprintf2(path_dst, size_dst,
-              "%s/%s", cecup.dst_base, ui_update_data->filepath);
+              "%s/%s", cecup.dst_base, message->filepath);
 
     switch (child = fork()) {
     case -1:
         error("Error forking: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
     case 0:
-        execlp(ui_update_data->term_cmd,
-               ui_update_data->term_cmd,
-               "-e", ui_update_data->diff_tool, path_src, path_dst,
+        execlp(message->term_cmd,
+               message->term_cmd,
+               "-e", message->diff_tool, path_src, path_dst,
                (char *)NULL);
         _exit(1);
     default:
@@ -1146,19 +1142,19 @@ diff_worker(void *user_data) {
     free(path_dst);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    if (ui_update_data->filepath) {
-        arena_pop(cecup.ui_arena, ui_update_data->filepath);
+    if (message->filepath) {
+        arena_pop(cecup.ui_arena, message->filepath);
     }
-    if (ui_update_data->term_cmd) {
-        arena_pop(cecup.ui_arena, ui_update_data->term_cmd);
+    if (message->term_cmd) {
+        arena_pop(cecup.ui_arena, message->term_cmd);
     }
-    if (ui_update_data->diff_tool) {
-        arena_pop(cecup.ui_arena, ui_update_data->diff_tool);
+    if (message->diff_tool) {
+        arena_pop(cecup.ui_arena, message->diff_tool);
     }
-    if (ui_update_data->link_target) {
-        arena_pop(cecup.ui_arena, ui_update_data->link_target);
+    if (message->link_target) {
+        arena_pop(cecup.ui_arena, message->link_target);
     }
-    arena_pop(cecup.ui_arena, ui_update_data);
+    arena_pop(cecup.ui_arena, message);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return NULL;
 }

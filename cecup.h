@@ -231,7 +231,7 @@ enum PathType {
     PATH_ABSOLUTE,
 };
 
-typedef struct UIUpdateData {
+typedef struct Message {
     enum DataType type;
     enum CecupAction action;
     enum CecupReason reason;
@@ -254,7 +254,7 @@ typedef struct UIUpdateData {
 
     int32 side;
     double fraction;
-} UIUpdateData;
+} Message;
 
 static gboolean update_ui_handler(void * user_data);
 static void on_preview_clicked(GtkWidget *b, void * data);
@@ -263,7 +263,7 @@ static gboolean refresh_ui_timeout_callback(void * data);
 static GPtrArray *get_target_tasks(int32 side,
                                    char *clicked_path,
                                    enum CecupAction clicked_action);
-static void free_update_data(UIUpdateData *ui_update_data);
+static void free_update_data(Message *message);
 static void free_task_list(GPtrArray *tasks);
 
 #endif /* CECUP_H */

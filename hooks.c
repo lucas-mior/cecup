@@ -36,10 +36,10 @@
 #define UI_INTERVAL_MS 100
 
 static void
-free_update_data(UIUpdateData *ui_update_data) {
+free_update_data(Message *message) {
     g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, ui_update_data->filepath);
-    arena_pop(cecup.ui_arena, ui_update_data);
+    arena_pop(cecup.ui_arena, message->filepath);
+    arena_pop(cecup.ui_arena, message);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
 }
@@ -53,7 +53,7 @@ free_task_list(GPtrArray *tasks) {
     g_mutex_lock(&cecup.ui_arena_mutex);
 
     for (int32 i = 0; i < (int32)tasks->len; i += 1) {
-        UIUpdateData *task = (UIUpdateData *)g_ptr_array_index(tasks, i);
+        Message *task = (Message *)g_ptr_array_index(tasks, i);
 
         if (task->filepath) {
             arena_pop(cecup.ui_arena, task->filepath);
@@ -90,7 +90,7 @@ get_target_tasks(int32 side, char *clicked_path,
         char *file_path;
         int64 path_len;
         enum CecupAction action;
-        UIUpdateData *task;
+        Message *task;
 
         if (!(row->selected)) {
             continue;
@@ -133,7 +133,7 @@ get_target_tasks(int32 side, char *clicked_path,
     }
 
     if ((tasks->len == 0) && clicked_path) {
-        UIUpdateData *task;
+        Message *task;
         int64 path_len;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
@@ -376,7 +376,7 @@ refresh_ui_timeout_callback(void *data) {
 
 static gboolean
 update_ui_handler(void *user_data) {
-    UIUpdateData *data = user_data;
+    Message *data = user_data;
 
     switch (data->type) {
     case DATA_TYPE_LOG:

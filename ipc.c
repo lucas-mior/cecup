@@ -24,7 +24,7 @@
 
 static void
 dispatch_log_internal(enum DataType type, char *format, va_list va_args) {
-    UIUpdateData *data;
+    Message *data;
     char buffer[8192];
     int64 n;
     int64 last_whitespace_index;
@@ -60,8 +60,8 @@ dispatch_log_internal(enum DataType type, char *format, va_list va_args) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-    memset64(data, 0, SIZEOF(UIUpdateData));
+    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(data, 0, SIZEOF(Message));
 
     data->message_len = n;
     data->message = xarena_push(cecup.ui_arena, ALIGN16(n + 1));
@@ -95,7 +95,7 @@ dispatch_log_error(char *format, ...) {
 
 static void
 dispatch_progress(enum DataType type, double fraction) {
-    UIUpdateData *data;
+    Message *data;
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index = 0;
 
@@ -112,8 +112,8 @@ dispatch_progress(enum DataType type, double fraction) {
     last_fractions[index] = fraction;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-    memset64(data, 0, SIZEOF(UIUpdateData));
+    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(data, 0, SIZEOF(Message));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     data->type = type;
@@ -130,12 +130,12 @@ dispatch_tree(int32 side,
               char *path, char *link_target,
               int64 size, int64 mtime) {
     // clang-format on
-    UIUpdateData *data;
+    Message *data;
     int64 target_len;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(UIUpdateData)));
-    memset64(data, 0, SIZEOF(UIUpdateData));
+    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(data, 0, SIZEOF(Message));
 
     data->filepath_length = strlen64(path);
     g_mutex_lock(&cecup.row_arena_mutex);
