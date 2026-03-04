@@ -569,7 +569,7 @@ on_fix_clicked(GtkWidget *b, void *data) {
 
     strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
     strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
-    g_thread_new("fix_fs_worker", fix_fs_worker, thread_data);
+    g_thread_new("fix_fs_worker", work_fix_fs_worker, thread_data);
     return;
 }
 

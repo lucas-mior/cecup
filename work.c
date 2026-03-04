@@ -320,7 +320,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
 }
 
 static void *
-fix_fs_worker(void *user_data) {
+work_fix_fs_worker(void *user_data) {
     ThreadData *thread_data = user_data;
     Message *ready;
 

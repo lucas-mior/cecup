@@ -265,5 +265,6 @@ static GPtrArray *get_target_tasks(int32 side,
                                    enum CecupAction clicked_action);
 static void free_update_data(Message *message);
 static void free_task_list(GPtrArray *tasks);
+static void save_config(void);
 
 #endif /* CECUP_H */
