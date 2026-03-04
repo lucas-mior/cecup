@@ -659,7 +659,7 @@ work_bulk_sync_worker(void *user_data) {
 }
 
 static void *
-sync_worker(void *user_data) {
+work_sync_worker(void *user_data) {
     ThreadData *thread_data = user_data;
     int64 total_files_preview = 0;
     int64 processed_files_preview = 0;
