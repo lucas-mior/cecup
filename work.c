@@ -799,11 +799,17 @@ work_rsync_bulk(void *user_data) {
     Message *ready;
 
     for (int32 i = 0; i < (int32)tasks->len; i += 1) {
+        char cmd[MAX_PATH_LENGTH*2];
         Message *message;
         int32 pipe_output[2];
         int32 pipe_error[2];
         pid_t child_pid;
         struct pollfd pipes[2];
+        char full_dst[MAX_PATH_LENGTH];
+        char relative_source[MAX_PATH_LENGTH];
+        char dst_dir[MAX_PATH_LENGTH];
+        char *args[32];
+        int32 a = 0;
 
         char buffer_output[8192];
         int32 buffer_output_pos = 0;
@@ -840,17 +846,36 @@ work_rsync_bulk(void *user_data) {
                 fatal(EXIT_FAILURE);
             }
 
+            SNPRINTF(relative_source, "%s/./%s", cecup.src_base,
+                     message->filepath);
+            SNPRINTF(dst_dir, "%s/", cecup.dst_base);
+
+            args[a++] = "rsync";
+            args[a++] = "--verbose";
+            args[a++] = "--update";
+            args[a++] = "--recursive";
+            args[a++] = "--partial";
+            args[a++] = "--progress";
+            args[a++] = "--info=progress2";
+            args[a++] = "--links";
+            args[a++] = "--hard-links";
+            args[a++] = "--itemize-changes";
+            args[a++] = "--perms";
+            args[a++] = "--times";
+            args[a++] = "--owner";
+            args[a++] = "--group";
+            args[a++] = "--relative";
+            args[a++] = relative_source;
+            args[a++] = dst_dir;
+            args[a++] = NULL;
+            STRING_FROM_ARRAY(cmd, " ", args, a);
+            ipc_dispatch_log("+ %s\n", cmd);
+
             switch (child_pid = fork()) {
             case -1:
                 error("Error forking: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             case 0: {
-                char full_dst[MAX_PATH_LENGTH];
-                char relative_source[MAX_PATH_LENGTH];
-                char dst_dir[MAX_PATH_LENGTH];
-                char *args[32];
-                int32 a = 0;
-
                 if (setpgid(0, 0) < 0) {
                     fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
                     exit(EXIT_FAILURE);
@@ -880,31 +905,6 @@ work_rsync_bulk(void *user_data) {
                     args[a++] = NULL;
                     execvp(args[0], args);
                 } else {
-                    char cmd[MAX_PATH_LENGTH*2];
-                    SNPRINTF(relative_source, "%s/./%s", cecup.src_base,
-                             message->filepath);
-                    SNPRINTF(dst_dir, "%s/", cecup.dst_base);
-
-                    args[a++] = "rsync";
-                    args[a++] = "--verbose";
-                    args[a++] = "--update";
-                    args[a++] = "--recursive";
-                    args[a++] = "--partial";
-                    args[a++] = "--progress";
-                    args[a++] = "--info=progress2";
-                    args[a++] = "--links";
-                    args[a++] = "--hard-links";
-                    args[a++] = "--itemize-changes";
-                    args[a++] = "--perms";
-                    args[a++] = "--times";
-                    args[a++] = "--owner";
-                    args[a++] = "--group";
-                    args[a++] = "--relative";
-                    args[a++] = relative_source;
-                    args[a++] = dst_dir;
-                    args[a++] = NULL;
-                    STRING_FROM_ARRAY(cmd, " ", args, a);
-                    ipc_dispatch_log("+ %s\n", cmd);
                     execvp(args[0], args);
                 }
                 fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
