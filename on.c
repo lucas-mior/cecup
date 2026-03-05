@@ -535,11 +535,10 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
         parent_path_len = strlen64(parent_path);
 
         for (int32 i = 0; i < cecup.rows_count; i += 1) {
-            CecupRow *row;
+            CecupRow *row = cecup.rows[i];
             char *row_path;
             int64 row_path_len;
 
-            row = cecup.rows[i];
             row_path = (row->src_path != NULL) ? row->src_path : row->dst_path;
 
             if (row_path == NULL) {
