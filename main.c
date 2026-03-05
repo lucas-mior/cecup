@@ -423,9 +423,9 @@ main(int32 argc, char *argv[]) {
     cecup.stats_label = gtk_label_new(_("✅ Everything ready"));
     gtk_box_pack_start(GTK_BOX(main_vbox), cecup.stats_label, FALSE, FALSE, 5);
 
-    cecup.src_entry_id = g_signal_connect(cecup.src_entry, "changed",
+    cecup.src_entry_id = g_signal_connect(cecup.src_entry, "activate",
                                           G_CALLBACK(on_config_changed), NULL);
-    cecup.dst_entry_id = g_signal_connect(cecup.dst_entry, "changed",
+    cecup.dst_entry_id = g_signal_connect(cecup.dst_entry, "activate",
                                           G_CALLBACK(on_config_changed), NULL);
 
     {
