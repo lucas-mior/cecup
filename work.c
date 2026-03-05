@@ -751,15 +751,15 @@ finalize:
     dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
     {
-        Message *ready_signal;
+        Message *message;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        ready_signal = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-        memset64(ready_signal, 0, SIZEOF(Message));
+        message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        memset64(message, 0, SIZEOF(Message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
-        ready_signal->type = DATA_TYPE_ENABLE_BUTTONS;
-        g_idle_add(update_ui_handler, ready_signal);
+        message->type = DATA_TYPE_ENABLE_BUTTONS;
+        g_idle_add(update_ui_handler, message);
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
@@ -1090,19 +1090,19 @@ work_rsync_bulk(void *user_data) {
     }
 
     {
-        Message *ready_signal;
+        Message *message;
         g_mutex_lock(&cecup.ui_arena_mutex);
-        ready_signal = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-        memset64(ready_signal, 0, SIZEOF(Message));
+        message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        memset64(message, 0, SIZEOF(Message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         if (cecup.cancel_sync) {
-            ready_signal->type = DATA_TYPE_ENABLE_BUTTONS;
+            message->type = DATA_TYPE_ENABLE_BUTTONS;
         } else {
-            ready_signal->type = DATA_TYPE_REGENERATE_PREVIEW;
+            message->type = DATA_TYPE_REGENERATE_PREVIEW;
         }
 
-        g_idle_add(update_ui_handler, ready_signal);
+        g_idle_add(update_ui_handler, message);
     }
     free_task_list(tasks);
     return NULL;
