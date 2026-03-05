@@ -434,10 +434,12 @@ update_ui_handler(void *user_data) {
         case UI_ACTION_HARDLINK:
             src_background_color = "#E2D1F9";
             dst_background_color = "#E2D1F9";
+            dst_path_final = NULL;
             break;
         case UI_ACTION_SYMLINK:
             src_background_color = "#FFD1F9";
             dst_background_color = "#FFD1F9";
+            dst_path_final = NULL;
             break;
         case UI_ACTION_EQUAL:
             src_background_color = "#F0F0F0";
