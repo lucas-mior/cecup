@@ -832,7 +832,7 @@ work_rsync_bulk(void *user_data) {
         pid_t child_pid;
         char destination_directory[MAX_PATH_LENGTH];
         char *rsync_arguments[32];
-        int32 argument_index = 0;
+        int32 a = 0;
         char buffer_output[8192];
         int32 buffer_output_pos = 0;
         char buffer_error[8192];
@@ -854,27 +854,27 @@ work_rsync_bulk(void *user_data) {
 
         SNPRINTF(destination_directory, "%s/", cecup.dst_base);
 
-        rsync_arguments[argument_index++] = "rsync";
-        rsync_arguments[argument_index++] = "--verbose";
-        rsync_arguments[argument_index++] = "--update";
-        rsync_arguments[argument_index++] = "--recursive";
-        rsync_arguments[argument_index++] = "--partial";
-        rsync_arguments[argument_index++] = "--progress";
-        rsync_arguments[argument_index++] = "--info=progress2";
-        rsync_arguments[argument_index++] = "--links";
-        rsync_arguments[argument_index++] = "--hard-links";
-        rsync_arguments[argument_index++] = "--itemize-changes";
-        rsync_arguments[argument_index++] = "--perms";
-        rsync_arguments[argument_index++] = "--times";
-        rsync_arguments[argument_index++] = "--owner";
-        rsync_arguments[argument_index++] = "--group";
-        rsync_arguments[argument_index++] = "--relative";
-        rsync_arguments[argument_index++] = "--files-from=-";
-        rsync_arguments[argument_index++] = cecup.src_base;
-        rsync_arguments[argument_index++] = destination_directory;
-        rsync_arguments[argument_index++] = NULL;
+        rsync_arguments[a++] = "rsync";
+        rsync_arguments[a++] = "--verbose";
+        rsync_arguments[a++] = "--update";
+        rsync_arguments[a++] = "--recursive";
+        rsync_arguments[a++] = "--partial";
+        rsync_arguments[a++] = "--progress";
+        rsync_arguments[a++] = "--info=progress2";
+        rsync_arguments[a++] = "--links";
+        rsync_arguments[a++] = "--hard-links";
+        rsync_arguments[a++] = "--itemize-changes";
+        rsync_arguments[a++] = "--perms";
+        rsync_arguments[a++] = "--times";
+        rsync_arguments[a++] = "--owner";
+        rsync_arguments[a++] = "--group";
+        rsync_arguments[a++] = "--relative";
+        rsync_arguments[a++] = "--files-from=-";
+        rsync_arguments[a++] = cecup.src_base;
+        rsync_arguments[a++] = destination_directory;
+        rsync_arguments[a++] = NULL;
 
-        STRING_FROM_ARRAY(cmd, " ", rsync_arguments, argument_index);
+        STRING_FROM_ARRAY(cmd, " ", rsync_arguments, a);
         ipc_dispatch_log("+ %s\n", cmd);
 
         switch (child_pid = fork()) {
