@@ -171,9 +171,25 @@ main(int32 argc, char *argv[]) {
         cecup.ignore_button, _("Edit the list of filename patterns to ignore"));
     cecup.fix_button
         = gtk_button_new_with_label(_("🛠️ Rename problematic files"));
-    gtk_widget_set_tooltip_text(
-        cecup.fix_button,
-        _("Fix file names with special characters that cause errors"));
+
+    {
+        char tooltip[1024];
+        int64 offset;
+
+        offset
+            = SNPRINTF(tooltip, "%s",
+                       _("Rename problematic filenames, the ones containing:"));
+        for (int32 i = 0; i < LENGTH(replacements); i += 1) {
+            int64 written;
+
+            written
+                = (int64)snprintf2(tooltip + offset, SIZEOF(tooltip) - offset,
+                                   " \"%s\"\n", replacements[i].problem);
+            offset += written;
+        }
+        gtk_widget_set_tooltip_text(cecup.fix_button, tooltip);
+    }
+
     cecup.stop_button = gtk_button_new_with_label(_("⏹️ Stop"));
     gtk_widget_set_tooltip_text(cecup.stop_button,
                                 _("Cancel the current task"));
