@@ -931,10 +931,14 @@ work_rsync_bulk(void *user_data) {
                 if (item->link_target == NULL) {
                     continue;
                 }
-                if (item->action == UI_ACTION_HARDLINK) {
+                switch (item->action) {
+                case UI_ACTION_HARDLINK:
                     write64(pipe_stdin[1], item->link_target,
                             item->link_target_len);
                     write64(pipe_stdin[1], "\n", 1);
+                    break;
+                default:
+                    break;
                 }
             }
         }
