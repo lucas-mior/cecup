@@ -247,7 +247,7 @@ on_menu_diff(GtkWidget *m, void *data) {
                 {
                     char buffer[MAX_PATH_LENGTH*2];
                     char *diff_command[] = {
-                        term_cmd, "-e", diff_tool, path_src, path_dst, NULL,
+                        term_cmd, "-e", diff_tool, path_dst, path_src, NULL,
                     };
 
                     execvp(diff_command[0], diff_command);
