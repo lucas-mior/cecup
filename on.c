@@ -453,8 +453,9 @@ on_preview_clicked(GtkWidget *b, void *data) {
     ThreadData *thread_data;
 
     (void)data;
-    cecup_get_dirs();
     (void)b;
+
+    cecup_get_dirs();
 
     if (strlen64(cecup.src_base) < 1 || strlen64(cecup.dst_base) < 1) {
         ipc_dispatch_log_error("Error: Invalid source and/or destination\n");
