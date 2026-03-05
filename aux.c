@@ -234,11 +234,12 @@ refresh_ui_list(void) {
     int32 count_equal = 0;
     int32 count_delete = 0;
     int32 count_ignore = 0;
+    int64 count_selected = 0;
     int64 total_size_bytes = 0;
     int32 current_store_count;
 
     char pretty_size[16];
-    char stats_text[128];
+    char stats_text[256];
     char button_label[64];
 
     bool show_new
@@ -258,6 +259,10 @@ refresh_ui_list(void) {
     for (int32 i = 0; i < cecup.rows_count; i += 1) {
         CecupRow *row = cecup.rows[i];
         bool visible = false;
+
+        if (row->selected) {
+            count_selected += 1;
+        }
 
         switch (row->src_action) {
         case UI_ACTION_NEW:
@@ -316,7 +321,8 @@ refresh_ui_list(void) {
     gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
 
     bytes_pretty(pretty_size, total_size_bytes);
-    SNPRINTF(stats_text, _("Total Transfer Size: 📦 %s"), pretty_size);
+    SNPRINTF(stats_text, _("Selected files: %lld\nTotal Transfer Size: 📦 %s"),
+             (llong)count_selected, pretty_size);
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
 
     if (cecup.visible_count > 0) {
