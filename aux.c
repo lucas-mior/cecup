@@ -376,15 +376,15 @@ refresh_ui_timeout_callback(void *data) {
 
 static gboolean
 update_ui_handler(void *user_data) {
-    Message *data = user_data;
+    Message *message = user_data;
 
-    switch (data->type) {
+    switch (message->type) {
     case DATA_TYPE_LOG:
     case DATA_TYPE_LOG_ERROR: {
         GtkTextIter end;
 
         gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
-        if (data->type == DATA_TYPE_LOG_ERROR) {
+        if (message->type == DATA_TYPE_LOG_ERROR) {
             GtkTextTagTable *table;
 
             table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
@@ -393,9 +393,10 @@ update_ui_handler(void *user_data) {
                                            "foreground", "red", NULL);
             }
             gtk_text_buffer_insert_with_tags_by_name(
-                cecup.log_buffer, &end, data->message, -1, "err_red", NULL);
+                cecup.log_buffer, &end, message->message, -1, "err_red", NULL);
         } else {
-            gtk_text_buffer_insert(cecup.log_buffer, &end, data->message, -1);
+            gtk_text_buffer_insert(cecup.log_buffer, &end, message->message,
+                                   -1);
         }
 
         gtk_text_view_scroll_to_mark(
@@ -405,22 +406,22 @@ update_ui_handler(void *user_data) {
     }
     case DATA_TYPE_PROGRESS_RSYNC:
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_rsync),
-                                      data->fraction);
+                                      message->fraction);
         break;
     case DATA_TYPE_PROGRESS_PREVIEW:
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
-                                      data->fraction);
+                                      message->fraction);
         break;
     case DATA_TYPE_TREE_ROW: {
         CecupRow *row;
         char *src_background_color = "#FFFFFF";
         char *dst_background_color = "#FFFFFF";
-        char *src_path_final = data->filepath;
-        char *dst_path_final = data->filepath;
-        enum CecupAction src_action = data->action;
-        enum CecupAction dst_action = data->action;
+        char *src_path_final = message->filepath;
+        char *dst_path_final = message->filepath;
+        enum CecupAction src_action = message->action;
+        enum CecupAction dst_action = message->action;
 
-        switch (data->action) {
+        switch (message->action) {
         case UI_ACTION_NEW:
             src_background_color = "#D4EDDA";
             dst_path_final = NULL;
@@ -444,7 +445,7 @@ update_ui_handler(void *user_data) {
             dst_background_color = "#F0F0F0";
             break;
         case UI_ACTION_DELETE:
-            if (data->reason == UI_REASON_IGNORED) {
+            if (message->reason == UI_REASON_IGNORED) {
                 src_background_color = "#FFF3CD";
                 dst_background_color = "#FFF3CD";
                 src_action = UI_ACTION_IGNORE;
@@ -461,7 +462,7 @@ update_ui_handler(void *user_data) {
         case UI_ACTION_IGNORE:
         case NUM_UI_ACTIONS:
         default:
-            error("Invalid data->action: %u\n", data->action);
+            error("Invalid message->action: %u\n", message->action);
             fatal(EXIT_FAILURE);
         }
 
@@ -471,15 +472,15 @@ update_ui_handler(void *user_data) {
         row->src_action = src_action;
         row->dst_action = dst_action;
 
-        bytes_pretty(row->size_text, data->size);
-        row->size_raw = data->size;
+        bytes_pretty(row->size_text, message->size);
+        row->size_raw = message->size;
 
-        if (data->mtime > 0) {
-            time_t t = (time_t)data->mtime;
+        if (message->mtime > 0) {
+            time_t t = (time_t)message->mtime;
             struct tm *tm_info = localtime(&t);
 
             STRFTIME(row->mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
-            row->mtime_raw = data->mtime;
+            row->mtime_raw = message->mtime;
         } else {
             strcpy(row->mtime_text, _("Unknown modification time"));
             row->mtime_raw = 0;
@@ -487,36 +488,36 @@ update_ui_handler(void *user_data) {
 
         row->src_color = src_background_color;
         row->dst_color = dst_background_color;
-        row->reason = data->reason;
+        row->reason = message->reason;
 
-        if (data->link_target) {
-            row->link_target_len = data->link_target_len;
+        if (message->link_target) {
+            row->link_target_len = message->link_target_len;
             row->link_target = xarena_push(cecup.row_arena,
                                            ALIGN16(row->link_target_len + 1));
-            memcpy64(row->link_target, data->link_target,
+            memcpy64(row->link_target, message->link_target,
                      row->link_target_len + 1);
         }
 
         if (src_path_final) {
-            row->src_path_len = data->filepath_length;
+            row->src_path_len = message->filepath_length;
         } else {
             row->src_path_len = 0;
         }
         if (dst_path_final) {
-            row->dst_path_len = data->filepath_length;
+            row->dst_path_len = message->filepath_length;
         } else {
             row->dst_path_len = 0;
         }
 
         if (src_path_final == NULL) {
             row->src_path = NULL;
-            row->dst_path = data->filepath;
+            row->dst_path = message->filepath;
         } else if (dst_path_final == NULL) {
-            row->src_path = data->filepath;
+            row->src_path = message->filepath;
             row->dst_path = NULL;
         } else {
-            row->src_path = data->filepath;
-            row->dst_path = data->filepath;
+            row->src_path = message->filepath;
+            row->dst_path = message->filepath;
         }
 
         if (cecup.rows_count >= cecup.rows_capacity) {
@@ -540,10 +541,11 @@ update_ui_handler(void *user_data) {
         g_mutex_lock(&cecup.row_arena_mutex);
         for (int32 i = 0; i < cecup.rows_count; i += 1) {
             CecupRow *row = cecup.rows[i];
-            if ((row->src_path_len == data->filepath_length && row->src_path
-                 && strcmp(row->src_path, data->filepath) == 0)
-                || (row->dst_path_len == data->filepath_length && row->dst_path
-                    && strcmp(row->dst_path, data->filepath) == 0)) {
+            if ((row->src_path_len == message->filepath_length && row->src_path
+                 && strcmp(row->src_path, message->filepath) == 0)
+                || (row->dst_path_len == message->filepath_length
+                    && row->dst_path
+                    && strcmp(row->dst_path, message->filepath) == 0)) {
                 for (int32 j = i; j < (cecup.rows_count - 1); j += 1) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }
@@ -594,10 +596,10 @@ update_ui_handler(void *user_data) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    if (data->message) {
-        arena_pop(cecup.ui_arena, data->message);
+    if (message->message) {
+        arena_pop(cecup.ui_arena, message->message);
     }
-    arena_pop(cecup.ui_arena, data);
+    arena_pop(cecup.ui_arena, message);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return G_SOURCE_REMOVE;
 }
