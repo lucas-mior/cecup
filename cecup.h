@@ -35,7 +35,6 @@
 #define ALIGN16(n) (((n) + 15) & ~15)
 
 enum CecupAction {
-    UI_ACTION_NONE = 0,
     UI_ACTION_NEW,
     UI_ACTION_HARDLINK,
     UI_ACTION_SYMLINK,
@@ -60,7 +59,6 @@ enum CecupReason {
 };
 
 static char *action_emojis[] = {
-    [UI_ACTION_NONE]     = "",
     [UI_ACTION_NEW]      = EMOJI_NEW,
     [UI_ACTION_HARDLINK] = EMOJI_LINK,
     [UI_ACTION_SYMLINK]  = EMOJI_SYMLINK,
@@ -72,7 +70,6 @@ static char *action_emojis[] = {
 };
 
 static char *src_action_strings[] = {
-    [UI_ACTION_NONE]     = "",
     [UI_ACTION_NEW]      = N_("Copy to backup"),
     [UI_ACTION_HARDLINK] = N_("Create hardlink in backup"),
     [UI_ACTION_SYMLINK]  = N_("Create symlink in backup"),
@@ -84,7 +81,6 @@ static char *src_action_strings[] = {
 };
 
 static char *dst_action_strings[] = {
-    [UI_ACTION_NONE]     = "",
     [UI_ACTION_NEW]      = N_("Copy from original"),
     [UI_ACTION_HARDLINK] = N_("Create hardlink according to original"),
     [UI_ACTION_SYMLINK]  = N_("Create symlink according to original"),

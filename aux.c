@@ -294,7 +294,6 @@ refresh_ui_list(void) {
             visible = show_ignore;
             count_ignore += 1;
             break;
-        case UI_ACTION_NONE:
         case UI_ACTION_DELETE:
         case NUM_UI_ACTIONS:
         default:
@@ -457,7 +456,6 @@ update_ui_handler(void *user_data) {
                 src_path_final = NULL;
             }
             break;
-        case UI_ACTION_NONE:
         case UI_ACTION_DELETED:
         case UI_ACTION_IGNORE:
         case NUM_UI_ACTIONS:

@@ -925,10 +925,13 @@ work_rsync_bulk(void *user_data) {
 
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *item = tasks->items[i];
-            if (item->action != UI_ACTION_DELETE) {
-                write64(pipe_stdin[1], item->filepath, item->filepath_length);
-                write64(pipe_stdin[1], "\n", 1);
-
+            switch (item->action) {
+            case UI_ACTION_DELETE:
+            case UI_ACTION_DELETED:
+            case UI_ACTION_IGNORE:
+            case UI_ACTION_EQUAL:
+                continue;
+            case UI_ACTION_HARDLINK:
                 // rsync, when using the --files-from mode,
                 // only transfers hard links
                 // if the target is also included in the --files-from list
@@ -937,6 +940,14 @@ work_rsync_bulk(void *user_data) {
                             item->link_target_len);
                     write64(pipe_stdin[1], "\n", 1);
                 }
+                __attribute__((fallthrough));
+            case UI_ACTION_NEW:
+            case UI_ACTION_UPDATE:
+            case UI_ACTION_SYMLINK:
+            case NUM_UI_ACTIONS:
+            default:
+                write64(pipe_stdin[1], item->filepath, item->filepath_length);
+                write64(pipe_stdin[1], "\n", 1);
             }
         }
         XCLOSE(&pipe_stdin[1]);
