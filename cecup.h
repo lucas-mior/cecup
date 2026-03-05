@@ -116,8 +116,6 @@ enum CecupColumn {
     COL_SIZE_RAW,
     COL_MTIME_TEXT,
     COL_MTIME_RAW,
-    COL_SRC_COLOR,
-    COL_DST_COLOR,
     COL_REASON,
     COL_ROW_PTR,
     NUM_COLS

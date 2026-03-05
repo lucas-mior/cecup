@@ -205,14 +205,12 @@ cecup_row_compare(const void *a, const void *b) {
         COMPARE(row_a->mtime_raw, row_b->mtime_raw);
         break;
     case COL_DST_ACTION:
-    case COL_DST_COLOR:
     case COL_MTIME_TEXT:
     case COL_REASON:
     case COL_ROW_PTR:
     case COL_SELECTED:
     case COL_SIZE_TEXT:
     case COL_SRC_ACTION:
-    case COL_SRC_COLOR:
     case NUM_COLS:
     default:
         COMPARE(row_a->src_action, row_b->src_action);
