@@ -492,10 +492,7 @@ main(int32 argc, char *argv[]) {
         g_key_file_free(key);
     }
 
-    cecup.src_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
-    cecup.dst_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
-    cecup.src_base_len = strlen64(cecup.src_base);
-    cecup.dst_base_len = strlen64(cecup.dst_base);
+    cecup_get_dirs();
 
     // Note: NEVER delete lines with // clang-format
     // clang-format off

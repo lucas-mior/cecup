@@ -601,6 +601,15 @@ update_ui_handler(void *user_data) {
     return G_SOURCE_REMOVE;
 }
 
+static void
+cecup_get_dirs(void) {
+    cecup.src_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
+    cecup.dst_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+    cecup.src_base_len = strlen64(cecup.src_base);
+    cecup.dst_base_len = strlen64(cecup.dst_base);
+    return;
+}
+
 #if TESTING_aux
 #include <assert.h>
 #include <string.h>

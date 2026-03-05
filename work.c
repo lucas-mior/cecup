@@ -937,6 +937,9 @@ work_rsync_bulk(void *user_data) {
                             item->link_target_len);
                     write64(pipe_stdin[1], "\n", 1);
                     break;
+                case UI_ACTION_SYMLINK:
+                    if (item->link_target[0] == '/') {
+                    }
                 default:
                     break;
                 }

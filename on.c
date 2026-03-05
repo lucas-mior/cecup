@@ -365,10 +365,7 @@ static void
 on_config_changed(GtkWidget *widget, void *data) {
     (void)widget;
     (void)data;
-    cecup.src_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
-    cecup.dst_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
-    cecup.src_base_len = strlen64(cecup.src_base);
-    cecup.dst_base_len = strlen64(cecup.dst_base);
+    cecup_get_dirs();
     save_config();
     return;
 }
