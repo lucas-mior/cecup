@@ -781,7 +781,7 @@ work_rsync_bulk(void *user_data) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *message = tasks->items[i];
             char full_destination_path[MAX_PATH_LENGTH];
-            pid_t rm_pid;
+            pid_t child_rm;
 
             if (message->action != UI_ACTION_DELETE) {
                 has_transfers = true;
@@ -790,7 +790,7 @@ work_rsync_bulk(void *user_data) {
 
             SNPRINTF(full_destination_path, "%s/%s", cecup.dst_base,
                      message->filepath);
-            switch (rm_pid = fork()) {
+            switch (child_rm = fork()) {
             case -1:
                 error("Error forking for rm: %s.\n", strerror(errno));
                 break;
@@ -798,7 +798,7 @@ work_rsync_bulk(void *user_data) {
                 execlp("rm", "rm", "-rf", full_destination_path, NULL);
                 _exit(EXIT_FAILURE);
             default:
-                waitpid(rm_pid, NULL, 0);
+                waitpid(child_rm, NULL, 0);
                 break;
             }
 
