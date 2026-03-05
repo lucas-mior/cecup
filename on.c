@@ -501,7 +501,6 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
     GtkTreePath *path;
     GtkTreeIter iter;
     CecupRow *parent_row;
-    int32 new_state;
     char *parent_path;
     int64 parent_path_len;
 
@@ -509,6 +508,8 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
     (void)user_data;
 
     do {
+        bool will_be_selected;
+
         if ((path = gtk_tree_path_new_from_string(path_string)) == NULL) {
             break;
         }
@@ -521,7 +522,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
                            &parent_row, -1);
 
         parent_row->selected = (parent_row->selected == 0) ? 1 : 0;
-        new_state = parent_row->selected;
+        will_be_selected = parent_row->selected;
 
         if (parent_row->src_path) {
             parent_path = parent_row->src_path;
@@ -548,7 +549,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
 
             row_path_len = strlen64(row_path);
 
-            if (new_state == 1) {
+            if (will_be_selected) {
                 if ((parent_path_len > 0)
                     && (parent_path[parent_path_len - 1] == '/')) {
                     if ((row_path_len >= parent_path_len)
