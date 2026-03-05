@@ -930,8 +930,10 @@ work_rsync_bulk(void *user_data) {
                 write64(pipe_stdin[1], item->filepath, item->filepath_length);
                 write64(pipe_stdin[1], "\n", 1);
                 if (item->link_target) {
-                    write64(pipe_stdin[1], item->link_target,
-                            item->link_target_len);
+                    char *link_target = item->link_target + cecup.src_base_len;
+                    int64 link_target_len
+                        = item->link_target_len - cecup.src_base_len;
+                    write64(pipe_stdin[1], link_target, link_target_len);
                     write64(pipe_stdin[1], "\n", 1);
                 }
             }
