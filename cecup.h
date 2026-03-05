@@ -172,11 +172,6 @@ typedef struct Message {
     int64 size;
     int64 mtime;
 
-    char *diff_tool;
-    int64 diff_tool_len;
-    char *term_cmd;
-    int64 term_cmd_len;
-
     int32 side;
     double fraction;
 } Message;

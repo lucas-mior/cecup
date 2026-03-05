@@ -58,15 +58,6 @@ free_task_list(TaskList *tasks) {
         if (task->message) {
             arena_pop(cecup.ui_arena, task->message);
         }
-        if (task->diff_tool) {
-            arena_pop(cecup.ui_arena, task->diff_tool);
-        }
-        if (task->term_cmd) {
-            arena_pop(cecup.ui_arena, task->term_cmd);
-        }
-        if (task->filepath) {
-            arena_pop(cecup.ui_arena, task->filepath);
-        }
         arena_pop(cecup.ui_arena, task);
     }
 

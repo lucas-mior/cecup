@@ -802,15 +802,6 @@ work_rsync_bulk(void *user_data) {
             if (message->message) {
                 arena_pop(cecup.ui_arena, message->message);
             }
-            if (message->diff_tool) {
-                arena_pop(cecup.ui_arena, message->diff_tool);
-            }
-            if (message->term_cmd) {
-                arena_pop(cecup.ui_arena, message->term_cmd);
-            }
-            if (message->filepath) {
-                arena_pop(cecup.ui_arena, message->filepath);
-            }
             arena_pop(cecup.ui_arena, message);
             g_mutex_unlock(&cecup.ui_arena_mutex);
             continue;
@@ -1048,25 +1039,6 @@ work_rsync_bulk(void *user_data) {
             remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
             g_idle_add(update_ui_handler, remove_data);
         }
-
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        if (message->link_target) {
-            arena_pop(cecup.ui_arena, message->link_target);
-        }
-        if (message->message) {
-            arena_pop(cecup.ui_arena, message->message);
-        }
-        if (message->diff_tool) {
-            arena_pop(cecup.ui_arena, message->diff_tool);
-        }
-        if (message->term_cmd) {
-            arena_pop(cecup.ui_arena, message->term_cmd);
-        }
-        if (message->filepath) {
-            arena_pop(cecup.ui_arena, message->filepath);
-        }
-        arena_pop(cecup.ui_arena, message);
-        g_mutex_unlock(&cecup.ui_arena_mutex);
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);

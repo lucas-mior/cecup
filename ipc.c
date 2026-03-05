@@ -130,36 +130,36 @@ ipc_dispatch_tree(int32 side,
                   char *path, char *link_target,
                   int64 size, int64 mtime) {
     // clang-format on
-    Message *data;
+    Message *message;
     int64 target_len;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-    memset64(data, 0, SIZEOF(Message));
+    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(message, 0, SIZEOF(Message));
 
-    data->filepath_length = strlen64(path);
+    message->filepath_length = strlen64(path);
     g_mutex_lock(&cecup.row_arena_mutex);
-    data->filepath
-        = xarena_push(cecup.row_arena, ALIGN16(data->filepath_length + 1));
-    memcpy64(data->filepath, path, data->filepath_length + 1);
+    message->filepath
+        = xarena_push(cecup.row_arena, ALIGN16(message->filepath_length + 1));
+    memcpy64(message->filepath, path, message->filepath_length + 1);
 
     if (link_target) {
         target_len = strlen64(link_target);
-        data->link_target_len = target_len;
-        data->link_target
+        message->link_target_len = target_len;
+        message->link_target
             = xarena_push(cecup.row_arena, ALIGN16(target_len + 1));
-        memcpy64(data->link_target, link_target, target_len + 1);
+        memcpy64(message->link_target, link_target, target_len + 1);
     }
     g_mutex_unlock(&cecup.row_arena_mutex);
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    data->type = DATA_TYPE_TREE_ROW;
-    data->side = side;
-    data->action = action;
-    data->reason = reason;
-    data->size = size;
-    data->mtime = mtime;
-    g_idle_add(update_ui_handler, data);
+    message->type = DATA_TYPE_TREE_ROW;
+    message->side = side;
+    message->action = action;
+    message->reason = reason;
+    message->size = size;
+    message->mtime = mtime;
+    g_idle_add(update_ui_handler, message);
     return;
 }
 
