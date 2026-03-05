@@ -184,6 +184,9 @@ static struct {
     GtkWidget *src_entry;
     GtkWidget *dst_entry;
 
+    ulong src_entry_id;
+    ulong dst_entry_id;
+
     GtkWidget *diff_entry;
     GtkWidget *term_entry;
 

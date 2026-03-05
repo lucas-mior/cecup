@@ -423,6 +423,11 @@ main(int32 argc, char *argv[]) {
     cecup.stats_label = gtk_label_new(_("✅ Everything ready"));
     gtk_box_pack_start(GTK_BOX(main_vbox), cecup.stats_label, FALSE, FALSE, 5);
 
+    cecup.src_entry_id = g_signal_connect(cecup.src_entry, "changed",
+                                          G_CALLBACK(on_config_changed), NULL);
+    cecup.dst_entry_id = g_signal_connect(cecup.dst_entry, "changed",
+                                          G_CALLBACK(on_config_changed), NULL);
+
     {
         GKeyFile *key;
         char *val;
@@ -532,10 +537,7 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_config_changed), NULL);
     g_signal_connect(cecup.term_entry, "changed",
                      G_CALLBACK(on_config_changed), NULL);
-    g_signal_connect(cecup.src_entry, "changed",
-                     G_CALLBACK(on_config_changed), NULL);
-    g_signal_connect(cecup.dst_entry, "changed",
-                     G_CALLBACK(on_config_changed), NULL);
+
     g_signal_connect(cecup.check_fs, "toggled",
                      G_CALLBACK(on_preview_setting_toggled), NULL);
     g_signal_connect(cecup.delete_excluded, "toggled",

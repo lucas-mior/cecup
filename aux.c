@@ -603,8 +603,35 @@ update_ui_handler(void *user_data) {
 
 static void
 cecup_get_dirs(void) {
+    char *full_src;
+    char *full_dst;
+
+    g_signal_handler_block(cecup.src_entry, cecup.src_entry_id);
+    g_signal_handler_block(cecup.dst_entry, cecup.dst_entry_id);
+
     cecup.src_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
     cecup.dst_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+
+    if ((full_src = realpath(cecup.src_base, NULL)) == NULL) {
+        ipc_dispatch_log_error("Error getting full path of %s: %s.\n",
+                               cecup.src_base, strerror(errno));
+        return;
+    }
+    if ((full_dst = realpath(cecup.dst_base, NULL)) == NULL) {
+        ipc_dispatch_log_error("Error getting full path of %s: %s.\n",
+                               cecup.dst_base, strerror(errno));
+        return;
+    }
+
+    cecup.src_base = full_src;
+    cecup.dst_base = full_dst;
+
+    gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), cecup.src_base);
+    gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), cecup.dst_base);
+
+    g_signal_handler_unblock(cecup.src_entry, cecup.src_entry_id);
+    g_signal_handler_unblock(cecup.dst_entry, cecup.dst_entry_id);
+
     cecup.src_base_len = strlen64(cecup.src_base);
     cecup.dst_base_len = strlen64(cecup.dst_base);
     return;

@@ -453,8 +453,7 @@ on_preview_clicked(GtkWidget *b, void *data) {
     ThreadData *thread_data;
 
     (void)data;
-    cecup.src_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
-    cecup.dst_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+    cecup_get_dirs();
     (void)b;
 
     if (strlen64(cecup.src_base) < 1 || strlen64(cecup.dst_base) < 1) {
