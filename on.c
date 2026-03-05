@@ -522,22 +522,47 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
             if (parent_path != NULL) {
                 parent_path_len = strlen64(parent_path);
 
-                if ((parent_path_len > 0)
-                    && (parent_path[parent_path_len - 1] == '/')) {
-                    for (int32 i = 0; i < cecup.rows_count; i += 1) {
-                        CecupRow *child_row;
-                        char *child_path;
+                for (int32 i = 0; i < cecup.rows_count; i += 1) {
+                    CecupRow *row;
+                    char *row_path;
+                    int64 row_path_len;
 
-                        child_row = cecup.rows[i];
-                        child_path = (child_row->src_path != NULL)
-                                         ? child_row->src_path
-                                         : child_row->dst_path;
+                    row = cecup.rows[i];
+                    row_path = (row->src_path != NULL) ? row->src_path
+                                                       : row->dst_path;
 
-                        if (child_path != NULL) {
-                            if (strncmp64(child_path, parent_path,
-                                          parent_path_len)
+                    if (row_path == NULL) {
+                        continue;
+                    }
+
+                    row_path_len = strlen64(row_path);
+
+                    if (new_state == 1) {
+                        if ((parent_path_len > 0)
+                            && (parent_path[parent_path_len - 1] == '/')) {
+                            if ((row_path_len >= parent_path_len)
+                                && (strncmp64(row_path, parent_path,
+                                              parent_path_len)
+                                    == 0)) {
+                                row->selected = 1;
+                            }
+                        }
+                    } else {
+                        if ((parent_path_len > 0)
+                            && (parent_path[parent_path_len - 1] == '/')) {
+                            if ((row_path_len >= parent_path_len)
+                                && (strncmp64(row_path, parent_path,
+                                              parent_path_len)
+                                    == 0)) {
+                                row->selected = 0;
+                            }
+                        }
+
+                        if ((row_path_len < parent_path_len)
+                            && (row_path[row_path_len - 1] == '/')) {
+                            if (strncmp64(parent_path, row_path, row_path_len)
                                 == 0) {
-                                child_row->selected = new_state;
+                                row->selected = 0;
                             }
                         }
                     }
