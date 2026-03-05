@@ -935,11 +935,9 @@ work_rsync_bulk(void *user_data) {
                 // rsync, when using the --files-from mode,
                 // only transfers hard links
                 // if the target is also included in the --files-from list
-                if (item->action == UI_ACTION_HARDLINK) {
-                    write64(pipe_stdin[1], item->link_target,
-                            item->link_target_len);
-                    write64(pipe_stdin[1], "\n", 1);
-                }
+                write64(pipe_stdin[1], item->link_target,
+                        item->link_target_len);
+                write64(pipe_stdin[1], "\n", 1);
                 __attribute__((fallthrough));
             case UI_ACTION_NEW:
             case UI_ACTION_UPDATE:
