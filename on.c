@@ -508,72 +508,75 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
     (void)renderer;
     (void)user_data;
 
-    if ((path = gtk_tree_path_new_from_string(path_string))) {
-        if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter, path)) {
-            gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
-                               &parent_row, -1);
+    do {
+        if ((path = gtk_tree_path_new_from_string(path_string)) == NULL) {
+            break;
+        }
+        if (!gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter,
+                                     path)) {
+            break;
+        }
 
-            parent_row->selected = (parent_row->selected == 0) ? 1 : 0;
-            new_state = parent_row->selected;
+        gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
+                           &parent_row, -1);
 
-            if (parent_row->src_path) {
-                parent_path = parent_row->src_path;
-            } else {
-                parent_path = parent_row->dst_path;
+        parent_row->selected = (parent_row->selected == 0) ? 1 : 0;
+        new_state = parent_row->selected;
+
+        if (parent_row->src_path) {
+            parent_path = parent_row->src_path;
+        } else {
+            parent_path = parent_row->dst_path;
+        }
+
+        if (parent_path == NULL) {
+            break;
+        }
+        parent_path_len = strlen64(parent_path);
+
+        for (int32 i = 0; i < cecup.rows_count; i += 1) {
+            CecupRow *row;
+            char *row_path;
+            int64 row_path_len;
+
+            row = cecup.rows[i];
+            row_path = (row->src_path != NULL) ? row->src_path : row->dst_path;
+
+            if (row_path == NULL) {
+                continue;
             }
 
-            if (parent_path != NULL) {
-                parent_path_len = strlen64(parent_path);
+            row_path_len = strlen64(row_path);
 
-                for (int32 i = 0; i < cecup.rows_count; i += 1) {
-                    CecupRow *row;
-                    char *row_path;
-                    int64 row_path_len;
-
-                    row = cecup.rows[i];
-                    row_path = (row->src_path != NULL) ? row->src_path
-                                                       : row->dst_path;
-
-                    if (row_path == NULL) {
-                        continue;
+            if (new_state == 1) {
+                if ((parent_path_len > 0)
+                    && (parent_path[parent_path_len - 1] == '/')) {
+                    if ((row_path_len >= parent_path_len)
+                        && (strncmp64(row_path, parent_path, parent_path_len)
+                            == 0)) {
+                        row->selected = 1;
                     }
+                }
+            } else {
+                if ((parent_path_len > 0)
+                    && (parent_path[parent_path_len - 1] == '/')) {
+                    if ((row_path_len >= parent_path_len)
+                        && (strncmp64(row_path, parent_path, parent_path_len)
+                            == 0)) {
+                        row->selected = 0;
+                    }
+                }
 
-                    row_path_len = strlen64(row_path);
-
-                    if (new_state == 1) {
-                        if ((parent_path_len > 0)
-                            && (parent_path[parent_path_len - 1] == '/')) {
-                            if ((row_path_len >= parent_path_len)
-                                && (strncmp64(row_path, parent_path,
-                                              parent_path_len)
-                                    == 0)) {
-                                row->selected = 1;
-                            }
-                        }
-                    } else {
-                        if ((parent_path_len > 0)
-                            && (parent_path[parent_path_len - 1] == '/')) {
-                            if ((row_path_len >= parent_path_len)
-                                && (strncmp64(row_path, parent_path,
-                                              parent_path_len)
-                                    == 0)) {
-                                row->selected = 0;
-                            }
-                        }
-
-                        if ((row_path_len < parent_path_len)
-                            && (row_path[row_path_len - 1] == '/')) {
-                            if (strncmp64(parent_path, row_path, row_path_len)
-                                == 0) {
-                                row->selected = 0;
-                            }
-                        }
+                if ((row_path_len < parent_path_len)
+                    && (row_path[row_path_len - 1] == '/')) {
+                    if (strncmp64(parent_path, row_path, row_path_len) == 0) {
+                        row->selected = 0;
                     }
                 }
             }
         }
         gtk_tree_path_free(path);
-    }
+    } while (0);
 
     refresh_ui_list();
     return;
