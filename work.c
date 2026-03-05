@@ -1016,7 +1016,7 @@ work_rsync_bulk(void *user_data) {
                 if ((line_len > 12) && (buffer_output[11] == ' ')) {
                     char *filename = buffer_output + 12;
                     char *sep;
-                    Message *remove_data;
+                    Message *message;
                     int64 path_len = strlen64(filename);
 
                     if ((sep = strstr(filename, RSYNC_HARDLINK_NOTATION))) {
@@ -1027,18 +1027,18 @@ work_rsync_bulk(void *user_data) {
                     }
 
                     g_mutex_lock(&cecup.ui_arena_mutex);
-                    remove_data
+                    message
                         = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-                    memset64(remove_data, 0, SIZEOF(Message));
+                    memset64(message, 0, SIZEOF(Message));
 
-                    remove_data->filepath_length = path_len;
-                    remove_data->filepath
+                    message->filepath_length = path_len;
+                    message->filepath
                         = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                    memcpy64(remove_data->filepath, filename, path_len + 1);
+                    memcpy64(message->filepath, filename, path_len + 1);
                     g_mutex_unlock(&cecup.ui_arena_mutex);
 
-                    remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
-                    g_idle_add(update_ui_handler, remove_data);
+                    message->type = DATA_TYPE_REMOVE_TREE_ROW;
+                    g_idle_add(update_ui_handler, message);
                 }
 
                 remaining = buffer_output_pos - (line_len + 1);
