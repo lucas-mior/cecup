@@ -880,7 +880,7 @@ work_rsync_bulk(void *user_data) {
                 if (message->action == UI_ACTION_DELETE) {
                     SNPRINTF(full_dst, "%s/%s", cecup.dst_base,
                              message->filepath);
-                    args[a++] = "rm";
+                    args[a = 0] = "rm";
                     args[a++] = "-rfv";
                     args[a++] = full_dst;
                     args[a++] = NULL;
