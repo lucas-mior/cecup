@@ -932,6 +932,7 @@ work_rsync_bulk(void *user_data) {
                 if (item->link_target) {
                     char *link_target;
                     int64 link_target_len;
+
                     if (item->action == UI_ACTION_SYMLINK) {
                         link_target = item->link_target + cecup.src_base_len;
                         link_target_len
@@ -940,6 +941,7 @@ work_rsync_bulk(void *user_data) {
                         link_target = item->link_target;
                         link_target_len = item->link_target_len;
                     }
+
                     write64(pipe_stdin[1], link_target, link_target_len);
                     write64(pipe_stdin[1], "\n", 1);
                 }
