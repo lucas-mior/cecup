@@ -612,9 +612,6 @@ cecup_get_dirs(void) {
 
     save_config();
 
-    PRINTLN(cecup.src_base);
-    PRINTLN(cecup.dst_base);
-
     if ((strlen64(cecup.src_base) <= 0) || (strlen64(cecup.dst_base) <= 0)) {
         ipc_dispatch_log_error("Error: Invalid source and/or destination\n");
         return;
