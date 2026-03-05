@@ -771,7 +771,6 @@ finalize:
 static void *
 work_rsync_bulk(void *user_data) {
     TaskList *tasks = user_data;
-    Message *ready_signal;
     bool has_transfers = false;
 
     if (cecup.cancel_sync == false) {
@@ -1090,18 +1089,21 @@ work_rsync_bulk(void *user_data) {
         XCLOSE(&pipe_error[0]);
     }
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    ready_signal = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-    memset64(ready_signal, 0, SIZEOF(Message));
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    {
+        Message *ready_signal;
+        g_mutex_lock(&cecup.ui_arena_mutex);
+        ready_signal = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        memset64(ready_signal, 0, SIZEOF(Message));
+        g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    if (cecup.cancel_sync != false) {
-        ready_signal->type = DATA_TYPE_ENABLE_BUTTONS;
-    } else {
-        ready_signal->type = DATA_TYPE_REGENERATE_PREVIEW;
+        if (cecup.cancel_sync != false) {
+            ready_signal->type = DATA_TYPE_ENABLE_BUTTONS;
+        } else {
+            ready_signal->type = DATA_TYPE_REGENERATE_PREVIEW;
+        }
+
+        g_idle_add(update_ui_handler, ready_signal);
     }
-
-    g_idle_add(update_ui_handler, ready_signal);
     free_task_list(tasks);
     return NULL;
 }
