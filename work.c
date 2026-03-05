@@ -1104,6 +1104,7 @@ work_rsync_bulk(void *user_data) {
 
     {
         Message *message;
+
         g_mutex_lock(&cecup.ui_arena_mutex);
         message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
         memset64(message, 0, SIZEOF(Message));
