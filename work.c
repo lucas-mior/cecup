@@ -776,58 +776,51 @@ work_rsync_bulk(void *user_data) {
     TaskList *tasks = user_data;
     Message *ready_signal;
     bool has_transfers = false;
-    bool has_deletions = false;
 
-    for (int32 i = 0; i < tasks->count; i += 1) {
-        if (tasks->items[i]->action == UI_ACTION_DELETE) {
-            has_deletions = true;
-        } else {
-            has_transfers = true;
-        }
-    }
-
-    if (has_deletions && (cecup.cancel_sync == false)) {
+    if (cecup.cancel_sync == false) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *message = tasks->items[i];
+            char full_destination_path[MAX_PATH_LENGTH];
+            pid_t rm_pid;
 
-            if (message->action == UI_ACTION_DELETE) {
-                char full_destination_path[MAX_PATH_LENGTH];
-                pid_t rm_pid;
+            if (message->action != UI_ACTION_DELETE) {
+                has_transfers = true;
+                continue;
+            }
 
-                SNPRINTF(full_destination_path, "%s/%s", cecup.dst_base,
-                         message->filepath);
-                switch (rm_pid = fork()) {
-                case -1:
-                    error("Error forking for rm: %s.\n", strerror(errno));
-                    break;
-                case 0:
-                    execlp("rm", "rm", "-rf", full_destination_path, NULL);
-                    _exit(EXIT_FAILURE);
-                default:
-                    waitpid(rm_pid, NULL, 0);
-                    break;
-                }
+            SNPRINTF(full_destination_path, "%s/%s", cecup.dst_base,
+                     message->filepath);
+            switch (rm_pid = fork()) {
+            case -1:
+                error("Error forking for rm: %s.\n", strerror(errno));
+                break;
+            case 0:
+                execlp("rm", "rm", "-rf", full_destination_path, NULL);
+                _exit(EXIT_FAILURE);
+            default:
+                waitpid(rm_pid, NULL, 0);
+                break;
+            }
 
-                if (cecup.cancel_sync == false) {
-                    Message *remove_data;
-                    int64 path_length;
+            if (cecup.cancel_sync == false) {
+                Message *remove_data;
+                int64 path_length;
 
-                    g_mutex_lock(&cecup.ui_arena_mutex);
-                    remove_data
-                        = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-                    memset64(remove_data, 0, SIZEOF(Message));
+                g_mutex_lock(&cecup.ui_arena_mutex);
+                remove_data
+                    = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+                memset64(remove_data, 0, SIZEOF(Message));
 
-                    path_length = message->filepath_length;
-                    remove_data->filepath_length = path_length;
-                    remove_data->filepath
-                        = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
-                    memcpy64(remove_data->filepath, message->filepath,
-                             path_length + 1);
-                    g_mutex_unlock(&cecup.ui_arena_mutex);
+                path_length = message->filepath_length;
+                remove_data->filepath_length = path_length;
+                remove_data->filepath
+                    = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
+                memcpy64(remove_data->filepath, message->filepath,
+                         path_length + 1);
+                g_mutex_unlock(&cecup.ui_arena_mutex);
 
-                    remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
-                    g_idle_add(update_ui_handler, remove_data);
-                }
+                remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
+                g_idle_add(update_ui_handler, remove_data);
             }
         }
     }
@@ -990,8 +983,19 @@ work_rsync_bulk(void *user_data) {
                 int32 remaining;
                 *eol = '\0';
 
+                ipc_dispatch_log("%s.\n", buffer_output);
+
                 if ((line_len > 12) && (buffer_output[11] == ' ')) {
                     char *filename = buffer_output + 12;
+                    char *sep;
+
+                    if ((sep = strstr(filename, RSYNC_HARDLINK_NOTATION))) {
+                        *sep = '\0';
+                    } else if ((sep
+                                = strstr(filename, RSYNC_SYMLINK_NOTATION))) {
+                        *sep = '\0';
+                    }
+
                     Message *remove_data;
                     int64 path_len = strlen64(filename);
 
@@ -1009,8 +1013,6 @@ work_rsync_bulk(void *user_data) {
                     remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
                     g_idle_add(update_ui_handler, remove_data);
                 }
-
-                ipc_dispatch_log("%s.\n", buffer_output);
 
                 remaining = buffer_output_pos - (line_len + 1);
                 if (remaining > 0) {
