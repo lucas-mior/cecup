@@ -309,7 +309,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
 static void *
 work_fix_fs_worker(void *user_data) {
     ThreadData *thread_data = user_data;
-    Message *ready;
+    Message *message;
 
     ipc_dispatch_log(
         "Checking for problematic names in the original folder...\n");
@@ -320,12 +320,12 @@ work_fix_fs_worker(void *user_data) {
     ipc_dispatch_log("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    ready = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-    memset64(ready, 0, SIZEOF(Message));
+    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(message, 0, SIZEOF(Message));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    ready->type = DATA_TYPE_ENABLE_BUTTONS;
-    g_idle_add(update_ui_handler, ready);
+    message->type = DATA_TYPE_ENABLE_BUTTONS;
+    g_idle_add(update_ui_handler, message);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     arena_pop(cecup.ui_arena, thread_data);
