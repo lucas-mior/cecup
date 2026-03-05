@@ -1096,7 +1096,7 @@ work_rsync_bulk(void *user_data) {
         memset64(ready_signal, 0, SIZEOF(Message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
-        if (cecup.cancel_sync != false) {
+        if (cecup.cancel_sync) {
             ready_signal->type = DATA_TYPE_ENABLE_BUTTONS;
         } else {
             ready_signal->type = DATA_TYPE_REGENERATE_PREVIEW;
