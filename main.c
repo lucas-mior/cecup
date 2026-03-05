@@ -176,9 +176,9 @@ main(int32 argc, char *argv[]) {
         char tooltip[1024];
         int64 offset;
 
-        offset
-            = SNPRINTF(tooltip, "%s",
-                       _("Rename problematic filenames, the ones containing:"));
+        offset = SNPRINTF(
+            tooltip, "%s",
+            _("Rename problematic filenames, the ones containing:\n"));
         for (int32 i = 0; i < LENGTH(replacements); i += 1) {
             int64 written;
 
