@@ -938,7 +938,8 @@ work_rsync_bulk(void *user_data) {
                     write64(pipe_stdin[1], "\n", 1);
                     break;
                 case UI_ACTION_SYMLINK:
-                    if (item->link_target[0] == '/') {
+                    if (memmem64(item->link_target, item->link_target_len,
+                                 cecup.src_base, cecup.src_base_len)) {
                     }
                 default:
                     break;
