@@ -879,7 +879,6 @@ work_rsync_bulk(void *user_data) {
         rsync_args[a++] = "--times";
         rsync_args[a++] = "--owner";
         rsync_args[a++] = "--group";
-        rsync_args[a++] = "--relative";
         rsync_args[a++] = "--files-from=-";
         rsync_args[a++] = cecup.src_base;
         rsync_args[a++] = destination_directory;
