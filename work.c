@@ -384,15 +384,15 @@ work_rsync(void *user_data) {
     }
 
     if (thread_data->is_preview) {
-        Message *clear;
+        Message *message;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        clear = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-        memset64(clear, 0, SIZEOF(Message));
+        message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        memset64(message, 0, SIZEOF(Message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
-        clear->type = DATA_TYPE_CLEAR_TREES;
-        g_idle_add(update_ui_handler, clear);
+        message->type = DATA_TYPE_CLEAR_TREES;
+        g_idle_add(update_ui_handler, message);
 
         ipc_dispatch_log("Counting files to prepare analysis...\n");
         total_files_preview
