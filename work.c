@@ -831,7 +831,7 @@ work_rsync_bulk(void *user_data) {
         int32 pipe_stdin[2] = {-1, -1};
         pid_t child_pid;
         char destination_directory[MAX_PATH_LENGTH];
-        char *rsync_arguments[32];
+        char *rsync_args[32];
         int32 a = 0;
         char buffer_output[8192];
         int32 buffer_output_pos = 0;
@@ -854,27 +854,27 @@ work_rsync_bulk(void *user_data) {
 
         SNPRINTF(destination_directory, "%s/", cecup.dst_base);
 
-        rsync_arguments[a++] = "rsync";
-        rsync_arguments[a++] = "--verbose";
-        rsync_arguments[a++] = "--update";
-        rsync_arguments[a++] = "--recursive";
-        rsync_arguments[a++] = "--partial";
-        rsync_arguments[a++] = "--progress";
-        rsync_arguments[a++] = "--info=progress2";
-        rsync_arguments[a++] = "--links";
-        rsync_arguments[a++] = "--hard-links";
-        rsync_arguments[a++] = "--itemize-changes";
-        rsync_arguments[a++] = "--perms";
-        rsync_arguments[a++] = "--times";
-        rsync_arguments[a++] = "--owner";
-        rsync_arguments[a++] = "--group";
-        rsync_arguments[a++] = "--relative";
-        rsync_arguments[a++] = "--files-from=-";
-        rsync_arguments[a++] = cecup.src_base;
-        rsync_arguments[a++] = destination_directory;
-        rsync_arguments[a++] = NULL;
+        rsync_args[a++] = "rsync";
+        rsync_args[a++] = "--verbose";
+        rsync_args[a++] = "--update";
+        rsync_args[a++] = "--recursive";
+        rsync_args[a++] = "--partial";
+        rsync_args[a++] = "--progress";
+        rsync_args[a++] = "--info=progress2";
+        rsync_args[a++] = "--links";
+        rsync_args[a++] = "--hard-links";
+        rsync_args[a++] = "--itemize-changes";
+        rsync_args[a++] = "--perms";
+        rsync_args[a++] = "--times";
+        rsync_args[a++] = "--owner";
+        rsync_args[a++] = "--group";
+        rsync_args[a++] = "--relative";
+        rsync_args[a++] = "--files-from=-";
+        rsync_args[a++] = cecup.src_base;
+        rsync_args[a++] = destination_directory;
+        rsync_args[a++] = NULL;
 
-        STRING_FROM_ARRAY(cmd, " ", rsync_arguments, a);
+        STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
         ipc_dispatch_log("+ %s\n", cmd);
 
         switch (child_pid = fork()) {
@@ -906,7 +906,7 @@ work_rsync_bulk(void *user_data) {
             XCLOSE(&pipe_output[1]);
             XCLOSE(&pipe_error[1]);
 
-            execvp("rsync", rsync_arguments);
+            execvp("rsync", rsync_args);
             fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
             _exit(EXIT_FAILURE);
         default:
