@@ -160,21 +160,6 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
     int32 count = 0;
     int32 capacity = 1024;
 
-    char *replacements[][2] = {
-        {"=>", "_equal_arrow_in_filename_"},
-        {"->", "_dash_arrow_in_filename_"},
-        {"\\", "_backslash_in_filename_"},
-        {"\n", "_newline_in_filename_"},
-        {"\"", "_double_quote_in_filename_"},
-        {"\'", "_single_quote_in_filename_"},
-        {"<", "_less_than_in_filename_"},
-        {">", "_greater_than_in_filename_"},
-        {":", "_colon_in_filename_"},
-        {"|", "_pipe_in_filename_"},
-        {"?", "_question_mark_in_filename_"},
-        {"*", "_asterisk_in_filename_"},
-    };
-
     if (cecup.cancel_sync) {
         return;
     }
@@ -187,7 +172,14 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
 
     if ((dir = opendir(full_path)) == NULL) {
         error("Error opening directory %s: %s.\n", full_path, strerror(errno));
-        fatal(EXIT_FAILURE);
+        error("Warning: Problematic file names will not be renamed.\n");
+        error("This is only a problem if you have problematic filenames.\n");
+        error("Problematic filenames are the ones that contain the strings:\n");
+        for (int32 i = 0; i < LENGTH(replacements); i += 1) {
+            error("\"%s\" ", replacements[i][0]);
+        }
+        error("\n");
+        return;
     }
 
     name_list = xmalloc(capacity*SIZEOF(char *));

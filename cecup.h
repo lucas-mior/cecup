@@ -272,4 +272,19 @@ static void free_update_data(Message *message);
 static void free_task_list(TaskList *tasks);
 static void save_config(void);
 
+static char *replacements[][2] = {
+    {"=>", "_equal_arrow_in_filename_"},
+    {"->", "_dash_arrow_in_filename_"},
+    {"\\", "_backslash_in_filename_"},
+    {"\n", "_newline_in_filename_"},
+    {"\"", "_double_quote_in_filename_"},
+    {"\'", "_single_quote_in_filename_"},
+    {"<", "_less_than_in_filename_"},
+    {">", "_greater_than_in_filename_"},
+    {":", "_colon_in_filename_"},
+    {"|", "_pipe_in_filename_"},
+    {"?", "_question_mark_in_filename_"},
+    {"*", "_asterisk_in_filename_"},
+};
+
 #endif /* CECUP_H */
