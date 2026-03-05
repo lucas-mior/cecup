@@ -794,9 +794,20 @@ work_rsync_bulk(void *user_data) {
             case -1:
                 error("Error forking for rm: %s.\n", strerror(errno));
                 break;
-            case 0:
-                execlp("rm", "rm", "-rf", full_destination_path, NULL);
+            case 0: {
+                char cmd_rm[MAX_PATH_LENGTH];
+                char *args_rm[] = {
+                    "rm",
+                    "-rf",
+                    full_destination_path,
+                    NULL,
+                };
+
+                execvp(args_rm[0], args_rm);
+                STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
+                error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
                 _exit(EXIT_FAILURE);
+            }
             default:
                 waitpid(child_rm, NULL, 0);
                 break;
@@ -997,6 +1008,8 @@ work_rsync_bulk(void *user_data) {
                 if ((line_len > 12) && (buffer_output[11] == ' ')) {
                     char *filename = buffer_output + 12;
                     char *sep;
+                    Message *remove_data;
+                    int64 path_len = strlen64(filename);
 
                     if ((sep = strstr(filename, RSYNC_HARDLINK_NOTATION))) {
                         *sep = '\0';
@@ -1004,9 +1017,6 @@ work_rsync_bulk(void *user_data) {
                                 = strstr(filename, RSYNC_SYMLINK_NOTATION))) {
                         *sep = '\0';
                     }
-
-                    Message *remove_data;
-                    int64 path_len = strlen64(filename);
 
                     g_mutex_lock(&cecup.ui_arena_mutex);
                     remove_data
