@@ -774,286 +774,253 @@ finalize:
 static void *
 work_rsync_bulk(void *user_data) {
     TaskList *tasks = user_data;
-    Message *ready;
+    Message *ready_signal;
+    bool has_transfers = false;
+    bool has_deletions = false;
 
     for (int32 i = 0; i < tasks->count; i += 1) {
-        char cmd[MAX_PATH_LENGTH*2];
+        if (tasks->items[i]->action == UI_ACTION_DELETE) {
+            has_deletions = true;
+        } else {
+            has_transfers = true;
+        }
+    }
+
+    if (has_deletions && (cecup.cancel_sync == false)) {
+        for (int32 i = 0; i < tasks->count; i += 1) {
+            Message *message = tasks->items[i];
+
+            if (message->action == UI_ACTION_DELETE) {
+                char full_destination_path[MAX_PATH_LENGTH];
+                pid_t rm_pid;
+
+                SNPRINTF(full_destination_path, "%s/%s", cecup.dst_base,
+                         message->filepath);
+                if ((rm_pid = fork()) == -1) {
+                    error("Error forking for rm: %s.\n", strerror(errno));
+                } else if (rm_pid == 0) {
+                    execlp("rm", "rm", "-rf", full_destination_path, NULL);
+                    _exit(EXIT_FAILURE);
+                } else {
+                    waitpid(rm_pid, NULL, 0);
+                }
+
+                if (cecup.cancel_sync == false) {
+                    Message *remove_data;
+                    int64 path_length;
+
+                    g_mutex_lock(&cecup.ui_arena_mutex);
+                    remove_data
+                        = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+                    memset64(remove_data, 0, SIZEOF(Message));
+
+                    path_length = message->filepath_length;
+                    remove_data->filepath_length = path_length;
+                    remove_data->filepath
+                        = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
+                    memcpy64(remove_data->filepath, message->filepath,
+                             path_length + 1);
+                    g_mutex_unlock(&cecup.ui_arena_mutex);
+
+                    remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
+                    g_idle_add(update_ui_handler, remove_data);
+                }
+            }
+        }
+    }
+
+    if (has_transfers && (cecup.cancel_sync == false)) {
         int32 pipe_output[2];
         int32 pipe_error[2];
-        pid_t child_pid;
-        struct pollfd pipes[2];
-        char full_dst[MAX_PATH_LENGTH];
-        char relative_source[MAX_PATH_LENGTH];
-        char dst_dir[MAX_PATH_LENGTH];
-        char *args[32];
-        int32 a = 0;
-
+        int32 pipe_stdin[2];
+        pid_t rsync_child_pid;
+        char destination_directory[MAX_PATH_LENGTH];
+        char *rsync_arguments[32];
+        int32 argument_index = 0;
         char buffer_output[8192];
-        int32 buffer_output_pos = 0;
+        int32 buffer_output_position = 0;
         char buffer_error[8192];
-        int32 buffer_error_pos = 0;
-        Message *message = tasks->items[i];
-
-        if (cecup.cancel_sync) {
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            if (message->link_target) {
-                arena_pop(cecup.ui_arena, message->link_target);
-            }
-            if (message->message) {
-                arena_pop(cecup.ui_arena, message->message);
-            }
-            arena_pop(cecup.ui_arena, message);
-            g_mutex_unlock(&cecup.ui_arena_mutex);
-            continue;
-        }
+        int32 buffer_error_position = 0;
 
         if (pipe(pipe_output) < 0) {
             error("Error creating pipe for stdout: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-
         if (pipe(pipe_error) < 0) {
             error("Error creating pipe for stderr: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-
-        SNPRINTF(relative_source, "%s/./%s", cecup.src_base, message->filepath);
-        SNPRINTF(dst_dir, "%s/", cecup.dst_base);
-
-        args[a++] = "rsync";
-        args[a++] = "--verbose";
-        args[a++] = "--update";
-        args[a++] = "--recursive";
-        args[a++] = "--partial";
-        args[a++] = "--progress";
-        args[a++] = "--info=progress2";
-        args[a++] = "--links";
-        args[a++] = "--hard-links";
-        args[a++] = "--itemize-changes";
-        args[a++] = "--perms";
-        args[a++] = "--times";
-        args[a++] = "--owner";
-        args[a++] = "--group";
-        args[a++] = "--relative";
-        args[a++] = relative_source;
-        args[a++] = dst_dir;
-        args[a++] = NULL;
-        STRING_FROM_ARRAY(cmd, " ", args, a);
-        ipc_dispatch_log("+ %s\n", cmd);
-
-        switch (child_pid = fork()) {
-        case -1:
-            error("Error forking: %s.\n", strerror(errno));
+        if (pipe(pipe_stdin) < 0) {
+            error("Error creating pipe for stdin: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
-        case 0: {
-            if (setpgid(0, 0) < 0) {
-                fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
-                exit(EXIT_FAILURE);
-            }
+        }
+
+        SNPRINTF(destination_directory, "%s/", cecup.dst_base);
+
+        rsync_arguments[argument_index++] = "rsync";
+        rsync_arguments[argument_index++] = "--verbose";
+        rsync_arguments[argument_index++] = "--update";
+        rsync_arguments[argument_index++] = "--recursive";
+        rsync_arguments[argument_index++] = "--partial";
+        rsync_arguments[argument_index++] = "--progress";
+        rsync_arguments[argument_index++] = "--info=progress2";
+        rsync_arguments[argument_index++] = "--links";
+        rsync_arguments[argument_index++] = "--hard-links";
+        rsync_arguments[argument_index++] = "--itemize-changes";
+        rsync_arguments[argument_index++] = "--perms";
+        rsync_arguments[argument_index++] = "--times";
+        rsync_arguments[argument_index++] = "--owner";
+        rsync_arguments[argument_index++] = "--group";
+        rsync_arguments[argument_index++] = "--relative";
+        rsync_arguments[argument_index++] = "--files-from=-";
+        rsync_arguments[argument_index++] = cecup.src_base;
+        rsync_arguments[argument_index++] = destination_directory;
+        rsync_arguments[argument_index++] = NULL;
+
+        if ((rsync_child_pid = fork()) == -1) {
+            error("Error forking for rsync: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
+        } else if (rsync_child_pid == 0) {
+            setpgid(0, 0);
             putenv("LC_ALL=C");
             XCLOSE(&pipe_output[0]);
             XCLOSE(&pipe_error[0]);
-            if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
-                fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
-                exit(EXIT_FAILURE);
-            }
-            if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
-                fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
-                exit(EXIT_FAILURE);
-            }
+            XCLOSE(&pipe_stdin[1]);
+            dup2(pipe_stdin[0], STDIN_FILENO);
+            dup2(pipe_output[1], STDOUT_FILENO);
+            dup2(pipe_error[1], STDERR_FILENO);
+            XCLOSE(&pipe_stdin[0]);
             XCLOSE(&pipe_output[1]);
             XCLOSE(&pipe_error[1]);
-
-            if (message->action == UI_ACTION_DELETE) {
-                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, message->filepath);
-                args[a = 0] = "rm";
-                args[a++] = "-rfv";
-                args[a++] = full_dst;
-                args[a++] = NULL;
-                execvp(args[0], args);
-            } else {
-                execvp(args[0], args);
-            }
-            fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-        default:
-            break;
+            execvp("rsync", rsync_arguments);
+            _exit(EXIT_FAILURE);
         }
 
         XCLOSE(&pipe_output[1]);
         XCLOSE(&pipe_error[1]);
+        XCLOSE(&pipe_stdin[0]);
 
-        pipes[0].fd = pipe_output[0];
-        pipes[0].events = POLLIN;
-        pipes[1].fd = pipe_error[0];
-        pipes[1].events = POLLIN;
+        for (int32 i = 0; i < tasks->count; i += 1) {
+            Message *item = tasks->items[i];
+            if (item->action != UI_ACTION_DELETE) {
+                write64(pipe_stdin[1], item->filepath, item->filepath_length);
+                write64(pipe_stdin[1], "\n", 1);
+            }
+        }
+        XCLOSE(&pipe_stdin[1]);
 
         while (true) {
-            int64 r;
-            char *eol;
+            struct pollfd poll_pipes[2];
+            int64 bytes_read;
+            char *eol_pointer;
 
-            if (cecup.cancel_sync) {
-                if (kill(-child_pid, SIGTERM) < 0) {
-                    ipc_dispatch_log_error("Error kill process group: %s.\n",
-                                           strerror(errno));
-                }
-                ipc_dispatch_log_error("Process cancelled: %s\n",
-                                       message->filepath);
+            poll_pipes[0].fd = pipe_output[0];
+            poll_pipes[0].events = POLLIN;
+            poll_pipes[1].fd = pipe_error[0];
+            poll_pipes[1].events = POLLIN;
+
+            if (cecup.cancel_sync != false) {
+                kill(-rsync_child_pid, SIGTERM);
                 break;
             }
 
-            switch (poll(pipes, 2, 100)) {
-            case -1:
-                if (errno != EINTR) {
-                    ipc_dispatch_log_error("Error in poll: %s.\n",
-                                           strerror(errno));
-                    fatal(EXIT_FAILURE);
+            if (poll(poll_pipes, 2, 100) <= 0) {
+                if ((poll_pipes[0].fd < 0) && (poll_pipes[1].fd < 0)) {
+                    break;
                 }
                 continue;
-            case 0:
-                continue;
-            default:
-                break;
             }
 
-            if (pipes[0].revents & (POLLHUP | POLLERR)) {
-                pipes[0].fd = -1;
-                goto read_error_pipe;
-            }
-            if (!(pipes[0].revents & POLLIN)) {
-                goto read_error_pipe;
-            }
+            if (poll_pipes[0].revents & POLLIN) {
+                bytes_read = read64(
+                    pipe_output[0], buffer_output + buffer_output_position,
+                    SIZEOF(buffer_output) - buffer_output_position - 1);
+                if (bytes_read > 0) {
+                    buffer_output_position += (int32)bytes_read;
+                    while (
+                        (buffer_output_position > 0)
+                        && (eol_pointer = memchr64(buffer_output, '\n',
+                                                   buffer_output_position))) {
+                        int32 line_length
+                            = (int32)(eol_pointer - buffer_output);
 
-            r = read64(pipe_output[0], buffer_output + buffer_output_pos,
-                       SIZEOF(buffer_output) - buffer_output_pos - 1);
-            if (r <= 0) {
-                if (r < 0) {
-                    ipc_dispatch_log_error("Error reading stdout pipe: %s.\n",
-                                           strerror(errno));
+                        *eol_pointer = '\0';
+                        if ((line_length > 12) && (buffer_output[11] == ' ')) {
+                            char *filename_in_output = buffer_output + 12;
+                            Message *remove_data;
+                            int64 path_length_in_output
+                                = strlen64(filename_in_output);
+
+                            g_mutex_lock(&cecup.ui_arena_mutex);
+                            remove_data = xarena_push(cecup.ui_arena,
+                                                      ALIGN16(SIZEOF(Message)));
+                            memset64(remove_data, 0, SIZEOF(Message));
+
+                            remove_data->filepath_length
+                                = path_length_in_output;
+                            remove_data->filepath = xarena_push(
+                                cecup.ui_arena,
+                                ALIGN16(path_length_in_output + 1));
+                            memcpy64(remove_data->filepath, filename_in_output,
+                                     path_length_in_output + 1);
+                            g_mutex_unlock(&cecup.ui_arena_mutex);
+
+                            remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
+                            g_idle_add(update_ui_handler, remove_data);
+                        }
+                        ipc_dispatch_log("%s\n", buffer_output);
+                        memmove64(buffer_output, eol_pointer + 1,
+                                  buffer_output_position - (line_length + 1));
+                        buffer_output_position -= (line_length + 1);
+                    }
+                } else {
+                    poll_pipes[0].fd = -1;
                 }
-                pipes[0].fd = -1;
-                goto read_error_pipe;
             }
-            buffer_output_pos += (int32)r;
 
-            while (buffer_output_pos > 0
-                   && ((eol = memchr64(buffer_output, '\n', buffer_output_pos))
-                       || (eol = memchr64(buffer_output, '\r',
-                                          buffer_output_pos)))) {
-                int32 line_len = (int32)(eol - buffer_output);
-                int32 remaining;
-                *eol = '\0';
+            if (poll_pipes[1].revents & POLLIN) {
+                bytes_read = read64(
+                    pipe_error[0], buffer_error + buffer_error_position,
+                    SIZEOF(buffer_error) - buffer_error_position - 1);
+                if (bytes_read > 0) {
+                    buffer_error_position += (int32)bytes_read;
+                    while ((buffer_error_position > 0)
+                           && (eol_pointer = memchr64(buffer_error, '\n',
+                                                      buffer_error_position))) {
+                        int32 line_length = (int32)(eol_pointer - buffer_error);
 
-                if (buffer_output[0] != '\0') {
-                    ipc_dispatch_log("%s.\n", buffer_output);
+                        *eol_pointer = '\0';
+                        ipc_dispatch_log_error("%s\n", buffer_error);
+                        memmove64(buffer_error, eol_pointer + 1,
+                                  buffer_error_position - (line_length + 1));
+                        buffer_error_position -= (line_length + 1);
+                    }
+                } else {
+                    poll_pipes[1].fd = -1;
                 }
-
-                remaining = buffer_output_pos - (line_len + 1);
-                if (remaining > 0) {
-                    memmove64(buffer_output, eol + 1, remaining);
-                }
-                buffer_output_pos = remaining;
             }
 
-            if (buffer_output_pos >= (int32)SIZEOF(buffer_output) - 1) {
-                buffer_output[buffer_output_pos] = '\0';
-                ipc_dispatch_log("%s.\n", buffer_output);
-                buffer_output_pos = 0;
-            }
-
-        read_error_pipe:
-            if (pipes[1].revents & (POLLHUP | POLLERR)) {
-                pipes[1].fd = -1;
-                goto check_pipes_or_break;
-            }
-            if (!(pipes[1].revents & POLLIN)) {
-                goto check_pipes_or_break;
-            }
-
-            r = read64(pipe_error[0], buffer_error + buffer_error_pos,
-                       SIZEOF(buffer_error) - buffer_error_pos - 1);
-            if (r <= 0) {
-                if (r < 0) {
-                    ipc_dispatch_log_error("Error reading stderr pipe: %s.\n",
-                                           strerror(errno));
-                }
-                pipes[1].fd = -1;
-                goto check_pipes_or_break;
-            }
-            buffer_error_pos += (int32)r;
-
-            while (buffer_error_pos > 0
-                   && ((eol = memchr64(buffer_error, '\n', buffer_error_pos))
-                       || (eol
-                           = memchr64(buffer_error, '\r', buffer_error_pos)))) {
-                int32 line_len = (int32)(eol - buffer_error);
-                int32 remaining;
-                *eol = '\0';
-
-                if (buffer_error[0] != '\0') {
-                    ipc_dispatch_log_error(buffer_error);
-                }
-
-                remaining = buffer_error_pos - (line_len + 1);
-                if (remaining > 0) {
-                    memmove64(buffer_error, eol + 1, remaining);
-                }
-                buffer_error_pos = remaining;
-            }
-
-            if (buffer_error_pos >= (int32)SIZEOF(buffer_error) - 1) {
-                buffer_error[buffer_error_pos] = '\0';
-                ipc_dispatch_log_error(buffer_error);
-                buffer_error_pos = 0;
-            }
-
-        check_pipes_or_break:
-            if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
+            if ((poll_pipes[0].fd < 0) && (poll_pipes[1].fd < 0)) {
                 break;
             }
         }
-
         XCLOSE(&pipe_output[0]);
         XCLOSE(&pipe_error[0]);
-        if (waitpid(child_pid, NULL, 0) < 0) {
-            ipc_dispatch_log_error("Error waiting for child: %s.\n",
-                                   strerror(errno));
-        }
-
-        if (!cecup.cancel_sync) {
-            int64 path_len;
-            Message *remove_data;
-
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            remove_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-            memset64(remove_data, 0, SIZEOF(Message));
-
-            path_len = message->filepath_length;
-            remove_data->filepath_length = path_len;
-            remove_data->filepath
-                = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-            memcpy64(remove_data->filepath, message->filepath, path_len + 1);
-            g_mutex_unlock(&cecup.ui_arena_mutex);
-
-            remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
-            g_idle_add(update_ui_handler, remove_data);
-        }
+        waitpid(rsync_child_pid, NULL, 0);
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    ready = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-    memset64(ready, 0, SIZEOF(Message));
+    ready_signal = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(ready_signal, 0, SIZEOF(Message));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    if (cecup.cancel_sync) {
-        ready->type = DATA_TYPE_ENABLE_BUTTONS;
+    if (cecup.cancel_sync != false) {
+        ready_signal->type = DATA_TYPE_ENABLE_BUTTONS;
     } else {
-        ready->type = DATA_TYPE_REGENERATE_PREVIEW;
+        ready_signal->type = DATA_TYPE_REGENERATE_PREVIEW;
     }
 
-    g_idle_add(update_ui_handler, ready);
-
+    g_idle_add(update_ui_handler, ready_signal);
     free_task_list(tasks);
     return NULL;
 }
