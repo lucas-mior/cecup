@@ -9,7 +9,6 @@ alias trace_off='{ set +x; } 2>/dev/null'
 program=$(basename "$(readlink -f "$(dirname "$0")")")
 script=$(basename "$0")
 
-# Define supported languages here
 LANGS="pt_BR"
 
 . ./targets
