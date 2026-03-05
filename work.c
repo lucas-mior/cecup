@@ -313,10 +313,10 @@ work_fix_fs_worker(void *user_data) {
 
     ipc_dispatch_log(
         "Checking for problematic names in the original folder...\n");
-    work_fix_fs_recursive(thread_data->src_path, "");
+    work_fix_fs_recursive(cecup.src_base, "");
     ipc_dispatch_log(
         "Checking for problematic names in the backup folder...\n");
-    work_fix_fs_recursive(thread_data->dst_path, "");
+    work_fix_fs_recursive(cecup.dst_base, "");
     ipc_dispatch_log("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
@@ -358,8 +358,8 @@ work_rsync(void *user_data) {
         struct stat stat_src;
         struct stat stat_dst;
 
-        if (stat(thread_data->src_path, &stat_src) == 0
-            && stat(thread_data->dst_path, &stat_dst) == 0) {
+        if (stat(cecup.src_base, &stat_src) == 0
+            && stat(cecup.dst_base, &stat_dst) == 0) {
             if (stat_src.st_dev == stat_dst.st_dev) {
                 Message *message;
                 ipc_dispatch_log_error(
@@ -395,8 +395,7 @@ work_rsync(void *user_data) {
         g_idle_add(update_ui_handler, message);
 
         ipc_dispatch_log("Counting files to prepare analysis...\n");
-        total_files_preview
-            = work_count_files_recursive(thread_data->src_path, "");
+        total_files_preview = work_count_files_recursive(cecup.src_base, "");
         ipc_dispatch_log("Found %lld files to analyse...\n",
                          (llong)total_files_preview);
     }
@@ -444,8 +443,8 @@ work_rsync(void *user_data) {
         rsync_args[a++] = cecup.ignore_path;
     }
 
-    SNPRINTF(src_dir, "%s/", thread_data->src_path);
-    SNPRINTF(dst_dir, "%s/", thread_data->dst_path);
+    SNPRINTF(src_dir, "%s/", cecup.src_base);
+    SNPRINTF(dst_dir, "%s/", cecup.dst_base);
     rsync_args[a++] = src_dir;
     rsync_args[a++] = dst_dir;
     rsync_args[a++] = NULL;
@@ -582,10 +581,8 @@ work_rsync(void *user_data) {
                     relative_path += 1;
                 }
 
-                SNPRINTF(full_src, "%s/%s", thread_data->src_path,
-                         relative_path);
-                SNPRINTF(full_dst, "%s/%s", thread_data->dst_path,
-                         relative_path);
+                SNPRINTF(full_src, "%s/%s", cecup.src_base, relative_path);
+                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, relative_path);
 
                 if (lstat(full_dst, &stat_dst_local) == 0) {
                     size_val = stat_dst_local.st_size;
@@ -645,7 +642,7 @@ work_rsync(void *user_data) {
                         cecup_action = UI_ACTION_NEW;
                     }
 
-                    SNPRINTF(full_src_path_val, "%s/%s", thread_data->src_path,
+                    SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
                              relative_path_entry);
 
                     if (lstat(full_src_path_val, &st_path_val) < 0) {

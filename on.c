@@ -436,16 +436,15 @@ on_stop_clicked(GtkWidget *b, void *data) {
 
 static void
 on_preview_clicked(GtkWidget *b, void *data) {
-    char *src_path;
-    char *dst_path;
     ThreadData *thread_data;
 
     (void)data;
-    src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
-    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+    cecup.src_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
+    cecup.dst_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
     (void)b;
 
-    if (strlen64(src_path) < 1 || strlen64(dst_path) < 1) {
+    if (strlen64(cecup.src_base) < 1 || strlen64(cecup.dst_base) < 1) {
+        ipc_dispatch_log_error("Error: Invalid source and/or destination\n");
         return;
     }
 
@@ -466,8 +465,6 @@ on_preview_clicked(GtkWidget *b, void *data) {
         GTK_TOGGLE_BUTTON(cecup.delete_excluded));
     thread_data->delete_after
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.delete_after));
-    strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
-    strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
     g_thread_new("worker", work_rsync, thread_data);
     return;
 }
@@ -649,8 +646,6 @@ on_fix_clicked(GtkWidget *b, void *data) {
     memset64(thread_data, 0, SIZEOF(*thread_data));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    strncpy(thread_data->src_path, src_path, MAX_PATH_LENGTH - 1);
-    strncpy(thread_data->dst_path, dst_path, MAX_PATH_LENGTH - 1);
     g_thread_new("fix_fs_worker", work_fix_fs_worker, thread_data);
     return;
 }
@@ -708,8 +703,6 @@ on_sync_clicked(GtkWidget *b, void *data) {
             = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
         thread_data->delete_after = gtk_toggle_button_get_active(
             GTK_TOGGLE_BUTTON(cecup.delete_after));
-        strncpy(thread_data->src_path, path_src, MAX_PATH_LENGTH - 1);
-        strncpy(thread_data->dst_path, path_dst, MAX_PATH_LENGTH - 1);
         g_thread_new("worker", work_rsync, thread_data);
     }
     gtk_widget_destroy(dialog);

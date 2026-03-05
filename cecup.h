@@ -243,8 +243,6 @@ static struct {
 } cecup;
 
 typedef struct ThreadData {
-    char src_path[MAX_PATH_LENGTH];
-    char dst_path[MAX_PATH_LENGTH];
     bool is_preview;
     bool check_different_fs;
     bool delete_excluded;
