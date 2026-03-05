@@ -837,6 +837,7 @@ work_rsync_bulk(void *user_data) {
         int32 buffer_output_pos = 0;
         char buffer_error[8192];
         int32 buffer_error_pos = 0;
+        char cmd[MAX_PATH_LENGTH*2];
 
         if (pipe(pipe_output) < 0) {
             error("Error creating pipe for stdout: %s.\n", strerror(errno));
@@ -872,6 +873,9 @@ work_rsync_bulk(void *user_data) {
         rsync_arguments[argument_index++] = cecup.src_base;
         rsync_arguments[argument_index++] = destination_directory;
         rsync_arguments[argument_index++] = NULL;
+
+        STRING_FROM_ARRAY(cmd, " ", rsync_arguments, argument_index);
+        ipc_dispatch_log("+ %s\n", cmd);
 
         switch (child_pid = fork()) {
         case -1:
@@ -918,6 +922,11 @@ work_rsync_bulk(void *user_data) {
             if (item->action != UI_ACTION_DELETE) {
                 write64(pipe_stdin[1], item->filepath, item->filepath_length);
                 write64(pipe_stdin[1], "\n", 1);
+                if (item->link_target) {
+                    write64(pipe_stdin[1], item->link_target,
+                            item->link_target_len);
+                    write64(pipe_stdin[1], "\n", 1);
+                }
             }
         }
         XCLOSE(&pipe_stdin[1]);
