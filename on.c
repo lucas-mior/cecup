@@ -498,16 +498,15 @@ on_sort_changed(GtkTreeSortable *sortable, void *data) {
 static void
 on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
                 void *user_data) {
-    GtkTreePath *path;
-    GtkTreeIter iter;
-    CecupRow *parent_row;
-    char *parent_path;
-    int64 parent_path_len;
-
     (void)renderer;
     (void)user_data;
 
     do {
+        GtkTreePath *path;
+        GtkTreeIter iter;
+        CecupRow *parent_row;
+        char *parent_path;
+        int64 parent_path_len;
         bool will_be_selected;
 
         if ((path = gtk_tree_path_new_from_string(path_string)) == NULL) {
