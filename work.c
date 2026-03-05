@@ -1094,7 +1094,12 @@ work_rsync_bulk(void *user_data) {
     memset64(ready, 0, SIZEOF(Message));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    ready->type = DATA_TYPE_ENABLE_BUTTONS;
+    if (cecup.cancel_sync) {
+        ready->type = DATA_TYPE_ENABLE_BUTTONS;
+    } else {
+        ready->type = DATA_TYPE_REGENERATE_PREVIEW;
+    }
+
     g_idle_add(update_ui_handler, ready);
 
     free_task_list(tasks);

@@ -588,6 +588,9 @@ update_ui_handler(void *user_data) {
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       0.0);
         break;
+    case DATA_TYPE_REGENERATE_PREVIEW:
+        on_preview_clicked(NULL, NULL);
+        break;
     default:
         break;
     }
