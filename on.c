@@ -496,23 +496,58 @@ on_sort_changed(GtkTreeSortable *sortable, void *data) {
 }
 
 static void
-on_cell_toggled(GtkCellRendererToggle *cell, char *path_str, void *data) {
+on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
+                void *user_data) {
+    GtkTreePath *path;
     GtkTreeIter iter;
-    CecupRow *row;
+    CecupRow *parent_row;
+    int32 new_state;
+    char *parent_path;
+    int64 parent_path_len;
 
-    (void)cell;
-    (void)data;
+    (void)renderer;
+    (void)user_data;
 
-    if (gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(cecup.store), &iter,
-                                            path_str)) {
-        gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
-                           &row, -1);
-        if (row) {
-            row->selected = !row->selected;
-            gtk_widget_queue_draw(cecup.l_tree);
-            gtk_widget_queue_draw(cecup.r_tree);
+    if ((path = gtk_tree_path_new_from_string(path_string))) {
+        if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter, path)) {
+            gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
+                               &parent_row, -1);
+
+            parent_row->selected = (parent_row->selected == 0) ? 1 : 0;
+            new_state = parent_row->selected;
+
+            parent_path = (parent_row->src_path != NULL) ? parent_row->src_path
+                                                         : parent_row->dst_path;
+
+            if (parent_path != NULL) {
+                parent_path_len = strlen64(parent_path);
+
+                if ((parent_path_len > 0)
+                    && (parent_path[parent_path_len - 1] == '/')) {
+                    for (int32 i = 0; i < cecup.rows_count; i += 1) {
+                        CecupRow *child_row;
+                        char *child_path;
+
+                        child_row = cecup.rows[i];
+                        child_path = (child_row->src_path != NULL)
+                                         ? child_row->src_path
+                                         : child_row->dst_path;
+
+                        if (child_path != NULL) {
+                            if (strncmp64(child_path, parent_path,
+                                          parent_path_len)
+                                == 0) {
+                                child_row->selected = new_state;
+                            }
+                        }
+                    }
+                }
+            }
         }
+        gtk_tree_path_free(path);
     }
+
+    refresh_ui_list();
     return;
 }
 
