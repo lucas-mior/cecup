@@ -833,9 +833,9 @@ work_rsync_bulk(void *user_data) {
         char destination_directory[MAX_PATH_LENGTH];
         char *rsync_args[32];
         int32 a = 0;
-        char buffer_output[8192];
+        char buffer_output[MAX_PATH_LENGTH*2];
+        char buffer_error[MAX_PATH_LENGTH*2];
         int32 buffer_output_pos = 0;
-        char buffer_error[8192];
         int32 buffer_error_pos = 0;
         char cmd[MAX_PATH_LENGTH*2];
 
