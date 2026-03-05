@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-05 12:06-0300\n"
+"POT-Creation-Date: 2026-03-05 12:41-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -180,6 +180,17 @@ msgstr "Restaurar configurações originais"
 msgid "Rsync transfer progress"
 msgstr "Progresso de transferência do rsync"
 
+#: work.c:366
+msgid ""
+"Safety stop: Original and Backup are on the same disk partition. Change "
+"settings to ignore this."
+msgstr ""
+"Parada de precaução: Original e backup são do mesmo"
+" dispositivo de armazenamento."
+"\nVerifique se o dispositivo de backup está conectado."
+"\nPara forçar o backup em pasta do mesmo dispositivo, desmarcar opção"
+"Dispositivos diferentes."
+
 #: main.c:316 main.c:339
 msgid "Select Folder"
 msgstr "Selecionar Pasta"
@@ -249,12 +260,12 @@ msgstr "Terminal:"
 msgid "The original file is newer"
 msgstr "O arquivo original é mais recente"
 
-#: aux.c:328
+#: aux.c:321
 #, c-format
 msgid "Total Transfer Size: 📦 %s"
 msgstr "Tamanho total a copiar: 📦 %s"
 
-#: aux.c:486
+#: aux.c:479
 msgid "Unknown modification time"
 msgstr "Data de modificação desconhecida"
 
