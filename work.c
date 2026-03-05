@@ -928,21 +928,10 @@ work_rsync_bulk(void *user_data) {
             if (item->action != UI_ACTION_DELETE) {
                 write64(pipe_stdin[1], item->filepath, item->filepath_length);
                 write64(pipe_stdin[1], "\n", 1);
-                if (item->link_target == NULL) {
-                    continue;
-                }
-                switch (item->action) {
-                case UI_ACTION_HARDLINK:
+                if (item->action == UI_ACTION_HARDLINK) {
                     write64(pipe_stdin[1], item->link_target,
                             item->link_target_len);
                     write64(pipe_stdin[1], "\n", 1);
-                    break;
-                case UI_ACTION_SYMLINK:
-                    if (memmem64(item->link_target, item->link_target_len,
-                                 cecup.src_base, cecup.src_base_len)) {
-                    }
-                default:
-                    break;
                 }
             }
         }
