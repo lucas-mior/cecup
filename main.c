@@ -497,8 +497,6 @@ main(int32 argc, char *argv[]) {
         g_key_file_free(key);
     }
 
-    cecup_get_dirs();
-
     // Note: NEVER delete lines with // clang-format
     // clang-format off
     g_signal_connect(browse_src, "clicked",
