@@ -181,15 +181,16 @@ msgid "Rsync transfer progress"
 msgstr "Progresso de transferência do rsync"
 
 #: work.c:366
+#, fuzzy
 msgid ""
 "Safety stop: Original and Backup are on the same disk partition. Change "
 "settings to ignore this."
 msgstr ""
-"Parada de precaução: Original e backup são do mesmo"
-" dispositivo de armazenamento."
-"\nVerifique se o dispositivo de backup está conectado."
-"\nPara forçar o backup em pasta do mesmo dispositivo, desmarcar opção"
-"Dispositivos diferentes."
+"Parada de precaução: Original e backup são do mesmo dispositivo de "
+"armazenamento.\n"
+"Verifique se o dispositivo de backup está conectado.\n"
+"Para forçar o backup em pasta do mesmo dispositivo, desmarcar "
+"opçãoDispositivos diferentes."
 
 #: main.c:316 main.c:339
 msgid "Select Folder"
