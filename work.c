@@ -363,8 +363,8 @@ work_rsync(void *user_data) {
             if (stat_src.st_dev == stat_dst.st_dev) {
                 Message *message;
                 ipc_dispatch_log_error(
-                    "Safety stop: Original and Backup are on the same disk "
-                    "partition. Change settings to ignore this.\n");
+                    _("Safety stop: Original and Backup are on the same disk "
+                      "partition. Change settings to ignore this.\n"));
 
                 g_mutex_lock(&cecup.ui_arena_mutex);
                 message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
