@@ -351,7 +351,7 @@ work_rsync(void *user_data) {
     char src_dir[MAX_PATH_LENGTH];
     char dst_dir[MAX_PATH_LENGTH];
     char cmd[MAX_PATH_LENGTH*2];
-    char *args[32];
+    char *rsync_args[32];
     int32 a = 0;
 
     if (thread_data->check_different_fs) {
@@ -415,42 +415,42 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
-    args[a++] = "rsync";
-    args[a++] = "--verbose";
-    args[a++] = "--update";
-    args[a++] = "--recursive";
-    args[a++] = "--partial";
-    args[a++] = "--progress";
-    args[a++] = "--info=progress2";
-    args[a++] = "--links";
-    args[a++] = "--hard-links";
-    args[a++] = "--itemize-changes";
-    args[a++] = "--perms";
-    args[a++] = "--times";
-    args[a++] = "--owner";
-    args[a++] = "--group";
+    rsync_args[a++] = "rsync";
+    rsync_args[a++] = "--verbose";
+    rsync_args[a++] = "--update";
+    rsync_args[a++] = "--recursive";
+    rsync_args[a++] = "--partial";
+    rsync_args[a++] = "--progress";
+    rsync_args[a++] = "--info=progress2";
+    rsync_args[a++] = "--links";
+    rsync_args[a++] = "--hard-links";
+    rsync_args[a++] = "--itemize-changes";
+    rsync_args[a++] = "--perms";
+    rsync_args[a++] = "--times";
+    rsync_args[a++] = "--owner";
+    rsync_args[a++] = "--group";
 
     if (thread_data->delete_excluded) {
-        args[a++] = "--delete-excluded";
+        rsync_args[a++] = "--delete-excluded";
     }
     if (thread_data->delete_after) {
-        args[a++] = "--delete-after";
+        rsync_args[a++] = "--delete-after";
     }
     if (thread_data->is_preview) {
-        args[a++] = "--dry-run";
+        rsync_args[a++] = "--dry-run";
     }
     if (access(cecup.ignore_path, F_OK) != -1) {
-        args[a++] = "--exclude-from";
-        args[a++] = cecup.ignore_path;
+        rsync_args[a++] = "--exclude-from";
+        rsync_args[a++] = cecup.ignore_path;
     }
 
     SNPRINTF(src_dir, "%s/", thread_data->src_path);
     SNPRINTF(dst_dir, "%s/", thread_data->dst_path);
-    args[a++] = src_dir;
-    args[a++] = dst_dir;
-    args[a++] = NULL;
+    rsync_args[a++] = src_dir;
+    rsync_args[a++] = dst_dir;
+    rsync_args[a++] = NULL;
 
-    STRING_FROM_ARRAY(cmd, " ", args, a);
+    STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
     ipc_dispatch_log("+ %s\n", cmd);
 
     switch (child_pid = fork()) {
@@ -476,7 +476,7 @@ work_rsync(void *user_data) {
         XCLOSE(&pipe_output[1]);
         XCLOSE(&pipe_error[1]);
 
-        execvp("rsync", args);
+        execvp("rsync", rsync_args);
         fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
         exit(EXIT_FAILURE);
     default:
