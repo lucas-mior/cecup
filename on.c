@@ -516,8 +516,11 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
             parent_row->selected = (parent_row->selected == 0) ? 1 : 0;
             new_state = parent_row->selected;
 
-            parent_path = (parent_row->src_path != NULL) ? parent_row->src_path
-                                                         : parent_row->dst_path;
+            if (parent_row->src_path) {
+                parent_path = parent_row->src_path;
+            } else {
+                parent_path = parent_row->dst_path;
+            }
 
             if (parent_path != NULL) {
                 parent_path_len = strlen64(parent_path);
