@@ -176,7 +176,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         error("This is only a problem if you have problematic filenames.\n");
         error("Problematic filenames are the ones that contain the strings:\n");
         for (int32 i = 0; i < LENGTH(replacements); i += 1) {
-            error("\"%s\" ", replacements[i][0]);
+            error("\"%s\" ", replacements[i].problem);
         }
         error("\n");
         return;
@@ -232,7 +232,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
             int32 replacement_index = -1;
 
             for (int32 r = 0; r < LENGTH(replacements); r += 1) {
-                char *search = replacements[r][0];
+                char *search = replacements[r].problem;
                 int64 search_len = strlen64(search);
                 char *match;
 
@@ -247,7 +247,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
 
             if (earliest_match) {
                 int64 prefix_len = (int64)(earliest_match - &d_name[k]);
-                char *replace_str = replacements[replacement_index][1];
+                char *replace_str = replacements[replacement_index].rename;
                 int64 replace_len = strlen64(replace_str);
 
                 if (prefix_len > 0) {
@@ -259,7 +259,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
                 memcpy64(&new_name[j], replace_str, replace_len);
 
                 j += replace_len;
-                k += strlen64(replacements[replacement_index][0]);
+                k += strlen64(replacements[replacement_index].problem);
                 changed = true;
             } else {
                 int64 remaining = name_len - k;

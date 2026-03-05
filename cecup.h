@@ -272,7 +272,10 @@ static void free_update_data(Message *message);
 static void free_task_list(TaskList *tasks);
 static void save_config(void);
 
-static char *replacements[][2] = {
+static struct {
+    char *problem;
+    char *rename;
+} replacements[] = {
     {"=>", "_equal_arrow_in_filename_"},
     {"->", "_dash_arrow_in_filename_"},
     {"\\", "_backslash_in_filename_"},
