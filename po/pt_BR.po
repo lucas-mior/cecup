@@ -204,7 +204,7 @@ msgstr ""
 "armazenamento.\n"
 "Verifique se o dispositivo de backup está conectado.\n"
 "Para forçar o backup em pasta do mesmo dispositivo, desmarcar "
-"opçãoDispositivos diferentes.\n"
+"opção \"Impedir cópia no mesmo disco\".\n"
 
 #: main.c:317 main.c:340
 msgid "Select Folder"
