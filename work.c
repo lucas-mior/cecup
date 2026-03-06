@@ -954,6 +954,7 @@ work_rsync_bulk(void *user_data) {
         int32 pipe_output[2] = {-1, -1};
         int32 pipe_error[2] = {-1, -1};
         int32 pipe_stdin[2] = {-1, -1};
+        struct pollfd pipes[2];
         pid_t child_pid;
         char destination_directory[MAX_PATH_LENGTH];
         char *rsync_args[32];
@@ -1069,8 +1070,7 @@ work_rsync_bulk(void *user_data) {
         }
         XCLOSE(&pipe_stdin[1]);
 
-        while (true) {
-            struct pollfd pipes[2];
+        do {
             int64 r;
             char *eol;
 
@@ -1170,11 +1170,11 @@ work_rsync_bulk(void *user_data) {
         read_error_pipe:
             if (pipes[1].revents & (POLLHUP | POLLERR)) {
                 pipes[1].fd = -1;
-                goto check_pipes_or_break;
+                continue;
             }
 
             if (!(pipes[1].revents & POLLIN)) {
-                goto check_pipes_or_break;
+                continue;
             }
 
             r = read64(pipe_error[0], buffer_error + buffer_error_pos,
@@ -1185,7 +1185,7 @@ work_rsync_bulk(void *user_data) {
                                            strerror(errno));
                     pipes[1].fd = -1;
                 }
-                goto check_pipes_or_break;
+                continue;
             }
             buffer_error_pos += (int32)r;
 
@@ -1206,11 +1206,7 @@ work_rsync_bulk(void *user_data) {
                 buffer_error_pos = remaining;
             }
 
-        check_pipes_or_break:
-            if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
-                break;
-            }
-        }
+        } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
         if (waitpid(child_pid, NULL, 0) < 0) {
             ipc_dispatch_log_error("Error waiting for child: %s.\n",
