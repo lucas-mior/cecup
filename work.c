@@ -464,18 +464,18 @@ work_rsync(void *user_data) {
         exit(EXIT_FAILURE);
     case 0:
         if (setpgid(0, 0) < 0) {
-            fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
+            error("Error setpgid: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
         putenv("LC_ALL=C");
         XCLOSE(&pipe_stdout[0]);
         XCLOSE(&pipe_stderr[0]);
         if (dup2(pipe_stdout[1], STDOUT_FILENO) < 0) {
-            fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
+            error("Error dup2 stdout: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
         if (dup2(pipe_stderr[1], STDERR_FILENO) < 0) {
-            fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
+            error("Error dup2 stderr: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
         XCLOSE(&pipe_stdout[1]);
@@ -1020,7 +1020,7 @@ work_rsync_bulk(void *user_data) {
             fatal(EXIT_FAILURE);
         case 0:
             if (setpgid(0, 0) < 0) {
-                fprintf(stderr, "Error setpgid: %s.\n", strerror(errno));
+                error("Error setpgid: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             putenv("LC_ALL=C");
@@ -1028,15 +1028,15 @@ work_rsync_bulk(void *user_data) {
             XCLOSE(&pipe_stderr[0]);
             XCLOSE(&pipe_stdin[1]);
             if (dup2(pipe_stdin[0], STDIN_FILENO) < 0) {
-                fprintf(stderr, "Error dup2 stdin: %s.\n", strerror(errno));
+                error("Error duplicating stdin: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             if (dup2(pipe_stdout[1], STDOUT_FILENO) < 0) {
-                fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
+                error("Error duplicating stdout: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             if (dup2(pipe_stderr[1], STDERR_FILENO) < 0) {
-                fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
+                error("Error duplicating stderr: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             XCLOSE(&pipe_stdin[0]);
@@ -1044,7 +1044,7 @@ work_rsync_bulk(void *user_data) {
             XCLOSE(&pipe_stderr[1]);
 
             execvp("rsync", rsync_args);
-            fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
+            error("Error: execvp failed: %s.\n", strerror(errno));
             _exit(EXIT_FAILURE);
         default:
             break;
