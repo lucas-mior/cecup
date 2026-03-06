@@ -185,6 +185,10 @@ static struct {
     GtkWidget *dst_entry;
     ulong src_entry_id;
     ulong dst_entry_id;
+    char *src_base;
+    char *dst_base;
+    int64 src_base_len;
+    int64 dst_base_len;
 
     GtkWidget *diff_entry;
     GtkWidget *term_entry;
@@ -235,11 +239,6 @@ static struct {
     Arena *ui_arena;
     GMutex row_arena_mutex;
     GMutex ui_arena_mutex;
-
-    char *src_base;
-    int64 src_base_len;
-    char *dst_base;
-    int64 dst_base_len;
 } cecup;
 
 typedef struct ThreadData {
