@@ -840,15 +840,19 @@ util_filename_from(char *buffer, int64 size, int fd) {
 
 static int
 xclose(char *file, int line, int *fd, char *fd_var_name, char *filename) {
-    if (close(*fd) < 0) {
-        char buffer[4096];
-        if (filename == NULL) {
-            if (util_filename_from(buffer, sizeof(buffer), *fd) < 0) {
-                filename = fd_var_name;
-            } else {
-                filename = buffer;
-            }
+#if DEBUGGING
+    char buffer[4096];
+    if (filename == NULL) {
+        if (util_filename_from(buffer, sizeof(buffer), *fd) < 0) {
+            filename = fd_var_name;
+        } else {
+            filename = buffer;
         }
+    }
+#else
+    filename = fd_var_name;
+#endif
+    if (close(*fd) < 0) {
         error("%s:%d Error closing %s: %s.\n", file, line, filename,
               strerror(errno));
         *fd = -1;
