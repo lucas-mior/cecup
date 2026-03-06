@@ -343,6 +343,7 @@ work_rsync(void *user_data) {
 
     int32 pipe_output[2] = {-1, -1};
     int32 pipe_error[2] = {-1, -1};
+    struct pollfd pipes[2];
     pid_t child_pid;
 
     char buffer_output[8192];
@@ -491,8 +492,7 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_output[1]);
     XCLOSE(&pipe_error[1]);
 
-    while (true) {
-        struct pollfd pipes[2];
+    do {
         int64 r;
         char *eol;
 
@@ -709,11 +709,11 @@ work_rsync(void *user_data) {
     read_error_pipe:
         if (pipes[1].revents & (POLLHUP | POLLERR)) {
             pipes[1].fd = -1;
-            goto check_pipes_or_break;
+            continue;
         }
 
         if (!(pipes[1].revents & POLLIN)) {
-            goto check_pipes_or_break;
+            continue;
         }
 
         r = read64(pipe_error[0], buffer_error + buffer_error_pos,
@@ -724,7 +724,7 @@ work_rsync(void *user_data) {
                                        strerror(errno));
                 pipes[1].fd = -1;
             }
-            goto check_pipes_or_break;
+            continue;
         }
         buffer_error_pos += (int32)r;
 
@@ -751,12 +751,7 @@ work_rsync(void *user_data) {
             ipc_dispatch_log_error("%s\n", buffer_error);
             buffer_error_pos = 0;
         }
-
-    check_pipes_or_break:
-        if ((pipes[0].fd < 0) && (pipes[1].fd < 0)) {
-            break;
-        }
-    }
+    } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     if (waitpid(child_pid, NULL, 0) < 0) {
         ipc_dispatch_log_error("Error waiting for child: %s.\n",
@@ -821,8 +816,7 @@ work_rsync(void *user_data) {
                 }
                 XCLOSE(&pipe_stdin[1]);
 
-                while (true) {
-                    struct pollfd pipes[2];
+                do {
                     pipes[0].fd = pipe_output[0];
                     pipes[0].events = POLLIN;
                     pipes[1].fd = pipe_error[0];
@@ -849,10 +843,7 @@ work_rsync(void *user_data) {
                             }
                         }
                     }
-                    if (pipes[0].fd < 0 && pipes[1].fd < 0) {
-                        break;
-                    }
-                }
+                } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
                 waitpid(child_pid, NULL, 0);
                 XCLOSE(&pipe_output[0]);
                 XCLOSE(&pipe_error[0]);
