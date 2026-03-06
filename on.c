@@ -36,17 +36,20 @@ typedef struct {
     char *path_type;
 } CecupMenuItem;
 
+// Note: NEVER delete lines with // clang-format
+// clang-format off
 static CecupMenuItem context_menu_items[] = {
-    {"📄 Open File", NULL, on_menu_open, NULL},
-    {"📂 Open Folder", NULL, on_menu_open_dir, NULL},
-    {"📋 Copy Relative Path", "Ctrl+C", on_menu_copy_path, "relative"},
-    {"📍 Copy Full Path", "Ctrl+Shift+V", on_menu_copy_path, "absolute"},
-    {"⏯️ Apply", NULL, on_menu_apply, NULL},
-    {"🔍 Diff", NULL, on_menu_diff, NULL},
-    {"✏️ Rename", "F2", on_menu_rename, NULL},
-    {"🗑️ Delete", NULL, on_menu_delete, NULL},
-    {"💤 Ignore...", NULL, NULL, NULL},
+{N_("📄 Open File"),          NULL,           on_menu_open,      NULL},
+{N_("📂 Open Folder"),        NULL,           on_menu_open_dir,  NULL},
+{N_("📋 Copy Relative Path"), "Ctrl+C",       on_menu_copy_path, "relative"},
+{N_("📍 Copy Full Path"),     "Ctrl+Shift+C", on_menu_copy_path, "absolute"},
+{N_("⏯️ Apply"),              NULL,           on_menu_apply,     NULL},
+{N_("🔍 Diff"),               NULL,           on_menu_diff,      NULL},
+{N_("✏️ Rename"),              "F2",           on_menu_rename,    NULL},
+{N_("🗑️ Delete"),             NULL,           on_menu_delete,    NULL},
+{N_("💤 Ignore..."),          NULL,           NULL, NULL},
 };
+// clang-format on
 
 static void
 on_menu_apply(GtkWidget *m, void *data) {
