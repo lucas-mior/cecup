@@ -342,9 +342,9 @@ work_rsync(void *user_data) {
     struct pollfd pipes[2];
     pid_t child_pid;
 
-    char buffer_output[8192];
+    char buffer_output[MAX_PATH_LENGTH*2];
     int32 buffer_output_pos = 0;
-    char buffer_error[8192];
+    char buffer_error[MAX_PATH_LENGTH*2];
     int32 buffer_error_pos = 0;
 
     char src_dir[MAX_PATH_LENGTH];
