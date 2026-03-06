@@ -87,7 +87,6 @@ msgid "Edit the list of filename patterns to ignore"
 msgstr "Editar a lista de padrões de nomes de arquivo para ignorar"
 
 #: on.c:1217
-#, c-format
 msgid "Error renaming %s: %s\n"
 msgstr "Error renomeando %s: %s\n"
 
@@ -148,7 +147,6 @@ msgid "Not found in original"
 msgstr "Não encontrado na pasta original"
 
 #: on.c:233
-#, c-format
 msgid "Permanently delete %d item(s)?"
 msgstr "Excluir permanentemente %d arquivo(s)?"
 
@@ -181,7 +179,6 @@ msgid "Rename problematic filenames, the ones containing:\n"
 msgstr "Renomear nomes de arquivo problemáticos, aqueles que contém:\n"
 
 #: on.c:1213
-#, c-format
 msgid "Renamed: %s -> %s\n"
 msgstr "Renomeado %s -> %s\n"
 
@@ -211,7 +208,6 @@ msgid "Select Folder"
 msgstr "Selecionar Pasta"
 
 #: aux.c:323
-#, c-format
 msgid ""
 "Selected files: %lld\n"
 "Total Transfer Size: 📦 %s"
