@@ -42,6 +42,77 @@ on_menu_apply(GtkWidget *m, void *data) {
 }
 
 static void
+on_menu_rename(GtkWidget *m, void *data) {
+    Message *message = data;
+    TaskList *tasks;
+    GtkWidget *dialog;
+    GtkWidget *content_area;
+    GtkWidget *entry;
+    char *base_path;
+
+    (void)m;
+
+    if ((tasks
+         = get_target_tasks(message->side, message->filepath, message->action))
+        == NULL) {
+        free_update_data(message);
+        return;
+    }
+
+    if (message->side == 0) {
+        base_path = cecup.src_base;
+    } else {
+        base_path = cecup.dst_base;
+    }
+
+    dialog = gtk_dialog_new_with_buttons(
+        _("Rename"), GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL,
+        _("_Cancel"), GTK_RESPONSE_CANCEL, _("_Rename"), GTK_RESPONSE_ACCEPT,
+        NULL);
+
+    content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(entry), basename(message->filepath));
+    gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
+
+    gtk_box_pack_start(GTK_BOX(content_area), entry, TRUE, TRUE, 10);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
+    gtk_widget_show_all(dialog);
+
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+        char *new_name = (char *)gtk_entry_get_text(GTK_ENTRY(entry));
+
+        for (int32 i = 0; i < tasks->count; i += 1) {
+            Message *task = tasks->items[i];
+            char old_path[MAX_PATH_LENGTH];
+            char new_path[MAX_PATH_LENGTH];
+            char *dir_name;
+
+            SNPRINTF(old_path, "%s/%s", base_path, task->filepath);
+
+            if ((dir_name = g_path_get_dirname(old_path))) {
+                SNPRINTF(new_path, "%s/%s", dir_name, new_name);
+
+                if (rename(old_path, new_path) == 0) {
+                    ipc_send_log(_("Renamed: %s -> %s\n"), task->filepath,
+                                 new_name);
+                } else {
+                    ipc_send_log_error(_("Error renaming %s: %s\n"),
+                                       task->filepath, strerror(errno));
+                }
+                g_free(dir_name);
+            }
+        }
+        on_preview_clicked(NULL, NULL);
+    }
+
+    gtk_widget_destroy(dialog);
+    free_task_list(tasks);
+    free_update_data(message);
+    return;
+}
+
+static void
 on_menu_open(GtkWidget *m, void *data) {
     Message *message = data;
     TaskList *tasks;
@@ -856,6 +927,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         GtkWidget *item_copy_relative;
         GtkWidget *item_copy_absolute;
         GtkWidget *item_diff;
+        GtkWidget *item_rename;
         GtkWidget *item_delete;
         GtkWidget *item_apply;
         GtkWidget *item_ignore;
@@ -914,6 +986,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             = gtk_menu_item_new_with_label(_("📍 Copy Full Path"));
         item_ignore = gtk_menu_item_new_with_label(_("💤 Ignore..."));
         item_diff = gtk_menu_item_new_with_label(_("🔍 Diff"));
+        item_rename = gtk_menu_item_new_with_label(_("✏️ Rename"));
         item_delete = gtk_menu_item_new_with_label(_("🗑️ Delete"));
 
         g_signal_connect(item_apply, "activate", G_CALLBACK(on_menu_apply),
@@ -931,6 +1004,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             gtk_widget_set_sensitive(item_dir, FALSE);
             gtk_widget_set_sensitive(item_copy_relative, FALSE);
             gtk_widget_set_sensitive(item_copy_absolute, FALSE);
+            gtk_widget_set_sensitive(item_rename, FALSE);
             gtk_widget_set_sensitive(item_delete, FALSE);
         } else {
             g_signal_connect(item_open, "activate", G_CALLBACK(on_menu_open),
@@ -947,6 +1021,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                              G_CALLBACK(on_menu_copy_path), message);
             g_signal_connect(item_copy_absolute, "activate",
                              G_CALLBACK(on_menu_copy_path), message);
+            g_signal_connect(item_rename, "activate",
+                             G_CALLBACK(on_menu_rename), message);
             g_signal_connect(item_delete, "activate",
                              G_CALLBACK(on_menu_delete), message);
         }
@@ -957,6 +1033,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_copy_absolute);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_apply);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_diff);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_rename);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_delete);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_ignore);
 
