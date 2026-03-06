@@ -949,24 +949,22 @@ work_rsync_bulk(void *user_data) {
             }
 
             if (cecup.cancel_sync == false) {
-                Message *remove_data;
+                Message *message;
                 int64 path_length;
 
                 g_mutex_lock(&cecup.ui_arena_mutex);
-                remove_data
-                    = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-                memset64(remove_data, 0, SIZEOF(Message));
+                message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+                memset64(message, 0, SIZEOF(Message));
 
                 path_length = message->filepath_length;
-                remove_data->filepath_length = path_length;
-                remove_data->filepath
+                message->filepath_length = path_length;
+                message->filepath
                     = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
-                memcpy64(remove_data->filepath, message->filepath,
-                         path_length + 1);
+                memcpy64(message->filepath, message->filepath, path_length + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
 
-                remove_data->type = DATA_TYPE_REMOVE_TREE_ROW;
-                g_idle_add(update_ui_handler, remove_data);
+                message->type = DATA_TYPE_REMOVE_TREE_ROW;
+                g_idle_add(update_ui_handler, message);
             }
         }
     }
