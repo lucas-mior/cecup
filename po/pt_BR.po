@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 19:00-0300\n"
+"POT-Creation-Date: 2026-03-06 19:05-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -154,8 +154,7 @@ msgstr "Excluir permanentemente %d arquivo(s)?"
 
 #: main.c:224
 msgid "Prevent copying if original and backup are on the same disk"
-msgstr ""
-"Evitar cópia se o original e o backup estiverem no mesmo dispositivo"
+msgstr "Evitar cópia se o original e o backup estiverem no mesmo dispositivo"
 
 #: main.c:273
 msgid "Preview analysis progress"
@@ -182,6 +181,7 @@ msgid "Rename problematic filenames, the ones containing:\n"
 msgstr "Renomear nomes de arquivo problemáticos, aqueles que contém:\n"
 
 #: on.c:1213
+#, c-format
 msgid "Renamed: %s -> %s\n"
 msgstr "Renomeado %s -> %s\n"
 
@@ -195,8 +195,10 @@ msgstr "Progresso de transferência do rsync"
 
 #: work.c:378
 msgid ""
-"Safety stop: Original and Backup are on the same disk partition. Change "
-"settings to ignore this.\n"
+"Safety stop: Original and backup are on the same storage device.\n"
+"Check if the backup device is connected.\n"
+"To force backup on a folder in the same device, uncheckoption different "
+"fs .\n"
 msgstr ""
 "Parada de precaução: Original e backup são do mesmo dispositivo de "
 "armazenamento.\n"
@@ -209,6 +211,7 @@ msgid "Select Folder"
 msgstr "Selecionar Pasta"
 
 #: aux.c:323
+#, c-format
 msgid ""
 "Selected files: %lld\n"
 "Total Transfer Size: 📦 %s"
@@ -391,6 +394,16 @@ msgstr "🗑️ Excluir"
 #: main.c:166
 msgid "🛠️ Rename problematic files"
 msgstr "🛠️ Corrigir nomes problemáticos"
+
+#~ msgid ""
+#~ "Safety stop: Original and Backup are on the same disk partition. Change "
+#~ "settings to ignore this.\n"
+#~ msgstr ""
+#~ "Parada de precaução: Original e backup são do mesmo dispositivo de "
+#~ "armazenamento.\n"
+#~ "Verifique se o dispositivo de backup está conectado.\n"
+#~ "Para forçar o backup em pasta do mesmo dispositivo, desmarcar "
+#~ "opçãoDispositivos diferentes.\n"
 
 #~ msgid "🔎 Analyze changes between folders"
 #~ msgstr "🔎 Analisar mudanças entre as pastas"
