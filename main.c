@@ -103,12 +103,10 @@ main(int32 argc, char *argv[]) {
     cecup.ui_arena = arena_create(SIZEMB(16));
     g_mutex_init(&cecup.ui_arena_mutex);
 
-    {
-        cecup.rows_len = 0;
-        cecup.rows_capacity = 4096;
-        cecup.rows = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
-        cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
-    }
+    cecup.rows_len = 0;
+    cecup.rows_capacity = 4096;
+    cecup.rows = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
+    cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
 
     cecup.sort_col = COL_SRC_PATH;
     cecup.sort_order = GTK_SORT_ASCENDING;
