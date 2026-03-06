@@ -353,7 +353,6 @@ work_rsync(void *user_data) {
 
     char src_dir[MAX_PATH_LENGTH];
     char dst_dir[MAX_PATH_LENGTH];
-    char cmd[MAX_PATH_LENGTH*2];
     char *rsync_args[32];
     int32 a = 0;
 
@@ -459,8 +458,11 @@ work_rsync(void *user_data) {
     rsync_args[a++] = dst_dir;
     rsync_args[a++] = NULL;
 
-    STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-    ipc_dispatch_log("+ %s\n", cmd);
+    {
+        char cmd[MAX_PATH_LENGTH*2];
+        STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
+        ipc_dispatch_log("+ %s\n", cmd);
+    }
 
     switch (child_pid = fork()) {
     case -1:
@@ -982,7 +984,6 @@ work_rsync_bulk(void *user_data) {
         char buffer_error[MAX_PATH_LENGTH*2];
         int32 buffer_output_pos = 0;
         int32 buffer_error_pos = 0;
-        char cmd[MAX_PATH_LENGTH*2];
 
         if (pipe(pipe_stdout) < 0) {
             error("Error creating pipe for stdout: %s.\n", strerror(errno));
@@ -1019,8 +1020,11 @@ work_rsync_bulk(void *user_data) {
         rsync_args[a++] = dst_directory;
         rsync_args[a++] = NULL;
 
-        STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-        ipc_dispatch_log("+ %s\n", cmd);
+        {
+            char cmd[MAX_PATH_LENGTH*2];
+            STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
+            ipc_dispatch_log("+ %s\n", cmd);
+        }
 
         switch (child_pid = fork()) {
         case -1:
