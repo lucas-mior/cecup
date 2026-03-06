@@ -915,16 +915,16 @@ work_rsync_bulk(void *user_data) {
 
     if (cecup.cancel_sync == false) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *message = tasks->items[i];
+            Message *task = tasks->items[i];
             char full_dst_path[MAX_PATH_LENGTH];
             pid_t child_rm;
 
-            if (message->action != UI_ACTION_DELETE) {
+            if (task->action != UI_ACTION_DELETE) {
                 has_transfers = true;
                 continue;
             }
 
-            SNPRINTF(full_dst_path, "%s/%s", cecup.dst_base, message->filepath);
+            SNPRINTF(full_dst_path, "%s/%s", cecup.dst_base, task->filepath);
             switch (child_rm = fork()) {
             case -1:
                 error("Error forking for rm: %s.\n", strerror(errno));
@@ -1065,8 +1065,8 @@ work_rsync_bulk(void *user_data) {
         XCLOSE(&pipe_stdin[0]);
 
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *item = tasks->items[i];
-            switch (item->action) {
+            Message *task = tasks->items[i];
+            switch (task->action) {
             case UI_ACTION_DELETE:
             case UI_ACTION_DELETED:
             case UI_ACTION_IGNORE:
@@ -1076,8 +1076,8 @@ work_rsync_bulk(void *user_data) {
                 // rsync, when using the --files-from mode,
                 // only transfers hard links
                 // if the target is also included in the --files-from list
-                write64(pipe_stdin[1], item->link_target,
-                        item->link_target_len);
+                write64(pipe_stdin[1], task->link_target,
+                        task->link_target_len);
                 write64(pipe_stdin[1], "\n", 1);
                 __attribute__((fallthrough));
             case UI_ACTION_NEW:
@@ -1085,7 +1085,7 @@ work_rsync_bulk(void *user_data) {
             case UI_ACTION_SYMLINK:
             case NUM_UI_ACTIONS:
             default:
-                write64(pipe_stdin[1], item->filepath, item->filepath_length);
+                write64(pipe_stdin[1], task->filepath, task->filepath_length);
                 write64(pipe_stdin[1], "\n", 1);
             }
         }
