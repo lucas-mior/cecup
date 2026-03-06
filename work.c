@@ -803,15 +803,19 @@ work_rsync(void *user_data) {
         case 0:
             setpgid(0, 0);
             putenv("LC_ALL=C");
+
             XCLOSE(&pipe_stdin[1]);
             XCLOSE(&pipe_stdout[0]);
             XCLOSE(&pipe_stderr[0]);
+
             dup2(pipe_stdin[0], STDIN_FILENO);
             dup2(pipe_stdout[1], STDOUT_FILENO);
             dup2(pipe_stderr[1], STDERR_FILENO);
+
             XCLOSE(&pipe_stdin[0]);
             XCLOSE(&pipe_stdout[1]);
             XCLOSE(&pipe_stderr[1]);
+
             execvp("rsync", rsync_args);
             _exit(EXIT_FAILURE);
         default:
