@@ -1107,16 +1107,13 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
         }
 
         switch (view_column_index) {
-        case 1: {
-
+        case 1:
             if (side == 0) {
                 tip_text = _(src_action_strings[action]);
             } else {
                 tip_text = _(dst_action_strings[action]);
             }
-
             break;
-        }
         case 2: {
             char *translated_reason;
 
