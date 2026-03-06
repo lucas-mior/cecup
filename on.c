@@ -873,11 +873,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         }
 
         {
-            int32 row_index;
-            CecupRow *row;
-
-            row_index = gtk_tree_path_get_indices(path)[0];
-            row = cecup.visible_rows[row_index];
+            int32 row_index = gtk_tree_path_get_indices(path)[0];
+            CecupRow *row = cecup.visible_rows[row_index];
 
             if (side == 0) {
                 file_path = row->src_path;
