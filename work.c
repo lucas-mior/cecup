@@ -75,8 +75,6 @@ enum RsyncCharAttribute {
                              " --links --hard-links --itemize-changes" \
                              " --perms --times --owner --group"
 #define MAX_COMMAND_LENGTH (MAX_PATH_LENGTH*2 + strlen64(RSYNC_UNIVERSAL_ARGS)*2)
-#define SIDE_LEFT 0
-#define SIDE_RIGHT 1
 #define BATCH_SIZE 256
 
 static int64

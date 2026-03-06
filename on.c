@@ -44,7 +44,8 @@ on_menu_apply(GtkWidget *m, void *data) {
 static void
 on_menu_rename(GtkWidget *m, void *data) {
     Message *message = data;
-    GtkWidget *tree = (message->side == 0) ? cecup.l_tree : cecup.r_tree;
+    GtkWidget *tree
+        = (message->side == SIDE_LEFT) ? cecup.l_tree : cecup.r_tree;
     GtkTreeSelection *selection
         = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
     GtkTreeModel *model;
@@ -79,7 +80,7 @@ on_menu_open(GtkWidget *m, void *data) {
             char *base_path;
             pid_t child;
 
-            if (message->side == 0) {
+            if (message->side == SIDE_LEFT) {
                 base_path = cecup.src_base;
             } else {
                 base_path = cecup.dst_base;
@@ -121,7 +122,7 @@ on_menu_open_dir(GtkWidget *m, void *data) {
             char *dir_path;
             char *base_path;
 
-            if (message->side == 0) {
+            if (message->side == SIDE_LEFT) {
                 base_path = cecup.src_base;
             } else {
                 base_path = cecup.dst_base;
@@ -159,7 +160,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     write_pointer = buffer;
     remaining_capacity = buffer_size - 1;
 
-    if (message->side == 0) {
+    if (message->side == SIDE_LEFT) {
         base_path = cecup.src_base;
     } else {
         base_path = cecup.dst_base;
@@ -835,7 +836,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 int32 row_index = gtk_tree_path_get_indices(path)[0];
                 CecupRow *row = cecup.visible_rows[row_index];
 
-                if (side == 0) {
+                if (side == SIDE_LEFT) {
                     file_path = row->src_path;
                     path_length = row->src_path_len;
                     action = row->src_action;
@@ -900,7 +901,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             int32 row_index = gtk_tree_path_get_indices(path)[0];
             CecupRow *row = cecup.visible_rows[row_index];
 
-            if (side == 0) {
+            if (side == SIDE_LEFT) {
                 file_path = row->src_path;
                 path_length = row->src_path_len;
                 other_path = row->dst_path;
@@ -1086,7 +1087,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
         char *file_path;
         enum CecupAction action;
 
-        if (side == 0) {
+        if (side == SIDE_LEFT) {
             file_path = row->src_path;
             action = row->src_action;
         } else {
@@ -1108,7 +1109,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
         switch (view_column_index) {
         case 1:
-            if (side == 0) {
+            if (side == SIDE_LEFT) {
                 tip_text = _(src_action_strings[action]);
             } else {
                 tip_text = _(dst_action_strings[action]);
@@ -1190,7 +1191,7 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
         gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
                            &row, -1);
 
-        if (side == 0) {
+        if (side == SIDE_LEFT) {
             base_path = cecup.src_base;
             current_rel_path = row->src_path;
         } else {

@@ -31,6 +31,9 @@
 #define EMOJI_DELETE "❌"
 #define EMOJI_IGNORE "💤"
 
+#define SIDE_LEFT 0
+#define SIDE_RIGHT 1
+
 #define MAX_PATH_LENGTH 4096
 #define ALIGN16(n) (((n) + 15) & ~15)
 
