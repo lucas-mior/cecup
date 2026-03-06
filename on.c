@@ -1108,23 +1108,13 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
         switch (view_column_index) {
         case 1: {
-            char **strings;
-            char *translated_action;
-            int64 string_length;
 
             if (side == 0) {
-                strings = src_action_strings;
+                tip_text = _(src_action_strings[action]);
             } else {
-                strings = dst_action_strings;
+                tip_text = _(dst_action_strings[action]);
             }
 
-            translated_action = _(strings[action]);
-            string_length = strlen64(translated_action);
-
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = xarena_push(cecup.ui_arena, ALIGN16(string_length + 1));
-            g_mutex_unlock(&cecup.ui_arena_mutex);
-            memcpy64(tip_text, translated_action, string_length + 1);
             break;
         }
         case 2: {
