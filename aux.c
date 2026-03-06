@@ -106,7 +106,7 @@ get_target_tasks(int32 side, char *clicked_path,
         task = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*task)));
         memset64(task, 0, SIZEOF(*task));
 
-        task->filepath_length = path_len;
+        task->filepath_len = path_len;
         task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
         memcpy64(task->filepath, file_path, path_len + 1);
 
@@ -135,7 +135,7 @@ get_target_tasks(int32 side, char *clicked_path,
         memset64(task, 0, SIZEOF(*task));
 
         path_len = strlen64(clicked_path);
-        task->filepath_length = path_len;
+        task->filepath_len = path_len;
         task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
         memcpy64(task->filepath, clicked_path, path_len + 1);
 
@@ -496,12 +496,12 @@ update_ui_handler(void *user_data) {
         }
 
         if (src_path_final) {
-            row->src_path_len = message->filepath_length;
+            row->src_path_len = message->filepath_len;
         } else {
             row->src_path_len = 0;
         }
         if (dst_path_final) {
-            row->dst_path_len = message->filepath_length;
+            row->dst_path_len = message->filepath_len;
         } else {
             row->dst_path_len = 0;
         }
@@ -538,10 +538,9 @@ update_ui_handler(void *user_data) {
         g_mutex_lock(&cecup.row_arena_mutex);
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
             CecupRow *row = cecup.rows[i];
-            if ((row->src_path_len == message->filepath_length && row->src_path
+            if ((row->src_path_len == message->filepath_len && row->src_path
                  && strcmp(row->src_path, message->filepath) == 0)
-                || (row->dst_path_len == message->filepath_length
-                    && row->dst_path
+                || (row->dst_path_len == message->filepath_len && row->dst_path
                     && strcmp(row->dst_path, message->filepath) == 0)) {
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                     cecup.rows[j] = cecup.rows[j + 1];

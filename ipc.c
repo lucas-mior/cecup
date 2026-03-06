@@ -137,11 +137,11 @@ ipc_send_tree(int32 side,
     message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
     memset64(message, 0, SIZEOF(Message));
 
-    message->filepath_length = strlen64(path);
+    message->filepath_len = strlen64(path);
     g_mutex_lock(&cecup.row_arena_mutex);
     message->filepath
-        = xarena_push(cecup.row_arena, ALIGN16(message->filepath_length + 1));
-    memcpy64(message->filepath, path, message->filepath_length + 1);
+        = xarena_push(cecup.row_arena, ALIGN16(message->filepath_len + 1));
+    memcpy64(message->filepath, path, message->filepath_len + 1);
 
     if (link_target) {
         target_len = strlen64(link_target);

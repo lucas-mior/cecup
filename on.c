@@ -190,7 +190,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
                 path_length = strlen64(path_full);
             } else {
                 path = task->filepath;
-                path_length = task->filepath_length;
+                path_length = task->filepath_len;
             }
 
             if ((i > 0) && (remaining_capacity > 0)) {
@@ -854,7 +854,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                                           ALIGN16(SIZEOF(*message)));
                     memset64(message, 0, SIZEOF(*message));
 
-                    message->filepath_length = path_length;
+                    message->filepath_len = path_length;
                     message->filepath
                         = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
                     memcpy64(message->filepath, file_path, path_length + 1);
@@ -919,7 +919,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         memset64(message, 0, SIZEOF(*message));
 
         if (file_path) {
-            message->filepath_length = path_length;
+            message->filepath_len = path_length;
             message->filepath
                 = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
             memcpy64(message->filepath, file_path, path_length + 1);

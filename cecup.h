@@ -163,7 +163,7 @@ typedef struct Message {
     char *link_target;
 
     int64 message_len;
-    int64 filepath_length;
+    int64 filepath_len;
     int64 link_target_len;
 
     int64 size;

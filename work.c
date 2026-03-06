@@ -948,8 +948,8 @@ work_rsync_bulk(void *user_data) {
                 message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
                 memset64(message, 0, SIZEOF(Message));
 
-                path_length = message->filepath_length;
-                message->filepath_length = path_length;
+                path_length = message->filepath_len;
+                message->filepath_len = path_length;
                 message->filepath
                     = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
                 memcpy64(message->filepath, message->filepath, path_length + 1);
@@ -1077,7 +1077,7 @@ work_rsync_bulk(void *user_data) {
             case UI_ACTION_SYMLINK:
             case NUM_UI_ACTIONS:
             default:
-                write64(pipe_stdin[1], task->filepath, task->filepath_length);
+                write64(pipe_stdin[1], task->filepath, task->filepath_len);
                 write64(pipe_stdin[1], "\n", 1);
             }
         }
@@ -1162,7 +1162,7 @@ work_rsync_bulk(void *user_data) {
                         = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
                     memset64(message, 0, SIZEOF(Message));
 
-                    message->filepath_length = path_len;
+                    message->filepath_len = path_len;
                     message->filepath
                         = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
                     memcpy64(message->filepath, filename, path_len + 1);
