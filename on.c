@@ -1056,7 +1056,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     int32 view_column_index;
     int32 number_of_columns;
     char *tip_text = NULL;
-    char tip_text_buffer[8192];
+    char tip_text_buffer[MAX_PATH_LENGTH*2];
     int64 tip_text_length;
 
     (void)k;
