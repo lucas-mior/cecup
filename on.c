@@ -47,7 +47,7 @@ static CecupMenuItem context_menu_items[] = {
 {N_("🔍 Diff"),               NULL,           on_menu_diff,      NULL},
 {N_("✏️ Rename"),              "F2",           on_menu_rename,    NULL},
 {N_("🗑️ Delete"),             NULL,           on_menu_delete,    NULL},
-{N_("💤 Ignore..."),          NULL,           NULL, NULL},
+{N_("💤 Ignore..."),          NULL,           NULL,              NULL},
 };
 // clang-format on
 
