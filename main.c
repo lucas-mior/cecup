@@ -159,31 +159,31 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
     button_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    cecup.preview_button
-        = gtk_button_new_with_label(_("🔎 Analyze changes between folders"));
-    gtk_widget_set_tooltip_text(
-        cecup.preview_button,
-        _("Check which files need to be copied or updated"));
-    cecup.ignore_button = gtk_button_new_with_label(_("Ignore Rules"));
-    gtk_widget_set_tooltip_text(
-        cecup.ignore_button, _("Edit the list of filename patterns to ignore"));
+
+    cecup.preview_button = gtk_button_new_with_label(_("🔎 Analyze"));
+    cecup.ignore_button = gtk_button_new_with_label(_("Edit Ignore Rules"));
     cecup.fix_button
         = gtk_button_new_with_label(_("🛠️ Rename problematic files"));
 
+    gtk_widget_set_tooltip_text(
+        cecup.preview_button,
+        _("Check which files need to be copied or updated"));
+    gtk_widget_set_tooltip_text(
+        cecup.ignore_button, _("Edit the list of filename patterns to ignore"));
+
     {
         char tooltip[1024];
-        int64 offset;
+        int32 offset;
 
         offset = SNPRINTF(
             tooltip, "%s",
             _("Rename problematic filenames, the ones containing:\n"));
         for (int32 i = 0; i < LENGTH(replacements); i += 1) {
-            int64 written;
+            int32 n;
 
-            written
-                = (int64)snprintf2(tooltip + offset, SIZEOF(tooltip) - offset,
-                                   " \"%s\"\n", replacements[i].problem);
-            offset += written;
+            n = snprintf2(tooltip + offset, SIZEOF(tooltip) - offset,
+                          " \"%s\"\n", replacements[i].problem);
+            offset += n;
         }
         gtk_widget_set_tooltip_text(cecup.fix_button, tooltip);
     }
