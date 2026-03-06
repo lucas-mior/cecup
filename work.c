@@ -942,17 +942,17 @@ work_rsync_bulk(void *user_data) {
 
             if (cecup.cancel_sync == false) {
                 Message *message;
-                int64 path_length;
+                int64 path_len;
 
                 g_mutex_lock(&cecup.ui_arena_mutex);
                 message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
                 memset64(message, 0, SIZEOF(Message));
 
-                path_length = message->filepath_len;
-                message->filepath_len = path_length;
+                path_len = message->filepath_len;
+                message->filepath_len = path_len;
                 message->filepath
-                    = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
-                memcpy64(message->filepath, message->filepath, path_length + 1);
+                    = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+                memcpy64(message->filepath, message->filepath, path_len + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
 
                 message->type = DATA_TYPE_REMOVE_TREE_ROW;

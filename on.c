@@ -170,7 +170,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task = tasks->items[i];
-            int64 path_length;
+            int64 path_len;
             char path_full[MAX_PATH_LENGTH];
             char *path;
             char *path_type = g_object_get_data(G_OBJECT(m), "path_type");
@@ -187,10 +187,10 @@ on_menu_copy_path(GtkWidget *m, void *data) {
                     continue;
                 }
                 path = path_full;
-                path_length = strlen64(path_full);
+                path_len = strlen64(path_full);
             } else {
                 path = task->filepath;
-                path_length = task->filepath_len;
+                path_len = task->filepath_len;
             }
 
             if ((i > 0) && (remaining_capacity > 0)) {
@@ -199,10 +199,10 @@ on_menu_copy_path(GtkWidget *m, void *data) {
                 remaining_capacity -= 1;
             }
 
-            if (remaining_capacity >= path_length) {
-                memcpy64(write_pointer, path, path_length);
-                write_pointer += path_length;
-                remaining_capacity -= path_length;
+            if (remaining_capacity >= path_len) {
+                memcpy64(write_pointer, path, path_len);
+                write_pointer += path_len;
+                remaining_capacity -= path_len;
             }
         }
         *write_pointer = '\0';
@@ -831,18 +831,18 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                                               (gint)event->x, (gint)event->y,
                                               &path, NULL, NULL, NULL)) {
                 char *file_path;
-                int64 path_length;
+                int64 path_len;
                 enum CecupAction action;
                 int32 row_index = gtk_tree_path_get_indices(path)[0];
                 CecupRow *row = cecup.rows_visible[row_index];
 
                 if (side == SIDE_LEFT) {
                     file_path = row->src_path;
-                    path_length = row->src_path_len;
+                    path_len = row->src_path_len;
                     action = row->src_action;
                 } else {
                     file_path = row->dst_path;
-                    path_length = row->dst_path_len;
+                    path_len = row->dst_path_len;
                     action = row->dst_action;
                 }
 
@@ -854,10 +854,10 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                                           ALIGN16(SIZEOF(*message)));
                     memset64(message, 0, SIZEOF(*message));
 
-                    message->filepath_len = path_length;
+                    message->filepath_len = path_len;
                     message->filepath
-                        = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
-                    memcpy64(message->filepath, file_path, path_length + 1);
+                        = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+                    memcpy64(message->filepath, file_path, path_len + 1);
                     g_mutex_unlock(&cecup.ui_arena_mutex);
 
                     message->action = action;
@@ -888,7 +888,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
         char *file_path;
         char *other_path;
-        int64 path_length;
+        int64 path_len;
         enum CecupAction action;
 
         if (!gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
@@ -903,12 +903,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
             if (side == SIDE_LEFT) {
                 file_path = row->src_path;
-                path_length = row->src_path_len;
+                path_len = row->src_path_len;
                 other_path = row->dst_path;
                 action = row->src_action;
             } else {
                 file_path = row->dst_path;
-                path_length = row->dst_path_len;
+                path_len = row->dst_path_len;
                 other_path = row->src_path;
                 action = row->dst_action;
             }
@@ -919,10 +919,10 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         memset64(message, 0, SIZEOF(*message));
 
         if (file_path) {
-            message->filepath_len = path_length;
+            message->filepath_len = path_len;
             message->filepath
-                = xarena_push(cecup.ui_arena, ALIGN16(path_length + 1));
-            memcpy64(message->filepath, file_path, path_length + 1);
+                = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+            memcpy64(message->filepath, file_path, path_len + 1);
         }
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
