@@ -331,17 +331,20 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(paths_hbox), invert_button,
                        EXPAND_FALSE, FILL_FALSE, PADDING_ZERO);
 
-    // clang-format on
-
     r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     cecup.dst_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.dst_entry,
                                 _("Folder where the backup will be stored"));
     gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), default_dst);
     browse_dst = gtk_button_new_with_label(_("Select Folder"));
-    gtk_box_pack_start(GTK_BOX(r_entry_hbox), cecup.dst_entry, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(r_entry_hbox), browse_dst, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(paths_hbox), r_entry_hbox, TRUE, TRUE, 0);
+
+    gtk_box_pack_start(GTK_BOX(r_entry_hbox), cecup.dst_entry,
+                       EXPAND_TRUE, FILL_TRUE, PADDING_ZERO);
+    gtk_box_pack_start(GTK_BOX(r_entry_hbox), browse_dst,
+                       EXPAND_FALSE, FILL_FALSE, PADDING_ZERO);
+    gtk_box_pack_start(GTK_BOX(paths_hbox), r_entry_hbox,
+                       EXPAND_TRUE, FILL_TRUE, PADDING_ZERO);
+    // clang-format on
 
     for (int32 i = 0; i < NUM_COLS; i += 1) {
         column_types[i] = G_TYPE_INT;
