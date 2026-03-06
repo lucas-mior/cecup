@@ -27,6 +27,7 @@
 #define PADDING_BUTTON 5
 #define PADDING_FILTER_BUTTON 2
 #define PADDING_LABEL 0
+#define PADDING_ZERO 0
 #define FILL_FALSE false
 #define EXPAND_FALSE false
 #define FILL_TRUE true
@@ -319,16 +320,16 @@ main(int32 argc, char *argv[]) {
     // Note: NEVER delete lines with // clang-format
     // clang-format off
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), cecup.src_entry,
-                       EXPAND_TRUE, FILL_TRUE, 0);
+                       EXPAND_TRUE, FILL_TRUE, PADDING_ZERO);
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), browse_src,
-                       EXPAND_FALSE, FILL_FALSE, 0);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_ZERO);
     gtk_box_pack_start(GTK_BOX(paths_hbox), l_entry_hbox,
-                       EXPAND_TRUE, FILL_TRUE, 0);
+                       EXPAND_TRUE, FILL_TRUE, PADDING_ZERO);
 
     invert_button = gtk_button_new_with_label("<--->");
     gtk_widget_set_tooltip_text(invert_button, _("Invert Original and Backup"));
     gtk_box_pack_start(GTK_BOX(paths_hbox), invert_button,
-                       EXPAND_FALSE, FILL_FALSE, 0);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_ZERO);
 
     // clang-format on
 
