@@ -71,13 +71,13 @@ static TaskList *
 get_target_tasks(int32 side, char *clicked_path,
                  enum CecupAction clicked_action) {
     TaskList *tasks;
-    int64 tasks_size = STRUCT_ARRAY_SIZE(tasks, Message *, cecup.rows_count);
+    int64 tasks_size = STRUCT_ARRAY_SIZE(tasks, Message *, cecup.rows_len);
 
     tasks = xmalloc(tasks_size);
     memset64(tasks, 0, tasks_size);
     tasks->count = 0;
 
-    for (int32 i = 0; i < cecup.rows_count; i += 1) {
+    for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupRow *row = cecup.rows[i];
         char *file_path;
         int64 path_len;
@@ -256,7 +256,7 @@ refresh_ui_list(void) {
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
     cecup.rows_visible_len = 0;
-    for (int32 i = 0; i < cecup.rows_count; i += 1) {
+    for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupRow *row = cecup.rows[i];
         bool visible = false;
 
@@ -517,15 +517,15 @@ update_ui_handler(void *user_data) {
             row->dst_path = message->filepath;
         }
 
-        if (cecup.rows_count >= cecup.rows_capacity) {
+        if (cecup.rows_len >= cecup.rows_capacity) {
             cecup.rows_capacity *= 2;
             cecup.rows = xrealloc(cecup.rows,
                                   cecup.rows_capacity*SIZEOF(CecupRow *));
             cecup.rows_visible = xrealloc(
                 cecup.rows_visible, cecup.rows_capacity*SIZEOF(CecupRow *));
         }
-        cecup.rows[cecup.rows_count] = row;
-        cecup.rows_count += 1;
+        cecup.rows[cecup.rows_len] = row;
+        cecup.rows_len += 1;
         g_mutex_unlock(&cecup.row_arena_mutex);
 
         if (cecup.refresh_id == 0) {
@@ -536,17 +536,17 @@ update_ui_handler(void *user_data) {
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
         g_mutex_lock(&cecup.row_arena_mutex);
-        for (int32 i = 0; i < cecup.rows_count; i += 1) {
+        for (int32 i = 0; i < cecup.rows_len; i += 1) {
             CecupRow *row = cecup.rows[i];
             if ((row->src_path_len == message->filepath_length && row->src_path
                  && strcmp(row->src_path, message->filepath) == 0)
                 || (row->dst_path_len == message->filepath_length
                     && row->dst_path
                     && strcmp(row->dst_path, message->filepath) == 0)) {
-                for (int32 j = i; j < (cecup.rows_count - 1); j += 1) {
+                for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }
-                cecup.rows_count -= 1;
+                cecup.rows_len -= 1;
                 arena_pop(cecup.row_arena, row);
                 break;
             }
@@ -577,7 +577,7 @@ update_ui_handler(void *user_data) {
         arena_reset(cecup.row_arena);
         g_mutex_unlock(&cecup.row_arena_mutex);
 
-        cecup.rows_count = 0;
+        cecup.rows_len = 0;
         cecup.rows_visible_len = 0;
         gtk_list_store_clear(cecup.store);
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_rsync),

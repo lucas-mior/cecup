@@ -225,7 +225,7 @@ static struct {
     GtkWidget *progress_preview;
 
     CecupRow **rows;
-    int32 rows_count;
+    int32 rows_len;
     int32 rows_capacity;
 
     CecupRow **rows_visible;
