@@ -118,25 +118,27 @@ enum CecupColumn {
 };
 
 typedef struct CecupRow {
-    int32 selected;
-
     enum CecupAction src_action;
     enum CecupAction dst_action;
     enum CecupReason reason;
 
     char *src_path;
-    int64 src_path_len;
     char *dst_path;
-    int64 dst_path_len;
     char *link_target;
+
+    int64 src_path_len;
+    int64 dst_path_len;
     int64 link_target_len;
+
     char size_text[16];
-    int64 size_raw;
     char mtime_text[32];
+    int64 size_raw;
     int64 mtime_raw;
 
     char *src_color;
     char *dst_color;
+
+    bool selected;
 } CecupRow;
 
 enum DataType {
