@@ -159,12 +159,13 @@ typedef struct Message {
     enum CecupReason reason;
 
     char *message;
-    int64 message_len;
-
     char *filepath;
-    int64 filepath_length;
     char *link_target;
+
+    int64 message_len;
+    int64 filepath_length;
     int64 link_target_len;
+
     int64 size;
     int64 mtime;
 
