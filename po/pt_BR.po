@@ -194,7 +194,6 @@ msgid "Rsync transfer progress"
 msgstr "Progresso de transferência do rsync"
 
 #: work.c:378
-#, fuzzy
 msgid ""
 "Safety stop: Original and backup are on the same storage device.\n"
 "Check if the backup device is connected.\n"
@@ -395,34 +394,3 @@ msgstr "🗑️ Excluir"
 #: main.c:166
 msgid "🛠️ Rename problematic files"
 msgstr "🛠️ Corrigir nomes problemáticos"
-
-#~ msgid ""
-#~ "Safety stop: Original and Backup are on the same disk partition. Change "
-#~ "settings to ignore this.\n"
-#~ msgstr ""
-#~ "Parada de precaução: Original e backup são do mesmo dispositivo de "
-#~ "armazenamento.\n"
-#~ "Verifique se o dispositivo de backup está conectado.\n"
-#~ "Para forçar o backup em pasta do mesmo dispositivo, desmarcar "
-#~ "opçãoDispositivos diferentes.\n"
-
-#~ msgid "🔎 Analyze changes between folders"
-#~ msgstr "🔎 Analisar mudanças entre as pastas"
-
-#~ msgid "Compare identical files"
-#~ msgstr "Comparar arquivos idênticos"
-
-#~ msgid "Comparing folders"
-#~ msgstr "Comparando pastas"
-
-#~ msgid "Detect files that are already the same (only for reference)"
-#~ msgstr "Identifica o que já está igual (apenas para referência)"
-
-#~ msgid "Equality scanner progress"
-#~ msgstr "Progresso da busca de igualdade"
-
-#~ msgid "Fix file names with special characters that cause errors"
-#~ msgstr "Corrigir nomes de arquivos com caracteres que impedem a cópia"
-
-#~ msgid "Stop"
-#~ msgstr "Parar"
