@@ -697,6 +697,8 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
                      G_CALLBACK(on_tree_tooltip), NULL);
     g_signal_connect(tree, "button-press-event",
                      G_CALLBACK(on_tree_button_press), NULL);
+    g_signal_connect(tree, "key-press-event",
+                     G_CALLBACK(on_tree_key_press), NULL);
     // clang-format on
     return;
 }

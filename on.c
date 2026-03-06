@@ -813,6 +813,38 @@ on_scroll_sync(GtkAdjustment *s, void *d) {
 }
 
 static gboolean
+on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
+    (void)data;
+    if (event->keyval == GDK_KEY_F2) {
+        GtkTreeSelection *selection
+            = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+        GtkTreeModel *model;
+        GtkTreeIter iter;
+
+        if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+            CecupRow *row;
+            int32 side
+                = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
+            char *filepath;
+
+            gtk_tree_model_get(model, &iter, COL_ROW_PTR, &row, -1);
+            filepath = (side == SIDE_LEFT) ? row->src_path : row->dst_path;
+
+            if (filepath && strcmp(filepath, "./") != 0) {
+                GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
+                GtkTreeViewColumn *col
+                    = gtk_tree_view_get_column(GTK_TREE_VIEW(widget), 2);
+                gtk_tree_view_set_cursor(GTK_TREE_VIEW(widget), path, col,
+                                         TRUE);
+                gtk_tree_path_free(path);
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
+static gboolean
 on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
     int32 side;
     GtkTreePath *path;
