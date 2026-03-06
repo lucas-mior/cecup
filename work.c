@@ -549,8 +549,8 @@ work_rsync(void *user_data) {
             char *space_pos;
             char *link_target;
             char full_src_path_val[MAX_PATH_LENGTH];
-            int64 sz_path_val = 0;
-            int64 mt_path_val = 0;
+            int64 size_path_val = 0;
+            int64 mtime_path_val = 0;
             int32 line_len = (int32)(eol - buffer_output);
             int32 remaining;
 
@@ -674,14 +674,14 @@ work_rsync(void *user_data) {
                                                full_src_path_val,
                                                strerror(errno));
                     } else {
-                        sz_path_val = st_path_val.st_size;
-                        mt_path_val = (int64)st_path_val.st_mtime;
+                        size_path_val = st_path_val.st_size;
+                        mtime_path_val = (int64)st_path_val.st_mtime;
                     }
 
                     ipc_dispatch_tree(SIDE_LEFT, cecup_action,
                                       (enum CecupReason)cecup_action,
                                       relative_path_entry, link_target,
-                                      sz_path_val, mt_path_val);
+                                      size_path_val, mtime_path_val);
 
                     processed_files_preview += 1;
                     if (total_files_preview > 0) {
