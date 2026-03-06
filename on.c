@@ -31,7 +31,8 @@ static void on_menu_delete(GtkWidget *m, void *data);
 
 typedef struct {
     char *label;
-    char *shortcut;
+    uint32 keyval;
+    GdkModifierType mask;
     void (*callback)(GtkWidget *, void *);
     char *path_type;
 } CecupMenuItem;
@@ -39,15 +40,15 @@ typedef struct {
 // Note: NEVER delete lines with // clang-format
 // clang-format off
 static CecupMenuItem context_menu_items[] = {
-{N_("📄 Open File"),          NULL,           on_menu_open,      NULL},
-{N_("📂 Open Folder"),        NULL,           on_menu_open_dir,  NULL},
-{N_("📋 Copy Relative Path"), "Ctrl+C",       on_menu_copy_path, "relative"},
-{N_("📍 Copy Full Path"),     "Ctrl+Shift+C", on_menu_copy_path, "absolute"},
-{N_("⏯️ Apply"),              NULL,           on_menu_apply,     NULL},
-{N_("🔍 Diff"),               NULL,           on_menu_diff,      NULL},
-{N_("✏️ Rename"),              "F2",           on_menu_rename,    NULL},
-{N_("🗑️ Delete"),             NULL,           on_menu_delete,    NULL},
-{N_("💤 Ignore..."),          NULL,           NULL,              NULL},
+{N_("📄 Open File"),          0,          (GdkModifierType)0,                                   on_menu_open,      NULL},
+{N_("📂 Open Folder"),        0,          (GdkModifierType)0,                                   on_menu_open_dir,  NULL},
+{N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK,                                     on_menu_copy_path, "relative"},
+{N_("📍 Copy Full Path"),     GDK_KEY_c,  (GdkModifierType)(GDK_CONTROL_MASK | GDK_SHIFT_MASK), on_menu_copy_path, "absolute"},
+{N_("⏯️ Apply"),              0,          (GdkModifierType)0,                                   on_menu_apply,     NULL},
+{N_("🔍 Diff"),               0,          (GdkModifierType)0,                                   on_menu_diff,      NULL},
+{N_("✏️ Rename"),              GDK_KEY_F2, (GdkModifierType)0,                                   on_menu_rename,    NULL},
+{N_("🗑️ Delete"),             0,          (GdkModifierType)0,                                   on_menu_delete,    NULL},
+{N_("💤 Ignore..."),          0,          (GdkModifierType)0,                                   NULL,              NULL},
 };
 // clang-format on
 
@@ -858,8 +859,7 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
         char *filepath;
         int64 path_len;
         enum CecupAction action;
-        int32 ctrl;
-        int32 shift;
+        uint32 modifiers;
 
         side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
         gtk_tree_model_get(model, &iter, COL_ROW_PTR, &row, -1);
@@ -867,64 +867,44 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
         filepath = (side == SIDE_LEFT) ? row->src_path : row->dst_path;
         path_len = (side == SIDE_LEFT) ? row->src_path_len : row->dst_path_len;
         action = (side == SIDE_LEFT) ? row->src_action : row->dst_action;
+        modifiers = event->state
+                    & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK);
 
-        ctrl = (event->state & GDK_CONTROL_MASK);
-        shift = (event->state & GDK_SHIFT_MASK);
+        for (int32 i = 0; i < (int32)LENGTH(context_menu_items); i += 1) {
+            uint32 key = gdk_keyval_to_lower(event->keyval);
+            uint32 target = gdk_keyval_to_lower(context_menu_items[i].keyval);
 
-        if (event->keyval == GDK_KEY_F2) {
-            if (filepath && strcmp(filepath, "./") != 0) {
-                GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
-                GtkTreeViewColumn *col
-                    = gtk_tree_view_get_column(GTK_TREE_VIEW(widget), 2);
+            if ((context_menu_items[i].keyval != 0) && (key == target)
+                && (modifiers == context_menu_items[i].mask)) {
+                if (filepath
+                    || (context_menu_items[i].callback == on_menu_rename)) {
+                    Message *message;
 
-                gtk_tree_view_set_cursor(GTK_TREE_VIEW(widget), path, col,
-                                         TRUE);
-                gtk_tree_path_free(path);
-                handled = TRUE;
-            }
-        } else if (ctrl && !shift
-                   && (event->keyval == GDK_KEY_c
-                       || event->keyval == GDK_KEY_C)) {
-            if (filepath) {
-                Message *message;
+                    g_mutex_lock(&cecup.ui_arena_mutex);
+                    message = xarena_push(cecup.ui_arena,
+                                          ALIGN16(SIZEOF(*message)));
+                    memset64(message, 0, SIZEOF(*message));
 
-                g_mutex_lock(&cecup.ui_arena_mutex);
-                message
-                    = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*message)));
-                memset64(message, 0, SIZEOF(*message));
-                message->filepath_len = path_len;
-                message->filepath
-                    = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                memcpy64(message->filepath, filepath, path_len + 1);
-                g_mutex_unlock(&cecup.ui_arena_mutex);
+                    if (filepath) {
+                        message->filepath_len = path_len;
+                        message->filepath = xarena_push(cecup.ui_arena,
+                                                        ALIGN16(path_len + 1));
+                        memcpy64(message->filepath, filepath, path_len + 1);
+                    }
+                    g_mutex_unlock(&cecup.ui_arena_mutex);
 
-                message->action = action;
-                message->side = side;
-                g_object_set_data(G_OBJECT(widget), "path_type", "relative");
-                on_menu_copy_path(widget, message);
-                handled = TRUE;
-            }
-        } else if (ctrl && shift
-                   && (event->keyval == GDK_KEY_v
-                       || event->keyval == GDK_KEY_V)) {
-            if (filepath) {
-                Message *message;
+                    message->action = action;
+                    message->side = side;
 
-                g_mutex_lock(&cecup.ui_arena_mutex);
-                message
-                    = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*message)));
-                memset64(message, 0, SIZEOF(*message));
-                message->filepath_len = path_len;
-                message->filepath
-                    = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                memcpy64(message->filepath, filepath, path_len + 1);
-                g_mutex_unlock(&cecup.ui_arena_mutex);
+                    if (context_menu_items[i].path_type) {
+                        g_object_set_data(G_OBJECT(widget), "path_type",
+                                          context_menu_items[i].path_type);
+                    }
 
-                message->action = action;
-                message->side = side;
-                g_object_set_data(G_OBJECT(widget), "path_type", "absolute");
-                on_menu_copy_path(widget, message);
-                handled = TRUE;
+                    context_menu_items[i].callback(widget, message);
+                    handled = TRUE;
+                    break;
+                }
             }
         }
     }
@@ -1041,12 +1021,15 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
         for (int32 i = 0; i < (int32)LENGTH(context_menu_items); i += 1) {
             GtkWidget *item;
+            char *accel;
             char label[256];
 
-            if (context_menu_items[i].shortcut) {
+            if (context_menu_items[i].keyval != 0) {
+                accel = gtk_accelerator_get_label(context_menu_items[i].keyval,
+                                                  context_menu_items[i].mask);
                 snprintf2(label, SIZEOF(label), "%s (%s)",
-                          _(context_menu_items[i].label),
-                          context_menu_items[i].shortcut);
+                          _(context_menu_items[i].label), accel);
+                g_free(accel);
             } else {
                 snprintf2(label, SIZEOF(label), "%s",
                           _(context_menu_items[i].label));
@@ -1109,7 +1092,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
                 }
             } else {
-                if (filepath == NULL) {
+                if ((filepath == NULL)
+                    && (context_menu_items[i].callback != on_menu_rename)) {
                     gtk_widget_set_sensitive(item, FALSE);
                 } else {
                     if (context_menu_items[i].path_type) {
