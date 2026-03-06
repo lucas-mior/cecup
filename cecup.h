@@ -196,6 +196,7 @@ static struct {
     GtkWidget *preview_button;
     GtkWidget *stop_button;
     GtkWidget *sync_button;
+    volatile bool cancel_sync;
 
     GtkWidget *ignore_button;
     GtkWidget *fix_button;
@@ -216,7 +217,6 @@ static struct {
     GtkTextBuffer *log_buffer;
     char ignore_path[MAX_PATH_LENGTH];
     char config_path[MAX_PATH_LENGTH];
-    volatile bool cancel_sync;
     GtkWidget *l_tree;
     GtkWidget *r_tree;
     GtkWidget *stats_label;
