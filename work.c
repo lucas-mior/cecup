@@ -1024,9 +1024,11 @@ work_rsync_bulk(void *user_data) {
                 fatal(EXIT_FAILURE);
             }
             putenv("LC_ALL=C");
+
             XCLOSE(&pipe_stdout[0]);
             XCLOSE(&pipe_stderr[0]);
             XCLOSE(&pipe_stdin[1]);
+
             if (dup2(pipe_stdin[0], STDIN_FILENO) < 0) {
                 error("Error duplicating stdin: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
@@ -1039,6 +1041,7 @@ work_rsync_bulk(void *user_data) {
                 error("Error duplicating stderr: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
+
             XCLOSE(&pipe_stdin[0]);
             XCLOSE(&pipe_stdout[1]);
             XCLOSE(&pipe_stderr[1]);
