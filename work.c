@@ -847,7 +847,10 @@ work_rsync(void *user_data) {
                         }
                     }
                 } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
-                waitpid(child_pid, NULL, 0);
+                if (waitpid(child_pid, NULL, 0) < 0) {
+                    ipc_dispatch_log_error("Error waiting for rsync: %s.\n",
+                                           strerror(errno));
+                }
                 XCLOSE(&pipe_output[0]);
                 XCLOSE(&pipe_error[0]);
                 break;
