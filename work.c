@@ -341,8 +341,8 @@ work_rsync(void *user_data) {
     int64 total_files_preview = 0;
     int64 processed_files_preview = 0;
 
-    int32 pipe_output[2] = {-1, -1};
-    int32 pipe_error[2] = {-1, -1};
+    int32 pipe_stdout[2] = {-1, -1};
+    int32 pipe_stderr[2] = {-1, -1};
     struct pollfd pipes[2];
     pid_t child_pid;
 
@@ -411,11 +411,11 @@ work_rsync(void *user_data) {
         goto finalize;
     }
 
-    if (pipe(pipe_output) < 0) {
+    if (pipe(pipe_stdout) < 0) {
         error("Error creating pipe for stdout: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
     }
-    if (pipe(pipe_error) < 0) {
+    if (pipe(pipe_stderr) < 0) {
         error("Error creating pipe for stderr: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
     }
@@ -468,18 +468,18 @@ work_rsync(void *user_data) {
             fatal(EXIT_FAILURE);
         }
         putenv("LC_ALL=C");
-        XCLOSE(&pipe_output[0]);
-        XCLOSE(&pipe_error[0]);
-        if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
+        XCLOSE(&pipe_stdout[0]);
+        XCLOSE(&pipe_stderr[0]);
+        if (dup2(pipe_stdout[1], STDOUT_FILENO) < 0) {
             fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-        if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
+        if (dup2(pipe_stderr[1], STDERR_FILENO) < 0) {
             fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-        XCLOSE(&pipe_output[1]);
-        XCLOSE(&pipe_error[1]);
+        XCLOSE(&pipe_stdout[1]);
+        XCLOSE(&pipe_stderr[1]);
 
         execvp("rsync", rsync_args);
         fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
@@ -488,16 +488,16 @@ work_rsync(void *user_data) {
         break;
     }
 
-    XCLOSE(&pipe_output[1]);
-    XCLOSE(&pipe_error[1]);
+    XCLOSE(&pipe_stdout[1]);
+    XCLOSE(&pipe_stderr[1]);
 
     do {
         int64 r;
         char *eol;
 
-        pipes[0].fd = pipe_output[0];
+        pipes[0].fd = pipe_stdout[0];
         pipes[0].events = POLLIN;
-        pipes[1].fd = pipe_error[0];
+        pipes[1].fd = pipe_stderr[0];
         pipes[1].events = POLLIN;
 
         if (cecup.cancel_sync) {
@@ -530,7 +530,7 @@ work_rsync(void *user_data) {
             goto read_error_pipe;
         }
 
-        r = read64(pipe_output[0], buffer_output + buffer_output_pos,
+        r = read64(pipe_stdout[0], buffer_output + buffer_output_pos,
                    SIZEOF(buffer_output) - buffer_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
@@ -715,7 +715,7 @@ work_rsync(void *user_data) {
             continue;
         }
 
-        r = read64(pipe_error[0], buffer_error + buffer_error_pos,
+        r = read64(pipe_stderr[0], buffer_error + buffer_error_pos,
                    SIZEOF(buffer_error) - buffer_error_pos - 1);
         if (r <= 0) {
             if (r < 0) {
@@ -757,8 +757,8 @@ work_rsync(void *user_data) {
                                strerror(errno));
     }
 
-    XCLOSE(&pipe_output[0]);
-    XCLOSE(&pipe_error[0]);
+    XCLOSE(&pipe_stdout[0]);
+    XCLOSE(&pipe_stderr[0]);
 
     if (checksum_count > 0 && cecup.cancel_sync == false) {
         int32 pipe_stdin[2] = {-1, -1};
@@ -781,11 +781,11 @@ work_rsync(void *user_data) {
 
         ipc_dispatch_log("Verifying transfers with checksum...\n");
 
-        if (pipe(pipe_output) < 0) {
+        if (pipe(pipe_stdout) < 0) {
             error("Error creating pipe for stdout: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-        if (pipe(pipe_error) < 0) {
+        if (pipe(pipe_stderr) < 0) {
             error("Error creating pipe for stderr: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
@@ -803,22 +803,22 @@ work_rsync(void *user_data) {
             setpgid(0, 0);
             putenv("LC_ALL=C");
             XCLOSE(&pipe_stdin[1]);
-            XCLOSE(&pipe_output[0]);
-            XCLOSE(&pipe_error[0]);
+            XCLOSE(&pipe_stdout[0]);
+            XCLOSE(&pipe_stderr[0]);
             dup2(pipe_stdin[0], STDIN_FILENO);
-            dup2(pipe_output[1], STDOUT_FILENO);
-            dup2(pipe_error[1], STDERR_FILENO);
+            dup2(pipe_stdout[1], STDOUT_FILENO);
+            dup2(pipe_stderr[1], STDERR_FILENO);
             XCLOSE(&pipe_stdin[0]);
-            XCLOSE(&pipe_output[1]);
-            XCLOSE(&pipe_error[1]);
+            XCLOSE(&pipe_stdout[1]);
+            XCLOSE(&pipe_stderr[1]);
             execvp("rsync", rsync_args);
             _exit(EXIT_FAILURE);
         default:
             break;
         }
         XCLOSE(&pipe_stdin[0]);
-        XCLOSE(&pipe_output[1]);
-        XCLOSE(&pipe_error[1]);
+        XCLOSE(&pipe_stdout[1]);
+        XCLOSE(&pipe_stderr[1]);
         for (int32 i = 0; i < checksum_count; i += 1) {
             write64(pipe_stdin[1], checksum_files[i],
                     strlen64(checksum_files[i]));
@@ -828,16 +828,16 @@ work_rsync(void *user_data) {
 
         do {
             int64 r;
-            pipes[0].fd = pipe_output[0];
+            pipes[0].fd = pipe_stdout[0];
             pipes[0].events = POLLIN;
-            pipes[1].fd = pipe_error[0];
+            pipes[1].fd = pipe_stderr[0];
             pipes[1].events = POLLIN;
 
             if (poll(pipes, 2, 100) <= 0) {
                 continue;
             }
             if (pipes[0].revents & POLLIN) {
-                r = read64(pipe_output[0], buffer_output,
+                r = read64(pipe_stdout[0], buffer_output,
                            SIZEOF(buffer_output) - 1);
                 if (r > 0) {
                     buffer_output[r] = '\0';
@@ -847,7 +847,7 @@ work_rsync(void *user_data) {
                 }
             }
             if (pipes[1].revents & POLLIN) {
-                r = read64(pipe_error[0], buffer_error,
+                r = read64(pipe_stderr[0], buffer_error,
                            SIZEOF(buffer_error) - 1);
                 if (r > 0) {
                     buffer_error[r] = '\0';
@@ -861,8 +861,8 @@ work_rsync(void *user_data) {
             ipc_dispatch_log_error("Error waiting for rsync: %s.\n",
                                    strerror(errno));
         }
-        XCLOSE(&pipe_output[0]);
-        XCLOSE(&pipe_error[0]);
+        XCLOSE(&pipe_stdout[0]);
+        XCLOSE(&pipe_stderr[0]);
     }
 
     for (int32 i = 0; i < checksum_count; i += 1) {
@@ -961,8 +961,8 @@ work_rsync_bulk(void *user_data) {
     }
 
     if (has_transfers && (cecup.cancel_sync == false)) {
-        int32 pipe_output[2] = {-1, -1};
-        int32 pipe_error[2] = {-1, -1};
+        int32 pipe_stdout[2] = {-1, -1};
+        int32 pipe_stderr[2] = {-1, -1};
         int32 pipe_stdin[2] = {-1, -1};
         struct pollfd pipes[2];
         pid_t child_pid;
@@ -975,11 +975,11 @@ work_rsync_bulk(void *user_data) {
         int32 buffer_error_pos = 0;
         char cmd[MAX_PATH_LENGTH*2];
 
-        if (pipe(pipe_output) < 0) {
+        if (pipe(pipe_stdout) < 0) {
             error("Error creating pipe for stdout: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-        if (pipe(pipe_error) < 0) {
+        if (pipe(pipe_stderr) < 0) {
             error("Error creating pipe for stderr: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
@@ -1023,24 +1023,24 @@ work_rsync_bulk(void *user_data) {
                 fatal(EXIT_FAILURE);
             }
             putenv("LC_ALL=C");
-            XCLOSE(&pipe_output[0]);
-            XCLOSE(&pipe_error[0]);
+            XCLOSE(&pipe_stdout[0]);
+            XCLOSE(&pipe_stderr[0]);
             XCLOSE(&pipe_stdin[1]);
             if (dup2(pipe_stdin[0], STDIN_FILENO) < 0) {
                 fprintf(stderr, "Error dup2 stdin: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
-            if (dup2(pipe_output[1], STDOUT_FILENO) < 0) {
+            if (dup2(pipe_stdout[1], STDOUT_FILENO) < 0) {
                 fprintf(stderr, "Error dup2 stdout: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
-            if (dup2(pipe_error[1], STDERR_FILENO) < 0) {
+            if (dup2(pipe_stderr[1], STDERR_FILENO) < 0) {
                 fprintf(stderr, "Error dup2 stderr: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             XCLOSE(&pipe_stdin[0]);
-            XCLOSE(&pipe_output[1]);
-            XCLOSE(&pipe_error[1]);
+            XCLOSE(&pipe_stdout[1]);
+            XCLOSE(&pipe_stderr[1]);
 
             execvp("rsync", rsync_args);
             fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
@@ -1049,8 +1049,8 @@ work_rsync_bulk(void *user_data) {
             break;
         }
 
-        XCLOSE(&pipe_output[1]);
-        XCLOSE(&pipe_error[1]);
+        XCLOSE(&pipe_stdout[1]);
+        XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdin[0]);
 
         for (int32 i = 0; i < tasks->count; i += 1) {
@@ -1084,9 +1084,9 @@ work_rsync_bulk(void *user_data) {
             int64 r;
             char *eol;
 
-            pipes[0].fd = pipe_output[0];
+            pipes[0].fd = pipe_stdout[0];
             pipes[0].events = POLLIN;
-            pipes[1].fd = pipe_error[0];
+            pipes[1].fd = pipe_stderr[0];
             pipes[1].events = POLLIN;
 
             if (cecup.cancel_sync) {
@@ -1120,7 +1120,7 @@ work_rsync_bulk(void *user_data) {
                 goto read_error_pipe;
             }
 
-            r = read64(pipe_output[0], buffer_output + buffer_output_pos,
+            r = read64(pipe_stdout[0], buffer_output + buffer_output_pos,
                        SIZEOF(buffer_output) - buffer_output_pos - 1);
             if (r <= 0) {
                 if (r < 0) {
@@ -1187,7 +1187,7 @@ work_rsync_bulk(void *user_data) {
                 continue;
             }
 
-            r = read64(pipe_error[0], buffer_error + buffer_error_pos,
+            r = read64(pipe_stderr[0], buffer_error + buffer_error_pos,
                        SIZEOF(buffer_error) - buffer_error_pos - 1);
             if (r <= 0) {
                 if (r < 0) {
@@ -1223,8 +1223,8 @@ work_rsync_bulk(void *user_data) {
                                    strerror(errno));
         }
 
-        XCLOSE(&pipe_output[0]);
-        XCLOSE(&pipe_error[0]);
+        XCLOSE(&pipe_stdout[0]);
+        XCLOSE(&pipe_stderr[0]);
     }
 
     {
