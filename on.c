@@ -1198,11 +1198,19 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
     path = gtk_tree_path_new_from_string(path_str);
 
     if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter, path)) {
+        char *base_path;
+        char *current_rel_path;
+
         gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
                            &row, -1);
 
-        char *base_path = (side == 0) ? cecup.src_base : cecup.dst_base;
-        char *current_rel_path = (side == 0) ? row->src_path : row->dst_path;
+        if (side == 0) {
+            base_path = cecup.src_base;
+            current_rel_path = row->src_path;
+        } else {
+            base_path = cecup.dst_base;
+            current_rel_path = row->dst_path;
+        }
 
         if (current_rel_path && strlen64(new_text) > 0) {
             char old_full[MAX_PATH_LENGTH];
