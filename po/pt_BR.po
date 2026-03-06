@@ -87,6 +87,7 @@ msgid "Edit the list of filename patterns to ignore"
 msgstr "Editar a lista de padrões de nomes de arquivo para ignorar"
 
 #: on.c:1217
+#, c-format
 msgid "Error renaming %s: %s\n"
 msgstr "Error renomeando %s: %s\n"
 
@@ -147,6 +148,7 @@ msgid "Not found in original"
 msgstr "Não encontrado na pasta original"
 
 #: on.c:233
+#, c-format
 msgid "Permanently delete %d item(s)?"
 msgstr "Excluir permanentemente %d arquivo(s)?"
 
@@ -179,6 +181,7 @@ msgid "Rename problematic filenames, the ones containing:\n"
 msgstr "Renomear nomes de arquivo problemáticos, aqueles que contém:\n"
 
 #: on.c:1213
+#, c-format
 msgid "Renamed: %s -> %s\n"
 msgstr "Renomeado %s -> %s\n"
 
@@ -194,20 +197,21 @@ msgstr "Progresso de transferência do rsync"
 msgid ""
 "Safety stop: Original and backup are on the same storage device.\n"
 "Check if the backup device is connected.\n"
-"To force backup on a folder in the same device, uncheck"
-" option \"Protect same drive sync\".\n"
+"To force backup on a folder in the same device, uncheck option \"Protect "
+"same drive sync\".\n"
 msgstr ""
 "Parada de precaução: Original e backup são do mesmo dispositivo de "
 "armazenamento.\n"
 "Verifique se o dispositivo de backup está conectado.\n"
-"Para forçar o backup em pasta do mesmo dispositivo, desmarcar"
-" opção \"Impedir cópia no mesmo disco\".\n"
+"Para forçar o backup em pasta do mesmo dispositivo, desmarcar opção "
+"\"Impedir cópia no mesmo disco\".\n"
 
 #: main.c:317 main.c:340
 msgid "Select Folder"
 msgstr "Selecionar Pasta"
 
 #: aux.c:323
+#, c-format
 msgid ""
 "Selected files: %lld\n"
 "Total Transfer Size: 📦 %s"
