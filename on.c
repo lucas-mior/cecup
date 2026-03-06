@@ -1166,9 +1166,8 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
         }
-        default: {
+        default:
             break;
-        }
         }
     }
 
