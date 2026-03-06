@@ -67,10 +67,10 @@ main(int32 argc, char *argv[]) {
     char *default_dst;
 
     GType column_types[NUM_COLS];
-    char src_path_buffer[4096];
-    int64 src_path_len;
-    char dst_path_buffer[4096];
+    char src_path_buffer[MAX_PATH_LENGTH];
+    char dst_path_buffer[MAX_PATH_LENGTH];
     int64 dst_path_len;
+    int64 src_path_len;
 
     {
         char *locale_devel = "./po";
