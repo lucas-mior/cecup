@@ -24,9 +24,9 @@
 #include "on.c"
 #include "i18n.h"
 
-#define BUTTON_PADDING 5
-#define FILTER_BUTTON_PADDING 2
-#define LABEL_PADDING 0
+#define PADDING_BUTTON 5
+#define FILTER_PADDING_BUTTON 2
+#define PADDING_LABEL 0
 #define FILL_FALSE false
 #define EXPAND_FALSE false
 #define FILL_TRUE true
@@ -199,17 +199,17 @@ main(int32 argc, char *argv[]) {
     // Note: NEVER delete lines with // clang-format
     // clang-format off
     gtk_box_pack_start(GTK_BOX(button_hbox), cecup.ignore_button,
-                       EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(button_hbox), cecup.fix_button,
-                       EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     gtk_box_pack_end(GTK_BOX(button_hbox), cecup.sync_button,
-                     EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
+                     EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     gtk_box_pack_end(GTK_BOX(button_hbox), cecup.stop_button,
-                     EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
+                     EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     gtk_box_pack_end(GTK_BOX(button_hbox), cecup.preview_button,
-                     EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
+                     EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(header_vbox), button_hbox,
-                       EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     // clang-format on
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
@@ -242,23 +242,23 @@ main(int32 argc, char *argv[]) {
     // Note: NEVER delete lines with // clang-format
     // clang-format off
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_fs,
-                       EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_excluded,
-                       EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_after,
-                       EXPAND_FALSE, FILL_FALSE, BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
 
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new(_("Diff Tool:")),
-                       EXPAND_FALSE, FILL_FALSE, LABEL_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_LABEL);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.diff_entry,
-                       EXPAND_FALSE, FILL_FALSE, LABEL_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_LABEL);
     // clang-format on
 
     gtk_entry_set_text(GTK_ENTRY(cecup.diff_entry), "unidiff.bash");
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new(_("Terminal:")),
-                       FALSE, FALSE, LABEL_PADDING);
+                       FALSE, FALSE, PADDING_LABEL);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.term_entry, FALSE, FALSE,
-                       LABEL_PADDING);
+                       PADDING_LABEL);
     gtk_entry_set_text(GTK_ENTRY(cecup.term_entry), "xterm");
 
     gtk_box_pack_start(GTK_BOX(options_hbox), reset_button, FALSE, FALSE, 0);
@@ -407,17 +407,17 @@ main(int32 argc, char *argv[]) {
     // Note: NEVER delete lines with // clang-format
     // clang-format off
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_new,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_hard,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_update,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_equal,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_delete,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_ignore,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_BUTTON_PADDING);
+                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
     // clang-format on
     gtk_box_pack_start(GTK_BOX(main_vbox), filter_hbox, FALSE, FALSE, 0);
 
