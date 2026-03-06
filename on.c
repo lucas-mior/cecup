@@ -21,6 +21,33 @@
 #include "cecup.h"
 #include "work.c"
 
+static void on_menu_open(GtkWidget *m, void *data);
+static void on_menu_open_dir(GtkWidget *m, void *data);
+static void on_menu_copy_path(GtkWidget *m, void *data);
+static void on_menu_apply(GtkWidget *m, void *data);
+static void on_menu_diff(GtkWidget *m, void *data);
+static void on_menu_rename(GtkWidget *m, void *data);
+static void on_menu_delete(GtkWidget *m, void *data);
+
+typedef struct {
+    char *label;
+    char *shortcut;
+    void (*callback)(GtkWidget *, void *);
+    char *path_type;
+} CecupMenuItem;
+
+static CecupMenuItem context_menu_items[] = {
+    {"📄 Open File", NULL, on_menu_open, NULL},
+    {"📂 Open Folder", NULL, on_menu_open_dir, NULL},
+    {"📋 Copy Relative Path", "Ctrl+C", on_menu_copy_path, "relative"},
+    {"📍 Copy Full Path", "Ctrl+Shift+V", on_menu_copy_path, "absolute"},
+    {"⏯️ Apply", NULL, on_menu_apply, NULL},
+    {"🔍 Diff", NULL, on_menu_diff, NULL},
+    {"✏️ Rename", "F2", on_menu_rename, NULL},
+    {"🗑️ Delete", NULL, on_menu_delete, NULL},
+    {"💤 Ignore...", NULL, NULL, NULL},
+};
+
 static void
 on_menu_apply(GtkWidget *m, void *data) {
     Message *message = data;
@@ -814,34 +841,91 @@ on_scroll_sync(GtkAdjustment *s, void *d) {
 
 static gboolean
 on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    gboolean handled = FALSE;
+
     (void)data;
-    if (event->keyval == GDK_KEY_F2) {
-        GtkTreeSelection *selection
-            = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
-        GtkTreeModel *model;
-        GtkTreeIter iter;
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
 
-        if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
-            CecupRow *row;
-            int32 side
-                = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
-            char *filepath;
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        CecupRow *row;
+        int32 side;
+        char *filepath;
+        int64 path_len;
+        enum CecupAction action;
+        int32 ctrl;
+        int32 shift;
 
-            gtk_tree_model_get(model, &iter, COL_ROW_PTR, &row, -1);
-            filepath = (side == SIDE_LEFT) ? row->src_path : row->dst_path;
+        side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
+        gtk_tree_model_get(model, &iter, COL_ROW_PTR, &row, -1);
 
+        filepath = (side == SIDE_LEFT) ? row->src_path : row->dst_path;
+        path_len = (side == SIDE_LEFT) ? row->src_path_len : row->dst_path_len;
+        action = (side == SIDE_LEFT) ? row->src_action : row->dst_action;
+
+        ctrl = (event->state & GDK_CONTROL_MASK);
+        shift = (event->state & GDK_SHIFT_MASK);
+
+        if (event->keyval == GDK_KEY_F2) {
             if (filepath && strcmp(filepath, "./") != 0) {
                 GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
                 GtkTreeViewColumn *col
                     = gtk_tree_view_get_column(GTK_TREE_VIEW(widget), 2);
+
                 gtk_tree_view_set_cursor(GTK_TREE_VIEW(widget), path, col,
                                          TRUE);
                 gtk_tree_path_free(path);
-                return TRUE;
+                handled = TRUE;
+            }
+        } else if (ctrl && !shift
+                   && (event->keyval == GDK_KEY_c
+                       || event->keyval == GDK_KEY_C)) {
+            if (filepath) {
+                Message *message;
+
+                g_mutex_lock(&cecup.ui_arena_mutex);
+                message
+                    = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*message)));
+                memset64(message, 0, SIZEOF(*message));
+                message->filepath_len = path_len;
+                message->filepath
+                    = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+                memcpy64(message->filepath, filepath, path_len + 1);
+                g_mutex_unlock(&cecup.ui_arena_mutex);
+
+                message->action = action;
+                message->side = side;
+                g_object_set_data(G_OBJECT(widget), "path_type", "relative");
+                on_menu_copy_path(widget, message);
+                handled = TRUE;
+            }
+        } else if (ctrl && shift
+                   && (event->keyval == GDK_KEY_v
+                       || event->keyval == GDK_KEY_V)) {
+            if (filepath) {
+                Message *message;
+
+                g_mutex_lock(&cecup.ui_arena_mutex);
+                message
+                    = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*message)));
+                memset64(message, 0, SIZEOF(*message));
+                message->filepath_len = path_len;
+                message->filepath
+                    = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+                memcpy64(message->filepath, filepath, path_len + 1);
+                g_mutex_unlock(&cecup.ui_arena_mutex);
+
+                message->action = action;
+                message->side = side;
+                g_object_set_data(G_OBJECT(widget), "path_type", "absolute");
+                on_menu_copy_path(widget, message);
+                handled = TRUE;
             }
         }
     }
-    return FALSE;
+    return handled;
 }
 
 static gboolean
@@ -906,18 +990,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
     }
     case GDK_BUTTON_SECONDARY: {
         Message *message;
-
         GtkWidget *menu;
-        GtkWidget *item_open;
-        GtkWidget *item_dir;
-        GtkWidget *item_copy_relative;
-        GtkWidget *item_copy_absolute;
-        GtkWidget *item_diff;
-        GtkWidget *item_rename;
-        GtkWidget *item_delete;
-        GtkWidget *item_apply;
-        GtkWidget *item_ignore;
-
         char *filepath;
         char *other_path;
         int64 path_len;
@@ -963,106 +1036,89 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
         menu = gtk_menu_new();
 
-        item_open = gtk_menu_item_new_with_label(_("📄 Open File"));
-        item_dir = gtk_menu_item_new_with_label(_("📂 Open Folder"));
-        item_apply = gtk_menu_item_new_with_label(_("⏯️ Apply"));
-        item_copy_relative
-            = gtk_menu_item_new_with_label(_("📋 Copy Relative Path"));
-        item_copy_absolute
-            = gtk_menu_item_new_with_label(_("📍 Copy Full Path"));
-        item_ignore = gtk_menu_item_new_with_label(_("💤 Ignore..."));
-        item_diff = gtk_menu_item_new_with_label(_("🔍 Diff"));
-        item_rename = gtk_menu_item_new_with_label(_("✏️ Rename"));
-        item_delete = gtk_menu_item_new_with_label(_("🗑️ Delete"));
+        for (int32 i = 0; i < (int32)LENGTH(context_menu_items); i += 1) {
+            GtkWidget *item;
+            char label[256];
 
-        g_signal_connect(item_apply, "activate", G_CALLBACK(on_menu_apply),
-                         message);
-
-        if ((filepath == NULL) || (other_path == NULL)) {
-            gtk_widget_set_sensitive(item_diff, FALSE);
-        } else {
-            g_signal_connect(item_diff, "activate", G_CALLBACK(on_menu_diff),
-                             message);
-        }
-
-        if (filepath == NULL) {
-            gtk_widget_set_sensitive(item_open, FALSE);
-            gtk_widget_set_sensitive(item_dir, FALSE);
-            gtk_widget_set_sensitive(item_copy_relative, FALSE);
-            gtk_widget_set_sensitive(item_copy_absolute, FALSE);
-            gtk_widget_set_sensitive(item_rename, FALSE);
-            gtk_widget_set_sensitive(item_delete, FALSE);
-        } else {
-            g_signal_connect(item_open, "activate", G_CALLBACK(on_menu_open),
-                             message);
-            g_signal_connect(item_dir, "activate", G_CALLBACK(on_menu_open_dir),
-                             message);
-
-            g_object_set_data(G_OBJECT(item_copy_relative), "path_type",
-                              "relative");
-            g_object_set_data(G_OBJECT(item_copy_absolute), "path_type",
-                              "absolute");
-
-            g_signal_connect(item_copy_relative, "activate",
-                             G_CALLBACK(on_menu_copy_path), message);
-            g_signal_connect(item_copy_absolute, "activate",
-                             G_CALLBACK(on_menu_copy_path), message);
-            g_signal_connect(item_rename, "activate",
-                             G_CALLBACK(on_menu_rename), message);
-            g_signal_connect(item_delete, "activate",
-                             G_CALLBACK(on_menu_delete), message);
-        }
-
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_open);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_dir);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_copy_relative);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_copy_absolute);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_apply);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_diff);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_rename);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_delete);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_ignore);
-
-        {
-            GtkWidget *sub = gtk_menu_new();
-            GtkWidget *sub_ext;
-            GtkWidget *sub_dir;
-            char extension_label[32];
-            char directory_label[MAX_PATH_LENGTH + 64];
-            char *extension_ptr;
-            char *directory_ptr;
-            char *name = basename(message->filepath);
-            int64 length = strlen64(name);
-
-            gtk_menu_item_set_submenu(GTK_MENU_ITEM(item_ignore), sub);
-
-            if ((extension_ptr = memchr(name, '.', length))) {
-                extension_ptr = strrchr(extension_ptr, '.');
-                SNPRINTF(extension_label, _("by extension (*%s)"),
-                         extension_ptr);
+            if (context_menu_items[i].shortcut) {
+                snprintf2(label, SIZEOF(label), "%s (%s)",
+                          _(context_menu_items[i].label),
+                          context_menu_items[i].shortcut);
             } else {
-                SNPRINTF(extension_label, "%s", _("by extension"));
+                snprintf2(label, SIZEOF(label), "%s",
+                          _(context_menu_items[i].label));
             }
-            sub_ext = gtk_menu_item_new_with_label(extension_label);
-            g_signal_connect(sub_ext, "activate",
-                             G_CALLBACK(on_menu_ignore_ext), message);
-            gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
 
-            if ((directory_ptr = g_path_get_dirname(message->filepath))) {
-                if (strcmp(directory_ptr, ".") != 0) {
-                    SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
-                             directory_ptr);
+            item = gtk_menu_item_new_with_label(label);
+
+            if (context_menu_items[i].callback == on_menu_apply) {
+                g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply),
+                                 message);
+            } else if (context_menu_items[i].callback == on_menu_diff) {
+                if ((filepath == NULL) || (other_path == NULL)) {
+                    gtk_widget_set_sensitive(item, FALSE);
                 } else {
-                    SNPRINTF(directory_label, "%s", _("📁 Dir"));
+                    g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
+                                     message);
                 }
-                g_free(directory_ptr);
+            } else if (context_menu_items[i].callback == NULL) {
+                GtkWidget *sub = gtk_menu_new();
+                GtkWidget *sub_ext;
+                GtkWidget *sub_dir;
+                char extension_label[32];
+                char directory_label[MAX_PATH_LENGTH + 64];
+                char *extension_ptr;
+                char *directory_ptr;
+                char *name = (filepath) ? basename(filepath) : "";
+                int64 length = strlen64(name);
+
+                gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
+
+                if (filepath == NULL) {
+                    gtk_widget_set_sensitive(item, FALSE);
+                } else {
+                    if ((extension_ptr = memchr(name, '.', length))) {
+                        extension_ptr = strrchr(extension_ptr, '.');
+                        SNPRINTF(extension_label, _("by extension (*%s)"),
+                                 extension_ptr);
+                    } else {
+                        SNPRINTF(extension_label, "%s", _("by extension"));
+                    }
+                    sub_ext = gtk_menu_item_new_with_label(extension_label);
+                    g_signal_connect(sub_ext, "activate",
+                                     G_CALLBACK(on_menu_ignore_ext), message);
+                    gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
+
+                    if ((directory_ptr = g_path_get_dirname(filepath))) {
+                        if (strcmp(directory_ptr, ".") != 0) {
+                            SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
+                                     directory_ptr);
+                        } else {
+                            SNPRINTF(directory_label, "%s", _("📁 Dir"));
+                        }
+                        g_free(directory_ptr);
+                    } else {
+                        SNPRINTF(directory_label, "%s", _("📁 Dir"));
+                    }
+                    sub_dir = gtk_menu_item_new_with_label(directory_label);
+                    g_signal_connect(sub_dir, "activate",
+                                     G_CALLBACK(on_menu_ignore_dir), message);
+                    gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
+                }
             } else {
-                SNPRINTF(directory_label, "%s", _("📁 Dir"));
+                if (filepath == NULL) {
+                    gtk_widget_set_sensitive(item, FALSE);
+                } else {
+                    if (context_menu_items[i].path_type) {
+                        g_object_set_data(G_OBJECT(item), "path_type",
+                                          context_menu_items[i].path_type);
+                    }
+                    g_signal_connect(item, "activate",
+                                     G_CALLBACK(context_menu_items[i].callback),
+                                     message);
+                }
             }
-            sub_dir = gtk_menu_item_new_with_label(directory_label);
-            g_signal_connect(sub_dir, "activate",
-                             G_CALLBACK(on_menu_ignore_dir), message);
-            gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         }
 
         gtk_widget_show_all(menu);
