@@ -373,8 +373,8 @@ refresh_ui_timeout_callback(void *data) {
 }
 
 static gboolean
-update_ui_handler(void *user_data) {
-    Message *message = user_data;
+update_ui_handler(void *data) {
+    Message *message = data;
 
     switch (message->type) {
     case DATA_TYPE_LOG:

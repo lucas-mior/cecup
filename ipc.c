@@ -24,7 +24,7 @@
 
 static void
 ipc_send_log_internal(enum DataType type, char *format, va_list va_args) {
-    Message *data;
+    Message *message;
     char buffer[8192];
     int64 n;
     int64 last_whitespace_index;
@@ -60,16 +60,16 @@ ipc_send_log_internal(enum DataType type, char *format, va_list va_args) {
     }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-    memset64(data, 0, SIZEOF(Message));
+    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(message, 0, SIZEOF(Message));
 
-    data->message_len = n;
-    data->message = xarena_push(cecup.ui_arena, ALIGN16(n + 1));
-    memcpy64(data->message, buffer, n + 1);
+    message->message_len = n;
+    message->message = xarena_push(cecup.ui_arena, ALIGN16(n + 1));
+    memcpy64(message->message, buffer, n + 1);
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    data->type = type;
-    g_idle_add(update_ui_handler, data);
+    message->type = type;
+    g_idle_add(update_ui_handler, message);
     return;
 }
 
@@ -95,7 +95,7 @@ ipc_send_log_error(char *format, ...) {
 
 static void
 ipc_send_progress(enum DataType type, double fraction) {
-    Message *data;
+    Message *message;
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index = 0;
 
@@ -112,13 +112,13 @@ ipc_send_progress(enum DataType type, double fraction) {
     last_fractions[index] = fraction;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-    memset64(data, 0, SIZEOF(Message));
+    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(message, 0, SIZEOF(Message));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    data->type = type;
-    data->fraction = fraction;
-    g_idle_add(update_ui_handler, data);
+    message->type = type;
+    message->fraction = fraction;
+    g_idle_add(update_ui_handler, message);
     return;
 }
 
