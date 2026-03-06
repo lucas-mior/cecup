@@ -91,10 +91,10 @@ work_count_files_recursive(char *base_path, char *relative_path) {
     }
 
     count = 0;
-    if (relative_path[0] == '\0') {
-        SNPRINTF(full_path, "%s", base_path);
-    } else {
+    if (relative_path) {
         SNPRINTF(full_path, "%s/%s", base_path, relative_path);
+    } else {
+        SNPRINTF(full_path, "%s", base_path);
     }
 
     if ((dir = opendir(full_path)) == NULL) {
@@ -119,7 +119,7 @@ work_count_files_recursive(char *base_path, char *relative_path) {
             continue;
         }
 
-        if (relative_path[0] != '\0') {
+        if (relative_path) {
             SNPRINTF(sub_rel, "%s/%s", relative_path, name);
         } else {
             SNPRINTF(sub_rel, "%s", name);
@@ -164,10 +164,10 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         return;
     }
 
-    if (relative_path[0] == '\0') {
-        SNPRINTF(full_path, "%s", base_path);
-    } else {
+    if (relative_path) {
         SNPRINTF(full_path, "%s/%s", base_path, relative_path);
+    } else {
+        SNPRINTF(full_path, "%s", base_path);
     }
 
     if ((dir = opendir(full_path)) == NULL) {
@@ -215,7 +215,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         int64 k;
         int64 name_len = strlen64(d_name);
 
-        if (relative_path[0] != '\0') {
+        if (relative_path) {
             SNPRINTF(sub_rel, "%s/%s", relative_path, d_name);
         } else {
             SNPRINTF(sub_rel, "%s", d_name);
@@ -273,7 +273,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         new_name[j] = '\0';
 
         if (changed) {
-            if (relative_path[0] != '\0') {
+            if (relative_path[0]) {
                 SNPRINTF(new_full, "%s/%s/%s", base_path, relative_path,
                          new_name);
             } else {
@@ -286,7 +286,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
             } else if (rename(old_full, new_full) == 0) {
                 ipc_send_log("Fixed: %s -> %s\n", d_name, new_name);
                 if (S_ISDIR(st.st_mode)) {
-                    if (relative_path[0] != '\0') {
+                    if (relative_path) {
                         SNPRINTF(sub_rel, "%s/%s", relative_path, new_name);
                     } else {
                         SNPRINTF(sub_rel, "%s", new_name);
@@ -314,9 +314,9 @@ work_fix_fs_worker(void *user_data) {
     Message *message;
 
     ipc_send_log("Checking for problematic names in the original folder...\n");
-    work_fix_fs_recursive(cecup.src_base, "");
+    work_fix_fs_recursive(cecup.src_base, NULL);
     ipc_send_log("Checking for problematic names in the backup folder...\n");
-    work_fix_fs_recursive(cecup.dst_base, "");
+    work_fix_fs_recursive(cecup.dst_base, NULL);
     ipc_send_log("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
@@ -403,7 +403,7 @@ work_rsync(void *user_data) {
         g_idle_add(update_ui_handler, message);
 
         ipc_send_log("Counting files to prepare analysis...\n");
-        total_files_preview = work_count_files_recursive(cecup.src_base, "");
+        total_files_preview = work_count_files_recursive(cecup.src_base, NULL);
         ipc_send_log("Found %lld files to analyse...\n",
                      (llong)total_files_preview);
     }
