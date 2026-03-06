@@ -806,11 +806,11 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
                                               (gint)event->x, (gint)event->y,
                                               &path, NULL, NULL, NULL)) {
-                int32 row_index = gtk_tree_path_get_indices(path)[0];
-                CecupRow *row = cecup.visible_rows[row_index];
                 char *file_path;
                 int64 path_length;
                 enum CecupAction action;
+                int32 row_index = gtk_tree_path_get_indices(path)[0];
+                CecupRow *row = cecup.visible_rows[row_index];
 
                 if (side == 0) {
                     file_path = row->src_path;
