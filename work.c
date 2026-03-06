@@ -351,6 +351,7 @@ work_rsync(void *user_data) {
     char dst_dir[MAX_PATH_LENGTH];
     char *rsync_args[32];
     int32 a = 0;
+    char cmd[MAX_PATH_LENGTH*2];
 
     char **checksum_files = NULL;
     int32 checksum_count = 0;
@@ -454,11 +455,8 @@ work_rsync(void *user_data) {
     rsync_args[a++] = dst_dir;
     rsync_args[a++] = NULL;
 
-    {
-        char cmd[MAX_PATH_LENGTH*2];
-        STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-        ipc_send_log("+ %s\n", cmd);
-    }
+    STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
+    ipc_send_log("+ %s\n", cmd);
 
     switch (child_pid = fork()) {
     case -1:
@@ -483,9 +481,9 @@ work_rsync(void *user_data) {
         XCLOSE(&pipe_stdout[1]);
         XCLOSE(&pipe_stderr[1]);
 
-        execvp("rsync", rsync_args);
-        fprintf(stderr, "Error: execvp failed: %s.\n", strerror(errno));
-        exit(EXIT_FAILURE);
+        execvp(rsync_args[0], rsync_args);
+        error("Error executing\n%s\n%s.", cmd, strerror(errno));
+        _exit(EXIT_FAILURE);
     default:
         break;
     }
