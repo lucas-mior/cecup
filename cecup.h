@@ -35,75 +35,35 @@
 #define ALIGN16(n) (((n) + 15) & ~15)
 
 enum CecupAction {
-    UI_ACTION_NONE,
     UI_ACTION_NEW,
     UI_ACTION_UPDATE,
     UI_ACTION_HARDLINK,
     UI_ACTION_SYMLINK,
+    UI_ACTION_EQUAL,
+    UI_ACTION_DELETED,
     UI_ACTION_DELETE,
+    UI_ACTION_IGNORE,
+    NUM_UI_ACTIONS
 };
 
 enum CecupReason {
-    UI_REASON_EQUAL,
     UI_REASON_NEW,
     UI_REASON_UPDATE,
     UI_REASON_HARDLINK,
     UI_REASON_SYMLINK,
+    UI_REASON_EQUAL,
     UI_REASON_IGNORED,
     UI_REASON_MISSING,
+    NUM_UI_REASONS
 };
 
-static enum CecupReason
-cecup_reason_from_action(enum CecupAction action) {
-    bool placeholder_ignored_file = false;
-    bool placeholder_delete_ignored = false;
-    bool placeholder_missing_in_src = false;
-
-    enum CecupReason reason;
-
-    switch (action) {
-    case UI_ACTION_NONE:
-        if (placeholder_ignored_file) {
-            reason = UI_REASON_IGNORED;
-        } else {
-            reason = UI_REASON_IGNORED;
-        }
-        break;
-    case UI_ACTION_NEW:
-        reason = UI_REASON_NEW;
-        break;
-    case UI_ACTION_UPDATE:
-        reason = UI_REASON_UPDATE;
-        break;
-    case UI_ACTION_HARDLINK:
-        reason = UI_REASON_HARDLINK;
-        break;
-    case UI_ACTION_SYMLINK:
-        reason = UI_REASON_SYMLINK;
-        break;
-    case UI_ACTION_DELETE:
-        if (placeholder_ignored_file
-            && placeholder_delete_ignored
-            && !placeholder_missing_in_src) {
-            reason = UI_REASON_IGNORED;
-        } else {
-            reason = UI_REASON_MISSING;
-        }
-        break;
-    default:
-        error("Error: Invalid action.\n");
-        fatal(EXIT_FAILURE);
-    }
-    
-    return reason;
-}
-
 static char *action_emojis[] = {
-    [UI_ACTION_NONE]     = EMOJI_EQUAL,
     [UI_ACTION_NEW]      = EMOJI_NEW,
     [UI_ACTION_HARDLINK] = EMOJI_LINK,
     [UI_ACTION_SYMLINK]  = EMOJI_SYMLINK,
     [UI_ACTION_UPDATE]   = EMOJI_UPDATE,
+    [UI_ACTION_EQUAL]    = EMOJI_EQUAL,
+    [UI_ACTION_DELETED]  = EMOJI_DELETE,
     [UI_ACTION_DELETE]   = EMOJI_DELETE,
     [UI_ACTION_IGNORE]   = EMOJI_IGNORE
 };
