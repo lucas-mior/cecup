@@ -894,7 +894,7 @@ work_rsync_bulk(void *user_data) {
     if (cecup.cancel_sync == false) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *message = tasks->items[i];
-            char full_destination_path[MAX_PATH_LENGTH];
+            char full_dst_path[MAX_PATH_LENGTH];
             pid_t child_rm;
 
             if (message->action != UI_ACTION_DELETE) {
@@ -902,8 +902,7 @@ work_rsync_bulk(void *user_data) {
                 continue;
             }
 
-            SNPRINTF(full_destination_path, "%s/%s", cecup.dst_base,
-                     message->filepath);
+            SNPRINTF(full_dst_path, "%s/%s", cecup.dst_base, message->filepath);
             switch (child_rm = fork()) {
             case -1:
                 error("Error forking for rm: %s.\n", strerror(errno));
@@ -913,7 +912,7 @@ work_rsync_bulk(void *user_data) {
                 char *args_rm[] = {
                     "rm",
                     "-rf",
-                    full_destination_path,
+                    full_dst_path,
                     NULL,
                 };
 
@@ -956,7 +955,7 @@ work_rsync_bulk(void *user_data) {
         int32 pipe_stdin[2] = {-1, -1};
         struct pollfd pipes[2];
         pid_t child_pid;
-        char destination_directory[MAX_PATH_LENGTH];
+        char dst_directory[MAX_PATH_LENGTH];
         char *rsync_args[32];
         int32 a = 0;
         char buffer_output[MAX_PATH_LENGTH*2];
@@ -978,7 +977,7 @@ work_rsync_bulk(void *user_data) {
             fatal(EXIT_FAILURE);
         }
 
-        SNPRINTF(destination_directory, "%s/", cecup.dst_base);
+        SNPRINTF(dst_directory, "%s/", cecup.dst_base);
 
         rsync_args[a++] = "rsync";
         rsync_args[a++] = "--verbose";
@@ -997,7 +996,7 @@ work_rsync_bulk(void *user_data) {
         rsync_args[a++] = "--group";
         rsync_args[a++] = "--files-from=-";
         rsync_args[a++] = cecup.src_base;
-        rsync_args[a++] = destination_directory;
+        rsync_args[a++] = dst_directory;
         rsync_args[a++] = NULL;
 
         STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
