@@ -629,6 +629,7 @@ static void
 setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     GtkCellRenderer *renderer_toggle = gtk_cell_renderer_toggle_new();
     GtkCellRenderer *renderer_text = gtk_cell_renderer_text_new();
+    GtkCellRenderer *renderer_path = gtk_cell_renderer_text_new();
     GtkTreeViewColumn *column = gtk_tree_view_column_new();
 
     gtk_tree_view_column_pack_start(column, renderer_toggle, TRUE);
@@ -652,7 +653,6 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     gtk_tree_view_column_set_min_width(column, 80);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
-    GtkCellRenderer *renderer_path = gtk_cell_renderer_text_new();
     g_object_set(renderer_path, "ellipsize", PANGO_ELLIPSIZE_END, "editable",
                  TRUE, NULL);
     g_signal_connect(renderer_path, "edited", G_CALLBACK(on_path_edited), tree);
