@@ -255,7 +255,7 @@ refresh_ui_list(void) {
     bool show_ignore
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
-    cecup.visible_count = 0;
+    cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_count; i += 1) {
         CecupRow *row = cecup.rows[i];
         bool visible = false;
@@ -301,8 +301,8 @@ refresh_ui_list(void) {
         }
 
         if (visible) {
-            cecup.rows_visible[cecup.visible_count] = row;
-            cecup.visible_count += 1;
+            cecup.rows_visible[cecup.rows_visible_len] = row;
+            cecup.rows_visible_len += 1;
         }
     }
 
@@ -324,22 +324,22 @@ refresh_ui_list(void) {
              (llong)count_selected, pretty_size);
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
 
-    if (cecup.visible_count > 0) {
-        qsort64(cecup.rows_visible, cecup.visible_count, SIZEOF(CecupRow *),
+    if (cecup.rows_visible_len > 0) {
+        qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(CecupRow *),
                 cecup_row_compare);
     }
 
     current_store_count
         = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(cecup.store), NULL);
 
-    if (cecup.visible_count > current_store_count) {
-        for (int32 i = 0; i < (cecup.visible_count - current_store_count);
+    if (cecup.rows_visible_len > current_store_count) {
+        for (int32 i = 0; i < (cecup.rows_visible_len - current_store_count);
              i += 1) {
             GtkTreeIter iter;
             gtk_list_store_append(cecup.store, &iter);
         }
-    } else if (cecup.visible_count < current_store_count) {
-        for (int32 i = 0; i < (current_store_count - cecup.visible_count);
+    } else if (cecup.rows_visible_len < current_store_count) {
+        for (int32 i = 0; i < (current_store_count - cecup.rows_visible_len);
              i += 1) {
             GtkTreeIter iter;
             if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cecup.store),
@@ -349,7 +349,7 @@ refresh_ui_list(void) {
         }
     }
 
-    for (int32 i = 0; i < cecup.visible_count; i += 1) {
+    for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
         GtkTreeIter iter;
         CecupRow *row = cecup.rows_visible[i];
         if (gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(cecup.store), &iter,
@@ -578,7 +578,7 @@ update_ui_handler(void *user_data) {
         g_mutex_unlock(&cecup.row_arena_mutex);
 
         cecup.rows_count = 0;
-        cecup.visible_count = 0;
+        cecup.rows_visible_len = 0;
         gtk_list_store_clear(cecup.store);
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_rsync),
                                       0.0);

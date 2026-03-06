@@ -1082,7 +1082,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
         }
     }
 
-    if ((index >= 0) && (index < cecup.visible_count)) {
+    if ((index >= 0) && (index < cecup.rows_visible_len)) {
         CecupRow *row = cecup.rows_visible[index];
         char *file_path;
         enum CecupAction action;

@@ -571,7 +571,7 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
     row_idx = gtk_tree_path_get_indices(path)[0];
     gtk_tree_path_free(path);
 
-    if ((row_idx < 0) || (row_idx >= cecup.visible_count)) {
+    if ((row_idx < 0) || (row_idx >= cecup.rows_visible_len)) {
         return;
     }
     row = cecup.rows_visible[row_idx];

@@ -229,7 +229,7 @@ static struct {
     int32 rows_capacity;
 
     CecupRow **rows_visible;
-    int32 visible_count;
+    int32 rows_visible_len;
 
     enum CecupColumn sort_col;
     GtkSortType sort_order;
