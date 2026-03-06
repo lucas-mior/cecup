@@ -25,7 +25,7 @@
 #include "i18n.h"
 
 #define PADDING_BUTTON 5
-#define FILTER_PADDING_BUTTON 2
+#define PADDING_FILTER_BUTTON 2
 #define PADDING_LABEL 0
 #define FILL_FALSE false
 #define EXPAND_FALSE false
@@ -407,17 +407,17 @@ main(int32 argc, char *argv[]) {
     // Note: NEVER delete lines with // clang-format
     // clang-format off
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_new,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_FILTER_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_hard,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_FILTER_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_update,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_FILTER_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_equal,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_FILTER_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_delete,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_FILTER_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_ignore,
-                       EXPAND_FALSE, FILL_FALSE, FILTER_PADDING_BUTTON);
+                       EXPAND_FALSE, FILL_FALSE, PADDING_FILTER_BUTTON);
     // clang-format on
     gtk_box_pack_start(GTK_BOX(main_vbox), filter_hbox, FALSE, FALSE, 0);
 
