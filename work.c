@@ -782,80 +782,88 @@ work_rsync(void *user_data) {
 
         ipc_dispatch_log("Verifying transfers with checksum...\n");
 
-        if (pipe(pipe_stdin) < 0 || pipe(pipe_output) < 0
-            || pipe(pipe_error) < 0) {
-            ipc_dispatch_log_error("Error creating pipes for checksum.\n");
-        } else {
-            switch (child_pid = fork()) {
-            case -1:
-                ipc_dispatch_log_error("Error forking for checksum: %s.\n",
-                                       strerror(errno));
-                break;
-            case 0:
-                setpgid(0, 0);
-                putenv("LC_ALL=C");
-                XCLOSE(&pipe_stdin[1]);
-                XCLOSE(&pipe_output[0]);
-                XCLOSE(&pipe_error[0]);
-                dup2(pipe_stdin[0], STDIN_FILENO);
-                dup2(pipe_output[1], STDOUT_FILENO);
-                dup2(pipe_error[1], STDERR_FILENO);
-                XCLOSE(&pipe_stdin[0]);
-                XCLOSE(&pipe_output[1]);
-                XCLOSE(&pipe_error[1]);
-                execvp("rsync", rsync_args);
-                _exit(EXIT_FAILURE);
-            default:
-                break;
-            }
+        if (pipe(pipe_output) < 0) {
+            error("Error creating pipe for stdout: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
+        }
+        if (pipe(pipe_error) < 0) {
+            error("Error creating pipe for stderr: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
+        }
+        if (pipe(pipe_stdin) < 0) {
+            error("Error creating pipe for stderr: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
+        }
+
+        switch (child_pid = fork()) {
+        case -1:
+            ipc_dispatch_log_error("Error forking for checksum: %s.\n",
+                                   strerror(errno));
+            break;
+        case 0:
+            setpgid(0, 0);
+            putenv("LC_ALL=C");
+            XCLOSE(&pipe_stdin[1]);
+            XCLOSE(&pipe_output[0]);
+            XCLOSE(&pipe_error[0]);
+            dup2(pipe_stdin[0], STDIN_FILENO);
+            dup2(pipe_output[1], STDOUT_FILENO);
+            dup2(pipe_error[1], STDERR_FILENO);
             XCLOSE(&pipe_stdin[0]);
             XCLOSE(&pipe_output[1]);
             XCLOSE(&pipe_error[1]);
-            for (int32 i = 0; i < checksum_count; i += 1) {
-                write64(pipe_stdin[1], checksum_files[i],
-                        strlen64(checksum_files[i]));
-                write64(pipe_stdin[1], "\n", 1);
-            }
-            XCLOSE(&pipe_stdin[1]);
-
-            do {
-                int64 r;
-                pipes[0].fd = pipe_output[0];
-                pipes[0].events = POLLIN;
-                pipes[1].fd = pipe_error[0];
-                pipes[1].events = POLLIN;
-
-                if (poll(pipes, 2, 100) <= 0) {
-                    continue;
-                }
-                if (pipes[0].revents & POLLIN) {
-                    r = read64(pipe_output[0], buffer_output,
-                               SIZEOF(buffer_output) - 1);
-                    if (r > 0) {
-                        buffer_output[r] = '\0';
-                        ipc_dispatch_log("%s", buffer_output);
-                    } else {
-                        pipes[0].fd = -1;
-                    }
-                }
-                if (pipes[1].revents & POLLIN) {
-                    r = read64(pipe_error[0], buffer_error,
-                               SIZEOF(buffer_error) - 1);
-                    if (r > 0) {
-                        buffer_error[r] = '\0';
-                        ipc_dispatch_log_error("%s", buffer_error);
-                    } else {
-                        pipes[1].fd = -1;
-                    }
-                }
-            } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
-            if (waitpid(child_pid, NULL, 0) < 0) {
-                ipc_dispatch_log_error("Error waiting for rsync: %s.\n",
-                                       strerror(errno));
-            }
-            XCLOSE(&pipe_output[0]);
-            XCLOSE(&pipe_error[0]);
+            execvp("rsync", rsync_args);
+            _exit(EXIT_FAILURE);
+        default:
+            break;
         }
+        XCLOSE(&pipe_stdin[0]);
+        XCLOSE(&pipe_output[1]);
+        XCLOSE(&pipe_error[1]);
+        for (int32 i = 0; i < checksum_count; i += 1) {
+            write64(pipe_stdin[1], checksum_files[i],
+                    strlen64(checksum_files[i]));
+            write64(pipe_stdin[1], "\n", 1);
+        }
+        XCLOSE(&pipe_stdin[1]);
+
+        do {
+            int64 r;
+            pipes[0].fd = pipe_output[0];
+            pipes[0].events = POLLIN;
+            pipes[1].fd = pipe_error[0];
+            pipes[1].events = POLLIN;
+
+            if (poll(pipes, 2, 100) <= 0) {
+                continue;
+            }
+            if (pipes[0].revents & POLLIN) {
+                r = read64(pipe_output[0], buffer_output,
+                           SIZEOF(buffer_output) - 1);
+                if (r > 0) {
+                    buffer_output[r] = '\0';
+                    ipc_dispatch_log("%s", buffer_output);
+                } else {
+                    pipes[0].fd = -1;
+                }
+            }
+            if (pipes[1].revents & POLLIN) {
+                r = read64(pipe_error[0], buffer_error,
+                           SIZEOF(buffer_error) - 1);
+                if (r > 0) {
+                    buffer_error[r] = '\0';
+                    ipc_dispatch_log_error("%s", buffer_error);
+                } else {
+                    pipes[1].fd = -1;
+                }
+            }
+        } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
+        if (waitpid(child_pid, NULL, 0) < 0) {
+            ipc_dispatch_log_error("Error waiting for rsync: %s.\n",
+                                   strerror(errno));
+        }
+        XCLOSE(&pipe_output[0]);
+        XCLOSE(&pipe_error[0]);
     }
 
     for (int32 i = 0; i < checksum_count; i += 1) {
