@@ -211,8 +211,8 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         char new_name[MAX_PATH_LENGTH];
         struct stat st;
         bool changed = false;
-        int64 j = 0;
-        int64 k = 0;
+        int64 j;
+        int64 k;
         int64 name_len = strlen64(d_name);
 
         if (relative_path[0] != '\0') {
@@ -227,6 +227,8 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
             continue;
         }
 
+        j = 0;
+        k = 0;
         while (k < name_len) {
             char *earliest_match = NULL;
             int32 replacement_index = -1;
