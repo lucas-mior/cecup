@@ -365,27 +365,31 @@ work_rsync(void *user_data) {
         struct stat stat_src;
         struct stat stat_dst;
 
-        if (stat(cecup.src_base, &stat_src) == 0
-            && stat(cecup.dst_base, &stat_dst) == 0) {
-            if (stat_src.st_dev == stat_dst.st_dev) {
-                Message *message;
-                ipc_dispatch_log_error(
-                    _("Safety stop: Original and Backup are on the same disk "
-                      "partition. Change settings to ignore this.\n"));
-
-                g_mutex_lock(&cecup.ui_arena_mutex);
-                message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-                memset64(message, 0, SIZEOF(Message));
-                g_mutex_unlock(&cecup.ui_arena_mutex);
-
-                message->type = DATA_TYPE_CLEAR_TREES;
-                g_idle_add(update_ui_handler, message);
-
-                goto finalize;
-            }
-        } else {
-            ipc_dispatch_log_error("Error checking filesystems: %s.\n",
+        if (stat(cecup.src_base, &stat_src) < 0) {
+            ipc_dispatch_log_error("Error checking %s: %s.\n", cecup.src_base,
                                    strerror(errno));
+            goto finalize;
+        }
+        if (stat(cecup.dst_base, &stat_dst) < 0) {
+            ipc_dispatch_log_error("Error checking %s: %s.\n", cecup.dst_base,
+                                   strerror(errno));
+            goto finalize;
+        }
+
+        if (stat_src.st_dev == stat_dst.st_dev) {
+            Message *message;
+            ipc_dispatch_log_error(
+                _("Safety stop: Original and Backup are on the same disk "
+                  "partition. Change settings to ignore this.\n"));
+
+            g_mutex_lock(&cecup.ui_arena_mutex);
+            message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+            memset64(message, 0, SIZEOF(Message));
+            g_mutex_unlock(&cecup.ui_arena_mutex);
+
+            message->type = DATA_TYPE_CLEAR_TREES;
+            g_idle_add(update_ui_handler, message);
+
             goto finalize;
         }
     }
