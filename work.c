@@ -379,7 +379,7 @@ work_rsync(void *user_data) {
                   "device.\n"
                   "Check if the backup device is connected.\n"
                   "To force backup on a folder in the same device, uncheck"
-                  "option different fs .\n"));
+                  "option \"Protect same drive sync\".\n"));
 
             g_mutex_lock(&cecup.ui_arena_mutex);
             message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
