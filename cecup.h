@@ -180,9 +180,9 @@ typedef struct TaskList {
 
 static struct {
     GtkWidget *gtk_window;
+
     GtkWidget *src_entry;
     GtkWidget *dst_entry;
-
     ulong src_entry_id;
     ulong dst_entry_id;
 
