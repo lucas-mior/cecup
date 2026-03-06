@@ -228,7 +228,7 @@ static struct {
     int32 rows_count;
     int32 rows_capacity;
 
-    CecupRow **visible_rows;
+    CecupRow **rows_visible;
     int32 visible_count;
 
     enum CecupColumn sort_col;

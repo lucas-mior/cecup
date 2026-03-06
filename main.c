@@ -107,7 +107,7 @@ main(int32 argc, char *argv[]) {
         cecup.rows_count = 0;
         cecup.rows_capacity = 4096;
         cecup.rows = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
-        cecup.visible_rows = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
+        cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
     }
 
     cecup.sort_col = COL_SRC_PATH;
@@ -553,7 +553,7 @@ main(int32 argc, char *argv[]) {
     g_mutex_clear(&cecup.ui_arena_mutex);
 
     free(cecup.rows);
-    free(cecup.visible_rows);
+    free(cecup.rows_visible);
 
     exit(EXIT_SUCCESS);
 }
@@ -574,7 +574,7 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
     if ((row_idx < 0) || (row_idx >= cecup.visible_count)) {
         return;
     }
-    row = cecup.visible_rows[row_idx];
+    row = cecup.rows_visible[row_idx];
 
     switch (col_id) {
     case COL_SELECTED:

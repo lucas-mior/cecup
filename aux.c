@@ -301,7 +301,7 @@ refresh_ui_list(void) {
         }
 
         if (visible) {
-            cecup.visible_rows[cecup.visible_count] = row;
+            cecup.rows_visible[cecup.visible_count] = row;
             cecup.visible_count += 1;
         }
     }
@@ -325,7 +325,7 @@ refresh_ui_list(void) {
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
 
     if (cecup.visible_count > 0) {
-        qsort64(cecup.visible_rows, cecup.visible_count, SIZEOF(CecupRow *),
+        qsort64(cecup.rows_visible, cecup.visible_count, SIZEOF(CecupRow *),
                 cecup_row_compare);
     }
 
@@ -351,7 +351,7 @@ refresh_ui_list(void) {
 
     for (int32 i = 0; i < cecup.visible_count; i += 1) {
         GtkTreeIter iter;
-        CecupRow *row = cecup.visible_rows[i];
+        CecupRow *row = cecup.rows_visible[i];
         if (gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(cecup.store), &iter,
                                           NULL, i)) {
             gtk_list_store_set(cecup.store, &iter, COL_SELECTED, row->selected,
@@ -521,8 +521,8 @@ update_ui_handler(void *user_data) {
             cecup.rows_capacity *= 2;
             cecup.rows = xrealloc(cecup.rows,
                                   cecup.rows_capacity*SIZEOF(CecupRow *));
-            cecup.visible_rows = xrealloc(
-                cecup.visible_rows, cecup.rows_capacity*SIZEOF(CecupRow *));
+            cecup.rows_visible = xrealloc(
+                cecup.rows_visible, cecup.rows_capacity*SIZEOF(CecupRow *));
         }
         cecup.rows[cecup.rows_count] = row;
         cecup.rows_count += 1;

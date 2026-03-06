@@ -834,7 +834,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 int64 path_length;
                 enum CecupAction action;
                 int32 row_index = gtk_tree_path_get_indices(path)[0];
-                CecupRow *row = cecup.visible_rows[row_index];
+                CecupRow *row = cecup.rows_visible[row_index];
 
                 if (side == SIDE_LEFT) {
                     file_path = row->src_path;
@@ -899,7 +899,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
         {
             int32 row_index = gtk_tree_path_get_indices(path)[0];
-            CecupRow *row = cecup.visible_rows[row_index];
+            CecupRow *row = cecup.rows_visible[row_index];
 
             if (side == SIDE_LEFT) {
                 file_path = row->src_path;
@@ -1083,7 +1083,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     }
 
     if ((index >= 0) && (index < cecup.visible_count)) {
-        CecupRow *row = cecup.visible_rows[index];
+        CecupRow *row = cecup.rows_visible[index];
         char *file_path;
         enum CecupAction action;
 
