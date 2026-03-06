@@ -821,26 +821,28 @@ work_rsync(void *user_data) {
                     pipes[0].events = POLLIN;
                     pipes[1].fd = pipe_error[0];
                     pipes[1].events = POLLIN;
-                    if (poll(pipes, 2, 100) > 0) {
-                        if (pipes[0].revents & POLLIN) {
-                            int64 bytes = read64(pipe_output[0], buffer_output,
-                                                 SIZEOF(buffer_output) - 1);
-                            if (bytes > 0) {
-                                buffer_output[bytes] = '\0';
-                                ipc_dispatch_log("%s", buffer_output);
-                            } else {
-                                pipes[0].fd = -1;
-                            }
+
+                    if (poll(pipes, 2, 100) <= 0) {
+                        continue;
+                    }
+                    if (pipes[0].revents & POLLIN) {
+                        int64 bytes = read64(pipe_output[0], buffer_output,
+                                             SIZEOF(buffer_output) - 1);
+                        if (bytes > 0) {
+                            buffer_output[bytes] = '\0';
+                            ipc_dispatch_log("%s", buffer_output);
+                        } else {
+                            pipes[0].fd = -1;
                         }
-                        if (pipes[1].revents & POLLIN) {
-                            int64 bytes = read64(pipe_error[0], buffer_error,
-                                                 SIZEOF(buffer_error) - 1);
-                            if (bytes > 0) {
-                                buffer_error[bytes] = '\0';
-                                ipc_dispatch_log_error("%s", buffer_error);
-                            } else {
-                                pipes[1].fd = -1;
-                            }
+                    }
+                    if (pipes[1].revents & POLLIN) {
+                        int64 bytes = read64(pipe_error[0], buffer_error,
+                                             SIZEOF(buffer_error) - 1);
+                        if (bytes > 0) {
+                            buffer_error[bytes] = '\0';
+                            ipc_dispatch_log_error("%s", buffer_error);
+                        } else {
+                            pipes[1].fd = -1;
                         }
                     }
                 } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
