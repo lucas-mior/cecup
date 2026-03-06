@@ -23,7 +23,7 @@
 #include "cecup.h"
 
 static void
-ipc_dispatch_log_internal(enum DataType type, char *format, va_list va_args) {
+ipc_send_log_internal(enum DataType type, char *format, va_list va_args) {
     Message *data;
     char buffer[8192];
     int64 n;
@@ -74,27 +74,27 @@ ipc_dispatch_log_internal(enum DataType type, char *format, va_list va_args) {
 }
 
 static void
-ipc_dispatch_log(char *format, ...) {
+ipc_send_log(char *format, ...) {
     va_list va_args;
 
     va_start(va_args, format);
-    ipc_dispatch_log_internal(DATA_TYPE_LOG, format, va_args);
+    ipc_send_log_internal(DATA_TYPE_LOG, format, va_args);
     va_end(va_args);
     return;
 }
 
 static void
-ipc_dispatch_log_error(char *format, ...) {
+ipc_send_log_error(char *format, ...) {
     va_list va_args;
 
     va_start(va_args, format);
-    ipc_dispatch_log_internal(DATA_TYPE_LOG_ERROR, format, va_args);
+    ipc_send_log_internal(DATA_TYPE_LOG_ERROR, format, va_args);
     va_end(va_args);
     return;
 }
 
 static void
-ipc_dispatch_progress(enum DataType type, double fraction) {
+ipc_send_progress(enum DataType type, double fraction) {
     Message *data;
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index = 0;
@@ -125,7 +125,7 @@ ipc_dispatch_progress(enum DataType type, double fraction) {
 // Note: NEVER delete lines with // clang-format
 // clang-format off
 static void
-ipc_dispatch_tree(int32 side,
+ipc_send_tree(int32 side,
                   enum CecupAction action, enum CecupReason reason,
                   char *path, char *link_target,
                   int64 size, int64 mtime) {

@@ -613,18 +613,18 @@ cecup_get_dirs(void) {
     save_config();
 
     if ((strlen64(cecup.src_base) <= 0) || (strlen64(cecup.dst_base) <= 0)) {
-        ipc_dispatch_log_error("Error: Invalid source and/or destination\n");
+        ipc_send_log_error("Error: Invalid source and/or destination\n");
         return;
     }
 
     if ((full_src = realpath(cecup.src_base, NULL)) == NULL) {
-        ipc_dispatch_log_error("Error getting full path of %s: %s.\n",
-                               cecup.src_base, strerror(errno));
+        ipc_send_log_error("Error getting full path of %s: %s.\n",
+                           cecup.src_base, strerror(errno));
         return;
     }
     if ((full_dst = realpath(cecup.dst_base, NULL)) == NULL) {
-        ipc_dispatch_log_error("Error getting full path of %s: %s.\n",
-                               cecup.dst_base, strerror(errno));
+        ipc_send_log_error("Error getting full path of %s: %s.\n",
+                           cecup.dst_base, strerror(errno));
         return;
     }
 
