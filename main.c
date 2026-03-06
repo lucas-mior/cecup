@@ -215,24 +215,27 @@ main(int32 argc, char *argv[]) {
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     cecup.check_fs
         = gtk_check_button_new_with_label(_("Protect same-drive sync"));
+    cecup.delete_excluded
+        = gtk_check_button_new_with_label(_("Remove ignored items"));
+    cecup.delete_after = gtk_check_button_new_with_label(_("Sync 100%"));
+
     gtk_widget_set_tooltip_text(
         cecup.check_fs,
         _("Prevent copying if original and backup are on the same disk"));
-    cecup.delete_excluded
-        = gtk_check_button_new_with_label(_("Remove ignored items"));
     gtk_widget_set_tooltip_text(
         cecup.delete_excluded,
         _("Remove files from backup if they were added to the ignore list"));
-    cecup.delete_after = gtk_check_button_new_with_label(_("Sync 100%"));
     gtk_widget_set_tooltip_text(
         cecup.delete_after,
         _("Delete files in backup that do not exist in the original"));
+
     cecup.diff_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.diff_entry,
                                 _("Executable used for comparing files"));
     cecup.term_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(
         cecup.term_entry, _("Terminal emulator used to launch the diff tool"));
+
     reset_button = gtk_button_new_with_label(_("Defaults"));
     gtk_widget_set_tooltip_text(reset_button, _("Restore original settings"));
 
