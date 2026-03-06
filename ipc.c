@@ -94,7 +94,7 @@ ipc_dispatch_log_error(char *format, ...) {
 }
 
 static void
-dispatch_progress(enum DataType type, double fraction) {
+ipc_dispatch_progress(enum DataType type, double fraction) {
     Message *data;
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index = 0;

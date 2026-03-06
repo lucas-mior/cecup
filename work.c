@@ -564,8 +564,8 @@ work_rsync(void *user_data) {
                            && isdigit(*(start_digit - 1))) {
                         start_digit -= 1;
                     }
-                    dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
-                                      atof(start_digit) / 100.0);
+                    ipc_dispatch_progress(DATA_TYPE_PROGRESS_RSYNC,
+                                          atof(start_digit) / 100.0);
                 }
             }
 
@@ -685,9 +685,10 @@ work_rsync(void *user_data) {
 
                     processed_files_preview += 1;
                     if (total_files_preview > 0) {
-                        dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                          (double)processed_files_preview
-                                              / (double)total_files_preview);
+                        ipc_dispatch_progress(
+                            DATA_TYPE_PROGRESS_PREVIEW,
+                            (double)processed_files_preview
+                                / (double)total_files_preview);
                     }
                 }
             }
@@ -876,8 +877,8 @@ work_rsync(void *user_data) {
     }
 
 finalize:
-    dispatch_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);
-    dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
+    ipc_dispatch_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);
+    ipc_dispatch_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
     {
         Message *message;
