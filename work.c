@@ -415,7 +415,6 @@ work_rsync(void *user_data) {
         error("Error creating pipe for stdout: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
     }
-
     if (pipe(pipe_error) < 0) {
         error("Error creating pipe for stderr: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
