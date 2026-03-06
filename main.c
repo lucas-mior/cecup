@@ -24,6 +24,7 @@
 #include "on.c"
 #include "i18n.h"
 
+#define SPACING_BOX 5
 #define PADDING_BUTTON 5
 #define PADDING_FILTER_BUTTON 2
 #define PADDING_LABEL 0
@@ -152,14 +153,14 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(gtk_main_quit), NULL);
     // clang-format on
 
-    main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, SPACING_BOX);
     gtk_container_add(GTK_CONTAINER(cecup.gtk_window), main_vbox);
 
-    header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    gtk_container_set_border_width(GTK_CONTAINER(header_vbox), 10);
+    header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, SPACING_BOX);
+    gtk_container_set_border_width(GTK_CONTAINER(header_vbox), SPACING_BOX);
     gtk_box_pack_start(GTK_BOX(main_vbox), header_vbox, FALSE, FALSE, 0);
 
-    button_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    button_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
 
     cecup.preview_button = gtk_button_new_with_label(_("🔎 Analyze"));
     cecup.ignore_button = gtk_button_new_with_label(_("Edit Ignore Rules"));
@@ -213,7 +214,7 @@ main(int32 argc, char *argv[]) {
                        EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     // clang-format on
 
-    options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     cecup.check_fs
         = gtk_check_button_new_with_label(_("Protect same-drive sync"));
     cecup.delete_excluded
@@ -392,7 +393,7 @@ main(int32 argc, char *argv[]) {
     gtk_container_add(GTK_CONTAINER(log_scroll), cecup.log_view);
     gtk_paned_pack2(GTK_PANED(v_paned), log_scroll, FALSE, FALSE);
 
-    filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     gtk_widget_set_halign(filter_hbox, GTK_ALIGN_CENTER);
     cecup.filter_new = gtk_toggle_button_new_with_label(EMOJI_NEW);
     cecup.filter_hard = gtk_toggle_button_new_with_label(EMOJI_LINK);
