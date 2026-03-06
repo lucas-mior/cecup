@@ -207,7 +207,6 @@ cecup_row_compare(const void *a, const void *b) {
         break;
     case COL_DST_ACTION:
     case COL_MTIME_TEXT:
-    case COL_REASON:
     case COL_ROW_PTR:
     case COL_SELECTED:
     case COL_SIZE_TEXT:

@@ -47,7 +47,6 @@ enum CecupAction {
 };
 
 enum CecupReason {
-    UI_REASON_NONE = 0,
     UI_REASON_NEW,
     UI_REASON_HARDLINK,
     UI_REASON_SYMLINK,
@@ -92,7 +91,6 @@ static char *dst_action_strings[] = {
 };
 
 static char *reason_strings[] = {
-    [UI_REASON_NONE]     = "",
     [UI_REASON_EQUAL]    = N_("Files have the same size and modification time"),
     [UI_REASON_IGNORED]  = N_("Matches an ignore rule"),
     [UI_REASON_MISSING]  = N_("File does not exist in the original folder"),
@@ -112,7 +110,6 @@ enum CecupColumn {
     COL_SIZE_RAW,
     COL_MTIME_TEXT,
     COL_MTIME_RAW,
-    COL_REASON,
     COL_ROW_PTR,
     NUM_COLS
 };
