@@ -830,23 +830,23 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
                                               (gint)event->x, (gint)event->y,
                                               &path, NULL, NULL, NULL)) {
-                char *file_path;
+                char *filepath;
                 int64 path_len;
                 enum CecupAction action;
                 int32 row_index = gtk_tree_path_get_indices(path)[0];
                 CecupRow *row = cecup.rows_visible[row_index];
 
                 if (side == SIDE_LEFT) {
-                    file_path = row->src_path;
+                    filepath = row->src_path;
                     path_len = row->src_path_len;
                     action = row->src_action;
                 } else {
-                    file_path = row->dst_path;
+                    filepath = row->dst_path;
                     path_len = row->dst_path_len;
                     action = row->dst_action;
                 }
 
-                if (file_path) {
+                if (filepath) {
                     Message *message;
 
                     g_mutex_lock(&cecup.ui_arena_mutex);
@@ -857,7 +857,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     message->filepath_len = path_len;
                     message->filepath
                         = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                    memcpy64(message->filepath, file_path, path_len + 1);
+                    memcpy64(message->filepath, filepath, path_len + 1);
                     g_mutex_unlock(&cecup.ui_arena_mutex);
 
                     message->action = action;
@@ -886,7 +886,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         GtkWidget *item_apply;
         GtkWidget *item_ignore;
 
-        char *file_path;
+        char *filepath;
         char *other_path;
         int64 path_len;
         enum CecupAction action;
@@ -902,12 +902,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             CecupRow *row = cecup.rows_visible[row_index];
 
             if (side == SIDE_LEFT) {
-                file_path = row->src_path;
+                filepath = row->src_path;
                 path_len = row->src_path_len;
                 other_path = row->dst_path;
                 action = row->src_action;
             } else {
-                file_path = row->dst_path;
+                filepath = row->dst_path;
                 path_len = row->dst_path_len;
                 other_path = row->src_path;
                 action = row->dst_action;
@@ -918,11 +918,11 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*message)));
         memset64(message, 0, SIZEOF(*message));
 
-        if (file_path) {
+        if (filepath) {
             message->filepath_len = path_len;
             message->filepath
                 = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-            memcpy64(message->filepath, file_path, path_len + 1);
+            memcpy64(message->filepath, filepath, path_len + 1);
         }
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -946,14 +946,14 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         g_signal_connect(item_apply, "activate", G_CALLBACK(on_menu_apply),
                          message);
 
-        if ((file_path == NULL) || (other_path == NULL)) {
+        if ((filepath == NULL) || (other_path == NULL)) {
             gtk_widget_set_sensitive(item_diff, FALSE);
         } else {
             g_signal_connect(item_diff, "activate", G_CALLBACK(on_menu_diff),
                              message);
         }
 
-        if (file_path == NULL) {
+        if (filepath == NULL) {
             gtk_widget_set_sensitive(item_open, FALSE);
             gtk_widget_set_sensitive(item_dir, FALSE);
             gtk_widget_set_sensitive(item_copy_relative, FALSE);
@@ -1084,27 +1084,27 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
     if ((index >= 0) && (index < cecup.rows_visible_len)) {
         CecupRow *row = cecup.rows_visible[index];
-        char *file_path;
+        char *filepath;
         enum CecupAction action;
 
         if (side == SIDE_LEFT) {
-            file_path = row->src_path;
+            filepath = row->src_path;
             action = row->src_action;
         } else {
-            file_path = row->dst_path;
+            filepath = row->dst_path;
             action = row->dst_action;
         }
 
-        if (file_path == NULL) {
+        if (filepath == NULL) {
             if (side == SIDE_LEFT) {
-                file_path = row->dst_path;
+                filepath = row->dst_path;
             } else {
-                file_path = row->src_path;
+                filepath = row->src_path;
             }
         }
 
-        if (file_path == NULL) {
-            file_path = "";
+        if (filepath == NULL) {
+            filepath = "";
         }
 
         switch (view_column_index) {
@@ -1121,10 +1121,10 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             translated_reason = _(reason_strings[row->reason]);
             if (row->link_target) {
                 tip_text_length
-                    = SNPRINTF(tip_text_buffer, "%s -> %s: %s", file_path,
+                    = SNPRINTF(tip_text_buffer, "%s -> %s: %s", filepath,
                                row->link_target, translated_reason);
             } else {
-                tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", file_path,
+                tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", filepath,
                                            translated_reason);
             }
             g_mutex_lock(&cecup.ui_arena_mutex);
@@ -1136,7 +1136,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
         }
         case 3: {
             tip_text_length = SNPRINTF(tip_text_buffer, "%s: %lld bytes",
-                                       file_path, (llong)row->size_raw);
+                                       filepath, (llong)row->size_raw);
             g_mutex_lock(&cecup.ui_arena_mutex);
             tip_text
                 = xarena_push(cecup.ui_arena, ALIGN16(tip_text_length + 1));
@@ -1145,7 +1145,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             break;
         }
         case 4: {
-            tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", file_path,
+            tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", filepath,
                                        row->mtime_text);
             g_mutex_lock(&cecup.ui_arena_mutex);
             tip_text
