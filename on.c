@@ -44,70 +44,22 @@ on_menu_apply(GtkWidget *m, void *data) {
 static void
 on_menu_rename(GtkWidget *m, void *data) {
     Message *message = data;
-    TaskList *tasks;
-    GtkWidget *dialog;
-    GtkWidget *content_area;
-    GtkWidget *entry;
-    char *base_path;
+    GtkWidget *tree = (message->side == 0) ? cecup.l_tree : cecup.r_tree;
+    GtkTreeSelection *selection
+        = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+    GtkTreeModel *model;
+    GtkTreeIter iter;
 
     (void)m;
 
-    if ((tasks
-         = get_target_tasks(message->side, message->filepath, message->action))
-        == NULL) {
-        free_update_data(message);
-        return;
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
+        GtkTreeViewColumn *col
+            = gtk_tree_view_get_column(GTK_TREE_VIEW(tree), 2);
+        gtk_tree_view_set_cursor(GTK_TREE_VIEW(tree), path, col, TRUE);
+        gtk_tree_path_free(path);
     }
 
-    if (message->side == 0) {
-        base_path = cecup.src_base;
-    } else {
-        base_path = cecup.dst_base;
-    }
-
-    dialog = gtk_dialog_new_with_buttons(
-        _("Rename"), GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL,
-        _("_Cancel"), GTK_RESPONSE_CANCEL, _("_Rename"), GTK_RESPONSE_ACCEPT,
-        NULL);
-
-    content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-    entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(entry), basename(message->filepath));
-    gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
-
-    gtk_box_pack_start(GTK_BOX(content_area), entry, TRUE, TRUE, 10);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
-    gtk_widget_show_all(dialog);
-
-    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        char *new_name = (char *)gtk_entry_get_text(GTK_ENTRY(entry));
-
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task = tasks->items[i];
-            char old_path[MAX_PATH_LENGTH];
-            char new_path[MAX_PATH_LENGTH];
-            char *dir_name;
-
-            SNPRINTF(old_path, "%s/%s", base_path, task->filepath);
-
-            if ((dir_name = g_path_get_dirname(old_path))) {
-                SNPRINTF(new_path, "%s/%s", dir_name, new_name);
-
-                if (rename(old_path, new_path) == 0) {
-                    ipc_send_log(_("Renamed: %s -> %s\n"), task->filepath,
-                                 new_name);
-                } else {
-                    ipc_send_log_error(_("Error renaming %s: %s\n"),
-                                       task->filepath, strerror(errno));
-                }
-                g_free(dir_name);
-            }
-        }
-        on_preview_clicked(NULL, NULL);
-    }
-
-    gtk_widget_destroy(dialog);
-    free_task_list(tasks);
     free_update_data(message);
     return;
 }
@@ -496,6 +448,7 @@ on_reset_clicked(GtkWidget *b, void *data) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_new), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_hard), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_update), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal), FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal), FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore), TRUE);
@@ -1231,4 +1184,51 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     return FALSE;
 }
 
-#endif /* ON_C */
+static void
+on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
+               void *data) {
+    GtkWidget *tree = data;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    CecupRow *row;
+    int32 side;
+
+    (void)renderer;
+    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
+    path = gtk_tree_path_new_from_string(path_str);
+
+    if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter, path)) {
+        gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
+                           &row, -1);
+
+        char *base_path = (side == 0) ? cecup.src_base : cecup.dst_base;
+        char *current_rel_path = (side == 0) ? row->src_path : row->dst_path;
+
+        if (current_rel_path && strlen64(new_text) > 0) {
+            char old_full[MAX_PATH_LENGTH];
+            char new_full[MAX_PATH_LENGTH];
+            char *dir_name;
+
+            SNPRINTF(old_full, "%s/%s", base_path, current_rel_path);
+
+            if ((dir_name = g_path_get_dirname(old_full))) {
+                SNPRINTF(new_full, "%s/%s", dir_name, new_text);
+
+                if (rename(old_full, new_full) == 0) {
+                    ipc_send_log(_("Renamed: %s -> %s\n"), current_rel_path,
+                                 new_text);
+                    on_preview_clicked(NULL, NULL);
+                } else {
+                    ipc_send_log_error(_("Error renaming %s: %s\n"),
+                                       current_rel_path, strerror(errno));
+                }
+                g_free(dir_name);
+            }
+        }
+    }
+
+    gtk_tree_path_free(path);
+    return;
+}
+
+#endif
