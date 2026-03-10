@@ -21,8 +21,7 @@
 #include "cecup.h"
 #include "work.c"
 
-static void on_menu_open(GtkWidget *m, void *data);
-static void on_menu_open_dir(GtkWidget *m, void *data);
+static void on_menu_open_item(GtkWidget *m, void *data);
 static void on_menu_copy_path(GtkWidget *m, void *data);
 static void on_menu_apply(GtkWidget *m, void *data);
 static void on_menu_diff(GtkWidget *m, void *data);
@@ -40,15 +39,15 @@ typedef struct {
 // Note: NEVER delete lines with // clang-format
 // clang-format off
 static CecupMenuItem context_menu_items[] = {
-{N_("📄 Open File"),          0,          0,                                 on_menu_open,      NULL},
-{N_("📂 Open Folder"),        0,          0,                                 on_menu_open_dir,  NULL},
-{N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK,                  on_menu_copy_path, "relative"},
-{N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "absolute"},
-{N_("⏯️ Apply"),              0,          0,                                 on_menu_apply,     NULL},
-{N_("🔍 Diff"),               0,          0,                                 on_menu_diff,      NULL},
-{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
-{N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
-{N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
+{N_("📄 Open File"),           0,          0,                                  on_menu_open_item, "file"},
+{N_("📂 Open Folder"),         0,          0,                                  on_menu_open_item, "folder"},
+{N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK,                   on_menu_copy_path, "relative"},
+{N_("📍 Copy Full Path"),      GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "absolute"},
+{N_("⏯️ Apply"),               0,          0,                                  on_menu_apply,     NULL},
+{N_("🔍 Diff"),                0,          0,                                  on_menu_diff,      NULL},
+{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                  on_menu_rename,    NULL},
+{N_("🗑️ Delete"),              0,          0,                                  on_menu_delete,    NULL},
+{N_("💤 Ignore..."),           0,          0,                                  NULL,              NULL},
 };
 // clang-format on
 
@@ -97,56 +96,23 @@ on_menu_rename(GtkWidget *m, void *data) {
 }
 
 static void
-on_menu_open(GtkWidget *m, void *data) {
+on_menu_open_item(GtkWidget *m, void *data) {
     Message *message = data;
     TaskList *tasks;
+    char *path_type;
 
-    (void)m;
-
-    if ((tasks = get_target_tasks(message->side, message->filepath,
-                                  message->action))) {
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task = tasks->items[i];
-            char full_path[MAX_PATH_LENGTH];
-            char *base_path;
-
-            if (message->side == SIDE_LEFT) {
-                base_path = cecup.src_base;
-            } else {
-                base_path = cecup.dst_base;
-            }
-
-            SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
-
-            {
-                char *command[] = {
-                    "xdg-open",
-                    full_path,
-                    NULL,
-                };
-                util_command_launch(LENGTH(command), command);
-            }
-        }
-        free_task_list(tasks);
+    if (m) {
+        path_type = g_object_get_data(G_OBJECT(m), "path_type");
+    } else {
+        path_type = NULL;
     }
 
-    free_update_data(message);
-    return;
-}
-
-static void
-on_menu_open_dir(GtkWidget *m, void *data) {
-    Message *message = data;
-    TaskList *tasks;
-
-    (void)m;
-
     if ((tasks = get_target_tasks(message->side, message->filepath,
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task = tasks->items[i];
             char full_path[MAX_PATH_LENGTH];
-            char *dir_path;
+            char *target_path;
             char *base_path;
 
             if (message->side == SIDE_LEFT) {
@@ -156,11 +122,17 @@ on_menu_open_dir(GtkWidget *m, void *data) {
             }
 
             SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
-            dir_path = dirname(full_path);
+
+            if (path_type && (strcmp(path_type, "folder") == 0)) {
+                target_path = dirname(full_path);
+            } else {
+                target_path = full_path;
+            }
+
             {
                 char *command[] = {
                     "xdg-open",
-                    dir_path,
+                    target_path,
                     NULL,
                 };
                 util_command_launch(LENGTH(command), command);
@@ -958,7 +930,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     message->action = action;
                     message->side = side;
 
-                    on_menu_open(NULL, message);
+                    on_menu_open_item(NULL, message);
                 }
 
                 gtk_tree_path_free(path);
