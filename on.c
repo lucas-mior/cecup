@@ -109,7 +109,6 @@ on_menu_open(GtkWidget *m, void *data) {
             Message *task = tasks->items[i];
             char full_path[MAX_PATH_LENGTH];
             char *base_path;
-            pid_t child;
 
             if (message->side == SIDE_LEFT) {
                 base_path = cecup.src_base;
@@ -119,16 +118,13 @@ on_menu_open(GtkWidget *m, void *data) {
 
             SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
 
-            switch (child = fork()) {
-            case -1:
-                error("Error forking: %s.\n", strerror(errno));
-                fatal(EXIT_FAILURE);
-            case 0:
-                execlp("xdg-open", "xdg-open", full_path, (char *)NULL);
-                error("Error executing xdg-open: %s.\n", strerror(errno));
-                _exit(EXIT_FAILURE);
-            default:
-                break;
+            {
+                char *command[] = {
+                    "xdg-open",
+                    full_path,
+                    NULL,
+                };
+                util_command_launch(LENGTH(command), command);
             }
         }
         free_task_list(tasks);
