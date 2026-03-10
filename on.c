@@ -160,14 +160,14 @@ on_menu_open_dir(GtkWidget *m, void *data) {
             }
 
             SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
-            if ((dir_path = g_path_get_dirname(full_path))) {
+            dir_path = dirname(full_path);
+            {
                 char *command[] = {
                     "xdg-open",
                     dir_path,
                     NULL,
                 };
                 util_command_launch(LENGTH(command), command);
-                g_free(dir_path);
             }
         }
         free_task_list(tasks);
