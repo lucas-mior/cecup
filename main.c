@@ -71,8 +71,8 @@ main(int32 argc, char *argv[]) {
     GType column_types[NUM_COLS];
     char src_path_buffer[MAX_PATH_LENGTH];
     char dst_path_buffer[MAX_PATH_LENGTH];
-    int64 dst_path_len;
-    int64 src_path_len;
+    int32 dst_path_len;
+    int32 src_path_len;
 
     {
         char *locale_devel = "./po";

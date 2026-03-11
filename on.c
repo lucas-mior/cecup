@@ -169,7 +169,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task = tasks->items[i];
-            int64 path_len;
+            int32 path_len;
             char path_full[MAX_PATH_LENGTH];
             char *path;
             char *path_type = g_object_get_data(G_OBJECT(m), "path_type");
@@ -186,7 +186,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
                     continue;
                 }
                 path = path_full;
-                path_len = strlen64(path_full);
+                path_len = (int32)strlen64(path_full);
             } else {
                 path = task->filepath;
                 path_len = task->filepath_len;
@@ -573,7 +573,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
             CecupRow *row = cecup.rows[i];
             char *row_path;
-            int64 row_path_len;
+            int32 row_path_len;
 
             row_path = (row->src_path != NULL) ? row->src_path : row->dst_path;
 
@@ -581,7 +581,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
                 continue;
             }
 
-            row_path_len = strlen64(row_path);
+            row_path_len = (int32)strlen64(row_path);
 
             if (parent_row->selected) {
                 if (is_root) {
@@ -825,7 +825,7 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
         CecupRow *row;
         int32 side;
         char *filepath;
-        int64 path_len;
+        int32 path_len;
         enum CecupAction action;
         uint32 modifiers;
 
@@ -898,7 +898,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                                               (gint)event->x, (gint)event->y,
                                               &path, NULL, NULL, NULL)) {
                 char *filepath;
-                int64 path_len;
+                int32 path_len;
                 enum CecupAction action;
                 int32 row_index = gtk_tree_path_get_indices(path)[0];
                 CecupRow *row = cecup.rows_visible[row_index];
@@ -944,7 +944,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         GtkWidget *menu;
         char *filepath;
         char *other_path;
-        int64 path_len;
+        int32 path_len;
         enum CecupAction action;
 
         if (!gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),

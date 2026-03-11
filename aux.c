@@ -80,7 +80,7 @@ get_target_tasks(int32 side, char *clicked_path,
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupRow *row = cecup.rows[i];
         char *file_path;
-        int64 path_len;
+        int32 path_len;
         enum CecupAction action;
         Message *task;
 
@@ -128,13 +128,13 @@ get_target_tasks(int32 side, char *clicked_path,
 
     if ((tasks->count == 0) && clicked_path) {
         Message *task;
-        int64 path_len;
+        int32 path_len;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
         task = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*task)));
         memset64(task, 0, SIZEOF(*task));
 
-        path_len = strlen64(clicked_path);
+        path_len = (int32)strlen64(clicked_path);
         task->filepath_len = path_len;
         task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
         memcpy64(task->filepath, clicked_path, path_len + 1);

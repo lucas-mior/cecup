@@ -972,7 +972,7 @@ work_rsync_bulk(void *user_data) {
 
             if (cecup.cancel_sync == false) {
                 Message *message;
-                int64 path_len;
+                int32 path_len;
 
                 g_mutex_lock(&cecup.ui_arena_mutex);
                 message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
@@ -1181,7 +1181,7 @@ work_rsync_bulk(void *user_data) {
                     char *filename = buffer_output + 12;
                     char *sep;
                     Message *message;
-                    int64 path_len = strlen64(filename);
+                    int32 path_len = (int32)strlen64(filename);
 
                     if ((sep = strstr(filename, RSYNC_HARDLINK_NOTATION))) {
                         *sep = '\0';
