@@ -567,7 +567,7 @@ work_rsync(void *user_data) {
                 char *percent_pos;
                 if ((percent_pos = strstr(buffer_output, "%"))) {
                     char *start_digit = percent_pos;
-                    while (start_digit > buffer_output
+                    while ((start_digit > buffer_output)
                            && isdigit(*(start_digit - 1))) {
                         start_digit -= 1;
                     }
