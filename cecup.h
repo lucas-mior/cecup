@@ -315,8 +315,6 @@ static struct {
     char *problem;
     char *rename;
 } replacements[] = {
-    {RSYNC_HARDLINK_NOTATION, "_rsync_hardlink_notation_in_filename_"},
-    {RSYNC_SYMLINK_NOTATION, "_rsync_symlink_notation_in_filename_"},
     {"\\", "_backslash_in_filename_"},
     {"\n", "_newline_in_filename_"},
     {"\"", "_double_quote_in_filename_"},
@@ -327,6 +325,8 @@ static struct {
     {"|", "_pipe_in_filename_"},
     {"?", "_question_mark_in_filename_"},
     {"*", "_asterisk_in_filename_"},
+    {RSYNC_HARDLINK_NOTATION, "_rsync_hardlink_notation_in_filename_"},
+    {RSYNC_SYMLINK_NOTATION, "_rsync_symlink_notation_in_filename_"},
     {RSYNC_IGNORE_PRE, "rsync_ignore_message_prelude_in_filename"},
     {RSYNC_IGNORE_INTER, "rsync_ignore_message_interlude_in_filename"},
 };
