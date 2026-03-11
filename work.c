@@ -1181,7 +1181,7 @@ work_rsync_bulk(void *user_data) {
                     char *filename = buffer_output + 12;
                     char *sep;
                     Message *message;
-                    int32 path_len = (int32)strlen32(filename);
+                    int32 path_len = strlen32(filename);
 
                     if ((sep = strstr(filename, RSYNC_HARDLINK_NOTATION))) {
                         *sep = '\0';

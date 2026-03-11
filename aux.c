@@ -134,7 +134,7 @@ get_target_tasks(int32 side, char *clicked_path,
         task = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*task)));
         memset64(task, 0, SIZEOF(*task));
 
-        path_len = (int32)strlen32(clicked_path);
+        path_len = strlen32(clicked_path);
         task->filepath_len = path_len;
         task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
         memcpy64(task->filepath, clicked_path, path_len + 1);

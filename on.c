@@ -186,7 +186,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
                     continue;
                 }
                 path = path_full;
-                path_len = (int32)strlen32(path_full);
+                path_len = strlen32(path_full);
             } else {
                 path = task->filepath;
                 path_len = task->filepath_len;
@@ -581,7 +581,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
                 continue;
             }
 
-            row_path_len = (int32)strlen32(row_path);
+            row_path_len = strlen32(row_path);
 
             if (parent_row->selected) {
                 if (is_root) {

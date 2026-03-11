@@ -138,14 +138,14 @@ ipc_send_tree(int32 side,
     message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
     memset64(message, 0, SIZEOF(Message));
 
-    message->filepath_len = (int32)strlen32(path);
+    message->filepath_len = strlen32(path);
     g_mutex_lock(&cecup.row_arena_mutex);
     message->filepath
         = xarena_push(cecup.row_arena, ALIGN16(message->filepath_len + 1));
     memcpy64(message->filepath, path, message->filepath_len + 1);
 
     if (link_target) {
-        target_len = (int32)strlen32(link_target);
+        target_len = strlen32(link_target);
         message->link_target_len = target_len;
         message->link_target
             = xarena_push(cecup.row_arena, ALIGN16(target_len + 1));
@@ -153,7 +153,7 @@ ipc_send_tree(int32 side,
     }
 
     if (ignore_pattern) {
-        pattern_len = (int32)strlen32(ignore_pattern);
+        pattern_len = strlen32(ignore_pattern);
         message->ignore_pattern_len = pattern_len;
         message->ignore_pattern
             = xarena_push(cecup.row_arena, ALIGN16(pattern_len + 1));
