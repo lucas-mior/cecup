@@ -537,8 +537,9 @@ work_rsync(void *user_data) {
 
             if (thread_data->is_preview == 0) {
                 ipc_send_log("%s.\n", buf_output);
-            } else if (buf_output[RSYNC_INDEX_ACTION] == RSYNC_CHAR_MESSAGE
-                       && literal_match(buf_output, RSYNC_MESSAGE_DELETING)) {
+            }
+
+            if (literal_match(buf_output, RSYNC_MESSAGE_DELETING)) {
                 char *relative_path
                     = buf_output + strlen32(RSYNC_MESSAGE_DELETING);
                 char full_src[MAX_PATH_LENGTH];
@@ -755,7 +756,7 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stdout[0]);
     XCLOSE(&pipe_stderr[0]);
 
-    if (checksum_count > 0 && cecup.cancel_sync == false) {
+    if ((checksum_count > 0) && (cecup.cancel_sync == false)) {
         int32 pipe_stdin[2] = {-1, -1};
         a = 0;
         rsync_args[a++] = "rsync";
@@ -775,6 +776,8 @@ work_rsync(void *user_data) {
         rsync_args[a++] = NULL;
 
         ipc_send_log("Verifying transfers with checksum...\n");
+        STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
+        ipc_send_log("+ %s\n", cmd);
 
         if (pipe(pipe_stdout) < 0) {
             error("Error creating pipe for stdout: %s.\n", strerror(errno));

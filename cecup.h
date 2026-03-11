@@ -296,6 +296,7 @@ enum RsyncCharAttribute {
     RSYNC_CHAR_XATTR = 'x'
 };
 
+#define RSYNC_ITEMIZE_PLACEHOLDERS "YXcstpoguax"
 #define RSYNC_INDEX_ACTION 0
 #define RSYNC_INDEX_FILE_TYPE 1
 
