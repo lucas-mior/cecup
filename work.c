@@ -305,8 +305,8 @@ work_rsync(void *user_data) {
     struct pollfd pipes[2];
     pid_t child_pid;
 
-    char buffer_output[MAX_PATH_LENGTH*2];
-    int32 buffer_output_pos = 0;
+    char buf_output[MAX_PATH_LENGTH*2];
+    int32 buf_output_pos = 0;
     char buffer_error[MAX_PATH_LENGTH*2];
     int32 buffer_error_pos = 0;
 
@@ -497,8 +497,8 @@ work_rsync(void *user_data) {
             goto read_error_pipe;
         }
 
-        r = read64(pipe_stdout[0], buffer_output + buffer_output_pos,
-                   SIZEOF(buffer_output) - buffer_output_pos - 1);
+        r = read64(pipe_stdout[0], buf_output + buf_output_pos,
+                   SIZEOF(buf_output) - buf_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
                 ipc_send_log_error("Error reading stdout pipe: %s.\n",
@@ -507,27 +507,26 @@ work_rsync(void *user_data) {
             }
             goto read_error_pipe;
         }
-        buffer_output_pos += (int32)r;
+        buf_output_pos += (int32)r;
 
-        while (
-            buffer_output_pos > 0
-            && ((eol = memchr64(buffer_output, '\n', buffer_output_pos))
-                || (eol = memchr64(buffer_output, '\r', buffer_output_pos)))) {
+        while (buf_output_pos > 0
+               && ((eol = memchr64(buf_output, '\n', buf_output_pos))
+                   || (eol = memchr64(buf_output, '\r', buf_output_pos)))) {
             char *space_pos;
             char *link_target;
             char full_src_path_val[MAX_PATH_LENGTH];
             int64 size_path_val = 0;
             int64 mtime_path_val = 0;
-            int32 line_len = (int32)(eol - buffer_output);
+            int32 line_len = (int32)(eol - buf_output);
             int32 remaining;
 
             *eol = '\0';
 
             {
                 char *percent_pos;
-                if ((percent_pos = strstr(buffer_output, "%"))) {
+                if ((percent_pos = strstr(buf_output, "%"))) {
                     char *start_digit = percent_pos;
-                    while ((start_digit > buffer_output)
+                    while ((start_digit > buf_output)
                            && isdigit(*(start_digit - 1))) {
                         start_digit -= 1;
                     }
@@ -537,12 +536,11 @@ work_rsync(void *user_data) {
             }
 
             if (thread_data->is_preview == 0) {
-                ipc_send_log("%s.\n", buffer_output);
-            } else if (buffer_output[RSYNC_INDEX_ACTION] == RSYNC_CHAR_MESSAGE
-                       && literal_match(buffer_output,
-                                        RSYNC_MESSAGE_DELETING)) {
+                ipc_send_log("%s.\n", buf_output);
+            } else if (buf_output[RSYNC_INDEX_ACTION] == RSYNC_CHAR_MESSAGE
+                       && literal_match(buf_output, RSYNC_MESSAGE_DELETING)) {
                 char *relative_path
-                    = buffer_output + strlen32(RSYNC_MESSAGE_DELETING);
+                    = buf_output + strlen32(RSYNC_MESSAGE_DELETING);
                 char full_src[MAX_PATH_LENGTH];
                 char full_dst[MAX_PATH_LENGTH];
                 struct stat stat_src_local;
@@ -574,9 +572,8 @@ work_rsync(void *user_data) {
 
                 ipc_send_tree(SIDE_RIGHT, UI_ACTION_DELETE, deletion_reason,
                               relative_path, NULL, NULL, size_val, time_val);
-            } else if (literal_match(buffer_output, RSYNC_IGNORE_PRE)) {
-                char *hiding_filename
-                    = buffer_output + strlen32(RSYNC_IGNORE_PRE);
+            } else if (literal_match(buf_output, RSYNC_IGNORE_PRE)) {
+                char *hiding_filename = buf_output + strlen32(RSYNC_IGNORE_PRE);
                 char *reason_sep;
                 char *ignore_pattern = NULL;
                 struct stat st_hiding;
@@ -602,9 +599,9 @@ work_rsync(void *user_data) {
                                   size_path_val, mtime_path_val);
                     // clang-format on
                 }
-            } else if ((space_pos = strchr(buffer_output, ' '))) {
-                char action_char = buffer_output[RSYNC_INDEX_ACTION];
-                char type_char = buffer_output[RSYNC_INDEX_FILE_TYPE];
+            } else if ((space_pos = strchr(buf_output, ' '))) {
+                char action_char = buf_output[RSYNC_INDEX_ACTION];
+                char type_char = buf_output[RSYNC_INDEX_FILE_TYPE];
                 if ((action_char == RSYNC_CHAR_RECEIVE)
                     || (action_char == RSYNC_CHAR_HARDLINK)
                     || (action_char == RSYNC_CHAR_CHANGE)
@@ -631,7 +628,7 @@ work_rsync(void *user_data) {
                                 = sep + strlen32(RSYNC_HARDLINK_NOTATION);
                         }
                     } else if ((action_char == RSYNC_CHAR_SYMLINK)
-                               || (buffer_output[RSYNC_INDEX_FILE_TYPE]
+                               || (buf_output[RSYNC_INDEX_FILE_TYPE]
                                    == RSYNC_CHAR_SYMLINK)) {
                         char *sep;
                         cecup_action = UI_ACTION_SYMLINK;
@@ -642,12 +639,12 @@ work_rsync(void *user_data) {
                             link_target
                                 = sep + strlen32(RSYNC_SYMLINK_NOTATION);
                         }
-                    } else if (buffer_output[2] == '+') {
+                    } else if (buf_output[2] == '+') {
                         cecup_action = UI_ACTION_NEW;
                     }
 
                     if ((thread_data->is_preview == 0) && (line_len > 11)
-                        && (buffer_output[RSYNC_INDEX_FILE_TYPE]
+                        && (buf_output[RSYNC_INDEX_FILE_TYPE]
                             == RSYNC_CHAR_FILE)
                         && ((action_char == RSYNC_CHAR_RECEIVE)
                             || (action_char == RSYNC_CHAR_CHANGE)
@@ -691,17 +688,17 @@ work_rsync(void *user_data) {
                 }
             }
 
-            remaining = buffer_output_pos - (line_len + 1);
+            remaining = buf_output_pos - (line_len + 1);
             if (remaining > 0) {
-                memmove64(buffer_output, eol + 1, remaining);
+                memmove64(buf_output, eol + 1, remaining);
             }
-            buffer_output_pos = remaining;
+            buf_output_pos = remaining;
         }
 
-        if (buffer_output_pos >= (int32)SIZEOF(buffer_output) - 1) {
-            buffer_output[buffer_output_pos] = '\0';
-            ipc_send_log("%s.\n", buffer_output);
-            buffer_output_pos = 0;
+        if (buf_output_pos >= (int32)SIZEOF(buf_output) - 1) {
+            buf_output[buf_output_pos] = '\0';
+            ipc_send_log("%s.\n", buf_output);
+            buf_output_pos = 0;
         }
 
     read_error_pipe:
@@ -839,11 +836,10 @@ work_rsync(void *user_data) {
                 continue;
             }
             if (pipes[0].revents & POLLIN) {
-                r = read64(pipe_stdout[0], buffer_output,
-                           SIZEOF(buffer_output) - 1);
+                r = read64(pipe_stdout[0], buf_output, SIZEOF(buf_output) - 1);
                 if (r > 0) {
-                    buffer_output[r] = '\0';
-                    ipc_send_log("%s", buffer_output);
+                    buf_output[r] = '\0';
+                    ipc_send_log("%s", buf_output);
                 } else {
                     pipes[0].fd = -1;
                 }
@@ -968,9 +964,9 @@ work_rsync_bulk(void *user_data) {
         char dst_directory[MAX_PATH_LENGTH];
         char *rsync_args[32];
         int32 a = 0;
-        char buffer_output[MAX_PATH_LENGTH*2];
+        char buf_output[MAX_PATH_LENGTH*2];
         char buffer_error[MAX_PATH_LENGTH*2];
-        int32 buffer_output_pos = 0;
+        int32 buf_output_pos = 0;
         int32 buffer_error_pos = 0;
 
         if (pipe(pipe_stdout) < 0) {
@@ -1123,8 +1119,8 @@ work_rsync_bulk(void *user_data) {
                 goto read_error_pipe;
             }
 
-            r = read64(pipe_stdout[0], buffer_output + buffer_output_pos,
-                       SIZEOF(buffer_output) - buffer_output_pos - 1);
+            r = read64(pipe_stdout[0], buf_output + buf_output_pos,
+                       SIZEOF(buf_output) - buf_output_pos - 1);
             if (r <= 0) {
                 if (r < 0) {
                     ipc_send_log_error("Error reading stdout pipe: %s.\n",
@@ -1133,20 +1129,19 @@ work_rsync_bulk(void *user_data) {
                 }
                 goto read_error_pipe;
             }
-            buffer_output_pos += (int32)r;
+            buf_output_pos += (int32)r;
 
-            while (buffer_output_pos > 0
-                   && ((eol = memchr64(buffer_output, '\n', buffer_output_pos))
-                       || (eol = memchr64(buffer_output, '\r',
-                                          buffer_output_pos)))) {
-                int32 line_len = (int32)(eol - buffer_output);
+            while (buf_output_pos > 0
+                   && ((eol = memchr64(buf_output, '\n', buf_output_pos))
+                       || (eol = memchr64(buf_output, '\r', buf_output_pos)))) {
+                int32 line_len = (int32)(eol - buf_output);
                 int32 remaining;
                 *eol = '\0';
 
-                ipc_send_log("%s.\n", buffer_output);
+                ipc_send_log("%s.\n", buf_output);
 
-                if ((line_len > 12) && (buffer_output[11] == ' ')) {
-                    char *filename = buffer_output + 12;
+                if ((line_len > 12) && (buf_output[11] == ' ')) {
+                    char *filename = buf_output + 12;
                     char *sep;
                     Message *message;
                     int32 path_len = strlen32(filename);
@@ -1173,11 +1168,11 @@ work_rsync_bulk(void *user_data) {
                     g_idle_add(update_ui_handler, message);
                 }
 
-                remaining = buffer_output_pos - (line_len + 1);
+                remaining = buf_output_pos - (line_len + 1);
                 if (remaining > 0) {
-                    memmove64(buffer_output, eol + 1, remaining);
+                    memmove64(buf_output, eol + 1, remaining);
                 }
-                buffer_output_pos = remaining;
+                buf_output_pos = remaining;
             }
 
         read_error_pipe:
