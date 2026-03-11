@@ -186,7 +186,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
                     continue;
                 }
                 path = path_full;
-                path_len = (int32)strlen64(path_full);
+                path_len = (int32)strlen32(path_full);
             } else {
                 path = task->filepath;
                 path_len = task->filepath_len;
@@ -267,8 +267,8 @@ on_menu_diff(GtkWidget *m, void *data) {
             int64 size_dst;
             int64 size_src;
 
-            size_src = strlen64(cecup.src_base) + strlen64(task->filepath) + 2;
-            size_dst = strlen64(cecup.dst_base) + strlen64(task->filepath) + 2;
+            size_src = strlen32(cecup.src_base) + strlen32(task->filepath) + 2;
+            size_dst = strlen32(cecup.dst_base) + strlen32(task->filepath) + 2;
 
             switch (fork()) {
             case -1:
@@ -567,7 +567,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
             break;
         }
 
-        parent_path_len = strlen64(parent_path);
+        parent_path_len = strlen32(parent_path);
         is_root = (strcmp(parent_path, "./") == 0);
 
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
@@ -581,7 +581,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
                 continue;
             }
 
-            row_path_len = (int32)strlen64(row_path);
+            row_path_len = (int32)strlen32(row_path);
 
             if (parent_row->selected) {
                 if (is_root) {
@@ -681,7 +681,7 @@ on_fix_clicked(GtkWidget *b, void *data) {
     src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
     dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
 
-    if ((strlen64(src_path) <= 0) || (strlen64(dst_path) <= 0)) {
+    if ((strlen32(src_path) <= 0) || (strlen32(dst_path) <= 0)) {
         return;
     }
 
@@ -1024,7 +1024,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 char *extension_ptr;
                 char *directory_ptr;
                 char *name = (filepath) ? basename(filepath) : "";
-                int64 length = strlen64(name);
+                int64 length = strlen32(name);
 
                 gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
 
@@ -1246,7 +1246,7 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
             current_rel_path = row->dst_path;
         }
 
-        if (current_rel_path && strlen64(new_text) > 0) {
+        if (current_rel_path && strlen32(new_text) > 0) {
             char old_full[MAX_PATH_LENGTH];
             char new_full[MAX_PATH_LENGTH];
             char *dir_name;

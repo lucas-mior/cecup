@@ -74,7 +74,7 @@ enum RsyncCharAttribute {
                              " --partial --progress --info=progress2" \
                              " --links --hard-links --itemize-changes" \
                              " --perms --times --owner --group"
-#define MAX_COMMAND_LENGTH (MAX_PATH_LENGTH*2 + strlen64(RSYNC_UNIVERSAL_ARGS)*2)
+#define MAX_COMMAND_LENGTH (MAX_PATH_LENGTH*2 + strlen32(RSYNC_UNIVERSAL_ARGS)*2)
 #define BATCH_SIZE 256
 
 static int64
@@ -211,7 +211,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         bool changed = false;
         int64 j;
         int64 k;
-        int64 name_len = strlen64(d_name);
+        int64 name_len = strlen32(d_name);
 
         if (relative_path) {
             SNPRINTF(sub_rel, "%s/%s", relative_path, d_name);
@@ -233,7 +233,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
 
             for (int32 r = 0; r < LENGTH(replacements); r += 1) {
                 char *search = replacements[r].problem;
-                int64 search_len = strlen64(search);
+                int64 search_len = strlen32(search);
                 char *match;
 
                 if ((match = memmem64(&d_name[k], name_len - k, search,
@@ -248,7 +248,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
             if (earliest_match) {
                 int64 prefix_len = (int64)(earliest_match - &d_name[k]);
                 char *replace_str = replacements[replacement_index].rename;
-                int64 replace_len = strlen64(replace_str);
+                int64 replace_len = strlen32(replace_str);
 
                 if (prefix_len > 0) {
                     memcpy64(&new_name[j], &d_name[k], prefix_len);
@@ -259,7 +259,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
                 memcpy64(&new_name[j], replace_str, replace_len);
 
                 j += replace_len;
-                k += strlen64(replacements[replacement_index].problem);
+                k += strlen32(replacements[replacement_index].problem);
                 changed = true;
             } else {
                 int64 remaining = name_len - k;
@@ -662,7 +662,7 @@ work_rsync(void *user_data) {
                                           RSYNC_HARDLINK_NOTATION))) {
                             *sep = '\0';
                             link_target
-                                = sep + strlen64(RSYNC_HARDLINK_NOTATION);
+                                = sep + strlen32(RSYNC_HARDLINK_NOTATION);
                         }
                     } else if (type_char == RSYNC_CHAR_SYMLINK
                                || buffer_output[1] == RSYNC_CHAR_SYMLINK) {
@@ -673,7 +673,7 @@ work_rsync(void *user_data) {
                                           RSYNC_SYMLINK_NOTATION))) {
                             *sep = '\0';
                             link_target
-                                = sep + strlen64(RSYNC_SYMLINK_NOTATION);
+                                = sep + strlen32(RSYNC_SYMLINK_NOTATION);
                         }
                     } else if (buffer_output[2] == '+') {
                         cecup_action = UI_ACTION_NEW;
@@ -855,7 +855,7 @@ work_rsync(void *user_data) {
         XCLOSE(&pipe_stderr[1]);
         for (int32 i = 0; i < checksum_count; i += 1) {
             write64(pipe_stdin[1], checksum_files[i],
-                    strlen64(checksum_files[i]));
+                    strlen32(checksum_files[i]));
             write64(pipe_stdin[1], "\n", 1);
         }
         XCLOSE(&pipe_stdin[1]);
@@ -1181,7 +1181,7 @@ work_rsync_bulk(void *user_data) {
                     char *filename = buffer_output + 12;
                     char *sep;
                     Message *message;
-                    int32 path_len = (int32)strlen64(filename);
+                    int32 path_len = (int32)strlen32(filename);
 
                     if ((sep = strstr(filename, RSYNC_HARDLINK_NOTATION))) {
                         *sep = '\0';

@@ -134,7 +134,7 @@ get_target_tasks(int32 side, char *clicked_path,
         task = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*task)));
         memset64(task, 0, SIZEOF(*task));
 
-        path_len = (int32)strlen64(clicked_path);
+        path_len = (int32)strlen32(clicked_path);
         task->filepath_len = path_len;
         task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
         memcpy64(task->filepath, clicked_path, path_len + 1);
@@ -619,7 +619,7 @@ cecup_get_dirs(void) {
 
     save_config();
 
-    if ((strlen64(cecup.src_base) <= 0) || (strlen64(cecup.dst_base) <= 0)) {
+    if ((strlen32(cecup.src_base) <= 0) || (strlen32(cecup.dst_base) <= 0)) {
         ipc_send_log_error("Error: Invalid source and/or destination\n");
         return;
     }
@@ -647,8 +647,8 @@ cecup_get_dirs(void) {
     g_signal_handler_unblock(cecup.src_entry, cecup.src_entry_id);
     g_signal_handler_unblock(cecup.dst_entry, cecup.dst_entry_id);
 
-    cecup.src_base_len = strlen64(cecup.src_base);
-    cecup.dst_base_len = strlen64(cecup.dst_base);
+    cecup.src_base_len = strlen32(cecup.src_base);
+    cecup.dst_base_len = strlen32(cecup.dst_base);
     return;
 }
 
