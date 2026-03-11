@@ -125,10 +125,12 @@ typedef struct CecupRow {
     char *src_path;
     char *dst_path;
     char *link_target;
+    char *ignore_pattern;
 
     int64 src_path_len;
     int64 dst_path_len;
     int64 link_target_len;
+    int64 ignore_pattern_len;
 
     char size_text[16];
     char mtime_text[32];
@@ -161,10 +163,12 @@ typedef struct Message {
     char *message;
     char *filepath;
     char *link_target;
+    char *ignore_pattern;
 
     int64 message_len;
     int64 filepath_len;
     int64 link_target_len;
+    int64 ignore_pattern_len;
 
     int64 size;
     int64 mtime;

@@ -127,11 +127,12 @@ ipc_send_progress(enum DataType type, double fraction) {
 static void
 ipc_send_tree(int32 side,
                   enum CecupAction action, enum CecupReason reason,
-                  char *path, char *link_target,
+                  char *path, char *link_target, char *ignore_pattern,
                   int64 size, int64 mtime) {
     // clang-format on
     Message *message;
     int64 target_len;
+    int64 pattern_len;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
@@ -149,6 +150,14 @@ ipc_send_tree(int32 side,
         message->link_target
             = xarena_push(cecup.row_arena, ALIGN16(target_len + 1));
         memcpy64(message->link_target, link_target, target_len + 1);
+    }
+
+    if (ignore_pattern) {
+        pattern_len = strlen64(ignore_pattern);
+        message->ignore_pattern_len = pattern_len;
+        message->ignore_pattern
+            = xarena_push(cecup.row_arena, ALIGN16(pattern_len + 1));
+        memcpy64(message->ignore_pattern, ignore_pattern, pattern_len + 1);
     }
     g_mutex_unlock(&cecup.row_arena_mutex);
     g_mutex_unlock(&cecup.ui_arena_mutex);

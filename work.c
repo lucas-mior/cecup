@@ -608,16 +608,18 @@ work_rsync(void *user_data) {
                 }
 
                 ipc_send_tree(SIDE_RIGHT, UI_ACTION_DELETE, deletion_reason,
-                              relative_path, NULL, size_val, time_val);
+                              relative_path, NULL, NULL, size_val, time_val);
             } else if (strncmp(buffer_output, "[sender] hiding file ", 21)
                        == 0) {
                 char *hiding_filename = buffer_output + 21;
                 char *reason_sep;
+                char *ignore_pattern = NULL;
                 struct stat st_hiding;
 
                 if ((reason_sep
                      = strstr(hiding_filename, " because of pattern "))) {
                     *reason_sep = '\0';
+                    ignore_pattern = reason_sep + 20;
 
                     SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
                              hiding_filename);
@@ -631,7 +633,7 @@ work_rsync(void *user_data) {
                     // clang-format off
                     ipc_send_tree(SIDE_LEFT,
                                   UI_ACTION_IGNORE, UI_REASON_IGNORED,
-                                  hiding_filename, NULL,
+                                  hiding_filename, NULL, ignore_pattern,
                                   size_path_val, mtime_path_val);
                     // clang-format on
                 }
@@ -709,7 +711,7 @@ work_rsync(void *user_data) {
 
                     ipc_send_tree(SIDE_LEFT, cecup_action,
                                   (enum CecupReason)cecup_action,
-                                  relative_path_entry, link_target,
+                                  relative_path_entry, link_target, NULL,
                                   size_path_val, mtime_path_val);
 
                     processed_files_preview += 1;

@@ -496,10 +496,12 @@ update_ui_handler(void *data) {
 
         if (message->link_target) {
             row->link_target_len = message->link_target_len;
-            row->link_target = xarena_push(cecup.row_arena,
-                                           ALIGN16(row->link_target_len + 1));
-            memcpy64(row->link_target, message->link_target,
-                     row->link_target_len + 1);
+            row->link_target = message->link_target;
+        }
+
+        if (message->ignore_pattern) {
+            row->ignore_pattern_len = message->ignore_pattern_len;
+            row->ignore_pattern = message->ignore_pattern;
         }
 
         if (src_path_final) {
