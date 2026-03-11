@@ -68,6 +68,9 @@ enum RsyncCharAttribute {
     RSYNC_CHAR_XATTR = 'x'
 };
 
+#define RSYNC_INDEX_ACTION 0
+#define RSYNC_INDEX_FILE_TYPE 1
+
 #define RSYNC_HARDLINK_NOTATION " => "
 #define RSYNC_SYMLINK_NOTATION " -> "
 #define RSYNC_UNIVERSAL_ARGS "--verbose --update --recursive" \
@@ -575,7 +578,7 @@ work_rsync(void *user_data) {
 
             if (thread_data->is_preview == 0) {
                 ipc_send_log("%s.\n", buffer_output);
-            } else if (buffer_output[0] == RSYNC_CHAR_MESSAGE
+            } else if (buffer_output[RSYNC_INDEX_ACTION] == RSYNC_CHAR_MESSAGE
                        && strncmp(buffer_output + 1, "deleting", 8) == 0) {
                 char *relative_path = buffer_output + 10;
                 char full_src[MAX_PATH_LENGTH];
@@ -638,11 +641,11 @@ work_rsync(void *user_data) {
                     // clang-format on
                 }
             } else if ((space_pos = strchr(buffer_output, ' '))) {
-                char type_char = buffer_output[0];
-                if ((type_char == RSYNC_CHAR_RECEIVE)
-                    || (type_char == RSYNC_CHAR_HARDLINK)
-                    || (type_char == RSYNC_CHAR_CHANGE)
-                    || (type_char == RSYNC_CHAR_SYMLINK)) {
+                char action_char = buffer_output[RSYNC_INDEX_ACTION];
+                if ((action_char == RSYNC_CHAR_RECEIVE)
+                    || (action_char == RSYNC_CHAR_HARDLINK)
+                    || (action_char == RSYNC_CHAR_CHANGE)
+                    || (action_char == RSYNC_CHAR_SYMLINK)) {
 
                     char *relative_path_entry = space_pos + 1;
                     enum CecupAction cecup_action = UI_ACTION_UPDATE;
@@ -653,7 +656,7 @@ work_rsync(void *user_data) {
                     }
 
                     link_target = NULL;
-                    if (type_char == RSYNC_CHAR_HARDLINK) {
+                    if (action_char == RSYNC_CHAR_HARDLINK) {
                         char *sep;
                         cecup_action = UI_ACTION_HARDLINK;
 
@@ -663,8 +666,9 @@ work_rsync(void *user_data) {
                             link_target
                                 = sep + strlen32(RSYNC_HARDLINK_NOTATION);
                         }
-                    } else if (type_char == RSYNC_CHAR_SYMLINK
-                               || buffer_output[1] == RSYNC_CHAR_SYMLINK) {
+                    } else if ((action_char == RSYNC_CHAR_SYMLINK)
+                               || (buffer_output[RSYNC_INDEX_FILE_TYPE]
+                                   == RSYNC_CHAR_SYMLINK)) {
                         char *sep;
                         cecup_action = UI_ACTION_SYMLINK;
 
@@ -678,11 +682,12 @@ work_rsync(void *user_data) {
                         cecup_action = UI_ACTION_NEW;
                     }
 
-                    if (thread_data->is_preview == 0 && line_len > 11
-                        && buffer_output[1] == RSYNC_CHAR_FILE
-                        && (type_char == RSYNC_CHAR_RECEIVE
-                            || type_char == RSYNC_CHAR_CHANGE
-                            || type_char == RSYNC_CHAR_HARDLINK)) {
+                    if ((thread_data->is_preview == 0) && (line_len > 11)
+                        && (buffer_output[RSYNC_INDEX_FILE_TYPE]
+                            == RSYNC_CHAR_FILE)
+                        && ((action_char == RSYNC_CHAR_RECEIVE)
+                            || (action_char == RSYNC_CHAR_CHANGE)
+                            || (action_char == RSYNC_CHAR_HARDLINK))) {
 
                         if (checksum_count >= checksum_capacity) {
                             checksum_capacity = (checksum_capacity == 0)
