@@ -307,8 +307,8 @@ work_rsync(void *user_data) {
 
     char buf_output[MAX_PATH_LENGTH*2];
     int32 buf_output_pos = 0;
-    char buffer_error[MAX_PATH_LENGTH*2];
-    int32 buffer_error_pos = 0;
+    char buf_error[MAX_PATH_LENGTH*2];
+    int32 buf_error_pos = 0;
 
     char src_dir[MAX_PATH_LENGTH];
     char dst_dir[MAX_PATH_LENGTH];
@@ -711,8 +711,8 @@ work_rsync(void *user_data) {
             continue;
         }
 
-        r = read64(pipe_stderr[0], buffer_error + buffer_error_pos,
-                   SIZEOF(buffer_error) - buffer_error_pos - 1);
+        r = read64(pipe_stderr[0], buf_error + buf_error_pos,
+                   SIZEOF(buf_error) - buf_error_pos - 1);
         if (r <= 0) {
             if (r < 0) {
                 ipc_send_log_error("Error reading stderr pipe: %s.\n",
@@ -721,30 +721,30 @@ work_rsync(void *user_data) {
             }
             continue;
         }
-        buffer_error_pos += (int32)r;
+        buf_error_pos += (int32)r;
 
-        while (buffer_error_pos > 0
-               && ((eol = memchr64(buffer_error, '\n', buffer_error_pos))
-                   || (eol = memchr64(buffer_error, '\r', buffer_error_pos)))) {
-            int32 line_len = (int32)(eol - buffer_error);
+        while (buf_error_pos > 0
+               && ((eol = memchr64(buf_error, '\n', buf_error_pos))
+                   || (eol = memchr64(buf_error, '\r', buf_error_pos)))) {
+            int32 line_len = (int32)(eol - buf_error);
             int32 remaining;
             *eol = '\0';
 
-            if (buffer_error[0] != '\0') {
-                ipc_send_log_error("%s\n", buffer_error);
+            if (buf_error[0] != '\0') {
+                ipc_send_log_error("%s\n", buf_error);
             }
 
-            remaining = buffer_error_pos - (line_len + 1);
+            remaining = buf_error_pos - (line_len + 1);
             if (remaining > 0) {
-                memmove64(buffer_error, eol + 1, remaining);
+                memmove64(buf_error, eol + 1, remaining);
             }
-            buffer_error_pos = remaining;
+            buf_error_pos = remaining;
         }
 
-        if (buffer_error_pos >= (int32)SIZEOF(buffer_error) - 1) {
-            buffer_error[buffer_error_pos] = '\0';
-            ipc_send_log_error("%s\n", buffer_error);
-            buffer_error_pos = 0;
+        if (buf_error_pos >= (int32)SIZEOF(buf_error) - 1) {
+            buf_error[buf_error_pos] = '\0';
+            ipc_send_log_error("%s\n", buf_error);
+            buf_error_pos = 0;
         }
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
@@ -845,11 +845,10 @@ work_rsync(void *user_data) {
                 }
             }
             if (pipes[1].revents & POLLIN) {
-                r = read64(pipe_stderr[0], buffer_error,
-                           SIZEOF(buffer_error) - 1);
+                r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
                 if (r > 0) {
-                    buffer_error[r] = '\0';
-                    ipc_send_log_error("%s", buffer_error);
+                    buf_error[r] = '\0';
+                    ipc_send_log_error("%s", buf_error);
                 } else {
                     pipes[1].fd = -1;
                 }
@@ -965,9 +964,9 @@ work_rsync_bulk(void *user_data) {
         char *rsync_args[32];
         int32 a = 0;
         char buf_output[MAX_PATH_LENGTH*2];
-        char buffer_error[MAX_PATH_LENGTH*2];
+        char buf_error[MAX_PATH_LENGTH*2];
         int32 buf_output_pos = 0;
-        int32 buffer_error_pos = 0;
+        int32 buf_error_pos = 0;
 
         if (pipe(pipe_stdout) < 0) {
             error("Error creating pipe for stdout: %s.\n", strerror(errno));
@@ -1185,8 +1184,8 @@ work_rsync_bulk(void *user_data) {
                 continue;
             }
 
-            r = read64(pipe_stderr[0], buffer_error + buffer_error_pos,
-                       SIZEOF(buffer_error) - buffer_error_pos - 1);
+            r = read64(pipe_stderr[0], buf_error + buf_error_pos,
+                       SIZEOF(buf_error) - buf_error_pos - 1);
             if (r <= 0) {
                 if (r < 0) {
                     ipc_send_log_error("Error reading stderr pipe: %s.\n",
@@ -1195,23 +1194,22 @@ work_rsync_bulk(void *user_data) {
                 }
                 continue;
             }
-            buffer_error_pos += (int32)r;
+            buf_error_pos += (int32)r;
 
-            while (buffer_error_pos > 0
-                   && ((eol = memchr64(buffer_error, '\n', buffer_error_pos))
-                       || (eol
-                           = memchr64(buffer_error, '\r', buffer_error_pos)))) {
-                int32 line_len = (int32)(eol - buffer_error);
+            while (buf_error_pos > 0
+                   && ((eol = memchr64(buf_error, '\n', buf_error_pos))
+                       || (eol = memchr64(buf_error, '\r', buf_error_pos)))) {
+                int32 line_len = (int32)(eol - buf_error);
                 int32 remaining;
                 *eol = '\0';
 
-                ipc_send_log_error("%s\n", buffer_error);
+                ipc_send_log_error("%s\n", buf_error);
 
-                remaining = buffer_error_pos - (line_len + 1);
+                remaining = buf_error_pos - (line_len + 1);
                 if (remaining > 0) {
-                    memmove64(buffer_error, eol + 1, remaining);
+                    memmove64(buf_error, eol + 1, remaining);
                 }
-                buffer_error_pos = remaining;
+                buf_error_pos = remaining;
             }
 
         } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
