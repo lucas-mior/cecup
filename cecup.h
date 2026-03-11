@@ -315,8 +315,8 @@ static struct {
     char *problem;
     char *rename;
 } replacements[] = {
-    {"=>", "_equal_arrow_in_filename_"},
-    {"->", "_dash_arrow_in_filename_"},
+    {RSYNC_HARDLINK_NOTATION, "_rsync_hardlink_notation_in_filename_"},
+    {RSYNC_SYMLINK_NOTATION, "_rsync_symlink_notation_in_filename_"},
     {"\\", "_backslash_in_filename_"},
     {"\n", "_newline_in_filename_"},
     {"\"", "_double_quote_in_filename_"},
