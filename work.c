@@ -579,7 +579,7 @@ work_rsync(void *user_data) {
             if (thread_data->is_preview == 0) {
                 ipc_send_log("%s.\n", buffer_output);
             } else if (buffer_output[RSYNC_INDEX_ACTION] == RSYNC_CHAR_MESSAGE
-                       && strncmp(buffer_output + 1, "deleting", 8) == 0) {
+                       && strncmp(buffer_output, "*deleting", 9) == 0) {
                 char *relative_path = buffer_output + 10;
                 char full_src[MAX_PATH_LENGTH];
                 char full_dst[MAX_PATH_LENGTH];
