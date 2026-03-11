@@ -132,10 +132,12 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
     }
 
     if ((dir = opendir(full_path)) == NULL) {
-        error("Error opening directory %s: %s.\n", full_path, strerror(errno));
-        error("Warning: Problematic file names will not be renamed.\n");
-        error("This is only a problem if you have problematic filenames.\n");
-        error("Problematic filenames are the ones that contain the strings:\n");
+        error(_("Error opening directory %s: %s.\n"), full_path,
+              strerror(errno));
+        error(_("Warning: Problematic file names will not be renamed.\n"));
+        error(_("This is only a problem if you have problematic filenames.\n"));
+        error(_(
+            "Problematic filenames are the ones that contain the strings:\n"));
         for (int32 i = 0; i < LENGTH(replacements); i += 1) {
             error("\"%s\" ", replacements[i].problem);
         }
