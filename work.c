@@ -632,8 +632,7 @@ work_rsync(void *user_data) {
                                 = sep + strlen32(RSYNC_HARDLINK_NOTATION);
                         }
                     } else if ((action_char == RSYNC_CHAR_SYMLINK)
-                               || (buf_output[RSYNC_INDEX_FILE_TYPE]
-                                   == RSYNC_CHAR_SYMLINK)) {
+                               || (type_char == RSYNC_CHAR_SYMLINK)) {
                         char *sep;
                         cecup_action = UI_ACTION_SYMLINK;
 
@@ -648,8 +647,7 @@ work_rsync(void *user_data) {
                     }
 
                     if ((thread_data->is_preview == 0) && (line_len > 11)
-                        && (buf_output[RSYNC_INDEX_FILE_TYPE]
-                            == RSYNC_CHAR_FILE)
+                        && (type_char == RSYNC_CHAR_FILE)
                         && ((action_char == RSYNC_CHAR_RECEIVE)
                             || (action_char == RSYNC_CHAR_CHANGE)
                             || (action_char == RSYNC_CHAR_HARDLINK))) {
