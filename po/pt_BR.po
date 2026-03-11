@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 19:08-0300\n"
+"POT-Creation-Date: 2026-03-11 20:48-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -22,15 +22,15 @@ msgstr ""
 msgid "Already identical"
 msgstr "Já está igual"
 
-#: main.c:282
+#: main.c:284
 msgid "Analyzing changes"
 msgstr "Analisando mudanças"
 
-#: main.c:193
+#: main.c:195
 msgid "Cancel the current task"
 msgstr "Cancelar a tarefa atual"
 
-#: main.c:170
+#: main.c:172
 msgid "Check which files need to be copied or updated"
 msgstr "Verificar quais arquivos precisam ser copiados ou atualizados"
 
@@ -42,7 +42,7 @@ msgstr "Copiar do original"
 msgid "Copy to backup"
 msgstr "Copiar para o backup"
 
-#: main.c:278
+#: main.c:280
 msgid "Copying files"
 msgstr "Copiando arquivos"
 
@@ -62,36 +62,40 @@ msgstr "Criar atalho conforme original"
 msgid "Create symlink in backup"
 msgstr "Criar atalho no backup"
 
-#: main.c:239
+#: main.c:241
 msgid "Defaults"
 msgstr "Padrão"
 
-#: main.c:230
+#: main.c:232
 msgid "Delete files in backup that do not exist in the original"
 msgstr "Deletar arquivos do backup que não existem no original"
 
-#: main.c:251
+#: main.c:253
 msgid "Diff Tool:"
 msgstr "Ferramenta de comparação"
 
-#: on.c:790
+#: on.c:789
 msgid "Dst"
 msgstr "Backup"
 
-#: main.c:164
+#: main.c:166
 msgid "Edit Ignore Rules"
 msgstr "Editar Regras de Ignorados"
 
-#: main.c:172
+#: main.c:174
 msgid "Edit the list of filename patterns to ignore"
 msgstr "Editar a lista de padrões de nomes de arquivo para ignorar"
 
-#: on.c:1217
+#: work.c:135
+msgid "Error opening directory %s: %s.\n"
+msgstr "Error abrindo pasta %s: %s\n"
+
+#: on.c:1267
 #, c-format
 msgid "Error renaming %s: %s\n"
 msgstr "Error renomeando %s: %s\n"
 
-#: main.c:234
+#: main.c:236
 msgid "Executable used for comparing files"
 msgstr "Programa usado para comparar arquivos"
 
@@ -103,7 +107,7 @@ msgstr "Arquivo não existe na pasta original"
 msgid "Files have the same size and modification time"
 msgstr "Arquivos tem o mesmo tamanho e data de modificação"
 
-#: main.c:315
+#: main.c:317
 msgid "Folder containing your original files"
 msgstr "Pasta que contém seus arquivos originais"
 
@@ -115,15 +119,11 @@ msgstr "Pasta onde o backup será guardado"
 msgid "Hardlinked file in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
 
-#: on.c:641
+#: on.c:640
 msgid "Ignore Rules"
 msgstr "Regras de Ignorados"
 
-#: main.c:648
-msgid "Task"
-msgstr "Tarefa"
-
-#: main.c:329
+#: main.c:331
 msgid "Invert Original and Backup"
 msgstr "Inverter original e backup"
 
@@ -131,11 +131,11 @@ msgstr "Inverter original e backup"
 msgid "Matches an ignore rule"
 msgstr "Ignorado por regra de exclusão"
 
-#: main.c:683
+#: main.c:688
 msgid "Modification Time"
 msgstr "Data de modificação"
 
-#: main.c:662
+#: main.c:667
 msgid "Name"
 msgstr "Nome do arquivo"
 
@@ -147,24 +147,28 @@ msgstr "Novo arquivo encontrado na pasta original"
 msgid "Not found in original"
 msgstr "Não encontrado na pasta original"
 
-#: on.c:233
+#: on.c:232
 #, c-format
 msgid "Permanently delete %d item(s)?"
 msgstr "Excluir permanentemente %d arquivo(s)?"
 
-#: main.c:224
+#: main.c:226
 msgid "Prevent copying if original and backup are on the same disk"
 msgstr "Evitar cópia se o original e o backup estiverem no mesmo dispositivo"
 
-#: main.c:273
+#: main.c:275
 msgid "Preview analysis progress"
 msgstr "Progresso da análise da prévia"
 
-#: main.c:217
+#: work.c:140
+msgid "Problematic filenames are the ones that contain the strings:\n"
+msgstr "Nomes de arquivo problemáticos são aqueles que contém:\n"
+
+#: main.c:219
 msgid "Protect same-drive sync"
 msgstr "Impedir cópia no mesmo disco"
 
-#: main.c:227
+#: main.c:229
 msgid "Remove files from backup if they were added to the ignore list"
 msgstr "Exclui do backup arquivos que você marcou para serem ignorados"
 
@@ -172,28 +176,27 @@ msgstr "Exclui do backup arquivos que você marcou para serem ignorados"
 msgid "Remove from backup"
 msgstr "Excluir do backup"
 
-#: main.c:219
+#: main.c:221
 msgid "Remove ignored items"
 msgstr "Excluir itens ignorados"
 
-#: main.c:180
+#: main.c:182
 msgid "Rename problematic filenames, the ones containing:\n"
 msgstr "Renomear nomes de arquivo problemáticos, aqueles que contém:\n"
 
-#: on.c:1213
-#, c-format
+#: on.c:1263
 msgid "Renamed: %s -> %s\n"
-msgstr "Renomeado %s -> %s\n"
+msgstr "Renomeado: %s -> %s\n"
 
-#: main.c:240
+#: main.c:242
 msgid "Restore original settings"
 msgstr "Restaurar configurações originais"
 
-#: main.c:270
+#: main.c:272
 msgid "Rsync transfer progress"
 msgstr "Progresso de transferência do rsync"
 
-#: work.c:378
+#: work.c:343
 msgid ""
 "Safety stop: Original and backup are on the same storage device.\n"
 "Check if the backup device is connected.\n"
@@ -206,7 +209,7 @@ msgstr ""
 "Para forçar o backup em pasta do mesmo dispositivo, desmarcar opção "
 "\"Impedir cópia no mesmo disco\".\n"
 
-#: main.c:317 main.c:340
+#: main.c:319 main.c:340
 msgid "Select Folder"
 msgstr "Selecionar Pasta"
 
@@ -219,31 +222,31 @@ msgstr ""
 "Arquivos selecionados: %lld\n"
 "Tamanho total a copiar: 📦 %s"
 
-#: main.c:404
+#: main.c:409
 msgid "Show Deletions"
 msgstr "Mostrar exclusões"
 
-#: main.c:405
+#: main.c:410
 msgid "Show Ignored"
 msgstr "Mostrar ignorados"
 
-#: main.c:400
+#: main.c:405
 msgid "Show New Files"
 msgstr "Mostrar arquivos novos"
 
-#: main.c:402
+#: main.c:407
 msgid "Show Updates"
 msgstr "Mostrar arquivos atualizados"
 
-#: main.c:403
+#: main.c:408
 msgid "Show equals"
 msgstr "Mostrar iguais"
 
-#: main.c:401
+#: main.c:406
 msgid "Show links"
 msgstr "Mostrar links"
 
-#: main.c:672
+#: main.c:677
 msgid "Size"
 msgstr "Tamanho"
 
@@ -251,11 +254,11 @@ msgstr "Tamanho"
 msgid "Skip"
 msgstr "Pular"
 
-#: on.c:769
+#: on.c:768
 msgid "Src"
 msgstr "Original"
 
-#: main.c:196
+#: main.c:198
 msgid "Start copying and updating the selected files"
 msgstr "Iniciar a cópia e atualização dos arquivos selecionados"
 
@@ -263,20 +266,24 @@ msgstr "Iniciar a cópia e atualização dos arquivos selecionados"
 msgid "Symlink in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
 
-#: on.c:736
+#: on.c:735
 #, c-format
 msgid "Sync %s -> %s?"
 msgstr "Sincronizar %s -> %s?"
 
-#: main.c:220
+#: main.c:222
 msgid "Sync 100%"
 msgstr "Sincronia 100%"
 
-#: main.c:237
+#: main.c:653
+msgid "Task"
+msgstr "Tarefa"
+
+#: main.c:239
 msgid "Terminal emulator used to launch the diff tool"
 msgstr "Emulator de terminal usado para executar o programa de comparação"
 
-#: main.c:258
+#: main.c:260
 msgid "Terminal:"
 msgstr "Terminal:"
 
@@ -284,7 +291,11 @@ msgstr "Terminal:"
 msgid "The original file is newer"
 msgstr "O arquivo original é mais recente"
 
-#: aux.c:482
+#: work.c:138
+msgid "This is only a problem if you have problematic filenames.\n"
+msgstr "Isso só é um problema se você tem nomes de arquivo problemáticos.\n"
+
+#: aux.c:497
 msgid "Unknown modification time"
 msgstr "Data de modificação desconhecida"
 
@@ -296,7 +307,7 @@ msgstr "Atualizar arquivo no backup"
 msgid "Update from original"
 msgstr "Atualizar conforme arquivo da pasta original"
 
-#: on.c:415
+#: on.c:414
 #, c-format
 msgid ""
 "Warning: 'Sync 100%%' (delete-after) is enabled. Files in the backup folder "
@@ -305,92 +316,96 @@ msgstr ""
 "Atenção: 'Sincronia 100%%' (delete-after) está ativada. Arquivos na pasta de "
 "backup que não existem na pasta original serão EXCLUÍDOS PERMANENTEMENTE."
 
-#: on.c:770 on.c:791
+#: work.c:137
+msgid "Warning: Problematic file names will not be renamed.\n"
+msgstr "Aviso: Nomes de arquivo problemáticos não serão renomeados.\n"
+
+#: on.c:769 on.c:790
 msgid "_Cancel"
 msgstr ""
 
-#: on.c:642
+#: on.c:641
 msgid "_Close"
 msgstr ""
 
-#: on.c:642
+#: on.c:641
 msgid "_Save"
 msgstr ""
 
-#: on.c:771 on.c:792
+#: on.c:770 on.c:791
 msgid "_Select"
 msgstr "Selecionar Pasta"
 
-#: on.c:1012
+#: on.c:1039
 msgid "by extension"
 msgstr "pela extensão"
 
-#: on.c:1009
+#: on.c:1036
 #, c-format
 msgid "by extension (*%s)"
 msgstr "pela extensão (*%s)"
 
-#: main.c:194
+#: main.c:196
 msgid "⏩ Apply Changes"
 msgstr "⏩ Aplicar Mudanças"
 
-#: on.c:936
+#: on.c:46
 msgid "⏯️ Apply"
 msgstr "⏯️ Aplicar"
 
-#: main.c:191
+#: main.c:193
 msgid "⏹️ Stop"
 msgstr "⏹️ Parar"
 
-#: main.c:424
+#: main.c:429
 msgid "✅ Everything ready"
 msgstr "✅ Tudo pronto"
 
-#: on.c:943
+#: on.c:48
 msgid "✏️ Rename"
 msgstr "✏️ Renomear"
 
-#: on.c:941
+#: on.c:50
 msgid "💤 Ignore..."
 msgstr "💤 Ignorar..."
 
-#: on.c:1024 on.c:1028
+#: on.c:1051 on.c:1055
 msgid "📁 Dir"
 msgstr "📁 Pasta"
 
-#: on.c:1021
+#: on.c:1048
 #, c-format
 msgid "📁 Dir (/%s/)"
 msgstr "📁 Pasta (/%s/)"
 
-#: on.c:935
+#: on.c:43
 msgid "📂 Open Folder"
 msgstr "📂 Abrir Pasta"
 
-#: on.c:934
+#: on.c:42
 msgid "📄 Open File"
 msgstr "📄 Abrir arquivo"
 
-#: on.c:938
+#: on.c:44
 msgid "📋 Copy Relative Path"
 msgstr "📋 Copiar caminho relativo"
 
-#: on.c:940
+#: on.c:45
 msgid "📍 Copy Full Path"
 msgstr "📍 Copiar caminho completo"
 
-#: on.c:942
+#: on.c:47
 msgid "🔍 Diff"
 msgstr "🔍 Comparar"
 
-#: main.c:163
+#: main.c:165
 msgid "🔎 Analyze"
 msgstr "🔎 Analisar"
 
-#: on.c:944
+#: on.c:49
 msgid "🗑️ Delete"
 msgstr "🗑️ Excluir"
 
-#: main.c:166
+#: main.c:168
 msgid "🛠️ Rename problematic files"
 msgstr "🛠️ Corrigir nomes problemáticos"
