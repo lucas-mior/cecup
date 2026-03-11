@@ -40,49 +40,6 @@
 #define TESTING_work 0
 #endif
 
-enum RsyncCharAction {
-    RSYNC_CHAR_SEND = '<',
-    RSYNC_CHAR_RECEIVE = '>',
-    RSYNC_CHAR_CHANGE = 'c',
-    RSYNC_CHAR_HARDLINK = 'h',
-    RSYNC_CHAR_NO_UPDATE = '.',
-    RSYNC_CHAR_MESSAGE = '*',
-};
-
-enum RsyncCharType {
-    RSYNC_CHAR_FILE = 'f',
-    RSYNC_CHAR_DIR = 'd',
-    RSYNC_CHAR_SYMLINK = 'L',
-    RSYNC_CHAR_DEVICE = 'D',
-    RSYNC_CHAR_SPECIAL = 'S',
-};
-
-enum RsyncCharAttribute {
-    RSYNC_CHAR_CHECKSUM = 'c',
-    RSYNC_CHAR_SIZE = 's',
-    RSYNC_CHAR_TIME = 't',
-    RSYNC_CHAR_PERM = 'p',
-    RSYNC_CHAR_OWNER = 'o',
-    RSYNC_CHAR_GROUP = 'g',
-    RSYNC_CHAR_ACL = 'a',
-    RSYNC_CHAR_XATTR = 'x'
-};
-
-#define RSYNC_INDEX_ACTION 0
-#define RSYNC_INDEX_FILE_TYPE 1
-
-#define RSYNC_MESSAGE_DELETING "*deleting"
-
-/* for ignored files on the source, rsync --verbose --verbose outputs:
- * [sender] hiding file <filename> because of pattern <pattern>
- */
-#define RSYNC_IGNORE_PRE "[sender] hiding file "
-#define RSYNC_IGNORE_INTER " because of pattern "
-
-#define RSYNC_HARDLINK_NOTATION " => "
-#define RSYNC_SYMLINK_NOTATION " -> "
-#define BATCH_SIZE 256
-
 static int64
 work_count_files_recursive(char *base_path, char *relative_path) {
     DIR *dir;
