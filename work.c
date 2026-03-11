@@ -71,13 +71,16 @@ enum RsyncCharAttribute {
 #define RSYNC_INDEX_ACTION 0
 #define RSYNC_INDEX_FILE_TYPE 1
 
+#define RSYNC_MESSAGE_DELETING "*deleting"
+
+/* for ignored files on the source, rsync --verbose --verbose outputs:
+ * [sender] hiding file <filename> because of pattern <pattern>
+ */
+#define RSYNC_IGNORE_PRE "[sender] hiding file "
+#define RSYNC_IGNORE_INTER " because of pattern "
+
 #define RSYNC_HARDLINK_NOTATION " => "
 #define RSYNC_SYMLINK_NOTATION " -> "
-#define RSYNC_UNIVERSAL_ARGS "--verbose --update --recursive" \
-                             " --partial --progress --info=progress2" \
-                             " --links --hard-links --itemize-changes" \
-                             " --perms --times --owner --group"
-#define MAX_COMMAND_LENGTH (MAX_PATH_LENGTH*2 + strlen32(RSYNC_UNIVERSAL_ARGS)*2)
 #define BATCH_SIZE 256
 
 static int64
@@ -579,8 +582,10 @@ work_rsync(void *user_data) {
             if (thread_data->is_preview == 0) {
                 ipc_send_log("%s.\n", buffer_output);
             } else if (buffer_output[RSYNC_INDEX_ACTION] == RSYNC_CHAR_MESSAGE
-                       && strncmp(buffer_output, "*deleting", 9) == 0) {
-                char *relative_path = buffer_output + 10;
+                       && literal_match(buffer_output,
+                                        RSYNC_MESSAGE_DELETING)) {
+                char *relative_path
+                    = buffer_output + strlen32(RSYNC_MESSAGE_DELETING);
                 char full_src[MAX_PATH_LENGTH];
                 char full_dst[MAX_PATH_LENGTH];
                 struct stat stat_src_local;
@@ -612,17 +617,17 @@ work_rsync(void *user_data) {
 
                 ipc_send_tree(SIDE_RIGHT, UI_ACTION_DELETE, deletion_reason,
                               relative_path, NULL, NULL, size_val, time_val);
-            } else if (strncmp(buffer_output, "[sender] hiding file ", 21)
-                       == 0) {
-                char *hiding_filename = buffer_output + 21;
+            } else if (literal_match(buffer_output, RSYNC_IGNORE_PRE)) {
+                char *hiding_filename
+                    = buffer_output + strlen32(RSYNC_IGNORE_PRE);
                 char *reason_sep;
                 char *ignore_pattern = NULL;
                 struct stat st_hiding;
 
                 if ((reason_sep
-                     = strstr(hiding_filename, " because of pattern "))) {
+                     = strstr(hiding_filename, RSYNC_IGNORE_INTER))) {
                     *reason_sep = '\0';
-                    ignore_pattern = reason_sep + 20;
+                    ignore_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
 
                     SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
                              hiding_filename);
