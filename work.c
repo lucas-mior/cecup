@@ -423,7 +423,7 @@ work_rsync(void *user_data) {
     rsync_args[a++] = NULL;
 
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-    ipc_send_log("+ %s\n", cmd);
+    ipc_send_log_cmd("%s\n", cmd);
 
     switch (child_pid = fork()) {
     case -1:
@@ -536,7 +536,7 @@ work_rsync(void *user_data) {
             }
 
             if (thread_data->is_preview == 0) {
-                ipc_send_log("%s.\n", buf_output);
+                ipc_send_log("%s\n", buf_output);
             }
 
             if (literal_match(buf_output, RSYNC_MESSAGE_DELETING)) {
@@ -777,7 +777,7 @@ work_rsync(void *user_data) {
 
         ipc_send_log("Verifying transfers with checksum...\n");
         STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-        ipc_send_log("+ %s\n", cmd);
+        ipc_send_log_cmd("%s\n", cmd);
 
         if (pipe(pipe_stdout) < 0) {
             error("Error creating pipe for stdout: %s.\n", strerror(errno));
@@ -1009,7 +1009,7 @@ work_rsync_bulk(void *user_data) {
         {
             char cmd[MAX_PATH_LENGTH*2];
             STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-            ipc_send_log("+ %s\n", cmd);
+            ipc_send_log_cmd("%s\n", cmd);
         }
 
         switch (child_pid = fork()) {

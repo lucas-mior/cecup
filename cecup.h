@@ -146,6 +146,7 @@ typedef struct CecupRow {
 enum DataType {
     DATA_TYPE_LOG,
     DATA_TYPE_LOG_ERROR,
+    DATA_TYPE_LOG_CMD,
     DATA_TYPE_TREE_ROW,
     DATA_TYPE_REMOVE_TREE_ROW,
     DATA_TYPE_ENABLE_BUTTONS,

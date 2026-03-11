@@ -94,6 +94,16 @@ ipc_send_log_error(char *format, ...) {
 }
 
 static void
+ipc_send_log_cmd(char *format, ...) {
+    va_list va_args;
+
+    va_start(va_args, format);
+    ipc_send_log_internal(DATA_TYPE_LOG_CMD, format, va_args);
+    va_end(va_args);
+    return;
+}
+
+static void
 ipc_send_progress(enum DataType type, double fraction) {
     Message *message;
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
