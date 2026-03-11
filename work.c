@@ -609,6 +609,32 @@ work_rsync(void *user_data) {
 
                 ipc_send_tree(SIDE_RIGHT, UI_ACTION_DELETE, deletion_reason,
                               relative_path, NULL, size_val, time_val);
+            } else if (strncmp(buffer_output, "[sender] hiding file ", 21)
+                       == 0) {
+                char *hiding_filename = buffer_output + 21;
+                char *reason_sep;
+                struct stat st_hiding;
+
+                if ((reason_sep
+                     = strstr(hiding_filename, " because of pattern "))) {
+                    *reason_sep = '\0';
+
+                    SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
+                             hiding_filename);
+
+                    if (lstat(full_src_path_val, &st_hiding) == 0) {
+                        size_path_val = st_hiding.st_size;
+                        mtime_path_val = (int64)st_hiding.st_mtime;
+                    }
+
+                    // Note: NEVER delete lines with // clang-format
+                    // clang-format off
+                    ipc_send_tree(SIDE_LEFT,
+                                  UI_ACTION_IGNORE, UI_REASON_IGNORED,
+                                  hiding_filename, NULL,
+                                  size_path_val, mtime_path_val);
+                    // clang-format on
+                }
             } else if ((space_pos = strchr(buffer_output, ' '))) {
                 char type_char = buffer_output[0];
                 if ((type_char == RSYNC_CHAR_RECEIVE)

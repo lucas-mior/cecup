@@ -442,12 +442,20 @@ update_ui_handler(void *data) {
             src_background_color = "#F0F0F0";
             dst_background_color = "#F0F0F0";
             break;
+        case UI_ACTION_IGNORE:
         case UI_ACTION_DELETE:
             if (message->reason == UI_REASON_IGNORED) {
                 src_background_color = "#FFF3CD";
-                dst_background_color = "#FFF3CD";
                 src_action = UI_ACTION_IGNORE;
-                dst_action = UI_ACTION_DELETE;
+
+                if (gtk_toggle_button_get_active(
+                        GTK_TOGGLE_BUTTON(cecup.delete_excluded))) {
+                    dst_background_color = "#FFF3CD";
+                    dst_action = UI_ACTION_DELETE;
+                } else {
+                    dst_background_color = "#F0F0F0";
+                    dst_action = UI_ACTION_IGNORE;
+                }
             } else {
                 dst_background_color = "#F8D7DA";
                 src_action = UI_ACTION_DELETED;
@@ -456,7 +464,6 @@ update_ui_handler(void *data) {
             }
             break;
         case UI_ACTION_DELETED:
-        case UI_ACTION_IGNORE:
         case NUM_UI_ACTIONS:
         default:
             error("Invalid message->action: %u\n", message->action);
