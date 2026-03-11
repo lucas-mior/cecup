@@ -522,6 +522,9 @@ work_rsync(void *user_data) {
             int32 line_len = (int32)(eol - buf_output);
             int32 remaining;
 
+            char action_char = buf_output[RSYNC_INDEX_ACTION];
+            char type_char = buf_output[RSYNC_INDEX_FILE_TYPE];
+
             *eol = '\0';
 
             {
@@ -603,8 +606,6 @@ work_rsync(void *user_data) {
                     // clang-format on
                 }
             } else if ((space_pos = strchr(buf_output, ' '))) {
-                char action_char = buf_output[RSYNC_INDEX_ACTION];
-                char type_char = buf_output[RSYNC_INDEX_FILE_TYPE];
                 if ((action_char == RSYNC_CHAR_RECEIVE)
                     || (action_char == RSYNC_CHAR_HARDLINK)
                     || (action_char == RSYNC_CHAR_CHANGE)
