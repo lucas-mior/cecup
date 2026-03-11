@@ -120,7 +120,7 @@ msgid "Ignore Rules"
 msgstr "Regras de Ignorados"
 
 #: main.c:648
-msgid "Intended Task"
+msgid "Task"
 msgstr "Tarefa"
 
 #: main.c:329
