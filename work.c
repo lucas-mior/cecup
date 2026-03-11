@@ -425,6 +425,7 @@ work_rsync(void *user_data) {
 
     rsync_args[a++] = "rsync";
     rsync_args[a++] = "--verbose";
+    rsync_args[a++] = "--verbose";  // 2 times to show ignored files
     rsync_args[a++] = "--update";
     rsync_args[a++] = "--recursive";
     rsync_args[a++] = "--partial";
