@@ -32,7 +32,6 @@
 #include <pthread.h>
 #include <limits.h>
 #include <sys/stat.h>
-#include <assert.h>
 #include <float.h>
 
 #include "generic.c"
@@ -74,6 +73,10 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <poll.h>
+#endif
+
+#if OS_MAC
+#include <sys/param.h>
 #endif
 
 #if !defined(DEBUGGING)
@@ -137,6 +140,10 @@ _Generic((ARRAY), \
 
 #if !defined(DEBUGGING)
 #define DEBUGGING 0
+#endif
+
+#ifndef RELEASING
+#define RELEASING 0
 #endif
 
 #include "assert.c"
@@ -801,7 +808,7 @@ util_filename_from(char *buffer, int64 size, int fd) {
     buffer[len] = '\0';
     return 0;
 #elif OS_MAC
-    static char buffer2[PATH_MAX];
+    static char buffer2[MAXPATHLEN];
     int64 len;
 
     if (fcntl(fd, F_GETPATH, buffer2) < 0) {
@@ -881,15 +888,15 @@ xunlink(char *filename) {
 #if OS_WINDOWS
 static int
 util_command(int argc, char **argv) {
-    char cmdline[1024] = {0};
+    char cmdline[BUFSIZ] = {0};
     FILE *tty;
     PROCESS_INFORMATION proc_info = {0};
     DWORD exit_code = 0;
-    int64 len = strlen64(argv[0]);
+    int64 len0 = strlen64(argv[0]);
     char argv0_windows[BUFSIZ];
     char *argv0 = argv[0];
 
-    if (len >= BUFSIZ) {
+    if (len0 >= BUFSIZ) {
         error("Invalid arguments.\n");
         fatal(EXIT_FAILURE);
     }
@@ -902,9 +909,9 @@ util_command(int argc, char **argv) {
     {
         char *exe = ".exe";
         int64 exe_len = (int64)(strlen64(exe));
-        if (memmem64(argv[0], len + 1, exe, exe_len + 1) == NULL) {
-            memcpy64(argv0_windows, argv[0], len);
-            memcpy64(argv0_windows + len, exe, exe_len + 1);
+        if (memmem64(argv[0], len0 + 1, exe, exe_len + 1) == NULL) {
+            memcpy64(argv0_windows, argv[0], len0);
+            memcpy64(argv0_windows + len0, exe, exe_len + 1);
             argv[0] = argv0_windows;
         }
     }
@@ -913,7 +920,7 @@ util_command(int argc, char **argv) {
         int64 j = 0;
         for (int i = 0; i < argc - 1; i += 1) {
             int64 len2 = strlen64(argv[i]);
-            if ((j + len2) >= (int64)sizeof(cmdline)) {
+            if ((j + len2) >= SIZEOF(cmdline)) {
                 error("Command line is too long.\n");
                 fatal(EXIT_FAILURE);
             }
@@ -1007,6 +1014,7 @@ util_command(int argc, char **argv) {
         return WEXITSTATUS(status);
     }
 }
+
 static int
 util_command_launch(int argc, char **argv) {
     (void)argc;
@@ -1056,23 +1064,40 @@ GENERATE_STRING_FROM_ARRAY(doubles, double *, "%f")
 void __attribute__((format(printf, 1, 2)))
 error(char *format, ...) {
     char buffer[BUFSIZ];
+    char *big_buffer = NULL;
+    char *pbuffer = buffer;
     va_list args;
     int64 n;
+    int64 m = SIZEOF(buffer);
 
     va_start(args, format);
-    n = vsnprintf(buffer, sizeof(buffer), format, args);
+    n = vsnprintf(buffer, (size_t)m, format, args);
+
+    if (n >= SIZEOF(buffer)) {
+        if (RELEASING) {
+            m = n + 1;
+            big_buffer = xmalloc(m);
+            n = vsnprintf(big_buffer, (size_t)m, format, args);
+            pbuffer = big_buffer;
+        } else {
+            fprintf(stderr, "Error in vsnprintf(\"%s\") (n = %lld).\n", format,
+                    (llong)n);
+            fatal(EXIT_FAILURE);
+        }
+    }
+
     va_end(args);
 
-    if ((n < 0) || (n >= SIZEOF(buffer))) {
-        fprintf(stderr, "Error in vsnprintf(%s) (n = %lld\n", format, (llong)n);
+    if ((n < 0) || (n >= m)) {
+        fprintf(stderr, "Error in vsnprintf(\"%s\") (n = %lld).\n", format,
+                (llong)n);
         fatal(EXIT_FAILURE);
     }
 
-    buffer[n] = '\0';
 #if OS_WINDOWS
-    write(STDERR_FILENO, buffer, (uint)n);
+    write(STDERR_FILENO, pbuffer, (uint)n);
 #else
-    write(STDERR_FILENO, buffer, (size_t)n);
+    write(STDERR_FILENO, pbuffer, (size_t)n);
     fsync(STDERR_FILENO);
     fsync(STDOUT_FILENO);
 #endif
@@ -1085,7 +1110,7 @@ error(char *format, ...) {
     case 0:
         for (uint32 i = 0; i < LENGTH(notifiers); i += 1) {
             execlp(notifiers[i], notifiers[i], "-u", "critical", program,
-                   buffer, NULL);
+                   pbuffer, NULL);
         }
         fprintf(stderr, "Error executing notifier: %s.\n", strerror(errno));
         exit(EXIT_FAILURE);
@@ -1097,6 +1122,9 @@ error(char *format, ...) {
     }
 #endif
 
+    if (big_buffer) {
+        free(big_buffer);
+    }
     return;
 }
 
@@ -1575,7 +1603,7 @@ static int64
 bytes_pretty(char *buffer, int64 raw) {
     char *suffixes[] = {"B", "kB", "MB", "GB", "TB", "PB"};
     double aux_pretty;
-    int i;
+    int64 i;
     int32 n;
 
     if (raw <= 1023) {
@@ -1585,8 +1613,8 @@ bytes_pretty(char *buffer, int64 raw) {
 
     aux_pretty = (double)raw;
     i = 0;
-    while ((aux_pretty >= 1024) && (i < LENGTH(suffixes))) {
-        aux_pretty /= 1024;
+    while ((aux_pretty >= 1024.0) && (i < LENGTH(suffixes))) {
+        aux_pretty /= 1024.0;
         i += 1;
     }
 
@@ -1720,19 +1748,19 @@ main(int argc, char **argv) {
 
         WRITE_FILE(a, "hello world");
         WRITE_FILE(b, "hello world");
-        assert(util_equal_files(a, b));
+        ASSERT(util_equal_files(a, b));
 
         WRITE_FILE(a, "hello world");
         WRITE_FILE(b, "hello worlx");
-        assert(!util_equal_files(a, b));
+        ASSERT(!util_equal_files(a, b));
 
         WRITE_FILE(a, "short");
         WRITE_FILE(b, "shorter");
-        assert(!util_equal_files(a, b));
+        ASSERT(!util_equal_files(a, b));
 
         WRITE_FILE(a, "");
         WRITE_FILE(b, "");
-        assert(util_equal_files(a, b));
+        ASSERT(util_equal_files(a, b));
 
         /* Uncomment below to trigger error */
         /* WRITE_FILE(a, "data"); */
