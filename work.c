@@ -640,7 +640,6 @@ work_rsync(void *user_data) {
             } else if ((space_pos = strchr(buffer_output, ' '))) {
                 char type_char = buffer_output[0];
                 if ((type_char == RSYNC_CHAR_RECEIVE)
-                    || (type_char == RSYNC_CHAR_NO_UPDATE)
                     || (type_char == RSYNC_CHAR_HARDLINK)
                     || (type_char == RSYNC_CHAR_CHANGE)
                     || (type_char == RSYNC_CHAR_SYMLINK)) {
