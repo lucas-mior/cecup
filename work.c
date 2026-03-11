@@ -642,10 +642,12 @@ work_rsync(void *user_data) {
                 }
             } else if ((space_pos = strchr(buffer_output, ' '))) {
                 char action_char = buffer_output[RSYNC_INDEX_ACTION];
+                char type_char = buffer_output[RSYNC_INDEX_FILE_TYPE];
                 if ((action_char == RSYNC_CHAR_RECEIVE)
                     || (action_char == RSYNC_CHAR_HARDLINK)
                     || (action_char == RSYNC_CHAR_CHANGE)
-                    || (action_char == RSYNC_CHAR_SYMLINK)) {
+                    || (action_char == RSYNC_CHAR_SYMLINK)
+                    || (type_char == RSYNC_CHAR_DIR)) {
 
                     char *relative_path_entry = space_pos + 1;
                     enum CecupAction cecup_action = UI_ACTION_UPDATE;
