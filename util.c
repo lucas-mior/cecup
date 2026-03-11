@@ -125,7 +125,7 @@ static void __attribute__((format(printf, 1, 2))) error(char *format, ...);
 #endif
 
 #define STRUCT_ARRAY_SIZE(struct_object, ArrayType, array_length) \
-    (uint32)(SIZEOF(*(struct_object)) + (array_length*SIZEOF(ArrayType)))
+    (int64)(SIZEOF(*(struct_object)) + (array_length*SIZEOF(ArrayType)))
 
 #define SWAP(x, y) do { __typeof__(x) SWAP = x; x = y; y = SWAP; } while (0)
 
@@ -476,17 +476,17 @@ qsort64(void *base, int64 n, int64 size,
 }
 
 #if OS_WINDOWS
-static uint32
+static int32
 util_nthreads(void) {
     SYSTEM_INFO sysinfo;
     memset64(&sysinfo, 0, SIZEOF(sysinfo));
     GetSystemInfo(&sysinfo);
-    return sysinfo.dwNumberOfProcessors;
+    return (int32)sysinfo.dwNumberOfProcessors;
 }
 #else
-static uint32
+static int32
 util_nthreads(void) {
-    return (uint32)sysconf(_SC_NPROCESSORS_ONLN);
+    return (int32)sysconf(_SC_NPROCESSORS_ONLN);
 }
 #endif
 
@@ -834,6 +834,7 @@ util_filename_from(char *buffer, int64 size, int fd) {
 #else
     (void)size;
     (void)fd;
+    (void)buffer;
     return -1;
 #endif
 }
