@@ -194,8 +194,8 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(cecup.stop_button,
                                 _("Cancel the current task"));
     cecup.sync_button = gtk_button_new_with_label(_("⏩ Apply Changes"));
-    gtk_widget_set_tooltip_text(
-        cecup.sync_button, _("Start copying and updating the selected files"));
+    gtk_widget_set_tooltip_text(cecup.sync_button,
+                                _("Start copying and updating all files"));
     gtk_widget_set_sensitive(cecup.stop_button, FALSE);
 
     // Note: NEVER delete lines with // clang-format

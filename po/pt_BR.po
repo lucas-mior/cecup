@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-11 20:48-0300\n"
+"POT-Creation-Date: 2026-03-11 20:51-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -87,6 +87,7 @@ msgid "Edit the list of filename patterns to ignore"
 msgstr "Editar a lista de padrões de nomes de arquivo para ignorar"
 
 #: work.c:135
+#, c-format
 msgid "Error opening directory %s: %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
@@ -185,6 +186,7 @@ msgid "Rename problematic filenames, the ones containing:\n"
 msgstr "Renomear nomes de arquivo problemáticos, aqueles que contém:\n"
 
 #: on.c:1263
+#, c-format
 msgid "Renamed: %s -> %s\n"
 msgstr "Renomeado: %s -> %s\n"
 
@@ -259,8 +261,8 @@ msgid "Src"
 msgstr "Original"
 
 #: main.c:198
-msgid "Start copying and updating the selected files"
-msgstr "Iniciar a cópia e atualização dos arquivos selecionados"
+msgid "Start copying and updating all files"
+msgstr "Iniciar a cópia e atualização de todos os arquivos"
 
 #: cecup.h:102
 msgid "Symlink in the original folder"
