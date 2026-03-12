@@ -5,6 +5,7 @@ debug
 # install
 # uninstall
 benchmark
+callgrind
 # perf
 # valgrind
 # test_all

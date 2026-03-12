@@ -82,6 +82,10 @@ case "$target" in
     CFLAGS="$CFLAGS -g -O0 -ftree-vectorize"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     ;;
+"callgrind") 
+    CFLAGS="$CFLAGS -g -O0 -ftree-vectorize"
+    CPPFLAGS="$CPPFLAGS $GNUSOURCE"
+    ;;
 "test")
     CFLAGS="$CFLAGS -g $GNUSOURCE -DDEBUGGING=1 -fsanitize=undefined"
     ;;
@@ -162,7 +166,7 @@ if [ "$CC" = "clang" ]; then
 fi
 
 case "$target" in
-"build"|"debug"|"valgrind")
+"build"|"debug"|"valgrind"|"callgrind")
     trace_on
 
     if [ ! -d "po" ]; then
@@ -275,6 +279,14 @@ case "$target" in
     trace_on
     valgrind $vg_flags -s --tool=memcheck bin/$program 2>&1 \
         | tee "valgrind_output_$(date +%s).txt"
+    trace_off
+    exit
+    ;;
+"callgrind")
+    out="callgrind_$(date +%s).txt"
+    trace_on
+    valgrind --tool=callgrind --callgrind-out-file="$out" bin/$program
+    kcachegrind "$out"
     trace_off
     exit
     ;;
