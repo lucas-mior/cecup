@@ -639,8 +639,12 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     GtkCellRenderer *renderer_toggle = gtk_cell_renderer_toggle_new();
     GtkCellRenderer *renderer_text = gtk_cell_renderer_text_new();
     GtkCellRenderer *renderer_path = gtk_cell_renderer_text_new();
-    GtkTreeViewColumn *column = gtk_tree_view_column_new();
+    GtkTreeViewColumn *column;
 
+    gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(tree), TRUE);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_column_pack_start(column, renderer_toggle, TRUE);
     gtk_tree_view_column_set_cell_data_func(
         column, renderer_toggle, cell_data_func, GINT_TO_POINTER(COL_SELECTED),
@@ -653,6 +657,7 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     g_object_set(renderer_text, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
 
     column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_column_set_title(column, _("Task"));
     gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
     gtk_tree_view_column_set_cell_data_func(
@@ -667,6 +672,7 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     g_signal_connect(renderer_path, "edited", G_CALLBACK(on_path_edited), tree);
 
     column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_column_set_title(column, _("Name"));
     gtk_tree_view_column_pack_start(column, renderer_path, TRUE);
     gtk_tree_view_column_set_cell_data_func(
@@ -677,6 +683,7 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_column_set_title(column, _("Size"));
     gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
     gtk_tree_view_column_set_cell_data_func(
@@ -688,6 +695,7 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_column_set_title(column, _("Modification Time"));
     gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
     gtk_tree_view_column_set_cell_data_func(
