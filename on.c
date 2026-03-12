@@ -470,7 +470,6 @@ on_preview_clicked(GtkWidget *b, void *data) {
 
     cecup_get_dirs();
 
-    cecup.cancel_sync = 0;
     gtk_widget_set_sensitive(cecup.preview_button, FALSE);
     gtk_widget_set_sensitive(cecup.sync_button, FALSE);
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
@@ -480,7 +479,7 @@ on_preview_clicked(GtkWidget *b, void *data) {
     memset64(thread_data, 0, SIZEOF(*thread_data));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    thread_data->is_preview = 1;
+    thread_data->is_preview = true;
     thread_data->check_different_fs
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
     thread_data->delete_excluded = gtk_toggle_button_get_active(
@@ -518,7 +517,7 @@ on_sync_clicked(GtkWidget *b, void *data) {
         memset64(thread_data, 0, SIZEOF(*thread_data));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
-        thread_data->is_preview = 0;
+        thread_data->is_preview = false;
         thread_data->check_different_fs
             = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
         thread_data->delete_after = gtk_toggle_button_get_active(

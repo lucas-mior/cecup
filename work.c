@@ -540,7 +540,7 @@ work_rsync(void *user_data) {
                 }
             }
 
-            if (thread_data->is_preview == 0) {
+            if (!thread_data->is_preview) {
                 ipc_send_log("%s\n", buf_output);
             }
 
