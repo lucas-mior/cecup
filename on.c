@@ -275,10 +275,13 @@ on_menu_diff(GtkWidget *m, void *data) {
                 path_src = xmalloc(size_src);
                 path_dst = xmalloc(size_dst);
 
-                snprintf2(path_src, size_src, "%s/%s", cecup.src_base,
-                          task->filepath);
-                snprintf2(path_dst, size_dst, "%s/%s", cecup.dst_base,
-                          task->filepath);
+                // Note: NEVER delete lines with // clang-format
+                // clang-format off
+                snprintf2(path_src, size_src,
+                          "%s/%s", cecup.src_base, task->filepath);
+                snprintf2(path_dst, size_dst,
+                          "%s/%s", cecup.dst_base, task->filepath);
+                // clang-format on
 
                 {
                     char buffer[MAX_PATH_LENGTH*2];
