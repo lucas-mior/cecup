@@ -545,6 +545,7 @@ work_rsync(void *user_data) {
 
             bool might_be_itemize_line = true;
 
+            *eol = '\0';
             ipc_send_log("%s\n", buf_output);
 
             switch (action_char) {
@@ -555,7 +556,9 @@ work_rsync(void *user_data) {
             case RSYNC_CHAR_NO_UPDATE:
                 break;
             default:
+                PRINTLN(buf_output[0]);
                 might_be_itemize_line = false;
+                break;
             }
 
             switch (type_char) {
@@ -567,9 +570,14 @@ work_rsync(void *user_data) {
                 break;
             default:
                 might_be_itemize_line = false;
+                break;
             }
 
             for (int i = 2; i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS); i += 1) {
+                if (!might_be_itemize_line) {
+                    break;
+                }
+
                 switch (buf_output[i]) {
                 case RSYNC_CHAR_CHECKSUM:
                 case RSYNC_CHAR_SIZE:
@@ -586,16 +594,11 @@ work_rsync(void *user_data) {
                     might_be_itemize_line = false;
                     break;
                 }
-                if (!might_be_itemize_line) {
-                    break;
-                }
             }
 
             if (buf_output[strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)] != ' ') {
                 might_be_itemize_line = false;
             }
-
-            *eol = '\0';
 
             {
                 char *percent_pos;
