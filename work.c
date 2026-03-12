@@ -394,14 +394,8 @@ work_rsync(void *user_data) {
         goto finalize;
     }
 
-    if (pipe(pipe_stdout) < 0) {
-        error("Error creating pipe for stdout: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
-    if (pipe(pipe_stderr) < 0) {
-        error("Error creating pipe for stderr: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
+    xpipe(pipe_stdout);
+    xpipe(pipe_stderr);
 
     rsync_args[a++] = "rsync";
     rsync_args[a++] = "--verbose";
@@ -934,18 +928,9 @@ work_rsync(void *user_data) {
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
     ipc_send_log_cmd("%s\n", cmd);
 
-    if (pipe(pipe_stdout) < 0) {
-        error("Error creating pipe for stdout: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
-    if (pipe(pipe_stderr) < 0) {
-        error("Error creating pipe for stderr: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
-    if (pipe(pipe_stdin) < 0) {
-        error("Error creating pipe for stdin: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
+    xpipe(pipe_stdout);
+    xpipe(pipe_stderr);
+    xpipe(pipe_stdin);
 
     switch (child_pid = fork()) {
     case -1:
@@ -1158,18 +1143,9 @@ work_rsync_bulk(void *user_data) {
         goto finalize;
     }
 
-    if (pipe(pipe_stdout) < 0) {
-        error("Error creating pipe for stdout: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
-    if (pipe(pipe_stderr) < 0) {
-        error("Error creating pipe for stderr: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
-    if (pipe(pipe_stdin) < 0) {
-        error("Error creating pipe for stdin: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
+    xpipe(pipe_stdout);
+    xpipe(pipe_stderr);
+    xpipe(pipe_stdin);
 
     SNPRINTF(dst_directory, "%s/", cecup.dst_base);
 
