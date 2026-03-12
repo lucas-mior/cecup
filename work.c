@@ -438,8 +438,10 @@ work_rsync(void *user_data) {
             fatal(EXIT_FAILURE);
         }
         putenv("LC_ALL=C");
+
         XCLOSE(&pipe_stdout[0]);
         XCLOSE(&pipe_stderr[0]);
+
         if (dup2(pipe_stdout[1], STDOUT_FILENO) < 0) {
             error("Error dup2 stdout: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
@@ -448,15 +450,16 @@ work_rsync(void *user_data) {
             error("Error dup2 stderr: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-        XCLOSE(&pipe_stdout[1]);
+
         XCLOSE(&pipe_stderr[1]);
+        XCLOSE(&pipe_stdout[1]);
 
         execvp(rsync_args[0], rsync_args);
         error("Error executing\n%s\n%s.", cmd, strerror(errno));
         _exit(EXIT_FAILURE);
     default:
-        XCLOSE(&pipe_stdout[1]);
         XCLOSE(&pipe_stderr[1]);
+        XCLOSE(&pipe_stdout[1]);
         break;
     }
 
@@ -781,8 +784,8 @@ work_rsync(void *user_data) {
         ipc_send_log_error("Error waiting for child: %s.\n", strerror(errno));
     }
 
-    XCLOSE(&pipe_stdout[0]);
     XCLOSE(&pipe_stderr[0]);
+    XCLOSE(&pipe_stdout[0]);
 
     if ((checksum_count <= 0) || cecup.cancel_sync) {
         goto finalize;
@@ -830,24 +833,24 @@ work_rsync(void *user_data) {
         setpgid(0, 0);
         putenv("LC_ALL=C");
 
+        XCLOSE(&pipe_stderr[0]);
         XCLOSE(&pipe_stdin[1]);
         XCLOSE(&pipe_stdout[0]);
-        XCLOSE(&pipe_stderr[0]);
 
         dup2(pipe_stdin[0], STDIN_FILENO);
         dup2(pipe_stdout[1], STDOUT_FILENO);
         dup2(pipe_stderr[1], STDERR_FILENO);
 
+        XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdin[0]);
         XCLOSE(&pipe_stdout[1]);
-        XCLOSE(&pipe_stderr[1]);
 
         execvp("rsync", rsync_args);
         _exit(EXIT_FAILURE);
     default:
+        XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdin[0]);
         XCLOSE(&pipe_stdout[1]);
-        XCLOSE(&pipe_stderr[1]);
         break;
     }
 
@@ -911,8 +914,8 @@ work_rsync(void *user_data) {
     if (waitpid(child_pid, NULL, 0) < 0) {
         ipc_send_log_error("Error waiting for rsync: %s.\n", strerror(errno));
     }
-    XCLOSE(&pipe_stdout[0]);
     XCLOSE(&pipe_stderr[0]);
+    XCLOSE(&pipe_stdout[0]);
 
     for (int32 i = 0; i < checksum_count; i += 1) {
         free(checksum_files[i]);
@@ -1072,9 +1075,9 @@ work_rsync_bulk(void *user_data) {
             }
             putenv("LC_ALL=C");
 
-            XCLOSE(&pipe_stdout[0]);
             XCLOSE(&pipe_stderr[0]);
             XCLOSE(&pipe_stdin[1]);
+            XCLOSE(&pipe_stdout[0]);
 
             if (dup2(pipe_stdin[0], STDIN_FILENO) < 0) {
                 error("Error duplicating stdin: %s.\n", strerror(errno));
