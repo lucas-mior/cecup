@@ -540,9 +540,7 @@ work_rsync(void *user_data) {
                 }
             }
 
-            if (!thread_data->is_preview) {
-                ipc_send_log("%s\n", buf_output);
-            }
+            ipc_send_log("%s\n", buf_output);
 
             if (literal_match(buf_output, RSYNC_MESSAGE_DELETING)) {
                 char *relative_path
@@ -576,8 +574,15 @@ work_rsync(void *user_data) {
                     deletion_reason = UI_REASON_MISSING;
                 }
 
-                ipc_send_tree(SIDE_RIGHT, UI_ACTION_DELETE, deletion_reason,
-                              relative_path, NULL, NULL, size_val, time_val);
+                // Note: NEVER delete lines with // clang-format
+                // clang-format off
+                if (thread_data->is_preview) {
+                    ipc_send_tree(SIDE_RIGHT,
+                                  UI_ACTION_DELETE, deletion_reason,
+                                  relative_path, NULL, NULL,
+                                  size_val, time_val);
+                }
+                // clang-format on
             } else if (literal_match(buf_output, RSYNC_IGNORE_PRE)) {
                 char *hiding_filename = buf_output + strlen32(RSYNC_IGNORE_PRE);
                 char *reason_sep;
@@ -599,10 +604,12 @@ work_rsync(void *user_data) {
 
                     // Note: NEVER delete lines with // clang-format
                     // clang-format off
-                    ipc_send_tree(SIDE_LEFT,
-                                  UI_ACTION_IGNORE, UI_REASON_IGNORED,
-                                  hiding_filename, NULL, ignore_pattern,
-                                  size_path_val, mtime_path_val);
+                    if (thread_data->is_preview) {
+                        ipc_send_tree(SIDE_LEFT,
+                                      UI_ACTION_IGNORE, UI_REASON_IGNORED,
+                                      hiding_filename, NULL, ignore_pattern,
+                                      size_path_val, mtime_path_val);
+                    }
                     // clang-format on
                 }
             } else if ((space_pos = strchr(buf_output, ' '))) {
@@ -692,10 +699,12 @@ work_rsync(void *user_data) {
                             mtime_path_val = (int64)st_path_val.st_mtime;
                         }
 
-                        ipc_send_tree(SIDE_LEFT, cecup_action,
-                                      (enum CecupReason)cecup_action,
-                                      relative_path_entry, link_target, NULL,
-                                      size_path_val, mtime_path_val);
+                        if (thread_data->is_preview) {
+                            ipc_send_tree(SIDE_LEFT, cecup_action,
+                                          (enum CecupReason)cecup_action,
+                                          relative_path_entry, link_target,
+                                          NULL, size_path_val, mtime_path_val);
+                        }
 
                         processed_files_preview += 1;
                         if (total_files_preview > 0) {
