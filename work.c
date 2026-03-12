@@ -40,6 +40,20 @@
 #define TESTING_work 0
 #endif
 
+static void
+get_size_and_mtime(char *path, int64 *size, int64 *mtime) {
+    struct stat stat;
+    if (lstat(path, &stat) < 0) {
+        ipc_send_log_error("Error lstat %s: %s.\n", path, strerror(errno));
+        *size = 0;
+        *mtime = 0;
+    } else {
+        *size = stat.st_size;
+        *mtime = (int64)stat.st_mtime;
+    }
+    return;
+}
+
 static int64
 work_count_files_recursive(char *base_path, char *relative_path) {
     DIR *dir;
@@ -519,7 +533,6 @@ work_rsync(void *user_data) {
         while (buf_output_pos > 0
                && ((eol = memchr64(buf_output, '\n', buf_output_pos))
                    || (eol = memchr64(buf_output, '\r', buf_output_pos)))) {
-            char *space_pos;
             char *link_target;
             char full_src_path_val[MAX_PATH_LENGTH];
             int64 size_path_val = 0;
@@ -617,108 +630,111 @@ work_rsync(void *user_data) {
                     }
                     // clang-format on
                 }
-            } else if ((space_pos = strchr(buf_output, ' '))) {
-                if ((action_char == RSYNC_CHAR_RECEIVE)
-                    || (action_char == RSYNC_CHAR_HARDLINK)
-                    || (action_char == RSYNC_CHAR_CHANGE)
-                    || (action_char == RSYNC_CHAR_SYMLINK)
-                    || (type_char == RSYNC_CHAR_DIR)) {
+            } else if ((action_char == RSYNC_CHAR_RECEIVE)
+                       || (action_char == RSYNC_CHAR_HARDLINK)
+                       || (action_char == RSYNC_CHAR_CHANGE)
+                       || (action_char == RSYNC_CHAR_SYMLINK)) {
 
-                    char *relative_path_entry = space_pos + 1;
-                    enum CecupAction cecup_action = UI_ACTION_UPDATE;
-                    struct stat st_path_val;
-                    bool attribute_changed = false;
+                char *space_pos = strchr(buf_output, ' ');
+                char *relative_path_entry = space_pos + 1;
+                enum CecupAction action = UI_ACTION_UPDATE;
 
-                    while (isspace(*relative_path_entry)) {
-                        relative_path_entry += 1;
+                while (isspace(*relative_path_entry)) {
+                    relative_path_entry += 1;
+                }
+
+                link_target = NULL;
+                if (action_char == RSYNC_CHAR_HARDLINK) {
+                    char *sep;
+                    action = UI_ACTION_HARDLINK;
+
+                    if ((sep = strstr(relative_path_entry,
+                                      RSYNC_HARDLINK_NOTATION))) {
+                        *sep = '\0';
+                        link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
                     }
+                } else if ((action_char == RSYNC_CHAR_SYMLINK)
+                           || (type_char == RSYNC_CHAR_SYMLINK)) {
+                    char *sep;
+                    action = UI_ACTION_SYMLINK;
 
-                    // Note: NEVER delete lines with // clang-format
-                    // clang-format off
-                    for (int32 i = 2;
-                         i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
-                         i += 1) {
-                        if ((buf_output[i] != '.') && (buf_output[i] != ' ')) {
-                            attribute_changed = true;
-                            break;
-                        }
+                    if ((sep = strstr(relative_path_entry,
+                                      RSYNC_SYMLINK_NOTATION))) {
+                        *sep = '\0';
+                        link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
                     }
-                    // clang-format on
+                } else if (buf_output[2] == '+') {
+                    action = UI_ACTION_NEW;
+                }
 
-                    if ((action_char != RSYNC_CHAR_NO_UPDATE)
-                        || attribute_changed) {
-                        link_target = NULL;
-                        if (action_char == RSYNC_CHAR_HARDLINK) {
-                            char *sep;
-                            cecup_action = UI_ACTION_HARDLINK;
+                if ((thread_data->is_preview == 0) && (line_len > 11)
+                    && (type_char == RSYNC_CHAR_FILE)
+                    && ((action_char == RSYNC_CHAR_RECEIVE)
+                        || (action_char == RSYNC_CHAR_CHANGE)
+                        || (action_char == RSYNC_CHAR_HARDLINK))) {
 
-                            if ((sep = strstr(relative_path_entry,
-                                              RSYNC_HARDLINK_NOTATION))) {
-                                *sep = '\0';
-                                link_target
-                                    = sep + strlen32(RSYNC_HARDLINK_NOTATION);
-                            }
-                        } else if ((action_char == RSYNC_CHAR_SYMLINK)
-                                   || (type_char == RSYNC_CHAR_SYMLINK)) {
-                            char *sep;
-                            cecup_action = UI_ACTION_SYMLINK;
-
-                            if ((sep = strstr(relative_path_entry,
-                                              RSYNC_SYMLINK_NOTATION))) {
-                                *sep = '\0';
-                                link_target
-                                    = sep + strlen32(RSYNC_SYMLINK_NOTATION);
-                            }
-                        } else if (buf_output[2] == '+') {
-                            cecup_action = UI_ACTION_NEW;
-                        }
-
-                        if ((thread_data->is_preview == 0) && (line_len > 11)
-                            && (type_char == RSYNC_CHAR_FILE)
-                            && ((action_char == RSYNC_CHAR_RECEIVE)
-                                || (action_char == RSYNC_CHAR_CHANGE)
-                                || (action_char == RSYNC_CHAR_HARDLINK))) {
-
-                            if (checksum_count >= checksum_capacity) {
-                                checksum_capacity = (checksum_capacity == 0)
-                                                        ? 256
-                                                        : checksum_capacity*2;
-                                checksum_files = xrealloc(checksum_files,
-                                                          checksum_capacity
-                                                              * SIZEOF(char *));
-                            }
-                            checksum_files[checksum_count]
-                                = xstrdup(relative_path_entry);
-                            checksum_count += 1;
-                        }
-
-                        SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
-                                 relative_path_entry);
-
-                        if (lstat(full_src_path_val, &st_path_val) < 0) {
-                            ipc_send_log_error("Error lstat %s: %s.\n",
-                                               full_src_path_val,
-                                               strerror(errno));
-                        } else {
-                            size_path_val = st_path_val.st_size;
-                            mtime_path_val = (int64)st_path_val.st_mtime;
-                        }
-
-                        if (thread_data->is_preview) {
-                            ipc_send_tree(SIDE_LEFT, cecup_action,
-                                          (enum CecupReason)cecup_action,
-                                          relative_path_entry, link_target,
-                                          NULL, size_path_val, mtime_path_val);
-                        }
-
-                        processed_files_preview += 1;
-                        if (total_files_preview > 0) {
-                            ipc_send_progress(
-                                DATA_TYPE_PROGRESS_PREVIEW,
-                                (double)processed_files_preview
-                                    / (double)total_files_preview);
-                        }
+                    if (checksum_count >= checksum_capacity) {
+                        checksum_capacity = (checksum_capacity == 0)
+                                                ? 256
+                                                : checksum_capacity*2;
+                        checksum_files = xrealloc(
+                            checksum_files, checksum_capacity*SIZEOF(char *));
                     }
+                    checksum_files[checksum_count]
+                        = xstrdup(relative_path_entry);
+                    checksum_count += 1;
+                }
+
+                SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
+                         relative_path_entry);
+
+                get_size_and_mtime(full_src_path_val, &size_path_val,
+                                   &mtime_path_val);
+
+                if (thread_data->is_preview) {
+                    ipc_send_tree(SIDE_LEFT, action, (enum CecupReason)action,
+                                  relative_path_entry, link_target, NULL,
+                                  size_path_val, mtime_path_val);
+                }
+
+                processed_files_preview += 1;
+                if (total_files_preview > 0) {
+                    ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                                      (double)processed_files_preview
+                                          / (double)total_files_preview);
+                }
+            } else if (action_char == RSYNC_CHAR_NO_UPDATE) {
+                enum CecupAction action = UI_ACTION_UPDATE;
+                enum CecupReason reason = UI_REASON_UPDATE;
+
+                bool attribute_changed = false;
+                char *space_pos = strchr(buf_output, ' ');
+                char *relative_path_entry = space_pos + 1;
+                // Note: NEVER delete lines with // clang-format
+                // clang-format off
+                for (int32 i = 2;
+                     i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
+                     i += 1) {
+                    if ((buf_output[i] != '.') && (buf_output[i] != ' ')) {
+                        attribute_changed = true;
+                        break;
+                    }
+                }
+                // clang-format on
+
+                SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
+                         relative_path_entry);
+                get_size_and_mtime(full_src_path_val, &size_path_val,
+                                   &mtime_path_val);
+
+                if (!attribute_changed) {
+                    action = UI_ACTION_EQUAL;
+                    reason = UI_REASON_EQUAL;
+                }
+                if (thread_data->is_preview) {
+                    ipc_send_tree(SIDE_LEFT, action, reason,
+                                  relative_path_entry, NULL, NULL,
+                                  size_path_val, mtime_path_val);
                 }
             }
 
