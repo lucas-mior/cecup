@@ -543,6 +543,57 @@ work_rsync(void *user_data) {
             char action_char = buf_output[RSYNC_INDEX_ACTION];
             char type_char = buf_output[RSYNC_INDEX_FILE_TYPE];
 
+            bool might_be_itemize_line = true;
+
+            ipc_send_log("%s\n", buf_output);
+
+            switch (action_char) {
+            case RSYNC_CHAR_SEND:
+            case RSYNC_CHAR_RECEIVE:
+            case RSYNC_CHAR_CHANGE:
+            case RSYNC_CHAR_HARDLINK:
+            case RSYNC_CHAR_NO_UPDATE:
+                might_be_itemize_line &= true;
+                break;
+            default:
+                might_be_itemize_line = false;
+            }
+
+            switch (type_char) {
+            case RSYNC_CHAR_FILE:
+            case RSYNC_CHAR_DIR:
+            case RSYNC_CHAR_SYMLINK:
+            case RSYNC_CHAR_DEVICE:
+            case RSYNC_CHAR_SPECIAL:
+                might_be_itemize_line &= true;
+                break;
+            default:
+                might_be_itemize_line = false;
+            }
+
+            for (int i = 2; i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS); i += 1) {
+                switch (buf_output[i]) {
+                case RSYNC_CHAR_CHECKSUM:
+                case RSYNC_CHAR_SIZE:
+                case RSYNC_CHAR_TIME:
+                case RSYNC_CHAR_PERM:
+                case RSYNC_CHAR_OWNER:
+                case RSYNC_CHAR_GROUP:
+                case RSYNC_CHAR_ACL:
+                case RSYNC_CHAR_XATTR:
+                case RSYNC_CHAR_NO_ATTR_CHANGE:
+                case RSYNC_CHAR_ALL_SPACE_MEANS_ALL_UNCHANGED:
+                    might_be_itemize_line &= true;
+                    break;
+                default:
+                    might_be_itemize_line = false;
+                    break;
+                }
+                if (!might_be_itemize_line) {
+                    break;
+                }
+            }
+
             *eol = '\0';
 
             {
@@ -557,8 +608,6 @@ work_rsync(void *user_data) {
                                       atof(start_digit) / 100.0);
                 }
             }
-
-            ipc_send_log("%s\n", buf_output);
 
             if (literal_match(buf_output, RSYNC_MESSAGE_DELETING)) {
                 char *relative_path

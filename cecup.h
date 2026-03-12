@@ -305,7 +305,9 @@ enum RsyncCharAttribute {
     RSYNC_CHAR_OWNER = 'o',
     RSYNC_CHAR_GROUP = 'g',
     RSYNC_CHAR_ACL = 'a',
-    RSYNC_CHAR_XATTR = 'x'
+    RSYNC_CHAR_XATTR = 'x',
+    RSYNC_CHAR_NO_ATTR_CHANGE = '.',
+    RSYNC_CHAR_ALL_SPACE_MEANS_ALL_UNCHANGED = ' ',
 };
 
 #define RSYNC_ITEMIZE_PLACEHOLDERS "YXcstpoguax"
