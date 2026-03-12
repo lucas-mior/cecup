@@ -619,22 +619,22 @@ work_rsync(void *user_data) {
                 SNPRINTF(full_dst_path_val, "%s/%s", cecup.dst_base,
                          relative_path);
 
-                if (lstat(full_src_path_val, &st_src) == 0) {
-                    src_sz = st_src.st_size;
-                    src_mt = (int64)st_src.st_mtime;
-                    deletion_reason = REASON_IGNORED;
-                } else {
+                if (lstat(full_src_path_val, &st_src) < 0) {
                     src_sz = 0;
                     src_mt = 0;
                     deletion_reason = REASON_MISSING;
+                } else {
+                    src_sz = st_src.st_size;
+                    src_mt = (int64)st_src.st_mtime;
+                    deletion_reason = REASON_IGNORED;
                 }
 
-                if (lstat(full_dst_path_val, &st_dst) == 0) {
-                    dst_sz = st_dst.st_size;
-                    dst_mt = (int64)st_dst.st_mtime;
-                } else {
+                if (lstat(full_dst_path_val, &st_dst) < 0) {
                     dst_sz = 0;
                     dst_mt = 0;
+                } else {
+                    dst_sz = st_dst.st_size;
+                    dst_mt = (int64)st_dst.st_mtime;
                 }
 
                 // Note: NEVER delete lines with // clang-format
@@ -669,20 +669,20 @@ work_rsync(void *user_data) {
                     SNPRINTF(full_dst_path_val, "%s/%s", cecup.dst_base,
                              hiding_filename);
 
-                    if (lstat(full_src_path_val, &st_src) == 0) {
-                        src_sz = st_src.st_size;
-                        src_mt = (int64)st_src.st_mtime;
-                    } else {
+                    if (lstat(full_src_path_val, &st_src) < 0) {
                         src_sz = 0;
                         src_mt = 0;
+                    } else {
+                        src_sz = st_src.st_size;
+                        src_mt = (int64)st_src.st_mtime;
                     }
 
-                    if (lstat(full_dst_path_val, &st_dst) == 0) {
-                        dst_sz = st_dst.st_size;
-                        dst_mt = (int64)st_dst.st_mtime;
-                    } else {
+                    if (lstat(full_dst_path_val, &st_dst) < 0) {
                         dst_sz = 0;
                         dst_mt = 0;
+                    } else {
+                        dst_sz = st_dst.st_size;
+                        dst_mt = (int64)st_dst.st_mtime;
                     }
 
                     // Note: NEVER delete lines with // clang-format
@@ -756,20 +756,20 @@ work_rsync(void *user_data) {
                 SNPRINTF(full_dst_path_val,
                          "%s/%s", cecup.dst_base, relative_path_entry);
 
-                if (lstat(full_src_path_val, &st_src) == 0) {
-                    src_sz = st_src.st_size;
-                    src_mt = (int64)st_src.st_mtime;
-                } else {
+                if (lstat(full_src_path_val, &st_src) < 0) {
                     src_sz = 0;
                     src_mt = 0;
+                } else {
+                    src_sz = st_src.st_size;
+                    src_mt = (int64)st_src.st_mtime;
                 }
 
-                if (lstat(full_dst_path_val, &st_dst) == 0) {
-                    dst_sz = st_dst.st_size;
-                    dst_mt = (int64)st_dst.st_mtime;
-                } else {
+                if (lstat(full_dst_path_val, &st_dst) < 0) {
                     dst_sz = 0;
                     dst_mt = 0;
+                } else {
+                    dst_sz = st_dst.st_size;
+                    dst_mt = (int64)st_dst.st_mtime;
                 }
                 // clang-format on
 
@@ -814,20 +814,20 @@ work_rsync(void *user_data) {
                 SNPRINTF(full_dst_path_val,
                          "%s/%s", cecup.dst_base, relative_path_entry);
 
-                if (lstat(full_src_path_val, &st_src) == 0) {
-                    src_sz = st_src.st_size;
-                    src_mt = (int64)st_src.st_mtime;
-                } else {
+                if (lstat(full_src_path_val, &st_src) < 0) {
                     src_sz = 0;
                     src_mt = 0;
+                } else {
+                    src_sz = st_src.st_size;
+                    src_mt = (int64)st_src.st_mtime;
                 }
 
-                if (lstat(full_dst_path_val, &st_dst) == 0) {
-                    dst_sz = st_dst.st_size;
-                    dst_mt = (int64)st_dst.st_mtime;
-                } else {
+                if (lstat(full_dst_path_val, &st_dst) < 0) {
                     dst_sz = 0;
                     dst_mt = 0;
+                } else {
+                    dst_sz = st_dst.st_size;
+                    dst_mt = (int64)st_dst.st_mtime;
                 }
 
                 // clang-format on
