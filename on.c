@@ -1067,8 +1067,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
                 }
             } else {
-                if ((filepath == NULL)
-                    && (context_menu_items[i].callback != on_menu_rename)) {
+                if (filepath == NULL) {
                     gtk_widget_set_sensitive(item, FALSE);
                 } else {
                     if (context_menu_items[i].path_type) {
