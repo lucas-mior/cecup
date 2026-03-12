@@ -71,7 +71,7 @@ work_count_files_recursive(char *base_path, char *relative_path) {
     }
 
     if ((dir = opendir(full_path)) == NULL) {
-        ipc_send_log_error("Error opening directory %s: %s.\n", full_path,
+        IPC_SEND_LOG_ERROR("Error opening directory %s: %s.\n", full_path,
                            strerror(errno));
         return 0;
     }
@@ -106,19 +106,19 @@ work_count_files_recursive(char *base_path, char *relative_path) {
                 count += 1;
             }
         } else {
-            ipc_send_log_error("Error lstat %s: %s.\n", full_path,
+            IPC_SEND_LOG_ERROR("Error lstat %s: %s.\n", full_path,
                                strerror(errno));
         }
         errno = 0;
     }
 
     if (errno) {
-        ipc_send_log_error("Error reading directory entry in %s: %s.\n",
+        IPC_SEND_LOG_ERROR("Error reading directory entry in %s: %s.\n",
                            full_path, strerror(errno));
     }
 
     if (closedir(dir) < 0) {
-        ipc_send_log_error("Error closing directory %s: %s.\n", full_path,
+        IPC_SEND_LOG_ERROR("Error closing directory %s: %s.\n", full_path,
                            strerror(errno));
     }
     return count;
@@ -256,10 +256,10 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
             }
 
             if (access(new_full, F_OK) == 0) {
-                ipc_send_log_error("Skip rename: %s already exists.\n",
+                IPC_SEND_LOG_ERROR("Skip rename: %s already exists.\n",
                                    new_name);
             } else if (rename(old_full, new_full) == 0) {
-                ipc_send_log("Fixed: %s -> %s\n", d_name, new_name);
+                IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name);
                 if (S_ISDIR(st.st_mode)) {
                     if (relative_path) {
                         SNPRINTF(sub_rel, "%s/%s", relative_path, new_name);
@@ -268,7 +268,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
                     }
                 }
             } else {
-                ipc_send_log_error("Error renaming %s to %s: %s\n", old_full,
+                IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n", old_full,
                                    new_full, strerror(errno));
             }
         }
@@ -288,11 +288,11 @@ work_fix_fs_worker(void *user_data) {
     ThreadData *thread_data = user_data;
     Message *message;
 
-    ipc_send_log("Checking for problematic names in the original folder...\n");
+    IPC_SEND_LOG("Checking for problematic names in the original folder...\n");
     work_fix_fs_recursive(cecup.src_base, NULL);
-    ipc_send_log("Checking for problematic names in the backup folder...\n");
+    IPC_SEND_LOG("Checking for problematic names in the backup folder...\n");
     work_fix_fs_recursive(cecup.dst_base, NULL);
-    ipc_send_log("Name correction finished.\n");
+    IPC_SEND_LOG("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
@@ -342,19 +342,19 @@ work_rsync(void *user_data) {
         struct stat stat_dst;
 
         if (stat(cecup.src_base, &stat_src) < 0) {
-            ipc_send_log_error("Error checking %s: %s.\n", cecup.src_base,
+            IPC_SEND_LOG_ERROR("Error checking %s: %s.\n", cecup.src_base,
                                strerror(errno));
             goto finalize;
         }
         if (stat(cecup.dst_base, &stat_dst) < 0) {
-            ipc_send_log_error("Error checking %s: %s.\n", cecup.dst_base,
+            IPC_SEND_LOG_ERROR("Error checking %s: %s.\n", cecup.dst_base,
                                strerror(errno));
             goto finalize;
         }
 
         if (stat_src.st_dev == stat_dst.st_dev) {
             Message *message;
-            ipc_send_log_error(
+            IPC_SEND_LOG_ERROR(
                 _("Safety stop: Original and backup are on the same storage "
                   "device.\n"
                   "Check if the backup device is connected.\n"
@@ -384,9 +384,9 @@ work_rsync(void *user_data) {
         message->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add(update_ui_handler, message);
 
-        ipc_send_log("Counting files to prepare analysis...\n");
+        IPC_SEND_LOG("Counting files to prepare analysis...\n");
         total_files_preview = work_count_files_recursive(cecup.src_base, NULL);
-        ipc_send_log("Found %lld files to analyse...\n",
+        IPC_SEND_LOG("Found %lld files to analyse...\n",
                      (llong)total_files_preview);
     }
 
@@ -434,7 +434,7 @@ work_rsync(void *user_data) {
     rsync_args[a++] = NULL;
 
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-    ipc_send_log_cmd("%s\n", cmd);
+    IPC_SEND_LOG_CMD("%s\n", cmd);
 
     switch (child_pid = fork()) {
     case -1:
@@ -485,17 +485,17 @@ work_rsync(void *user_data) {
 
         if (cecup.cancel_sync) {
             if (kill(-child_pid, SIGTERM) < 0) {
-                ipc_send_log_error("Error killing process group: %s.\n",
+                IPC_SEND_LOG_ERROR("Error killing process group: %s.\n",
                                    strerror(errno));
             }
-            ipc_send_log_error("Operation stopped by user.\n");
+            IPC_SEND_LOG_ERROR("Operation stopped by user.\n");
             break;
         }
 
         switch (poll(pipes, 2, 100)) {
         case -1:
             if (errno != EINTR) {
-                ipc_send_log_error("Error in poll: %s.\n", strerror(errno));
+                IPC_SEND_LOG_ERROR("Error in poll: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             continue;
@@ -517,7 +517,7 @@ work_rsync(void *user_data) {
                    buf_size - buf_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
-                ipc_send_log_error("Error reading stdout pipe: %s.\n",
+                IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
                                    strerror(errno));
                 pipes[0].fd = -1;
             }
@@ -869,7 +869,7 @@ work_rsync(void *user_data) {
 
         if (buf_output_pos >= (int32)SIZEOF(buf_output) - 1) {
             buf_output[buf_output_pos] = '\0';
-            ipc_send_log("%s.\n", buf_output);
+            IPC_SEND_LOG("%s.\n", buf_output);
             buf_output_pos = 0;
         }
 
@@ -886,19 +886,19 @@ work_rsync(void *user_data) {
         r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error));
         if (r <= 0) {
             if (r < 0) {
-                ipc_send_log_error("Error reading stderr pipe: %s.\n",
+                IPC_SEND_LOG_ERROR("Error reading stderr pipe: %s.\n",
                                    strerror(errno));
                 pipes[1].fd = -1;
             }
             continue;
         }
         buf_error[r] = '\0';
-        ipc_send_log_error("%s", buf_error);
+        IPC_SEND_LOG_ERROR("%s", buf_error);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     if (waitpid(child_pid, NULL, 0) < 0) {
-        ipc_send_log_error("Error waiting for child: %s.\n", strerror(errno));
+        IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
     }
 
     XCLOSE(&pipe_stderr[0]);
@@ -924,9 +924,9 @@ work_rsync(void *user_data) {
     rsync_args[a++] = dst_dir;
     rsync_args[a++] = NULL;
 
-    ipc_send_log("Verifying transfers with checksum...\n");
+    IPC_SEND_LOG("Verifying transfers with checksum...\n");
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-    ipc_send_log_cmd("%s\n", cmd);
+    IPC_SEND_LOG_CMD("%s\n", cmd);
 
     xpipe(pipe_stdout);
     xpipe(pipe_stderr);
@@ -934,7 +934,7 @@ work_rsync(void *user_data) {
 
     switch (child_pid = fork()) {
     case -1:
-        ipc_send_log_error("Error forking for checksum: %s.\n",
+        IPC_SEND_LOG_ERROR("Error forking for checksum: %s.\n",
                            strerror(errno));
         break;
     case 0:
@@ -981,7 +981,7 @@ work_rsync(void *user_data) {
         switch (poll(pipes, 2, 100)) {
         case -1:
             if (errno != EINTR) {
-                ipc_send_log_error("Error in poll: %s.\n", strerror(errno));
+                IPC_SEND_LOG_ERROR("Error in poll: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             continue;
@@ -1000,7 +1000,7 @@ work_rsync(void *user_data) {
             r = read64(pipe_stdout[0], buf_output, SIZEOF(buf_output) - 1);
             if (r > 0) {
                 buf_output[r] = '\0';
-                ipc_send_log("%s", buf_output);
+                IPC_SEND_LOG("%s", buf_output);
             } else {
                 pipes[0].fd = -1;
             }
@@ -1019,19 +1019,19 @@ work_rsync(void *user_data) {
         r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error));
         if (r <= 0) {
             if (r < 0) {
-                ipc_send_log_error("Error reading stderr pipe: %s.\n",
+                IPC_SEND_LOG_ERROR("Error reading stderr pipe: %s.\n",
                                    strerror(errno));
                 pipes[1].fd = -1;
             }
             continue;
         }
         buf_error[r] = '\0';
-        ipc_send_log_error("%s", buf_error);
+        IPC_SEND_LOG_ERROR("%s", buf_error);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     if (waitpid(child_pid, NULL, 0) < 0) {
-        ipc_send_log_error("Error waiting for rsync: %s.\n", strerror(errno));
+        IPC_SEND_LOG_ERROR("Error waiting for rsync: %s.\n", strerror(errno));
     }
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
@@ -1042,7 +1042,7 @@ work_rsync(void *user_data) {
     free(checksum_files);
 
     if (thread_data->is_preview && !cecup.cancel_sync) {
-        ipc_send_log("Analysis complete. Review the list and click Apply.\n");
+        IPC_SEND_LOG("Analysis complete. Review the list and click Apply.\n");
     }
 
 finalize:
@@ -1118,7 +1118,7 @@ work_rsync_bulk(void *user_data) {
             }
             default:
                 if (waitpid(child_rm, &child_status, 0) < 0) {
-                    ipc_send_log_error("Error waiting for child: %s.\n",
+                    IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n",
                                        strerror(errno));
                 } else if (WIFEXITED(child_status)) {
                     removed = !WEXITSTATUS(child_status);
@@ -1180,7 +1180,7 @@ work_rsync_bulk(void *user_data) {
     {
         char cmd[MAX_PATH_LENGTH*2];
         STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-        ipc_send_log_cmd("%s\n", cmd);
+        IPC_SEND_LOG_CMD("%s\n", cmd);
     }
 
     switch (child_pid = fork()) {
@@ -1264,17 +1264,17 @@ work_rsync_bulk(void *user_data) {
 
         if (cecup.cancel_sync) {
             if (kill(-child_pid, SIGTERM) < 0) {
-                ipc_send_log_error("Error killing process group: %s.\n",
+                IPC_SEND_LOG_ERROR("Error killing process group: %s.\n",
                                    strerror(errno));
             }
-            ipc_send_log_error("Operation stopped by user.\n");
+            IPC_SEND_LOG_ERROR("Operation stopped by user.\n");
             break;
         }
 
         switch (poll(pipes, 2, 100)) {
         case -1:
             if (errno != EINTR) {
-                ipc_send_log_error("Error in poll: %s.\n", strerror(errno));
+                IPC_SEND_LOG_ERROR("Error in poll: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             continue;
@@ -1296,7 +1296,7 @@ work_rsync_bulk(void *user_data) {
                    SIZEOF(buf_output) - buf_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
-                ipc_send_log_error("Error reading stdout pipe: %s.\n",
+                IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
                                    strerror(errno));
                 pipes[0].fd = -1;
             }
@@ -1311,7 +1311,7 @@ work_rsync_bulk(void *user_data) {
             int32 remaining;
             *eol = '\0';
 
-            ipc_send_log("%s.\n", buf_output);
+            IPC_SEND_LOG("%s.\n", buf_output);
 
             if ((line_len > 12) && (buf_output[11] == ' ')) {
                 char *filename = buf_output + 12;
@@ -1359,19 +1359,19 @@ work_rsync_bulk(void *user_data) {
         r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error));
         if (r <= 0) {
             if (r < 0) {
-                ipc_send_log_error("Error reading stderr pipe: %s.\n",
+                IPC_SEND_LOG_ERROR("Error reading stderr pipe: %s.\n",
                                    strerror(errno));
                 pipes[1].fd = -1;
             }
             continue;
         }
         buf_error[r] = '\0';
-        ipc_send_log_error("%s", buf_error);
+        IPC_SEND_LOG_ERROR("%s", buf_error);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     if (waitpid(child_pid, NULL, 0) < 0) {
-        ipc_send_log_error("Error waiting for child: %s.\n", strerror(errno));
+        IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
     }
 
     XCLOSE(&pipe_stdout[0]);

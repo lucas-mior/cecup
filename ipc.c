@@ -23,19 +23,22 @@
 #include "cecup.h"
 
 static void
-ipc_send_log_internal(enum DataType type, char *format, va_list va_args) {
+ipc_send_log_internal(enum DataType type, char *format, ...) {
     Message *message;
     char buffer[8192];
     int32 n;
     int32 last_whitespace_index;
     int32 current_column;
+    va_list va_args;
 
+    va_start(va_args, format);
     n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
 
     if ((n <= 0) || (n >= SIZEOF(buffer))) {
         error("Error in vsnprintf(%s) (n = %lld)\n", format, (llong)n);
         exit(EXIT_FAILURE);
     }
+    va_end(va_args);
 
     last_whitespace_index = -1;
     current_column = 0;
@@ -73,35 +76,39 @@ ipc_send_log_internal(enum DataType type, char *format, va_list va_args) {
     return;
 }
 
-static void
-ipc_send_log(char *format, ...) {
-    va_list va_args;
+// Note: NEVER delete lines with // clang-format
+// clang-format off
+#define IPC_SEND_LOG_1(X)        ipc_send_log_internal(DATA_TYPE_LOG, "%s", X)
+#define IPC_SEND_LOG_2(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_3(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_4(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_5(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_6(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_7(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_8(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG(...)           SELECT_ON_NUM_ARGS(IPC_SEND_LOG_, __VA_ARGS__)
 
-    va_start(va_args, format);
-    ipc_send_log_internal(DATA_TYPE_LOG, format, va_args);
-    va_end(va_args);
-    return;
-}
+#define IPC_SEND_LOG_ERROR_1(X)        ipc_send_log_internal(DATA_TYPE_LOG_ERROR, "%s", X)
+#define IPC_SEND_LOG_ERROR_2(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_ERROR_3(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_ERROR_4(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_ERROR_5(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_ERROR_6(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_ERROR_7(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_ERROR_8(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_ERROR(...)           SELECT_ON_NUM_ARGS(IPC_SEND_LOG_ERROR_, __VA_ARGS__)
 
-static void
-ipc_send_log_error(char *format, ...) {
-    va_list va_args;
+#define IPC_SEND_LOG_CMD_1(X)        ipc_send_log_internal(DATA_TYPE_LOG_CMD, "%s", X)
+#define IPC_SEND_LOG_CMD_2(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_CMD_3(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_CMD_4(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_CMD_5(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_CMD_6(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_CMD_7(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_CMD_8(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
+#define IPC_SEND_LOG_CMD(...)           SELECT_ON_NUM_ARGS(IPC_SEND_LOG_CMD_, __VA_ARGS__)
 
-    va_start(va_args, format);
-    ipc_send_log_internal(DATA_TYPE_LOG_ERROR, format, va_args);
-    va_end(va_args);
-    return;
-}
-
-static void
-ipc_send_log_cmd(char *format, ...) {
-    va_list va_args;
-
-    va_start(va_args, format);
-    ipc_send_log_internal(DATA_TYPE_LOG_CMD, format, va_args);
-    va_end(va_args);
-    return;
-}
+// clang-format on
 
 static void
 ipc_send_progress(enum DataType type, double fraction) {

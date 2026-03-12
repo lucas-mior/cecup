@@ -178,7 +178,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 
                 SNPRINTF(path_relative, "%s/%s", base_path, task->path);
                 if (realpath(path_relative, path_full) == NULL) {
-                    ipc_send_log_error("Error resolving full path of %s: %s.\n",
+                    IPC_SEND_LOG_ERROR("Error resolving full path of %s: %s.\n",
                                        path_relative, strerror(errno));
                     continue;
                 }
@@ -269,7 +269,7 @@ on_menu_diff(GtkWidget *m, void *data) {
 
             switch (fork()) {
             case -1:
-                ipc_send_log_error("Error forking: %s.\n", strerror(errno));
+                IPC_SEND_LOG_ERROR("Error forking: %s.\n", strerror(errno));
                 break;
             case 0:
                 path_src = xmalloc(size_src);
@@ -323,7 +323,7 @@ on_menu_ignore_ext(GtkWidget *m, void *data) {
             break;
         }
         if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
-            ipc_send_log_error("Error opening %s: %s.\n", cecup.ignore_path,
+            IPC_SEND_LOG_ERROR("Error opening %s: %s.\n", cecup.ignore_path,
                                strerror(errno));
             break;
         }
@@ -1284,11 +1284,11 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
                               row->ignore_pattern, row->src_size_raw,
                               row->src_mtime_raw, row->dst_size_raw,
                               row->dst_mtime_raw);
-                ipc_send_log(_("Renamed: %s -> %s\n"), current_rel_path,
+                IPC_SEND_LOG(_("Renamed: %s -> %s\n"), current_rel_path,
                              new_text);
                 on_preview_clicked(NULL, NULL);
             } else {
-                ipc_send_log_error(_("Error renaming %s to %s: %s\n"), old_full,
+                IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full,
                                    new_full, strerror(errno));
             }
         }
