@@ -777,6 +777,10 @@ work_rsync(void *user_data) {
                     }
                 }
 
+                while (isspace(*relative_path_entry)) {
+                    relative_path_entry += 1;
+                }
+
                 SNPRINTF(full_src_path_val,
                          "%s/%s", cecup.src_base, relative_path_entry);
                 get_size_and_mtime(full_src_path_val,
