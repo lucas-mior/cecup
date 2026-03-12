@@ -462,14 +462,6 @@ on_reset_clicked(GtkWidget *b, void *data) {
 }
 
 static void
-on_stop_clicked(GtkWidget *b, void *data) {
-    (void)b;
-    (void)data;
-    cecup.cancel_sync = 1;
-    return;
-}
-
-static void
 on_preview_clicked(GtkWidget *b, void *data) {
     ThreadData *thread_data;
 
@@ -496,6 +488,52 @@ on_preview_clicked(GtkWidget *b, void *data) {
     thread_data->delete_after
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.delete_after));
     g_thread_new("work_rsync", work_rsync, thread_data);
+    return;
+}
+
+static void
+on_sync_clicked(GtkWidget *b, void *data) {
+    char *path_src;
+    char *path_dst;
+    GtkWidget *dialog;
+
+    (void)data;
+    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
+    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+    (void)b;
+    dialog = gtk_message_dialog_new(
+        GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
+        GTK_BUTTONS_YES_NO, _("Sync %s -> %s?"), path_src, path_dst);
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
+        ThreadData *thread_data;
+
+        cecup.cancel_sync = 0;
+        gtk_widget_set_sensitive(cecup.preview_button, FALSE);
+        gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+        gtk_widget_set_sensitive(cecup.stop_button, TRUE);
+
+        g_mutex_lock(&cecup.ui_arena_mutex);
+        thread_data
+            = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
+        memset64(thread_data, 0, SIZEOF(*thread_data));
+        g_mutex_unlock(&cecup.ui_arena_mutex);
+
+        thread_data->is_preview = 0;
+        thread_data->check_different_fs
+            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
+        thread_data->delete_after = gtk_toggle_button_get_active(
+            GTK_TOGGLE_BUTTON(cecup.delete_after));
+        g_thread_new("work_rsync", work_rsync, thread_data);
+    }
+    gtk_widget_destroy(dialog);
+    return;
+}
+
+static void
+on_stop_clicked(GtkWidget *b, void *data) {
+    (void)b;
+    (void)data;
+    cecup.cancel_sync = 1;
     return;
 }
 
@@ -715,44 +753,6 @@ on_invert_clicked(GtkWidget *b, void *data) {
     gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), path_dst);
     gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), path_src);
     on_preview_clicked(NULL, NULL);
-    return;
-}
-
-static void
-on_sync_clicked(GtkWidget *b, void *data) {
-    char *path_src;
-    char *path_dst;
-    GtkWidget *dialog;
-
-    (void)data;
-    path_src = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
-    path_dst = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
-    (void)b;
-    dialog = gtk_message_dialog_new(
-        GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
-        GTK_BUTTONS_YES_NO, _("Sync %s -> %s?"), path_src, path_dst);
-    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
-        ThreadData *thread_data;
-
-        cecup.cancel_sync = 0;
-        gtk_widget_set_sensitive(cecup.preview_button, FALSE);
-        gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-        gtk_widget_set_sensitive(cecup.stop_button, TRUE);
-
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        thread_data
-            = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
-        memset64(thread_data, 0, SIZEOF(*thread_data));
-        g_mutex_unlock(&cecup.ui_arena_mutex);
-
-        thread_data->is_preview = 0;
-        thread_data->check_different_fs
-            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
-        thread_data->delete_after = gtk_toggle_button_get_active(
-            GTK_TOGGLE_BUTTON(cecup.delete_after));
-        g_thread_new("work_rsync", work_rsync, thread_data);
-    }
-    gtk_widget_destroy(dialog);
     return;
 }
 
