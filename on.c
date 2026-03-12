@@ -568,19 +568,19 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
     (void)user_data;
 
     do {
-        GtkTreePath *path;
+        GtkTreePath *tree_path;
         GtkTreeIter iter;
         CecupRow *parent_row;
         char *parent_path;
         int64 parent_path_len;
         bool is_root;
 
-        if ((path = gtk_tree_path_new_from_string(path_string)) == NULL) {
+        if ((tree_path = gtk_tree_path_new_from_string(path_string)) == NULL) {
             break;
         }
         if (!gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter,
-                                     path)) {
-            gtk_tree_path_free(path);
+                                     tree_path)) {
+            gtk_tree_path_free(tree_path);
             break;
         }
 
@@ -600,7 +600,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
         }
 
         if (parent_path == NULL) {
-            gtk_tree_path_free(path);
+            gtk_tree_path_free(tree_path);
             break;
         }
 
@@ -657,7 +657,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
                 }
             }
         }
-        gtk_tree_path_free(path);
+        gtk_tree_path_free(tree_path);
     } while (0);
 
     refresh_ui_list();
