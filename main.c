@@ -584,20 +584,20 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
         g_object_set(renderer, "active", row->selected, NULL);
         break;
     case COL_SRC_ACTION:
-        g_object_set(renderer, "text", action_emojis[row->src_action],
-                     "cell-background", row->src_color, NULL);
+        g_object_set(renderer, "text", action_emojis[row->src_action], NULL);
+        g_object_set(renderer, "cell-background", row->src_color, NULL);
         break;
     case COL_DST_ACTION:
-        g_object_set(renderer, "text", action_emojis[row->dst_action],
-                     "cell-background", row->dst_color, NULL);
+        g_object_set(renderer, "text", action_emojis[row->dst_action], NULL);
+        g_object_set(renderer, "cell-background", row->dst_color, NULL);
         break;
     case COL_SRC_PATH:
-        g_object_set(renderer, "text", row->src_path, "cell-background",
-                     row->src_color, NULL);
+        g_object_set(renderer, "text", row->src_path, NULL);
+        g_object_set(renderer, "cell-background", row->src_color, NULL);
         break;
     case COL_DST_PATH:
-        g_object_set(renderer, "text", row->dst_path, "cell-background",
-                     row->dst_color, NULL);
+        g_object_set(renderer, "text", row->dst_path, NULL);
+        g_object_set(renderer, "cell-background", row->dst_color, NULL);
         break;
     case COL_SIZE_TEXT: {
         char *background;
