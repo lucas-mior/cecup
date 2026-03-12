@@ -927,7 +927,7 @@ work_rsync(void *user_data) {
     }
     free(checksum_files);
 
-    if (!cecup.cancel_sync) {
+    if (thread_data->is_preview && !cecup.cancel_sync) {
         ipc_send_log("Analysis complete. Review the list and click Apply.\n");
     }
 
