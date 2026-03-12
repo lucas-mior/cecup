@@ -1089,20 +1089,19 @@ work_rsync_bulk(void *user_data) {
                 fatal(EXIT_FAILURE);
             }
 
+            XCLOSE(&pipe_stderr[1]);
             XCLOSE(&pipe_stdin[0]);
             XCLOSE(&pipe_stdout[1]);
-            XCLOSE(&pipe_stderr[1]);
 
             execvp("rsync", rsync_args);
             error("Error: execvp failed: %s.\n", strerror(errno));
             _exit(EXIT_FAILURE);
         default:
+            XCLOSE(&pipe_stderr[1]);
+            XCLOSE(&pipe_stdin[0]);
+            XCLOSE(&pipe_stdout[1]);
             break;
         }
-
-        XCLOSE(&pipe_stdout[1]);
-        XCLOSE(&pipe_stderr[1]);
-        XCLOSE(&pipe_stdin[0]);
 
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task = tasks->items[i];
