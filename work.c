@@ -320,8 +320,7 @@ work_rsync(void *user_data) {
     struct pollfd pipes[2];
     pid_t child_pid;
 
-    char *buf_output;
-    int32 buf_size = SIZEMB(1);
+    char buf_output[MAX_PATH_LENGTH*2];
     int32 buf_output_pos = 0;
     char buf_error[MAX_PATH_LENGTH*2];
 
@@ -334,8 +333,6 @@ work_rsync(void *user_data) {
     char **checksum_files = NULL;
     int32 checksum_count = 0;
     int32 checksum_capacity = 0;
-
-    buf_output = xmalloc(buf_size);
 
     if (thread_data->check_different_fs) {
         struct stat stat_src;
@@ -514,7 +511,7 @@ work_rsync(void *user_data) {
         }
 
         r = read64(pipe_stdout[0], buf_output + buf_output_pos,
-                   buf_size - buf_output_pos - 1);
+                   SIZEOF(buf_output) - buf_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
@@ -1046,7 +1043,6 @@ work_rsync(void *user_data) {
     }
 
 finalize:
-    free(buf_output);
     ipc_send_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);
     ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 

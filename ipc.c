@@ -25,7 +25,7 @@
 static void
 ipc_send_log_internal(enum DataType type, char *format, ...) {
     Message *message;
-    char buffer[8192];
+    char buffer[MAX_PATH_LENGTH*2];
     int32 n;
     int32 last_whitespace_index;
     int32 current_column;
