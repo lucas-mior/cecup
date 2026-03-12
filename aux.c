@@ -503,7 +503,7 @@ update_ui_handler(void *data) {
             STRFTIME(row->src_mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
             row->src_mtime_raw = message->src_mtime;
         } else {
-            strcpy(row->src_mtime_text, _("Unknown modification time"));
+            strcpy(row->src_mtime_text, "");
             row->src_mtime_raw = 0;
         }
 
@@ -514,7 +514,7 @@ update_ui_handler(void *data) {
             STRFTIME(row->dst_mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
             row->dst_mtime_raw = message->dst_mtime;
         } else {
-            strcpy(row->dst_mtime_text, _("Unknown modification time"));
+            strcpy(row->dst_mtime_text, "");
             row->dst_mtime_raw = 0;
         }
 
