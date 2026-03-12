@@ -756,7 +756,7 @@ work_rsync(void *user_data) {
                     reason = (enum CecupReason)action;
                 }
 
-                if ((thread_data->is_preview == 0) && (line_len > 11)
+                if ((thread_data->is_preview == 0)
                     && (type_char == RSYNC_CHAR1_TYPE_FILE)
                     && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
                         || (action_char == RSYNC_CHAR0_ACTION_CHANGE)
