@@ -1698,7 +1698,9 @@ dirname2(char *buffer, int64 size, char *path) {
         fatal(EXIT_FAILURE);
     }
 
-    memcpy64(buffer, path, dir_length);
+    if (buffer != path) {
+        memcpy64(buffer, path, dir_length);
+    }
     buffer[dir_length] = '\0';
     return;
 }
