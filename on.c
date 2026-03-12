@@ -112,7 +112,6 @@ on_menu_open_item(GtkWidget *m, void *data) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task = tasks->items[i];
             char full_path[MAX_PATH_LENGTH];
-            char *target_path;
             char *base_path;
 
             if (message->side == SIDE_LEFT) {
@@ -124,15 +123,13 @@ on_menu_open_item(GtkWidget *m, void *data) {
             SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
 
             if (path_type && (strcmp(path_type, "folder") == 0)) {
-                target_path = dirname(full_path);
-            } else {
-                target_path = full_path;
+                DIRNAME(full_path, full_path);
             }
 
             {
                 char *command[] = {
                     "xdg-open",
-                    target_path,
+                    full_path,
                     NULL,
                 };
                 util_command_launch(LENGTH(command), command);
@@ -353,6 +350,7 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
     (void)m;
 
     do {
+        char dir_buffer[MAX_PATH_LENGTH];
         if ((tasks = get_target_tasks(message->side, message->filepath,
                                       message->action))
             == NULL) {
@@ -363,13 +361,11 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
         }
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task = tasks->items[i];
-            char *dir;
 
-            dir = xdirname(task->filepath);
-            if (strcmp(dir, ".")) {
-                fprintf(fp, "\n/%s/", dir);
+            DIRNAME(dir_buffer, task->filepath);
+            if (strcmp(dir_buffer, ".")) {
+                fprintf(fp, "\n/%s/", dir_buffer);
             }
-            free(dir);
         }
         fclose(fp);
         on_preview_clicked(NULL, NULL);
@@ -1018,9 +1014,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 GtkWidget *sub = gtk_menu_new();
                 GtkWidget *sub_ext;
                 GtkWidget *sub_dir;
-                char extension_label[32];
-                char directory_label[MAX_PATH_LENGTH + 64];
-                char *directory_ptr;
                 char *name = (filepath) ? basename(filepath) : "";
                 int64 length = strlen32(name);
 
@@ -1029,9 +1022,16 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
                 if (filepath) {
                     char *extension_ptr = NULL;
+                    char extension_label[32];
+                    char directory_label[MAX_PATH_LENGTH + 64];
+                    char directory_buffer[MAX_PATH_LENGTH];
+
                     sub_ext = gtk_menu_item_new();
+                    sub_dir = gtk_menu_item_new();
+
                     gtk_widget_set_sensitive(item, TRUE);
                     gtk_widget_set_sensitive(sub_ext, FALSE);
+                    gtk_widget_set_sensitive(sub_dir, FALSE);
 
                     if ((extension_ptr = memchr(name, '.', length))) {
                         extension_ptr = strrchr(extension_ptr, '.');
@@ -1042,23 +1042,28 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                         SNPRINTF(extension_label, "%s", _("by extension"));
                     }
 
-                    gtk_menu_item_set_label(GTK_MENU_ITEM(sub_ext),
-                                            extension_label);
-                    g_signal_connect(sub_ext, "activate",
-                                     G_CALLBACK(on_menu_ignore_ext), message);
-                    gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
-
-                    directory_ptr = xdirname(filepath);
-                    if (strcmp(directory_ptr, ".") != 0) {
+                    DIRNAME(directory_buffer, filepath);
+                    PRINTLN(directory_buffer);
+                    if (strcmp(directory_buffer, ".")) {
+                        gtk_widget_set_sensitive(sub_dir, TRUE);
                         SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
-                                 directory_ptr);
+                                 directory_buffer);
                     } else {
                         SNPRINTF(directory_label, "%s", _("📁 Dir"));
                     }
-                    free(directory_ptr);
-                    sub_dir = gtk_menu_item_new_with_label(directory_label);
+
+                    gtk_menu_item_set_label(GTK_MENU_ITEM(sub_ext),
+                                            extension_label);
+                    gtk_menu_item_set_label(GTK_MENU_ITEM(sub_dir),
+                                            directory_label);
+
+                    g_signal_connect(sub_ext, "activate",
+                                     G_CALLBACK(on_menu_ignore_ext), message);
+
                     g_signal_connect(sub_dir, "activate",
                                      G_CALLBACK(on_menu_ignore_dir), message);
+
+                    gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
                 }
             } else {

@@ -1678,12 +1678,6 @@ shell_escape(char *path) {
     return escaped;
 }
 
-INLINE char *
-xdirname(char *path) {
-    char *copy = xstrdup(path);
-    return dirname(copy);
-}
-
 static void
 dirname2(char *buffer, int64 size, char *path) {
     char *last_slash;
