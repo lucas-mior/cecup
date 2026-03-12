@@ -1329,7 +1329,25 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
         SNPRINTF(relative_new, "/%s", new_full + base_path_len);
 
         if (rename(old_full, new_full) == 0) {
+            struct stat stat_new;
+
             IPC_SEND_LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
+
+            if (lstat(new_full, &stat_new) < 0) {
+                error("Error in lstat(%s): %s.\n", new_full, strerror(errno));
+                fatal(EXIT_FAILURE);
+            }
+
+            if (S_ISDIR(stat_new.st_mode)) {
+                int32 len_old = strlen32(relative_old);
+                int32 len_new = strlen32(relative_new);
+
+                relative_old[len_old] = '/';
+                relative_old[len_old + 1] = '\0';
+
+                relative_new[len_new] = '/';
+                relative_new[len_new + 1] = '\0';
+            }
 
             normalize(relative_old);
             normalize(relative_new);
