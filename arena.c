@@ -432,6 +432,8 @@ arenas_pop(Arena **arenas, int32 narenas, void *p) {
     return false;
 }
 
+// Note that arena_pop
+// does NOT have to happen in reverse order of arena_push
 static bool
 arena_pop(Arena *arena, void *p) {
     if ((arena = arena_of(arena, p)) == NULL) {
