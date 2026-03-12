@@ -321,6 +321,9 @@ work_rsync(void *user_data) {
     int32 checksum_count = 0;
     int32 checksum_capacity = 0;
 
+    char old_recursive[MAX_PATH_LENGTH];
+    char new_recursive[MAX_PATH_LENGTH];
+
     if (thread_data->check_different_fs) {
         struct stat stat_src;
         struct stat stat_dst;
@@ -407,8 +410,21 @@ work_rsync(void *user_data) {
         rsync_args[a++] = "--exclude=*";
         rsync_args[a++] = "--include";
         rsync_args[a++] = thread_data->relative_old;
+        if (thread_data->relative_old[strlen32(thread_data->relative_old) - 1]
+            == '/') {
+            SNPRINTF(old_recursive, "%s**", thread_data->relative_old);
+            rsync_args[a++] = "--include";
+            rsync_args[a++] = old_recursive;
+        }
+
         rsync_args[a++] = "--include";
         rsync_args[a++] = thread_data->relative_new;
+        if (thread_data->relative_new[strlen32(thread_data->relative_new) - 1]
+            == '/') {
+            SNPRINTF(new_recursive, "%s**", thread_data->relative_new);
+            rsync_args[a++] = "--include";
+            rsync_args[a++] = new_recursive;
+        }
     } else {
         if (access(cecup.ignore_path, F_OK) != -1) {
             rsync_args[a++] = "--exclude-from";

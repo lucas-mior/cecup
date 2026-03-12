@@ -556,7 +556,39 @@ update_ui_handler(void *data) {
         break;
     }
     case DATA_TYPE_REMOVE_MATCHES: {
-        // implement the removal logic here
+        char *pattern = message->src_path;
+
+        if (pattern[0] == '/') {
+            pattern += 1;
+        }
+
+        g_mutex_lock(&cecup.row_arena_mutex);
+        for (int32 i = 0; i < cecup.rows_len;) {
+            CecupRow *row = cecup.rows[i];
+            bool match = false;
+
+            if (row->src_path && literal_match(row->src_path, pattern)) {
+                match = true;
+            } else if (row->dst_path && literal_match(row->dst_path, pattern)) {
+                match = true;
+            }
+
+            if (match) {
+                for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
+                    cecup.rows[j] = cecup.rows[j + 1];
+                }
+                cecup.rows_len -= 1;
+                arena_pop(cecup.row_arena, row);
+            } else {
+                i += 1;
+            }
+        }
+        g_mutex_unlock(&cecup.row_arena_mutex);
+
+        if (cecup.refresh_id == 0) {
+            cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
+                                             refresh_ui_timeout_callback, NULL);
+        }
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
