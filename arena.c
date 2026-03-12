@@ -539,8 +539,8 @@ main(void) {
 
             if (total_size < arena_data_size(arena)) {
                 ASSERT_EQUAL(arena_narenas(arena), 1);
-                ASSERT((char *)objs[i] >= arena->begin);
-                ASSERT((char *)arena->pos >= (char *)objs[i]);
+                ASSERT_MORE_EQUAL((void *)objs[i], (void *)arena->begin);
+                ASSERT_MORE_EQUAL((void *)arena->pos, (void *)objs[i]);
             }
         }
 
