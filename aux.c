@@ -426,6 +426,8 @@ update_ui_handler(void *data) {
         CecupRow *row;
         char *src_path_final;
         char *dst_path_final;
+        char src_buffer[MAX_PATH_LENGTH];
+        char dst_buffer[MAX_PATH_LENGTH];
 
         g_mutex_lock(&cecup.row_arena_mutex);
         row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
@@ -433,29 +435,38 @@ update_ui_handler(void *data) {
 
         row->src_color = "#FFFFFF";
         row->dst_color = "#FFFFFF";
-        src_path_final = message->filepath;
-        dst_path_final = message->filepath;
         row->src_action = message->action;
         row->dst_action = message->action;
         row->reason = message->reason;
 
+        SNPRINTF(src_buffer, "%s/%s", cecup.src_base, message->filepath);
+        SNPRINTF(dst_buffer, "%s/%s", cecup.dst_base, message->filepath);
+
+        if (!access(src_buffer, F_OK)) {
+            src_path_final = message->filepath;
+        } else {
+            src_path_final = NULL;
+        }
+        if (!access(dst_buffer, F_OK)) {
+            dst_path_final = message->filepath;
+        } else {
+            dst_path_final = NULL;
+        }
+
         switch (message->action) {
         case ACTION_NEW:
-            dst_path_final = NULL;
             break;
         case ACTION_UPDATE:
             break;
         case ACTION_HARDLINK:
-            dst_path_final = NULL;
             break;
         case ACTION_SYMLINK:
-            dst_path_final = NULL;
             break;
         case ACTION_EQUAL:
             break;
         case ACTION_IGNORE: {
-            if (message->reason == REASON_IGNORED) {
-                row->src_action = ACTION_IGNORE;
+            row->src_action = ACTION_IGNORE;
+            if (dst_path_final) {
                 if (gtk_toggle_button_get_active(
                         GTK_TOGGLE_BUTTON(cecup.delete_excluded))) {
                     row->dst_action = ACTION_DELETE;
@@ -463,26 +474,13 @@ update_ui_handler(void *data) {
                     row->dst_action = ACTION_IGNORE;
                 }
             } else {
-                row->src_action = ACTION_DELETED;
-                row->dst_action = ACTION_DELETE;
-                src_path_final = NULL;
+                row->dst_action = ACTION_IGNORE;
             }
             break;
         }
         case ACTION_DELETE:
-            if (message->reason == REASON_IGNORED) {
-                row->src_action = ACTION_IGNORE;
-                if (gtk_toggle_button_get_active(
-                        GTK_TOGGLE_BUTTON(cecup.delete_excluded))) {
-                    row->dst_action = ACTION_DELETE;
-                } else {
-                    row->dst_action = ACTION_IGNORE;
-                }
-            } else {
-                row->src_action = ACTION_DELETED;
-                row->dst_action = ACTION_DELETE;
-                src_path_final = NULL;
-            }
+            row->dst_action = ACTION_DELETE;
+            row->src_action = ACTION_IGNORE;
             break;
         case ACTION_DELETED:
         default:
@@ -541,16 +539,8 @@ update_ui_handler(void *data) {
             row->dst_path_len = 0;
         }
 
-        if (src_path_final == NULL) {
-            row->src_path = NULL;
-            row->dst_path = message->filepath;
-        } else if (dst_path_final == NULL) {
-            row->src_path = message->filepath;
-            row->dst_path = NULL;
-        } else {
-            row->src_path = message->filepath;
-            row->dst_path = message->filepath;
-        }
+        row->src_path = src_path_final;
+        row->dst_path = dst_path_final;
 
         if (cecup.rows_len >= cecup.rows_capacity) {
             cecup.rows_capacity *= 2;

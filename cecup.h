@@ -66,7 +66,7 @@ static char *action_emojis[] = {
     [ACTION_EQUAL]    = EMOJI_EQUAL,
     [ACTION_DELETED]  = EMOJI_DELETE,
     [ACTION_DELETE]   = EMOJI_DELETE,
-    [ACTION_IGNORE]   = EMOJI_IGNORE
+    [ACTION_IGNORE]   = EMOJI_IGNORE,
 };
 
 static char *src_action_strings[] = {
@@ -77,7 +77,7 @@ static char *src_action_strings[] = {
     [ACTION_EQUAL]    = N_("Already identical"),
     [ACTION_DELETED]  = N_("Not found in original"),
     [ACTION_DELETE]   = "",
-    [ACTION_IGNORE]   = N_("Skip")
+    [ACTION_IGNORE]   = N_("Skip"),
 };
 
 static char *dst_action_strings[] = {
@@ -88,7 +88,7 @@ static char *dst_action_strings[] = {
     [ACTION_EQUAL]    = N_("Already identical"),
     [ACTION_DELETED]  = "",
     [ACTION_DELETE]   = N_("Remove from backup"),
-    [ACTION_IGNORE]   = N_("Skip")
+    [ACTION_IGNORE]   = N_("Skip"),
 };
 
 static char *reason_strings[] = {
