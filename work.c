@@ -1115,7 +1115,10 @@ work_rsync_bulk(void *user_data) {
                 _exit(EXIT_FAILURE);
             }
             default:
-                waitpid(child_rm, NULL, 0);
+                if (waitpid(child_rm, NULL, 0) < 0) {
+                    ipc_send_log_error("Error waiting for child: %s.\n",
+                                       strerror(errno));
+                }
                 break;
             }
 
