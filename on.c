@@ -365,12 +365,11 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
             Message *task = tasks->items[i];
             char *dir;
 
-            if ((dir = g_path_get_dirname(task->filepath)) != NULL) {
-                if (strcmp(dir, ".") != 0) {
-                    fprintf(fp, "\n/%s/", dir);
-                }
-                g_free(dir);
+            dir = xdirname(task->filepath);
+            if (strcmp(dir, ".") != 0) {
+                fprintf(fp, "\n/%s/", dir);
             }
+            free(dir);
         }
         fclose(fp);
         on_preview_clicked(NULL, NULL);
@@ -1049,17 +1048,14 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                                      G_CALLBACK(on_menu_ignore_ext), message);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
 
-                    if ((directory_ptr = g_path_get_dirname(filepath))) {
-                        if (strcmp(directory_ptr, ".") != 0) {
-                            SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
-                                     directory_ptr);
-                        } else {
-                            SNPRINTF(directory_label, "%s", _("📁 Dir"));
-                        }
-                        g_free(directory_ptr);
+                    directory_ptr = xdirname(filepath);
+                    if (strcmp(directory_ptr, ".") != 0) {
+                        SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
+                                 directory_ptr);
                     } else {
                         SNPRINTF(directory_label, "%s", _("📁 Dir"));
                     }
+                    free(directory_ptr);
                     sub_dir = gtk_menu_item_new_with_label(directory_label);
                     g_signal_connect(sub_dir, "activate",
                                      G_CALLBACK(on_menu_ignore_dir), message);
