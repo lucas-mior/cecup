@@ -60,9 +60,10 @@ on_menu_apply(GtkWidget *m, void *data) {
 
     if ((tasks = get_target_tasks(message->side, message->src_path,
                                   message->action))) {
-        cecup.cancel_sync = 0;
         gtk_widget_set_sensitive(cecup.preview_button, FALSE);
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+        gtk_widget_set_sensitive(cecup.fix_button, FALSE);
+        gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
         gtk_widget_set_sensitive(cecup.stop_button, TRUE);
         g_thread_new("bulk_sync", work_rsync_bulk, tasks);
     }
@@ -229,9 +230,10 @@ on_menu_delete(GtkWidget *m, void *data) {
             GTK_BUTTONS_YES_NO, _("Permanently delete %d item(s)?"), count);
 
         if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
-            cecup.cancel_sync = 0;
             gtk_widget_set_sensitive(cecup.preview_button, FALSE);
             gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+            gtk_widget_set_sensitive(cecup.fix_button, FALSE);
+            gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
             gtk_widget_set_sensitive(cecup.stop_button, TRUE);
             g_thread_new("work_bulk_sync", work_rsync_bulk, tasks);
         } else {
@@ -472,6 +474,8 @@ on_preview_clicked(GtkWidget *b, void *data) {
 
     gtk_widget_set_sensitive(cecup.preview_button, FALSE);
     gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+    gtk_widget_set_sensitive(cecup.fix_button, FALSE);
+    gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
@@ -506,9 +510,10 @@ on_sync_clicked(GtkWidget *b, void *data) {
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         ThreadData *thread_data;
 
-        cecup.cancel_sync = 0;
         gtk_widget_set_sensitive(cecup.preview_button, FALSE);
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+        gtk_widget_set_sensitive(cecup.fix_button, FALSE);
+        gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
         gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
         g_mutex_lock(&cecup.ui_arena_mutex);
@@ -534,7 +539,9 @@ static void
 on_stop_clicked(GtkWidget *b, void *data) {
     (void)b;
     (void)data;
-    cecup.cancel_sync = 1;
+    if (cecup.child_pid > 0) {
+        kill(-cecup.child_pid, SIGTERM);
+    }
     return;
 }
 
@@ -722,9 +729,10 @@ on_fix_clicked(GtkWidget *b, void *data) {
         return;
     }
 
-    cecup.cancel_sync = 0;
     gtk_widget_set_sensitive(cecup.preview_button, FALSE);
     gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+    gtk_widget_set_sensitive(cecup.fix_button, FALSE);
+    gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
     g_mutex_lock(&cecup.ui_arena_mutex);

@@ -25,7 +25,6 @@
 #include <poll.h>
 #include <unistd.h>
 #include <stdarg.h>
-#include <signal.h>
 #include <string.h>
 #include <errno.h>
 
@@ -59,10 +58,6 @@ work_count_files_recursive(char *base_path, char *relative_path) {
     char full_path[MAX_PATH_LENGTH];
     int64 count;
 
-    if (cecup.cancel_sync) {
-        return 0;
-    }
-
     count = 0;
     if (relative_path) {
         SNPRINTF(full_path, "%s/%s", base_path, relative_path);
@@ -81,10 +76,6 @@ work_count_files_recursive(char *base_path, char *relative_path) {
         char *name;
         char sub_rel[MAX_PATH_LENGTH];
         struct stat st;
-
-        if (cecup.cancel_sync) {
-            break;
-        }
 
         name = entry->d_name;
         if (name[0] == '.'
@@ -132,10 +123,6 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
     char **name_list;
     int32 count = 0;
     int32 capacity = 1024;
-
-    if (cecup.cancel_sync) {
-        return;
-    }
 
     if (relative_path) {
         SNPRINTF(full_path, "%s/%s", base_path, relative_path);
@@ -318,7 +305,7 @@ work_rsync(void *user_data) {
     int32 pipe_stderr[2];
     int32 pipe_stdin[2];
     struct pollfd pipes[2];
-    pid_t child_pid;
+    pid_t child_process_id;
 
     char buf_output[MAX_PATH_LENGTH*2];
     int32 buf_output_pos = 0;
@@ -387,10 +374,6 @@ work_rsync(void *user_data) {
                      (llong)total_files_preview);
     }
 
-    if (cecup.cancel_sync) {
-        goto finalize;
-    }
-
     xpipe(pipe_stdout);
     xpipe(pipe_stderr);
 
@@ -433,7 +416,7 @@ work_rsync(void *user_data) {
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
     IPC_SEND_LOG_CMD("%s\n", cmd);
 
-    switch (child_pid = fork()) {
+    switch (child_process_id = fork()) {
     case -1:
         error("Error forking: %s.\n", strerror(errno));
         exit(EXIT_FAILURE);
@@ -463,6 +446,7 @@ work_rsync(void *user_data) {
         error("Error executing\n%s\n%s.", cmd, strerror(errno));
         _exit(EXIT_FAILURE);
     default:
+        cecup.child_pid = child_process_id;
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
         break;
@@ -479,15 +463,6 @@ work_rsync(void *user_data) {
 
         pipes[0].revents = 0;
         pipes[1].revents = 0;
-
-        if (cecup.cancel_sync) {
-            if (kill(-child_pid, SIGTERM) < 0) {
-                IPC_SEND_LOG_ERROR("Error killing process group: %s.\n",
-                                   strerror(errno));
-            }
-            IPC_SEND_LOG_ERROR("Operation stopped by user.\n");
-            break;
-        }
 
         switch (poll(pipes, 2, 100)) {
         case -1:
@@ -894,14 +869,15 @@ work_rsync(void *user_data) {
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
-    if (waitpid(child_pid, NULL, 0) < 0) {
+    if (waitpid(child_process_id, NULL, 0) < 0) {
         IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
     }
+    cecup.child_pid = 0;
 
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
 
-    if ((checksum_count <= 0) || cecup.cancel_sync) {
+    if (checksum_count <= 0) {
         goto finalize;
     }
     a = 0;
@@ -929,7 +905,7 @@ work_rsync(void *user_data) {
     xpipe(pipe_stderr);
     xpipe(pipe_stdin);
 
-    switch (child_pid = fork()) {
+    switch (child_process_id = fork()) {
     case -1:
         IPC_SEND_LOG_ERROR("Error forking for checksum: %s.\n",
                            strerror(errno));
@@ -953,6 +929,7 @@ work_rsync(void *user_data) {
         execvp("rsync", rsync_args);
         _exit(EXIT_FAILURE);
     default:
+        cecup.child_pid = child_process_id;
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdin[0]);
         XCLOSE(&pipe_stdout[1]);
@@ -1027,9 +1004,10 @@ work_rsync(void *user_data) {
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
-    if (waitpid(child_pid, NULL, 0) < 0) {
+    if (waitpid(child_process_id, NULL, 0) < 0) {
         IPC_SEND_LOG_ERROR("Error waiting for rsync: %s.\n", strerror(errno));
     }
+    cecup.child_pid = 0;
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
 
@@ -1038,7 +1016,7 @@ work_rsync(void *user_data) {
     }
     free(checksum_files);
 
-    if (thread_data->is_preview && !cecup.cancel_sync) {
+    if (thread_data->is_preview) {
         IPC_SEND_LOG("Analysis complete. Review the list and click Apply.\n");
     }
 
@@ -1080,70 +1058,70 @@ work_rsync_bulk(void *user_data) {
     char buf_error[MAX_PATH_LENGTH*2];
     int32 buf_output_pos = 0;
 
-    if (cecup.cancel_sync == false) {
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task = tasks->items[i];
-            char full_dst_path[MAX_PATH_LENGTH];
-            pid_t child_rm;
-            int child_status;
-            bool removed = false;
+    for (int32 i = 0; i < tasks->count; i += 1) {
+        Task *task = tasks->items[i];
+        char full_dst_path[MAX_PATH_LENGTH];
+        pid_t child_rm;
+        int child_status;
+        bool removed = false;
 
-            if (task->action != ACTION_DELETE) {
-                has_transfers = true;
-                continue;
+        if (task->action != ACTION_DELETE) {
+            has_transfers = true;
+            continue;
+        }
+
+        SNPRINTF(full_dst_path, "%s/%s", cecup.dst_base, task->path);
+        switch (child_rm = fork()) {
+        case -1:
+            error("Error forking for rm: %s.\n", strerror(errno));
+            break;
+        case 0: {
+            char cmd_rm[MAX_PATH_LENGTH];
+            char *args_rm[] = {
+                "rm",
+                "-rf",
+                full_dst_path,
+                NULL,
+            };
+
+            execvp(args_rm[0], args_rm);
+            STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
+            error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        default:
+            cecup.child_pid = child_rm;
+            if (waitpid(child_rm, &child_status, 0) < 0) {
+                IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n",
+                                   strerror(errno));
+            } else if (WIFEXITED(child_status)) {
+                removed = !WEXITSTATUS(child_status);
             }
+            cecup.child_pid = 0;
+            break;
+        }
 
-            SNPRINTF(full_dst_path, "%s/%s", cecup.dst_base, task->path);
-            switch (child_rm = fork()) {
-            case -1:
-                error("Error forking for rm: %s.\n", strerror(errno));
-                break;
-            case 0: {
-                char cmd_rm[MAX_PATH_LENGTH];
-                char *args_rm[] = {
-                    "rm",
-                    "-rf",
-                    full_dst_path,
-                    NULL,
-                };
+        if (removed) {
+            Message *message;
+            int32 path_len;
 
-                execvp(args_rm[0], args_rm);
-                STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
-                error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
-                _exit(EXIT_FAILURE);
-            }
-            default:
-                if (waitpid(child_rm, &child_status, 0) < 0) {
-                    IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n",
-                                       strerror(errno));
-                } else if (WIFEXITED(child_status)) {
-                    removed = !WEXITSTATUS(child_status);
-                }
-                break;
-            }
+            g_mutex_lock(&cecup.ui_arena_mutex);
+            message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+            memset64(message, 0, SIZEOF(Message));
 
-            if ((cecup.cancel_sync == false) && removed) {
-                Message *message;
-                int32 path_len;
+            path_len = task->path_len;
+            message->path_len = path_len;
+            message->src_path
+                = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+            memcpy64(message->src_path, task->path, path_len + 1);
+            g_mutex_unlock(&cecup.ui_arena_mutex);
 
-                g_mutex_lock(&cecup.ui_arena_mutex);
-                message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-                memset64(message, 0, SIZEOF(Message));
-
-                path_len = task->path_len;
-                message->path_len = path_len;
-                message->src_path
-                    = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                memcpy64(message->src_path, task->path, path_len + 1);
-                g_mutex_unlock(&cecup.ui_arena_mutex);
-
-                message->type = DATA_TYPE_REMOVE_TREE_ROW;
-                g_idle_add(update_ui_handler, message);
-            }
+            message->type = DATA_TYPE_REMOVE_TREE_ROW;
+            g_idle_add(update_ui_handler, message);
         }
     }
 
-    if (!has_transfers || cecup.cancel_sync) {
+    if (!has_transfers) {
         goto finalize;
     }
 
@@ -1215,6 +1193,7 @@ work_rsync_bulk(void *user_data) {
         error("Error: execvp failed: %s.\n", strerror(errno));
         _exit(EXIT_FAILURE);
     default:
+        cecup.child_pid = child_pid;
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdin[0]);
         XCLOSE(&pipe_stdout[1]);
@@ -1257,15 +1236,6 @@ work_rsync_bulk(void *user_data) {
 
         pipes[0].revents = 0;
         pipes[1].revents = 0;
-
-        if (cecup.cancel_sync) {
-            if (kill(-child_pid, SIGTERM) < 0) {
-                IPC_SEND_LOG_ERROR("Error killing process group: %s.\n",
-                                   strerror(errno));
-            }
-            IPC_SEND_LOG_ERROR("Operation stopped by user.\n");
-            break;
-        }
 
         switch (poll(pipes, 2, 100)) {
         case -1:
@@ -1369,6 +1339,7 @@ work_rsync_bulk(void *user_data) {
     if (waitpid(child_pid, NULL, 0) < 0) {
         IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
     }
+    cecup.child_pid = 0;
 
     XCLOSE(&pipe_stdout[0]);
     XCLOSE(&pipe_stderr[0]);
@@ -1383,7 +1354,7 @@ finalize:
     memset64(message, 0, SIZEOF(Message));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    if (cecup.cancel_sync) {
+    if (cecup.child_pid != 0) {
         message->type = DATA_TYPE_ENABLE_BUTTONS;
     } else {
         message->type = DATA_TYPE_REGENERATE_PREVIEW;

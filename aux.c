@@ -584,6 +584,8 @@ update_ui_handler(void *data) {
         refresh_ui_list();
         gtk_widget_set_sensitive(cecup.sync_button, TRUE);
         gtk_widget_set_sensitive(cecup.preview_button, TRUE);
+        gtk_widget_set_sensitive(cecup.fix_button, TRUE);
+        gtk_widget_set_sensitive(cecup.ignore_button, TRUE);
         gtk_widget_set_sensitive(cecup.stop_button, FALSE);
         break;
     case DATA_TYPE_CLEAR_TREES:

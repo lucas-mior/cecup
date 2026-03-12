@@ -235,7 +235,6 @@ static struct {
     GtkWidget *preview_button;
     GtkWidget *stop_button;
     GtkWidget *sync_button;
-    volatile bool cancel_sync;
 
     GtkWidget *ignore_button;
     GtkWidget *fix_button;
@@ -278,6 +277,8 @@ static struct {
     Arena *ui_arena;
     GMutex row_arena_mutex;
     GMutex ui_arena_mutex;
+
+    pid_t child_pid;
 } cecup;
 
 typedef struct ThreadData {
