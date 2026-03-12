@@ -1240,49 +1240,52 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
     GtkTreeIter iter;
     CecupRow *row;
     int32 side;
+    char *base_path;
+    int32 base_path_len;
+    char basedir[MAX_PATH_LENGTH];
+    char old_full[MAX_PATH_LENGTH];
+    char *current_rel_path;
 
     (void)renderer;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
     tree_path = gtk_tree_path_new_from_string(path_str);
 
-    if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter,
-                                tree_path)) {
-        char *base_path;
-        int32 base_path_len;
-        char basedir[MAX_PATH_LENGTH];
-        char old_full[MAX_PATH_LENGTH];
-        char *current_rel_path;
+    if (!gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter,
+                                 tree_path)) {
+        return;
+    }
 
-        gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
-                           &row, -1);
+    gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR, &row,
+                       -1);
 
-        if (side == SIDE_LEFT) {
-            base_path = cecup.src_base;
-            base_path_len = cecup.src_base_len;
-            current_rel_path = row->src_path;
+    if (side == SIDE_LEFT) {
+        base_path = cecup.src_base;
+        base_path_len = cecup.src_base_len;
+        current_rel_path = row->src_path;
+    } else {
+        base_path = cecup.dst_base;
+        base_path_len = cecup.dst_base_len;
+        current_rel_path = row->dst_path;
+    }
+
+    SNPRINTF(old_full, "%s/%s", base_path, current_rel_path);
+    DIRNAME(basedir, old_full);
+
+    if (current_rel_path && (strlen32(new_text) > 0)) {
+        char *relative;
+        char new_full[MAX_PATH_LENGTH];
+
+        SNPRINTF(new_full, "%s/%s", basedir, new_text);
+        relative = new_full + base_path_len;
+
+        if (rename(old_full, new_full) == 0) {
+            IPC_SEND_LOG(_("Renamed: %s -> %s\n"), current_rel_path,
+                         relative + 1);
+
+            refresh_ui_list();
         } else {
-            base_path = cecup.dst_base;
-            base_path_len = cecup.dst_base_len;
-            current_rel_path = row->dst_path;
-        }
-
-        SNPRINTF(old_full, "%s/%s", base_path, current_rel_path);
-        DIRNAME(basedir, old_full);
-
-        if (current_rel_path && (strlen32(new_text) > 0)) {
-            char *relative;
-            char new_full[MAX_PATH_LENGTH];
-            SNPRINTF(new_full, "%s/%s", basedir, new_text);
-            relative = new_full + base_path_len + 1;
-
-            if (rename(old_full, new_full) == 0) {
-                IPC_SEND_LOG(_("Renamed: %s -> %s\n"), current_rel_path,
-                             relative);
-                refresh_ui_list();
-            } else {
-                IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full,
-                                   new_full, strerror(errno));
-            }
+            IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full,
+                               new_full, strerror(errno));
         }
     }
 
