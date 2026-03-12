@@ -623,6 +623,8 @@ work_rsync(void *user_data) {
                     dst_path += 1;
                 }
 
+                PRINTLN(dst_path);
+
                 SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base, dst_path);
                 SNPRINTF(full_dst_path_val, "%s/%s", cecup.dst_base, dst_path);
 
@@ -630,10 +632,12 @@ work_rsync(void *user_data) {
                     src_size = 0;
                     src_mtime = 0;
                     reason = REASON_MISSING;
+                    HERE;
                 } else {
                     src_size = st_src.st_size;
                     src_mtime = (int64)st_src.st_mtime;
                     reason = REASON_IGNORED;
+                    HERE;
                 }
 
                 if (lstat(full_dst_path_val, &st_dst) < 0) {
@@ -647,6 +651,7 @@ work_rsync(void *user_data) {
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
                 if (thread_data->is_preview && (reason == REASON_MISSING)) {
+                    HERE;
                     // if source file exists, rsync will report it as ignored
                     // so we dont send it here to avoid the duplication
                     ipc_send_tree(SIDE_RIGHT,
