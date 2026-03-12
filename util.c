@@ -1684,6 +1684,33 @@ xdirname(char *path) {
     return dirname(copy);
 }
 
+static void
+dirname2(char *buffer, int64 size, char *path) {
+    char *last_slash;
+    int64 dir_length;
+
+    if ((last_slash = strrchr(path, '/')) == NULL) {
+        snprintf2(buffer, size, ".");
+        return;
+    }
+
+    dir_length = (int64)(last_slash - path);
+    if (dir_length == 0) {
+        dir_length = 1;
+    }
+
+    if (dir_length >= size) {
+        error("Error in %s: path '%s' is too long.\n", __func__, path);
+        fatal(EXIT_FAILURE);
+    }
+
+    memcpy64(buffer, path, dir_length);
+    buffer[dir_length] = '\0';
+    return;
+}
+
+#define DIRNAME(BUFFER, PATH) dirname2(BUFFER, sizeof(BUFFER), PATH)
+
 #if TESTING_util
 
 static void
@@ -1719,13 +1746,21 @@ main(int argc, char **argv) {
     char *p3;
     char *string = __FILE__;
 
+    // Note: NEVER delete lines with // clang-format
+    // clang-format off
     char *paths[] = {
         "/aaaa/bbbb/cccc", "/aa/bb/cc", "/a/b/c",    "a/b/c",
-        "a/b/cccc",        "a/bb/cccc", "aaaa/cccc",
+        "a/b/cccc",        "a/bb/cccc", "aaaa/cccc", "/aaaa",
     };
     char *bases[] = {
-        "cccc", "cc", "c", "c", "cccc", "cccc", "cccc",
+        "cccc",            "cc",        "c",         "c",
+        "cccc",            "cccc",      "cccc",      "aaaa"
     };
+    char *dirs[] = {
+        "/aaaa/bbbb",      "/aa/bb",    "/a/b",      "a/b",
+        "a/b",             "a/bb",      "aaaa",      "/",
+    };
+    // clang-format on
     (void)argc;
 
     if (OS_LINUX) {
@@ -1757,6 +1792,12 @@ main(int argc, char **argv) {
     for (int64 i = 0; i < LENGTH(paths); i += 1) {
         char *path = paths[i];
         ASSERT_EQUAL(basename2(path), bases[i]);
+    }
+
+    for (int64 i = 0; i < LENGTH(paths); i += 1) {
+        char buffer[4096];
+        DIRNAME(buffer, paths[i]);
+        ASSERT_EQUAL(buffer, dirs[i]);
     }
 
     if (OS_WINDOWS) {
