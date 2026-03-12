@@ -437,43 +437,30 @@ update_ui_handler(void *data) {
 
         switch (message->action) {
         case UI_ACTION_NEW:
-            row->src_color = "#D4EDDA";
             dst_path_final = NULL;
             break;
         case UI_ACTION_UPDATE:
-            row->src_color = "#CCE5FF";
-            row->dst_color = "#CCE5FF";
             break;
         case UI_ACTION_HARDLINK:
-            row->src_color = "#E2D1F9";
-            row->dst_color = "#E2D1F9";
             dst_path_final = NULL;
             break;
         case UI_ACTION_SYMLINK:
-            row->src_color = "#FFD1F9";
-            row->dst_color = "#FFD1F9";
             dst_path_final = NULL;
             break;
         case UI_ACTION_EQUAL:
-            row->src_color = "#F0F0F0";
-            row->dst_color = "#F0F0F0";
             break;
         case UI_ACTION_IGNORE:
         case UI_ACTION_DELETE:
             if (message->reason == UI_REASON_IGNORED) {
-                row->src_color = "#FFF3CD";
                 row->src_action = UI_ACTION_IGNORE;
 
                 if (gtk_toggle_button_get_active(
                         GTK_TOGGLE_BUTTON(cecup.delete_excluded))) {
-                    row->dst_color = "#FFF3CD";
                     row->dst_action = UI_ACTION_DELETE;
                 } else {
-                    row->dst_color = "#F0F0F0";
                     row->dst_action = UI_ACTION_IGNORE;
                 }
             } else {
-                row->dst_color = "#F8D7DA";
                 row->src_action = UI_ACTION_DELETED;
                 row->dst_action = UI_ACTION_DELETE;
                 src_path_final = NULL;
@@ -485,6 +472,9 @@ update_ui_handler(void *data) {
             error("Invalid message->action: %u\n", message->action);
             fatal(EXIT_FAILURE);
         }
+
+        row->src_color = colors[row->src_action];
+        row->dst_color = colors[row->dst_action];
 
         bytes_pretty(row->size_text, message->size);
         row->size_raw = message->size;

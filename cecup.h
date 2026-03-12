@@ -103,6 +103,17 @@ static char *reason_strings[] = {
     [UI_REASON_UPDATE]   = N_("The original file is newer"),
 };
 
+static char *colors[] = {
+    [UI_ACTION_NEW]      = "#D4EDDA",
+    [UI_ACTION_UPDATE]   = "#CCE5FF",
+    [UI_ACTION_HARDLINK] = "#E2D1F9",
+    [UI_ACTION_SYMLINK]  = "#FFD1F9",
+    [UI_ACTION_EQUAL]    = "#F0F0F0",
+    [UI_ACTION_IGNORE]   = "#FFF3CD",
+    [UI_ACTION_DELETE]   = "#F8D7DA",
+    [UI_ACTION_DELETED]  = "#F8D7DA",
+};
+
 enum CecupColumn {
     COL_SELECTED = 0,
     COL_SRC_ACTION,
