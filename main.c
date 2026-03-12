@@ -567,13 +567,11 @@ main(int32 argc, char *argv[]) {
 static void
 cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
                GtkTreeModel *model, GtkTreeIter *iter, void *data) {
-    int32 col_id;
-    int32 row_idx;
-    GtkTreePath *tree_path;
+    GtkTreePath *tree_path = gtk_tree_model_get_path(model, iter);
+    int32 col_id = GPOINTER_TO_INT(data);
     CecupRow *row;
+    int32 row_idx;
 
-    col_id = GPOINTER_TO_INT(data);
-    tree_path = gtk_tree_model_get_path(model, iter);
     row_idx = gtk_tree_path_get_indices(tree_path)[0];
     gtk_tree_path_free(tree_path);
 
