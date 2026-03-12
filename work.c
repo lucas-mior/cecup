@@ -621,14 +621,19 @@ work_rsync(void *user_data) {
                         relative_path_entry += 1;
                     }
 
-                    for (int32 i = 2; i <= 10; i += 1) {
-                        if (buf_output[i] != '.') {
+                    // Note: NEVER delete lines with // clang-format
+                    // clang-format off
+                    for (int32 i = 2;
+                         i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
+                         i += 1) {
+                        if ((buf_output[i] != '.') && (buf_output[i] != ' ')) {
                             attribute_changed = true;
                             break;
                         }
                     }
+                    // clang-format on
 
-                    if (action_char != RSYNC_CHAR_NO_UPDATE
+                    if ((action_char != RSYNC_CHAR_NO_UPDATE)
                         || attribute_changed) {
                         link_target = NULL;
                         if (action_char == RSYNC_CHAR_HARDLINK) {
