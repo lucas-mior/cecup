@@ -1306,14 +1306,14 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
     if (side == SIDE_LEFT) {
         base_path = cecup.src_base;
         base_path_len = cecup.src_base_len;
-        if (!row->src_path) {
+        if (row->src_path == NULL) {
             goto out;
         }
         SNPRINTF(relative_old, "/%s", row->src_path);
     } else {
         base_path = cecup.dst_base;
         base_path_len = cecup.dst_base_len;
-        if (!row->dst_path) {
+        if (row->dst_path == NULL) {
             goto out;
         }
         SNPRINTF(relative_old, "/%s", row->dst_path);
