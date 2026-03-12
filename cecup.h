@@ -226,8 +226,8 @@ static struct {
     ulong dst_entry_id;
     char *src_base;
     char *dst_base;
-    int64 src_base_len;
-    int64 dst_base_len;
+    int32 src_base_len;
+    int32 dst_base_len;
 
     GtkWidget *diff_entry;
     GtkWidget *term_entry;
