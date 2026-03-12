@@ -290,8 +290,13 @@ refresh_ui_list(void) {
             count_delete += 1;
             break;
         case ACTION_IGNORE:
-            visible = show_ignore;
-            count_ignore += 1;
+            if (row->dst_action == ACTION_DELETE) {
+                visible = show_delete;
+                count_delete += 1;
+            } else {
+                visible = show_ignore;
+                count_ignore += 1;
+            }
             break;
         case ACTION_DELETE:
         default:

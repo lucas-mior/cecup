@@ -196,18 +196,6 @@ ipc_send_tree(int32 side,
     message->src_mtime = src_mtime;
     message->dst_size = dst_size;
     message->dst_mtime = dst_mtime;
-    if (message->action == ACTION_DELETE) {
-        PRINT(message->src_path);
-        PRINT(message->dst_path);
-        PRINT(message->type);
-        PRINT(message->side);
-        PRINT(message->action);
-        PRINT(message->reason);
-        PRINT(message->src_size);
-        PRINT(message->dst_size);
-        PRINT(message->src_mtime);
-        PRINT(message->dst_mtime);
-    }
     g_idle_add(update_ui_handler, message);
     return;
 }
