@@ -1268,10 +1268,6 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
         SNPRINTF(old_full, "%s/%s", base_path, current_rel_path);
         DIRNAME(basedir, old_full);
 
-        PRINTLN(old_full);
-        PRINTLN(new_text);
-        PRINTLN(basedir);
-
         if (current_rel_path && (strlen32(new_text) > 0)) {
             char new_full[MAX_PATH_LENGTH];
             SNPRINTF(new_full, "%s/%s", basedir, new_text);
