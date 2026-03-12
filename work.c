@@ -553,7 +553,6 @@ work_rsync(void *user_data) {
             case RSYNC_CHAR_CHANGE:
             case RSYNC_CHAR_HARDLINK:
             case RSYNC_CHAR_NO_UPDATE:
-                might_be_itemize_line &= true;
                 break;
             default:
                 might_be_itemize_line = false;
@@ -565,7 +564,6 @@ work_rsync(void *user_data) {
             case RSYNC_CHAR_SYMLINK:
             case RSYNC_CHAR_DEVICE:
             case RSYNC_CHAR_SPECIAL:
-                might_be_itemize_line &= true;
                 break;
             default:
                 might_be_itemize_line = false;
@@ -583,7 +581,6 @@ work_rsync(void *user_data) {
                 case RSYNC_CHAR_XATTR:
                 case RSYNC_CHAR_NO_ATTR_CHANGE:
                 case RSYNC_CHAR_ALL_SPACE_MEANS_ALL_UNCHANGED:
-                    might_be_itemize_line &= true;
                     break;
                 default:
                     might_be_itemize_line = false;
@@ -594,9 +591,7 @@ work_rsync(void *user_data) {
                 }
             }
 
-            if (buf_output[strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)] == ' ') {
-                might_be_itemize_line &= true;
-            } else {
+            if (buf_output[strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)] != ' ') {
                 might_be_itemize_line = false;
             }
 
