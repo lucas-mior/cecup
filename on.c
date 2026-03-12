@@ -1248,6 +1248,7 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
     if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter,
                                 tree_path)) {
         char *base_path;
+        int32 base_path_len;
         char basedir[MAX_PATH_LENGTH];
         char old_full[MAX_PATH_LENGTH];
         char *current_rel_path;
@@ -1257,9 +1258,11 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
 
         if (side == SIDE_LEFT) {
             base_path = cecup.src_base;
+            base_path_len = cecup.src_base_len;
             current_rel_path = row->src_path;
         } else {
             base_path = cecup.dst_base;
+            base_path_len = cecup.dst_base_len;
             current_rel_path = row->dst_path;
         }
 
@@ -1267,12 +1270,14 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
         DIRNAME(basedir, old_full);
 
         if (current_rel_path && (strlen32(new_text) > 0)) {
+            char *relative;
             char new_full[MAX_PATH_LENGTH];
             SNPRINTF(new_full, "%s/%s", basedir, new_text);
+            relative = new_full + base_path_len + 1;
 
             if (rename(old_full, new_full) == 0) {
                 IPC_SEND_LOG(_("Renamed: %s -> %s\n"), current_rel_path,
-                             new_text);
+                             relative);
                 refresh_ui_list();
             } else {
                 IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full,
