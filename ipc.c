@@ -78,35 +78,9 @@ ipc_send_log_internal(enum DataType type, char *format, ...) {
 
 // Note: NEVER delete lines with // clang-format
 // clang-format off
-#define IPC_SEND_LOG_1(X)        ipc_send_log_internal(DATA_TYPE_LOG, "%s", X)
-#define IPC_SEND_LOG_2(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_3(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_4(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_5(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_6(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_7(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_8(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG(...)           SELECT_ON_NUM_ARGS(IPC_SEND_LOG_, __VA_ARGS__)
-
-#define IPC_SEND_LOG_ERROR_1(X)        ipc_send_log_internal(DATA_TYPE_LOG_ERROR, "%s", X)
-#define IPC_SEND_LOG_ERROR_2(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_ERROR_3(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_ERROR_4(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_ERROR_5(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_ERROR_6(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_ERROR_7(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_ERROR_8(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_ERROR, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_ERROR(...)           SELECT_ON_NUM_ARGS(IPC_SEND_LOG_ERROR_, __VA_ARGS__)
-
-#define IPC_SEND_LOG_CMD_1(X)        ipc_send_log_internal(DATA_TYPE_LOG_CMD, "%s", X)
-#define IPC_SEND_LOG_CMD_2(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_CMD_3(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_CMD_4(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_CMD_5(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_CMD_6(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_CMD_7(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_CMD_8(FORMAT, ...) ipc_send_log_internal(DATA_TYPE_LOG_CMD, FORMAT, __VA_ARGS__)
-#define IPC_SEND_LOG_CMD(...)           SELECT_ON_NUM_ARGS(IPC_SEND_LOG_CMD_, __VA_ARGS__)
+#define IPC_SEND_LOG(...)        ipc_send_log_internal(DATA_TYPE_LOG, __VA_ARGS__)
+#define IPC_SEND_LOG_ERROR(...)  ipc_send_log_internal(DATA_TYPE_LOG_ERROR, __VA_ARGS__)
+#define IPC_SEND_LOG_CMD(...)    ipc_send_log_internal(DATA_TYPE_LOG_CMD, __VA_ARGS__)
 
 // clang-format on
 
