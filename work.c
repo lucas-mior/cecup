@@ -640,7 +640,7 @@ work_rsync(void *user_data) {
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
                 if (thread_data->is_preview
-                    && deletion_reason != REASON_MISSING) {
+                    && (deletion_reason != REASON_MISSING)) {
                     // if source file exists, rsync will report it as ignored
                     // so we dont send it here to avoid the duplication
                     ipc_send_tree(SIDE_RIGHT,
