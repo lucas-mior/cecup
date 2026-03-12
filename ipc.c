@@ -28,8 +28,6 @@ ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
     Message *message;
     char buffer[MAX_PATH_LENGTH*2];
     int32 n;
-    int32 last_whitespace_index;
-    int32 current_column;
     va_list va_args;
 
     va_start(va_args, format);
@@ -44,28 +42,6 @@ ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
         // clang-format on
     }
     va_end(va_args);
-
-    last_whitespace_index = -1;
-    current_column = 0;
-    for (int32 i = 0; i < n; i += 1) {
-        if ((buffer[i] == ' ') || (buffer[i] == '\t') || (buffer[i] == '\n')) {
-            last_whitespace_index = i;
-        }
-
-        if (buffer[i] == '\n') {
-            current_column = 0;
-        } else {
-            current_column += 1;
-        }
-
-        if (current_column > 120) {
-            if (last_whitespace_index != -1) {
-                buffer[last_whitespace_index] = '\n';
-                current_column = i - last_whitespace_index;
-                last_whitespace_index = -1;
-            }
-        }
-    }
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));

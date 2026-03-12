@@ -1233,6 +1233,32 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 }
 
 static void
+regenerate_preview_filtered(char *relative_old, char *relative_new) {
+    ThreadData *thread_data;
+
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
+    memset64(thread_data, 0, SIZEOF(*thread_data));
+    g_mutex_unlock(&cecup.ui_arena_mutex);
+
+    thread_data->is_preview = true;
+    thread_data->check_different_fs
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
+    thread_data->delete_excluded = gtk_toggle_button_get_active(
+        GTK_TOGGLE_BUTTON(cecup.delete_excluded));
+    thread_data->delete_after
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.delete_after));
+
+    thread_data->filtered = true;
+    thread_data->relative_old = relative_old;
+    thread_data->relative_new = relative_new;
+    PRINTLN(relative_new);
+    PRINTLN(relative_old);
+
+    g_thread_new("work_rsync", work_rsync, thread_data);
+}
+
+static void
 on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
                void *data) {
     GtkWidget *tree = data;
@@ -1244,7 +1270,8 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
     int32 base_path_len;
     char basedir[MAX_PATH_LENGTH];
     char old_full[MAX_PATH_LENGTH];
-    char *current_rel_path;
+    char relative_old[MAX_PATH_LENGTH];
+    char relative_new[MAX_PATH_LENGTH];
 
     (void)renderer;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
@@ -1261,26 +1288,31 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
     if (side == SIDE_LEFT) {
         base_path = cecup.src_base;
         base_path_len = cecup.src_base_len;
-        current_rel_path = row->src_path;
+        if (!row->dst_path) {
+            goto out;
+        }
+        SNPRINTF(relative_old, "/%s/", row->src_path);
     } else {
         base_path = cecup.dst_base;
         base_path_len = cecup.dst_base_len;
-        current_rel_path = row->dst_path;
+        if (!row->dst_path) {
+            goto out;
+        }
+        SNPRINTF(relative_old, "/%s/", row->dst_path);
     }
 
-    SNPRINTF(old_full, "%s/%s", base_path, current_rel_path);
+    SNPRINTF(old_full, "%s/%s", base_path, relative_old);
     DIRNAME(basedir, old_full);
 
-    if (current_rel_path && (strlen32(new_text) > 0)) {
-        char *relative;
+    if (strlen32(new_text) > 0) {
         char new_full[MAX_PATH_LENGTH];
 
         SNPRINTF(new_full, "%s/%s", basedir, new_text);
-        relative = new_full + base_path_len;
+        SNPRINTF(relative_new, "/%s/", new_full + base_path_len);
 
         if (rename(old_full, new_full) == 0) {
-            IPC_SEND_LOG(_("Renamed: %s -> %s\n"), current_rel_path,
-                         relative + 1);
+            IPC_SEND_LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
+            regenerate_preview_filtered(relative_old, relative_new);
 
             refresh_ui_list();
         } else {
@@ -1289,6 +1321,7 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
         }
     }
 
+out:
     gtk_tree_path_free(tree_path);
     return;
 }

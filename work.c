@@ -313,7 +313,7 @@ work_rsync(void *user_data) {
 
     char src_dir[MAX_PATH_LENGTH];
     char dst_dir[MAX_PATH_LENGTH];
-    char *rsync_args[32];
+    char *rsync_args[64];
     int32 a = 0;
     char cmd[MAX_PATH_LENGTH*2];
 
@@ -357,7 +357,7 @@ work_rsync(void *user_data) {
         }
     }
 
-    if (thread_data->is_preview) {
+    if (thread_data->is_preview && !thread_data->filtered) {
         Message *message;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
@@ -402,9 +402,18 @@ work_rsync(void *user_data) {
     if (thread_data->is_preview) {
         rsync_args[a++] = "--dry-run";
     }
-    if (access(cecup.ignore_path, F_OK) != -1) {
-        rsync_args[a++] = "--exclude-from";
-        rsync_args[a++] = cecup.ignore_path;
+
+    if (thread_data->filtered) {
+        rsync_args[a++] = "--exclude=*";
+        rsync_args[a++] = "--include";
+        rsync_args[a++] = thread_data->relative_old;
+        rsync_args[a++] = "--include";
+        rsync_args[a++] = thread_data->relative_new;
+    } else {
+        if (access(cecup.ignore_path, F_OK) != -1) {
+            rsync_args[a++] = "--exclude-from";
+            rsync_args[a++] = cecup.ignore_path;
+        }
     }
 
     SNPRINTF(src_dir, "%s/", cecup.src_base);
@@ -415,6 +424,10 @@ work_rsync(void *user_data) {
 
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
     IPC_SEND_LOG_CMD("%s\n", cmd);
+
+    if (thread_data->filtered) {
+        goto finalize;
+    }
 
     switch (child_process_id = fork()) {
     case -1:
