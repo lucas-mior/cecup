@@ -845,11 +845,12 @@ work_rsync(void *user_data) {
         execvp("rsync", rsync_args);
         _exit(EXIT_FAILURE);
     default:
+        XCLOSE(&pipe_stdin[0]);
+        XCLOSE(&pipe_stdout[1]);
+        XCLOSE(&pipe_stderr[1]);
         break;
     }
-    XCLOSE(&pipe_stdin[0]);
-    XCLOSE(&pipe_stdout[1]);
-    XCLOSE(&pipe_stderr[1]);
+
     for (int32 i = 0; i < checksum_count; i += 1) {
         write64(pipe_stdin[1], checksum_files[i], strlen32(checksum_files[i]));
         write64(pipe_stdin[1], "\n", 1);
