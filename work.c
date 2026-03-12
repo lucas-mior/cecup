@@ -546,7 +546,9 @@ work_rsync(void *user_data) {
             bool might_be_itemize_line = true;
 
             *eol = '\0';
-            ipc_send_log("%s\n", buf_output);
+            if (DEBUGGING) {
+                error("%s\n", buf_output);
+            }
 
             switch (action_char) {
             case RSYNC_CHAR0_ACTION_SEND:
