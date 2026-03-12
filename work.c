@@ -462,14 +462,17 @@ work_rsync(void *user_data) {
         break;
     }
 
+    pipes[0].fd = pipe_stdout[0];
+    pipes[1].fd = pipe_stderr[0];
+    pipes[0].events = POLLIN;
+    pipes[1].events = POLLIN;
+
     do {
         int64 r;
         char *eol;
 
-        pipes[0].fd = pipe_stdout[0];
-        pipes[0].events = POLLIN;
-        pipes[1].fd = pipe_stderr[0];
-        pipes[1].events = POLLIN;
+        pipes[0].revents = 0;
+        pipes[1].revents = 0;
 
         if (cecup.cancel_sync) {
             if (kill(-child_pid, SIGTERM) < 0) {
@@ -836,12 +839,15 @@ work_rsync(void *user_data) {
     }
     XCLOSE(&pipe_stdin[1]);
 
+    pipes[0].fd = pipe_stdout[0];
+    pipes[1].fd = pipe_stderr[0];
+    pipes[0].events = POLLIN;
+    pipes[1].events = POLLIN;
+
     do {
         int64 r;
-        pipes[0].fd = pipe_stdout[0];
-        pipes[0].events = POLLIN;
-        pipes[1].fd = pipe_stderr[0];
-        pipes[1].events = POLLIN;
+        pipes[0].revents = 0;
+        pipes[1].revents = 0;
 
         switch (poll(pipes, 2, 100)) {
         case -1:
@@ -1116,14 +1122,17 @@ work_rsync_bulk(void *user_data) {
     }
     XCLOSE(&pipe_stdin[1]);
 
+    pipes[0].fd = pipe_stdout[0];
+    pipes[1].fd = pipe_stderr[0];
+    pipes[0].events = POLLIN;
+    pipes[1].events = POLLIN;
+
     do {
         int64 r;
         char *eol;
 
-        pipes[0].fd = pipe_stdout[0];
-        pipes[0].events = POLLIN;
-        pipes[1].fd = pipe_stderr[0];
-        pipes[1].events = POLLIN;
+        pipes[0].revents = 0;
+        pipes[1].revents = 0;
 
         if (cecup.cancel_sync) {
             if (kill(-child_pid, SIGTERM) < 0) {
