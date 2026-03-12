@@ -1235,16 +1235,17 @@ static void
 on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
                void *data) {
     GtkWidget *tree = data;
-    GtkTreePath *path;
+    GtkTreePath *tree_path;
     GtkTreeIter iter;
     CecupRow *row;
     int32 side;
 
     (void)renderer;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
-    path = gtk_tree_path_new_from_string(path_str);
+    tree_path = gtk_tree_path_new_from_string(path_str);
 
-    if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter, path)) {
+    if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter,
+                                tree_path)) {
         char *base_path;
         char *current_rel_path;
 
@@ -1281,7 +1282,7 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
         }
     }
 
-    gtk_tree_path_free(path);
+    gtk_tree_path_free(tree_path);
     return;
 }
 
