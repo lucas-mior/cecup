@@ -654,8 +654,6 @@ work_rsync(void *user_data) {
                             }
                         } else if (buf_output[2] == '+') {
                             cecup_action = UI_ACTION_NEW;
-                        } else if (action_char == RSYNC_CHAR_NO_UPDATE) {
-                            cecup_action = UI_ACTION_EQUAL;
                         }
 
                         if ((thread_data->is_preview == 0) && (line_len > 11)
