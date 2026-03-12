@@ -1089,6 +1089,8 @@ work_rsync_bulk(void *user_data) {
             Task *task = tasks->items[i];
             char full_dst_path[MAX_PATH_LENGTH];
             pid_t child_rm;
+            int child_status;
+            bool removed = false;
 
             if (task->action != ACTION_DELETE) {
                 has_transfers = true;
@@ -1115,14 +1117,16 @@ work_rsync_bulk(void *user_data) {
                 _exit(EXIT_FAILURE);
             }
             default:
-                if (waitpid(child_rm, NULL, 0) < 0) {
+                if (waitpid(child_rm, &child_status, 0) < 0) {
                     ipc_send_log_error("Error waiting for child: %s.\n",
                                        strerror(errno));
+                } else if (WIFEXITED(child_status)) {
+                    removed = !WEXITSTATUS(child_status);
                 }
                 break;
             }
 
-            if (cecup.cancel_sync == false) {
+            if ((cecup.cancel_sync == false) && removed) {
                 Message *message;
                 int32 path_len;
 
