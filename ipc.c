@@ -137,7 +137,8 @@ ipc_send_progress(enum DataType type, double fraction) {
 static void
 ipc_send_tree(int32 side,
               enum CecupAction action, enum CecupReason reason,
-              char *path, char *link_target, char *ignore_pattern,
+              char *src_path, char *dst_path,
+              char *link_target, char *ignore_pattern,
               int64 src_size, int64 src_mtime,
               int64 dst_size, int64 dst_mtime) {
     // clang-format on
@@ -149,11 +150,25 @@ ipc_send_tree(int32 side,
     message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
     memset64(message, 0, SIZEOF(Message));
 
-    message->filepath_len = strlen32(path);
-    g_mutex_lock(&cecup.row_arena_mutex);
-    message->filepath
-        = xarena_push(cecup.row_arena, ALIGN16(message->filepath_len + 1));
-    memcpy64(message->filepath, path, message->filepath_len + 1);
+    if (src_path) {
+        message->path_len = strlen32(src_path);
+        g_mutex_lock(&cecup.row_arena_mutex);
+        message->src_path
+            = xarena_push(cecup.row_arena, ALIGN16(message->path_len + 1));
+        memcpy64(message->src_path, src_path, message->path_len + 1);
+        if (dst_path) {
+            message->dst_path = message->src_path;
+        }
+    } else if (dst_path) {
+        message->path_len = strlen32(dst_path);
+        g_mutex_lock(&cecup.row_arena_mutex);
+        message->dst_path
+            = xarena_push(cecup.row_arena, ALIGN16(message->path_len + 1));
+        memcpy64(message->dst_path, dst_path, message->path_len + 1);
+    } else {
+        error("Error: both src_path and dst_path are NULL.\n");
+        exit(EXIT_FAILURE);
+    }
 
     if (link_target) {
         target_len = strlen32(link_target);

@@ -58,7 +58,7 @@ on_menu_apply(GtkWidget *m, void *data) {
 
     (void)m;
 
-    if ((tasks = get_target_tasks(message->side, message->filepath,
+    if ((tasks = get_target_tasks(message->side, message->src_path,
                                   message->action))) {
         cecup.cancel_sync = 0;
         gtk_widget_set_sensitive(cecup.preview_button, FALSE);
@@ -107,7 +107,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
         path_type = NULL;
     }
 
-    if ((tasks = get_target_tasks(message->side, message->filepath,
+    if ((tasks = get_target_tasks(message->side, message->src_path,
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task = tasks->items[i];
@@ -120,7 +120,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
                 base_path = cecup.dst_base;
             }
 
-            SNPRINTF(full_path, "%s/%s", base_path, task->filepath);
+            SNPRINTF(full_path, "%s/%s", base_path, task->src_path);
 
             if (path_type && (strcmp(path_type, "folder") == 0)) {
                 DIRNAME(full_path, full_path);
@@ -162,7 +162,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
         base_path = cecup.dst_base;
     }
 
-    if ((tasks = get_target_tasks(message->side, message->filepath,
+    if ((tasks = get_target_tasks(message->side, message->src_path,
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task = tasks->items[i];
@@ -176,7 +176,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 
                 task = tasks->items[i];
 
-                SNPRINTF(path_relative, "%s/%s", base_path, task->filepath);
+                SNPRINTF(path_relative, "%s/%s", base_path, task->src_path);
                 if (realpath(path_relative, path_full) == NULL) {
                     ipc_send_log_error("Error resolving full path of %s: %s.\n",
                                        path_relative, strerror(errno));
@@ -185,8 +185,8 @@ on_menu_copy_path(GtkWidget *m, void *data) {
                 path = path_full;
                 path_len = strlen32(path_full);
             } else {
-                path = task->filepath;
-                path_len = task->filepath_len;
+                path = task->src_path;
+                path_len = task->path_len;
             }
 
             if ((i > 0) && (remaining_capacity > 0)) {
@@ -222,7 +222,7 @@ on_menu_delete(GtkWidget *m, void *data) {
     (void)m;
 
     if ((tasks
-         = get_target_tasks(message->side, message->filepath, ACTION_DELETE))) {
+         = get_target_tasks(message->side, message->src_path, ACTION_DELETE))) {
         count = tasks->count;
         dialog = gtk_message_dialog_new(
             GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
@@ -255,7 +255,7 @@ on_menu_diff(GtkWidget *m, void *data) {
     diff_tool = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.diff_entry));
     term_cmd = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.term_entry));
 
-    if ((tasks = get_target_tasks(message->side, message->filepath,
+    if ((tasks = get_target_tasks(message->side, message->src_path,
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task = tasks->items[i];
@@ -264,8 +264,8 @@ on_menu_diff(GtkWidget *m, void *data) {
             int64 size_dst;
             int64 size_src;
 
-            size_src = strlen32(cecup.src_base) + strlen32(task->filepath) + 2;
-            size_dst = strlen32(cecup.dst_base) + strlen32(task->filepath) + 2;
+            size_src = strlen32(cecup.src_base) + strlen32(task->src_path) + 2;
+            size_dst = strlen32(cecup.dst_base) + strlen32(task->src_path) + 2;
 
             switch (fork()) {
             case -1:
@@ -278,9 +278,9 @@ on_menu_diff(GtkWidget *m, void *data) {
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
                 snprintf2(path_src, size_src,
-                          "%s/%s", cecup.src_base, task->filepath);
+                          "%s/%s", cecup.src_base, task->src_path);
                 snprintf2(path_dst, size_dst,
-                          "%s/%s", cecup.dst_base, task->filepath);
+                          "%s/%s", cecup.dst_base, task->src_path);
                 // clang-format on
 
                 {
@@ -317,7 +317,7 @@ on_menu_ignore_ext(GtkWidget *m, void *data) {
     (void)m;
 
     do {
-        if ((tasks = get_target_tasks(message->side, message->filepath,
+        if ((tasks = get_target_tasks(message->side, message->src_path,
                                       message->action))
             == NULL) {
             break;
@@ -331,7 +331,7 @@ on_menu_ignore_ext(GtkWidget *m, void *data) {
             Message *task = tasks->items[i];
             char *ext;
 
-            if ((ext = strrchr(task->filepath, '.')) != NULL) {
+            if ((ext = strrchr(task->src_path, '.')) != NULL) {
                 fprintf(fp, "\n*%s", ext);
             }
         }
@@ -354,7 +354,7 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
 
     do {
         char dir_buffer[MAX_PATH_LENGTH];
-        if ((tasks = get_target_tasks(message->side, message->filepath,
+        if ((tasks = get_target_tasks(message->side, message->src_path,
                                       message->action))
             == NULL) {
             break;
@@ -365,7 +365,7 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Message *task = tasks->items[i];
 
-            DIRNAME(dir_buffer, task->filepath);
+            DIRNAME(dir_buffer, task->src_path);
             if (strcmp(dir_buffer, ".")) {
                 fprintf(fp, "\n/%s/", dir_buffer);
             }
@@ -853,10 +853,10 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
                     memset64(message, 0, SIZEOF(*message));
 
                     if (filepath) {
-                        message->filepath_len = path_len;
-                        message->filepath = xarena_push(cecup.ui_arena,
+                        message->path_len = path_len;
+                        message->src_path = xarena_push(cecup.ui_arena,
                                                         ALIGN16(path_len + 1));
-                        memcpy64(message->filepath, filepath, path_len + 1);
+                        memcpy64(message->src_path, filepath, path_len + 1);
                     }
                     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -920,10 +920,10 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                                           ALIGN16(SIZEOF(*message)));
                     memset64(message, 0, SIZEOF(*message));
 
-                    message->filepath_len = path_len;
-                    message->filepath
+                    message->path_len = path_len;
+                    message->src_path
                         = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                    memcpy64(message->filepath, filepath, path_len + 1);
+                    memcpy64(message->src_path, filepath, path_len + 1);
                     g_mutex_unlock(&cecup.ui_arena_mutex);
 
                     message->action = action;
@@ -974,10 +974,10 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         memset64(message, 0, SIZEOF(*message));
 
         if (filepath) {
-            message->filepath_len = path_len;
-            message->filepath
+            message->path_len = path_len;
+            message->src_path
                 = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-            memcpy64(message->filepath, filepath, path_len + 1);
+            memcpy64(message->src_path, filepath, path_len + 1);
         }
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1248,9 +1248,13 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
                                 tree_path)) {
         char *base_path;
         char *current_rel_path;
+        char *new_src_path;
+        char *new_dst_path;
 
         gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
                            &row, -1);
+        new_src_path = row->src_path;
+        new_dst_path = row->dst_path;
 
         if (side == SIDE_LEFT) {
             base_path = cecup.src_base;
@@ -1260,18 +1264,26 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
             current_rel_path = row->dst_path;
         }
 
-        if (current_rel_path && strlen32(new_text) > 0) {
+        if (current_rel_path && (strlen32(new_text) > 0)) {
             char old_full[MAX_PATH_LENGTH];
             char new_full[MAX_PATH_LENGTH];
 
             SNPRINTF(old_full, "%s/%s", base_path, current_rel_path);
             SNPRINTF(new_full, "%s/%s", base_path, new_text);
 
+            if (side == SIDE_LEFT) {
+                new_src_path = new_text;
+            }
+            if (side == SIDE_RIGHT) {
+                new_dst_path = new_text;
+            }
+
             if (rename(old_full, new_full) == 0) {
-                ipc_send_tree(side, row->src_action, row->reason, new_text,
-                              row->link_target, row->ignore_pattern,
-                              row->src_size_raw, row->src_mtime_raw,
-                              row->dst_size_raw, row->dst_mtime_raw);
+                ipc_send_tree(side, row->src_action, row->reason, new_src_path,
+                              new_dst_path, row->link_target,
+                              row->ignore_pattern, row->src_size_raw,
+                              row->src_mtime_raw, row->dst_size_raw,
+                              row->dst_mtime_raw);
                 ipc_send_log(_("Renamed: %s -> %s\n"), current_rel_path,
                              new_text);
                 on_preview_clicked(NULL, NULL);

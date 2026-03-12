@@ -36,7 +36,7 @@
 static void
 free_update_data(Message *message) {
     g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, message->filepath);
+    arena_pop(cecup.ui_arena, message->src_path);
     arena_pop(cecup.ui_arena, message);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return;
@@ -106,9 +106,9 @@ get_target_tasks(int32 side, char *clicked_path,
         task = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*task)));
         memset64(task, 0, SIZEOF(*task));
 
-        task->filepath_len = path_len;
-        task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-        memcpy64(task->filepath, file_path, path_len + 1);
+        task->path_len = path_len;
+        task->src_path = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+        memcpy64(task->src_path, file_path, path_len + 1);
 
         if (row->link_target) {
             task->link_target_len = row->link_target_len;
@@ -135,9 +135,9 @@ get_target_tasks(int32 side, char *clicked_path,
         memset64(task, 0, SIZEOF(*task));
 
         path_len = strlen32(clicked_path);
-        task->filepath_len = path_len;
-        task->filepath = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-        memcpy64(task->filepath, clicked_path, path_len + 1);
+        task->path_len = path_len;
+        task->src_path = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+        memcpy64(task->src_path, clicked_path, path_len + 1);
 
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -424,10 +424,8 @@ update_ui_handler(void *data) {
         break;
     case DATA_TYPE_TREE_ROW: {
         CecupRow *row;
-        char *src_path_final;
-        char *dst_path_final;
-        char src_buffer[MAX_PATH_LENGTH];
-        char dst_buffer[MAX_PATH_LENGTH];
+        char *src_path_final = message->src_path;
+        char *dst_path_final = message->dst_path;
 
         g_mutex_lock(&cecup.row_arena_mutex);
         row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
@@ -439,18 +437,9 @@ update_ui_handler(void *data) {
         row->dst_action = message->action;
         row->reason = message->reason;
 
-        SNPRINTF(src_buffer, "%s/%s", cecup.src_base, message->filepath);
-        SNPRINTF(dst_buffer, "%s/%s", cecup.dst_base, message->filepath);
-
-        if (!access(src_buffer, F_OK)) {
-            src_path_final = message->filepath;
-        } else {
-            src_path_final = NULL;
-        }
-        if (!access(dst_buffer, F_OK)) {
-            dst_path_final = message->filepath;
-        } else {
-            dst_path_final = NULL;
+        if (!src_path_final && !dst_path_final) {
+            error("both filenames are NULL\n");
+            exit(EXIT_FAILURE);
         }
 
         switch (message->action) {
@@ -529,12 +518,12 @@ update_ui_handler(void *data) {
         }
 
         if (src_path_final) {
-            row->src_path_len = message->filepath_len;
+            row->src_path_len = message->path_len;
         } else {
             row->src_path_len = 0;
         }
         if (dst_path_final) {
-            row->dst_path_len = message->filepath_len;
+            row->dst_path_len = message->path_len;
         } else {
             row->dst_path_len = 0;
         }
@@ -563,11 +552,10 @@ update_ui_handler(void *data) {
         g_mutex_lock(&cecup.row_arena_mutex);
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
             CecupRow *row = cecup.rows[i];
-            if (((row->src_path_len == message->filepath_len) && row->src_path
-                 && !strcmp(row->src_path, message->filepath))
-                || ((row->dst_path_len == message->filepath_len)
-                    && row->dst_path
-                    && !strcmp(row->dst_path, message->filepath))) {
+            if (((row->src_path_len == message->path_len) && row->src_path
+                 && !strcmp(row->src_path, message->src_path))
+                || ((row->dst_path_len == message->path_len) && row->dst_path
+                    && !strcmp(row->dst_path, message->src_path))) {
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }

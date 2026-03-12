@@ -645,32 +645,31 @@ work_rsync(void *user_data) {
                     // so we dont send it here to avoid the duplication
                     ipc_send_tree(SIDE_RIGHT,
                                   ACTION_DELETE, deletion_reason,
-                                  relative_path, NULL, NULL,
+                                  relative_path, relative_path, NULL, NULL,
                                   src_size, src_mtime, dst_size, dst_mtime);
                 }
                 // clang-format on
             } else if (literal_match(buf_output, RSYNC_IGNORE_PRE)
                        || literal_match(buf_output, RSYNC_IGNORE_DIR_PRE)) {
-                char *hiding_filename;
+                char *src_path;
+                char *dst_path;
                 char *reason_sep;
                 char *ignore_pattern = NULL;
 
                 if (literal_match(buf_output, RSYNC_IGNORE_PRE)) {
-                    hiding_filename = buf_output + strlen32(RSYNC_IGNORE_PRE);
+                    src_path = buf_output + strlen32(RSYNC_IGNORE_PRE);
                 } else {
-                    hiding_filename
-                        = buf_output + strlen32(RSYNC_IGNORE_DIR_PRE);
+                    src_path = buf_output + strlen32(RSYNC_IGNORE_DIR_PRE);
                 }
 
-                if ((reason_sep
-                     = strstr(hiding_filename, RSYNC_IGNORE_INTER))) {
+                if ((reason_sep = strstr(src_path, RSYNC_IGNORE_INTER))) {
                     *reason_sep = '\0';
                     ignore_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
 
                     SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
-                             hiding_filename);
+                             src_path);
                     SNPRINTF(full_dst_path_val, "%s/%s", cecup.dst_base,
-                             hiding_filename);
+                             src_path);
 
                     if (lstat(full_src_path_val, &st_src) < 0) {
                         src_size = 0;
@@ -683,9 +682,11 @@ work_rsync(void *user_data) {
                     if (lstat(full_dst_path_val, &st_dst) < 0) {
                         dst_size = 0;
                         dst_mtime = 0;
+                        dst_path = NULL;
                     } else {
                         dst_size = st_dst.st_size;
                         dst_mtime = (int64)st_dst.st_mtime;
+                        dst_path = src_path;
                     }
 
                     // Note: NEVER delete lines with // clang-format
@@ -693,7 +694,7 @@ work_rsync(void *user_data) {
                     if (thread_data->is_preview) {
                         ipc_send_tree(SIDE_LEFT,
                                       ACTION_IGNORE, REASON_IGNORED,
-                                      hiding_filename, NULL, ignore_pattern,
+                                      src_path, dst_path, NULL, ignore_pattern,
                                       src_size, src_mtime, dst_size, dst_mtime);
                     }
                     // clang-format on
@@ -704,11 +705,12 @@ work_rsync(void *user_data) {
                            || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
 
                 char *space_pos = strchr(buf_output, ' ');
-                char *relative_path_entry = space_pos + 1;
+                char *src_path = space_pos + 1;
+                char *dst_path = NULL;
                 enum CecupAction action = ACTION_UPDATE;
 
-                while (isspace(*relative_path_entry)) {
-                    relative_path_entry += 1;
+                while (isspace(*src_path)) {
+                    src_path += 1;
                 }
 
                 link_target = NULL;
@@ -716,8 +718,7 @@ work_rsync(void *user_data) {
                     char *sep;
                     action = ACTION_HARDLINK;
 
-                    if ((sep = strstr(relative_path_entry,
-                                      RSYNC_HARDLINK_NOTATION))) {
+                    if ((sep = strstr(src_path, RSYNC_HARDLINK_NOTATION))) {
                         *sep = '\0';
                         link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
                     }
@@ -725,8 +726,7 @@ work_rsync(void *user_data) {
                     char *sep;
                     action = ACTION_SYMLINK;
 
-                    if ((sep = strstr(relative_path_entry,
-                                      RSYNC_SYMLINK_NOTATION))) {
+                    if ((sep = strstr(src_path, RSYNC_SYMLINK_NOTATION))) {
                         *sep = '\0';
                         link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
                     }
@@ -747,17 +747,16 @@ work_rsync(void *user_data) {
                         checksum_files = xrealloc(
                             checksum_files, checksum_capacity*SIZEOF(char *));
                     }
-                    checksum_files[checksum_count]
-                        = xstrdup(relative_path_entry);
+                    checksum_files[checksum_count] = xstrdup(src_path);
                     checksum_count += 1;
                 }
 
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
                 SNPRINTF(full_src_path_val,
-                         "%s/%s", cecup.src_base, relative_path_entry);
+                         "%s/%s", cecup.src_base, src_path);
                 SNPRINTF(full_dst_path_val,
-                         "%s/%s", cecup.dst_base, relative_path_entry);
+                         "%s/%s", cecup.dst_base, src_path);
 
                 if (lstat(full_src_path_val, &st_src) < 0) {
                     src_size = 0;
@@ -770,15 +769,17 @@ work_rsync(void *user_data) {
                 if (lstat(full_dst_path_val, &st_dst) < 0) {
                     dst_size = 0;
                     dst_mtime = 0;
+                    dst_path = NULL;
                 } else {
                     dst_size = st_dst.st_size;
                     dst_mtime = (int64)st_dst.st_mtime;
+                    dst_path = src_path;
                 }
                 // clang-format on
 
                 if (thread_data->is_preview) {
                     ipc_send_tree(SIDE_LEFT, action, (enum CecupReason)action,
-                                  relative_path_entry, link_target, NULL,
+                                  src_path, dst_path, link_target, NULL,
                                   src_size, src_mtime, dst_size, dst_mtime);
                 }
 
@@ -795,7 +796,8 @@ work_rsync(void *user_data) {
 
                 bool attribute_changed = false;
                 char *space_pos = strchr(buf_output, ' ');
-                char *relative_path_entry = space_pos + 1;
+                char *src_path = space_pos + 1;
+                char *dst_path = NULL;
 
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
@@ -808,14 +810,14 @@ work_rsync(void *user_data) {
                     }
                 }
 
-                while (isspace(*relative_path_entry)) {
-                    relative_path_entry += 1;
+                while (isspace(*src_path)) {
+                    src_path += 1;
                 }
 
                 SNPRINTF(full_src_path_val,
-                         "%s/%s", cecup.src_base, relative_path_entry);
+                         "%s/%s", cecup.src_base, src_path);
                 SNPRINTF(full_dst_path_val,
-                         "%s/%s", cecup.dst_base, relative_path_entry);
+                         "%s/%s", cecup.dst_base, src_path);
 
                 if (lstat(full_src_path_val, &st_src) < 0) {
                     src_size = 0;
@@ -828,12 +830,12 @@ work_rsync(void *user_data) {
                 if (lstat(full_dst_path_val, &st_dst) < 0) {
                     dst_size = 0;
                     dst_mtime = 0;
+                    dst_path = NULL;
                 } else {
                     dst_size = st_dst.st_size;
                     dst_mtime = (int64)st_dst.st_mtime;
+                    dst_path = src_path;
                 }
-
-                // clang-format on
 
                 if (!attribute_changed) {
                     action = ACTION_EQUAL;
@@ -841,9 +843,10 @@ work_rsync(void *user_data) {
                 }
                 if (thread_data->is_preview) {
                     ipc_send_tree(SIDE_LEFT, action, reason,
-                                  relative_path_entry, NULL, NULL, src_size,
-                                  src_mtime, dst_size, dst_mtime);
+                                  src_path, dst_path, NULL, NULL,
+                                  src_size, src_mtime, dst_size, dst_mtime);
                 }
+                // clang-format on
             }
 
             remaining = buf_output_pos - (line_len + 1);
@@ -1088,7 +1091,7 @@ work_rsync_bulk(void *user_data) {
                 continue;
             }
 
-            SNPRINTF(full_dst_path, "%s/%s", cecup.dst_base, task->filepath);
+            SNPRINTF(full_dst_path, "%s/%s", cecup.dst_base, task->src_path);
             switch (child_rm = fork()) {
             case -1:
                 error("Error forking for rm: %s.\n", strerror(errno));
@@ -1120,11 +1123,11 @@ work_rsync_bulk(void *user_data) {
                 message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
                 memset64(message, 0, SIZEOF(Message));
 
-                path_len = task->filepath_len;
-                message->filepath_len = path_len;
-                message->filepath
+                path_len = task->path_len;
+                message->path_len = path_len;
+                message->src_path
                     = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                memcpy64(message->filepath, task->filepath, path_len + 1);
+                memcpy64(message->src_path, task->src_path, path_len + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
 
                 message->type = DATA_TYPE_REMOVE_TREE_ROW;
@@ -1239,7 +1242,7 @@ work_rsync_bulk(void *user_data) {
         case ACTION_UPDATE:
         case ACTION_SYMLINK:
         default:
-            write64(pipe_stdin[1], task->filepath, task->filepath_len);
+            write64(pipe_stdin[1], task->src_path, task->path_len);
             write64(pipe_stdin[1], "\n", 1);
         }
     }
@@ -1324,10 +1327,10 @@ work_rsync_bulk(void *user_data) {
                 message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
                 memset64(message, 0, SIZEOF(Message));
 
-                message->filepath_len = path_len;
-                message->filepath
+                message->path_len = path_len;
+                message->src_path
                     = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                memcpy64(message->filepath, filename, path_len + 1);
+                memcpy64(message->src_path, filename, path_len + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
 
                 message->type = DATA_TYPE_REMOVE_TREE_ROW;
