@@ -751,7 +751,9 @@ work_rsync(void *user_data) {
             }
             continue;
         }
+        buf_error[r] = '\0';
         ipc_send_log_error("%s", buf_error);
+
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     if (waitpid(child_pid, NULL, 0) < 0) {
@@ -875,15 +877,22 @@ work_rsync(void *user_data) {
             continue;
         }
 
-        if (pipes[1].revents & POLLIN) {
-            r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
-            if (r > 0) {
-                buf_error[r] = '\0';
-                ipc_send_log_error("%s", buf_error);
-            } else {
+        if (!(pipes[1].revents & POLLIN)) {
+            continue;
+        }
+
+        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error));
+        if (r <= 0) {
+            if (r < 0) {
+                ipc_send_log_error("Error reading stderr pipe: %s.\n",
+                                   strerror(errno));
                 pipes[1].fd = -1;
             }
+            continue;
         }
+        buf_error[r] = '\0';
+        ipc_send_log_error("%s", buf_error);
+
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
     if (waitpid(child_pid, NULL, 0) < 0) {
         ipc_send_log_error("Error waiting for rsync: %s.\n", strerror(errno));
@@ -1219,6 +1228,7 @@ work_rsync_bulk(void *user_data) {
             }
             continue;
         }
+        buf_error[r] = '\0';
         ipc_send_log_error("%s", buf_error);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
