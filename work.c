@@ -1274,7 +1274,9 @@ work_rsync_bulk(void *user_data) {
     XCLOSE(&pipe_stdout[0]);
     XCLOSE(&pipe_stderr[0]);
 
-finalize: {
+finalize:
+
+{
     Message *message;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
