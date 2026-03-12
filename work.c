@@ -548,6 +548,9 @@ work_rsync(void *user_data) {
             if (DEBUGGING) {
                 error("%s\n", buf_output);
             }
+            if (literal_match(buf_output, "[sender] showing")) {
+                error("%s\n", buf_output);
+            }
 
             switch (action_char) {
             case RSYNC_CHAR0_ACTION_SEND:

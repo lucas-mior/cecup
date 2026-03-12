@@ -1763,6 +1763,32 @@ dirname2(char *buffer, int64 size, char *path) {
     return;
 }
 
+static void
+normalize(char *path) {
+    char *p = path;
+    int64 off = 0;
+    int32 length = strlen32(path);
+
+    PRINTLN(path);
+
+    while ((p = memmem64(path + off, length - off, "//", 2))) {
+        off = p - path;
+
+        memmove64(&p[0], &p[1], length - off);
+        length -= 1;
+    }
+
+    off = 0;
+    while ((p = memmem64(path + off, length - off, "/./", 3))) {
+        off = p - path;
+
+        memmove64(&p[1], &p[3], length - off - 2);
+        length -= 2;
+    }
+
+    return;
+}
+
 #define DIRNAME(BUFFER, PATH) dirname2(BUFFER, sizeof(BUFFER), PATH)
 
 static void
