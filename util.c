@@ -1089,7 +1089,7 @@ error(char *format, ...) {
     va_start(args, format);
     n = vsnprintf(buffer, (size_t)m, format, args);
 
-    if (n >= SIZEOF(buffer)) {
+    if (n >= m) {
         if (RELEASING) {
             m = n + 1;
             big_buffer = xmalloc(m);
