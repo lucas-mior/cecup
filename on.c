@@ -1099,7 +1099,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 static gboolean
 on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 void *d) {
-    GtkTreePath *path_obj;
+    GtkTreePath *tree_path;
     GtkTreeViewColumn *col;
     gint bin_x;
     gint bin_y;
@@ -1118,11 +1118,11 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                                                       &bin_x, &bin_y);
 
     if (!gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(w), bin_x, bin_y,
-                                       &path_obj, &col, NULL, NULL)) {
+                                       &tree_path, &col, NULL, NULL)) {
         return FALSE;
     }
 
-    index = gtk_tree_path_get_indices(path_obj)[0];
+    index = gtk_tree_path_get_indices(tree_path)[0];
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
     view_column_index = -1;
 
@@ -1224,10 +1224,10 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
         g_mutex_lock(&cecup.ui_arena_mutex);
         arena_pop(cecup.ui_arena, tip_text);
         g_mutex_unlock(&cecup.ui_arena_mutex);
-        gtk_tree_path_free(path_obj);
+        gtk_tree_path_free(tree_path);
         return TRUE;
     }
-    gtk_tree_path_free(path_obj);
+    gtk_tree_path_free(tree_path);
     return FALSE;
 }
 
