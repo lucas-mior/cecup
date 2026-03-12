@@ -453,7 +453,22 @@ update_ui_handler(void *data) {
             break;
         case ACTION_EQUAL:
             break;
-        case ACTION_IGNORE:
+        case ACTION_IGNORE: {
+            if (message->reason == REASON_IGNORED) {
+                row->src_action = ACTION_IGNORE;
+                if (gtk_toggle_button_get_active(
+                        GTK_TOGGLE_BUTTON(cecup.delete_excluded))) {
+                    row->dst_action = ACTION_DELETE;
+                } else {
+                    row->dst_action = ACTION_IGNORE;
+                }
+            } else {
+                row->src_action = ACTION_DELETED;
+                row->dst_action = ACTION_DELETE;
+                src_path_final = NULL;
+            }
+            break;
+        }
         case ACTION_DELETE:
             if (message->reason == REASON_IGNORED) {
                 row->src_action = ACTION_IGNORE;
