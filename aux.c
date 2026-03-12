@@ -548,10 +548,11 @@ update_ui_handler(void *data) {
         g_mutex_lock(&cecup.row_arena_mutex);
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
             CecupRow *row = cecup.rows[i];
-            if ((row->src_path_len == message->filepath_len && row->src_path
-                 && strcmp(row->src_path, message->filepath) == 0)
-                || (row->dst_path_len == message->filepath_len && row->dst_path
-                    && strcmp(row->dst_path, message->filepath) == 0)) {
+            if (((row->src_path_len == message->filepath_len) && row->src_path
+                 && !strcmp(row->src_path, message->filepath))
+                || ((row->dst_path_len == message->filepath_len)
+                    && row->dst_path
+                    && !strcmp(row->dst_path, message->filepath))) {
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }
