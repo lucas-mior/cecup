@@ -511,7 +511,7 @@ work_rsync(void *user_data) {
         }
 
         r = read64(pipe_stdout[0], buf_output + buf_output_pos,
-                   SIZEOF(buf_output) - buf_output_pos - 1);
+                   SIZEOF(buf_output) - 1 - buf_output_pos);
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
@@ -880,7 +880,7 @@ work_rsync(void *user_data) {
             continue;
         }
 
-        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error));
+        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stderr pipe: %s.\n",
@@ -1013,7 +1013,7 @@ work_rsync(void *user_data) {
             continue;
         }
 
-        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error));
+        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stderr pipe: %s.\n",
@@ -1289,7 +1289,7 @@ work_rsync_bulk(void *user_data) {
         }
 
         r = read64(pipe_stdout[0], buf_output + buf_output_pos,
-                   SIZEOF(buf_output) - buf_output_pos - 1);
+                   SIZEOF(buf_output) - 1 - buf_output_pos);
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
@@ -1352,7 +1352,7 @@ work_rsync_bulk(void *user_data) {
             continue;
         }
 
-        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error));
+        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stderr pipe: %s.\n",

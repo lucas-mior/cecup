@@ -23,7 +23,8 @@
 #include "cecup.h"
 
 static void
-ipc_send_log_internal(enum DataType type, char *format, ...) {
+ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
+                      ...) {
     Message *message;
     char buffer[MAX_PATH_LENGTH*2];
     int32 n;
@@ -35,8 +36,12 @@ ipc_send_log_internal(enum DataType type, char *format, ...) {
     n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
 
     if ((n <= 0) || (n >= SIZEOF(buffer))) {
-        error("Error in vsnprintf(%s) (n = %lld)\n", format, (llong)n);
+        // Note: NEVER delete lines with // clang-format
+        // clang-format off
+        error("%s:%d: Error in vsnprintf(%s) (n = %lld)\n",
+              file, line, format, (llong)n);
         exit(EXIT_FAILURE);
+        // clang-format on
     }
     va_end(va_args);
 
@@ -78,9 +83,9 @@ ipc_send_log_internal(enum DataType type, char *format, ...) {
 
 // Note: NEVER delete lines with // clang-format
 // clang-format off
-#define IPC_SEND_LOG(...)        ipc_send_log_internal(DATA_TYPE_LOG, __VA_ARGS__)
-#define IPC_SEND_LOG_ERROR(...)  ipc_send_log_internal(DATA_TYPE_LOG_ERROR, __VA_ARGS__)
-#define IPC_SEND_LOG_CMD(...)    ipc_send_log_internal(DATA_TYPE_LOG_CMD, __VA_ARGS__)
+#define IPC_SEND_LOG(...)        ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG, __VA_ARGS__)
+#define IPC_SEND_LOG_ERROR(...)  ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_ERROR, __VA_ARGS__)
+#define IPC_SEND_LOG_CMD(...)    ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_CMD, __VA_ARGS__)
 // clang-format on
 
 static void
