@@ -407,7 +407,6 @@ work_rsync(void *user_data) {
     }
 
     if (thread_data->filtered) {
-        rsync_args[a++] = "--exclude=*";
         rsync_args[a++] = "--include";
         rsync_args[a++] = thread_data->relative_old;
         if (thread_data->relative_old[strlen32(thread_data->relative_old) - 1]
@@ -425,6 +424,7 @@ work_rsync(void *user_data) {
             rsync_args[a++] = "--include";
             rsync_args[a++] = new_recursive;
         }
+        rsync_args[a++] = "--exclude=*";
     } else {
         if (access(cecup.ignore_path, F_OK) != -1) {
             rsync_args[a++] = "--exclude-from";
