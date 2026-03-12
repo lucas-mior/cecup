@@ -685,10 +685,11 @@ work_rsync(void *user_data) {
                     }
                     // clang-format on
                 }
-            } else if ((action_char == RSYNC_CHAR_RECEIVE)
-                       || (action_char == RSYNC_CHAR_HARDLINK)
-                       || (action_char == RSYNC_CHAR_CHANGE)
-                       || (action_char == RSYNC_CHAR_SYMLINK)) {
+            } else if (might_be_itemize_line
+                       && ((action_char == RSYNC_CHAR_RECEIVE)
+                           || (action_char == RSYNC_CHAR_HARDLINK)
+                           || (action_char == RSYNC_CHAR_CHANGE)
+                           || (action_char == RSYNC_CHAR_SYMLINK))) {
 
                 char *space_pos = strchr(buf_output, ' ');
                 char *relative_path_entry = space_pos + 1;
@@ -758,7 +759,8 @@ work_rsync(void *user_data) {
                                       (double)processed_files_preview
                                           / (double)total_files_preview);
                 }
-            } else if (action_char == RSYNC_CHAR_NO_UPDATE) {
+            } else if (might_be_itemize_line
+                       && (action_char == RSYNC_CHAR_NO_UPDATE)) {
                 enum CecupAction action = UI_ACTION_UPDATE;
                 enum CecupReason reason = UI_REASON_UPDATE;
 
