@@ -33,6 +33,90 @@
 #define FILL_TRUE true
 #define EXPAND_TRUE true
 
+/* --- CecupCellRendererText Definition --- */
+
+#define CECUP_TYPE_CELL_RENDERER_TEXT (cecup_cell_renderer_text_get_type())
+G_DECLARE_FINAL_TYPE(CecupCellRendererText, cecup_cell_renderer_text, CECUP,
+                     CELL_RENDERER_TEXT, GtkCellRenderer)
+
+struct _CecupCellRendererText {
+    GtkCellRenderer parent_instance;
+    char *raw_text;
+    char *raw_color;
+};
+
+G_DEFINE_TYPE(CecupCellRendererText, cecup_cell_renderer_text,
+              GTK_TYPE_CELL_RENDERER)
+
+static void
+cecup_cell_renderer_text_init(CecupCellRendererText *self) {
+    self->raw_text = NULL;
+    self->raw_color = NULL;
+    return;
+}
+
+static void
+cecup_cell_renderer_text_render(GtkCellRenderer *cell, cairo_t *cr,
+                                GtkWidget *widget,
+                                const GdkRectangle *background_area,
+                                const GdkRectangle *cell_area,
+                                GtkCellRendererState flags) {
+    CecupCellRendererText *self = CECUP_CELL_RENDERER_TEXT(cell);
+    PangoLayout *layout;
+    PangoContext *context;
+    GdkRGBA color;
+    int32 x_pad;
+    int32 y_pad;
+    (void)flags;
+
+    if (self->raw_text == NULL) {
+        return;
+    }
+
+    if (self->raw_color) {
+        if (gdk_rgba_parse(&color, self->raw_color)) {
+            gdk_cairo_set_source_rgba(cr, &color);
+            cairo_rectangle(cr, background_area->x, background_area->y,
+                            background_area->width, background_area->height);
+            cairo_fill(cr);
+        }
+    }
+
+    if ((context = gtk_widget_get_pango_context(widget)) == NULL) {
+        return;
+    }
+
+    if ((layout = pango_layout_new(context)) == NULL) {
+        return;
+    }
+
+    pango_layout_set_text(layout, self->raw_text, -1);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
+    pango_layout_set_width(layout, (cell_area->width)*PANGO_SCALE);
+
+    gtk_cell_renderer_get_padding(cell, &x_pad, &y_pad);
+
+    gtk_render_layout(gtk_widget_get_style_context(widget), cr,
+                      cell_area->x + x_pad, cell_area->y + y_pad, layout);
+
+    g_object_unref(layout);
+    return;
+}
+
+static void
+cecup_cell_renderer_text_class_init(CecupCellRendererTextClass *klass) {
+    GtkCellRendererClass *cell_class = GTK_CELL_RENDERER_CLASS(klass);
+    cell_class->render = cecup_cell_renderer_text_render;
+    return;
+}
+
+GtkCellRenderer *
+cecup_cell_renderer_text_new(void) {
+    return g_object_new(CECUP_TYPE_CELL_RENDERER_TEXT, NULL);
+}
+
+/* --- End of Custom Renderer --- */
+
 static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path);
 
 int32
@@ -570,6 +654,7 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
     int32 col_id = GPOINTER_TO_INT(data);
     CecupRow *row;
     int32 row_idx;
+    CecupCellRendererText *cecup_renderer = (CecupCellRendererText *)renderer;
 
     row_idx = gtk_tree_path_get_indices(tree_path)[0];
     gtk_tree_path_free(tree_path);
@@ -584,20 +669,20 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
         g_object_set(renderer, "active", row->selected, NULL);
         break;
     case COL_SRC_ACTION:
-        g_object_set(renderer, "text", action_emojis[row->src_action], NULL);
-        g_object_set(renderer, "cell-background", row->src_color, NULL);
+        cecup_renderer->raw_text = action_emojis[row->src_action];
+        cecup_renderer->raw_color = row->src_color;
         break;
     case COL_DST_ACTION:
-        g_object_set(renderer, "text", action_emojis[row->dst_action], NULL);
-        g_object_set(renderer, "cell-background", row->dst_color, NULL);
+        cecup_renderer->raw_text = action_emojis[row->dst_action];
+        cecup_renderer->raw_color = row->dst_color;
         break;
     case COL_SRC_PATH:
-        g_object_set(renderer, "text", row->src_path, NULL);
-        g_object_set(renderer, "cell-background", row->src_color, NULL);
+        cecup_renderer->raw_text = row->src_path;
+        cecup_renderer->raw_color = row->src_color;
         break;
     case COL_DST_PATH:
-        g_object_set(renderer, "text", row->dst_path, NULL);
-        g_object_set(renderer, "cell-background", row->dst_color, NULL);
+        cecup_renderer->raw_text = row->dst_path;
+        cecup_renderer->raw_color = row->dst_color;
         break;
     case COL_SIZE_TEXT: {
         char *background;
@@ -609,8 +694,8 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
             background = row->dst_color;
             text = row->dst_size_text;
         }
-        g_object_set(renderer, "text", text, "cell-background", background,
-                     NULL);
+        cecup_renderer->raw_text = text;
+        cecup_renderer->raw_color = background;
         break;
     }
     case COL_MTIME_TEXT: {
@@ -623,8 +708,8 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
             background = row->dst_color;
             text = row->dst_mtime_text;
         }
-        g_object_set(renderer, "text", text, "cell-background", background,
-                     NULL);
+        cecup_renderer->raw_text = text;
+        cecup_renderer->raw_color = background;
         break;
     }
     default:
@@ -637,8 +722,8 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
 static void
 setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     GtkCellRenderer *renderer_toggle = gtk_cell_renderer_toggle_new();
-    GtkCellRenderer *renderer_text = gtk_cell_renderer_text_new();
-    GtkCellRenderer *renderer_path = gtk_cell_renderer_text_new();
+    GtkCellRenderer *renderer_text = cecup_cell_renderer_text_new();
+    GtkCellRenderer *renderer_path = cecup_cell_renderer_text_new();
     GtkTreeViewColumn *column;
 
     gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(tree), TRUE);
@@ -654,8 +739,6 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     gtk_tree_view_column_set_resizable(column, TRUE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
-    g_object_set(renderer_text, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-
     column = gtk_tree_view_column_new();
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_column_set_title(column, _("Task"));
@@ -667,8 +750,6 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     gtk_tree_view_column_set_min_width(column, 80);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
-    g_object_set(renderer_path, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-    g_object_set(renderer_path, "editable", TRUE, NULL);
     g_signal_connect(renderer_path, "edited", G_CALLBACK(on_path_edited), tree);
 
     column = gtk_tree_view_column_new();
