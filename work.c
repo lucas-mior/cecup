@@ -235,7 +235,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         new_name[j] = '\0';
 
         if (changed) {
-            if (relative_path[0]) {
+            if (relative_path && relative_path[0]) {
                 SNPRINTF(new_full, "%s/%s/%s", base_path, relative_path,
                          new_name);
             } else {

@@ -46,7 +46,7 @@ static CecupMenuItem context_menu_items[] = {
 {N_("⏯️ Apply"),              0,          0,                                 on_menu_apply,     NULL},
 {N_("🔍 Diff"),               0,          0,                                 on_menu_diff,      NULL},
 {N_("✏️ Rename"),              GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
-{N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
+{N_("🗑️ Delete"),              0,          0,                                on_menu_delete,    NULL},
 {N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
 };
 // clang-format on
@@ -1249,13 +1249,11 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
                                 tree_path)) {
         char *base_path;
         char *current_rel_path;
-        char *new_src_path;
-        char *new_dst_path;
+        char *allocated_name;
+        int32 name_len;
 
         gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
                            &row, -1);
-        new_src_path = row->src_path;
-        new_dst_path = row->dst_path;
 
         if (side == SIDE_LEFT) {
             base_path = cecup.src_base;
@@ -1272,19 +1270,24 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
             SNPRINTF(old_full, "%s/%s", base_path, current_rel_path);
             SNPRINTF(new_full, "%s/%s", base_path, new_text);
 
-            if (side == SIDE_LEFT) {
-                new_src_path = new_text;
-            }
-            if (side == SIDE_RIGHT) {
-                new_dst_path = new_text;
-            }
-
             if (rename(old_full, new_full) == 0) {
-                ipc_send_tree(side, row->src_action, row->reason, new_src_path,
-                              new_dst_path, row->link_target,
-                              row->ignore_pattern, row->src_size_raw,
-                              row->src_mtime_raw, row->dst_size_raw,
-                              row->dst_mtime_raw);
+                name_len = strlen32(new_text);
+
+                g_mutex_lock(&cecup.row_arena_mutex);
+                allocated_name
+                    = xarena_push(cecup.row_arena, ALIGN16(name_len + 1));
+                memcpy64(allocated_name, new_text, name_len + 1);
+
+                if (side == SIDE_LEFT) {
+                    row->src_path = allocated_name;
+                    row->src_path_len = name_len;
+                } else {
+                    row->dst_path = allocated_name;
+                    row->dst_path_len = name_len;
+                }
+                g_mutex_unlock(&cecup.row_arena_mutex);
+
+                refresh_ui_list();
                 IPC_SEND_LOG(_("Renamed: %s -> %s\n"), current_rel_path,
                              new_text);
             } else {
