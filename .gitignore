@@ -16,3 +16,5 @@ valgrind.out.*
 *.mo
 *.pot
 gdb_output*
+/a/
+/b/

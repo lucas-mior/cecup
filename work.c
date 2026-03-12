@@ -556,7 +556,6 @@ work_rsync(void *user_data) {
             case RSYNC_CHAR0_ACTION_NO_UPDATE:
                 break;
             default:
-                PRINTLN(buf_output[0]);
                 might_be_itemize_line = false;
                 break;
             }
@@ -739,11 +738,13 @@ work_rsync(void *user_data) {
                     checksum_count += 1;
                 }
 
-                SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
-                         relative_path_entry);
-
-                get_size_and_mtime(full_src_path_val, &size_path_val,
-                                   &mtime_path_val);
+                // Note: NEVER delete lines with // clang-format
+                // clang-format off
+                SNPRINTF(full_src_path_val,
+                         "%s/%s", cecup.src_base, relative_path_entry);
+                get_size_and_mtime(full_src_path_val,
+                                   &size_path_val, &mtime_path_val);
+                // clang-format on
 
                 if (thread_data->is_preview) {
                     ipc_send_tree(SIDE_LEFT, action, (enum CecupReason)action,
@@ -775,12 +776,13 @@ work_rsync(void *user_data) {
                         break;
                     }
                 }
-                // clang-format on
 
-                SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
-                         relative_path_entry);
-                get_size_and_mtime(full_src_path_val, &size_path_val,
-                                   &mtime_path_val);
+                SNPRINTF(full_src_path_val,
+                         "%s/%s", cecup.src_base, relative_path_entry);
+                get_size_and_mtime(full_src_path_val,
+                                   &size_path_val, &mtime_path_val);
+
+                // clang-format on
 
                 if (!attribute_changed) {
                     action = ACTION_EQUAL;
