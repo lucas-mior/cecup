@@ -366,7 +366,7 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
             char *dir;
 
             dir = xdirname(task->filepath);
-            if (strcmp(dir, ".") != 0) {
+            if (strcmp(dir, ".")) {
                 fprintf(fp, "\n/%s/", dir);
             }
             free(dir);
