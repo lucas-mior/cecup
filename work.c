@@ -920,7 +920,7 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
     if (pipe(pipe_stdin) < 0) {
-        error("Error creating pipe for stderr: %s.\n", strerror(errno));
+        error("Error creating pipe for stdin: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
     }
 
