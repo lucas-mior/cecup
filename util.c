@@ -1848,16 +1848,19 @@ main(int argc, char **argv) {
             "/aaaa/bbbb/cccc", "/aa/bb/cc", "/a/b/c",    "a/b/c",
             "a/b/cccc",        "a/bb/cccc", "aaaa/cccc", "/aaaa",
             "/",               "//",        "/a/",       "/a/b/",
+            "./",              "..",        "././",      "./a/",
         };
         char *bases[] = {
             "cccc",            "cc",        "c",         "c",
             "cccc",            "cccc",      "cccc",      "aaaa",
-            "/",               "/",         "a/",         "b/",
+            "/",               "/",         "a/",        "b/",
+            "./",              "..",        "./",        "a/",
         };
         char *dirs[] = {
             "/aaaa/bbbb",      "/aa/bb",    "/a/b",      "a/b",
             "a/b",             "a/bb",      "aaaa",      "/",
             "/",               "/",         "/",          "/a",
+            ".",               ".",         ".",         ".",
         };
         // clang-format on
         for (int64 i = 0; i < LENGTH(paths); i += 1) {
