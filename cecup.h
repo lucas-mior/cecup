@@ -194,9 +194,27 @@ typedef struct Message {
     double fraction;
 } Message;
 
+typedef struct Task {
+    enum DataType type;
+    enum CecupAction action;
+    enum CecupReason reason;
+
+    char *message;
+    char *path;
+    char *link_target;
+    char *ignore_pattern;
+
+    int32 message_len;
+    int32 path_len;
+    int32 link_target_len;
+    int32 ignore_pattern_len;
+
+    int32 side;
+} Task;
+
 typedef struct TaskList {
     int32 count;
-    Message *items[];
+    Task *items[];
 } TaskList;
 
 static struct {
@@ -282,7 +300,7 @@ static TaskList *get_target_tasks(int32 side,
                                    char *clicked_path,
                                    enum CecupAction clicked_action);
 static void free_update_data(Message *message);
-static void free_task_list(TaskList *tasks);
+static void free_Task *tasklist(TaskList *tasks);
 static void save_config(void);
 
 enum RsyncCharAction {
