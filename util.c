@@ -520,9 +520,14 @@ util_nthreads(void) {
 static char *
 basename2(char *path) {
     int64 left = strlen32(path);
+    char *end = path + left;
     char *fslash = NULL;
     char *bslash = NULL;
     char *p = path;
+
+    if (left == 1) {
+        return p;
+    }
 
     while (left > 0) {
         int64 length;
@@ -533,6 +538,9 @@ basename2(char *path) {
         }
 
         if ((fslash == NULL) && (bslash == NULL)) {
+            return p;
+        }
+        if ((fslash == end) || (bslash == end)) {
             return p;
         }
         if (fslash > bslash) {
@@ -1682,8 +1690,9 @@ static void
 dirname2(char *buffer, int64 size, char *path) {
     char *last_slash;
     int64 dir_length;
+    int32 len = strlen32(path);
 
-    if ((last_slash = strrchr(path, '/')) == NULL) {
+    if ((last_slash = memrchr(path, '/', len - 1)) == NULL) {
         snprintf2(buffer, size, ".");
         return;
     }
@@ -1755,21 +1764,6 @@ main(int argc, char **argv) {
     char *p3;
     char *string = __FILE__;
 
-    // Note: NEVER delete lines with // clang-format
-    // clang-format off
-    char *paths[] = {
-        "/aaaa/bbbb/cccc", "/aa/bb/cc", "/a/b/c",    "a/b/c",
-        "a/b/cccc",        "a/bb/cccc", "aaaa/cccc", "/aaaa",
-    };
-    char *bases[] = {
-        "cccc",            "cc",        "c",         "c",
-        "cccc",            "cccc",      "cccc",      "aaaa"
-    };
-    char *dirs[] = {
-        "/aaaa/bbbb",      "/aa/bb",    "/a/b",      "a/b",
-        "a/b",             "a/bb",      "aaaa",      "/",
-    };
-    // clang-format on
     (void)argc;
 
     if (OS_LINUX) {
@@ -1798,20 +1792,42 @@ main(int argc, char **argv) {
         ASSERT_EQUAL(atoi2(itoa2(n, buffer)), n);
     }
 
-    for (int64 i = 0; i < LENGTH(paths); i += 1) {
-        char *path = paths[i];
-        ASSERT_EQUAL(basename2(path), bases[i]);
-    }
-
-    for (int64 i = 0; i < LENGTH(paths); i += 1) {
-        char dir_buffer[4096];
-        DIRNAME(dir_buffer, paths[i]);
-        ASSERT_EQUAL(dir_buffer, dirs[i]);
-    }
     {
-        char dir_buffer[128] = "a/b/c";
-        DIRNAME(dir_buffer, dir_buffer);
-        ASSERT_EQUAL(dir_buffer, "a/b");
+        // Note: NEVER delete lines with // clang-format
+        // clang-format off
+        char *paths[] = {
+            "/aaaa/bbbb/cccc", "/aa/bb/cc", "/a/b/c",    "a/b/c",
+            "a/b/cccc",        "a/bb/cccc", "aaaa/cccc", "/aaaa",
+            "/",               "//",        "/a/",       "/a/b/",
+        };
+        char *bases[] = {
+            "cccc",            "cc",        "c",         "c",
+            "cccc",            "cccc",      "cccc",      "aaaa"
+            "/",               "/",         "a",         "b",
+        };
+        char *dirs[] = {
+            "/aaaa/bbbb",      "/aa/bb",    "/a/b",      "a/b",
+            "a/b",             "a/bb",      "aaaa",      "/",
+            "/",               "/",         "/",          "/a",
+        };
+        // clang-format on
+        for (int64 i = 0; i < LENGTH(paths); i += 1) {
+            char *path = paths[i];
+            PRINTLN(i);
+            ASSERT_EQUAL(basename2(path), bases[i]);
+        }
+
+        for (int64 i = 0; i < LENGTH(paths); i += 1) {
+            char dir_buffer[4096];
+            PRINTLN(i);
+            DIRNAME(dir_buffer, paths[i]);
+            ASSERT_EQUAL(dir_buffer, dirs[i]);
+        }
+        {
+            char dir_buffer[128] = "a/b/c";
+            DIRNAME(dir_buffer, dir_buffer);
+            ASSERT_EQUAL(dir_buffer, "a/b");
+        }
     }
 
     if (OS_WINDOWS) {

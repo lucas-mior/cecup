@@ -1248,6 +1248,8 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
     if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter,
                                 tree_path)) {
         char *base_path;
+        char basedir[MAX_PATH_LENGTH];
+        char old_full[MAX_PATH_LENGTH];
         char *current_rel_path;
         char *allocated_name;
         int32 name_len;
@@ -1263,12 +1265,16 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
             current_rel_path = row->dst_path;
         }
 
-        if (current_rel_path && (strlen32(new_text) > 0)) {
-            char old_full[MAX_PATH_LENGTH];
-            char new_full[MAX_PATH_LENGTH];
+        SNPRINTF(old_full, "%s/%s", base_path, current_rel_path);
+        DIRNAME(basedir, old_full);
 
-            SNPRINTF(old_full, "%s/%s", base_path, current_rel_path);
-            SNPRINTF(new_full, "%s/%s", base_path, new_text);
+        PRINTLN(old_full);
+        PRINTLN(new_text);
+        PRINTLN(basedir);
+
+        if (current_rel_path && (strlen32(new_text) > 0)) {
+            char new_full[MAX_PATH_LENGTH];
+            SNPRINTF(new_full, "%s/%s", basedir, new_text);
 
             if (rename(old_full, new_full) == 0) {
                 name_len = strlen32(new_text);
