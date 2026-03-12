@@ -579,6 +579,7 @@ work_rsync(void *user_data) {
                 }
 
                 switch (buf_output[i]) {
+                case RSYNC_CHAR_NEW:
                 case RSYNC_CHAR_CHECKSUM:
                 case RSYNC_CHAR_SIZE:
                 case RSYNC_CHAR_TIME:

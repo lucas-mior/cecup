@@ -298,6 +298,7 @@ enum RsyncCharType {
 };
 
 enum RsyncCharAttribute {
+    RSYNC_CHAR_NEW = '+',
     RSYNC_CHAR_CHECKSUM = 'c',
     RSYNC_CHAR_SIZE = 's',
     RSYNC_CHAR_TIME = 't',
