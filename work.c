@@ -1029,6 +1029,7 @@ work_rsync(void *user_data) {
         ipc_send_log_error("%s", buf_error);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
+
     if (waitpid(child_pid, NULL, 0) < 0) {
         ipc_send_log_error("Error waiting for rsync: %s.\n", strerror(errno));
     }
