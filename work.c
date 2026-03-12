@@ -425,7 +425,7 @@ work_rsync(void *user_data) {
             error("Error setpgid: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-        putenv("LC_ALL=C");
+        putenv("LC_ALL=C.UTF-8");
 
         XCLOSE(&pipe_stdout[0]);
         XCLOSE(&pipe_stderr[0]);
