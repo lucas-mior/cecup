@@ -81,7 +81,6 @@ ipc_send_log_internal(enum DataType type, char *format, ...) {
 #define IPC_SEND_LOG(...)        ipc_send_log_internal(DATA_TYPE_LOG, __VA_ARGS__)
 #define IPC_SEND_LOG_ERROR(...)  ipc_send_log_internal(DATA_TYPE_LOG_ERROR, __VA_ARGS__)
 #define IPC_SEND_LOG_CMD(...)    ipc_send_log_internal(DATA_TYPE_LOG_CMD, __VA_ARGS__)
-
 // clang-format on
 
 static void
