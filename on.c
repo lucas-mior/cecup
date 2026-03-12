@@ -1027,10 +1027,10 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 int64 length = strlen32(name);
 
                 gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
+                gtk_widget_set_sensitive(item, FALSE);
 
-                if (filepath == NULL) {
-                    gtk_widget_set_sensitive(item, FALSE);
-                } else {
+                if (filepath) {
+                    gtk_widget_set_sensitive(item, TRUE);
                     if ((extension_ptr = memchr(name, '.', length))) {
                         extension_ptr = strrchr(extension_ptr, '.');
                         SNPRINTF(extension_label, _("by extension (*%s)"),
