@@ -110,7 +110,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
     if ((tasks = get_target_tasks(message->side, message->src_path,
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task = tasks->items[i];
+            Task *task = tasks->items[i];
             char full_path[MAX_PATH_LENGTH];
             char *base_path;
 
@@ -120,7 +120,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
                 base_path = cecup.dst_base;
             }
 
-            SNPRINTF(full_path, "%s/%s", base_path, task->src_path);
+            SNPRINTF(full_path, "%s/%s", base_path, task->path);
 
             if (path_type && (strcmp(path_type, "folder") == 0)) {
                 DIRNAME(full_path, full_path);
@@ -165,7 +165,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     if ((tasks = get_target_tasks(message->side, message->src_path,
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task = tasks->items[i];
+            Task *task = tasks->items[i];
             int32 path_len;
             char path_full[MAX_PATH_LENGTH];
             char *path;
@@ -176,7 +176,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 
                 task = tasks->items[i];
 
-                SNPRINTF(path_relative, "%s/%s", base_path, task->src_path);
+                SNPRINTF(path_relative, "%s/%s", base_path, task->path);
                 if (realpath(path_relative, path_full) == NULL) {
                     ipc_send_log_error("Error resolving full path of %s: %s.\n",
                                        path_relative, strerror(errno));
@@ -185,7 +185,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
                 path = path_full;
                 path_len = strlen32(path_full);
             } else {
-                path = task->src_path;
+                path = task->path;
                 path_len = task->path_len;
             }
 
@@ -258,14 +258,14 @@ on_menu_diff(GtkWidget *m, void *data) {
     if ((tasks = get_target_tasks(message->side, message->src_path,
                                   message->action))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task = tasks->items[i];
+            Task *task = tasks->items[i];
             char *path_src;
             char *path_dst;
             int64 size_dst;
             int64 size_src;
 
-            size_src = strlen32(cecup.src_base) + strlen32(task->src_path) + 2;
-            size_dst = strlen32(cecup.dst_base) + strlen32(task->src_path) + 2;
+            size_src = strlen32(cecup.src_base) + strlen32(task->path) + 2;
+            size_dst = strlen32(cecup.dst_base) + strlen32(task->path) + 2;
 
             switch (fork()) {
             case -1:
@@ -278,9 +278,9 @@ on_menu_diff(GtkWidget *m, void *data) {
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
                 snprintf2(path_src, size_src,
-                          "%s/%s", cecup.src_base, task->src_path);
+                          "%s/%s", cecup.src_base, task->path);
                 snprintf2(path_dst, size_dst,
-                          "%s/%s", cecup.dst_base, task->src_path);
+                          "%s/%s", cecup.dst_base, task->path);
                 // clang-format on
 
                 {
@@ -328,10 +328,10 @@ on_menu_ignore_ext(GtkWidget *m, void *data) {
             break;
         }
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task = tasks->items[i];
+            Task *task = tasks->items[i];
             char *ext;
 
-            if ((ext = strrchr(task->src_path, '.')) != NULL) {
+            if ((ext = strrchr(task->path, '.')) != NULL) {
                 fprintf(fp, "\n*%s", ext);
             }
         }
@@ -363,9 +363,9 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
             break;
         }
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task = tasks->items[i];
+            Task *task = tasks->items[i];
 
-            DIRNAME(dir_buffer, task->src_path);
+            DIRNAME(dir_buffer, task->path);
             if (strcmp(dir_buffer, ".")) {
                 fprintf(fp, "\n/%s/", dir_buffer);
             }

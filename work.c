@@ -1082,7 +1082,7 @@ work_rsync_bulk(void *user_data) {
 
     if (cecup.cancel_sync == false) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Message *task = tasks->items[i];
+            Task *task = tasks->items[i];
             char full_dst_path[MAX_PATH_LENGTH];
             pid_t child_rm;
 
@@ -1091,7 +1091,7 @@ work_rsync_bulk(void *user_data) {
                 continue;
             }
 
-            SNPRINTF(full_dst_path, "%s/%s", cecup.dst_base, task->src_path);
+            SNPRINTF(full_dst_path, "%s/%s", cecup.dst_base, task->path);
             switch (child_rm = fork()) {
             case -1:
                 error("Error forking for rm: %s.\n", strerror(errno));
@@ -1127,7 +1127,7 @@ work_rsync_bulk(void *user_data) {
                 message->path_len = path_len;
                 message->src_path
                     = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-                memcpy64(message->src_path, task->src_path, path_len + 1);
+                memcpy64(message->src_path, task->path, path_len + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
 
                 message->type = DATA_TYPE_REMOVE_TREE_ROW;
@@ -1224,7 +1224,7 @@ work_rsync_bulk(void *user_data) {
     }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
-        Message *task = tasks->items[i];
+        Task *task = tasks->items[i];
         switch (task->action) {
         case ACTION_DELETE:
         case ACTION_DELETED:
@@ -1242,7 +1242,7 @@ work_rsync_bulk(void *user_data) {
         case ACTION_UPDATE:
         case ACTION_SYMLINK:
         default:
-            write64(pipe_stdin[1], task->src_path, task->path_len);
+            write64(pipe_stdin[1], task->path, task->path_len);
             write64(pipe_stdin[1], "\n", 1);
         }
     }

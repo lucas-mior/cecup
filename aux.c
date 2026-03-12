@@ -51,7 +51,7 @@ free_task_list(TaskList *tasks) {
     g_mutex_lock(&cecup.ui_arena_mutex);
 
     for (int32 i = 0; i < tasks->count; i += 1) {
-        Message *task = tasks->items[i];
+        Task *task = tasks->items[i];
 
         if (task->link_target) {
             arena_pop(cecup.ui_arena, task->link_target);
@@ -82,7 +82,7 @@ get_target_tasks(int32 side, char *clicked_path,
         char *file_path;
         int32 path_len;
         enum CecupAction action;
-        Message *task;
+        Task *task;
 
         if (!(row->selected)) {
             continue;
@@ -107,8 +107,8 @@ get_target_tasks(int32 side, char *clicked_path,
         memset64(task, 0, SIZEOF(*task));
 
         task->path_len = path_len;
-        task->src_path = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-        memcpy64(task->src_path, file_path, path_len + 1);
+        task->path = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+        memcpy64(task->path, file_path, path_len + 1);
 
         if (row->link_target) {
             task->link_target_len = row->link_target_len;
@@ -127,7 +127,7 @@ get_target_tasks(int32 side, char *clicked_path,
     }
 
     if ((tasks->count == 0) && clicked_path) {
-        Message *task;
+        Task *task;
         int32 path_len;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
@@ -136,8 +136,8 @@ get_target_tasks(int32 side, char *clicked_path,
 
         path_len = strlen32(clicked_path);
         task->path_len = path_len;
-        task->src_path = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
-        memcpy64(task->src_path, clicked_path, path_len + 1);
+        task->path = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+        memcpy64(task->path, clicked_path, path_len + 1);
 
         g_mutex_unlock(&cecup.ui_arena_mutex);
 

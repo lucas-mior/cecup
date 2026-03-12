@@ -300,7 +300,7 @@ static TaskList *get_target_tasks(int32 side,
                                    char *clicked_path,
                                    enum CecupAction clicked_action);
 static void free_update_data(Message *message);
-static void free_Task *tasklist(TaskList *tasks);
+static void free_task_list(TaskList *tasks);
 static void save_config(void);
 
 enum RsyncCharAction {
