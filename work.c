@@ -549,11 +549,11 @@ work_rsync(void *user_data) {
             ipc_send_log("%s\n", buf_output);
 
             switch (action_char) {
-            case RSYNC_CHAR_SEND:
-            case RSYNC_CHAR_RECEIVE:
-            case RSYNC_CHAR_CHANGE:
-            case RSYNC_CHAR_HARDLINK:
-            case RSYNC_CHAR_NO_UPDATE:
+            case RSYNC_CHAR0_ACTION_SEND:
+            case RSYNC_CHAR0_ACTION_RECEIVE:
+            case RSYNC_CHAR0_ACTION_CHANGE:
+            case RSYNC_CHAR0_ACTION_HARDLINK:
+            case RSYNC_CHAR0_ACTION_NO_UPDATE:
                 break;
             default:
                 PRINTLN(buf_output[0]);
@@ -562,11 +562,11 @@ work_rsync(void *user_data) {
             }
 
             switch (type_char) {
-            case RSYNC_CHAR_FILE:
-            case RSYNC_CHAR_DIR:
-            case RSYNC_CHAR_SYMLINK:
-            case RSYNC_CHAR_DEVICE:
-            case RSYNC_CHAR_SPECIAL:
+            case RSYNC_CHAR1_TYPE_FILE:
+            case RSYNC_CHAR1_TYPE_DIR:
+            case RSYNC_CHAR1_TYPE_SYMLINK:
+            case RSYNC_CHAR1_TYPE_DEVICE:
+            case RSYNC_CHAR1_TYPE_SPECIAL:
                 break;
             default:
                 might_be_itemize_line = false;
@@ -579,17 +579,18 @@ work_rsync(void *user_data) {
                 }
 
                 switch (buf_output[i]) {
-                case RSYNC_CHAR_NEW:
-                case RSYNC_CHAR_CHECKSUM:
-                case RSYNC_CHAR_SIZE:
-                case RSYNC_CHAR_TIME:
-                case RSYNC_CHAR_PERM:
-                case RSYNC_CHAR_OWNER:
-                case RSYNC_CHAR_GROUP:
-                case RSYNC_CHAR_ACL:
-                case RSYNC_CHAR_XATTR:
-                case RSYNC_CHAR_NO_ATTR_CHANGE:
-                case RSYNC_CHAR_ALL_SPACE_MEANS_ALL_UNCHANGED:
+                case RSYNC_CHAR_ATTR_NO_CHANGE:
+                case RSYNC_CHAR_ATTR_ALL_SPACE_MEANS_ALL_UNCHANGED:
+                case RSYNC_CHAR_ATTR_NEW:
+                case RSYNC_CHAR_ATTR_UNKNOWN:
+                case RSYNC_CHAR_ATTR_CHECKSUM:
+                case RSYNC_CHAR_ATTR_SIZE:
+                case RSYNC_CHAR_ATTR_TIME:
+                case RSYNC_CHAR_ATTR_PERM:
+                case RSYNC_CHAR_ATTR_OWNER:
+                case RSYNC_CHAR_ATTR_GROUP:
+                case RSYNC_CHAR_ATTR_ACL:
+                case RSYNC_CHAR_ATTR_XATTR:
                     break;
                 default:
                     might_be_itemize_line = false;
@@ -685,10 +686,9 @@ work_rsync(void *user_data) {
                     // clang-format on
                 }
             } else if (might_be_itemize_line
-                       && ((action_char == RSYNC_CHAR_RECEIVE)
-                           || (action_char == RSYNC_CHAR_HARDLINK)
-                           || (action_char == RSYNC_CHAR_CHANGE)
-                           || (action_char == RSYNC_CHAR_SYMLINK))) {
+                       && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
+                           || (action_char == RSYNC_CHAR0_ACTION_HARDLINK)
+                           || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
 
                 char *space_pos = strchr(buf_output, ' ');
                 char *relative_path_entry = space_pos + 1;
@@ -699,7 +699,7 @@ work_rsync(void *user_data) {
                 }
 
                 link_target = NULL;
-                if (action_char == RSYNC_CHAR_HARDLINK) {
+                if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
                     char *sep;
                     action = UI_ACTION_HARDLINK;
 
@@ -708,8 +708,7 @@ work_rsync(void *user_data) {
                         *sep = '\0';
                         link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
                     }
-                } else if ((action_char == RSYNC_CHAR_SYMLINK)
-                           || (type_char == RSYNC_CHAR_SYMLINK)) {
+                } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
                     char *sep;
                     action = UI_ACTION_SYMLINK;
 
@@ -723,10 +722,10 @@ work_rsync(void *user_data) {
                 }
 
                 if ((thread_data->is_preview == 0) && (line_len > 11)
-                    && (type_char == RSYNC_CHAR_FILE)
-                    && ((action_char == RSYNC_CHAR_RECEIVE)
-                        || (action_char == RSYNC_CHAR_CHANGE)
-                        || (action_char == RSYNC_CHAR_HARDLINK))) {
+                    && (type_char == RSYNC_CHAR1_TYPE_FILE)
+                    && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
+                        || (action_char == RSYNC_CHAR0_ACTION_CHANGE)
+                        || (action_char == RSYNC_CHAR0_ACTION_HARDLINK))) {
 
                     if (checksum_count >= checksum_capacity) {
                         checksum_capacity = (checksum_capacity == 0)
@@ -759,7 +758,7 @@ work_rsync(void *user_data) {
                                           / (double)total_files_preview);
                 }
             } else if (might_be_itemize_line
-                       && (action_char == RSYNC_CHAR_NO_UPDATE)) {
+                       && (action_char == RSYNC_CHAR0_ACTION_NO_UPDATE)) {
                 enum CecupAction action = UI_ACTION_UPDATE;
                 enum CecupReason reason = UI_REASON_UPDATE;
 

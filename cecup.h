@@ -281,34 +281,35 @@ static void free_task_list(TaskList *tasks);
 static void save_config(void);
 
 enum RsyncCharAction {
-    RSYNC_CHAR_SEND = '<',
-    RSYNC_CHAR_RECEIVE = '>',
-    RSYNC_CHAR_CHANGE = 'c',
-    RSYNC_CHAR_HARDLINK = 'h',
-    RSYNC_CHAR_NO_UPDATE = '.',
-    RSYNC_CHAR_MESSAGE = '*',
+    RSYNC_CHAR0_ACTION_SEND = '<',
+    RSYNC_CHAR0_ACTION_RECEIVE = '>',
+    RSYNC_CHAR0_ACTION_CHANGE = 'c',
+    RSYNC_CHAR0_ACTION_HARDLINK = 'h',
+    RSYNC_CHAR0_ACTION_NO_UPDATE = '.',
+    RSYNC_CHAR0_ACTION_MESSAGE = '*',
 };
 
 enum RsyncCharType {
-    RSYNC_CHAR_FILE = 'f',
-    RSYNC_CHAR_DIR = 'd',
-    RSYNC_CHAR_SYMLINK = 'L',
-    RSYNC_CHAR_DEVICE = 'D',
-    RSYNC_CHAR_SPECIAL = 'S',
+    RSYNC_CHAR1_TYPE_FILE = 'f',
+    RSYNC_CHAR1_TYPE_DIR = 'd',
+    RSYNC_CHAR1_TYPE_SYMLINK = 'L',
+    RSYNC_CHAR1_TYPE_DEVICE = 'D',
+    RSYNC_CHAR1_TYPE_SPECIAL = 'S',
 };
 
 enum RsyncCharAttribute {
-    RSYNC_CHAR_NEW = '+',
-    RSYNC_CHAR_CHECKSUM = 'c',
-    RSYNC_CHAR_SIZE = 's',
-    RSYNC_CHAR_TIME = 't',
-    RSYNC_CHAR_PERM = 'p',
-    RSYNC_CHAR_OWNER = 'o',
-    RSYNC_CHAR_GROUP = 'g',
-    RSYNC_CHAR_ACL = 'a',
-    RSYNC_CHAR_XATTR = 'x',
-    RSYNC_CHAR_NO_ATTR_CHANGE = '.',
-    RSYNC_CHAR_ALL_SPACE_MEANS_ALL_UNCHANGED = ' ',
+    RSYNC_CHAR_ATTR_NO_CHANGE = '.',
+    RSYNC_CHAR_ATTR_ALL_SPACE_MEANS_ALL_UNCHANGED = ' ',
+    RSYNC_CHAR_ATTR_NEW = '+',
+    RSYNC_CHAR_ATTR_UNKNOWN = '?',
+    RSYNC_CHAR_ATTR_CHECKSUM = 'c',
+    RSYNC_CHAR_ATTR_SIZE = 's',
+    RSYNC_CHAR_ATTR_TIME = 't',
+    RSYNC_CHAR_ATTR_PERM = 'p',
+    RSYNC_CHAR_ATTR_OWNER = 'o',
+    RSYNC_CHAR_ATTR_GROUP = 'g',
+    RSYNC_CHAR_ATTR_ACL = 'a',
+    RSYNC_CHAR_ATTR_XATTR = 'x',
 };
 
 #define RSYNC_ITEMIZE_PLACEHOLDERS "YXcstpoguax"
