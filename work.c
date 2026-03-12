@@ -524,10 +524,10 @@ work_rsync(void *user_data) {
             char full_dst_path_val[MAX_PATH_LENGTH];
             struct stat st_src;
             struct stat st_dst;
-            int64 src_sz = 0;
-            int64 src_mt = 0;
-            int64 dst_sz = 0;
-            int64 dst_mt = 0;
+            int64 src_size = 0;
+            int64 src_mtime = 0;
+            int64 dst_size = 0;
+            int64 dst_mtime = 0;
             int32 line_len = (int32)(eol - buf_output);
             int32 remaining;
 
@@ -620,21 +620,21 @@ work_rsync(void *user_data) {
                          relative_path);
 
                 if (lstat(full_src_path_val, &st_src) < 0) {
-                    src_sz = 0;
-                    src_mt = 0;
+                    src_size = 0;
+                    src_mtime = 0;
                     deletion_reason = REASON_MISSING;
                 } else {
-                    src_sz = st_src.st_size;
-                    src_mt = (int64)st_src.st_mtime;
+                    src_size = st_src.st_size;
+                    src_mtime = (int64)st_src.st_mtime;
                     deletion_reason = REASON_IGNORED;
                 }
 
                 if (lstat(full_dst_path_val, &st_dst) < 0) {
-                    dst_sz = 0;
-                    dst_mt = 0;
+                    dst_size = 0;
+                    dst_mtime = 0;
                 } else {
-                    dst_sz = st_dst.st_size;
-                    dst_mt = (int64)st_dst.st_mtime;
+                    dst_size = st_dst.st_size;
+                    dst_mtime = (int64)st_dst.st_mtime;
                 }
 
                 // Note: NEVER delete lines with // clang-format
@@ -643,7 +643,7 @@ work_rsync(void *user_data) {
                     ipc_send_tree(SIDE_RIGHT,
                                   ACTION_DELETE, deletion_reason,
                                   relative_path, NULL, NULL,
-                                  src_sz, src_mt, dst_sz, dst_mt);
+                                  src_size, src_mtime, dst_size, dst_mtime);
                 }
                 // clang-format on
             } else if (literal_match(buf_output, RSYNC_IGNORE_PRE)
@@ -670,19 +670,19 @@ work_rsync(void *user_data) {
                              hiding_filename);
 
                     if (lstat(full_src_path_val, &st_src) < 0) {
-                        src_sz = 0;
-                        src_mt = 0;
+                        src_size = 0;
+                        src_mtime = 0;
                     } else {
-                        src_sz = st_src.st_size;
-                        src_mt = (int64)st_src.st_mtime;
+                        src_size = st_src.st_size;
+                        src_mtime = (int64)st_src.st_mtime;
                     }
 
                     if (lstat(full_dst_path_val, &st_dst) < 0) {
-                        dst_sz = 0;
-                        dst_mt = 0;
+                        dst_size = 0;
+                        dst_mtime = 0;
                     } else {
-                        dst_sz = st_dst.st_size;
-                        dst_mt = (int64)st_dst.st_mtime;
+                        dst_size = st_dst.st_size;
+                        dst_mtime = (int64)st_dst.st_mtime;
                     }
 
                     // Note: NEVER delete lines with // clang-format
@@ -691,7 +691,7 @@ work_rsync(void *user_data) {
                         ipc_send_tree(SIDE_LEFT,
                                       ACTION_IGNORE, REASON_IGNORED,
                                       hiding_filename, NULL, ignore_pattern,
-                                      src_sz, src_mt, dst_sz, dst_mt);
+                                      src_size, src_mtime, dst_size, dst_mtime);
                     }
                     // clang-format on
                 }
@@ -757,26 +757,26 @@ work_rsync(void *user_data) {
                          "%s/%s", cecup.dst_base, relative_path_entry);
 
                 if (lstat(full_src_path_val, &st_src) < 0) {
-                    src_sz = 0;
-                    src_mt = 0;
+                    src_size = 0;
+                    src_mtime = 0;
                 } else {
-                    src_sz = st_src.st_size;
-                    src_mt = (int64)st_src.st_mtime;
+                    src_size = st_src.st_size;
+                    src_mtime = (int64)st_src.st_mtime;
                 }
 
                 if (lstat(full_dst_path_val, &st_dst) < 0) {
-                    dst_sz = 0;
-                    dst_mt = 0;
+                    dst_size = 0;
+                    dst_mtime = 0;
                 } else {
-                    dst_sz = st_dst.st_size;
-                    dst_mt = (int64)st_dst.st_mtime;
+                    dst_size = st_dst.st_size;
+                    dst_mtime = (int64)st_dst.st_mtime;
                 }
                 // clang-format on
 
                 if (thread_data->is_preview) {
                     ipc_send_tree(SIDE_LEFT, action, (enum CecupReason)action,
                                   relative_path_entry, link_target, NULL,
-                                  src_sz, src_mt, dst_sz, dst_mt);
+                                  src_size, src_mtime, dst_size, dst_mtime);
                 }
 
                 processed_files_preview += 1;
@@ -815,19 +815,19 @@ work_rsync(void *user_data) {
                          "%s/%s", cecup.dst_base, relative_path_entry);
 
                 if (lstat(full_src_path_val, &st_src) < 0) {
-                    src_sz = 0;
-                    src_mt = 0;
+                    src_size = 0;
+                    src_mtime = 0;
                 } else {
-                    src_sz = st_src.st_size;
-                    src_mt = (int64)st_src.st_mtime;
+                    src_size = st_src.st_size;
+                    src_mtime = (int64)st_src.st_mtime;
                 }
 
                 if (lstat(full_dst_path_val, &st_dst) < 0) {
-                    dst_sz = 0;
-                    dst_mt = 0;
+                    dst_size = 0;
+                    dst_mtime = 0;
                 } else {
-                    dst_sz = st_dst.st_size;
-                    dst_mt = (int64)st_dst.st_mtime;
+                    dst_size = st_dst.st_size;
+                    dst_mtime = (int64)st_dst.st_mtime;
                 }
 
                 // clang-format on
@@ -838,8 +838,8 @@ work_rsync(void *user_data) {
                 }
                 if (thread_data->is_preview) {
                     ipc_send_tree(SIDE_LEFT, action, reason,
-                                  relative_path_entry, NULL, NULL, src_sz,
-                                  src_mt, dst_sz, dst_mt);
+                                  relative_path_entry, NULL, NULL, src_size,
+                                  src_mtime, dst_size, dst_mtime);
                 }
             }
 
