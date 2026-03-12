@@ -305,7 +305,7 @@ work_rsync(void *user_data) {
     int32 pipe_stdout[2] = {-1, -1};
     int32 pipe_stderr[2] = {-1, -1};
     int32 pipe_stdin[2] = {-1, -1};
-    struct pollfd pipes[2];
+    struct pollfd pipes[3];
     pid_t child_pid;
 
     char buf_output[MAX_PATH_LENGTH*2];
@@ -321,6 +321,7 @@ work_rsync(void *user_data) {
     char **checksum_files = NULL;
     int32 checksum_count = 0;
     int32 checksum_capacity = 0;
+    int32 checksum_sent = 0;
 
     if (thread_data->check_different_fs) {
         struct stat stat_src;
@@ -954,23 +955,21 @@ work_rsync(void *user_data) {
         break;
     }
 
-    for (int32 i = 0; i < checksum_count; i += 1) {
-        write64(pipe_stdin[1], checksum_files[i], strlen32(checksum_files[i]));
-        write64(pipe_stdin[1], "\n", 1);
-    }
-    XCLOSE(&pipe_stdin[1]);
-
     pipes[0].fd = pipe_stdout[0];
     pipes[1].fd = pipe_stderr[0];
+    pipes[2].fd = pipe_stdin[1];
+
     pipes[0].events = POLLIN;
     pipes[1].events = POLLIN;
+    pipes[2].events = POLLOUT;
 
     do {
         int64 r;
         pipes[0].revents = 0;
         pipes[1].revents = 0;
+        pipes[2].revents = 0;
 
-        switch (poll(pipes, 2, 100)) {
+        switch (poll(pipes, 3, 100)) {
         case -1:
             if (errno != EINTR) {
                 ipc_send_log_error("Error in poll: %s.\n", strerror(errno));
@@ -981,6 +980,27 @@ work_rsync(void *user_data) {
             continue;
         default:
             break;
+        }
+
+        if (pipes[2].fd >= 0 && (pipes[2].revents & POLLOUT)) {
+            while (checksum_sent < checksum_count) {
+                char *f = checksum_files[checksum_sent];
+                int32 flen = strlen32(f);
+                if (write64(pipe_stdin[1], f, flen) != flen
+                    || write64(pipe_stdin[1], "\n", 1) != 1) {
+                    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                        break;
+                    }
+                    XCLOSE(&pipe_stdin[1]);
+                    pipes[2].fd = -1;
+                    break;
+                }
+                checksum_sent += 1;
+            }
+            if (checksum_sent >= checksum_count) {
+                XCLOSE(&pipe_stdin[1]);
+                pipes[2].fd = -1;
+            }
         }
 
         if (pipes[0].revents & (POLLHUP | POLLERR)) {
@@ -1020,7 +1040,7 @@ work_rsync(void *user_data) {
         buf_error[r] = '\0';
         ipc_send_log_error("%s", buf_error);
 
-    } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
+    } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0) || (pipes[2].fd >= 0));
     if (waitpid(child_pid, NULL, 0) < 0) {
         ipc_send_log_error("Error waiting for rsync: %s.\n", strerror(errno));
     }
@@ -1065,7 +1085,7 @@ work_rsync_bulk(void *user_data) {
     int32 pipe_stdout[2] = {-1, -1};
     int32 pipe_stderr[2] = {-1, -1};
     int32 pipe_stdin[2] = {-1, -1};
-    struct pollfd pipes[2];
+    struct pollfd pipes[3];
     pid_t child_pid;
     char dst_directory[MAX_PATH_LENGTH];
     char *rsync_args[32];
@@ -1073,6 +1093,7 @@ work_rsync_bulk(void *user_data) {
     char buf_output[MAX_PATH_LENGTH*2];
     char buf_error[MAX_PATH_LENGTH*2];
     int32 buf_output_pos = 0;
+    int32 task_sent_idx = 0;
 
     if (cecup.cancel_sync == false) {
         for (int32 i = 0; i < tasks->count; i += 1) {
@@ -1217,36 +1238,12 @@ work_rsync_bulk(void *user_data) {
         break;
     }
 
-    for (int32 i = 0; i < tasks->count; i += 1) {
-        Message *task = tasks->items[i];
-        switch (task->action) {
-        case ACTION_DELETE:
-        case ACTION_DELETED:
-        case ACTION_IGNORE:
-        case ACTION_EQUAL:
-            continue;
-        case ACTION_HARDLINK:
-            // rsync, when using the --files-from mode,
-            // only transfers hard links
-            // if the target is also included in the --files-from list
-            write64(pipe_stdin[1], task->link_target, task->link_target_len);
-            write64(pipe_stdin[1], "\n", 1);
-            __attribute__((fallthrough));
-        case ACTION_NEW:
-        case ACTION_UPDATE:
-        case ACTION_SYMLINK:
-        case NUM_UI_ACTIONS:
-        default:
-            write64(pipe_stdin[1], task->filepath, task->filepath_len);
-            write64(pipe_stdin[1], "\n", 1);
-        }
-    }
-    XCLOSE(&pipe_stdin[1]);
-
     pipes[0].fd = pipe_stdout[0];
-    pipes[1].fd = pipe_stderr[0];
     pipes[0].events = POLLIN;
+    pipes[1].fd = pipe_stderr[0];
     pipes[1].events = POLLIN;
+    pipes[2].fd = pipe_stdin[1];
+    pipes[2].events = POLLOUT;
 
     do {
         int64 r;
@@ -1254,6 +1251,7 @@ work_rsync_bulk(void *user_data) {
 
         pipes[0].revents = 0;
         pipes[1].revents = 0;
+        pipes[2].revents = 0;
 
         if (cecup.cancel_sync) {
             if (kill(-child_pid, SIGTERM) < 0) {
@@ -1264,7 +1262,7 @@ work_rsync_bulk(void *user_data) {
             break;
         }
 
-        switch (poll(pipes, 2, 100)) {
+        switch (poll(pipes, 3, 100)) {
         case -1:
             if (errno != EINTR) {
                 ipc_send_log_error("Error in poll: %s.\n", strerror(errno));
@@ -1275,6 +1273,56 @@ work_rsync_bulk(void *user_data) {
             continue;
         default:
             break;
+        }
+
+        if (pipes[2].fd >= 0 && (pipes[2].revents & POLLOUT)) {
+            while (task_sent_idx < tasks->count) {
+                Message *task = tasks->items[task_sent_idx];
+
+                switch (task->action) {
+                case ACTION_DELETE:
+                case ACTION_DELETED:
+                case ACTION_IGNORE:
+                case ACTION_EQUAL:
+                    break;
+                case ACTION_HARDLINK:
+                    if (write64(pipe_stdin[1], task->link_target,
+                                task->link_target_len)
+                            != task->link_target_len
+                        || write64(pipe_stdin[1], "\n", 1) != 1) {
+                        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                            goto bulk_stdin_full;
+                        }
+                    }
+                    __attribute__((fallthrough));
+                case ACTION_NEW:
+                case ACTION_UPDATE:
+                case ACTION_SYMLINK:
+                case NUM_UI_ACTIONS:
+                default:
+                    if (write64(pipe_stdin[1], task->filepath,
+                                task->filepath_len)
+                            != task->filepath_len
+                        || write64(pipe_stdin[1], "\n", 1) != 1) {
+                        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                            goto bulk_stdin_full;
+                        }
+                        XCLOSE(&pipe_stdin[1]);
+                        pipes[2].fd = -1;
+                        break;
+                    }
+                }
+                task_sent_idx += 1;
+                continue;
+
+            bulk_stdin_full:
+                break;
+            }
+
+            if (task_sent_idx == tasks->count) {
+                XCLOSE(&pipe_stdin[1]);
+                pipes[2].fd = -1;
+            }
         }
 
         if (pipes[0].revents & (POLLHUP | POLLERR)) {
@@ -1361,7 +1409,7 @@ work_rsync_bulk(void *user_data) {
         buf_error[r] = '\0';
         ipc_send_log_error("%s", buf_error);
 
-    } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
+    } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0) || (pipes[2].fd >= 0));
 
     if (waitpid(child_pid, NULL, 0) < 0) {
         ipc_send_log_error("Error waiting for child: %s.\n", strerror(errno));
