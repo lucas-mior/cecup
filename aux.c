@@ -420,54 +420,62 @@ update_ui_handler(void *data) {
         break;
     case DATA_TYPE_TREE_ROW: {
         CecupRow *row;
-        char *src_background_color = "#FFFFFF";
-        char *dst_background_color = "#FFFFFF";
-        char *src_path_final = message->filepath;
-        char *dst_path_final = message->filepath;
-        enum CecupAction src_action = message->action;
-        enum CecupAction dst_action = message->action;
+        char *src_path_final;
+        char *dst_path_final;
+
+        g_mutex_lock(&cecup.row_arena_mutex);
+        row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
+        memset64(row, 0, SIZEOF(*row));
+
+        row->src_color = "#FFFFFF";
+        row->dst_color = "#FFFFFF";
+        src_path_final = message->filepath;
+        dst_path_final = message->filepath;
+        row->src_action = message->action;
+        row->dst_action = message->action;
+        row->reason = message->reason;
 
         switch (message->action) {
         case UI_ACTION_NEW:
-            src_background_color = "#D4EDDA";
+            row->src_color = "#D4EDDA";
             dst_path_final = NULL;
             break;
         case UI_ACTION_UPDATE:
-            src_background_color = "#CCE5FF";
-            dst_background_color = "#CCE5FF";
+            row->src_color = "#CCE5FF";
+            row->dst_color = "#CCE5FF";
             break;
         case UI_ACTION_HARDLINK:
-            src_background_color = "#E2D1F9";
-            dst_background_color = "#E2D1F9";
+            row->src_color = "#E2D1F9";
+            row->dst_color = "#E2D1F9";
             dst_path_final = NULL;
             break;
         case UI_ACTION_SYMLINK:
-            src_background_color = "#FFD1F9";
-            dst_background_color = "#FFD1F9";
+            row->src_color = "#FFD1F9";
+            row->dst_color = "#FFD1F9";
             dst_path_final = NULL;
             break;
         case UI_ACTION_EQUAL:
-            src_background_color = "#F0F0F0";
-            dst_background_color = "#F0F0F0";
+            row->src_color = "#F0F0F0";
+            row->dst_color = "#F0F0F0";
             break;
         case UI_ACTION_IGNORE:
         case UI_ACTION_DELETE:
             if (message->reason == UI_REASON_IGNORED) {
-                src_background_color = "#FFF3CD";
-                src_action = UI_ACTION_IGNORE;
+                row->src_color = "#FFF3CD";
+                row->src_action = UI_ACTION_IGNORE;
 
                 if (gtk_toggle_button_get_active(
                         GTK_TOGGLE_BUTTON(cecup.delete_excluded))) {
-                    dst_background_color = "#FFF3CD";
-                    dst_action = UI_ACTION_DELETE;
+                    row->dst_color = "#FFF3CD";
+                    row->dst_action = UI_ACTION_DELETE;
                 } else {
-                    dst_background_color = "#F0F0F0";
-                    dst_action = UI_ACTION_IGNORE;
+                    row->dst_color = "#F0F0F0";
+                    row->dst_action = UI_ACTION_IGNORE;
                 }
             } else {
-                dst_background_color = "#F8D7DA";
-                src_action = UI_ACTION_DELETED;
-                dst_action = UI_ACTION_DELETE;
+                row->dst_color = "#F8D7DA";
+                row->src_action = UI_ACTION_DELETED;
+                row->dst_action = UI_ACTION_DELETE;
                 src_path_final = NULL;
             }
             break;
@@ -477,12 +485,6 @@ update_ui_handler(void *data) {
             error("Invalid message->action: %u\n", message->action);
             fatal(EXIT_FAILURE);
         }
-
-        g_mutex_lock(&cecup.row_arena_mutex);
-        row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
-        memset64(row, 0, SIZEOF(*row));
-        row->src_action = src_action;
-        row->dst_action = dst_action;
 
         bytes_pretty(row->size_text, message->size);
         row->size_raw = message->size;
@@ -497,10 +499,6 @@ update_ui_handler(void *data) {
             strcpy(row->mtime_text, _("Unknown modification time"));
             row->mtime_raw = 0;
         }
-
-        row->src_color = src_background_color;
-        row->dst_color = dst_background_color;
-        row->reason = message->reason;
 
         if (message->link_target) {
             row->link_target_len = message->link_target_len;
