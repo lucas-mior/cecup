@@ -533,6 +533,8 @@ work_rsync(void *user_data) {
             char full_dst_path_val[MAX_PATH_LENGTH];
             struct stat st_src;
             struct stat st_dst;
+            char *src_path;
+            char *dst_path;
             int64 src_size = 0;
             int64 src_mtime = 0;
             int64 dst_size = 0;
@@ -617,9 +619,9 @@ work_rsync(void *user_data) {
             }
 
             if (literal_match(buf_output, RSYNC_MESSAGE_DELETING)) {
-                char *src_path = NULL;
-                char *dst_path = buf_output + strlen32(RSYNC_MESSAGE_DELETING);
                 enum CecupReason reason;
+                src_path = NULL;
+                dst_path = buf_output + strlen32(RSYNC_MESSAGE_DELETING);
 
                 while (isspace(*dst_path)) {
                     dst_path += 1;
@@ -659,8 +661,6 @@ work_rsync(void *user_data) {
                 // clang-format on
             } else if (literal_match(buf_output, RSYNC_IGNORE_PRE)
                        || literal_match(buf_output, RSYNC_IGNORE_DIR_PRE)) {
-                char *src_path;
-                char *dst_path;
                 char *reason_sep;
                 char *ignore_pattern = NULL;
 
@@ -712,12 +712,13 @@ work_rsync(void *user_data) {
                            || (action_char == RSYNC_CHAR0_ACTION_HARDLINK)
                            || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
 
-                char *space_pos = strchr(buf_output, ' ');
-                char *src_path = space_pos + 1;
-                char *dst_path = NULL;
                 enum CecupAction action = ACTION_UPDATE;
+                char *space_pos = strchr(buf_output, ' ');
                 enum CecupReason reason = REASON_UPDATE;
                 bool attribute_changed = false;
+
+                src_path = space_pos + 1;
+                dst_path = NULL;
 
                 while (isspace(*src_path)) {
                     src_path += 1;
@@ -813,8 +814,8 @@ work_rsync(void *user_data) {
 
                 bool attribute_changed = false;
                 char *space_pos = strchr(buf_output, ' ');
-                char *src_path = space_pos + 1;
-                char *dst_path = NULL;
+                src_path = space_pos + 1;
+                dst_path = NULL;
 
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
