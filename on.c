@@ -1249,25 +1249,20 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
         if (current_rel_path && strlen32(new_text) > 0) {
             char old_full[MAX_PATH_LENGTH];
             char new_full[MAX_PATH_LENGTH];
-            char *dir_name;
 
             SNPRINTF(old_full, "%s/%s", base_path, current_rel_path);
+            SNPRINTF(new_full, "%s/%s", base_path, new_text);
 
-            if ((dir_name = g_path_get_dirname(old_full))) {
-                SNPRINTF(new_full, "%s/%s", dir_name, new_text);
-
-                if (rename(old_full, new_full) == 0) {
-                    ipc_send_tree(side, row->src_action, row->reason, new_text,
-                                  row->link_target, row->ignore_pattern,
-                                  row->size_raw, row->mtime_raw);
-                    ipc_send_log(_("Renamed: %s -> %s\n"), current_rel_path,
-                                 new_text);
-                    on_preview_clicked(NULL, NULL);
-                } else {
-                    ipc_send_log_error(_("Error renaming %s to %s: %s\n"),
-                                       old_full, new_full, strerror(errno));
-                }
-                g_free(dir_name);
+            if (rename(old_full, new_full) == 0) {
+                ipc_send_tree(side, row->src_action, row->reason, new_text,
+                              row->link_target, row->ignore_pattern,
+                              row->size_raw, row->mtime_raw);
+                ipc_send_log(_("Renamed: %s -> %s\n"), current_rel_path,
+                             new_text);
+                on_preview_clicked(NULL, NULL);
+            } else {
+                ipc_send_log_error(_("Error renaming %s to %s: %s\n"), old_full,
+                                   new_full, strerror(errno));
             }
         }
     }
