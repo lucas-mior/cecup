@@ -314,9 +314,9 @@ work_rsync(void *user_data) {
     int64 total_files_preview = 0;
     int64 processed_files_preview = 0;
 
-    int32 pipe_stdout[2] = {-1, -1};
-    int32 pipe_stderr[2] = {-1, -1};
-    int32 pipe_stdin[2] = {-1, -1};
+    int32 pipe_stdout[2];
+    int32 pipe_stderr[2];
+    int32 pipe_stdin[2];
     struct pollfd pipes[2];
     pid_t child_pid;
 
@@ -1071,9 +1071,9 @@ static void *
 work_rsync_bulk(void *user_data) {
     TaskList *tasks = user_data;
     bool has_transfers = false;
-    int32 pipe_stdout[2] = {-1, -1};
-    int32 pipe_stderr[2] = {-1, -1};
-    int32 pipe_stdin[2] = {-1, -1};
+    int32 pipe_stdout[2];
+    int32 pipe_stderr[2];
+    int32 pipe_stdin[2];
     struct pollfd pipes[2];
     pid_t child_pid;
     char dst_directory[MAX_PATH_LENGTH];
