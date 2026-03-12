@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-11 20:51-0300\n"
+"POT-Creation-Date: 2026-03-11 21:21-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -87,14 +87,12 @@ msgid "Edit the list of filename patterns to ignore"
 msgstr "Editar a lista de padrões de nomes de arquivo para ignorar"
 
 #: work.c:135
-#, c-format
 msgid "Error opening directory %s: %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
 #: on.c:1267
-#, c-format
-msgid "Error renaming %s: %s\n"
-msgstr "Error renomeando %s: %s\n"
+msgid "Error renaming %s to %s: %s\n"
+msgstr "Error renomeando %s to %s: %s\n"
 
 #: main.c:236
 msgid "Executable used for comparing files"
