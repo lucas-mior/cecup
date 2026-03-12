@@ -766,6 +766,7 @@ work_rsync(void *user_data) {
                 bool attribute_changed = false;
                 char *space_pos = strchr(buf_output, ' ');
                 char *relative_path_entry = space_pos + 1;
+
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
                 for (int32 i = 2;
