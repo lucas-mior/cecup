@@ -455,11 +455,10 @@ work_rsync(void *user_data) {
         error("Error executing\n%s\n%s.", cmd, strerror(errno));
         _exit(EXIT_FAILURE);
     default:
+        XCLOSE(&pipe_stdout[1]);
+        XCLOSE(&pipe_stderr[1]);
         break;
     }
-
-    XCLOSE(&pipe_stdout[1]);
-    XCLOSE(&pipe_stderr[1]);
 
     do {
         int64 r;
