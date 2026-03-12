@@ -1021,7 +1021,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 GtkWidget *sub_dir;
                 char extension_label[32];
                 char directory_label[MAX_PATH_LENGTH + 64];
-                char *extension_ptr;
                 char *directory_ptr;
                 char *name = (filepath) ? basename(filepath) : "";
                 int64 length = strlen32(name);
@@ -1030,15 +1029,22 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 gtk_widget_set_sensitive(item, FALSE);
 
                 if (filepath) {
+                    char *extension_ptr = NULL;
+                    sub_ext = gtk_menu_item_new();
                     gtk_widget_set_sensitive(item, TRUE);
+                    gtk_widget_set_sensitive(sub_ext, FALSE);
+
                     if ((extension_ptr = memchr(name, '.', length))) {
                         extension_ptr = strrchr(extension_ptr, '.');
+                        gtk_widget_set_sensitive(sub_ext, TRUE);
                         SNPRINTF(extension_label, _("by extension (*%s)"),
                                  extension_ptr);
                     } else {
                         SNPRINTF(extension_label, "%s", _("by extension"));
                     }
-                    sub_ext = gtk_menu_item_new_with_label(extension_label);
+
+                    gtk_menu_item_set_label(GTK_MENU_ITEM(sub_ext),
+                                            extension_label);
                     g_signal_connect(sub_ext, "activate",
                                      G_CALLBACK(on_menu_ignore_ext), message);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
