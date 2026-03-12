@@ -136,10 +136,10 @@ ipc_send_progress(enum DataType type, double fraction) {
 // clang-format off
 static void
 ipc_send_tree(int32 side,
-                  enum CecupAction action, enum CecupReason reason,
-                  char *path, char *link_target, char *ignore_pattern,
-                  int64 src_size, int64 src_mtime,
-                  int64 dst_size, int64 dst_mtime) {
+              enum CecupAction action, enum CecupReason reason,
+              char *path, char *link_target, char *ignore_pattern,
+              int64 src_size, int64 src_mtime,
+              int64 dst_size, int64 dst_mtime) {
     // clang-format on
     Message *message;
     int32 target_len;
