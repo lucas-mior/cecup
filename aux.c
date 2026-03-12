@@ -427,6 +427,8 @@ update_ui_handler(void *data) {
         CecupRow *row;
         char *src_path_final;
         char *dst_path_final;
+        int64 active_size;
+        int64 active_mtime;
 
         g_mutex_lock(&cecup.row_arena_mutex);
         row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
@@ -482,15 +484,23 @@ update_ui_handler(void *data) {
         row->src_color = colors[row->src_action];
         row->dst_color = colors[row->dst_action];
 
-        bytes_pretty(row->size_text, message->size);
-        row->size_raw = message->size;
+        if (message->side == SIDE_LEFT) {
+            active_size = message->src_size;
+            active_mtime = message->src_mtime;
+        } else {
+            active_size = message->dst_size;
+            active_mtime = message->dst_mtime;
+        }
 
-        if (message->mtime > 0) {
-            time_t t = (time_t)message->mtime;
+        bytes_pretty(row->size_text, active_size);
+        row->size_raw = active_size;
+
+        if (active_mtime > 0) {
+            time_t t = (time_t)active_mtime;
             struct tm *tm_info = localtime(&t);
 
             STRFTIME(row->mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
-            row->mtime_raw = message->mtime;
+            row->mtime_raw = active_mtime;
         } else {
             strcpy(row->mtime_text, _("Unknown modification time"));
             row->mtime_raw = 0;

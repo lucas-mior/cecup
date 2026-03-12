@@ -39,15 +39,15 @@ typedef struct {
 // Note: NEVER delete lines with // clang-format
 // clang-format off
 static CecupMenuItem context_menu_items[] = {
-{N_("📄 Open File"),          0,          0,                                 on_menu_open_item, "file"},
-{N_("📂 Open Folder"),        0,          0,                                 on_menu_open_item, "folder"},
+{N_("📄 Open File"),          0,          0,                                  on_menu_open_item, "file"},
+{N_("📂 Open Folder"),        0,          0,                                  on_menu_open_item, "folder"},
 {N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK,                  on_menu_copy_path, "relative"},
 {N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "absolute"},
-{N_("⏯️ Apply"),              0,          0,                                 on_menu_apply,     NULL},
-{N_("🔍 Diff"),               0,          0,                                 on_menu_diff,      NULL},
-{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
-{N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
-{N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
+{N_("⏯️ Apply"),              0,          0,                                  on_menu_apply,      NULL},
+{N_("🔍 Diff"),                0,          0,                                  on_menu_diff,       NULL},
+{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                  on_menu_rename,     NULL},
+{N_("🗑️ Delete"),              0,          0,                                  on_menu_delete,     NULL},
+{N_("💤 Ignore..."),          0,          0,                                  NULL,               NULL},
 };
 // clang-format on
 
@@ -1265,7 +1265,8 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
             if (rename(old_full, new_full) == 0) {
                 ipc_send_tree(side, row->src_action, row->reason, new_text,
                               row->link_target, row->ignore_pattern,
-                              row->size_raw, row->mtime_raw);
+                              row->size_raw, row->mtime_raw, row->size_raw,
+                              row->mtime_raw);
                 ipc_send_log(_("Renamed: %s -> %s\n"), current_rel_path,
                              new_text);
                 on_preview_clicked(NULL, NULL);

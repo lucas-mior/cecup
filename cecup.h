@@ -182,8 +182,10 @@ typedef struct Message {
     int32 link_target_len;
     int32 ignore_pattern_len;
 
-    int64 size;
-    int64 mtime;
+    int64 src_size;
+    int64 src_mtime;
+    int64 dst_size;
+    int64 dst_mtime;
 
     int32 side;
     double fraction;
@@ -331,16 +333,16 @@ static struct {
     char *problem;
     char *rename;
 } replacements[] = {
-    {"\\",                    "_backslash_in_filename_"                   },
-    {"\n",                    "_newline_in_filename_"                     },
-    {"\"",                    "_double_quote_in_filename_"                },
-    {"\'",                    "_single_quote_in_filename_"                },
-    {"<",                     "_less_than_in_filename_"                   },
-    {">",                     "_greater_than_in_filename_"                },
-    {":",                     "_colon_in_filename_"                       },
-    {"|",                     "_pipe_in_filename_"                        },
-    {"?",                     "_question_mark_in_filename_"               },
-    {"*",                     "_asterisk_in_filename_"                    },
+    {"\\",                     "_backslash_in_filename_"                    },
+    {"\n",                    "_newline_in_filename_"                      },
+    {"\"",                    "_double_quote_in_filename_"                 },
+    {"\'",                    "_single_quote_in_filename_"                 },
+    {"<",                      "_less_than_in_filename_"                    },
+    {">",                      "_greater_than_in_filename_"                    },
+    {":",                      "_colon_in_filename_"                        },
+    {"|",                      "_pipe_in_filename_"                         },
+    {"?",                      "_question_mark_in_filename_"                },
+    {"*",                      "_asterisk_in_filename_"                     },
     {RSYNC_HARDLINK_NOTATION, "_rsync_hardlink_notation_in_filename_"     },
     {RSYNC_SYMLINK_NOTATION,  "_rsync_symlink_notation_in_filename_"      },
     {RSYNC_IGNORE_PRE,        "rsync_ignore_message_prelude_in_filename"  },

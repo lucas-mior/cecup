@@ -138,7 +138,8 @@ static void
 ipc_send_tree(int32 side,
                   enum CecupAction action, enum CecupReason reason,
                   char *path, char *link_target, char *ignore_pattern,
-                  int64 size, int64 mtime) {
+                  int64 src_size, int64 src_mtime,
+                  int64 dst_size, int64 dst_mtime) {
     // clang-format on
     Message *message;
     int32 target_len;
@@ -176,8 +177,10 @@ ipc_send_tree(int32 side,
     message->side = side;
     message->action = action;
     message->reason = reason;
-    message->size = size;
-    message->mtime = mtime;
+    message->src_size = src_size;
+    message->src_mtime = src_mtime;
+    message->dst_size = dst_size;
+    message->dst_mtime = dst_mtime;
     g_idle_add(update_ui_handler, message);
     return;
 }

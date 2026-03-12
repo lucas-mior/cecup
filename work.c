@@ -40,20 +40,6 @@
 #define TESTING_work 0
 #endif
 
-static void
-get_size_and_mtime(char *path, int64 *size, int64 *mtime) {
-    struct stat stat;
-    if (lstat(path, &stat) < 0) {
-        ipc_send_log_error("Error lstat %s: %s.\n", path, strerror(errno));
-        *size = 0;
-        *mtime = 0;
-    } else {
-        *size = stat.st_size;
-        *mtime = (int64)stat.st_mtime;
-    }
-    return;
-}
-
 static int64
 work_count_files_recursive(char *base_path, char *relative_path) {
     DIR *dir;
@@ -535,8 +521,13 @@ work_rsync(void *user_data) {
                    || (eol = memchr64(buf_output, '\r', buf_output_pos)))) {
             char *link_target;
             char full_src_path_val[MAX_PATH_LENGTH];
-            int64 size_path_val = 0;
-            int64 mtime_path_val = 0;
+            char full_dst_path_val[MAX_PATH_LENGTH];
+            struct stat st_src;
+            struct stat st_dst;
+            int64 src_sz = 0;
+            int64 src_mt = 0;
+            int64 dst_sz = 0;
+            int64 dst_mt = 0;
             int32 line_len = (int32)(eol - buf_output);
             int32 remaining;
 
@@ -617,33 +608,33 @@ work_rsync(void *user_data) {
             if (literal_match(buf_output, RSYNC_MESSAGE_DELETING)) {
                 char *relative_path
                     = buf_output + strlen32(RSYNC_MESSAGE_DELETING);
-                char full_src[MAX_PATH_LENGTH];
-                char full_dst[MAX_PATH_LENGTH];
-                struct stat stat_src_local;
-                struct stat stat_dst_local;
-                int64 size_val;
-                int64 time_val;
                 enum CecupReason deletion_reason;
 
                 while (isspace(*relative_path)) {
                     relative_path += 1;
                 }
 
-                SNPRINTF(full_src, "%s/%s", cecup.src_base, relative_path);
-                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, relative_path);
+                SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
+                         relative_path);
+                SNPRINTF(full_dst_path_val, "%s/%s", cecup.dst_base,
+                         relative_path);
 
-                if (lstat(full_dst, &stat_dst_local) == 0) {
-                    size_val = stat_dst_local.st_size;
-                    time_val = (int64)stat_dst_local.st_mtime;
-                } else {
-                    size_val = 0;
-                    time_val = 0;
-                }
-
-                if (lstat(full_src, &stat_src_local) == 0) {
+                if (lstat(full_src_path_val, &st_src) == 0) {
+                    src_sz = st_src.st_size;
+                    src_mt = (int64)st_src.st_mtime;
                     deletion_reason = REASON_IGNORED;
                 } else {
+                    src_sz = 0;
+                    src_mt = 0;
                     deletion_reason = REASON_MISSING;
+                }
+
+                if (lstat(full_dst_path_val, &st_dst) == 0) {
+                    dst_sz = st_dst.st_size;
+                    dst_mt = (int64)st_dst.st_mtime;
+                } else {
+                    dst_sz = 0;
+                    dst_mt = 0;
                 }
 
                 // Note: NEVER delete lines with // clang-format
@@ -652,14 +643,13 @@ work_rsync(void *user_data) {
                     ipc_send_tree(SIDE_RIGHT,
                                   ACTION_DELETE, deletion_reason,
                                   relative_path, NULL, NULL,
-                                  size_val, time_val);
+                                  src_sz, src_mt, dst_sz, dst_mt);
                 }
                 // clang-format on
             } else if (literal_match(buf_output, RSYNC_IGNORE_PRE)) {
                 char *hiding_filename = buf_output + strlen32(RSYNC_IGNORE_PRE);
                 char *reason_sep;
                 char *ignore_pattern = NULL;
-                struct stat st_hiding;
 
                 if ((reason_sep
                      = strstr(hiding_filename, RSYNC_IGNORE_INTER))) {
@@ -668,10 +658,23 @@ work_rsync(void *user_data) {
 
                     SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
                              hiding_filename);
+                    SNPRINTF(full_dst_path_val, "%s/%s", cecup.dst_base,
+                             hiding_filename);
 
-                    if (lstat(full_src_path_val, &st_hiding) == 0) {
-                        size_path_val = st_hiding.st_size;
-                        mtime_path_val = (int64)st_hiding.st_mtime;
+                    if (lstat(full_src_path_val, &st_src) == 0) {
+                        src_sz = st_src.st_size;
+                        src_mt = (int64)st_src.st_mtime;
+                    } else {
+                        src_sz = 0;
+                        src_mt = 0;
+                    }
+
+                    if (lstat(full_dst_path_val, &st_dst) == 0) {
+                        dst_sz = st_dst.st_size;
+                        dst_mt = (int64)st_dst.st_mtime;
+                    } else {
+                        dst_sz = 0;
+                        dst_mt = 0;
                     }
 
                     // Note: NEVER delete lines with // clang-format
@@ -680,7 +683,7 @@ work_rsync(void *user_data) {
                         ipc_send_tree(SIDE_LEFT,
                                       ACTION_IGNORE, REASON_IGNORED,
                                       hiding_filename, NULL, ignore_pattern,
-                                      size_path_val, mtime_path_val);
+                                      src_sz, src_mt, dst_sz, dst_mt);
                     }
                     // clang-format on
                 }
@@ -742,14 +745,30 @@ work_rsync(void *user_data) {
                 // clang-format off
                 SNPRINTF(full_src_path_val,
                          "%s/%s", cecup.src_base, relative_path_entry);
-                get_size_and_mtime(full_src_path_val,
-                                   &size_path_val, &mtime_path_val);
+                SNPRINTF(full_dst_path_val,
+                         "%s/%s", cecup.dst_base, relative_path_entry);
+
+                if (lstat(full_src_path_val, &st_src) == 0) {
+                    src_sz = st_src.st_size;
+                    src_mt = (int64)st_src.st_mtime;
+                } else {
+                    src_sz = 0;
+                    src_mt = 0;
+                }
+
+                if (lstat(full_dst_path_val, &st_dst) == 0) {
+                    dst_sz = st_dst.st_size;
+                    dst_mt = (int64)st_dst.st_mtime;
+                } else {
+                    dst_sz = 0;
+                    dst_mt = 0;
+                }
                 // clang-format on
 
                 if (thread_data->is_preview) {
                     ipc_send_tree(SIDE_LEFT, action, (enum CecupReason)action,
                                   relative_path_entry, link_target, NULL,
-                                  size_path_val, mtime_path_val);
+                                  src_sz, src_mt, dst_sz, dst_mt);
                 }
 
                 processed_files_preview += 1;
@@ -784,8 +803,24 @@ work_rsync(void *user_data) {
 
                 SNPRINTF(full_src_path_val,
                          "%s/%s", cecup.src_base, relative_path_entry);
-                get_size_and_mtime(full_src_path_val,
-                                   &size_path_val, &mtime_path_val);
+                SNPRINTF(full_dst_path_val,
+                         "%s/%s", cecup.dst_base, relative_path_entry);
+
+                if (lstat(full_src_path_val, &st_src) == 0) {
+                    src_sz = st_src.st_size;
+                    src_mt = (int64)st_src.st_mtime;
+                } else {
+                    src_sz = 0;
+                    src_mt = 0;
+                }
+
+                if (lstat(full_dst_path_val, &st_dst) == 0) {
+                    dst_sz = st_dst.st_size;
+                    dst_mt = (int64)st_dst.st_mtime;
+                } else {
+                    dst_sz = 0;
+                    dst_mt = 0;
+                }
 
                 // clang-format on
 
@@ -795,8 +830,8 @@ work_rsync(void *user_data) {
                 }
                 if (thread_data->is_preview) {
                     ipc_send_tree(SIDE_LEFT, action, reason,
-                                  relative_path_entry, NULL, NULL,
-                                  size_path_val, mtime_path_val);
+                                  relative_path_entry, NULL, NULL, src_sz,
+                                  src_mt, dst_sz, dst_mt);
                 }
             }
 
