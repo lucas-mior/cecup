@@ -425,10 +425,6 @@ work_rsync(void *user_data) {
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
     IPC_SEND_LOG_CMD("%s\n", cmd);
 
-    if (thread_data->filtered) {
-        goto finalize;
-    }
-
     switch (child_process_id = fork()) {
     case -1:
         error("Error forking: %s.\n", strerror(errno));

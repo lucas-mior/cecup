@@ -1255,6 +1255,24 @@ regenerate_preview_filtered(char *relative_old, char *relative_new) {
     PRINTLN(relative_new);
     PRINTLN(relative_old);
 
+    {
+        Message *message;
+        int32 path_len;
+
+        g_mutex_lock(&cecup.ui_arena_mutex);
+        message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        memset64(message, 0, SIZEOF(Message));
+
+        path_len = strlen32(relative_old);
+        message->path_len = path_len;
+        message->src_path = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+        memcpy64(message->src_path, relative_old, path_len + 1);
+        g_mutex_unlock(&cecup.ui_arena_mutex);
+
+        message->type = DATA_TYPE_REMOVE_MATCHES;
+        g_idle_add(update_ui_handler, message);
+    }
+
     g_thread_new("work_rsync", work_rsync, thread_data);
 }
 
