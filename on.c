@@ -1264,8 +1264,8 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
                                  new_text);
                     on_preview_clicked(NULL, NULL);
                 } else {
-                    ipc_send_log_error(_("Error renaming %s: %s\n"),
-                                       current_rel_path, strerror(errno));
+                    ipc_send_log_error(_("Error renaming %s to %s: %s\n"),
+                                       old_full, new_full, strerror(errno));
                 }
                 g_free(dir_name);
             }
