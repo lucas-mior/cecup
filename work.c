@@ -642,16 +642,16 @@ work_rsync(void *user_data) {
                 }
 
                 if (lstat(full_src, &stat_src_local) == 0) {
-                    deletion_reason = UI_REASON_IGNORED;
+                    deletion_reason = REASON_IGNORED;
                 } else {
-                    deletion_reason = UI_REASON_MISSING;
+                    deletion_reason = REASON_MISSING;
                 }
 
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
                 if (thread_data->is_preview) {
                     ipc_send_tree(SIDE_RIGHT,
-                                  UI_ACTION_DELETE, deletion_reason,
+                                  ACTION_DELETE, deletion_reason,
                                   relative_path, NULL, NULL,
                                   size_val, time_val);
                 }
@@ -679,7 +679,7 @@ work_rsync(void *user_data) {
                     // clang-format off
                     if (thread_data->is_preview) {
                         ipc_send_tree(SIDE_LEFT,
-                                      UI_ACTION_IGNORE, UI_REASON_IGNORED,
+                                      ACTION_IGNORE, REASON_IGNORED,
                                       hiding_filename, NULL, ignore_pattern,
                                       size_path_val, mtime_path_val);
                     }
@@ -692,7 +692,7 @@ work_rsync(void *user_data) {
 
                 char *space_pos = strchr(buf_output, ' ');
                 char *relative_path_entry = space_pos + 1;
-                enum CecupAction action = UI_ACTION_UPDATE;
+                enum CecupAction action = ACTION_UPDATE;
 
                 while (isspace(*relative_path_entry)) {
                     relative_path_entry += 1;
@@ -701,7 +701,7 @@ work_rsync(void *user_data) {
                 link_target = NULL;
                 if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
                     char *sep;
-                    action = UI_ACTION_HARDLINK;
+                    action = ACTION_HARDLINK;
 
                     if ((sep = strstr(relative_path_entry,
                                       RSYNC_HARDLINK_NOTATION))) {
@@ -710,7 +710,7 @@ work_rsync(void *user_data) {
                     }
                 } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
                     char *sep;
-                    action = UI_ACTION_SYMLINK;
+                    action = ACTION_SYMLINK;
 
                     if ((sep = strstr(relative_path_entry,
                                       RSYNC_SYMLINK_NOTATION))) {
@@ -718,7 +718,7 @@ work_rsync(void *user_data) {
                         link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
                     }
                 } else if (buf_output[2] == '+') {
-                    action = UI_ACTION_NEW;
+                    action = ACTION_NEW;
                 }
 
                 if ((thread_data->is_preview == 0) && (line_len > 11)
@@ -759,8 +759,8 @@ work_rsync(void *user_data) {
                 }
             } else if (might_be_itemize_line
                        && (action_char == RSYNC_CHAR0_ACTION_NO_UPDATE)) {
-                enum CecupAction action = UI_ACTION_UPDATE;
-                enum CecupReason reason = UI_REASON_UPDATE;
+                enum CecupAction action = ACTION_UPDATE;
+                enum CecupReason reason = REASON_UPDATE;
 
                 bool attribute_changed = false;
                 char *space_pos = strchr(buf_output, ' ');
@@ -783,8 +783,8 @@ work_rsync(void *user_data) {
                                    &mtime_path_val);
 
                 if (!attribute_changed) {
-                    action = UI_ACTION_EQUAL;
-                    reason = UI_REASON_EQUAL;
+                    action = ACTION_EQUAL;
+                    reason = REASON_EQUAL;
                 }
                 if (thread_data->is_preview) {
                     ipc_send_tree(SIDE_LEFT, action, reason,
@@ -1030,7 +1030,7 @@ work_rsync_bulk(void *user_data) {
             char full_dst_path[MAX_PATH_LENGTH];
             pid_t child_rm;
 
-            if (task->action != UI_ACTION_DELETE) {
+            if (task->action != ACTION_DELETE) {
                 has_transfers = true;
                 continue;
             }
@@ -1170,21 +1170,21 @@ work_rsync_bulk(void *user_data) {
     for (int32 i = 0; i < tasks->count; i += 1) {
         Message *task = tasks->items[i];
         switch (task->action) {
-        case UI_ACTION_DELETE:
-        case UI_ACTION_DELETED:
-        case UI_ACTION_IGNORE:
-        case UI_ACTION_EQUAL:
+        case ACTION_DELETE:
+        case ACTION_DELETED:
+        case ACTION_IGNORE:
+        case ACTION_EQUAL:
             continue;
-        case UI_ACTION_HARDLINK:
+        case ACTION_HARDLINK:
             // rsync, when using the --files-from mode,
             // only transfers hard links
             // if the target is also included in the --files-from list
             write64(pipe_stdin[1], task->link_target, task->link_target_len);
             write64(pipe_stdin[1], "\n", 1);
             __attribute__((fallthrough));
-        case UI_ACTION_NEW:
-        case UI_ACTION_UPDATE:
-        case UI_ACTION_SYMLINK:
+        case ACTION_NEW:
+        case ACTION_UPDATE:
+        case ACTION_SYMLINK:
         case NUM_UI_ACTIONS:
         default:
             write64(pipe_stdin[1], task->filepath, task->filepath_len);

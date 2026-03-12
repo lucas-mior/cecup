@@ -221,8 +221,8 @@ on_menu_delete(GtkWidget *m, void *data) {
 
     (void)m;
 
-    if ((tasks = get_target_tasks(message->side, message->filepath,
-                                  UI_ACTION_DELETE))) {
+    if ((tasks
+         = get_target_tasks(message->side, message->filepath, ACTION_DELETE))) {
         count = tasks->count;
         dialog = gtk_message_dialog_new(
             GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,

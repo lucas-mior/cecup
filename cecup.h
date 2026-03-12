@@ -38,80 +38,80 @@
 #define ALIGN16(n) (((n) + 15) & ~15)
 
 enum CecupAction {
-    UI_ACTION_NEW,
-    UI_ACTION_UPDATE,
-    UI_ACTION_HARDLINK,
-    UI_ACTION_SYMLINK,
-    UI_ACTION_EQUAL,
-    UI_ACTION_DELETED,
-    UI_ACTION_DELETE,
-    UI_ACTION_IGNORE,
+    ACTION_NEW,
+    ACTION_UPDATE,
+    ACTION_HARDLINK,
+    ACTION_SYMLINK,
+    ACTION_EQUAL,
+    ACTION_DELETED,
+    ACTION_DELETE,
+    ACTION_IGNORE,
     NUM_UI_ACTIONS
 };
 
 enum CecupReason {
-    UI_REASON_NEW,
-    UI_REASON_UPDATE,
-    UI_REASON_HARDLINK,
-    UI_REASON_SYMLINK,
-    UI_REASON_EQUAL,
-    UI_REASON_IGNORED,
-    UI_REASON_MISSING,
+    REASON_NEW,
+    REASON_UPDATE,
+    REASON_HARDLINK,
+    REASON_SYMLINK,
+    REASON_EQUAL,
+    REASON_IGNORED,
+    REASON_MISSING,
     NUM_UI_REASONS
 };
 
 static char *action_emojis[] = {
-    [UI_ACTION_NEW]      = EMOJI_NEW,
-    [UI_ACTION_HARDLINK] = EMOJI_LINK,
-    [UI_ACTION_SYMLINK]  = EMOJI_SYMLINK,
-    [UI_ACTION_UPDATE]   = EMOJI_UPDATE,
-    [UI_ACTION_EQUAL]    = EMOJI_EQUAL,
-    [UI_ACTION_DELETED]  = EMOJI_DELETE,
-    [UI_ACTION_DELETE]   = EMOJI_DELETE,
-    [UI_ACTION_IGNORE]   = EMOJI_IGNORE
+    [ACTION_NEW]      = EMOJI_NEW,
+    [ACTION_HARDLINK] = EMOJI_LINK,
+    [ACTION_SYMLINK]  = EMOJI_SYMLINK,
+    [ACTION_UPDATE]   = EMOJI_UPDATE,
+    [ACTION_EQUAL]    = EMOJI_EQUAL,
+    [ACTION_DELETED]  = EMOJI_DELETE,
+    [ACTION_DELETE]   = EMOJI_DELETE,
+    [ACTION_IGNORE]   = EMOJI_IGNORE
 };
 
 static char *src_action_strings[] = {
-    [UI_ACTION_NEW]      = N_("Copy to backup"),
-    [UI_ACTION_HARDLINK] = N_("Create hardlink in backup"),
-    [UI_ACTION_SYMLINK]  = N_("Create symlink in backup"),
-    [UI_ACTION_UPDATE]   = N_("Update file in backup"),
-    [UI_ACTION_EQUAL]    = N_("Already identical"),
-    [UI_ACTION_DELETED]  = N_("Not found in original"),
-    [UI_ACTION_DELETE]   = "",
-    [UI_ACTION_IGNORE]   = N_("Skip")
+    [ACTION_NEW]      = N_("Copy to backup"),
+    [ACTION_HARDLINK] = N_("Create hardlink in backup"),
+    [ACTION_SYMLINK]  = N_("Create symlink in backup"),
+    [ACTION_UPDATE]   = N_("Update file in backup"),
+    [ACTION_EQUAL]    = N_("Already identical"),
+    [ACTION_DELETED]  = N_("Not found in original"),
+    [ACTION_DELETE]   = "",
+    [ACTION_IGNORE]   = N_("Skip")
 };
 
 static char *dst_action_strings[] = {
-    [UI_ACTION_NEW]      = N_("Copy from original"),
-    [UI_ACTION_HARDLINK] = N_("Create hardlink according to original"),
-    [UI_ACTION_SYMLINK]  = N_("Create symlink according to original"),
-    [UI_ACTION_UPDATE]   = N_("Update from original"),
-    [UI_ACTION_EQUAL]    = N_("Already identical"),
-    [UI_ACTION_DELETED]  = "",
-    [UI_ACTION_DELETE]   = N_("Remove from backup"),
-    [UI_ACTION_IGNORE]   = N_("Skip")
+    [ACTION_NEW]      = N_("Copy from original"),
+    [ACTION_HARDLINK] = N_("Create hardlink according to original"),
+    [ACTION_SYMLINK]  = N_("Create symlink according to original"),
+    [ACTION_UPDATE]   = N_("Update from original"),
+    [ACTION_EQUAL]    = N_("Already identical"),
+    [ACTION_DELETED]  = "",
+    [ACTION_DELETE]   = N_("Remove from backup"),
+    [ACTION_IGNORE]   = N_("Skip")
 };
 
 static char *reason_strings[] = {
-    [UI_REASON_EQUAL]    = N_("Files have the same size and modification time"),
-    [UI_REASON_IGNORED]  = N_("Matches an ignore rule"),
-    [UI_REASON_MISSING]  = N_("File does not exist in the original folder"),
-    [UI_REASON_NEW]      = N_("New file found in the original folder"),
-    [UI_REASON_HARDLINK] = N_("Hardlinked file in the original folder"),
-    [UI_REASON_SYMLINK]  = N_("Symlink in the original folder"),
-    [UI_REASON_UPDATE]   = N_("The original file is newer"),
+    [REASON_EQUAL]    = N_("Files have the same size and modification time"),
+    [REASON_IGNORED]  = N_("Matches an ignore rule"),
+    [REASON_MISSING]  = N_("File does not exist in the original folder"),
+    [REASON_NEW]      = N_("New file found in the original folder"),
+    [REASON_HARDLINK] = N_("Hardlinked file in the original folder"),
+    [REASON_SYMLINK]  = N_("Symlink in the original folder"),
+    [REASON_UPDATE]   = N_("The original file is newer"),
 };
 
 static char *colors[] = {
-    [UI_ACTION_NEW]      = "#D4EDDA",
-    [UI_ACTION_UPDATE]   = "#CCE5FF",
-    [UI_ACTION_HARDLINK] = "#E2D1F9",
-    [UI_ACTION_SYMLINK]  = "#FFD1F9",
-    [UI_ACTION_EQUAL]    = "#F0F0F0",
-    [UI_ACTION_IGNORE]   = "#FFF3CD",
-    [UI_ACTION_DELETE]   = "#F8D7DA",
-    [UI_ACTION_DELETED]  = "#F8D7DA",
+    [ACTION_NEW]      = "#D4EDDA",
+    [ACTION_UPDATE]   = "#CCE5FF",
+    [ACTION_HARDLINK] = "#E2D1F9",
+    [ACTION_SYMLINK]  = "#FFD1F9",
+    [ACTION_EQUAL]    = "#F0F0F0",
+    [ACTION_IGNORE]   = "#FFF3CD",
+    [ACTION_DELETE]   = "#F8D7DA",
+    [ACTION_DELETED]  = "#F8D7DA",
 };
 
 enum CecupColumn {

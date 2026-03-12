@@ -265,35 +265,35 @@ refresh_ui_list(void) {
         }
 
         switch (row->src_action) {
-        case UI_ACTION_NEW:
+        case ACTION_NEW:
             visible = show_new;
             count_new += 1;
             total_size_bytes += row->size_raw;
             break;
-        case UI_ACTION_HARDLINK:
-        case UI_ACTION_SYMLINK:
+        case ACTION_HARDLINK:
+        case ACTION_SYMLINK:
             visible = show_link;
             count_hard += 1;
             total_size_bytes += row->size_raw;
             break;
-        case UI_ACTION_UPDATE:
+        case ACTION_UPDATE:
             visible = show_update;
             count_update += 1;
             total_size_bytes += row->size_raw;
             break;
-        case UI_ACTION_EQUAL:
+        case ACTION_EQUAL:
             visible = show_equal;
             count_equal += 1;
             break;
-        case UI_ACTION_DELETED:
+        case ACTION_DELETED:
             visible = show_delete;
             count_delete += 1;
             break;
-        case UI_ACTION_IGNORE:
+        case ACTION_IGNORE:
             visible = show_ignore;
             count_ignore += 1;
             break;
-        case UI_ACTION_DELETE:
+        case ACTION_DELETE:
         case NUM_UI_ACTIONS:
         default:
             error("Invalid row->src_action: %u\n", row->src_action);
@@ -441,38 +441,38 @@ update_ui_handler(void *data) {
         row->reason = message->reason;
 
         switch (message->action) {
-        case UI_ACTION_NEW:
+        case ACTION_NEW:
             dst_path_final = NULL;
             break;
-        case UI_ACTION_UPDATE:
+        case ACTION_UPDATE:
             break;
-        case UI_ACTION_HARDLINK:
+        case ACTION_HARDLINK:
             dst_path_final = NULL;
             break;
-        case UI_ACTION_SYMLINK:
+        case ACTION_SYMLINK:
             dst_path_final = NULL;
             break;
-        case UI_ACTION_EQUAL:
+        case ACTION_EQUAL:
             break;
-        case UI_ACTION_IGNORE:
-        case UI_ACTION_DELETE:
-            if (message->reason == UI_REASON_IGNORED) {
-                row->src_action = UI_ACTION_IGNORE;
+        case ACTION_IGNORE:
+        case ACTION_DELETE:
+            if (message->reason == REASON_IGNORED) {
+                row->src_action = ACTION_IGNORE;
                 dst_path_final = NULL;
 
                 if (gtk_toggle_button_get_active(
                         GTK_TOGGLE_BUTTON(cecup.delete_excluded))) {
-                    row->dst_action = UI_ACTION_DELETE;
+                    row->dst_action = ACTION_DELETE;
                 } else {
-                    row->dst_action = UI_ACTION_IGNORE;
+                    row->dst_action = ACTION_IGNORE;
                 }
             } else {
-                row->src_action = UI_ACTION_DELETED;
-                row->dst_action = UI_ACTION_DELETE;
+                row->src_action = ACTION_DELETED;
+                row->dst_action = ACTION_DELETE;
                 src_path_final = NULL;
             }
             break;
-        case UI_ACTION_DELETED:
+        case ACTION_DELETED:
         case NUM_UI_ACTIONS:
         default:
             error("Invalid message->action: %u\n", message->action);
