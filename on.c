@@ -84,11 +84,11 @@ on_menu_rename(GtkWidget *m, void *data) {
     (void)m;
 
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
+        GtkTreePath *tree_path = gtk_tree_model_get_path(model, &iter);
         GtkTreeViewColumn *col
             = gtk_tree_view_get_column(GTK_TREE_VIEW(tree), 2);
-        gtk_tree_view_set_cursor(GTK_TREE_VIEW(tree), path, col, TRUE);
-        gtk_tree_path_free(path);
+        gtk_tree_view_set_cursor(GTK_TREE_VIEW(tree), tree_path, col, TRUE);
+        gtk_tree_path_free(tree_path);
     }
 
     free_update_data(message);
