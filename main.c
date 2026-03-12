@@ -33,8 +33,6 @@
 #define FILL_TRUE true
 #define EXPAND_TRUE true
 
-/* --- CecupCellRendererText Definition --- */
-
 #define CECUP_TYPE_CELL_RENDERER_TEXT (cecup_cell_renderer_text_get_type())
 G_DECLARE_FINAL_TYPE(CecupCellRendererText, cecup_cell_renderer_text, CECUP,
                      CELL_RENDERER_TEXT, GtkCellRenderer)
@@ -114,8 +112,6 @@ GtkCellRenderer *
 cecup_cell_renderer_text_new(void) {
     return g_object_new(CECUP_TYPE_CELL_RENDERER_TEXT, NULL);
 }
-
-/* --- End of Custom Renderer --- */
 
 static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path);
 
