@@ -522,6 +522,8 @@ on_sync_clicked(GtkWidget *b, void *data) {
             = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs));
         thread_data->delete_after = gtk_toggle_button_get_active(
             GTK_TOGGLE_BUTTON(cecup.delete_after));
+        thread_data->delete_excluded = gtk_toggle_button_get_active(
+            GTK_TOGGLE_BUTTON(cecup.delete_excluded));
         g_thread_new("work_rsync", work_rsync, thread_data);
     }
     gtk_widget_destroy(dialog);
