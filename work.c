@@ -540,8 +540,8 @@ work_rsync(void *user_data) {
             int32 line_len = (int32)(eol - buf_output);
             int32 remaining;
 
-            char action_char = buf_output[RSYNC_INDEX_ACTION];
-            char type_char = buf_output[RSYNC_INDEX_FILE_TYPE];
+            char action_char = buf_output[0];
+            char type_char = buf_output[1];
 
             bool might_be_itemize_line = true;
 
