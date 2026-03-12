@@ -1251,8 +1251,6 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
         char basedir[MAX_PATH_LENGTH];
         char old_full[MAX_PATH_LENGTH];
         char *current_rel_path;
-        char *allocated_name;
-        int32 name_len;
 
         gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
                            &row, -1);
@@ -1273,22 +1271,6 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
             SNPRINTF(new_full, "%s/%s", basedir, new_text);
 
             if (rename(old_full, new_full) == 0) {
-                name_len = strlen32(new_text);
-
-                g_mutex_lock(&cecup.row_arena_mutex);
-                allocated_name
-                    = xarena_push(cecup.row_arena, ALIGN16(name_len + 1));
-                memcpy64(allocated_name, new_text, name_len + 1);
-
-                if (side == SIDE_LEFT) {
-                    row->src_path = allocated_name;
-                    row->src_path_len = name_len;
-                } else {
-                    row->dst_path = allocated_name;
-                    row->dst_path_len = name_len;
-                }
-                g_mutex_unlock(&cecup.row_arena_mutex);
-
                 IPC_SEND_LOG(_("Renamed: %s -> %s\n"), current_rel_path,
                              new_text);
                 refresh_ui_list();
