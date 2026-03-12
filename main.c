@@ -436,26 +436,26 @@ main(int32 argc, char *argv[]) {
 
     {
         GKeyFile *key;
-        char *val;
+        char *value;
 
         key = g_key_file_new();
         if (g_key_file_load_from_file(key, cecup.config_path, G_KEY_FILE_NONE,
                                       NULL)) {
-            if ((val = g_key_file_get_string(key, "Paths", "src", NULL))) {
-                gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), val);
-                g_free(val);
+            if ((value = g_key_file_get_string(key, "Paths", "src", NULL))) {
+                gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), value);
+                g_free(value);
             }
-            if ((val = g_key_file_get_string(key, "Paths", "dst", NULL))) {
-                gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), val);
-                g_free(val);
+            if ((value = g_key_file_get_string(key, "Paths", "dst", NULL))) {
+                gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), value);
+                g_free(value);
             }
-            if ((val = g_key_file_get_string(key, "Tools", "diff", NULL))) {
-                gtk_entry_set_text(GTK_ENTRY(cecup.diff_entry), val);
-                g_free(val);
+            if ((value = g_key_file_get_string(key, "Tools", "diff", NULL))) {
+                gtk_entry_set_text(GTK_ENTRY(cecup.diff_entry), value);
+                g_free(value);
             }
-            if ((val = g_key_file_get_string(key, "Tools", "term", NULL))) {
-                gtk_entry_set_text(GTK_ENTRY(cecup.term_entry), val);
-                g_free(val);
+            if ((value = g_key_file_get_string(key, "Tools", "term", NULL))) {
+                gtk_entry_set_text(GTK_ENTRY(cecup.term_entry), value);
+                g_free(value);
             }
 
             if (g_key_file_has_key(key, "Filters", "new", NULL)) {
