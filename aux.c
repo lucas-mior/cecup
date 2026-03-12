@@ -200,10 +200,10 @@ cecup_row_compare(const void *a, const void *b) {
         }
         break;
     case COL_SIZE_RAW:
-        COMPARE(row_a->size_raw, row_b->size_raw);
+        COMPARE(row_a->src_size_raw, row_b->src_size_raw);
         break;
     case COL_MTIME_RAW:
-        COMPARE(row_a->mtime_raw, row_b->mtime_raw);
+        COMPARE(row_a->src_mtime_raw, row_b->src_mtime_raw);
         break;
     case COL_DST_ACTION:
     case COL_MTIME_TEXT:
@@ -268,18 +268,18 @@ refresh_ui_list(void) {
         case ACTION_NEW:
             visible = show_new;
             count_new += 1;
-            total_size_bytes += row->size_raw;
+            total_size_bytes += row->src_size_raw;
             break;
         case ACTION_HARDLINK:
         case ACTION_SYMLINK:
             visible = show_link;
             count_hard += 1;
-            total_size_bytes += row->size_raw;
+            total_size_bytes += row->src_size_raw;
             break;
         case ACTION_UPDATE:
             visible = show_update;
             count_update += 1;
-            total_size_bytes += row->size_raw;
+            total_size_bytes += row->src_size_raw;
             break;
         case ACTION_EQUAL:
             visible = show_equal;
@@ -427,8 +427,6 @@ update_ui_handler(void *data) {
         CecupRow *row;
         char *src_path_final;
         char *dst_path_final;
-        int64 active_size;
-        int64 active_mtime;
 
         g_mutex_lock(&cecup.row_arena_mutex);
         row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
@@ -484,26 +482,31 @@ update_ui_handler(void *data) {
         row->src_color = colors[row->src_action];
         row->dst_color = colors[row->dst_action];
 
-        if (message->side == SIDE_LEFT) {
-            active_size = message->src_size;
-            active_mtime = message->src_mtime;
-        } else {
-            active_size = message->dst_size;
-            active_mtime = message->dst_mtime;
-        }
+        bytes_pretty(row->src_size_text, message->src_size);
+        row->src_size_raw = message->src_size;
+        bytes_pretty(row->dst_size_text, message->dst_size);
+        row->dst_size_raw = message->dst_size;
 
-        bytes_pretty(row->size_text, active_size);
-        row->size_raw = active_size;
-
-        if (active_mtime > 0) {
-            time_t t = (time_t)active_mtime;
+        if (message->src_mtime > 0) {
+            time_t t = (time_t)message->src_mtime;
             struct tm *tm_info = localtime(&t);
 
-            STRFTIME(row->mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
-            row->mtime_raw = active_mtime;
+            STRFTIME(row->src_mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
+            row->src_mtime_raw = message->src_mtime;
         } else {
-            strcpy(row->mtime_text, _("Unknown modification time"));
-            row->mtime_raw = 0;
+            strcpy(row->src_mtime_text, _("Unknown modification time"));
+            row->src_mtime_raw = 0;
+        }
+
+        if (message->dst_mtime > 0) {
+            time_t t = (time_t)message->dst_mtime;
+            struct tm *tm_info = localtime(&t);
+
+            STRFTIME(row->dst_mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
+            row->dst_mtime_raw = message->dst_mtime;
+        } else {
+            strcpy(row->dst_mtime_text, _("Unknown modification time"));
+            row->dst_mtime_raw = 0;
         }
 
         if (message->link_target) {

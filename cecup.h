@@ -143,10 +143,14 @@ typedef struct CecupRow {
     int32 link_target_len;
     int32 ignore_pattern_len;
 
-    char size_text[16];
-    char mtime_text[32];
-    int64 size_raw;
-    int64 mtime_raw;
+    char src_size_text[16];
+    char dst_size_text[16];
+    char src_mtime_text[32];
+    char dst_mtime_text[32];
+    int64 src_size_raw;
+    int64 dst_size_raw;
+    int64 src_mtime_raw;
+    int64 dst_mtime_raw;
 
     char *src_color;
     char *dst_color;
@@ -338,7 +342,7 @@ static struct {
     {"\"",                    "_double_quote_in_filename_"                 },
     {"\'",                    "_single_quote_in_filename_"                 },
     {"<",                      "_less_than_in_filename_"                    },
-    {">",                      "_greater_than_in_filename_"                    },
+    {">",                      "_greater_than_in_filename_"                 },
     {":",                      "_colon_in_filename_"                        },
     {"|",                      "_pipe_in_filename_"                         },
     {"?",                      "_question_mark_in_filename_"                },

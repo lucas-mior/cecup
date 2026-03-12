@@ -41,13 +41,13 @@ typedef struct {
 static CecupMenuItem context_menu_items[] = {
 {N_("📄 Open File"),          0,          0,                                  on_menu_open_item, "file"},
 {N_("📂 Open Folder"),        0,          0,                                  on_menu_open_item, "folder"},
-{N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK,                  on_menu_copy_path, "relative"},
+{N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK,                   on_menu_copy_path, "relative"},
 {N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "absolute"},
 {N_("⏯️ Apply"),              0,          0,                                  on_menu_apply,      NULL},
 {N_("🔍 Diff"),                0,          0,                                  on_menu_diff,       NULL},
 {N_("✏️ Rename"),              GDK_KEY_F2, 0,                                  on_menu_rename,     NULL},
 {N_("🗑️ Delete"),              0,          0,                                  on_menu_delete,     NULL},
-{N_("💤 Ignore..."),          0,          0,                                  NULL,               NULL},
+{N_("💤 Ignore..."),          0,          0,                                  NULL,                NULL},
 };
 // clang-format on
 
@@ -1191,8 +1191,10 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             break;
         }
         case 3: {
+            int64 size_raw
+                = (side == SIDE_LEFT) ? row->src_size_raw : row->dst_size_raw;
             tip_text_length = SNPRINTF(tip_text_buffer, "%s: %lld bytes",
-                                       filepath, (llong)row->size_raw);
+                                       filepath, (llong)size_raw);
             g_mutex_lock(&cecup.ui_arena_mutex);
             tip_text
                 = xarena_push(cecup.ui_arena, ALIGN16(tip_text_length + 1));
@@ -1201,8 +1203,10 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             break;
         }
         case 4: {
-            tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", filepath,
-                                       row->mtime_text);
+            char *mtime_text = (side == SIDE_LEFT) ? row->src_mtime_text
+                                                   : row->dst_mtime_text;
+            tip_text_length
+                = SNPRINTF(tip_text_buffer, "%s: %s", filepath, mtime_text);
             g_mutex_lock(&cecup.ui_arena_mutex);
             tip_text
                 = xarena_push(cecup.ui_arena, ALIGN16(tip_text_length + 1));
@@ -1265,8 +1269,8 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
             if (rename(old_full, new_full) == 0) {
                 ipc_send_tree(side, row->src_action, row->reason, new_text,
                               row->link_target, row->ignore_pattern,
-                              row->size_raw, row->mtime_raw, row->size_raw,
-                              row->mtime_raw);
+                              row->src_size_raw, row->src_mtime_raw,
+                              row->dst_size_raw, row->dst_mtime_raw);
                 ipc_send_log(_("Renamed: %s -> %s\n"), current_rel_path,
                              new_text);
                 on_preview_clicked(NULL, NULL);

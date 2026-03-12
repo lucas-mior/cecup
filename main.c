@@ -500,7 +500,7 @@ main(int32 argc, char *argv[]) {
                                            NULL));
             }
         }
-        g_key_file_free(key);
+        g_free(key);
     }
 
     // Note: NEVER delete lines with // clang-format
@@ -604,24 +604,30 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
         break;
     case COL_SIZE_TEXT: {
         char *background;
+        char *text;
         if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 3)) {
             background = row->src_color;
+            text = row->src_size_text;
         } else {
             background = row->dst_color;
+            text = row->dst_size_text;
         }
-        g_object_set(renderer, "text", row->size_text, "cell-background",
-                     background, NULL);
+        g_object_set(renderer, "text", text, "cell-background", background,
+                     NULL);
         break;
     }
     case COL_MTIME_TEXT: {
         char *background;
+        char *text;
         if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 4)) {
             background = row->src_color;
+            text = row->src_mtime_text;
         } else {
             background = row->dst_color;
+            text = row->dst_mtime_text;
         }
-        g_object_set(renderer, "text", row->mtime_text, "cell-background",
-                     background, NULL);
+        g_object_set(renderer, "text", text, "cell-background", background,
+                     NULL);
         break;
     }
     default:
