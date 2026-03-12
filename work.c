@@ -594,6 +594,12 @@ work_rsync(void *user_data) {
                 }
             }
 
+            if (buf_output[strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)] == ' ') {
+                might_be_itemize_line &= true;
+            } else {
+                might_be_itemize_line = false;
+            }
+
             *eol = '\0';
 
             {
