@@ -338,7 +338,6 @@ on_menu_ignore_ext(GtkWidget *m, void *data) {
             }
         }
         fclose(fp);
-        on_preview_clicked(NULL, NULL);
         free_task_list(tasks);
     } while (0);
 
@@ -373,7 +372,6 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
             }
         }
         fclose(fp);
-        on_preview_clicked(NULL, NULL);
     } while (0);
 
     if (tasks) {
@@ -397,7 +395,6 @@ on_preview_setting_toggled(GtkToggleButton *b, void *data) {
     (void)b;
     (void)data;
     save_config();
-    on_preview_clicked(NULL, NULL);
     return;
 }
 
@@ -420,7 +417,6 @@ on_delete_after_toggled(GtkToggleButton *b, void *data) {
     }
 
     save_config();
-    on_preview_clicked(NULL, NULL);
     return;
 }
 
@@ -436,7 +432,6 @@ on_delete_excluded_toggled(GtkToggleButton *b, void *data) {
                                           on_delete_after_toggled, NULL);
     }
     save_config();
-    on_preview_clicked(NULL, NULL);
     return;
 }
 
@@ -708,7 +703,6 @@ on_ignore_clicked(GtkWidget *b, void *data) {
         content = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
         g_file_set_contents(cecup.ignore_path, content, -1, NULL);
         g_free(content);
-        on_preview_clicked(NULL, NULL);
     }
     gtk_widget_destroy(dialog);
     return;
@@ -761,7 +755,6 @@ on_invert_clicked(GtkWidget *b, void *data) {
 
     gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), path_dst);
     gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), path_src);
-    on_preview_clicked(NULL, NULL);
     return;
 }
 
@@ -1294,7 +1287,6 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
                               row->dst_mtime_raw);
                 IPC_SEND_LOG(_("Renamed: %s -> %s\n"), current_rel_path,
                              new_text);
-                on_preview_clicked(NULL, NULL);
             } else {
                 IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full,
                                    new_full, strerror(errno));
