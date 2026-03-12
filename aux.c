@@ -458,6 +458,7 @@ update_ui_handler(void *data) {
         case UI_ACTION_DELETE:
             if (message->reason == UI_REASON_IGNORED) {
                 row->src_action = UI_ACTION_IGNORE;
+                dst_path_final = NULL;
 
                 if (gtk_toggle_button_get_active(
                         GTK_TOGGLE_BUTTON(cecup.delete_excluded))) {
