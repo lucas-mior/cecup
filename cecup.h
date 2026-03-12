@@ -325,6 +325,8 @@ enum RsyncCharAttribute {
 /* for ignored files on the source, rsync --verbose --verbose outputs:
  * [sender] hiding file <filename> because of pattern <pattern>
  */
+
+#define RSYNC_IGNORE_DIR_PRE "[sender] hiding directory "
 #define RSYNC_IGNORE_PRE "[sender] hiding file "
 #define RSYNC_IGNORE_INTER " because of pattern "
 

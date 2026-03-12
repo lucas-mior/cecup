@@ -646,10 +646,18 @@ work_rsync(void *user_data) {
                                   src_sz, src_mt, dst_sz, dst_mt);
                 }
                 // clang-format on
-            } else if (literal_match(buf_output, RSYNC_IGNORE_PRE)) {
-                char *hiding_filename = buf_output + strlen32(RSYNC_IGNORE_PRE);
+            } else if (literal_match(buf_output, RSYNC_IGNORE_PRE)
+                       || literal_match(buf_output, RSYNC_IGNORE_DIR_PRE)) {
+                char *hiding_filename;
                 char *reason_sep;
                 char *ignore_pattern = NULL;
+
+                if (literal_match(buf_output, RSYNC_IGNORE_PRE)) {
+                    hiding_filename = buf_output + strlen32(RSYNC_IGNORE_PRE);
+                } else {
+                    hiding_filename
+                        = buf_output + strlen32(RSYNC_IGNORE_DIR_PRE);
+                }
 
                 if ((reason_sep
                      = strstr(hiding_filename, RSYNC_IGNORE_INTER))) {
