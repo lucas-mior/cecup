@@ -881,7 +881,7 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
 static gboolean
 on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
     int32 side;
-    GtkTreePath *path;
+    GtkTreePath *tree_path;
 
     (void)data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
@@ -895,11 +895,11 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         if (event->type == GDK_2BUTTON_PRESS) {
             if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
                                               (gint)event->x, (gint)event->y,
-                                              &path, NULL, NULL, NULL)) {
+                                              &tree_path, NULL, NULL, NULL)) {
                 char *filepath;
                 int32 path_len;
                 enum CecupAction action;
-                int32 row_index = gtk_tree_path_get_indices(path)[0];
+                int32 row_index = gtk_tree_path_get_indices(tree_path)[0];
                 CecupRow *row = cecup.rows_visible[row_index];
 
                 if (side == SIDE_LEFT) {
@@ -932,7 +932,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     on_menu_open_item(NULL, message);
                 }
 
-                gtk_tree_path_free(path);
+                gtk_tree_path_free(tree_path);
                 return TRUE;
             }
         }
@@ -948,12 +948,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
         if (!gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
                                            (gint)event->x, (gint)event->y,
-                                           &path, NULL, NULL, NULL)) {
+                                           &tree_path, NULL, NULL, NULL)) {
             break;
         }
 
         {
-            int32 row_index = gtk_tree_path_get_indices(path)[0];
+            int32 row_index = gtk_tree_path_get_indices(tree_path)[0];
             CecupRow *row = cecup.rows_visible[row_index];
 
             if (side == SIDE_LEFT) {
@@ -1087,7 +1087,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
         gtk_widget_show_all(menu);
         gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
-        gtk_tree_path_free(path);
+        gtk_tree_path_free(tree_path);
         return TRUE;
     }
     default:
