@@ -308,14 +308,19 @@ refresh_ui_list(void) {
 
     SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_new), button_label);
+
     SNPRINTF(button_label, "%s/%s %d", EMOJI_LINK, EMOJI_SYMLINK, count_hard);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_hard), button_label);
+
     SNPRINTF(button_label, "%s %d", EMOJI_UPDATE, count_update);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_update), button_label);
+
     SNPRINTF(button_label, "%s %d", EMOJI_EQUAL, count_equal);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_equal), button_label);
+
     SNPRINTF(button_label, "%s %d", EMOJI_DELETE, count_delete);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), button_label);
+
     SNPRINTF(button_label, "%s %d", EMOJI_IGNORE, count_ignore);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
 
