@@ -555,6 +555,10 @@ update_ui_handler(void *data) {
         }
         break;
     }
+    case DATA_TYPE_REMOVE_MATCHES: {
+        // implement the removal logic here
+        break;
+    }
     case DATA_TYPE_REMOVE_TREE_ROW: {
         g_mutex_lock(&cecup.row_arena_mutex);
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
