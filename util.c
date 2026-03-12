@@ -1707,6 +1707,10 @@ dirname2(char *buffer, int64 size, char *path) {
 
 #define DIRNAME(BUFFER, PATH) dirname2(BUFFER, sizeof(BUFFER), PATH)
 
+#define HERE do { \
+    fprintf(stderr, "\n===== Here: %s:%d (%s)\n", __FILE__, __LINE__, __func__); \
+} while (0)
+
 #if TESTING_util
 
 static void

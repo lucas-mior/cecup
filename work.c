@@ -863,9 +863,24 @@ work_rsync(void *user_data) {
             pipes[1].fd = pipe_stderr[0];
             pipes[1].events = POLLIN;
 
-            if (poll(pipes, 2, 100) <= 0) {
+            switch (poll(pipes, 2, 100)) {
+            case -1:
+                if (errno != EINTR) {
+                    ipc_send_log_error("Error in poll: %s.\n", strerror(errno));
+                    fatal(EXIT_FAILURE);
+                }
                 continue;
+            case 0:
+                continue;
+            default:
+                break;
             }
+
+            if (pipes[0].revents & (POLLHUP | POLLERR)) {
+                pipes[0].fd = -1;
+                goto read_error_pipe2;
+            }
+
             if (pipes[0].revents & POLLIN) {
                 r = read64(pipe_stdout[0], buf_output, SIZEOF(buf_output) - 1);
                 if (r > 0) {
@@ -875,6 +890,13 @@ work_rsync(void *user_data) {
                     pipes[0].fd = -1;
                 }
             }
+
+        read_error_pipe2:
+            if (pipes[1].revents & (POLLHUP | POLLERR)) {
+                pipes[1].fd = -1;
+                continue;
+            }
+
             if (pipes[1].revents & POLLIN) {
                 r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
                 if (r > 0) {
