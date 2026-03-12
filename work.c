@@ -40,6 +40,18 @@
 #define TESTING_work 0
 #endif
 
+static bool
+did_attribute_change(char *buf_output) {
+    bool attribute_changed = false;
+    for (int32 i = 2; i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS); i += 1) {
+        if ((buf_output[i] != '.') && (buf_output[i] != ' ')) {
+            attribute_changed = true;
+            break;
+        }
+    }
+    return attribute_changed;
+}
+
 static int64
 work_count_files_recursive(char *base_path, char *relative_path) {
     DIR *dir;
@@ -708,6 +720,8 @@ work_rsync(void *user_data) {
                 char *src_path = space_pos + 1;
                 char *dst_path = NULL;
                 enum CecupAction action = ACTION_UPDATE;
+                enum CecupReason reason = REASON_UPDATE;
+                bool attribute_changed = false;
 
                 while (isspace(*src_path)) {
                     src_path += 1;
@@ -732,6 +746,14 @@ work_rsync(void *user_data) {
                     }
                 } else if (buf_output[2] == '+') {
                     action = ACTION_NEW;
+                }
+
+                attribute_changed = did_attribute_change(buf_output);
+                if (!attribute_changed) {
+                    action = ACTION_EQUAL;
+                    reason = REASON_EQUAL;
+                } else {
+                    reason = (enum CecupReason)action;
                 }
 
                 if ((thread_data->is_preview == 0) && (line_len > 11)
@@ -778,9 +800,9 @@ work_rsync(void *user_data) {
                 // clang-format on
 
                 if (thread_data->is_preview) {
-                    ipc_send_tree(SIDE_LEFT, action, (enum CecupReason)action,
-                                  src_path, dst_path, link_target, NULL,
-                                  src_size, src_mtime, dst_size, dst_mtime);
+                    ipc_send_tree(SIDE_LEFT, action, reason, src_path, dst_path,
+                                  link_target, NULL, src_size, src_mtime,
+                                  dst_size, dst_mtime);
                 }
 
                 processed_files_preview += 1;
@@ -789,8 +811,7 @@ work_rsync(void *user_data) {
                                       (double)processed_files_preview
                                           / (double)total_files_preview);
                 }
-            } else if (might_be_itemize_line
-                       && (action_char == RSYNC_CHAR0_ACTION_NO_UPDATE)) {
+            } else if (might_be_itemize_line) {
                 enum CecupAction action = ACTION_UPDATE;
                 enum CecupReason reason = REASON_UPDATE;
 
@@ -801,13 +822,10 @@ work_rsync(void *user_data) {
 
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
-                for (int32 i = 2;
-                     i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
-                     i += 1) {
-                    if ((buf_output[i] != '.') && (buf_output[i] != ' ')) {
-                        attribute_changed = true;
-                        break;
-                    }
+                attribute_changed = did_attribute_change(buf_output);
+                if (!attribute_changed) {
+                    action = ACTION_EQUAL;
+                    reason = REASON_EQUAL;
                 }
 
                 while (isspace(*src_path)) {
@@ -837,10 +855,6 @@ work_rsync(void *user_data) {
                     dst_path = src_path;
                 }
 
-                if (!attribute_changed) {
-                    action = ACTION_EQUAL;
-                    reason = REASON_EQUAL;
-                }
                 if (thread_data->is_preview) {
                     ipc_send_tree(SIDE_LEFT, action, reason,
                                   src_path, dst_path, NULL, NULL,
