@@ -1791,9 +1791,14 @@ main(int argc, char **argv) {
     }
 
     for (int64 i = 0; i < LENGTH(paths); i += 1) {
-        char buffer[4096];
-        DIRNAME(buffer, paths[i]);
-        ASSERT_EQUAL(buffer, dirs[i]);
+        char dir_buffer[4096];
+        DIRNAME(dir_buffer, paths[i]);
+        ASSERT_EQUAL(dir_buffer, dirs[i]);
+    }
+    {
+        char dir_buffer[128] = "a/b/c";
+        DIRNAME(dir_buffer, dir_buffer);
+        ASSERT_EQUAL(dir_buffer, "a/b");
     }
 
     if (OS_WINDOWS) {
