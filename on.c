@@ -1289,9 +1289,9 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
                 }
                 g_mutex_unlock(&cecup.row_arena_mutex);
 
-                refresh_ui_list();
                 IPC_SEND_LOG(_("Renamed: %s -> %s\n"), current_rel_path,
                              new_text);
+                refresh_ui_list();
             } else {
                 IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full,
                                    new_full, strerror(errno));

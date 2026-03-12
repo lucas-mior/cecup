@@ -334,8 +334,10 @@ refresh_ui_list(void) {
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
 
     if (cecup.rows_visible_len > 0) {
+        IPC_SEND_LOG("Sorting list...\n");
         qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(CecupRow *),
                 cecup_row_compare);
+        IPC_SEND_LOG("Finished sorting.\n");
     }
 
     current_store_count
