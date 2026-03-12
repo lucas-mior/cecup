@@ -1043,7 +1043,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     }
 
                     DIRNAME(directory_buffer, filepath);
-                    PRINTLN(directory_buffer);
                     if (strcmp(directory_buffer, ".")) {
                         gtk_widget_set_sensitive(sub_dir, TRUE);
                         SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
