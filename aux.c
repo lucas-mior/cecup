@@ -294,7 +294,6 @@ refresh_ui_list(void) {
             count_ignore += 1;
             break;
         case ACTION_DELETE:
-        case NUM_UI_ACTIONS:
         default:
             error("Invalid row->src_action: %u\n", row->src_action);
             fatal(EXIT_FAILURE);
@@ -471,7 +470,6 @@ update_ui_handler(void *data) {
             }
             break;
         case ACTION_DELETED:
-        case NUM_UI_ACTIONS:
         default:
             error("Invalid message->action: %u\n", message->action);
             fatal(EXIT_FAILURE);

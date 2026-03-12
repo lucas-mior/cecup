@@ -46,7 +46,6 @@ enum CecupAction {
     ACTION_DELETED,
     ACTION_DELETE,
     ACTION_IGNORE,
-    NUM_UI_ACTIONS
 };
 
 enum CecupReason {
@@ -57,7 +56,6 @@ enum CecupReason {
     REASON_EQUAL,
     REASON_IGNORED,
     REASON_MISSING,
-    NUM_UI_REASONS
 };
 
 static char *action_emojis[] = {

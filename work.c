@@ -1238,7 +1238,6 @@ work_rsync_bulk(void *user_data) {
         case ACTION_NEW:
         case ACTION_UPDATE:
         case ACTION_SYMLINK:
-        case NUM_UI_ACTIONS:
         default:
             write64(pipe_stdin[1], task->filepath, task->filepath_len);
             write64(pipe_stdin[1], "\n", 1);
