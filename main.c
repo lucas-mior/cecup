@@ -40,6 +40,7 @@ G_DECLARE_FINAL_TYPE(CecupCellRendererText, cecup_cell_renderer_text, CECUP,
 struct _CecupCellRendererText {
     GtkCellRendererText parent_instance;
     char *raw_text;
+    int32 text_len;
     char *raw_color;
 };
 
@@ -49,6 +50,7 @@ G_DEFINE_TYPE(CecupCellRendererText, cecup_cell_renderer_text,
 static void
 cecup_cell_renderer_text_init(CecupCellRendererText *self) {
     self->raw_text = NULL;
+    self->text_len = 0;
     self->raw_color = NULL;
     return;
 }
@@ -66,11 +68,6 @@ cecup_cell_renderer_text_render(GtkCellRenderer *cell, cairo_t *cairo,
     int32 x_pad;
     int32 y_pad;
     (void)flags;
-    char *text = self->raw_text;
-
-    if (text == NULL) {
-        text = "";
-    }
 
     if (self->raw_color) {
         if (gdk_rgba_parse(&color, self->raw_color)) {
@@ -89,7 +86,7 @@ cecup_cell_renderer_text_render(GtkCellRenderer *cell, cairo_t *cairo,
         return;
     }
 
-    pango_layout_set_text(layout, text, -1);
+    pango_layout_set_text(layout, self->raw_text, self->text_len);
     pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
     pango_layout_set_width(layout, (cell_area->width)*PANGO_SCALE);
 
@@ -668,45 +665,61 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
         break;
     case COL_SRC_ACTION:
         cecup_renderer->raw_text = action_emojis[row->src_action];
+        cecup_renderer->text_len = strlen32(cecup_renderer->raw_text);
         cecup_renderer->raw_color = row->src_color;
         break;
     case COL_DST_ACTION:
         cecup_renderer->raw_text = action_emojis[row->dst_action];
+        cecup_renderer->text_len = strlen32(cecup_renderer->raw_text);
         cecup_renderer->raw_color = row->dst_color;
         break;
     case COL_SRC_PATH:
         cecup_renderer->raw_text = row->src_path;
+        cecup_renderer->text_len = row->src_path_len;
         cecup_renderer->raw_color = row->src_color;
         break;
     case COL_DST_PATH:
         cecup_renderer->raw_text = row->dst_path;
+        cecup_renderer->text_len = row->dst_path_len;
         cecup_renderer->raw_color = row->dst_color;
         break;
     case COL_SIZE_TEXT: {
         char *background;
         char *text;
+        int32 text_len;
+
         if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 3)) {
             background = row->src_color;
             text = row->src_size_text;
+            text_len = strlen32(row->src_size_text);
         } else {
             background = row->dst_color;
             text = row->dst_size_text;
+            text_len = strlen32(row->dst_size_text);
         }
+
         cecup_renderer->raw_text = text;
+        cecup_renderer->text_len = text_len;
         cecup_renderer->raw_color = background;
         break;
     }
     case COL_MTIME_TEXT: {
         char *background;
         char *text;
+        int32 text_len;
+
         if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 4)) {
             background = row->src_color;
             text = row->src_mtime_text;
+            text_len = strlen32(row->src_mtime_text);
         } else {
             background = row->dst_color;
             text = row->dst_mtime_text;
+            text_len = strlen32(row->dst_mtime_text);
         }
+
         cecup_renderer->raw_text = text;
+        cecup_renderer->text_len = text_len;
         cecup_renderer->raw_color = background;
         break;
     }
