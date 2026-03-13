@@ -59,62 +59,130 @@ work_send_tree(int32 side,
               char *src_path, char *dst_path,
               char *link_target, char *ignore_pattern,
               int64 src_size, int64 src_mtime,
-              int64 dst_size, int64 dst_mtime) {
+              int64 dst_size, int64 dst_mtime,
+              bool delete_excluded) {
     // clang-format on
+    CecupRow *row;
     Message *message;
-    int32 target_len;
-    int32 pattern_len;
+    char *final_src_path = NULL;
+    char *final_dst_path = NULL;
+    int64 path_len = 0;
+    int64 target_len;
+    int64 pattern_len;
+    (void)side;
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-    memset64(message, 0, SIZEOF(Message));
+    g_mutex_lock(&cecup.row_arena_mutex);
 
     if (src_path) {
-        message->path_len = strlen32(src_path);
-        g_mutex_lock(&cecup.row_arena_mutex);
-        message->src_path
-            = xarena_push(cecup.row_arena, ALIGN16(message->path_len + 1));
-        memcpy64(message->src_path, src_path, message->path_len + 1);
+        path_len = strlen32(src_path);
+        final_src_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
+        memcpy64(final_src_path, src_path, path_len + 1);
         if (dst_path) {
-            message->dst_path = message->src_path;
+            final_dst_path = final_src_path;
         }
     } else if (dst_path) {
-        message->path_len = strlen32(dst_path);
-        g_mutex_lock(&cecup.row_arena_mutex);
-        message->dst_path
-            = xarena_push(cecup.row_arena, ALIGN16(message->path_len + 1));
-        memcpy64(message->dst_path, dst_path, message->path_len + 1);
+        path_len = strlen32(dst_path);
+        final_dst_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
+        memcpy64(final_dst_path, dst_path, path_len + 1);
     } else {
         error("Error: both src_path and dst_path are NULL.\n");
         exit(EXIT_FAILURE);
     }
 
+    row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
+    memset64(row, 0, SIZEOF(*row));
+
+    row->src_action = action;
+    row->dst_action = action;
+    row->reason = reason;
+
+    switch (action) {
+    case ACTION_IGNORE:
+        row->src_action = ACTION_IGNORE;
+        if (final_dst_path) {
+            if (delete_excluded) {
+                row->dst_action = ACTION_DELETE;
+            } else {
+                row->dst_action = ACTION_IGNORE;
+            }
+        } else {
+            row->dst_action = ACTION_IGNORE;
+        }
+        break;
+    case ACTION_DELETE:
+        row->dst_action = ACTION_DELETE;
+        row->src_action = ACTION_IGNORE;
+        break;
+    case ACTION_DELETED:
+    case ACTION_EQUAL:
+    case ACTION_HARDLINK:
+    case ACTION_SYMLINK:
+    case ACTION_NEW:
+    case ACTION_UPDATE:
+    default:
+        break;
+    }
+
+    row->src_color = colors[row->src_action];
+    row->dst_color = colors[row->dst_action];
+
+    bytes_pretty(row->src_size_text, src_size);
+    row->src_size_raw = src_size;
+    bytes_pretty(row->dst_size_text, dst_size);
+    row->dst_size_raw = dst_size;
+
+    if (src_mtime > 0) {
+        time_t t = (time_t)src_mtime;
+        struct tm *tm_info = localtime(&t);
+        STRFTIME(row->src_mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
+        row->src_mtime_raw = src_mtime;
+    }
+
+    if (dst_mtime > 0) {
+        time_t t = (time_t)dst_mtime;
+        struct tm *tm_info = localtime(&t);
+        STRFTIME(row->dst_mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
+        row->dst_mtime_raw = dst_mtime;
+    }
+
     if (link_target) {
         target_len = strlen32(link_target);
-        message->link_target_len = target_len;
-        message->link_target
+        row->link_target_len = (int32)target_len;
+        row->link_target
             = xarena_push(cecup.row_arena, ALIGN16(target_len + 1));
-        memcpy64(message->link_target, link_target, target_len + 1);
+        memcpy64(row->link_target, link_target, target_len + 1);
     }
 
     if (ignore_pattern) {
         pattern_len = strlen32(ignore_pattern);
-        message->ignore_pattern_len = pattern_len;
-        message->ignore_pattern
+        row->ignore_pattern_len = (int32)pattern_len;
+        row->ignore_pattern
             = xarena_push(cecup.row_arena, ALIGN16(pattern_len + 1));
-        memcpy64(message->ignore_pattern, ignore_pattern, pattern_len + 1);
+        memcpy64(row->ignore_pattern, ignore_pattern, pattern_len + 1);
     }
+
+    row->src_path = final_src_path;
+    row->dst_path = final_dst_path;
+    row->src_path_len = (final_src_path) ? (int32)path_len : 0;
+    row->dst_path_len = (final_dst_path) ? (int32)path_len : 0;
+
+    if (cecup.rows_len >= cecup.rows_capacity) {
+        cecup.rows_capacity *= 2;
+        cecup.rows
+            = xrealloc(cecup.rows, cecup.rows_capacity*SIZEOF(CecupRow *));
+        cecup.rows_visible = xrealloc(cecup.rows_visible,
+                                      cecup.rows_capacity*SIZEOF(CecupRow *));
+    }
+    cecup.rows[cecup.rows_len] = row;
+    cecup.rows_len += 1;
     g_mutex_unlock(&cecup.row_arena_mutex);
+
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(message, 0, SIZEOF(Message));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     message->type = DATA_TYPE_TREE_ROW;
-    message->side = side;
-    message->action = action;
-    message->reason = reason;
-    message->src_size = src_size;
-    message->src_mtime = src_mtime;
-    message->dst_size = dst_size;
-    message->dst_mtime = dst_mtime;
     g_idle_add(update_ui_handler, message);
     return;
 }
@@ -728,7 +796,8 @@ work_rsync(void *user_data) {
                     work_send_tree(SIDE_RIGHT,
                                   ACTION_DELETE, reason,
                                   src_path, dst_path, NULL, NULL,
-                                  src_size, src_mtime, dst_size, dst_mtime);
+                                  src_size, src_mtime, dst_size, dst_mtime,
+                                  thread_data->delete_excluded);
                 }
             } else if ((src_path = literal_match(buf_output,
                                                  RSYNC_IGNORE_PRE))
@@ -770,7 +839,8 @@ work_rsync(void *user_data) {
                         work_send_tree(SIDE_LEFT,
                                       ACTION_IGNORE, REASON_IGNORED,
                                       src_path, dst_path, NULL, ignore_pattern,
-                                      src_size, src_mtime, dst_size, dst_mtime);
+                                      src_size, src_mtime, dst_size, dst_mtime,
+                                      thread_data->delete_excluded);
                     }
                     // clang-format on
                 }
@@ -867,7 +937,8 @@ work_rsync(void *user_data) {
                         work_send_tree(SIDE_LEFT,
                                       action, reason,
                                       src_path, dst_path, link_target, NULL,
-                                      src_size, src_mtime, dst_size, dst_mtime);
+                                      src_size, src_mtime, dst_size, dst_mtime,
+                                      thread_data->delete_excluded);
                     }
 
                     processed_files_preview += 1;
@@ -926,7 +997,8 @@ work_rsync(void *user_data) {
                     if (thread_data->is_preview) {
                         work_send_tree(SIDE_LEFT, action, reason,
                                       src_path, dst_path, NULL, NULL,
-                                      src_size, src_mtime, dst_size, dst_mtime);
+                                      src_size, src_mtime, dst_size, dst_mtime,
+                                      thread_data->delete_excluded);
                     }
                 }
                 // clang-format on
