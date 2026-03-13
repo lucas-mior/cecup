@@ -544,6 +544,7 @@ work_rsync(void *user_data) {
     if (thread_data->filtered) {
         int32 len_old = strlen32(thread_data->relative_old);
         int32 len_new = strlen32(thread_data->relative_new);
+
         rsync_args[a++] = "--include";
         rsync_args[a++] = thread_data->relative_old;
 
