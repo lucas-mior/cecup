@@ -119,7 +119,6 @@ int32
 main(int32 argc, char *argv[]) {
     GtkWidget *main_vbox;
     GtkWidget *header_vbox;
-    GtkWidget *invert_button;
     GtkWidget *button_hbox;
     GtkWidget *filter_hbox;
     GtkWidget *options_hbox;
@@ -406,9 +405,9 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(paths_hbox), l_entry_hbox,
                        EXPAND_TRUE, FILL_TRUE, PADDING_ZERO);
 
-    invert_button = gtk_button_new_with_label("<--->");
-    gtk_widget_set_tooltip_text(invert_button, _("Invert Original and Backup"));
-    gtk_box_pack_start(GTK_BOX(paths_hbox), invert_button,
+    cecup.invert_button = gtk_button_new_with_label("<--->");
+    gtk_widget_set_tooltip_text(cecup.invert_button, _("Invert Original and Backup"));
+    gtk_box_pack_start(GTK_BOX(paths_hbox), cecup.invert_button,
                        EXPAND_FALSE, FILL_FALSE, PADDING_ZERO);
 
     r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -588,7 +587,7 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_browse_src), NULL);
     g_signal_connect(browse_dst, "clicked",
                      G_CALLBACK(on_browse_dst), NULL);
-    g_signal_connect(invert_button, "clicked",
+    g_signal_connect(cecup.invert_button, "clicked",
                      G_CALLBACK(on_invert_clicked), NULL);
     g_signal_connect(cecup.preview_button, "clicked",
                      G_CALLBACK(on_preview_clicked), NULL);

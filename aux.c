@@ -625,6 +625,13 @@ update_ui_handler(void *data) {
         gtk_widget_set_sensitive(cecup.fix_button, TRUE);
         gtk_widget_set_sensitive(cecup.ignore_button, TRUE);
         gtk_widget_set_sensitive(cecup.stop_button, FALSE);
+
+        gtk_widget_set_sensitive(cecup.src_entry, TRUE);
+        gtk_widget_set_sensitive(cecup.dst_entry, TRUE);
+        gtk_widget_set_sensitive(cecup.invert_button, TRUE);
+        // Note: invert_button is local to main, but we can access it via a
+        // pointer if we added it to the cecup struct, or just rely on the
+        // fact that the main buttons are the primary gateways.
         break;
     case DATA_TYPE_CLEAR_TREES:
         if (cecup.refresh_id != 0) {
@@ -642,6 +649,10 @@ update_ui_handler(void *data) {
                                       0.0);
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       0.0);
+
+        gtk_widget_set_sensitive(cecup.src_entry, TRUE);
+        gtk_widget_set_sensitive(cecup.dst_entry, TRUE);
+        gtk_widget_set_sensitive(cecup.invert_button, TRUE);
         break;
     case DATA_TYPE_REGENERATE_PREVIEW:
         on_preview_clicked(NULL, NULL);

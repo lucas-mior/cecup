@@ -473,6 +473,10 @@ on_preview_clicked(GtkWidget *b, void *data) {
     gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
+    /* Lock paths during work */
+    gtk_widget_set_sensitive(cecup.src_entry, FALSE);
+    gtk_widget_set_sensitive(cecup.dst_entry, FALSE);
+
     g_mutex_lock(&cecup.ui_arena_mutex);
     thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
     memset64(thread_data, 0, SIZEOF(*thread_data));
@@ -511,6 +515,10 @@ on_sync_clicked(GtkWidget *b, void *data) {
         gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
         gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
+        /* Lock paths during work */
+        gtk_widget_set_sensitive(cecup.src_entry, FALSE);
+        gtk_widget_set_sensitive(cecup.dst_entry, FALSE);
+
         g_mutex_lock(&cecup.ui_arena_mutex);
         thread_data
             = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
@@ -527,6 +535,40 @@ on_sync_clicked(GtkWidget *b, void *data) {
         g_thread_new("work_rsync", work_rsync, thread_data);
     }
     gtk_widget_destroy(dialog);
+    return;
+}
+
+static void
+on_fix_clicked(GtkWidget *b, void *data) {
+    char *src_path;
+    char *dst_path;
+    ThreadData *thread_data;
+
+    (void)b;
+    (void)data;
+    src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
+    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+
+    if ((strlen32(src_path) <= 0) || (strlen32(dst_path) <= 0)) {
+        return;
+    }
+
+    gtk_widget_set_sensitive(cecup.preview_button, FALSE);
+    gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+    gtk_widget_set_sensitive(cecup.fix_button, FALSE);
+    gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
+    gtk_widget_set_sensitive(cecup.stop_button, TRUE);
+
+    /* Lock paths during work */
+    gtk_widget_set_sensitive(cecup.src_entry, FALSE);
+    gtk_widget_set_sensitive(cecup.dst_entry, FALSE);
+
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
+    memset64(thread_data, 0, SIZEOF(*thread_data));
+    g_mutex_unlock(&cecup.ui_arena_mutex);
+
+    g_thread_new("work_fix_fs_worker", work_fix_fs_worker, thread_data);
     return;
 }
 
@@ -705,36 +747,6 @@ on_ignore_clicked(GtkWidget *b, void *data) {
         g_free(content);
     }
     gtk_widget_destroy(dialog);
-    return;
-}
-
-static void
-on_fix_clicked(GtkWidget *b, void *data) {
-    char *src_path;
-    char *dst_path;
-    ThreadData *thread_data;
-
-    (void)b;
-    (void)data;
-    src_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
-    dst_path = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
-
-    if ((strlen32(src_path) <= 0) || (strlen32(dst_path) <= 0)) {
-        return;
-    }
-
-    gtk_widget_set_sensitive(cecup.preview_button, FALSE);
-    gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-    gtk_widget_set_sensitive(cecup.fix_button, FALSE);
-    gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
-    gtk_widget_set_sensitive(cecup.stop_button, TRUE);
-
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
-    memset64(thread_data, 0, SIZEOF(*thread_data));
-    g_mutex_unlock(&cecup.ui_arena_mutex);
-
-    g_thread_new("work_fix_fs_worker", work_fix_fs_worker, thread_data);
     return;
 }
 
