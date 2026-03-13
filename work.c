@@ -71,8 +71,6 @@ work_send_tree(int32 side,
     int64 pattern_len;
     (void)side;
 
-    g_mutex_lock(&cecup.row_arena_mutex);
-
     if (src_path) {
         path_len = strlen32(src_path);
         final_src_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
@@ -167,15 +165,16 @@ work_send_tree(int32 side,
     row->dst_path_len = (final_dst_path) ? (int32)path_len : 0;
 
     if (cecup.rows_len >= cecup.rows_capacity) {
+        g_mutex_lock(&cecup.row_arena_mutex);
         cecup.rows_capacity *= 2;
         cecup.rows
             = xrealloc(cecup.rows, cecup.rows_capacity*SIZEOF(CecupRow *));
         cecup.rows_visible = xrealloc(cecup.rows_visible,
                                       cecup.rows_capacity*SIZEOF(CecupRow *));
+        g_mutex_unlock(&cecup.row_arena_mutex);
     }
     cecup.rows[cecup.rows_len] = row;
     cecup.rows_len += 1;
-    g_mutex_unlock(&cecup.row_arena_mutex);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));

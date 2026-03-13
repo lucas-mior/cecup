@@ -252,23 +252,30 @@ refresh_ui_list(enum RefreshType refresh_type) {
     int64 count_selected = 0;
     int64 total_size_bytes = 0;
     int32 current_store_count;
-
     char pretty_size[16];
     char stats_text[256];
     char button_label[64];
+    bool show_new;
+    bool show_link;
+    bool show_update;
+    bool show_equal;
+    bool show_delete;
+    bool show_ignore;
 
-    bool show_new
+    show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
-    bool show_link
+    show_link
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
-    bool show_update
+    show_update
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
-    bool show_equal
+    show_equal
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_equal));
-    bool show_delete
+    show_delete
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
-    bool show_ignore
+    show_ignore
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
+
+    g_mutex_lock(&cecup.row_arena_mutex);
 
     cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
@@ -388,6 +395,8 @@ refresh_ui_list(enum RefreshType refresh_type) {
                                COL_ROW_PTR, row, -1);
         }
     }
+
+    g_mutex_unlock(&cecup.row_arena_mutex);
 
     gtk_widget_queue_draw(cecup.l_tree);
     gtk_widget_queue_draw(cecup.r_tree);
@@ -521,9 +530,6 @@ update_ui_handler(void *data) {
         }
         refresh_ui_list(REFRESH_FINAL);
         protect_interface_from_user(false);
-        // Note: invert_button is local to main, but we can access it via a
-        // pointer if we added it to the cecup struct, or just rely on the
-        // fact that the main buttons are the primary gateways.
         break;
     case DATA_TYPE_CLEAR_TREES:
         if (cecup.refresh_id != 0) {
