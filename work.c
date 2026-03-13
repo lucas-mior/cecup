@@ -51,6 +51,74 @@ did_attribute_change(char *buf_output) {
     return attribute_changed;
 }
 
+// Note: NEVER delete lines with // clang-format
+// clang-format off
+static void
+work_send_tree(int32 side,
+              enum CecupAction action, enum CecupReason reason,
+              char *src_path, char *dst_path,
+              char *link_target, char *ignore_pattern,
+              int64 src_size, int64 src_mtime,
+              int64 dst_size, int64 dst_mtime) {
+    // clang-format on
+    Message *message;
+    int32 target_len;
+    int32 pattern_len;
+
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    memset64(message, 0, SIZEOF(Message));
+
+    if (src_path) {
+        message->path_len = strlen32(src_path);
+        g_mutex_lock(&cecup.row_arena_mutex);
+        message->src_path
+            = xarena_push(cecup.row_arena, ALIGN16(message->path_len + 1));
+        memcpy64(message->src_path, src_path, message->path_len + 1);
+        if (dst_path) {
+            message->dst_path = message->src_path;
+        }
+    } else if (dst_path) {
+        message->path_len = strlen32(dst_path);
+        g_mutex_lock(&cecup.row_arena_mutex);
+        message->dst_path
+            = xarena_push(cecup.row_arena, ALIGN16(message->path_len + 1));
+        memcpy64(message->dst_path, dst_path, message->path_len + 1);
+    } else {
+        error("Error: both src_path and dst_path are NULL.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (link_target) {
+        target_len = strlen32(link_target);
+        message->link_target_len = target_len;
+        message->link_target
+            = xarena_push(cecup.row_arena, ALIGN16(target_len + 1));
+        memcpy64(message->link_target, link_target, target_len + 1);
+    }
+
+    if (ignore_pattern) {
+        pattern_len = strlen32(ignore_pattern);
+        message->ignore_pattern_len = pattern_len;
+        message->ignore_pattern
+            = xarena_push(cecup.row_arena, ALIGN16(pattern_len + 1));
+        memcpy64(message->ignore_pattern, ignore_pattern, pattern_len + 1);
+    }
+    g_mutex_unlock(&cecup.row_arena_mutex);
+    g_mutex_unlock(&cecup.ui_arena_mutex);
+
+    message->type = DATA_TYPE_TREE_ROW;
+    message->side = side;
+    message->action = action;
+    message->reason = reason;
+    message->src_size = src_size;
+    message->src_mtime = src_mtime;
+    message->dst_size = dst_size;
+    message->dst_mtime = dst_mtime;
+    g_idle_add(update_ui_handler, message);
+    return;
+}
+
 static int64
 work_count_files_recursive(char *base_path, char *relative_path) {
     DIR *dir;
@@ -657,7 +725,7 @@ work_rsync(void *user_data) {
                 if (thread_data->is_preview && (reason == REASON_MISSING)) {
                     // if source file exists, rsync will report it as ignored
                     // so we dont send it here to avoid the duplication
-                    ipc_send_tree(SIDE_RIGHT,
+                    work_send_tree(SIDE_RIGHT,
                                   ACTION_DELETE, reason,
                                   src_path, dst_path, NULL, NULL,
                                   src_size, src_mtime, dst_size, dst_mtime);
@@ -699,7 +767,7 @@ work_rsync(void *user_data) {
                     // Note: NEVER delete lines with // clang-format
                     // clang-format off
                     if (thread_data->is_preview) {
-                        ipc_send_tree(SIDE_LEFT,
+                        work_send_tree(SIDE_LEFT,
                                       ACTION_IGNORE, REASON_IGNORED,
                                       src_path, dst_path, NULL, ignore_pattern,
                                       src_size, src_mtime, dst_size, dst_mtime);
@@ -796,7 +864,7 @@ work_rsync(void *user_data) {
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
-                        ipc_send_tree(SIDE_LEFT,
+                        work_send_tree(SIDE_LEFT,
                                       action, reason,
                                       src_path, dst_path, link_target, NULL,
                                       src_size, src_mtime, dst_size, dst_mtime);
@@ -856,7 +924,7 @@ work_rsync(void *user_data) {
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
-                        ipc_send_tree(SIDE_LEFT, action, reason,
+                        work_send_tree(SIDE_LEFT, action, reason,
                                       src_path, dst_path, NULL, NULL,
                                       src_size, src_mtime, dst_size, dst_mtime);
                     }
