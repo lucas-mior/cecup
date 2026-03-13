@@ -473,7 +473,6 @@ on_preview_clicked(GtkWidget *b, void *data) {
     gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
-    /* Lock paths during work */
     gtk_widget_set_sensitive(cecup.src_entry, FALSE);
     gtk_widget_set_sensitive(cecup.dst_entry, FALSE);
 
@@ -559,9 +558,9 @@ on_fix_clicked(GtkWidget *b, void *data) {
     gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
 
-    /* Lock paths during work */
     gtk_widget_set_sensitive(cecup.src_entry, FALSE);
     gtk_widget_set_sensitive(cecup.dst_entry, FALSE);
+    gtk_widget_set_sensitive(cecup.invert_button, FALSE);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
