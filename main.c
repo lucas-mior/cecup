@@ -108,7 +108,7 @@ cecup_cell_renderer_text_class_init(CecupCellRendererTextClass *klass) {
     return;
 }
 
-GtkCellRenderer *
+static GtkCellRenderer *
 cecup_cell_renderer_text_new(void) {
     return g_object_new(CECUP_TYPE_CELL_RENDERER_TEXT, NULL);
 }

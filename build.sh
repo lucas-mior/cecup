@@ -163,6 +163,7 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-padded"
     CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
     CFLAGS="$CFLAGS -Wno-assign-enum"
+    CFLAGS="$CFLAGS -Wno-used-but-marked-unused"
 fi
 
 case "$target" in
