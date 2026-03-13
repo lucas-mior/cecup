@@ -438,7 +438,6 @@ work_rsync(void *user_data) {
 
     int32 pipe_stdout[2];
     int32 pipe_stderr[2];
-    int32 pipe_stdin[2];
     struct pollfd pipes[2];
     pid_t child_process_id;
 
@@ -455,6 +454,7 @@ work_rsync(void *user_data) {
     char **checksum_files = NULL;
     int32 checksum_count = 0;
     int32 checksum_capacity = 0;
+    char *files_from_filename = "/tmp/rsync";
 
     char old_recursive[MAX_PATH_LENGTH];
     char new_recursive[MAX_PATH_LENGTH];
@@ -1063,7 +1063,8 @@ work_rsync(void *user_data) {
     rsync_args[a++] = "--times";
     rsync_args[a++] = "--owner";
     rsync_args[a++] = "--group";
-    rsync_args[a++] = "--files-from=-";
+    rsync_args[a++] = "--files-from";
+    rsync_args[a++] = files_from_filename;
     rsync_args[a++] = src_dir;
     rsync_args[a++] = dst_dir;
     rsync_args[a++] = NULL;
@@ -1074,7 +1075,6 @@ work_rsync(void *user_data) {
 
     xpipe(pipe_stdout);
     xpipe(pipe_stderr);
-    xpipe(pipe_stdin);
 
     switch (child_process_id = fork()) {
     case -1:
@@ -1086,15 +1086,12 @@ work_rsync(void *user_data) {
         putenv("LC_ALL=C");
 
         XCLOSE(&pipe_stderr[0]);
-        XCLOSE(&pipe_stdin[1]);
         XCLOSE(&pipe_stdout[0]);
 
-        dup2(pipe_stdin[0], STDIN_FILENO);
         dup2(pipe_stdout[1], STDOUT_FILENO);
         dup2(pipe_stderr[1], STDERR_FILENO);
 
         XCLOSE(&pipe_stderr[1]);
-        XCLOSE(&pipe_stdin[0]);
         XCLOSE(&pipe_stdout[1]);
 
         execvp("rsync", rsync_args);
@@ -1102,16 +1099,26 @@ work_rsync(void *user_data) {
     default:
         cecup.child_pid = child_process_id;
         XCLOSE(&pipe_stderr[1]);
-        XCLOSE(&pipe_stdin[0]);
         XCLOSE(&pipe_stdout[1]);
         break;
     }
 
-    for (int32 i = 0; i < checksum_count; i += 1) {
-        write64(pipe_stdin[1], checksum_files[i], strlen32(checksum_files[i]));
-        write64(pipe_stdin[1], "\n", 1);
+    {
+        int files_from_fd;
+        if ((files_from_fd
+             = open(files_from_filename, O_WRONLY | O_TRUNC | O_CREAT, 0644))
+            < 0) {
+            error("Error opening %s: %s.\n", files_from_filename,
+                  strerror(errno));
+            fatal(EXIT_FAILURE);
+        }
+        for (int32 i = 0; i < checksum_count; i += 1) {
+            write64(files_from_fd, checksum_files[i],
+                    strlen32(checksum_files[i]));
+            write64(files_from_fd, "\n", 1);
+        }
+        XCLOSE(&files_from_fd);
     }
-    XCLOSE(&pipe_stdin[1]);
 
     pipes[0].fd = pipe_stdout[0];
     pipes[1].fd = pipe_stderr[0];
@@ -1219,7 +1226,6 @@ work_rsync_bulk(void *user_data) {
     bool has_transfers = false;
     int32 pipe_stdout[2];
     int32 pipe_stderr[2];
-    int32 pipe_stdin[2];
     struct pollfd pipes[2];
     pid_t child_pid;
     char dst_directory[MAX_PATH_LENGTH];
@@ -1228,6 +1234,8 @@ work_rsync_bulk(void *user_data) {
     char buf_output[MAX_PATH_LENGTH*2];
     char buf_error[MAX_PATH_LENGTH*2];
     int32 buf_output_pos = 0;
+    char *files_from_filename = "/tmp/rsync.txt";
+    int files_from_fd;
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
@@ -1298,7 +1306,6 @@ work_rsync_bulk(void *user_data) {
 
     xpipe(pipe_stdout);
     xpipe(pipe_stderr);
-    xpipe(pipe_stdin);
 
     SNPRINTF(dst_directory, "%s/", cecup.dst_base);
 
@@ -1317,7 +1324,8 @@ work_rsync_bulk(void *user_data) {
     rsync_args[a++] = "--times";
     rsync_args[a++] = "--owner";
     rsync_args[a++] = "--group";
-    rsync_args[a++] = "--files-from=-";
+    rsync_args[a++] = "--files-from";
+    rsync_args[a++] = files_from_filename;
     rsync_args[a++] = cecup.src_base;
     rsync_args[a++] = dst_directory;
     rsync_args[a++] = NULL;
@@ -1340,13 +1348,8 @@ work_rsync_bulk(void *user_data) {
         putenv("LC_ALL=C");
 
         XCLOSE(&pipe_stderr[0]);
-        XCLOSE(&pipe_stdin[1]);
         XCLOSE(&pipe_stdout[0]);
 
-        if (dup2(pipe_stdin[0], STDIN_FILENO) < 0) {
-            error("Error duplicating stdin: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
         if (dup2(pipe_stdout[1], STDOUT_FILENO) < 0) {
             error("Error duplicating stdout: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
@@ -1357,7 +1360,6 @@ work_rsync_bulk(void *user_data) {
         }
 
         XCLOSE(&pipe_stderr[1]);
-        XCLOSE(&pipe_stdin[0]);
         XCLOSE(&pipe_stdout[1]);
 
         execvp("rsync", rsync_args);
@@ -1366,9 +1368,15 @@ work_rsync_bulk(void *user_data) {
     default:
         cecup.child_pid = child_pid;
         XCLOSE(&pipe_stderr[1]);
-        XCLOSE(&pipe_stdin[0]);
         XCLOSE(&pipe_stdout[1]);
         break;
+    }
+
+    if ((files_from_fd
+         = open(files_from_filename, O_WRONLY | O_TRUNC | O_CREAT, 0644))
+        < 0) {
+        error("Error opening %s: %s.\n", files_from_filename, strerror(errno));
+        fatal(EXIT_FAILURE);
     }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
@@ -1383,18 +1391,18 @@ work_rsync_bulk(void *user_data) {
             // rsync, when using the --files-from mode,
             // only transfers hard links
             // if the target is also included in the --files-from list
-            write64(pipe_stdin[1], task->link_target, task->link_target_len);
-            write64(pipe_stdin[1], "\n", 1);
+            write64(files_from_fd, task->link_target, task->link_target_len);
+            write64(files_from_fd, "\n", 1);
             __attribute__((fallthrough));
         case ACTION_NEW:
         case ACTION_UPDATE:
         case ACTION_SYMLINK:
         default:
-            write64(pipe_stdin[1], task->path, task->path_len);
-            write64(pipe_stdin[1], "\n", 1);
+            write64(files_from_fd, task->path, task->path_len);
+            write64(files_from_fd, "\n", 1);
         }
     }
-    XCLOSE(&pipe_stdin[1]);
+    XCLOSE(&files_from_fd);
 
     pipes[0].fd = pipe_stdout[0];
     pipes[1].fd = pipe_stderr[0];
