@@ -666,8 +666,8 @@ work_rsync(void *user_data) {
                && ((eol = memchr64(buf_output, '\n', buf_output_pos))
                    || (eol = memchr64(buf_output, '\r', buf_output_pos)))) {
             char *link_target;
-            char full_src_path_val[MAX_PATH_LENGTH];
-            char full_dst_path_val[MAX_PATH_LENGTH];
+            char full_src[MAX_PATH_LENGTH];
+            char full_dst[MAX_PATH_LENGTH];
             struct stat st_src;
             struct stat st_dst;
             char *src_path;
@@ -767,10 +767,10 @@ work_rsync(void *user_data) {
                     dst_path += 1;
                 }
 
-                SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base, dst_path);
-                SNPRINTF(full_dst_path_val, "%s/%s", cecup.dst_base, dst_path);
+                SNPRINTF(full_src, "%s/%s", cecup.src_base, dst_path);
+                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
 
-                if (lstat(full_src_path_val, &st_src) < 0) {
+                if (lstat(full_src, &st_src) < 0) {
                     src_size = 0;
                     src_mtime = 0;
                     reason = REASON_MISSING;
@@ -780,7 +780,7 @@ work_rsync(void *user_data) {
                     reason = REASON_IGNORED;
                 }
 
-                if (lstat(full_dst_path_val, &st_dst) < 0) {
+                if (lstat(full_dst, &st_dst) < 0) {
                     dst_size = 0;
                     dst_mtime = 0;
                 } else {
@@ -810,12 +810,12 @@ work_rsync(void *user_data) {
                     *reason_sep = '\0';
                     ignore_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
 
-                    SNPRINTF(full_src_path_val, "%s/%s", cecup.src_base,
+                    SNPRINTF(full_src, "%s/%s", cecup.src_base,
                              src_path);
-                    SNPRINTF(full_dst_path_val, "%s/%s", cecup.dst_base,
+                    SNPRINTF(full_dst, "%s/%s", cecup.dst_base,
                              src_path);
 
-                    if (lstat(full_src_path_val, &st_src) < 0) {
+                    if (lstat(full_src, &st_src) < 0) {
                         src_size = 0;
                         src_mtime = 0;
                     } else {
@@ -823,7 +823,7 @@ work_rsync(void *user_data) {
                         src_mtime = (int64)st_src.st_mtime;
                     }
 
-                    if (lstat(full_dst_path_val, &st_dst) < 0) {
+                    if (lstat(full_dst, &st_dst) < 0) {
                         dst_size = 0;
                         dst_mtime = 0;
                         dst_path = NULL;
@@ -909,12 +909,12 @@ work_rsync(void *user_data) {
 
                 // Note: NEVER delete lines with // clang-format
                 // clang-format off
-                SNPRINTF(full_src_path_val,
+                SNPRINTF(full_src,
                          "%s/%s", cecup.src_base, src_path);
-                SNPRINTF(full_dst_path_val,
+                SNPRINTF(full_dst,
                          "%s/%s", cecup.dst_base, src_path);
 
-                if (lstat(full_src_path_val, &st_src) < 0) {
+                if (lstat(full_src, &st_src) < 0) {
                     src_size = 0;
                     src_mtime = 0;
                 } else {
@@ -922,7 +922,7 @@ work_rsync(void *user_data) {
                     src_mtime = (int64)st_src.st_mtime;
                 }
 
-                if (lstat(full_dst_path_val, &st_dst) < 0) {
+                if (lstat(full_dst, &st_dst) < 0) {
                     dst_size = 0;
                     dst_mtime = 0;
                     dst_path = NULL;
@@ -970,12 +970,10 @@ work_rsync(void *user_data) {
                     src_path += 1;
                 }
 
-                SNPRINTF(full_src_path_val,
-                         "%s/%s", cecup.src_base, src_path);
-                SNPRINTF(full_dst_path_val,
-                         "%s/%s", cecup.dst_base, src_path);
+                SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
+                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
 
-                if (lstat(full_src_path_val, &st_src) < 0) {
+                if (lstat(full_src, &st_src) < 0) {
                     src_size = 0;
                     src_mtime = 0;
                 } else {
@@ -983,7 +981,7 @@ work_rsync(void *user_data) {
                     src_mtime = (int64)st_src.st_mtime;
                 }
 
-                if (lstat(full_dst_path_val, &st_dst) < 0) {
+                if (lstat(full_dst, &st_dst) < 0) {
                     dst_size = 0;
                     dst_mtime = 0;
                     dst_path = NULL;
