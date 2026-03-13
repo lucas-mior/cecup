@@ -608,7 +608,7 @@ work_rsync(void *user_data) {
         XCLOSE(&pipe_stdout[1]);
 
         execvp(rsync_args[0], rsync_args);
-        error("Error executing\n%s\n%s.", cmd, strerror(errno));
+        error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
         _exit(EXIT_FAILURE);
     default:
         cecup.child_pid = child_process_id;
