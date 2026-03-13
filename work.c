@@ -850,8 +850,8 @@ work_rsync(void *user_data) {
                            || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
 
                 enum CecupAction action = ACTION_UPDATE;
-                char *space_pos = strchr(buf_output, ' ');
                 enum CecupReason reason = REASON_UPDATE;
+                char *space_pos = strchr(buf_output, ' ');
                 bool attribute_changed = false;
 
                 src_path = space_pos + 1;
