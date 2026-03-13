@@ -798,20 +798,23 @@ work_rsync(void *user_data) {
                     dst_mtime = (int64)st_dst.st_mtime;
                     dst_path = src_path;
                 }
+
+                if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
+                    if (thread_data->is_preview) {
+                        ipc_send_tree(SIDE_LEFT,
+                                      action, reason,
+                                      src_path, dst_path, link_target, NULL,
+                                      src_size, src_mtime, dst_size, dst_mtime);
+                    }
+
+                    processed_files_preview += 1;
+                    if (total_files_preview > 0) {
+                        ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                                          (double)processed_files_preview
+                                              / (double)total_files_preview);
+                    }
+                }
                 // clang-format on
-
-                if (thread_data->is_preview) {
-                    ipc_send_tree(SIDE_LEFT, action, reason, src_path, dst_path,
-                                  link_target, NULL, src_size, src_mtime,
-                                  dst_size, dst_mtime);
-                }
-
-                processed_files_preview += 1;
-                if (total_files_preview > 0) {
-                    ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                      (double)processed_files_preview
-                                          / (double)total_files_preview);
-                }
             } else if (might_be_itemize_line) {
                 enum CecupAction action = ACTION_UPDATE;
                 enum CecupReason reason = REASON_UPDATE;
@@ -856,10 +859,12 @@ work_rsync(void *user_data) {
                     dst_path = src_path;
                 }
 
-                if (thread_data->is_preview) {
-                    ipc_send_tree(SIDE_LEFT, action, reason,
-                                  src_path, dst_path, NULL, NULL,
-                                  src_size, src_mtime, dst_size, dst_mtime);
+                if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
+                    if (thread_data->is_preview) {
+                        ipc_send_tree(SIDE_LEFT, action, reason,
+                                      src_path, dst_path, NULL, NULL,
+                                      src_size, src_mtime, dst_size, dst_mtime);
+                    }
                 }
                 // clang-format on
             }
