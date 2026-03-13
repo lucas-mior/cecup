@@ -542,11 +542,12 @@ work_rsync(void *user_data) {
     }
 
     if (thread_data->filtered) {
+        int32 len_old = strlen32(thread_data->relative_old);
+        int32 len_new = strlen32(thread_data->relative_new);
         rsync_args[a++] = "--include";
         rsync_args[a++] = thread_data->relative_old;
 
-        if (thread_data->relative_old[strlen32(thread_data->relative_old) - 1]
-            == '/') {
+        if (thread_data->relative_old[len_old - 1] == '/') {
             SNPRINTF(old_recursive, "%s**", thread_data->relative_old);
             rsync_args[a++] = "--include";
             rsync_args[a++] = old_recursive;
@@ -555,8 +556,7 @@ work_rsync(void *user_data) {
         rsync_args[a++] = "--include";
         rsync_args[a++] = thread_data->relative_new;
 
-        if (thread_data->relative_new[strlen32(thread_data->relative_new) - 1]
-            == '/') {
+        if (thread_data->relative_new[len_new - 1] == '/') {
             SNPRINTF(new_recursive, "%s**", thread_data->relative_new);
             rsync_args[a++] = "--include";
             rsync_args[a++] = new_recursive;
