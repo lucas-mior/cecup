@@ -445,8 +445,8 @@ work_rsync(void *user_data) {
     int32 buf_output_pos = 0;
     char buf_error[MAX_PATH_LENGTH*2];
 
-    char src_dir[MAX_PATH_LENGTH];
-    char dst_dir[MAX_PATH_LENGTH];
+    char src_base_with_slash[MAX_PATH_LENGTH];
+    char dst_base_with_slash[MAX_PATH_LENGTH];
     char *rsync_args[64];
     int32 a = 0;
     char cmd[MAX_PATH_LENGTH*2];
@@ -572,10 +572,10 @@ work_rsync(void *user_data) {
         }
     }
 
-    SNPRINTF(src_dir, "%s/", cecup.src_base);
-    SNPRINTF(dst_dir, "%s/", cecup.dst_base);
-    rsync_args[a++] = src_dir;
-    rsync_args[a++] = dst_dir;
+    SNPRINTF(src_base_with_slash, "%s/", cecup.src_base);
+    SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
+    rsync_args[a++] = src_base_with_slash;
+    rsync_args[a++] = dst_base_with_slash;
     rsync_args[a++] = NULL;
 
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
@@ -1066,8 +1066,8 @@ work_rsync(void *user_data) {
     rsync_args[a++] = "--group";
     rsync_args[a++] = "--files-from";
     rsync_args[a++] = files_from_filename;
-    rsync_args[a++] = src_dir;
-    rsync_args[a++] = dst_dir;
+    rsync_args[a++] = src_base_with_slash;
+    rsync_args[a++] = dst_base_with_slash;
     rsync_args[a++] = NULL;
 
     IPC_SEND_LOG("Verifying transfers with checksum...\n");
@@ -1229,7 +1229,7 @@ work_rsync_bulk(void *user_data) {
     int32 pipe_stderr[2];
     struct pollfd pipes[2];
     pid_t child_pid;
-    char dst_directory[MAX_PATH_LENGTH];
+    char dst_base_with_slash[MAX_PATH_LENGTH];
     char *rsync_args[32];
     int32 a = 0;
     char buf_output[MAX_PATH_LENGTH*2];
@@ -1308,7 +1308,7 @@ work_rsync_bulk(void *user_data) {
     xpipe(pipe_stdout);
     xpipe(pipe_stderr);
 
-    SNPRINTF(dst_directory, "%s/", cecup.dst_base);
+    SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
 
     rsync_args[a++] = "rsync";
     rsync_args[a++] = "--verbose";
@@ -1328,7 +1328,7 @@ work_rsync_bulk(void *user_data) {
     rsync_args[a++] = "--files-from";
     rsync_args[a++] = files_from_filename;
     rsync_args[a++] = cecup.src_base;
-    rsync_args[a++] = dst_directory;
+    rsync_args[a++] = dst_base_with_slash;
     rsync_args[a++] = NULL;
 
     {
