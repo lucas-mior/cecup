@@ -421,12 +421,10 @@ work_fix_fs_worker(void *user_data) {
     g_mutex_lock(&cecup.ui_arena_mutex);
     message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
     memset64(message, 0, SIZEOF(Message));
-    g_mutex_unlock(&cecup.ui_arena_mutex);
 
     message->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, message);
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
     arena_pop(cecup.ui_arena, thread_data);
     g_mutex_unlock(&cecup.ui_arena_mutex);
     return NULL;
