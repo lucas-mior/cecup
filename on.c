@@ -124,11 +124,14 @@ on_menu_open_item(GtkWidget *m, void *data) {
             }
 
             {
+                char cmd[MAX_PATH_LENGTH];
                 char *command[] = {
                     "xdg-open",
                     full_path,
                     NULL,
                 };
+                STRING_FROM_ARRAY(cmd, " ", command, LENGTH(command));
+                IPC_SEND_LOG("Launching %s...\n", cmd);
                 util_command_launch(LENGTH(command), command);
             }
         }
