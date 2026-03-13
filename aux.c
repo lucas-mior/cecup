@@ -34,6 +34,36 @@
 #define UI_INTERVAL_MS 100
 
 static void
+block_buttons(void) {
+    error("Blocking buttons...\n");
+    gtk_widget_set_sensitive(cecup.preview_button, FALSE);
+    gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+    gtk_widget_set_sensitive(cecup.fix_button, FALSE);
+    gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
+
+    gtk_widget_set_sensitive(cecup.src_entry, FALSE);
+    gtk_widget_set_sensitive(cecup.src_entry, FALSE);
+    gtk_widget_set_sensitive(cecup.invert_button, FALSE);
+    error("Blocked buttons buttons...\n");
+    return;
+}
+
+static void
+unblock_buttons(void) {
+    error("unblocking_buttons...\n");
+    gtk_widget_set_sensitive(cecup.sync_button, TRUE);
+    gtk_widget_set_sensitive(cecup.preview_button, TRUE);
+    gtk_widget_set_sensitive(cecup.fix_button, TRUE);
+    gtk_widget_set_sensitive(cecup.ignore_button, TRUE);
+
+    gtk_widget_set_sensitive(cecup.src_entry, TRUE);
+    gtk_widget_set_sensitive(cecup.dst_entry, TRUE);
+    gtk_widget_set_sensitive(cecup.invert_button, TRUE);
+    error("unblocked...\n");
+    return;
+}
+
+static void
 free_update_data(Message *message) {
     g_mutex_lock(&cecup.ui_arena_mutex);
     arena_pop(cecup.ui_arena, message->src_path);
@@ -620,15 +650,8 @@ update_ui_handler(void *data) {
             cecup.refresh_id = 0;
         }
         refresh_ui_list();
-        gtk_widget_set_sensitive(cecup.sync_button, TRUE);
-        gtk_widget_set_sensitive(cecup.preview_button, TRUE);
-        gtk_widget_set_sensitive(cecup.fix_button, TRUE);
-        gtk_widget_set_sensitive(cecup.ignore_button, TRUE);
+        unblock_buttons();
         gtk_widget_set_sensitive(cecup.stop_button, FALSE);
-
-        gtk_widget_set_sensitive(cecup.src_entry, TRUE);
-        gtk_widget_set_sensitive(cecup.dst_entry, TRUE);
-        gtk_widget_set_sensitive(cecup.invert_button, TRUE);
         // Note: invert_button is local to main, but we can access it via a
         // pointer if we added it to the cecup struct, or just rely on the
         // fact that the main buttons are the primary gateways.
@@ -649,10 +672,6 @@ update_ui_handler(void *data) {
                                       0.0);
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       0.0);
-
-        gtk_widget_set_sensitive(cecup.src_entry, TRUE);
-        gtk_widget_set_sensitive(cecup.dst_entry, TRUE);
-        gtk_widget_set_sensitive(cecup.invert_button, TRUE);
         break;
     case DATA_TYPE_REGENERATE_PREVIEW:
         on_preview_clicked(NULL, NULL);

@@ -60,11 +60,8 @@ on_menu_apply(GtkWidget *m, void *data) {
 
     if ((tasks = get_target_tasks(message->side, message->src_path,
                                   message->action))) {
-        gtk_widget_set_sensitive(cecup.preview_button, FALSE);
-        gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-        gtk_widget_set_sensitive(cecup.fix_button, FALSE);
-        gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
         gtk_widget_set_sensitive(cecup.stop_button, TRUE);
+        block_buttons();
         g_thread_new("bulk_sync", work_rsync_bulk, tasks);
     }
 
@@ -230,11 +227,7 @@ on_menu_delete(GtkWidget *m, void *data) {
             GTK_BUTTONS_YES_NO, _("Permanently delete %d item(s)?"), count);
 
         if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
-            gtk_widget_set_sensitive(cecup.preview_button, FALSE);
-            gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-            gtk_widget_set_sensitive(cecup.fix_button, FALSE);
-            gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
-            gtk_widget_set_sensitive(cecup.stop_button, TRUE);
+            block_buttons();
             g_thread_new("work_bulk_sync", work_rsync_bulk, tasks);
         } else {
             free_task_list(tasks);
@@ -467,14 +460,8 @@ on_preview_clicked(GtkWidget *b, void *data) {
 
     cecup_get_dirs();
 
-    gtk_widget_set_sensitive(cecup.preview_button, FALSE);
-    gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-    gtk_widget_set_sensitive(cecup.fix_button, FALSE);
-    gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
+    block_buttons();
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
-
-    gtk_widget_set_sensitive(cecup.src_entry, FALSE);
-    gtk_widget_set_sensitive(cecup.dst_entry, FALSE);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
@@ -508,16 +495,8 @@ on_sync_clicked(GtkWidget *b, void *data) {
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         ThreadData *thread_data;
 
-        gtk_widget_set_sensitive(cecup.preview_button, FALSE);
-        gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-        gtk_widget_set_sensitive(cecup.fix_button, FALSE);
-        gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
+        block_buttons();
         gtk_widget_set_sensitive(cecup.stop_button, TRUE);
-
-        /* Lock paths during work */
-        gtk_widget_set_sensitive(cecup.src_entry, FALSE);
-        gtk_widget_set_sensitive(cecup.dst_entry, FALSE);
-        gtk_widget_set_sensitive(cecup.invert_button, FALSE);
 
         g_mutex_lock(&cecup.ui_arena_mutex);
         thread_data
@@ -553,15 +532,8 @@ on_fix_clicked(GtkWidget *b, void *data) {
         return;
     }
 
-    gtk_widget_set_sensitive(cecup.preview_button, FALSE);
-    gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-    gtk_widget_set_sensitive(cecup.fix_button, FALSE);
-    gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
+    block_buttons();
     gtk_widget_set_sensitive(cecup.stop_button, TRUE);
-
-    gtk_widget_set_sensitive(cecup.src_entry, FALSE);
-    gtk_widget_set_sensitive(cecup.dst_entry, FALSE);
-    gtk_widget_set_sensitive(cecup.invert_button, FALSE);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
