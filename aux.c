@@ -681,27 +681,32 @@ static void
 cecup_get_dirs(void) {
     char *full_src;
     char *full_dst;
+    char *tmp_src;
+    char *tmp_dst;
 
-    cecup.src_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
-    cecup.dst_base = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+    tmp_src = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
+    tmp_dst = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
 
     save_config();
 
-    if ((strlen32(cecup.src_base) <= 0) || (strlen32(cecup.dst_base) <= 0)) {
+    if ((strlen32(tmp_src) <= 0) || (strlen32(tmp_dst) <= 0)) {
         IPC_SEND_LOG_ERROR("Error: Invalid source and/or destination\n");
         return;
     }
 
-    if ((full_src = realpath(cecup.src_base, NULL)) == NULL) {
-        IPC_SEND_LOG_ERROR("Error getting full path of %s: %s.\n",
-                           cecup.src_base, strerror(errno));
+    if ((full_src = realpath(tmp_src, NULL)) == NULL) {
+        IPC_SEND_LOG_ERROR("Error getting full path of %s: %s.\n", tmp_src,
+                           strerror(errno));
         return;
     }
-    if ((full_dst = realpath(cecup.dst_base, NULL)) == NULL) {
-        IPC_SEND_LOG_ERROR("Error getting full path of %s: %s.\n",
-                           cecup.dst_base, strerror(errno));
+    if ((full_dst = realpath(tmp_dst, NULL)) == NULL) {
+        IPC_SEND_LOG_ERROR("Error getting full path of %s: %s.\n", tmp_dst,
+                           strerror(errno));
         return;
     }
+
+    free(cecup.src_base);
+    free(cecup.dst_base);
 
     cecup.src_base = full_src;
     cecup.dst_base = full_dst;
