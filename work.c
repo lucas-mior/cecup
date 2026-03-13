@@ -662,17 +662,12 @@ work_rsync(void *user_data) {
                                   src_path, dst_path, NULL, NULL,
                                   src_size, src_mtime, dst_size, dst_mtime);
                 }
-                // clang-format on
-            } else if (literal_match(buf_output, RSYNC_IGNORE_PRE)
-                       || literal_match(buf_output, RSYNC_IGNORE_DIR_PRE)) {
+            } else if ((src_path = literal_match(buf_output,
+                                                 RSYNC_IGNORE_PRE))
+                       || (src_path = literal_match(buf_output,
+                                                    RSYNC_IGNORE_DIR_PRE))) {
                 char *reason_sep;
                 char *ignore_pattern = NULL;
-
-                if (literal_match(buf_output, RSYNC_IGNORE_PRE)) {
-                    src_path = buf_output + strlen32(RSYNC_IGNORE_PRE);
-                } else {
-                    src_path = buf_output + strlen32(RSYNC_IGNORE_DIR_PRE);
-                }
 
                 if ((reason_sep = strstr(src_path, RSYNC_IGNORE_INTER))) {
                     *reason_sep = '\0';
