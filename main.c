@@ -178,6 +178,8 @@ main(int32 argc, char *argv[]) {
 
     gtk_init(&argc, &argv);
 
+    memset64(&cecup, 0, SIZEOF(cecup));
+
     cecup.row_arena = arena_create(SIZEMB(64));
     g_mutex_init(&cecup.row_arena_mutex);
     cecup.ui_arena = arena_create(SIZEMB(16));
