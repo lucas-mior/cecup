@@ -66,9 +66,10 @@ cecup_cell_renderer_text_render(GtkCellRenderer *cell, cairo_t *cairo,
     int32 x_pad;
     int32 y_pad;
     (void)flags;
+    char *text = self->raw_text;
 
-    if (self->raw_text == NULL) {
-        return;
+    if (text == NULL) {
+        text = "";
     }
 
     if (self->raw_color) {
@@ -88,7 +89,7 @@ cecup_cell_renderer_text_render(GtkCellRenderer *cell, cairo_t *cairo,
         return;
     }
 
-    pango_layout_set_text(layout, self->raw_text, -1);
+    pango_layout_set_text(layout, text, -1);
     pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
     pango_layout_set_width(layout, (cell_area->width)*PANGO_SCALE);
 
