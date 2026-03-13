@@ -517,6 +517,7 @@ on_sync_clicked(GtkWidget *b, void *data) {
         /* Lock paths during work */
         gtk_widget_set_sensitive(cecup.src_entry, FALSE);
         gtk_widget_set_sensitive(cecup.dst_entry, FALSE);
+        gtk_widget_set_sensitive(cecup.invert_button, FALSE);
 
         g_mutex_lock(&cecup.ui_arena_mutex);
         thread_data
