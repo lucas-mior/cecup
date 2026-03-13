@@ -794,10 +794,10 @@ work_rsync(void *user_data) {
                     // if source file exists, rsync will report it as ignored
                     // so we dont send it here to avoid the duplication
                     work_send_tree(SIDE_RIGHT,
-                                  ACTION_DELETE, reason,
-                                  src_path, dst_path, NULL, NULL,
-                                  src_size, src_mtime, dst_size, dst_mtime,
-                                  thread_data->delete_excluded);
+                                   ACTION_DELETE, reason,
+                                   src_path, dst_path, NULL, NULL,
+                                   src_size, src_mtime, dst_size, dst_mtime,
+                                   thread_data->delete_excluded);
                 }
             } else if ((src_path = literal_match(buf_output,
                                                  RSYNC_IGNORE_PRE))
