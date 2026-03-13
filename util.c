@@ -366,24 +366,6 @@ strlen32(char *string) {
     return length;
 }
 
-INLINE int64
-strnlen64(char *string, int64 size) {
-    size_t len;
-    if (DEBUGGING) {
-        if (size <= 0) {
-            error("Error in %s: Invalid size = %lld\n", __func__, (llong)size);
-            fatal(EXIT_FAILURE);
-        }
-        if ((ullong)size >= (ullong)SIZE_MAX) {
-            error("Error in %s: Size (%lld) is bigger than SIZEMAX\n", __func__,
-                  (llong)size);
-            fatal(EXIT_FAILURE);
-        }
-    }
-    len = strnlen(string, (size_t)size);
-    return (int64)len;
-}
-
 INLINE int
 strncmp64(char *left, char *right, int64 size) {
     int result;
