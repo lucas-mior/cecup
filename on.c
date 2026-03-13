@@ -60,8 +60,8 @@ on_menu_apply(GtkWidget *m, void *data) {
 
     if ((tasks = get_target_tasks(message->side, message->src_path,
                                   message->action))) {
-        gtk_widget_set_sensitive(cecup.stop_button, TRUE);
         block_buttons();
+        gtk_widget_set_sensitive(cecup.stop_button, TRUE);
         g_thread_new("bulk_sync", work_rsync_bulk, tasks);
     }
 
