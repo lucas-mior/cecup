@@ -409,6 +409,7 @@ work_rsync(void *user_data) {
     if (thread_data->filtered) {
         rsync_args[a++] = "--include";
         rsync_args[a++] = thread_data->relative_old;
+
         if (thread_data->relative_old[strlen32(thread_data->relative_old) - 1]
             == '/') {
             SNPRINTF(old_recursive, "%s**", thread_data->relative_old);
@@ -418,12 +419,15 @@ work_rsync(void *user_data) {
 
         rsync_args[a++] = "--include";
         rsync_args[a++] = thread_data->relative_new;
+
         if (thread_data->relative_new[strlen32(thread_data->relative_new) - 1]
             == '/') {
             SNPRINTF(new_recursive, "%s**", thread_data->relative_new);
             rsync_args[a++] = "--include";
             rsync_args[a++] = new_recursive;
         }
+
+        // important: --exclude=* has to come last
         rsync_args[a++] = "--exclude=*";
     } else {
         if (access(cecup.ignore_path, F_OK) != -1) {
