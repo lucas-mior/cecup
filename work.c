@@ -1237,6 +1237,7 @@ work_rsync_bulk(void *user_data) {
     int32 buf_output_pos = 0;
     char *files_from_filename = "/tmp/rsync.txt";
     int files_from_fd;
+    char cmd[MAX_PATH_LENGTH*2];
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
@@ -1331,11 +1332,8 @@ work_rsync_bulk(void *user_data) {
     rsync_args[a++] = dst_base_with_slash;
     rsync_args[a++] = NULL;
 
-    {
-        char cmd[MAX_PATH_LENGTH*2];
-        STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-        IPC_SEND_LOG_CMD("%s\n", cmd);
-    }
+    STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
+    IPC_SEND_LOG_CMD("%s\n", cmd);
 
     switch (child_pid = fork()) {
     case -1:
@@ -1363,8 +1361,8 @@ work_rsync_bulk(void *user_data) {
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
 
-        execvp("rsync", rsync_args);
-        error("Error: execvp failed: %s.\n", strerror(errno));
+        execvp(rsync_args[0], rsync_args);
+        error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
         _exit(EXIT_FAILURE);
     default:
         cecup.child_pid = child_pid;
