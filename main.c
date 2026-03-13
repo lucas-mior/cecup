@@ -54,7 +54,7 @@ cecup_cell_renderer_text_init(CecupCellRendererText *self) {
 }
 
 static void
-cecup_cell_renderer_text_render(GtkCellRenderer *cell, cairo_t *cr,
+cecup_cell_renderer_text_render(GtkCellRenderer *cell, cairo_t *cairo,
                                 GtkWidget *widget,
                                 const GdkRectangle *background_area,
                                 const GdkRectangle *cell_area,
@@ -73,10 +73,10 @@ cecup_cell_renderer_text_render(GtkCellRenderer *cell, cairo_t *cr,
 
     if (self->raw_color) {
         if (gdk_rgba_parse(&color, self->raw_color)) {
-            gdk_cairo_set_source_rgba(cr, &color);
-            cairo_rectangle(cr, background_area->x, background_area->y,
+            gdk_cairo_set_source_rgba(cairo, &color);
+            cairo_rectangle(cairo, background_area->x, background_area->y,
                             background_area->width, background_area->height);
-            cairo_fill(cr);
+            cairo_fill(cairo);
         }
     }
 
@@ -94,7 +94,7 @@ cecup_cell_renderer_text_render(GtkCellRenderer *cell, cairo_t *cr,
 
     gtk_cell_renderer_get_padding(cell, &x_pad, &y_pad);
 
-    gtk_render_layout(gtk_widget_get_style_context(widget), cr,
+    gtk_render_layout(gtk_widget_get_style_context(widget), cairo,
                       cell_area->x + x_pad, cell_area->y + y_pad, layout);
 
     g_object_unref(layout);
