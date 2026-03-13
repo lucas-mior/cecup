@@ -60,8 +60,7 @@ on_menu_apply(GtkWidget *m, void *data) {
 
     if ((tasks = get_target_tasks(message->side, message->src_path,
                                   message->action))) {
-        block_buttons();
-        gtk_widget_set_sensitive(cecup.stop_button, TRUE);
+        protect_interface_from_user(true);
         g_thread_new("bulk_sync", work_rsync_bulk, tasks);
     }
 
@@ -227,7 +226,7 @@ on_menu_delete(GtkWidget *m, void *data) {
             GTK_BUTTONS_YES_NO, _("Permanently delete %d item(s)?"), count);
 
         if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
-            block_buttons();
+            protect_interface_from_user(true);
             g_thread_new("work_bulk_sync", work_rsync_bulk, tasks);
         } else {
             free_task_list(tasks);
@@ -460,8 +459,7 @@ on_preview_clicked(GtkWidget *b, void *data) {
 
     cecup_get_dirs();
 
-    block_buttons();
-    gtk_widget_set_sensitive(cecup.stop_button, TRUE);
+    protect_interface_from_user(true);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
@@ -495,8 +493,7 @@ on_sync_clicked(GtkWidget *b, void *data) {
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES) {
         ThreadData *thread_data;
 
-        block_buttons();
-        gtk_widget_set_sensitive(cecup.stop_button, TRUE);
+        protect_interface_from_user(true);
 
         g_mutex_lock(&cecup.ui_arena_mutex);
         thread_data
@@ -532,8 +529,7 @@ on_fix_clicked(GtkWidget *b, void *data) {
         return;
     }
 
-    block_buttons();
-    gtk_widget_set_sensitive(cecup.stop_button, TRUE);
+    protect_interface_from_user(true);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
     thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
@@ -558,7 +554,7 @@ static void
 on_filter_toggled(GtkToggleButton *b, void *data) {
     (void)data;
     (void)b;
-    refresh_ui_list();
+    refresh_ui_list(REFRESH_FILTER_CHANGED);
     save_config();
     return;
 }
@@ -572,7 +568,7 @@ on_sort_changed(GtkTreeSortable *sortable, void *data) {
     if (gtk_tree_sortable_get_sort_column_id(sortable, &id, &order)) {
         cecup.sort_col = (enum CecupColumn)id;
         cecup.sort_order = order;
-        refresh_ui_list();
+        refresh_ui_list(REFRESH_FILTER_CHANGED);
     }
     return;
 }
@@ -676,7 +672,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
         gtk_tree_path_free(tree_path);
     } while (0);
 
-    refresh_ui_list();
+    refresh_ui_list(REFRESH_FINAL);
     return;
 }
 
@@ -1338,7 +1334,7 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
 
             regenerate_preview_filtered(relative_old, relative_new);
 
-            refresh_ui_list();
+            refresh_ui_list(REFRESH_FINAL);
         } else {
             IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full,
                                new_full, strerror(errno));

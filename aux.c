@@ -34,32 +34,17 @@
 #define UI_INTERVAL_MS 100
 
 static void
-block_buttons(void) {
-    error("Blocking buttons...\n");
-    gtk_widget_set_sensitive(cecup.preview_button, FALSE);
-    gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-    gtk_widget_set_sensitive(cecup.fix_button, FALSE);
-    gtk_widget_set_sensitive(cecup.ignore_button, FALSE);
+protect_interface_from_user(bool state) {
+    gtk_widget_set_sensitive(cecup.preview_button, !state);
+    gtk_widget_set_sensitive(cecup.sync_button, !state);
+    gtk_widget_set_sensitive(cecup.fix_button, !state);
+    gtk_widget_set_sensitive(cecup.ignore_button, !state);
 
-    gtk_widget_set_sensitive(cecup.src_entry, FALSE);
-    gtk_widget_set_sensitive(cecup.src_entry, FALSE);
-    gtk_widget_set_sensitive(cecup.invert_button, FALSE);
-    error("Blocked buttons buttons...\n");
-    return;
-}
+    gtk_widget_set_sensitive(cecup.src_entry, !state);
+    gtk_widget_set_sensitive(cecup.src_entry, !state);
+    gtk_widget_set_sensitive(cecup.invert_button, !state);
 
-static void
-unblock_buttons(void) {
-    error("unblocking_buttons...\n");
-    gtk_widget_set_sensitive(cecup.sync_button, TRUE);
-    gtk_widget_set_sensitive(cecup.preview_button, TRUE);
-    gtk_widget_set_sensitive(cecup.fix_button, TRUE);
-    gtk_widget_set_sensitive(cecup.ignore_button, TRUE);
-
-    gtk_widget_set_sensitive(cecup.src_entry, TRUE);
-    gtk_widget_set_sensitive(cecup.dst_entry, TRUE);
-    gtk_widget_set_sensitive(cecup.invert_button, TRUE);
-    error("unblocked...\n");
+    gtk_widget_set_sensitive(cecup.stop_button, state);
     return;
 }
 
@@ -257,7 +242,7 @@ cecup_row_compare(const void *a, const void *b) {
 }
 
 static void
-refresh_ui_list(void) {
+refresh_ui_list(enum RefreshType refresh_type) {
     int32 count_new = 0;
     int32 count_hard = 0;
     int32 count_update = 0;
@@ -364,10 +349,14 @@ refresh_ui_list(void) {
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
 
     if (cecup.rows_visible_len > 0) {
-        IPC_SEND_LOG("Sorting list...\n");
+        if (refresh_type & (REFRESH_FINAL | REFRESH_FILTER_CHANGED)) {
+            IPC_SEND_LOG("Sorting list...\n");
+        }
         qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(CecupRow *),
                 cecup_row_compare);
-        IPC_SEND_LOG("Finished sorting.\n");
+        if (refresh_type & (REFRESH_FINAL | REFRESH_FILTER_CHANGED)) {
+            IPC_SEND_LOG("Finished sorting.\n");
+        }
     }
 
     current_store_count
@@ -408,7 +397,7 @@ refresh_ui_list(void) {
 static gboolean
 refresh_ui_timeout_callback(void *data) {
     (void)data;
-    refresh_ui_list();
+    refresh_ui_list(REFRESH_PARTIAL);
     cecup.refresh_id = 0;
     return G_SOURCE_REMOVE;
 }
@@ -649,9 +638,8 @@ update_ui_handler(void *data) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
         }
-        refresh_ui_list();
-        unblock_buttons();
-        gtk_widget_set_sensitive(cecup.stop_button, FALSE);
+        refresh_ui_list(REFRESH_FINAL);
+        protect_interface_from_user(false);
         // Note: invert_button is local to main, but we can access it via a
         // pointer if we added it to the cecup struct, or just rely on the
         // fact that the main buttons are the primary gateways.
