@@ -401,10 +401,14 @@ strncmp64(char *left, char *right, int64 size) {
     return result;
 }
 
-INLINE int
+INLINE char *
 literal_match(char *string, char *literal) {
     int64 n = strlen32(literal);
-    return strncmp64(literal, string, n) == 0;
+    if (strncmp64(literal, string, n) == 0) {
+        return string + n;
+    } else {
+        return NULL;
+    }
 }
 
 INLINE int
