@@ -176,13 +176,15 @@ work_send_tree(int32 side,
     cecup.rows[cecup.rows_len] = row;
     cecup.rows_len += 1;
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
-    memset64(message, 0, SIZEOF(Message));
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    if ((cecup.rows_len % 1000) == 0) {
+        g_mutex_lock(&cecup.ui_arena_mutex);
+        message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        memset64(message, 0, SIZEOF(Message));
+        g_mutex_unlock(&cecup.ui_arena_mutex);
 
-    message->type = DATA_TYPE_TREE_ROW;
-    g_idle_add(update_ui_handler, message);
+        message->type = DATA_TYPE_TREE_UPDATE;
+        g_idle_add(update_ui_handler, message);
+    }
     return;
 }
 

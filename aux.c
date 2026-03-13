@@ -457,7 +457,7 @@ update_ui_handler(void *data) {
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       message->fraction);
         break;
-    case DATA_TYPE_TREE_ROW: {
+    case DATA_TYPE_TREE_UPDATE: {
         if (cecup.refresh_id == 0) {
             cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
                                              refresh_ui_timeout_callback, NULL);
