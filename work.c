@@ -758,10 +758,10 @@ work_rsync(void *user_data) {
                 }
             }
 
-            if (literal_match(buf_output, RSYNC_MESSAGE_DELETING)) {
+            if ((dst_path
+                 = literal_match(buf_output, RSYNC_MESSAGE_DELETING))) {
                 enum CecupReason reason;
                 src_path = NULL;
-                dst_path = buf_output + strlen32(RSYNC_MESSAGE_DELETING);
 
                 while (isspace(*dst_path)) {
                     dst_path += 1;
