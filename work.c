@@ -1147,14 +1147,18 @@ work_rsync(void *user_data) {
             goto read_error_pipe2;
         }
 
-        if (pipes[0].revents & POLLIN) {
-            r = read64(pipe_stdout[0], buf_output, SIZEOF(buf_output) - 1);
-            if (r > 0) {
-                buf_output[r] = '\0';
-                IPC_SEND_LOG("%s", buf_output);
-            } else {
-                pipes[0].fd = -1;
+        if (!(pipes[0].revents & POLLIN)) {
+            goto read_error_pipe2;
+        }
+
+        r = read64(pipe_stdout[0], buf_output, SIZEOF(buf_output) - 1);
+        if (r <= 0) {
+            if (r < 0) {
+                IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
+                                   strerror(errno));
+                pipes[1].fd = -1;
             }
+            goto read_error_pipe2;
         }
 
     read_error_pipe2:
