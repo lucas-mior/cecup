@@ -74,7 +74,7 @@
 #define SIZEGB(X) ((int64)(X)*1024l*1024l*1024l)
 #endif
 
-#define ARENA_ALIGN(S, A) (((S) + ((A) - 1)) & ~((A) - 1))
+#define ARENA_ALIGN(S, A) (int64)(((S) + ((A) - 1)) & ~((A) - 1))
 #if !defined(ALIGNMENT)
 #define ALIGNMENT 16ul
 #endif
