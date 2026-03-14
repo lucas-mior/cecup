@@ -1452,13 +1452,15 @@ work_rsync_bulk(void *user_data) {
                && ((eol = memchr64(buf_output, '\n', buf_output_pos))
                    || (eol = memchr64(buf_output, '\r', buf_output_pos)))) {
             int32 line_len = (int32)(eol - buf_output);
+            int32 itemize_length = strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
             int32 remaining;
             *eol = '\0';
 
             IPC_SEND_LOG("%s\n", buf_output);
 
-            if ((line_len > 12) && (buf_output[11] == ' ')) {
-                char *filename = buf_output + 12;
+            if ((line_len > itemize_length)
+                && (buf_output[itemize_length + 1] == ' ')) {
+                char *filename = buf_output + itemize_length + 1;
                 char *sep;
                 Message *message;
                 int32 path_len = strlen32(filename);
