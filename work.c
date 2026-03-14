@@ -1020,7 +1020,6 @@ work_rsync(void *user_data) {
             pipes[1].fd = -1;
             continue;
         }
-
         if (!(pipes[1].revents & POLLIN)) {
             continue;
         }
@@ -1146,7 +1145,6 @@ work_rsync(void *user_data) {
             pipes[0].fd = -1;
             goto read_error_pipe2;
         }
-
         if (!(pipes[0].revents & POLLIN)) {
             goto read_error_pipe2;
         }
