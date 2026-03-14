@@ -1455,7 +1455,7 @@ work_rsync_bulk(void *user_data) {
             int32 remaining;
             *eol = '\0';
 
-            IPC_SEND_LOG("%s.\n", buf_output);
+            IPC_SEND_LOG("%s\n", buf_output);
 
             if ((line_len > 12) && (buf_output[11] == ' ')) {
                 char *filename = buf_output + 12;
