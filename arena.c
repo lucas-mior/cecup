@@ -76,10 +76,10 @@
 
 #define ARENA_ALIGN(S, A) (int64)(((S) + ((A) - 1)) & ~((A) - 1))
 #if !defined(ALIGNMENT)
-#define ALIGNMENT 16
+#define ALIGNMENT 16ul
 #endif
 #if !defined(ALIGN)
-#define ALIGN(x) ARENA_ALIGN(x, ALIGNMENT)
+#define ALIGN(x) ARENA_ALIGN((ulong)x, ALIGNMENT)
 #endif
 
 #if OS_LINUX && defined(MAP_HUGE_2MB)
