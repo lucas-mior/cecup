@@ -541,7 +541,7 @@ main(void) {
         int64 total_pushed = 0;
 
         for (uint32 i = 0; i < LENGTH(objs); i += 1) {
-            int64 size = ALIGN(10 + (rand() % 10000));
+            int64 size = ALIGN(10ul + (ulong)(rand() % 10000));
             ASSERT((objs[i] = arena_push(arena, size)));
 
             total_size += size;
