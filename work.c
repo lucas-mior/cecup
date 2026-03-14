@@ -55,12 +55,12 @@ did_attribute_change(char *buf_output) {
 // clang-format off
 static void
 work_send_tree(int32 side,
-              enum CecupAction action, enum CecupReason reason,
-              char *src_path, char *dst_path,
-              char *link_target, char *ignore_pattern,
-              int64 src_size, int64 src_mtime,
-              int64 dst_size, int64 dst_mtime,
-              bool delete_excluded) {
+               enum CecupAction action, enum CecupReason reason,
+               char *src_path, char *dst_path,
+               char *link_target, char *ignore_pattern,
+               int64 src_size, int64 src_mtime,
+               int64 dst_size, int64 dst_mtime,
+               bool delete_excluded) {
     // clang-format on
     CecupRow *row;
     Message *message;
