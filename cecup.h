@@ -316,6 +316,19 @@ static void cecup_get_dirs(void);
 static void save_config(void);
 static void on_preview_clicked(GtkWidget *b, void *data);
 
+static void ipc_send_log_internal(char *file, int line, enum DataType type, char *format, ...);
+static void ipc_send_progress(enum DataType type, double fraction);
+
+// Note: NEVER delete lines with // clang-format
+// clang-format off
+#define IPC_SEND_LOG(...)        \
+    ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG, __VA_ARGS__)
+#define IPC_SEND_LOG_ERROR(...)  \
+    ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_ERROR, __VA_ARGS__)
+#define IPC_SEND_LOG_CMD(...)    \
+    ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_CMD, __VA_ARGS__)
+// clang-format on
+
 enum RsyncCharAction {
     RSYNC_CHAR0_ACTION_SEND = '<',
     RSYNC_CHAR0_ACTION_RECEIVE = '>',

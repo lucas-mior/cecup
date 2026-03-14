@@ -21,6 +21,12 @@
 #include "cecup.h"
 #include "work.c"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_on 1
+#elif !defined(TESTING_on)
+#define TESTING_on 0
+#endif
+
 static void on_menu_open_item(GtkWidget *m, void *data);
 static void on_menu_copy_path(GtkWidget *m, void *data);
 static void on_menu_apply(GtkWidget *m, void *data);
@@ -1341,5 +1347,13 @@ out:
     gtk_tree_path_free(tree_path);
     return;
 }
+
+#if TESTING_on
+int
+main(void) {
+    ASSERT(true);
+    exit(EXIT_SUCCESS);
+}
+#endif
 
 #endif

@@ -21,16 +21,13 @@
 #include "cecup.h"
 
 #include "util.c"
+#include "aux.c"
 
-// Note: NEVER delete lines with // clang-format
-// clang-format off
-#define IPC_SEND_LOG(...)        \
-    ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG, __VA_ARGS__)
-#define IPC_SEND_LOG_ERROR(...)  \
-    ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_ERROR, __VA_ARGS__)
-#define IPC_SEND_LOG_CMD(...)    \
-    ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_CMD, __VA_ARGS__)
-// clang-format on
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_ipc 1
+#elif !defined(TESTING_ipc)
+#define TESTING_ipc 0
+#endif
 
 static void
 ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
@@ -95,5 +92,16 @@ ipc_send_progress(enum DataType type, double fraction) {
     g_idle_add(update_ui_handler, message);
     return;
 }
+
+#if TESTING_ipc
+#include "assert.c"
+
+int
+main(void) {
+    ASSERT(true);
+    exit(EXIT_SUCCESS);
+}
+
+#endif
 
 #endif /* IPC_C */
