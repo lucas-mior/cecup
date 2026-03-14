@@ -73,21 +73,21 @@ work_send_tree(int32 side,
 
     if (src_path) {
         path_len = strlen32(src_path);
-        final_src_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
+        final_src_path = xarena_push(cecup.row_arena, path_len + 1);
         memcpy64(final_src_path, src_path, path_len + 1);
         if (dst_path) {
             final_dst_path = final_src_path;
         }
     } else if (dst_path) {
         path_len = strlen32(dst_path);
-        final_dst_path = xarena_push(cecup.row_arena, ALIGN16(path_len + 1));
+        final_dst_path = xarena_push(cecup.row_arena, path_len + 1);
         memcpy64(final_dst_path, dst_path, path_len + 1);
     } else {
         error("Error: both src_path and dst_path are NULL.\n");
         exit(EXIT_FAILURE);
     }
 
-    row = xarena_push(cecup.row_arena, ALIGN16(SIZEOF(*row)));
+    row = xarena_push(cecup.row_arena, SIZEOF(*row));
     memset64(row, 0, SIZEOF(*row));
 
     row->src_action = action;
@@ -146,16 +146,14 @@ work_send_tree(int32 side,
     if (link_target) {
         target_len = strlen32(link_target);
         row->link_target_len = (int32)target_len;
-        row->link_target
-            = xarena_push(cecup.row_arena, ALIGN16(target_len + 1));
+        row->link_target = xarena_push(cecup.row_arena, target_len + 1);
         memcpy64(row->link_target, link_target, target_len + 1);
     }
 
     if (ignore_pattern) {
         pattern_len = strlen32(ignore_pattern);
         row->ignore_pattern_len = (int32)pattern_len;
-        row->ignore_pattern
-            = xarena_push(cecup.row_arena, ALIGN16(pattern_len + 1));
+        row->ignore_pattern = xarena_push(cecup.row_arena, pattern_len + 1);
         memcpy64(row->ignore_pattern, ignore_pattern, pattern_len + 1);
     }
 
@@ -178,7 +176,7 @@ work_send_tree(int32 side,
 
     if ((cecup.rows_len % 1000) == 0) {
         g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        message = xarena_push(cecup.ui_arena, SIZEOF(Message));
         memset64(message, 0, SIZEOF(Message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -419,7 +417,7 @@ work_fix_fs_worker(void *user_data) {
     IPC_SEND_LOG("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    message = xarena_push(cecup.ui_arena, SIZEOF(Message));
     memset64(message, 0, SIZEOF(Message));
 
     message->type = DATA_TYPE_ENABLE_BUTTONS;
@@ -484,7 +482,7 @@ work_rsync(void *user_data) {
                   " option \"Protect same drive sync\".\n"));
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+            message = xarena_push(cecup.ui_arena, SIZEOF(Message));
             memset64(message, 0, SIZEOF(Message));
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -499,7 +497,7 @@ work_rsync(void *user_data) {
         Message *message;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        message = xarena_push(cecup.ui_arena, SIZEOF(Message));
         memset64(message, 0, SIZEOF(Message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1207,7 +1205,7 @@ finalize:
         Message *message;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        message = xarena_push(cecup.ui_arena, SIZEOF(Message));
         memset64(message, 0, SIZEOF(Message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1287,13 +1285,12 @@ work_rsync_bulk(void *user_data) {
             int32 path_len;
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+            message = xarena_push(cecup.ui_arena, SIZEOF(Message));
             memset64(message, 0, SIZEOF(Message));
 
             path_len = task->path_len;
             message->path_len = path_len;
-            message->src_path
-                = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+            message->src_path = xarena_push(cecup.ui_arena, path_len + 1);
             memcpy64(message->src_path, task->path, path_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1472,12 +1469,11 @@ work_rsync_bulk(void *user_data) {
                 }
 
                 g_mutex_lock(&cecup.ui_arena_mutex);
-                message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+                message = xarena_push(cecup.ui_arena, SIZEOF(Message));
                 memset64(message, 0, SIZEOF(Message));
 
                 message->path_len = path_len;
-                message->src_path
-                    = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+                message->src_path = xarena_push(cecup.ui_arena, path_len + 1);
                 memcpy64(message->src_path, filename, path_len + 1);
                 g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1530,7 +1526,7 @@ finalize:
     Message *message;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    message = xarena_push(cecup.ui_arena, SIZEOF(Message));
     memset64(message, 0, SIZEOF(Message));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 

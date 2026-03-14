@@ -465,7 +465,7 @@ on_preview_clicked(GtkWidget *b, void *data) {
     protect_interface_from_user(true);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
+    thread_data = xarena_push(cecup.ui_arena, SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -499,8 +499,7 @@ on_sync_clicked(GtkWidget *b, void *data) {
         protect_interface_from_user(true);
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        thread_data
-            = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
+        thread_data = xarena_push(cecup.ui_arena, SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -535,7 +534,7 @@ on_fix_clicked(GtkWidget *b, void *data) {
     protect_interface_from_user(true);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
+    thread_data = xarena_push(cecup.ui_arena, SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -832,14 +831,13 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
                     Message *message;
 
                     g_mutex_lock(&cecup.ui_arena_mutex);
-                    message = xarena_push(cecup.ui_arena,
-                                          ALIGN16(SIZEOF(*message)));
+                    message = xarena_push(cecup.ui_arena, SIZEOF(*message));
                     memset64(message, 0, SIZEOF(*message));
 
                     if (filepath) {
                         message->path_len = path_len;
-                        message->src_path = xarena_push(cecup.ui_arena,
-                                                        ALIGN16(path_len + 1));
+                        message->src_path
+                            = xarena_push(cecup.ui_arena, path_len + 1);
                         memcpy64(message->src_path, filepath, path_len + 1);
                     }
                     g_mutex_unlock(&cecup.ui_arena_mutex);
@@ -900,13 +898,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     Message *message;
 
                     g_mutex_lock(&cecup.ui_arena_mutex);
-                    message = xarena_push(cecup.ui_arena,
-                                          ALIGN16(SIZEOF(*message)));
+                    message = xarena_push(cecup.ui_arena, SIZEOF(*message));
                     memset64(message, 0, SIZEOF(*message));
 
                     message->path_len = path_len;
                     message->src_path
-                        = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+                        = xarena_push(cecup.ui_arena, path_len + 1);
                     memcpy64(message->src_path, filepath, path_len + 1);
                     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -954,13 +951,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         }
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*message)));
+        message = xarena_push(cecup.ui_arena, SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         if (filepath) {
             message->path_len = path_len;
-            message->src_path
-                = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+            message->src_path = xarena_push(cecup.ui_arena, path_len + 1);
             memcpy64(message->src_path, filepath, path_len + 1);
         }
         g_mutex_unlock(&cecup.ui_arena_mutex);
@@ -1168,8 +1164,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                                            translated_reason);
             }
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text
-                = xarena_push(cecup.ui_arena, ALIGN16(tip_text_length + 1));
+            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
@@ -1180,8 +1175,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             tip_text_length = SNPRINTF(tip_text_buffer, "%s: %lld bytes",
                                        filepath, (llong)size_raw);
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text
-                = xarena_push(cecup.ui_arena, ALIGN16(tip_text_length + 1));
+            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
@@ -1192,8 +1186,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             tip_text_length
                 = SNPRINTF(tip_text_buffer, "%s: %s", filepath, mtime_text);
             g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text
-                = xarena_push(cecup.ui_arena, ALIGN16(tip_text_length + 1));
+            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
@@ -1220,7 +1213,7 @@ regenerate_preview_filtered(char *relative_old, char *relative_new) {
     ThreadData *thread_data;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(*thread_data)));
+    thread_data = xarena_push(cecup.ui_arena, SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -1243,12 +1236,12 @@ regenerate_preview_filtered(char *relative_old, char *relative_new) {
         int32 path_len;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+        message = xarena_push(cecup.ui_arena, SIZEOF(Message));
         memset64(message, 0, SIZEOF(Message));
 
         path_len = strlen32(relative_old);
         message->path_len = path_len;
-        message->src_path = xarena_push(cecup.ui_arena, ALIGN16(path_len + 1));
+        message->src_path = xarena_push(cecup.ui_arena, path_len + 1);
         memcpy64(message->src_path, relative_old, path_len + 1);
         g_mutex_unlock(&cecup.ui_arena_mutex);
 

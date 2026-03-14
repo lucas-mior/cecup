@@ -337,6 +337,7 @@ arena_with_space(Arena *arena, int64 size) {
 static void *__attribute__((malloc))
 arena_push(Arena *arena, int64 size) {
     void *before;
+    size = ALIGN(size);
 
     if ((arena = arena_with_space(arena, size)) == NULL) {
         return NULL;

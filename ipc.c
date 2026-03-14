@@ -44,11 +44,11 @@ ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
     va_end(va_args);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    message = xarena_push(cecup.ui_arena, SIZEOF(Message));
     memset64(message, 0, SIZEOF(Message));
 
     message->message_len = n;
-    message->message = xarena_push(cecup.ui_arena, ALIGN16(n + 1));
+    message->message = xarena_push(cecup.ui_arena, n + 1);
     memcpy64(message->message, buffer, n + 1);
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
@@ -83,7 +83,7 @@ ipc_send_progress(enum DataType type, double fraction) {
     last_fractions[index] = fraction;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, ALIGN16(SIZEOF(Message)));
+    message = xarena_push(cecup.ui_arena, SIZEOF(Message));
     memset64(message, 0, SIZEOF(Message));
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
