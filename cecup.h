@@ -318,6 +318,9 @@ static void on_preview_clicked(GtkWidget *b, void *data);
 
 static void ipc_send_log_internal(char *file, int line, enum DataType type, char *format, ...);
 static void ipc_send_progress(enum DataType type, double fraction);
+static void *work_rsync_bulk(void *user_data);
+static void *work_rsync(void *user_data);
+static void *work_fix_fs_worker(void *user_data);
 
 // Note: NEVER delete lines with // clang-format
 // clang-format off

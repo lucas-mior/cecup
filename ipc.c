@@ -21,7 +21,6 @@
 #include "cecup.h"
 
 #include "util.c"
-#include "aux.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_ipc 1
@@ -95,6 +94,8 @@ ipc_send_progress(enum DataType type, double fraction) {
 
 #if TESTING_ipc
 #include "assert.c"
+
+#include "aux.c"
 
 int
 main(void) {
