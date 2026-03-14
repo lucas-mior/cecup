@@ -76,7 +76,7 @@
 
 #define ARENA_ALIGN(S, A) (int64)(((S) + ((A) - 1)) & ~((A) - 1))
 #if !defined(ALIGNMENT)
-#define ALIGNMENT 16ul
+#define ALIGNMENT 16
 #endif
 #if !defined(ALIGN)
 #define ALIGN(x) ARENA_ALIGN(x, ALIGNMENT)
