@@ -304,7 +304,6 @@ enum PathType {
 };
 
 static gboolean update_ui_handler(void * user_data);
-static void on_preview_clicked(GtkWidget *b, void * data);
 static void refresh_ui_list(enum RefreshType);
 static gboolean refresh_ui_timeout_callback(void * data);
 static TaskList *get_target_tasks(int32 side,
@@ -312,7 +311,10 @@ static TaskList *get_target_tasks(int32 side,
                                    enum CecupAction clicked_action);
 static void free_update_data(Message *message);
 static void free_task_list(TaskList *tasks);
+static void protect_interface_from_user(bool state);
+static void cecup_get_dirs(void);
 static void save_config(void);
+static void on_preview_clicked(GtkWidget *b, void *data);
 
 enum RsyncCharAction {
     RSYNC_CHAR0_ACTION_SEND = '<',

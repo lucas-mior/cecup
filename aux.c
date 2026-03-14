@@ -21,10 +21,12 @@
 #include <gtk/gtk.h>
 #include <glib/gmain.h>
 #include <stdlib.h>
+
 #include "i18n.h"
 #include "cecup.h"
 #include "util.c"
 #include "ipc.c"
+#include "on.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_aux 1
@@ -613,6 +615,57 @@ cecup_get_dirs(void) {
 
     cecup.src_base_len = strlen32(cecup.src_base);
     cecup.dst_base_len = strlen32(cecup.dst_base);
+    return;
+}
+
+static void
+save_config(void) {
+    GKeyFile *key;
+    char *out;
+    gsize len;
+
+    key = g_key_file_new();
+    g_key_file_set_string(key, "Paths", "src",
+                          gtk_entry_get_text(GTK_ENTRY(cecup.src_entry)));
+    g_key_file_set_string(key, "Paths", "dst",
+                          gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry)));
+    g_key_file_set_string(key, "Tools", "diff",
+                          gtk_entry_get_text(GTK_ENTRY(cecup.diff_entry)));
+    g_key_file_set_string(key, "Tools", "term",
+                          gtk_entry_get_text(GTK_ENTRY(cecup.term_entry)));
+    g_key_file_set_boolean(
+        key, "Filters", "new",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new)));
+    g_key_file_set_boolean(
+        key, "Filters", "hard",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard)));
+    g_key_file_set_boolean(
+        key, "Filters", "update",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update)));
+    g_key_file_set_boolean(
+        key, "Filters", "equal",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_equal)));
+    g_key_file_set_boolean(
+        key, "Filters", "delete",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete)));
+    g_key_file_set_boolean(
+        key, "Filters", "ignore",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore)));
+    g_key_file_set_boolean(
+        key, "Options", "check_fs",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs)));
+    g_key_file_set_boolean(
+        key, "Options", "delete_after",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.delete_after)));
+    g_key_file_set_boolean(
+        key, "Options", "delete_excluded",
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.delete_excluded)));
+
+    out = g_key_file_to_data(key, &len, NULL);
+    g_file_set_contents(cecup.config_path, out, (gssize)len, NULL);
+
+    g_free(out);
+    g_key_file_free(key);
     return;
 }
 

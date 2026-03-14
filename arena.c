@@ -525,6 +525,13 @@ main(void) {
     ASSERT(arena->pos == arena->begin);
     arena_size = (uint32)arena_data_size(arena);
 
+    ASSERT_EQUAL(ARENA_ALIGN(1, 16), 16);
+    ASSERT_EQUAL(ARENA_ALIGN(2, 16), 16);
+    ASSERT_EQUAL(ARENA_ALIGN(10, 16), 16);
+    ASSERT_EQUAL(ARENA_ALIGN(16, 16), 16);
+    ASSERT_EQUAL(ARENA_ALIGN(17, 16), 32);
+    ASSERT_EQUAL(ARENA_ALIGN(18, 16), 32);
+
     srand((uint32)time(NULL));
 
     ASSERT_EQUAL(arena_narenas(arena), 1);
@@ -534,7 +541,7 @@ main(void) {
         int64 total_pushed = 0;
 
         for (uint32 i = 0; i < LENGTH(objs); i += 1) {
-            int64 size = 10 + (rand() % 10000);
+            int64 size = ALIGN(10 + (rand() % 10000));
             ASSERT((objs[i] = arena_push(arena, size)));
 
             total_size += size;
@@ -605,9 +612,9 @@ main(void) {
         void *p3;
         void *p4;
 
-        ASSERT((p3 = arena_push(arena, arena_size / 2)));
+        ASSERT((p3 = arena_push(arena, ALIGN(arena_size / 2))));
         ASSERT_EQUAL(arena->npushed, 1);
-        ASSERT((p4 = arena_push(arena, arena_size / 2)));
+        ASSERT((p4 = arena_push(arena, ALIGN(arena_size / 3))));
         ASSERT_EQUAL(arena->npushed, 2);
         ASSERT(arena_of(arena, p3) == arena_of(arena, p4));
 
