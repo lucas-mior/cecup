@@ -35,7 +35,6 @@
 #define SIDE_RIGHT 1
 
 #define MAX_PATH_LENGTH 4096
-#define ALIGN16(n) (((n) + 15) & ~15)
 
 enum CecupAction {
     ACTION_NEW,
