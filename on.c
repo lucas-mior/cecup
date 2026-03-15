@@ -1163,7 +1163,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                                row->link_target, translated_reason);
             } else if (row->ignore_pattern) {
                 tip_text_length = SNPRINTF(
-                    tip_text_buffer, "%s: %s (pattern: %s)", filepath,
+                    tip_text_buffer, "%s: %s (" N_("pattern") ": %s)", filepath,
                     translated_reason, row->ignore_pattern);
             } else {
                 tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", filepath,
