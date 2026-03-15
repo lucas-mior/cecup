@@ -1313,6 +1313,8 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
 
         if (rename(old_full, new_full) == 0) {
             struct stat stat_new;
+            int32 len_old = strlen32(relative_old);
+            int32 len_new = strlen32(relative_new);
 
             IPC_SEND_LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
 
@@ -1322,18 +1324,19 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
             }
 
             if (S_ISDIR(stat_new.st_mode)) {
-                int32 len_old = strlen32(relative_old);
-                int32 len_new = strlen32(relative_new);
 
                 relative_old[len_old] = '/';
                 relative_old[len_old + 1] = '\0';
 
                 relative_new[len_new] = '/';
                 relative_new[len_new + 1] = '\0';
+
+                len_old += 1;
+                len_new += 1;
             }
 
-            normalize(relative_old);
-            normalize(relative_new);
+            normalize(relative_old, len_old);
+            normalize(relative_new, len_old);
 
             regenerate_preview_filtered(relative_old, relative_new);
 
