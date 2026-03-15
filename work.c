@@ -663,7 +663,7 @@ work_rsync(void *user_data) {
         while (buf_output_pos > 0
                && ((eol = memchr64(buf_output, '\n', buf_output_pos))
                    || (eol = memchr64(buf_output, '\r', buf_output_pos)))) {
-            char *link_target;
+            char *link_target = NULL;
             char full_src[MAX_PATH_LENGTH];
             char full_dst[MAX_PATH_LENGTH];
             struct stat st_src;
@@ -859,7 +859,6 @@ work_rsync(void *user_data) {
                     src_path += 1;
                 }
 
-                link_target = NULL;
                 if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
                     char *sep;
                     action = ACTION_HARDLINK;
@@ -969,6 +968,22 @@ work_rsync(void *user_data) {
                     src_path += 1;
                 }
 
+                if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
+                    char *sep;
+
+                    if ((sep = strstr(src_path, RSYNC_HARDLINK_NOTATION))) {
+                        *sep = '\0';
+                        link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
+                    }
+                } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
+                    char *sep;
+
+                    if ((sep = strstr(src_path, RSYNC_SYMLINK_NOTATION))) {
+                        *sep = '\0';
+                        link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
+                    }
+                }
+
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
                 SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
 
@@ -993,7 +1008,7 @@ work_rsync(void *user_data) {
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
                         work_send_tree(SIDE_LEFT, action, reason,
-                                       src_path, dst_path, NULL, NULL,
+                                       src_path, dst_path, link_target, NULL,
                                        src_size, src_mtime, dst_size, dst_mtime,
                                        thread_data->delete_excluded);
                     }
