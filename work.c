@@ -1486,11 +1486,9 @@ work_rsync_bulk(void *user_data) {
 
             *eol = '\0';
 
-            might_be_itemize_line = check_itemize_line(buf_output);
-
             IPC_SEND_LOG("%s\n", buf_output);
 
-            if (might_be_itemize_line) {
+            if ((might_be_itemize_line = check_itemize_line(buf_output))) {
                 char *filename = buf_output + itemize_length + 1;
                 char *sep;
                 Message *message;
