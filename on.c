@@ -629,24 +629,23 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
 
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
             CecupRow *row = cecup.rows[i];
-            char *row_path;
-            int32 row_path_len;
+            char *path;
+            int32 path_len;
 
-            row_path = (row->src_path != NULL) ? row->src_path : row->dst_path;
-
-            if (row_path == NULL) {
-                continue;
+            if (row->src_path) {
+                path = row->src_path;
+            } else {
+                path = row->dst_path;
             }
-
-            row_path_len = strlen32(row_path);
+            path_len = row->path_len;
 
             if (parent_row->selected) {
                 if (is_root) {
                     row->selected = 1;
                 } else if ((parent_path_len > 0)
                            && (parent_path[parent_path_len - 1] == '/')) {
-                    if ((row_path_len >= parent_path_len)
-                        && (strncmp32(row_path, parent_path, parent_path_len)
+                    if ((path_len >= parent_path_len)
+                        && (strncmp32(path, parent_path, parent_path_len)
                             == 0)) {
                         row->selected = 1;
                     }
@@ -657,20 +656,18 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
                 } else {
                     if ((parent_path_len > 0)
                         && (parent_path[parent_path_len - 1] == '/')) {
-                        if ((row_path_len >= parent_path_len)
-                            && (strncmp32(row_path, parent_path,
-                                          parent_path_len)
+                        if ((path_len >= parent_path_len)
+                            && (strncmp32(path, parent_path, parent_path_len)
                                 == 0)) {
                             row->selected = 0;
                         }
                     }
 
-                    if (strcmp(row_path, "./") == 0) {
+                    if (strcmp(path, "./") == 0) {
                         row->selected = 0;
-                    } else if ((row_path_len < parent_path_len)
-                               && (row_path[row_path_len - 1] == '/')) {
-                        if (strncmp32(parent_path, row_path, row_path_len)
-                            == 0) {
+                    } else if ((path_len < parent_path_len)
+                               && (path[path_len - 1] == '/')) {
+                        if (strncmp32(parent_path, path, path_len) == 0) {
                             row->selected = 0;
                         }
                     }
