@@ -20,6 +20,7 @@
 
 #include "cecup.h"
 #include "work.c"
+#include "aux.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_on 1
@@ -820,7 +821,7 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
         gtk_tree_model_get(model, &iter, COL_ROW_PTR, &row, -1);
 
         filepath = (side == SIDE_LEFT) ? row->src_path : row->dst_path;
-        path_len = (side == SIDE_LEFT) ? row->src_path_len : row->dst_path_len;
+        path_len = row->path_len;
         action = (side == SIDE_LEFT) ? row->src_action : row->dst_action;
         modifiers = event->state
                     & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK);
@@ -884,18 +885,15 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                                               (gint)event->x, (gint)event->y,
                                               &tree_path, NULL, NULL, NULL)) {
                 char *filepath;
-                int32 path_len;
                 enum CecupAction action;
                 int32 row_index = gtk_tree_path_get_indices(tree_path)[0];
                 CecupRow *row = cecup.rows_visible[row_index];
 
                 if (side == SIDE_LEFT) {
                     filepath = row->src_path;
-                    path_len = row->src_path_len;
                     action = row->src_action;
                 } else {
                     filepath = row->dst_path;
-                    path_len = row->dst_path_len;
                     action = row->dst_action;
                 }
 
@@ -906,10 +904,10 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     message = xarena_push(cecup.ui_arena, SIZEOF(*message));
                     memset64(message, 0, SIZEOF(*message));
 
-                    message->path_len = path_len;
+                    message->path_len = row->path_len;
                     message->src_path
-                        = xarena_push(cecup.ui_arena, path_len + 1);
-                    memcpy64(message->src_path, filepath, path_len + 1);
+                        = xarena_push(cecup.ui_arena, row->path_len + 1);
+                    memcpy64(message->src_path, filepath, row->path_len + 1);
                     g_mutex_unlock(&cecup.ui_arena_mutex);
 
                     message->action = action;
@@ -944,15 +942,14 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
             if (side == SIDE_LEFT) {
                 filepath = row->src_path;
-                path_len = row->src_path_len;
                 other_path = row->dst_path;
                 action = row->src_action;
             } else {
                 filepath = row->dst_path;
-                path_len = row->dst_path_len;
                 other_path = row->src_path;
                 action = row->dst_action;
             }
+            path_len = row->path_len;
         }
 
         g_mutex_lock(&cecup.ui_arena_mutex);

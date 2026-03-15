@@ -141,8 +141,7 @@ typedef struct CecupRow {
     char *link_target;
     char *ignore_pattern;
 
-    int32 src_path_len;
-    int32 dst_path_len;
+    int32 path_len;
     int32 link_target_len;
     int32 ignore_pattern_len;
 

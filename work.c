@@ -31,7 +31,6 @@
 #include "cecup.h"
 #include "util.c"
 #include "ipc.c"
-#include "aux.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_work 1
@@ -140,7 +139,7 @@ work_send_tree(int32 side,
     Message *message;
     char *final_src_path = NULL;
     char *final_dst_path = NULL;
-    int64 path_len = 0;
+    int32 path_len = 0;
     int64 target_len;
     int64 pattern_len;
     (void)side;
@@ -233,8 +232,7 @@ work_send_tree(int32 side,
 
     row->src_path = final_src_path;
     row->dst_path = final_dst_path;
-    row->src_path_len = (final_src_path) ? (int32)path_len : 0;
-    row->dst_path_len = (final_dst_path) ? (int32)path_len : 0;
+    row->path_len = path_len;
 
     if (cecup.rows_len >= cecup.rows_capacity) {
         g_mutex_lock(&cecup.row_arena_mutex);

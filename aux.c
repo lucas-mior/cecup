@@ -108,13 +108,12 @@ get_target_tasks(int32 side, char *clicked_path,
 
         if (side == SIDE_LEFT) {
             file_path = row->src_path;
-            path_len = row->src_path_len;
             action = row->src_action;
         } else {
             file_path = row->dst_path;
-            path_len = row->dst_path_len;
             action = row->dst_action;
         }
+        path_len = row->path_len;
 
         if (file_path == NULL) {
             continue;
@@ -508,10 +507,14 @@ update_ui_handler(void *data) {
 
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
             CecupRow *row = cecup.rows[i];
-            if (((row->src_path_len == message->path_len) && row->src_path
-                 && !strcmp(row->src_path, message->src_path))
-                || ((row->dst_path_len == message->path_len) && row->dst_path
-                    && !strcmp(row->dst_path, message->src_path))) {
+            char *path = message->src_path;
+
+            if (row->path_len != message->path_len) {
+                continue;
+            }
+
+            if ((row->src_path && !strcmp(row->src_path, path))
+                || (row->dst_path && !strcmp(row->dst_path, path))) {
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }
