@@ -287,16 +287,15 @@ on_menu_diff(GtkWidget *m, void *data) {
                 // clang-format on
 
                 {
-                    char buffer[MAX_PATH_LENGTH*2];
+                    char cmd[MAX_PATH_LENGTH*2];
                     char *diff_command[] = {
                         term_cmd, "-e", diff_tool, path_dst, path_src, NULL,
                     };
 
                     execvp(diff_command[0], diff_command);
-                    STRING_FROM_ARRAY(buffer, " ", diff_command,
+                    STRING_FROM_ARRAY(cmd, " ", diff_command,
                                       LENGTH(diff_command));
-                    error("Error executing\n%s\n%s.\n", buffer,
-                          strerror(errno));
+                    error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
                     _exit(1);
                 }
             default:
