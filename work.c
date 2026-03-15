@@ -677,8 +677,8 @@ work_rsync(void *user_data) {
             int32 line_len = (int32)(eol - buf_output);
             int32 remaining;
 
-            char action_char = buf_output[0];
-            char type_char = buf_output[1];
+            char action_char;
+            char type_char;
 
             bool might_be_itemize_line = true;
 
@@ -690,7 +690,7 @@ work_rsync(void *user_data) {
                 error("%s\n", buf_output);
             }
 
-            switch (action_char) {
+            switch (buf_output[0]) {
             case RSYNC_CHAR0_ACTION_SEND:
             case RSYNC_CHAR0_ACTION_RECEIVE:
             case RSYNC_CHAR0_ACTION_CHANGE:
@@ -702,7 +702,7 @@ work_rsync(void *user_data) {
                 break;
             }
 
-            switch (type_char) {
+            switch (buf_output[1]) {
             case RSYNC_CHAR1_TYPE_FILE:
             case RSYNC_CHAR1_TYPE_DIR:
             case RSYNC_CHAR1_TYPE_SYMLINK:
@@ -742,6 +742,9 @@ work_rsync(void *user_data) {
             if (buf_output[strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)] != ' ') {
                 might_be_itemize_line = false;
             }
+
+            action_char = buf_output[0];
+            type_char = buf_output[1];
 
             {
                 char *percent_pos;
