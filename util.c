@@ -539,14 +539,18 @@ util_nthreads(void) {
 #endif
 
 static char *
-basename2(char *path) {
-    int64 left = strlen32(path);
+basename2(char *path, int32 full_length, int32 *base_len) {
+    int64 left = full_length;
     char *end = path + left - 1;
     char *fslash = NULL;
     char *bslash = NULL;
     char *p = path;
 
     if (left == 1) {
+        if (base_len) {
+            *base_len = 1;
+            return p;
+        }
         return p;
     }
 
@@ -559,9 +563,16 @@ basename2(char *path) {
         }
 
         if ((fslash == NULL) && (bslash == NULL)) {
-            return p;
+            if (base_len) {
+                *base_len = full_length - (p - path);
+                return p;
+            }
         }
         if ((fslash == end) || (bslash == end)) {
+            if (base_len) {
+                *base_len = full_length - (p - path);
+                return p;
+            }
             return p;
         }
         if (fslash > bslash) {

@@ -1001,7 +1001,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 int32 length;
 
                 if (filepath) {
-                    name = basename2(filepath);
+                    name = basename2(filepath, path_len, NULL);
                 } else {
                     name = "";
                 }
