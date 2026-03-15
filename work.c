@@ -100,11 +100,7 @@ work_finalize(ThreadData *thread_data) {
     message = xarena_push(cecup.ui_arena, SIZEOF(Message));
     memset64(message, 0, SIZEOF(Message));
 
-    if (cecup.child_pid != 0) {
-        message->type = DATA_TYPE_ENABLE_BUTTONS;
-    } else {
-        message->type = DATA_TYPE_REGENERATE_PREVIEW;
-    }
+    message->type = DATA_TYPE_ENABLE_BUTTONS;
 
     if (thread_data) {
         arena_pop(cecup.ui_arena, thread_data);
@@ -1281,7 +1277,7 @@ work_rsync_bulk(void *user_data) {
         SNPRINTF(full_dst_path, "%s/%s", cecup.dst_base, task->path);
         switch (child_rm = fork()) {
         case -1:
-            error("Error forking for rm: %s.\n", strerror(errno));
+            error("Error forking: %s.\n", strerror(errno));
             break;
         case 0: {
             char cmd_rm[MAX_PATH_LENGTH];
