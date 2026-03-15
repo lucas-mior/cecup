@@ -1782,27 +1782,27 @@ dirname2(char *buffer, int64 size, char *path) {
 }
 
 static void
-normalize(char *path, int32 length) {
+normalize(char *path, int32 *length) {
     char *p = path;
     int64 off = 0;
-    if (length < 0) {
-        length = strlen32(path);
+    if (*length < 0) {
+        *length = strlen32(path);
     }
 
     PRINTLN(path);
 
-    while ((p = memmem64(path + off, length - off, "//", 2))) {
+    while ((p = memmem64(path + off, *length - off, "//", 2))) {
         off = p - path;
 
-        memmove64(&p[0], &p[1], length - off);
-        length -= 1;
+        memmove64(&p[0], &p[1], *length - off);
+        *length -= 1;
     }
 
     off = 0;
-    while ((p = memmem64(path + off, length - off, "/./", 3))) {
+    while ((p = memmem64(path + off, *length - off, "/./", 3))) {
         off = p - path;
 
-        memmove64(&p[1], &p[3], length - off - 2);
+        memmove64(&p[1], &p[3], *length - off - 2);
         length -= 2;
     }
 

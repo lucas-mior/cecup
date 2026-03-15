@@ -1216,7 +1216,8 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 }
 
 static void
-regenerate_preview_filtered(char *relative_old, char *relative_new) {
+regenerate_preview_filtered(char *relative_old, char *relative_new,
+                            int32 len_old, int32 len_new) {
     ThreadData *thread_data;
 
     g_mutex_lock(&cecup.ui_arena_mutex);
@@ -1235,21 +1236,19 @@ regenerate_preview_filtered(char *relative_old, char *relative_new) {
     thread_data->filtered = true;
     thread_data->relative_old = relative_old;
     thread_data->relative_new = relative_new;
-    PRINTLN(relative_new);
-    PRINTLN(relative_old);
+    thread_data->len_old = len_old;
+    thread_data->len_new = len_new;
 
     {
         Message *message;
-        int32 path_len;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
         message = xarena_push(cecup.ui_arena, SIZEOF(Message));
         memset64(message, 0, SIZEOF(Message));
 
-        path_len = strlen32(relative_old);
-        message->path_len = path_len;
-        message->src_path = xarena_push(cecup.ui_arena, path_len + 1);
-        memcpy64(message->src_path, relative_old, path_len + 1);
+        message->path_len = len_old;
+        message->src_path = xarena_push(cecup.ui_arena, len_old + 1);
+        memcpy64(message->src_path, relative_old, len_old + 1);
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         message->type = DATA_TYPE_REMOVE_MATCHES;
@@ -1335,10 +1334,11 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
                 len_new += 1;
             }
 
-            normalize(relative_old, len_old);
-            normalize(relative_new, len_old);
+            normalize(relative_old, &len_old);
+            normalize(relative_new, &len_new);
 
-            regenerate_preview_filtered(relative_old, relative_new);
+            regenerate_preview_filtered(relative_old, relative_new, len_old,
+                                        len_new);
 
             refresh_ui_list(REFRESH_FINAL);
         } else {

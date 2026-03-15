@@ -295,6 +295,8 @@ typedef struct ThreadData {
     bool filtered;
     char *relative_old;
     char *relative_new;
+    int32 len_old;
+    int32 len_new;
 } ThreadData;
 
 enum PathType {
