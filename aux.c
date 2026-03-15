@@ -401,9 +401,6 @@ refresh_ui_list(enum RefreshType refresh_type) {
 
     g_mutex_unlock(&cecup.row_arena_mutex);
 
-    /* gtk_widget_queue_draw(cecup.l_tree); */
-    /* gtk_widget_queue_draw(cecup.r_tree); */
-
     g_idle_add((GSourceFunc)gtk_widget_queue_draw, (void *)cecup.l_tree);
     g_idle_add((GSourceFunc)gtk_widget_queue_draw, (void *)cecup.r_tree);
     return;
