@@ -127,7 +127,7 @@ did_attribute_change(char *buf_output) {
 // Note: NEVER delete lines with // clang-format
 // clang-format off
 static void
-work_send_tree(int32 side,
+work_send_tree(int32 side, char type_char,
                enum CecupAction action, enum CecupReason reason,
                char *src_path, char *dst_path,
                char *link_target, char *ignore_pattern,
@@ -146,8 +146,19 @@ work_send_tree(int32 side,
 
     if (src_path) {
         path_len = strlen32(src_path);
+
+        if (type_char == RSYNC_CHAR1_TYPE_DIR) {
+            path_len += 1;
+        }
+
         final_src_path = xarena_push(cecup.row_arena, path_len + 1);
+
         memcpy64(final_src_path, src_path, path_len + 1);
+        if (type_char == RSYNC_CHAR1_TYPE_DIR) {
+            final_src_path[path_len - 1] = '/';
+            final_src_path[path_len] = '\0';
+        }
+
         if (dst_path) {
             final_dst_path = final_src_path;
         }
@@ -815,7 +826,7 @@ work_rsync(void *user_data) {
                 if (thread_data->is_preview && (reason == REASON_MISSING)) {
                     // if source file exists, rsync will report it as ignored
                     // so we dont send it here to avoid the duplication
-                    work_send_tree(SIDE_RIGHT,
+                    work_send_tree(SIDE_RIGHT, type_char,
                                    ACTION_DELETE, reason,
                                    src_path, dst_path, NULL, NULL,
                                    src_size, src_mtime, dst_size, dst_mtime,
@@ -858,7 +869,7 @@ work_rsync(void *user_data) {
                     // Note: NEVER delete lines with // clang-format
                     // clang-format off
                     if (thread_data->is_preview) {
-                        work_send_tree(SIDE_LEFT,
+                        work_send_tree(SIDE_LEFT, type_char,
                                        ACTION_IGNORE, REASON_IGNORED,
                                        src_path, dst_path, NULL, ignore_pattern,
                                        src_size, src_mtime, dst_size, dst_mtime,
@@ -956,7 +967,7 @@ work_rsync(void *user_data) {
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
-                        work_send_tree(SIDE_LEFT,
+                        work_send_tree(SIDE_LEFT, type_char,
                                        action, reason,
                                        src_path, dst_path, link_target, NULL,
                                        src_size, src_mtime, dst_size, dst_mtime,
@@ -1031,7 +1042,7 @@ work_rsync(void *user_data) {
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
-                        work_send_tree(SIDE_LEFT, action, reason,
+                        work_send_tree(SIDE_LEFT, type_char, action, reason,
                                        src_path, dst_path, link_target, NULL,
                                        src_size, src_mtime, dst_size, dst_mtime,
                                        thread_data->delete_excluded);
