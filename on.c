@@ -1001,11 +1001,11 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 int32 length;
 
                 if (filepath) {
-                    name = basename2(filepath, path_len, NULL);
+                    name = basename2(filepath, path_len, &length);
                 } else {
                     name = "";
+                    length = 0;
                 }
-                length = strlen32(name);
 
                 gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
                 gtk_widget_set_sensitive(item, FALSE);
