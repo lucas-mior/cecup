@@ -263,6 +263,22 @@ memmem(void *haystack, size_t hay_len, void *needle, size_t needle_len) {
 }
 #endif
 
+extern void *memrchr(const void *memory_pointer, int32 character_to_find,
+                     size_t size);
+void *
+memrchr(const void *memory_pointer, int32 character_to_find, size_t size) {
+    uchar *buffer = (uchar *)memory_pointer;
+    uchar target_byte = (uchar)character_to_find;
+
+    for (long i = (long)(size - 1); i >= 0; i -= 1) {
+        if (buffer[i] == target_byte) {
+            return (void *)(buffer + i);
+        }
+    }
+
+    return NULL;
+}
+
 #define X64(func) \
 INLINE void \
 CAT(func, 64)(void *dest, void *source, int64 size) { \
@@ -1777,6 +1793,7 @@ normalize(char *path) {
 
 #define DIRNAME(BUFFER, PATH) dirname2(BUFFER, sizeof(BUFFER), PATH)
 
+#if OS_UNIX
 static void
 xpipe(int array[2]) {
     if (pipe(array) < 0) {
@@ -1785,6 +1802,7 @@ xpipe(int array[2]) {
     }
     return;
 }
+#endif
 
 #define HERE do { \
     fprintf(stderr, "\n===== Here: %s:%d (%s)\n", __FILE__, __LINE__, __func__); \
