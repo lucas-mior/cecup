@@ -508,6 +508,7 @@ update_ui_handler(void *data) {
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
         g_mutex_lock(&cecup.row_arena_mutex);
+
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
             CecupRow *row = cecup.rows[i];
             if (((row->src_path_len == message->path_len) && row->src_path
@@ -523,6 +524,7 @@ update_ui_handler(void *data) {
             }
         }
         g_mutex_unlock(&cecup.row_arena_mutex);
+
         if (cecup.refresh_id == 0) {
             cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
                                              refresh_ui_timeout_callback, NULL);
