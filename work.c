@@ -1288,8 +1288,10 @@ work_rsync_bulk(void *user_data) {
                 NULL,
             };
 
-            execvp(args_rm[0], args_rm);
             STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
+            IPC_SEND_LOG(cmd_rm);
+
+            execvp(args_rm[0], args_rm);
             error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
             _exit(EXIT_FAILURE);
         }
