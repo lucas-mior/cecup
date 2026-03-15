@@ -1968,10 +1968,10 @@ main(int argc, char **argv) {
         }
     }
 
-    /* if (OS_WINDOWS) { */
-    /*     char *path2 = "aa\\cc"; */
-    /*     ASSERT_EQUAL(basename2(path2, strlen32(path2), NULL), "cc"); */
-    /* } */
+    if (OS_WINDOWS) {
+        char *path2 = "aa\\cc";
+        ASSERT_EQUAL(basename2(path2, strlen32(path2), NULL), "cc");
+    }
 
     {
         char *a = "/tmp/afile";
