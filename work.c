@@ -39,6 +39,57 @@
 #define TESTING_work 0
 #endif
 
+static bool
+check_itemize_line(char *buf_output) {
+    switch (buf_output[0]) {
+    case RSYNC_CHAR0_ACTION_SEND:
+    case RSYNC_CHAR0_ACTION_RECEIVE:
+    case RSYNC_CHAR0_ACTION_CHANGE:
+    case RSYNC_CHAR0_ACTION_HARDLINK:
+    case RSYNC_CHAR0_ACTION_NO_UPDATE:
+        break;
+    default:
+        return false;
+    }
+
+    switch (buf_output[1]) {
+    case RSYNC_CHAR1_TYPE_FILE:
+    case RSYNC_CHAR1_TYPE_DIR:
+    case RSYNC_CHAR1_TYPE_SYMLINK:
+    case RSYNC_CHAR1_TYPE_DEVICE:
+    case RSYNC_CHAR1_TYPE_SPECIAL:
+        break;
+    default:
+        return false;
+    }
+
+    for (int i = 2; i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS); i += 1) {
+        switch (buf_output[i]) {
+        case RSYNC_CHAR_ATTR_NO_CHANGE:
+        case RSYNC_CHAR_ATTR_ALL_SPACE_MEANS_ALL_UNCHANGED:
+        case RSYNC_CHAR_ATTR_NEW:
+        case RSYNC_CHAR_ATTR_UNKNOWN:
+        case RSYNC_CHAR_ATTR_CHECKSUM:
+        case RSYNC_CHAR_ATTR_SIZE:
+        case RSYNC_CHAR_ATTR_TIME:
+        case RSYNC_CHAR_ATTR_PERM:
+        case RSYNC_CHAR_ATTR_OWNER:
+        case RSYNC_CHAR_ATTR_GROUP:
+        case RSYNC_CHAR_ATTR_ACL:
+        case RSYNC_CHAR_ATTR_XATTR:
+            break;
+        default:
+            return false;
+        }
+    }
+
+    if (buf_output[strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)] != ' ') {
+        return false;
+    }
+
+    return true;
+}
+
 static void
 work_finalize(ThreadData *thread_data) {
     Message *message;
@@ -707,10 +758,9 @@ work_rsync(void *user_data) {
             int32 line_len = (int32)(eol - buf_output);
             int32 remaining;
 
+            bool might_be_itemize_line;
             char action_char;
             char type_char;
-
-            bool might_be_itemize_line = true;
 
             *eol = '\0';
             if (DEBUGGING) {
@@ -719,59 +769,7 @@ work_rsync(void *user_data) {
                 error("%s\n", buf_output);
             }
 
-            switch (buf_output[0]) {
-            case RSYNC_CHAR0_ACTION_SEND:
-            case RSYNC_CHAR0_ACTION_RECEIVE:
-            case RSYNC_CHAR0_ACTION_CHANGE:
-            case RSYNC_CHAR0_ACTION_HARDLINK:
-            case RSYNC_CHAR0_ACTION_NO_UPDATE:
-                break;
-            default:
-                might_be_itemize_line = false;
-                break;
-            }
-
-            switch (buf_output[1]) {
-            case RSYNC_CHAR1_TYPE_FILE:
-            case RSYNC_CHAR1_TYPE_DIR:
-            case RSYNC_CHAR1_TYPE_SYMLINK:
-            case RSYNC_CHAR1_TYPE_DEVICE:
-            case RSYNC_CHAR1_TYPE_SPECIAL:
-                break;
-            default:
-                might_be_itemize_line = false;
-                break;
-            }
-
-            for (int i = 2; i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS); i += 1) {
-                if (!might_be_itemize_line) {
-                    break;
-                }
-
-                switch (buf_output[i]) {
-                case RSYNC_CHAR_ATTR_NO_CHANGE:
-                case RSYNC_CHAR_ATTR_ALL_SPACE_MEANS_ALL_UNCHANGED:
-                case RSYNC_CHAR_ATTR_NEW:
-                case RSYNC_CHAR_ATTR_UNKNOWN:
-                case RSYNC_CHAR_ATTR_CHECKSUM:
-                case RSYNC_CHAR_ATTR_SIZE:
-                case RSYNC_CHAR_ATTR_TIME:
-                case RSYNC_CHAR_ATTR_PERM:
-                case RSYNC_CHAR_ATTR_OWNER:
-                case RSYNC_CHAR_ATTR_GROUP:
-                case RSYNC_CHAR_ATTR_ACL:
-                case RSYNC_CHAR_ATTR_XATTR:
-                    break;
-                default:
-                    might_be_itemize_line = false;
-                    break;
-                }
-            }
-
-            if (buf_output[strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)] != ' ') {
-                might_be_itemize_line = false;
-            }
-
+            might_be_itemize_line = check_itemize_line(buf_output);
             action_char = buf_output[0];
             type_char = buf_output[1];
 
@@ -1484,12 +1482,15 @@ work_rsync_bulk(void *user_data) {
             int32 line_len = (int32)(eol - buf_output);
             int32 itemize_length = strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
             int32 remaining;
+            bool might_be_itemize_line;
+
             *eol = '\0';
+
+            might_be_itemize_line = check_itemize_line(buf_output);
 
             IPC_SEND_LOG("%s\n", buf_output);
 
-            if ((line_len > itemize_length)
-                && (buf_output[itemize_length + 1] == ' ')) {
+            if (might_be_itemize_line) {
                 char *filename = buf_output + itemize_length + 1;
                 char *sep;
                 Message *message;
