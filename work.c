@@ -155,15 +155,16 @@ work_send_tree(int32 side, char type_char,
 
         final_src_path = xarena_push(cecup.row_arena, path_len + add_slash + 1);
 
-        memcpy64(final_src_path, src_path, path_len + add_slash + 1);
+        memcpy64(final_src_path, src_path, path_len + 1);
         if (add_slash) {
-            final_src_path[path_len - 1] = '/';
-            final_src_path[path_len] = '\0';
+            final_src_path[path_len + add_slash - 1] = '/';
+            final_src_path[path_len + add_slash] = '\0';
         }
 
         if (dst_path) {
             final_dst_path = final_src_path;
         }
+        path_len += add_slash;
     } else if (dst_path) {
         int add_slash = 0;
         path_len = strlen32(dst_path);
@@ -175,11 +176,12 @@ work_send_tree(int32 side, char type_char,
 
         final_dst_path = xarena_push(cecup.row_arena, path_len + add_slash + 1);
 
-        memcpy64(final_dst_path, dst_path, path_len + add_slash + 1);
+        memcpy64(final_dst_path, dst_path, path_len + 1);
         if (add_slash) {
-            final_dst_path[path_len - 1] = '/';
-            final_dst_path[path_len] = '\0';
+            final_dst_path[path_len + add_slash - 1] = '/';
+            final_dst_path[path_len + add_slash] = '\0';
         }
+        path_len += add_slash;
     } else {
         error("Error: both src_path and dst_path are NULL.\n");
         exit(EXIT_FAILURE);
