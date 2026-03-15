@@ -39,6 +39,33 @@
 #define TESTING_work 0
 #endif
 
+static void
+work_finalize(ThreadData *thread_data) {
+    Message *message;
+    ipc_send_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);
+    ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
+
+    g_mutex_lock(&cecup.ui_arena_mutex);
+    message = xarena_push(cecup.ui_arena, SIZEOF(Message));
+    memset64(message, 0, SIZEOF(Message));
+
+    if (cecup.child_pid != 0) {
+        message->type = DATA_TYPE_ENABLE_BUTTONS;
+    } else {
+        message->type = DATA_TYPE_REGENERATE_PREVIEW;
+    }
+
+    message->type = DATA_TYPE_ENABLE_BUTTONS;
+
+    if (thread_data) {
+        arena_pop(cecup.ui_arena, thread_data);
+    }
+    g_mutex_unlock(&cecup.ui_arena_mutex);
+
+    g_idle_add(update_ui_handler, message);
+    return;
+}
+
 static bool
 did_attribute_change(char *buf_output) {
     bool attribute_changed = false;
@@ -464,12 +491,14 @@ work_rsync(void *user_data) {
         if (stat(cecup.src_base, &stat_src) < 0) {
             IPC_SEND_LOG_ERROR("Error checking %s: %s.\n", cecup.src_base,
                                strerror(errno));
-            goto finalize;
+            work_finalize(thread_data);
+            return NULL;
         }
         if (stat(cecup.dst_base, &stat_dst) < 0) {
             IPC_SEND_LOG_ERROR("Error checking %s: %s.\n", cecup.dst_base,
                                strerror(errno));
-            goto finalize;
+            work_finalize(thread_data);
+            return NULL;
         }
 
         if (stat_src.st_dev == stat_dst.st_dev) {
@@ -489,7 +518,8 @@ work_rsync(void *user_data) {
             message->type = DATA_TYPE_CLEAR_TREES;
             g_idle_add(update_ui_handler, message);
 
-            goto finalize;
+            work_finalize(thread_data);
+            return NULL;
         }
     }
 
@@ -1063,7 +1093,8 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stdout[0]);
 
     if (checksum_count <= 0) {
-        goto finalize;
+        work_finalize(thread_data);
+        return NULL;
     }
     a = 0;
     rsync_args[a++] = "rsync";
@@ -1215,25 +1246,7 @@ work_rsync(void *user_data) {
         IPC_SEND_LOG("Analysis complete. Review the list and click Apply.\n");
     }
 
-finalize:
-    ipc_send_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);
-    ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
-
-    {
-        Message *message;
-
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-        memset64(message, 0, SIZEOF(Message));
-        g_mutex_unlock(&cecup.ui_arena_mutex);
-
-        message->type = DATA_TYPE_ENABLE_BUTTONS;
-        g_idle_add(update_ui_handler, message);
-    }
-
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, thread_data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    work_finalize(thread_data);
     return NULL;
 }
 
@@ -1318,7 +1331,9 @@ work_rsync_bulk(void *user_data) {
     }
 
     if (!has_transfers) {
-        goto finalize;
+        work_finalize(NULL);
+        free_task_list(tasks);
+        return NULL;
     }
 
     xpipe(pipe_stdout);
@@ -1538,24 +1553,7 @@ work_rsync_bulk(void *user_data) {
     XCLOSE(&pipe_stdout[0]);
     XCLOSE(&pipe_stderr[0]);
 
-finalize:
-
-{
-    Message *message;
-
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-    memset64(message, 0, SIZEOF(Message));
-    g_mutex_unlock(&cecup.ui_arena_mutex);
-
-    if (cecup.child_pid != 0) {
-        message->type = DATA_TYPE_ENABLE_BUTTONS;
-    } else {
-        message->type = DATA_TYPE_REGENERATE_PREVIEW;
-    }
-
-    g_idle_add(update_ui_handler, message);
-}
+    work_finalize(NULL);
     free_task_list(tasks);
     return NULL;
 }
