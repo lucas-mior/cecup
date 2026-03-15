@@ -892,6 +892,18 @@ util_filename_from(char *buffer, int64 size, int fd) {
 #endif
 }
 
+#if OS_WINDOWS
+int
+strerror_r(int errnum, char *buffer, size_t size) {
+    char *error_message = strerror(errnum);
+    int32 len = strlen32(error_message);
+    memcpy64(buffer, error_message, MIN(len + 1, size - 1));
+    buffer[size] = '\0';
+    return 0;
+}
+
+#endif
+
 static int
 xclose(char *file, int line, int *fd, char *fd_var_name, char *filename) {
 #if DEBUGGING
@@ -1789,13 +1801,16 @@ normalize(char *path, int32 *length) {
         *length = strlen32(path);
     }
 
-    PRINTLN(path);
-
     while ((p = memmem64(path + off, *length - off, "//", 2))) {
         off = p - path;
 
         memmove64(&p[0], &p[1], *length - off);
         *length -= 1;
+    }
+
+    while ((path[0] == '.') && (path[1] == '/') && (*length > 2)) {
+        memmove64(&path[0], &path[2], *length - 1);
+        *length -= 2;
     }
 
     off = 0;
@@ -1893,28 +1908,41 @@ main(int argc, char **argv) {
         // Note: NEVER delete lines with // clang-format
         // clang-format off
         char *paths[] = {
-            "/aaaa/bbbb/cccc", "/aa/bb/cc", "/a/b/c",    "a/b/c",
+            "/aaaa/bbbb/cccc", "/aa/bb/cc",  "/a/b/c",    "a/b/c",
             "a/b/cccc",        "a/bb/cccc", "aaaa/cccc", "/aaaa",
-            "/",               "//",        "/a/",       "/a/b/",
-            "./",              "..",        "././",      "./a/",
+            "/",               "//",          "/a/",       "/a/b/",
+            "./",              "..",          "././",      "./a/",
         };
         char *bases[] = {
-            "cccc",            "cc",        "c",         "c",
-            "cccc",            "cccc",      "cccc",      "aaaa",
-            "/",               "/",         "a/",        "b/",
-            "./",              "..",        "./",        "a/",
+            "cccc",            "cc",          "c",         "c",
+            "cccc",            "cccc",        "cccc",      "aaaa",
+            "/",               "/",           "a/",        "b/",
+            "./",              "..",          "./",        "a/",
         };
         char *dirs[] = {
-            "/aaaa/bbbb",      "/aa/bb",    "/a/b",      "a/b",
-            "a/b",             "a/bb",      "aaaa",      "/",
-            "/",               "/",         "/",          "/a",
-            ".",               ".",         ".",         ".",
+            "/aaaa/bbbb",      "/aa/bb",      "/a/b",      "a/b",
+            "a/b",             "a/bb",        "aaaa",      "/",
+            "/",               "/",           "/",         "/a",
+            ".",               ".",           ".",         ".",
+        };
+        char *normalized[] = {
+            "/aaaa/bbbb/cccc", "/aa/bb/cc",   "/a/b/c",    "a/b/c",
+            "a/b/cccc",        "a/bb/cccc",   "aaaa/cccc", "/aaaa",
+            "/",               "/",           "/a/",       "/a/b/",
+            "./",              "..",          "./",        "a/",
         };
         // clang-format on
         for (int64 i = 0; i < LENGTH(paths); i += 1) {
             char *path = paths[i];
             char *base = bases[i];
             ASSERT_EQUAL(basename2(path), base);
+        }
+        for (int64 i = 0; i < LENGTH(paths); i += 1) {
+            char *copy = xstrdup(paths[i]);
+            int len = strlen32(copy);
+            normalize(copy, &len);
+            ASSERT_EQUAL(copy, normalized[i]);
+            free(copy);
         }
 
         for (int64 i = 0; i < LENGTH(paths); i += 1) {
