@@ -127,8 +127,8 @@ msgid "Invert Original and Backup"
 msgstr "Inverter original e backup"
 
 #: cecup.h:96
-msgid "Matches an ignore rule"
-msgstr "Ignorado por regra de exclusão"
+msgid "Matches an ignore pattern"
+msgstr "Corresponde a uma padrão a ignorar"
 
 #: main.c:776
 msgid "Modification Time"

@@ -92,7 +92,7 @@ static char *dst_action_strings[] = {
 
 static char *reason_strings[] = {
     [REASON_EQUAL]    = N_("Files have the same size and modification time"),
-    [REASON_IGNORED]  = N_("Matches an ignore rule"),
+    [REASON_IGNORED]  = N_("Matches an ignore pattern"),
     [REASON_MISSING]  = N_("File does not exist in the original folder"),
     [REASON_NEW]      = N_("New file found in the original folder"),
     [REASON_HARDLINK] = N_("Hardlinked file in the original folder"),
