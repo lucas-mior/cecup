@@ -685,8 +685,7 @@ work_rsync(void *user_data) {
             *eol = '\0';
             if (DEBUGGING) {
                 error("%s\n", buf_output);
-            }
-            if (literal_match(buf_output, "[sender] showing")) {
+            } else if (literal_match(buf_output, "[sender] showing")) {
                 error("%s\n", buf_output);
             }
 
