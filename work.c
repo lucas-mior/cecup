@@ -55,8 +55,6 @@ work_finalize(ThreadData *thread_data) {
         message->type = DATA_TYPE_REGENERATE_PREVIEW;
     }
 
-    message->type = DATA_TYPE_ENABLE_BUTTONS;
-
     if (thread_data) {
         arena_pop(cecup.ui_arena, thread_data);
     }
