@@ -1264,7 +1264,7 @@ work_rsync_bulk(void *user_data) {
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
-        char full_dst_path[MAX_PATH_LENGTH];
+        char full_path[MAX_PATH_LENGTH];
         pid_t child_rm;
         int child_status;
         bool removed = false;
@@ -1274,7 +1274,11 @@ work_rsync_bulk(void *user_data) {
             continue;
         }
 
-        SNPRINTF(full_dst_path, "%s/%s", cecup.dst_base, task->path);
+        if (task->side == SIDE_LEFT) {
+            SNPRINTF(full_path, "%s/%s", cecup.src_base, task->path);
+        } else {
+            SNPRINTF(full_path, "%s/%s", cecup.dst_base, task->path);
+        }
         switch (child_rm = fork()) {
         case -1:
             error("Error forking: %s.\n", strerror(errno));
@@ -1284,12 +1288,12 @@ work_rsync_bulk(void *user_data) {
             char *args_rm[] = {
                 "rm",
                 "-rf",
-                full_dst_path,
+                full_path,
                 NULL,
             };
 
             STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
-            IPC_SEND_LOG(cmd_rm);
+            error("+ %s\n", cmd_rm);
 
             execvp(args_rm[0], args_rm);
             error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
