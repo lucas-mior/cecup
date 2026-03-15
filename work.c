@@ -1353,8 +1353,6 @@ work_rsync_bulk(void *user_data) {
             memcpy64(message->src_path, task->path, path_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
-            error("sending remove message...\n");
-
             message->type = DATA_TYPE_REMOVE_TREE_ROW;
             g_idle_add(update_ui_handler, message);
         }

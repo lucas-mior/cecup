@@ -1000,8 +1000,16 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 GtkWidget *sub = gtk_menu_new();
                 GtkWidget *sub_ext;
                 GtkWidget *sub_dir;
-                char *name = (filepath) ? basename(filepath) : "";
-                int64 length = strlen32(name);
+                char *name;
+                int32 length;
+
+                if (filepath) {
+                    name = xstrdup(filepath);
+                    name = basename(name);
+                } else {
+                    name = "";
+                }
+                length = strlen32(name);
 
                 gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), sub);
                 gtk_widget_set_sensitive(item, FALSE);
