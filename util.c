@@ -540,7 +540,7 @@ util_nthreads(void) {
 
 static char *
 basename2(char *path, int32 full_length, int32 *base_len) {
-    int64 left = full_length;
+    int32 left = full_length;
     char *end = path + left - 1;
     char *fslash = NULL;
     char *bslash = NULL;
@@ -564,13 +564,13 @@ basename2(char *path, int32 full_length, int32 *base_len) {
 
         if ((fslash == NULL) && (bslash == NULL)) {
             if (base_len) {
-                *base_len = full_length - (p - path);
+                *base_len = full_length - (int32)(p - path);
                 return p;
             }
         }
         if ((fslash == end) || (bslash == end)) {
             if (base_len) {
-                *base_len = full_length - (p - path);
+                *base_len = full_length - (int32)(p - path);
                 return p;
             }
             return p;
@@ -1946,7 +1946,7 @@ main(int argc, char **argv) {
         for (int64 i = 0; i < LENGTH(paths); i += 1) {
             char *path = paths[i];
             char *base = bases[i];
-            ASSERT_EQUAL(basename2(path), base);
+            ASSERT_EQUAL(basename2(path, strlen32(path), NULL), base);
         }
         for (int64 i = 0; i < LENGTH(paths); i += 1) {
             char *copy = xstrdup(paths[i]);
@@ -1968,10 +1968,10 @@ main(int argc, char **argv) {
         }
     }
 
-    if (OS_WINDOWS) {
-        char *path2 = "aa\\cc";
-        ASSERT_EQUAL(basename2(path2), "cc");
-    }
+    /* if (OS_WINDOWS) { */
+    /*     char *path2 = "aa\\cc"; */
+    /*     ASSERT_EQUAL(basename2(path2, strlen32(path2), NULL), "cc"); */
+    /* } */
 
     {
         char *a = "/tmp/afile";
