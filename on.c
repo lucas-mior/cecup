@@ -641,34 +641,34 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
 
             if (parent_row->selected) {
                 if (is_root) {
-                    row->selected = 1;
+                    row->selected = true;
                 } else if ((parent_path_len > 0)
                            && (parent_path[parent_path_len - 1] == '/')) {
                     if ((path_len >= parent_path_len)
                         && (strncmp32(path, parent_path, parent_path_len)
                             == 0)) {
-                        row->selected = 1;
+                        row->selected = true;
                     }
                 }
             } else {
                 if (is_root) {
-                    row->selected = 0;
+                    row->selected = false;
                 } else {
                     if ((parent_path_len > 0)
                         && (parent_path[parent_path_len - 1] == '/')) {
                         if ((path_len >= parent_path_len)
                             && (strncmp32(path, parent_path, parent_path_len)
                                 == 0)) {
-                            row->selected = 0;
+                            row->selected = false;
                         }
                     }
 
                     if (strcmp(path, "./") == 0) {
-                        row->selected = 0;
+                        row->selected = false;
                     } else if ((path_len < parent_path_len)
                                && (path[path_len - 1] == '/')) {
                         if (strncmp32(parent_path, path, path_len) == 0) {
-                            row->selected = 0;
+                            row->selected = false;
                         }
                     }
                 }
