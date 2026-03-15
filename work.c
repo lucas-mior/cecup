@@ -437,7 +437,7 @@ work_rsync(void *user_data) {
     int32 pipe_stdout[2];
     int32 pipe_stderr[2];
     struct pollfd pipes[2];
-    pid_t child_process_id;
+    pid_t child_pid;
 
     char buf_output[MAX_PATH_LENGTH*2];
     int32 buf_output_pos = 0;
@@ -579,7 +579,7 @@ work_rsync(void *user_data) {
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
     IPC_SEND_LOG_CMD("%s\n", cmd);
 
-    switch (child_process_id = fork()) {
+    switch (child_pid = fork()) {
     case -1:
         error("Error forking: %s.\n", strerror(errno));
         exit(EXIT_FAILURE);
@@ -609,7 +609,7 @@ work_rsync(void *user_data) {
         error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
         _exit(EXIT_FAILURE);
     default:
-        cecup.child_pid = child_process_id;
+        cecup.child_pid = child_pid;
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
         break;
@@ -1054,7 +1054,7 @@ work_rsync(void *user_data) {
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
-    if (waitpid(child_process_id, NULL, 0) < 0) {
+    if (waitpid(child_pid, NULL, 0) < 0) {
         IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
     }
     cecup.child_pid = 0;
@@ -1090,7 +1090,7 @@ work_rsync(void *user_data) {
     xpipe(pipe_stdout);
     xpipe(pipe_stderr);
 
-    switch (child_process_id = fork()) {
+    switch (child_pid = fork()) {
     case -1:
         IPC_SEND_LOG_ERROR("Error forking for checksum: %s.\n",
                            strerror(errno));
@@ -1111,7 +1111,7 @@ work_rsync(void *user_data) {
         execvp("rsync", rsync_args);
         _exit(EXIT_FAILURE);
     default:
-        cecup.child_pid = child_process_id;
+        cecup.child_pid = child_pid;
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
         break;
@@ -1199,7 +1199,7 @@ work_rsync(void *user_data) {
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
-    if (waitpid(child_process_id, NULL, 0) < 0) {
+    if (waitpid(child_pid, NULL, 0) < 0) {
         IPC_SEND_LOG_ERROR("Error waiting for rsync: %s.\n", strerror(errno));
     }
     cecup.child_pid = 0;
