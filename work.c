@@ -859,10 +859,10 @@ work_rsync(void *user_data) {
                     // clang-format off
                     if (thread_data->is_preview) {
                         work_send_tree(SIDE_LEFT,
-                                      ACTION_IGNORE, REASON_IGNORED,
-                                      src_path, dst_path, NULL, ignore_pattern,
-                                      src_size, src_mtime, dst_size, dst_mtime,
-                                      thread_data->delete_excluded);
+                                       ACTION_IGNORE, REASON_IGNORED,
+                                       src_path, dst_path, NULL, ignore_pattern,
+                                       src_size, src_mtime, dst_size, dst_mtime,
+                                       thread_data->delete_excluded);
                     }
                     // clang-format on
                 }
@@ -1322,6 +1322,8 @@ work_rsync_bulk(void *user_data) {
             message->src_path = xarena_push(cecup.ui_arena, path_len + 1);
             memcpy64(message->src_path, task->path, path_len + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
+
+            error("sending remove message...\n");
 
             message->type = DATA_TYPE_REMOVE_TREE_ROW;
             g_idle_add(update_ui_handler, message);

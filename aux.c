@@ -509,6 +509,9 @@ update_ui_handler(void *data) {
             CecupRow *row = cecup.rows[i];
             char *path = message->src_path;
 
+            printf("row::%s::\n", row->src_path);
+            printf("mes::%s::\n", path);
+
             if (row->path_len != message->path_len) {
                 continue;
             }
