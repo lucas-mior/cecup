@@ -87,12 +87,10 @@ msgid "Edit the list of filename patterns to ignore"
 msgstr "Editar a lista de padrões de nomes de arquivo para ignorar"
 
 #: work.c:269
-#, c-format
 msgid "Error opening directory %s: %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
 #: on.c:1341
-#, c-format
 msgid "Error renaming %s to %s: %s\n"
 msgstr "Error renomeando %s to %s: %s\n"
 
