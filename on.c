@@ -646,7 +646,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
                 } else if ((parent_path_len > 0)
                            && (parent_path[parent_path_len - 1] == '/')) {
                     if ((row_path_len >= parent_path_len)
-                        && (strncmp64(row_path, parent_path, parent_path_len)
+                        && (strncmp32(row_path, parent_path, parent_path_len)
                             == 0)) {
                         row->selected = 1;
                     }
@@ -658,7 +658,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
                     if ((parent_path_len > 0)
                         && (parent_path[parent_path_len - 1] == '/')) {
                         if ((row_path_len >= parent_path_len)
-                            && (strncmp64(row_path, parent_path,
+                            && (strncmp32(row_path, parent_path,
                                           parent_path_len)
                                 == 0)) {
                             row->selected = 0;
@@ -669,7 +669,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
                         row->selected = 0;
                     } else if ((row_path_len < parent_path_len)
                                && (row_path[row_path_len - 1] == '/')) {
-                        if (strncmp64(parent_path, row_path, row_path_len)
+                        if (strncmp32(parent_path, row_path, row_path_len)
                             == 0) {
                             row->selected = 0;
                         }

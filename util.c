@@ -383,7 +383,7 @@ strlen32(char *string) {
 }
 
 INLINE int
-strncmp64(char *left, char *right, int64 size) {
+strncmp32(char *left, char *right, int64 size) {
     int result;
     if (size == 0) {
         return 0;
@@ -402,7 +402,7 @@ strncmp64(char *left, char *right, int64 size) {
 INLINE char *
 literal_match(char *string, char *literal) {
     int64 n = strlen32(literal);
-    if (strncmp64(literal, string, n) == 0) {
+    if (strncmp32(literal, string, n) == 0) {
         return string + n;
     } else {
         return NULL;
