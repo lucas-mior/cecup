@@ -1402,8 +1402,8 @@ work_rsync_bulk(void *user_data) {
         case ACTION_EQUAL:
             continue;
         case ACTION_HARDLINK:
-            // rsync, when using the --files-from mode,
-            // only transfers hard links
+            // when using the --files-from mode,
+            // rsync only transfers hard links
             // if the target is also included in the --files-from list
             write64(files_from_fd, task->link_target, task->link_target_len);
             write64(files_from_fd, "\n", 1);
