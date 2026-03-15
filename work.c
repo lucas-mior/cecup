@@ -145,16 +145,18 @@ work_send_tree(int32 side, char type_char,
     (void)side;
 
     if (src_path) {
+        int add_slash = 0;
         path_len = strlen32(src_path);
 
-        if (type_char == RSYNC_CHAR1_TYPE_DIR) {
-            path_len += 1;
+        if ((type_char == RSYNC_CHAR1_TYPE_DIR)
+            && (src_path[path_len - 1] != '/')) {
+            add_slash = 1;
         }
 
-        final_src_path = xarena_push(cecup.row_arena, path_len + 1);
+        final_src_path = xarena_push(cecup.row_arena, path_len + add_slash + 1);
 
-        memcpy64(final_src_path, src_path, path_len + 1);
-        if (type_char == RSYNC_CHAR1_TYPE_DIR) {
+        memcpy64(final_src_path, src_path, path_len + add_slash + 1);
+        if (add_slash) {
             final_src_path[path_len - 1] = '/';
             final_src_path[path_len] = '\0';
         }
@@ -854,6 +856,9 @@ work_rsync(void *user_data) {
                     } else {
                         src_size = stat_src.st_size;
                         src_mtime = (int64)stat_src.st_mtime;
+                        if (S_ISDIR(stat_src.st_mode)) {
+                            type_char = RSYNC_CHAR1_TYPE_DIR;
+                        }
                     }
 
                     if (lstat(full_dst, &stat_dst) < 0) {
