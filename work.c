@@ -1503,8 +1503,8 @@ work_rsync_bulk(void *user_data) {
                 }
 
                 g_mutex_lock(&cecup.ui_arena_mutex);
-                message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-                memset64(message, 0, SIZEOF(Message));
+                message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+                memset64(message, 0, SIZEOF(*message));
 
                 message->path_len = path_len;
                 message->src_path = xarena_push(cecup.ui_arena, path_len + 1);
