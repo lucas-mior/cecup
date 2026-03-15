@@ -147,7 +147,6 @@ msgid "Not found in original"
 msgstr "Não encontrado na pasta original"
 
 #: on.c:235
-#, c-format
 msgid "Permanently delete %d item(s)?"
 msgstr "Excluir permanentemente %d arquivo(s)?"
 
@@ -184,7 +183,6 @@ msgid "Rename problematic filenames, the ones containing:\n"
 msgstr "Renomear nomes de arquivo problemáticos, aqueles que contém:\n"
 
 #: on.c:1316
-#, c-format
 msgid "Renamed: %s -> %s\n"
 msgstr "Renomeado: %s -> %s\n"
 
@@ -214,7 +212,6 @@ msgid "Select Folder"
 msgstr "Selecionar Pasta"
 
 #: aux.c:357
-#, c-format
 msgid ""
 "Selected files: %lld\n"
 "Total Transfer Size: 📦 %s"
@@ -267,7 +264,6 @@ msgid "Symlink in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
 
 #: on.c:501
-#, c-format
 msgid "Sync %s -> %s?"
 msgstr "Sincronizar %s -> %s?"
 
@@ -304,7 +300,6 @@ msgid "Update from original"
 msgstr "Atualizar conforme arquivo da pasta original"
 
 #: on.c:412
-#, c-format
 msgid ""
 "Warning: 'Sync 100%%' (delete-after) is enabled. Files in the backup folder "
 "that do not exist in the source folder will be PERMANENTLY DELETED."
@@ -337,7 +332,6 @@ msgid "by extension"
 msgstr "pela extensão"
 
 #: on.c:1029
-#, c-format
 msgid "by extension (*%s)"
 msgstr "pela extensão (*%s)"
 
@@ -374,7 +368,6 @@ msgid "📁 Dir"
 msgstr "📁 Pasta"
 
 #: on.c:1038
-#, c-format
 msgid "📁 Dir (/%s/)"
 msgstr "📁 Pasta (/%s/)"
 
