@@ -1888,6 +1888,7 @@ main(int argc, char **argv) {
     char *string = __FILE__;
 
     (void)argc;
+    (void)argv;
 
     if (OS_LINUX) {
         struct sigaction signal_action;
