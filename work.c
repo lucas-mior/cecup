@@ -889,7 +889,8 @@ work_rsync(void *user_data) {
                 }
 
                 if ((thread_data->is_preview == 0)
-                    && (type_char == RSYNC_CHAR1_TYPE_FILE)
+                    && ((type_char == RSYNC_CHAR1_TYPE_FILE)
+                        || (type_char == RSYNC_CHAR1_TYPE_SYMLINK))
                     && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
                         || (action_char == RSYNC_CHAR0_ACTION_CHANGE)
                         || (action_char == RSYNC_CHAR0_ACTION_HARDLINK))) {
@@ -933,10 +934,10 @@ work_rsync(void *user_data) {
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
                         work_send_tree(SIDE_LEFT,
-                                      action, reason,
-                                      src_path, dst_path, link_target, NULL,
-                                      src_size, src_mtime, dst_size, dst_mtime,
-                                      thread_data->delete_excluded);
+                                       action, reason,
+                                       src_path, dst_path, link_target, NULL,
+                                       src_size, src_mtime, dst_size, dst_mtime,
+                                       thread_data->delete_excluded);
                     }
 
                     processed_files_preview += 1;
