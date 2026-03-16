@@ -804,8 +804,8 @@ work_rsync(void *user_data) {
             char full_src[MAX_PATH_LENGTH];
             char full_dst[MAX_PATH_LENGTH];
             struct stat stat;
-            char *src_path;
-            char *dst_path;
+            char *src_path = NULL;
+            char *dst_path = NULL;
             int64 src_size = 0;
             int64 src_mtime = 0;
             int64 dst_size = 0;
