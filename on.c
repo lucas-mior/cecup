@@ -1312,14 +1312,16 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
 
     if (strlen32(new_text) > 0) {
         char new_full[MAX_PATH_LENGTH];
+        int32 len_old = -1;
+        int32 len_new = -1;
 
         SNPRINTF(new_full, "%s/%s", basedir, new_text);
         SNPRINTF(relative_new, "/%s", new_full + base_path_len);
+        normalize(relative_old, &len_old);
+        normalize(relative_new, &len_new);
 
         if (rename(old_full, new_full) == 0) {
             struct stat stat_new;
-            int32 len_old = strlen32(relative_old);
-            int32 len_new = strlen32(relative_new);
 
             IPC_SEND_LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
 
