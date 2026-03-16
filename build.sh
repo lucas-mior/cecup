@@ -213,7 +213,7 @@ case "$target" in
         cp -rp etc/* "$DESTDIR/etc/$program/"
     fi
     if [ -f "$program.desktop" ]; then
-        install -Dm644 \
+        install -Dm755 \
             "$program.desktop" \
             "$DESTDIR/usr/share/applications/$program.desktop"
     fi
