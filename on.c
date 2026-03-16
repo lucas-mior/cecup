@@ -1262,10 +1262,11 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         message->type = DATA_TYPE_REMOVE_MATCHES;
-        g_idle_add(update_ui_handler, message);
+        g_idle_add_full(G_PRIORITY_HIGH, update_ui_handler, message, NULL);
+        sleep(1);
+        g_thread_new("work_rsync", work_rsync, thread_data);
     }
-
-    g_thread_new("work_rsync", work_rsync, thread_data);
+    return;
 }
 
 static void
