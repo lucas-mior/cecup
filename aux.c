@@ -26,7 +26,6 @@
 #include "cecup.h"
 #include "util.c"
 #include "ipc.c"
-#include "on.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_aux 1
@@ -674,6 +673,8 @@ save_config(void) {
 #if TESTING_aux
 #include <assert.h>
 #include <string.h>
+
+#include "on.c"
 
 int
 main(void) {

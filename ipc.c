@@ -96,6 +96,7 @@ ipc_send_progress(enum DataType type, double fraction) {
 #include "assert.c"
 
 #include "aux.c"
+#include "on.c"
 
 int
 main(void) {
