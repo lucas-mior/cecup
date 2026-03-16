@@ -887,8 +887,10 @@ work_rsync(void *user_data) {
                     SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
                     SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
 
-                    get_file_info(full_src, NULL, &src_size, &src_mtime, &is_dir);
-                    get_file_info(full_dst, &dst_path, &dst_size, &dst_mtime, &is_dir);
+                    get_file_info(full_src, NULL,
+                                  &src_size, &src_mtime, &is_dir);
+                    get_file_info(full_dst, &dst_path,
+                                  &dst_size, &dst_mtime, &is_dir);
 
                     if (thread_data->is_preview && strcmp(ignore_pattern, "*")) {
                         work_send_tree(SIDE_LEFT,
