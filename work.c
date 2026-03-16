@@ -839,7 +839,6 @@ work_rsync(void *user_data) {
 
             if ((dst_path = src_path
                      = literal_match(buf_output, RSYNC_MESSAGE_DELETING))) {
-                src_path = dst_path;
 
                 while (isspace(*dst_path)) {
                     dst_path += 1;
