@@ -1228,6 +1228,13 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
     g_mutex_lock(&cecup.ui_arena_mutex);
     thread_data = xarena_push(cecup.ui_arena, SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
+
+    thread_data->relative_old = xarena_push(cecup.ui_arena, len_old + 1);
+    thread_data->relative_new = xarena_push(cecup.ui_arena, len_new + 1);
+
+    memcpy64(thread_data->relative_old, relative_old, len_old + 1);
+    memcpy64(thread_data->relative_new, relative_new, len_new + 1);
+
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     thread_data->is_preview = true;
@@ -1239,8 +1246,6 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.delete_after));
 
     thread_data->filtered = true;
-    thread_data->relative_old = relative_old;
-    thread_data->relative_new = relative_new;
     thread_data->len_old = len_old;
     thread_data->len_new = len_new;
 

@@ -102,6 +102,12 @@ work_finalize(ThreadData *thread_data) {
     message->type = DATA_TYPE_ENABLE_BUTTONS;
 
     if (thread_data) {
+        if (thread_data->relative_new) {
+            arena_pop(cecup.ui_arena, thread_data->relative_new);
+        }
+        if (thread_data->relative_old) {
+            arena_pop(cecup.ui_arena, thread_data->relative_old);
+        }
         arena_pop(cecup.ui_arena, thread_data);
     }
     g_mutex_unlock(&cecup.ui_arena_mutex);
