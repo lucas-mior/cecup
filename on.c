@@ -1262,8 +1262,7 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         message->type = DATA_TYPE_REMOVE_MATCHES;
-        update_ui_handler(message);
-        refresh_ui_list(REFRESH_PARTIAL);
+        g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
         while (g_main_context_pending(NULL)) {
             g_main_context_iteration(NULL, false);
         }

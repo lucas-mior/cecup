@@ -288,15 +288,6 @@ refresh_ui_list(enum RefreshType refresh_type) {
             count_selected += 1;
         }
 
-        if (row->src_path && literal_match(row->src_path, "tomze")) {
-            HERE;
-            printf("I am adding %s (action=%d)\n", row->src_path,
-                   row->src_action);
-            added_tomze = true;
-        } else if (row->src_path) {
-            printf("not tom:%s\n", row->src_path);
-        }
-
         switch (row->src_action) {
         case ACTION_NEW:
             visible = show_new;
