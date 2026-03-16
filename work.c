@@ -1374,6 +1374,31 @@ work_rsync_bulk(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
+    for (int32 i = 0; i < tasks->count; i += 1) {
+        Task *task = tasks->items[i];
+        switch (task->action) {
+        case ACTION_DELETE:
+        case ACTION_DELETED:
+        case ACTION_IGNORE:
+        case ACTION_EQUAL:
+            continue;
+        case ACTION_HARDLINK:
+            // when using the --files-from mode,
+            // rsync only transfers hard links
+            // if the target is also included in the --files-from list
+            write64(files_from_fd, task->link_target, task->link_target_len);
+            write64(files_from_fd, "\n", 1);
+            __attribute__((fallthrough));
+        case ACTION_NEW:
+        case ACTION_UPDATE:
+        case ACTION_SYMLINK:
+        default:
+            write64(files_from_fd, task->path, task->path_len);
+            write64(files_from_fd, "\n", 1);
+        }
+    }
+    XCLOSE(&files_from_fd);
+
     rsync_args[a++] = "rsync";
     rsync_args[a++] = "--verbose";
     rsync_args[a++] = "--update";
@@ -1433,31 +1458,6 @@ work_rsync_bulk(void *user_data) {
         XCLOSE(&pipe_stdout[1]);
         break;
     }
-
-    for (int32 i = 0; i < tasks->count; i += 1) {
-        Task *task = tasks->items[i];
-        switch (task->action) {
-        case ACTION_DELETE:
-        case ACTION_DELETED:
-        case ACTION_IGNORE:
-        case ACTION_EQUAL:
-            continue;
-        case ACTION_HARDLINK:
-            // when using the --files-from mode,
-            // rsync only transfers hard links
-            // if the target is also included in the --files-from list
-            write64(files_from_fd, task->link_target, task->link_target_len);
-            write64(files_from_fd, "\n", 1);
-            __attribute__((fallthrough));
-        case ACTION_NEW:
-        case ACTION_UPDATE:
-        case ACTION_SYMLINK:
-        default:
-            write64(files_from_fd, task->path, task->path_len);
-            write64(files_from_fd, "\n", 1);
-        }
-    }
-    XCLOSE(&files_from_fd);
 
     pipes[0].fd = pipe_stdout[0];
     pipes[1].fd = pipe_stderr[0];
