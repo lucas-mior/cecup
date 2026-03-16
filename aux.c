@@ -162,8 +162,8 @@ get_target_tasks(int32 side, char *clicked_path,
         task->action = clicked_action;
         task->side = side;
 
-        tasks->items[tasks->count] = task;
-        tasks->count += 1;
+        tasks->items[0] = task;
+        tasks->count = 1;
     }
 
     if (tasks->count == 0) {
