@@ -34,7 +34,9 @@ ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
     Message *message;
     char buffer[MAX_PATH_LENGTH*2];
     int32 n;
+    int32 m;
     va_list va_args;
+    char fileline[64];
 
     va_start(va_args, format);
     n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
@@ -47,12 +49,17 @@ ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
     va_end(va_args);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-    memset64(message, 0, SIZEOF(Message));
+    message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
 
-    message->message_len = n;
-    message->message = xarena_push(cecup.ui_arena, n + 1);
+    m = SNPRINTF(fileline, "%s:%d: ", file, line);
+
+    message->message_len = n + m;
+    message->message = xarena_push(cecup.ui_arena, n + m + 1);
+
+    memcpy64(message->message, fileline, m);
     memcpy64(message->message, buffer, n + 1);
+
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     message->type = type;

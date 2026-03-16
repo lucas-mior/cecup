@@ -1024,7 +1024,7 @@ work_rsync(void *user_data) {
                 get_file_info(full_src, &src_path,
                               &src_size, &src_mtime, &is_dir);
                 get_file_info(full_src, &dst_path,
-                              &src_size, &src_mtime, &is_dir);
+                              &dst_size, &dst_mtime, &is_dir);
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
