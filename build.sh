@@ -104,8 +104,6 @@ case "$target" in
         --keyword=_ \
         --keyword=N_ \
         --language=C \
-        --add-comments \
-        --sort-output \
         --from-code=UTF-8 \
         -o po/${program}.pot \
         ./*.c ./*.h

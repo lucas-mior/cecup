@@ -105,11 +105,6 @@ GENERATE_COMPARE_INTEGERS_SAME_SIGN(unsigned, >,  max)
 
 #undef GENERATE_COMPARE_INTEGERS_SAME_SIGN
 
-// clang-format on
-
-// Note: NEVER delete lines with // clang-format
-// clang-format off
-
 #define GENERATE_COMPARE_SIGNED_UNSIGNED(MODE, SYMBOL) \
 static llong \
 get_signed_unsigned_##MODE(llong var1, ullong var2) { \
