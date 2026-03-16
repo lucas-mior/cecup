@@ -117,6 +117,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
             Task *task = tasks->items[i];
             char full_path[MAX_PATH_LENGTH];
             char *base_path;
+            int32 n;
 
             if (message->side == SIDE_LEFT) {
                 base_path = cecup.src_base;
@@ -124,10 +125,11 @@ on_menu_open_item(GtkWidget *m, void *data) {
                 base_path = cecup.dst_base;
             }
 
-            SNPRINTF(full_path, "%s/%s", base_path, task->path);
+            n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
 
             if (path_type && (strcmp(path_type, "folder") == 0)) {
-                DIRNAME(full_path, full_path);
+                int32 path_len = n;
+                dirname2(full_path, full_path, &path_len);
             }
 
             {
@@ -367,7 +369,7 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Task *task = tasks->items[i];
 
-            DIRNAME(dir_buffer, task->path);
+            dirname2(dir_buffer, task->path, &(task->path_len));
             if (strcmp(dir_buffer, ".")) {
                 fprintf(fp, "\n/%s/", dir_buffer);
             }
@@ -1001,7 +1003,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 int32 length;
 
                 if (filepath) {
-                    name = basename2(filepath, path_len, &length);
+                    name = basename2(filepath, &path_len, &length);
                 } else {
                     name = "";
                     length = 0;
@@ -1032,7 +1034,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                         SNPRINTF(extension_label, "%s", _("by extension"));
                     }
 
-                    DIRNAME(directory_buffer, filepath);
+                    dirname2(directory_buffer, filepath, &path_len);
                     if (strcmp(directory_buffer, ".")) {
                         gtk_widget_set_sensitive(sub_dir, TRUE);
                         SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
@@ -1271,6 +1273,7 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
     char old_full[MAX_PATH_LENGTH];
     char relative_old[MAX_PATH_LENGTH];
     char relative_new[MAX_PATH_LENGTH];
+    int32 old_full_len;
 
     (void)renderer;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
@@ -1300,8 +1303,8 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
         SNPRINTF(relative_old, "/%s", row->dst_path);
     }
 
-    SNPRINTF(old_full, "%s/%s", base_path, relative_old);
-    DIRNAME(basedir, old_full);
+    old_full_len = SNPRINTF(old_full, "%s/%s", base_path, relative_old);
+    dirname2(basedir, old_full, &old_full_len);
 
     if (strlen32(new_text) > 0) {
         char new_full[MAX_PATH_LENGTH];
