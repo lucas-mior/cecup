@@ -237,11 +237,8 @@ main(int32 argc, char *argv[]) {
     gtk_window_set_wmclass(GTK_WINDOW(cecup.gtk_window), "cecup", "Cecup");
     gtk_window_set_default_size(GTK_WINDOW(cecup.gtk_window), 1100, 800);
 
-    // Note: NEVER delete lines with // clang-format
-    // clang-format off
     g_signal_connect(cecup.gtk_window, "destroy",
                      G_CALLBACK(gtk_main_quit), NULL);
-    // clang-format on
 
     main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, SPACING_BOX);
     gtk_container_add(GTK_CONTAINER(cecup.gtk_window), main_vbox);
@@ -288,8 +285,6 @@ main(int32 argc, char *argv[]) {
                                 _("Start copying and updating all files"));
     gtk_widget_set_sensitive(cecup.stop_button, FALSE);
 
-    // Note: NEVER delete lines with // clang-format
-    // clang-format off
     gtk_box_pack_start(GTK_BOX(button_hbox), cecup.ignore_button,
                        EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(button_hbox), cecup.fix_button,
@@ -302,7 +297,6 @@ main(int32 argc, char *argv[]) {
                      EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(header_vbox), button_hbox,
                        EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
-    // clang-format on
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     cecup.check_fs
@@ -331,8 +325,6 @@ main(int32 argc, char *argv[]) {
     reset_button = gtk_button_new_with_label(_("Defaults"));
     gtk_widget_set_tooltip_text(reset_button, _("Restore original settings"));
 
-    // Note: NEVER delete lines with // clang-format
-    // clang-format off
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.check_fs,
                        EXPAND_FALSE, FILL_FALSE, PADDING_BUTTON);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.delete_excluded,
@@ -344,7 +336,6 @@ main(int32 argc, char *argv[]) {
                        EXPAND_FALSE, FILL_FALSE, PADDING_LABEL);
     gtk_box_pack_start(GTK_BOX(options_hbox), cecup.diff_entry,
                        EXPAND_FALSE, FILL_FALSE, PADDING_LABEL);
-    // clang-format on
 
     gtk_entry_set_text(GTK_ENTRY(cecup.diff_entry), "unidiff.bash");
     gtk_box_pack_start(GTK_BOX(options_hbox), gtk_label_new(_("Terminal:")),
@@ -373,15 +364,12 @@ main(int32 argc, char *argv[]) {
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_preview),
                               _("Analyzing changes"));
 
-    // Note: NEVER delete lines with // clang-format
-    // clang-format off
     gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_rsync,
                        EXPAND_FALSE, FILL_FALSE, 0);
     gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_preview,
                        EXPAND_FALSE, FILL_FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), progress_vbox,
                        EXPAND_FALSE, FILL_FALSE, 5);
-    // clang-format on
 
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
         error("Error getting current working directory: %s.\n",
@@ -408,8 +396,6 @@ main(int32 argc, char *argv[]) {
     gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), default_src);
     browse_src = gtk_button_new_with_label(_("Select Folder"));
 
-    // Note: NEVER delete lines with // clang-format
-    // clang-format off
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), cecup.src_entry,
                        EXPAND_TRUE, FILL_TRUE, PADDING_ZERO);
     gtk_box_pack_start(GTK_BOX(l_entry_hbox), browse_src,
@@ -435,7 +421,6 @@ main(int32 argc, char *argv[]) {
                        EXPAND_FALSE, FILL_FALSE, PADDING_ZERO);
     gtk_box_pack_start(GTK_BOX(paths_hbox), r_entry_hbox,
                        EXPAND_TRUE, FILL_TRUE, PADDING_ZERO);
-    // clang-format on
 
     search_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     gtk_container_set_border_width(GTK_CONTAINER(search_hbox), 10);
@@ -514,8 +499,6 @@ main(int32 argc, char *argv[]) {
     gtk_widget_set_tooltip_text(cecup.filter_delete, _("Show Deletions"));
     gtk_widget_set_tooltip_text(cecup.filter_ignore, _("Show Ignored"));
 
-    // Note: NEVER delete lines with // clang-format
-    // clang-format off
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_new,
                        EXPAND_FALSE, FILL_FALSE, PADDING_FILTER_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_hard,
@@ -528,7 +511,7 @@ main(int32 argc, char *argv[]) {
                        EXPAND_FALSE, FILL_FALSE, PADDING_FILTER_BUTTON);
     gtk_box_pack_start(GTK_BOX(filter_hbox), cecup.filter_ignore,
                        EXPAND_FALSE, FILL_FALSE, PADDING_FILTER_BUTTON);
-    // clang-format on
+
     gtk_box_pack_start(GTK_BOX(main_vbox), filter_hbox, FALSE, FALSE, 0);
 
     cecup.stats_label = gtk_label_new(_("✅ Everything ready"));
@@ -608,8 +591,6 @@ main(int32 argc, char *argv[]) {
         g_free(key);
     }
 
-    // Note: NEVER delete lines with // clang-format
-    // clang-format off
     g_signal_connect(browse_src, "clicked",
                      G_CALLBACK(on_browse_src), NULL);
     g_signal_connect(browse_dst, "clicked",
@@ -656,7 +637,6 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_delete_excluded_toggled), NULL);
     g_signal_connect(cecup.delete_after, "toggled",
                      G_CALLBACK(on_delete_after_toggled), NULL);
-    // clang-format on
 
     gtk_widget_show_all(cecup.gtk_window);
     gtk_main();
@@ -830,14 +810,12 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
     gtk_widget_set_has_tooltip(tree, TRUE);
-    // Note: NEVER delete lines with // clang-format
-    // clang-format off
+
     g_signal_connect(tree, "query-tooltip",
                      G_CALLBACK(on_tree_tooltip), NULL);
     g_signal_connect(tree, "button-press-event",
                      G_CALLBACK(on_tree_button_press), NULL);
     g_signal_connect(tree, "key-press-event",
                      G_CALLBACK(on_tree_key_press), NULL);
-    // clang-format on
     return;
 }

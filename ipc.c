@@ -40,12 +40,9 @@ ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
     n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
 
     if ((n <= 0) || (n >= SIZEOF(buffer))) {
-        // Note: NEVER delete lines with // clang-format
-        // clang-format off
         error("%s:%d: Error in vsnprintf(%s) (n = %lld)\n",
               file, line, format, (llong)n);
-        exit(EXIT_FAILURE);
-        // clang-format on
+        fatal(EXIT_FAILURE);
     }
     va_end(va_args);
 

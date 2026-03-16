@@ -43,8 +43,6 @@ typedef struct {
     char *path_type;
 } CecupMenuItem;
 
-// Note: NEVER delete lines with // clang-format
-// clang-format off
 static CecupMenuItem context_menu_items[] = {
 {N_("📄 Open File"),          0,          0,                                 on_menu_open_item, "file"},
 {N_("📂 Open Folder"),        0,          0,                                 on_menu_open_item, "folder"},
@@ -56,7 +54,6 @@ static CecupMenuItem context_menu_items[] = {
 {N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
 {N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
 };
-// clang-format on
 
 static void
 on_menu_apply(GtkWidget *m, void *data) {
@@ -285,13 +282,10 @@ on_menu_diff(GtkWidget *m, void *data) {
                 path_src = xmalloc(size_src);
                 path_dst = xmalloc(size_dst);
 
-                // Note: NEVER delete lines with // clang-format
-                // clang-format off
                 snprintf2(path_src, size_src,
                           "%s/%s", cecup.src_base, task->path);
                 snprintf2(path_dst, size_dst,
                           "%s/%s", cecup.dst_base, task->path);
-                // clang-format on
 
                 {
                     char cmd[MAX_PATH_LENGTH*2];
