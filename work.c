@@ -907,10 +907,10 @@ work_rsync(void *user_data) {
                            || (action_char == RSYNC_CHAR0_ACTION_HARDLINK)
                            || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
 
-                action = ACTION_UPDATE;
-                reason = REASON_UPDATE;
                 char *space_pos = strchr(buf_output, ' ');
                 bool attribute_changed = false;
+                action = ACTION_UPDATE;
+                reason = REASON_UPDATE;
 
                 src_path = space_pos + 1;
                 dst_path = NULL;
