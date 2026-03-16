@@ -262,6 +262,9 @@ refresh_ui_list(enum RefreshType refresh_type) {
     bool show_equal;
     bool show_delete;
     bool show_ignore;
+    char buffer[4096];
+    FILE *file;
+    static ullong counter = 0;
 
     show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
@@ -278,6 +281,9 @@ refresh_ui_list(enum RefreshType refresh_type) {
 
     g_mutex_lock(&cecup.row_arena_mutex);
 
+    SNPRINTF(buffer, "%010llu_%s_all_rows.txt", counter++, __func__);
+    file = fopen(buffer, "w");
+
     cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupRow *row = cecup.rows[i];
@@ -286,6 +292,14 @@ refresh_ui_list(enum RefreshType refresh_type) {
         if (row->selected) {
             count_selected += 1;
         }
+
+        /* if (refresh_type & REFRESH_FINAL) { */
+        /*     if (row->src_path) { */
+        /*         fprintf(file, "%s\n", row->src_path); */
+        /*     } else { */
+        /*         fprintf(file, "%s\n", row->dst_path); */
+        /*     } */
+        /* } */
 
         switch (row->src_action) {
         case ACTION_NEW:
@@ -332,6 +346,8 @@ refresh_ui_list(enum RefreshType refresh_type) {
             cecup.rows_visible_len += 1;
         }
     }
+
+    fclose(file);
 
     SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_new), button_label);
@@ -387,15 +403,29 @@ refresh_ui_list(enum RefreshType refresh_type) {
         }
     }
 
+    SNPRINTF(buffer, "%010llu_%s_visible.txt", counter++, __func__);
+    file = fopen(buffer, "w");
+
     for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
         GtkTreeIter iter;
         CecupRow *row = cecup.rows_visible[i];
+
+        /* if (refresh_type & REFRESH_FINAL) { */
+        /*     if (row->src_path) { */
+        /*         fprintf(file, "%s\n", row->src_path); */
+        /*     } else { */
+        /*         fprintf(file, "%s\n", row->dst_path); */
+        /*     } */
+        /* } */
+
         if (gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(cecup.store), &iter,
                                           NULL, i)) {
             gtk_list_store_set(cecup.store, &iter, COL_SELECTED, row->selected,
                                COL_ROW_PTR, row, -1);
         }
     }
+
+    fclose(file);
 
     g_mutex_unlock(&cecup.row_arena_mutex);
 
