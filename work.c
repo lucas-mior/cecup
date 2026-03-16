@@ -163,8 +163,6 @@ did_attribute_change(char *buf_output) {
     return attribute_changed;
 }
 
-// Note: NEVER delete lines with // clang-format
-// clang-format off
 static void
 work_send_tree(int32 side,
                enum CecupAction action, enum CecupReason reason,
@@ -173,7 +171,6 @@ work_send_tree(int32 side,
                int64 src_size, int64 src_mtime,
                int64 dst_size, int64 dst_mtime,
                bool delete_excluded, bool is_dir) {
-    // clang-format on
     CecupRow *row;
     Message *message;
     char *final_src_path = NULL;
@@ -871,8 +868,6 @@ work_rsync(void *user_data) {
 
                 get_file_info(full_dst, NULL, &dst_size, &dst_mtime, &is_dir);
 
-                // Note: NEVER delete lines with // clang-format
-                // clang-format off
                 if (thread_data->is_preview && (reason == REASON_MISSING)) {
                     // if source file exists, rsync will report it as ignored
                     // so we dont send it here to avoid the duplication
@@ -899,8 +894,6 @@ work_rsync(void *user_data) {
                     get_file_info(full_src, NULL, &src_size, &src_mtime, &is_dir);
                     get_file_info(full_dst, &dst_path, &dst_size, &dst_mtime, &is_dir);
 
-                    // Note: NEVER delete lines with // clang-format
-                    // clang-format off
                     if (thread_data->is_preview && strcmp(ignore_pattern, "*")) {
                         work_send_tree(SIDE_LEFT,
                                        ACTION_IGNORE, REASON_IGNORED,
@@ -908,7 +901,6 @@ work_rsync(void *user_data) {
                                        src_size, src_mtime, dst_size, dst_mtime,
                                        thread_data->delete_excluded, is_dir);
                     }
-                    // clang-format on
                 }
             } else if (might_be_itemize_line
                        && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
@@ -973,12 +965,8 @@ work_rsync(void *user_data) {
                     checksum_count += 1;
                 }
 
-                // Note: NEVER delete lines with // clang-format
-                // clang-format off
-                SNPRINTF(full_src,
-                         "%s/%s", cecup.src_base, src_path);
-                SNPRINTF(full_dst,
-                         "%s/%s", cecup.dst_base, src_path);
+                SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
+                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
 
                 get_file_info(full_src, NULL, &src_size, &src_mtime, &is_dir);
                 get_file_info(full_dst, &dst_path, &dst_size, &dst_mtime, &is_dir);
@@ -999,7 +987,6 @@ work_rsync(void *user_data) {
                                               / (double)total_files_preview);
                     }
                 }
-                // clang-format on
             } else if (might_be_itemize_line) {
                 enum CecupAction action = ACTION_UPDATE;
                 enum CecupReason reason = REASON_UPDATE;
@@ -1009,8 +996,6 @@ work_rsync(void *user_data) {
                 src_path = space_pos + 1;
                 dst_path = NULL;
 
-                // Note: NEVER delete lines with // clang-format
-                // clang-format off
                 attribute_changed = did_attribute_change(buf_output);
                 if (!attribute_changed) {
                     action = ACTION_EQUAL;
@@ -1068,7 +1053,6 @@ work_rsync(void *user_data) {
                                        thread_data->delete_excluded, is_dir);
                     }
                 }
-                // clang-format on
             }
 
             remaining = buf_output_pos - (line_len + 1);
