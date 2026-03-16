@@ -398,6 +398,22 @@ on_config_changed(GtkWidget *widget, void *data) {
 }
 
 static void
+on_search_changed(GtkEditable *editable, void *data) {
+    char *text;
+    (void)data;
+
+    text = (char *)gtk_entry_get_text(GTK_ENTRY(editable));
+
+    if (cecup.search_query) {
+        free(cecup.search_query);
+    }
+
+    cecup.search_query = xstrdup(text);
+    refresh_ui_list(REFRESH_FILTER_CHANGED, NULL);
+    return;
+}
+
+static void
 on_preview_setting_toggled(GtkToggleButton *b, void *data) {
     (void)b;
     (void)data;

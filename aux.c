@@ -25,7 +25,6 @@
 #include "i18n.h"
 #include "cecup.h"
 #include "util.c"
-#include "ipc.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_aux 1
@@ -325,6 +324,14 @@ refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
         default:
             error("Invalid row->src_action: %u\n", row->src_action);
             fatal(EXIT_FAILURE);
+        }
+
+        if (visible && cecup.search_query && (cecup.search_query[0] != '\0')) {
+            char *path = row->src_path ? row->src_path : row->dst_path;
+            if (path == NULL
+                || (strcasestr(path, cecup.search_query) == NULL)) {
+                visible = false;
+            }
         }
 
         if (visible) {

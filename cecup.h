@@ -239,6 +239,7 @@ static struct {
 
     GtkWidget *diff_entry;
     GtkWidget *term_entry;
+    GtkWidget *search_entry;
 
     GtkWidget *preview_button;
     GtkWidget *stop_button;
@@ -263,6 +264,7 @@ static struct {
     GtkTextBuffer *log_buffer;
     char ignore_path[MAX_PATH_LENGTH];
     char config_path[MAX_PATH_LENGTH];
+    char *search_query;
     GtkWidget *l_tree;
     GtkWidget *r_tree;
     GtkWidget *stats_label;

@@ -127,6 +127,7 @@ main(int32 argc, char *argv[]) {
     GtkWidget *header_vbox;
     GtkWidget *button_hbox;
     GtkWidget *filter_hbox;
+    GtkWidget *search_hbox;
     GtkWidget *options_hbox;
     GtkWidget *reset_button;
     GtkWidget *v_paned;
@@ -436,6 +437,16 @@ main(int32 argc, char *argv[]) {
                        EXPAND_TRUE, FILL_TRUE, PADDING_ZERO);
     // clang-format on
 
+    search_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
+    gtk_container_set_border_width(GTK_CONTAINER(search_hbox), 10);
+    cecup.search_entry = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(cecup.search_entry),
+                                   _("Search files..."));
+    gtk_box_pack_start(GTK_BOX(search_hbox), gtk_label_new(_("🔍")), FALSE,
+                       FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(search_hbox), cecup.search_entry, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(main_vbox), search_hbox, FALSE, FALSE, 0);
+
     for (int32 i = 0; i < NUM_COLS; i += 1) {
         column_types[i] = G_TYPE_INT;
     }
@@ -614,6 +625,9 @@ main(int32 argc, char *argv[]) {
                      G_CALLBACK(on_fix_clicked), NULL);
     g_signal_connect(reset_button, "clicked",
                      G_CALLBACK(on_reset_clicked), NULL);
+
+    g_signal_connect(cecup.search_entry, "changed",
+                     G_CALLBACK(on_search_changed), NULL);
 
     g_signal_connect(cecup.filter_new, "toggled",
                      G_CALLBACK(on_filter_toggled), NULL);
