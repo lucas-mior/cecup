@@ -1110,7 +1110,7 @@ work_rsync(void *user_data) {
     rsync_args[a++] = "--partial";
     rsync_args[a++] = "--progress";
     rsync_args[a++] = "--info=progress2";
-    rsync_args[a++] = "--checksum";
+    rsync_args[a++] = "--checksum";  // check if previous copy went corrupted
     rsync_args[a++] = "--perms";
     rsync_args[a++] = "--times";
     rsync_args[a++] = "--owner";
