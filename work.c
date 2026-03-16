@@ -812,6 +812,8 @@ work_rsync(void *user_data) {
             int64 dst_mtime = 0;
             int32 line_len = (int32)(eol - buf_output);
             int32 remaining;
+            enum CecupAction action;
+            enum CecupReason reason;
 
             bool might_be_itemize_line;
             char action_char;
@@ -844,7 +846,6 @@ work_rsync(void *user_data) {
 
             if ((dst_path
                  = literal_match(buf_output, RSYNC_MESSAGE_DELETING))) {
-                enum CecupReason reason;
                 src_path = NULL;
 
                 while (isspace(*dst_path)) {
@@ -911,8 +912,8 @@ work_rsync(void *user_data) {
                            || (action_char == RSYNC_CHAR0_ACTION_HARDLINK)
                            || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
 
-                enum CecupAction action = ACTION_UPDATE;
-                enum CecupReason reason = REASON_UPDATE;
+                action = ACTION_UPDATE;
+                reason = REASON_UPDATE;
                 char *space_pos = strchr(buf_output, ' ');
                 bool attribute_changed = false;
 
