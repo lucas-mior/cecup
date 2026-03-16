@@ -841,12 +841,13 @@ work_rsync(void *user_data) {
                 }
             }
 
-            if ((dst_path = src_path
+            if ((dst_path
                      = literal_match(buf_output, RSYNC_MESSAGE_DELETING))) {
 
                 while (isspace(*dst_path)) {
                     dst_path += 1;
                 }
+                src_path = dst_path;
 
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
                 SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
