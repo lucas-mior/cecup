@@ -139,7 +139,7 @@ work_send_tree(int32 side,
                char *link_target, char *ignore_pattern,
                int64 src_size, int64 src_mtime,
                int64 dst_size, int64 dst_mtime,
-               bool delete_excluded) {
+               bool delete_excluded, bool is_dir) {
     // clang-format on
     CecupRow *row;
     Message *message;
@@ -148,22 +148,41 @@ work_send_tree(int32 side,
     int32 path_len = 0;
     int64 target_len;
     int64 pattern_len;
+    int32 slash = 0;
     (void)side;
 
     if (src_path) {
         path_len = strlen32(src_path);
 
-        final_src_path = xarena_push(cecup.row_arena, path_len + 1);
+        if (is_dir) {
+            slash = 1;
+        }
+
+        final_src_path = xarena_push(cecup.row_arena, path_len + slash + 1);
         memcpy64(final_src_path, src_path, path_len + 1);
+
+        if (is_dir && (final_src_path[path_len - 1] != '/')) {
+            final_src_path[path_len] = '/';
+            final_src_path[path_len + 1] = '\0';
+            path_len += 1;
+        }
 
         if (dst_path) {
             final_dst_path = final_src_path;
         }
     } else if (dst_path) {
         path_len = strlen32(dst_path);
+        if (is_dir) {
+            slash = 1;
+        }
 
-        final_dst_path = xarena_push(cecup.row_arena, path_len + 1);
+        final_dst_path = xarena_push(cecup.row_arena, path_len + slash + 1);
         memcpy64(final_dst_path, dst_path, path_len + 1);
+        if (is_dir && (final_dst_path[path_len - 1] != '/')) {
+            final_dst_path[path_len] = '/';
+            final_dst_path[path_len + 1] = '\0';
+            path_len += 1;
+        }
     } else {
         error("Error: both src_path and dst_path are NULL.\n");
         exit(EXIT_FAILURE);
@@ -764,6 +783,7 @@ work_rsync(void *user_data) {
             bool might_be_itemize_line;
             char action_char;
             char type_char;
+            bool is_dir = false;
 
             *eol = '\0';
             if (DEBUGGING) {
@@ -809,6 +829,7 @@ work_rsync(void *user_data) {
                     src_size = stat.st_size;
                     src_mtime = (int64)stat.st_mtime;
                     reason = REASON_IGNORED;
+                    is_dir = S_ISDIR(stat.st_mode);
                 }
 
                 if (lstat(full_dst, &stat) < 0) {
@@ -817,6 +838,7 @@ work_rsync(void *user_data) {
                 } else {
                     dst_size = stat.st_size;
                     dst_mtime = (int64)stat.st_mtime;
+                    is_dir = S_ISDIR(stat.st_mode);
                 }
 
                 // Note: NEVER delete lines with // clang-format
@@ -828,7 +850,7 @@ work_rsync(void *user_data) {
                                    ACTION_DELETE, reason,
                                    src_path, dst_path, NULL, NULL,
                                    src_size, src_mtime, dst_size, dst_mtime,
-                                   thread_data->delete_excluded);
+                                   thread_data->delete_excluded, is_dir);
                 }
             } else if ((src_path = literal_match(buf_output,
                                                  RSYNC_IGNORE_PRE))
@@ -852,9 +874,7 @@ work_rsync(void *user_data) {
                     } else {
                         src_size = stat.st_size;
                         src_mtime = (int64)stat.st_mtime;
-                        if (S_ISDIR(stat.st_mode)) {
-                            type_char = RSYNC_CHAR1_TYPE_DIR;
-                        }
+                        is_dir = S_ISDIR(stat.st_mode);
                     }
 
                     if (lstat(full_dst, &stat) < 0) {
@@ -864,7 +884,7 @@ work_rsync(void *user_data) {
                     } else {
                         dst_size = stat.st_size;
                         dst_mtime = (int64)stat.st_mtime;
-                        dst_path = src_path;
+                        is_dir = S_ISDIR(stat.st_mode);
                     }
 
                     // Note: NEVER delete lines with // clang-format
@@ -874,7 +894,7 @@ work_rsync(void *user_data) {
                                        ACTION_IGNORE, REASON_IGNORED,
                                        src_path, dst_path, NULL, ignore_pattern,
                                        src_size, src_mtime, dst_size, dst_mtime,
-                                       thread_data->delete_excluded);
+                                       thread_data->delete_excluded, is_dir);
                     }
                     // clang-format on
                 }
@@ -954,6 +974,7 @@ work_rsync(void *user_data) {
                 } else {
                     src_size = stat.st_size;
                     src_mtime = (int64)stat.st_mtime;
+                    is_dir = S_ISDIR(stat.st_mode);
                 }
 
                 if (lstat(full_dst, &stat) < 0) {
@@ -964,6 +985,7 @@ work_rsync(void *user_data) {
                     dst_size = stat.st_size;
                     dst_mtime = (int64)stat.st_mtime;
                     dst_path = src_path;
+                    is_dir = S_ISDIR(stat.st_mode);
                 }
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
@@ -972,7 +994,7 @@ work_rsync(void *user_data) {
                                        action, reason,
                                        src_path, dst_path, link_target, NULL,
                                        src_size, src_mtime, dst_size, dst_mtime,
-                                       thread_data->delete_excluded);
+                                       thread_data->delete_excluded, is_dir);
                     }
 
                     processed_files_preview += 1;
@@ -1029,6 +1051,7 @@ work_rsync(void *user_data) {
                 } else {
                     src_size = stat.st_size;
                     src_mtime = (int64)stat.st_mtime;
+                    is_dir = S_ISDIR(stat.st_mode);
                 }
 
                 if (lstat(full_dst, &stat) < 0) {
@@ -1039,6 +1062,7 @@ work_rsync(void *user_data) {
                     dst_size = stat.st_size;
                     dst_mtime = (int64)stat.st_mtime;
                     dst_path = src_path;
+                    is_dir = S_ISDIR(stat.st_mode);
                 }
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
@@ -1046,7 +1070,7 @@ work_rsync(void *user_data) {
                         work_send_tree(SIDE_LEFT, action, reason,
                                        src_path, dst_path, link_target, NULL,
                                        src_size, src_mtime, dst_size, dst_mtime,
-                                       thread_data->delete_excluded);
+                                       thread_data->delete_excluded, is_dir);
                     }
                 }
                 // clang-format on
