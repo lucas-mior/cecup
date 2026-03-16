@@ -262,7 +262,6 @@ refresh_ui_list(enum RefreshType refresh_type) {
     bool show_equal;
     bool show_delete;
     bool show_ignore;
-    bool added_tomze = false;
 
     show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
@@ -332,12 +331,6 @@ refresh_ui_list(enum RefreshType refresh_type) {
             cecup.rows_visible[cecup.rows_visible_len] = row;
             cecup.rows_visible_len += 1;
         }
-    }
-
-    if (!added_tomze) {
-        printf("I didnt add tomze\n");
-    } else {
-        printf("YES I added tomze\n");
     }
 
     SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
@@ -488,6 +481,7 @@ update_ui_handler(void *data) {
                 printf("I am removing %s\n", row->src_path);
                 match = true;
             } else if (row->dst_path && literal_match(row->dst_path, pattern)) {
+                printf("I am removing %s\n", row->dst_path);
                 match = true;
             }
 
