@@ -151,6 +151,9 @@ main(int32 argc, char *argv[]) {
     int32 dst_path_len;
     int32 src_path_len;
 
+    (void)program;
+    (void)program_len;
+
     {
         char *locale_devel = "./po";
         char *locale_system = "/usr/share/locale/";
