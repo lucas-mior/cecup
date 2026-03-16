@@ -1045,7 +1045,8 @@ work_rsync(void *user_data) {
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
-                        work_send_tree(SIDE_LEFT, action, reason,
+                        work_send_tree(SIDE_LEFT,
+                                       action, reason,
                                        src_path, dst_path, link_target, NULL,
                                        src_size, src_mtime, dst_size, dst_mtime,
                                        thread_data->delete_excluded, is_dir);
