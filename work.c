@@ -161,8 +161,7 @@ did_attribute_change(char *buf_output) {
 }
 
 static void
-work_send_tree(int32 side,
-               enum CecupAction action, enum CecupReason reason,
+work_send_tree(enum CecupAction action, enum CecupReason reason,
                char *src_path, char *dst_path,
                char *link_target, char *ignore_pattern,
                int64 src_size, int64 src_mtime,
@@ -176,7 +175,6 @@ work_send_tree(int32 side,
     int64 target_len;
     int64 pattern_len;
     int32 slash = 0;
-    (void)side;
 
     if (src_path) {
         path_len = strlen32(src_path);
@@ -865,8 +863,7 @@ work_rsync(void *user_data) {
                 if (thread_data->is_preview && (reason == REASON_MISSING)) {
                     // if source file exists, rsync will report it as ignored
                     // so we dont send it here to avoid the duplication
-                    work_send_tree(SIDE_RIGHT,
-                                   ACTION_DELETE, reason,
+                    work_send_tree(ACTION_DELETE, reason,
                                    src_path, dst_path, NULL, NULL,
                                    src_size, src_mtime, dst_size, dst_mtime,
                                    thread_data->delete_excluded, is_dir);
@@ -893,8 +890,7 @@ work_rsync(void *user_data) {
                                   &dst_size, &dst_mtime, &is_dir);
 
                     if (thread_data->is_preview && strcmp(ignore_pattern, "*")) {
-                        work_send_tree(SIDE_LEFT,
-                                       ACTION_IGNORE, REASON_IGNORED,
+                        work_send_tree(ACTION_IGNORE, REASON_IGNORED,
                                        src_path, dst_path, NULL, ignore_pattern,
                                        src_size, src_mtime, dst_size, dst_mtime,
                                        thread_data->delete_excluded, is_dir);
@@ -972,8 +968,7 @@ work_rsync(void *user_data) {
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
-                        work_send_tree(SIDE_LEFT,
-                                       action, reason,
+                        work_send_tree(action, reason,
                                        src_path, dst_path, link_target, NULL,
                                        src_size, src_mtime, dst_size, dst_mtime,
                                        thread_data->delete_excluded, is_dir);
@@ -1031,8 +1026,7 @@ work_rsync(void *user_data) {
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
-                        work_send_tree(SIDE_LEFT,
-                                       action, reason,
+                        work_send_tree(action, reason,
                                        src_path, dst_path, link_target, NULL,
                                        src_size, src_mtime, dst_size, dst_mtime,
                                        thread_data->delete_excluded, is_dir);
