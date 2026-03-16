@@ -88,10 +88,10 @@ get_target_tasks(int32 side, char *clicked_path,
                  enum CecupAction clicked_action) {
     TaskList *tasks;
     int64 tasks_size = STRUCT_ARRAY_SIZE(tasks, Message *, cecup.rows_len);
+    int32 count = 0;
 
     tasks = xmalloc(tasks_size);
     memset64(tasks, 0, tasks_size);
-    tasks->count = 0;
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupRow *row = cecup.rows[i];
@@ -137,9 +137,12 @@ get_target_tasks(int32 side, char *clicked_path,
         task->action = action;
         task->side = side;
 
-        tasks->items[tasks->count] = task;
-        tasks->count += 1;
+        tasks->items[count] = task;
+        count += 1;
     }
+
+    tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Message *, count));
+    tasks->count = count;
 
     if ((tasks->count == 0) && clicked_path) {
         Task *task;
