@@ -96,7 +96,7 @@ get_target_tasks(int32 side, char *clicked_path,
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupRow *row = cecup.rows[i];
-        char *file_path;
+        char *filepath;
         int32 path_len;
         enum CecupAction action;
         Task *task;
@@ -106,15 +106,15 @@ get_target_tasks(int32 side, char *clicked_path,
         }
 
         if (side == SIDE_LEFT) {
-            file_path = row->src_path;
+            filepath = row->src_path;
             action = row->src_action;
         } else {
-            file_path = row->dst_path;
+            filepath = row->dst_path;
             action = row->dst_action;
         }
         path_len = row->path_len;
 
-        if (file_path == NULL) {
+        if (filepath == NULL) {
             continue;
         }
 
@@ -124,7 +124,7 @@ get_target_tasks(int32 side, char *clicked_path,
 
         task->path_len = path_len;
         task->path = xarena_push(cecup.ui_arena, path_len + 1);
-        memcpy64(task->path, file_path, path_len + 1);
+        memcpy64(task->path, filepath, path_len + 1);
 
         if (row->link_target) {
             task->link_target_len = row->link_target_len;
