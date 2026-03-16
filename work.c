@@ -586,7 +586,7 @@ work_rsync(void *user_data) {
     char **checksum_files = NULL;
     int32 checksum_count = 0;
     int32 checksum_capacity = 0;
-    char *files_from_filename = "/tmp/rsync";
+    char files_from_filename[] = "/tmp/cecup_XXXXXX";
 
     char old_recursive[MAX_PATH_LENGTH];
     char new_recursive[MAX_PATH_LENGTH];
@@ -1115,6 +1115,21 @@ work_rsync(void *user_data) {
         work_finalize(thread_data);
         return NULL;
     }
+
+    {
+        int files_from_fd;
+        if ((files_from_fd = mkstemp(files_from_filename)) < 0) {
+            error("Error in mkstemp: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
+        }
+        for (int32 i = 0; i < checksum_count; i += 1) {
+            write64(files_from_fd, checksum_files[i],
+                    strlen32(checksum_files[i]));
+            write64(files_from_fd, "\n", 1);
+        }
+        XCLOSE(&files_from_fd);
+    }
+
     a = 0;
     rsync_args[a++] = "rsync";
     rsync_args[a++] = "--verbose";
@@ -1165,23 +1180,6 @@ work_rsync(void *user_data) {
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
         break;
-    }
-
-    {
-        int files_from_fd;
-        if ((files_from_fd
-             = open(files_from_filename, O_WRONLY | O_TRUNC | O_CREAT, 0644))
-            < 0) {
-            error("Error opening %s: %s.\n", files_from_filename,
-                  strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
-        for (int32 i = 0; i < checksum_count; i += 1) {
-            write64(files_from_fd, checksum_files[i],
-                    strlen32(checksum_files[i]));
-            write64(files_from_fd, "\n", 1);
-        }
-        XCLOSE(&files_from_fd);
     }
 
     pipes[0].fd = pipe_stdout[0];
@@ -1283,7 +1281,7 @@ work_rsync_bulk(void *user_data) {
     char buf_output[MAX_PATH_LENGTH*2];
     char buf_error[MAX_PATH_LENGTH*2];
     int32 buf_output_pos = 0;
-    char *files_from_filename = "/tmp/rsync.txt";
+    char files_from_filename[] = "/tmp/cecup_XXXXXX";
     int files_from_fd;
     char cmd[MAX_PATH_LENGTH*2];
 
@@ -1370,6 +1368,11 @@ work_rsync_bulk(void *user_data) {
 
     SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
 
+    if ((files_from_fd = mkstemp(files_from_filename)) < 0) {
+        error("Error in mkstemp: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    }
+
     rsync_args[a++] = "rsync";
     rsync_args[a++] = "--verbose";
     rsync_args[a++] = "--update";
@@ -1428,13 +1431,6 @@ work_rsync_bulk(void *user_data) {
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
         break;
-    }
-
-    if ((files_from_fd
-         = open(files_from_filename, O_WRONLY | O_TRUNC | O_CREAT, 0644))
-        < 0) {
-        error("Error opening %s: %s.\n", files_from_filename, strerror(errno));
-        fatal(EXIT_FAILURE);
     }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
