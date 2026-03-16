@@ -209,9 +209,9 @@ work_send_tree(enum CecupAction action, enum CecupReason reason,
             path_len += 1;
         }
     } else {
-        /* error("Error: both src_path and dst_path are NULL. " */
-        /*       "(action=%d) (reason=%d)\n", action, reason); */
-        return;
+        error("Error: both src_path and dst_path are NULL. "
+              "(action=%d) (reason=%d)\n", action, reason);
+        fatal(EXIT_FAILURE);
     }
 
     row = xarena_push(cecup.row_arena, SIZEOF(*row));
