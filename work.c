@@ -1250,6 +1250,7 @@ work_rsync(void *user_data) {
     if (waitpid(child_pid, NULL, 0) < 0) {
         IPC_SEND_LOG_ERROR("Error waiting for rsync: %s.\n", strerror(errno));
     }
+    unlink(files_from_filename);
     cecup.child_pid = 0;
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
@@ -1574,6 +1575,7 @@ work_rsync_bulk(void *user_data) {
     if (waitpid(child_pid, NULL, 0) < 0) {
         IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
     }
+    unlink(files_from_filename);
     cecup.child_pid = 0;
 
     XCLOSE(&pipe_stdout[0]);
