@@ -852,8 +852,9 @@ work_rsync(void *user_data) {
                                    src_size, src_mtime, dst_size, dst_mtime,
                                    thread_data->delete_excluded, is_dir);
                 }
-            } else if ((src_path = literal_match(buf_output,
-                                                 RSYNC_IGNORE_PRE))
+            } else if (!thread_data->filtered
+                       && (src_path = literal_match(buf_output,
+                                                    RSYNC_IGNORE_PRE))
                        || (src_path = literal_match(buf_output,
                                                     RSYNC_IGNORE_DIR_PRE))) {
                 char *reason_sep;
