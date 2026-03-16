@@ -852,11 +852,10 @@ work_rsync(void *user_data) {
                                    src_size, src_mtime, dst_size, dst_mtime,
                                    thread_data->delete_excluded, is_dir);
                 }
-            } else if (!thread_data->filtered
-                       && ((src_path = literal_match(buf_output,
+            } else if ((src_path = literal_match(buf_output,
                                                     RSYNC_IGNORE_PRE))
                        || (src_path = literal_match(buf_output,
-                                                    RSYNC_IGNORE_DIR_PRE)))) {
+                                                    RSYNC_IGNORE_DIR_PRE))) {
                 char *reason_sep;
                 char *ignore_pattern = NULL;
 
@@ -890,7 +889,7 @@ work_rsync(void *user_data) {
 
                     // Note: NEVER delete lines with // clang-format
                     // clang-format off
-                    if (thread_data->is_preview) {
+                    if (thread_data->is_preview && strcmp(ignore_pattern, "*")) {
                         work_send_tree(SIDE_LEFT,
                                        ACTION_IGNORE, REASON_IGNORED,
                                        src_path, dst_path, NULL, ignore_pattern,
