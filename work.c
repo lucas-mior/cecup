@@ -963,7 +963,7 @@ work_rsync(void *user_data) {
                 }
 
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
+                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
 
                 get_file_info(full_src, &src_path,
                               &src_size, &src_mtime, &is_dir);
