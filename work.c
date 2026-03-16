@@ -751,8 +751,7 @@ work_rsync(void *user_data) {
             char *link_target = NULL;
             char full_src[MAX_PATH_LENGTH];
             char full_dst[MAX_PATH_LENGTH];
-            struct stat stat_src;
-            struct stat stat_dst;
+            struct stat stat;
             char *src_path;
             char *dst_path;
             int64 src_size = 0;
@@ -802,22 +801,22 @@ work_rsync(void *user_data) {
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, dst_path);
                 SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
 
-                if (lstat(full_src, &stat_src) < 0) {
+                if (lstat(full_src, &stat) < 0) {
                     src_size = 0;
                     src_mtime = 0;
                     reason = REASON_MISSING;
                 } else {
-                    src_size = stat_src.st_size;
-                    src_mtime = (int64)stat_src.st_mtime;
+                    src_size = stat.st_size;
+                    src_mtime = (int64)stat.st_mtime;
                     reason = REASON_IGNORED;
                 }
 
-                if (lstat(full_dst, &stat_dst) < 0) {
+                if (lstat(full_dst, &stat) < 0) {
                     dst_size = 0;
                     dst_mtime = 0;
                 } else {
-                    dst_size = stat_dst.st_size;
-                    dst_mtime = (int64)stat_dst.st_mtime;
+                    dst_size = stat.st_size;
+                    dst_mtime = (int64)stat.st_mtime;
                 }
 
                 // Note: NEVER delete lines with // clang-format
@@ -847,24 +846,24 @@ work_rsync(void *user_data) {
                     SNPRINTF(full_dst, "%s/%s", cecup.dst_base,
                              src_path);
 
-                    if (lstat(full_src, &stat_src) < 0) {
+                    if (lstat(full_src, &stat) < 0) {
                         src_size = 0;
                         src_mtime = 0;
                     } else {
-                        src_size = stat_src.st_size;
-                        src_mtime = (int64)stat_src.st_mtime;
-                        if (S_ISDIR(stat_src.st_mode)) {
+                        src_size = stat.st_size;
+                        src_mtime = (int64)stat.st_mtime;
+                        if (S_ISDIR(stat.st_mode)) {
                             type_char = RSYNC_CHAR1_TYPE_DIR;
                         }
                     }
 
-                    if (lstat(full_dst, &stat_dst) < 0) {
+                    if (lstat(full_dst, &stat) < 0) {
                         dst_size = 0;
                         dst_mtime = 0;
                         dst_path = NULL;
                     } else {
-                        dst_size = stat_dst.st_size;
-                        dst_mtime = (int64)stat_dst.st_mtime;
+                        dst_size = stat.st_size;
+                        dst_mtime = (int64)stat.st_mtime;
                         dst_path = src_path;
                     }
 
@@ -949,21 +948,21 @@ work_rsync(void *user_data) {
                 SNPRINTF(full_dst,
                          "%s/%s", cecup.dst_base, src_path);
 
-                if (lstat(full_src, &stat_src) < 0) {
+                if (lstat(full_src, &stat) < 0) {
                     src_size = 0;
                     src_mtime = 0;
                 } else {
-                    src_size = stat_src.st_size;
-                    src_mtime = (int64)stat_src.st_mtime;
+                    src_size = stat.st_size;
+                    src_mtime = (int64)stat.st_mtime;
                 }
 
-                if (lstat(full_dst, &stat_dst) < 0) {
+                if (lstat(full_dst, &stat) < 0) {
                     dst_size = 0;
                     dst_mtime = 0;
                     dst_path = NULL;
                 } else {
-                    dst_size = stat_dst.st_size;
-                    dst_mtime = (int64)stat_dst.st_mtime;
+                    dst_size = stat.st_size;
+                    dst_mtime = (int64)stat.st_mtime;
                     dst_path = src_path;
                 }
 
@@ -1024,21 +1023,21 @@ work_rsync(void *user_data) {
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
                 SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
 
-                if (lstat(full_src, &stat_src) < 0) {
+                if (lstat(full_src, &stat) < 0) {
                     src_size = 0;
                     src_mtime = 0;
                 } else {
-                    src_size = stat_src.st_size;
-                    src_mtime = (int64)stat_src.st_mtime;
+                    src_size = stat.st_size;
+                    src_mtime = (int64)stat.st_mtime;
                 }
 
-                if (lstat(full_dst, &stat_dst) < 0) {
+                if (lstat(full_dst, &stat) < 0) {
                     dst_size = 0;
                     dst_mtime = 0;
                     dst_path = NULL;
                 } else {
-                    dst_size = stat_dst.st_size;
-                    dst_mtime = (int64)stat_dst.st_mtime;
+                    dst_size = stat.st_size;
+                    dst_mtime = (int64)stat.st_mtime;
                     dst_path = src_path;
                 }
 
