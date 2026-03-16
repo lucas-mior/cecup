@@ -38,7 +38,7 @@
 #define TESTING_work 0
 #endif
 
-static void
+static bool
 get_file_info(char *full_path, char **path, int64 *size, int64 *mtime,
               bool *is_dir) {
     struct stat stat;
@@ -46,16 +46,14 @@ get_file_info(char *full_path, char **path, int64 *size, int64 *mtime,
     if (lstat(full_path, &stat) < 0) {
         *size = 0;
         *mtime = 0;
-        if (path) {
-            *path = NULL;
-        }
+        *path = NULL;
+        return false;
     } else {
         *size = stat.st_size;
         *mtime = (int64)stat.st_mtime;
         *is_dir = S_ISDIR(stat.st_mode);
+        return true;
     }
-
-    return;
 }
 
 static bool
@@ -799,9 +797,8 @@ work_rsync(void *user_data) {
             char *link_target = NULL;
             char full_src[MAX_PATH_LENGTH];
             char full_dst[MAX_PATH_LENGTH];
-            struct stat stat;
-            char *src_path = NULL;
-            char *dst_path = NULL;
+            char *src_path;
+            char *dst_path;
             int64 src_size = 0;
             int64 src_mtime = 0;
             int64 dst_size = 0;
@@ -840,9 +837,9 @@ work_rsync(void *user_data) {
                 }
             }
 
-            if ((dst_path
-                 = literal_match(buf_output, RSYNC_MESSAGE_DELETING))) {
-                src_path = NULL;
+            if ((dst_path = src_path
+                     = literal_match(buf_output, RSYNC_MESSAGE_DELETING))) {
+                src_path = dst_path;
 
                 while (isspace(*dst_path)) {
                     dst_path += 1;
@@ -851,18 +848,15 @@ work_rsync(void *user_data) {
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, dst_path);
                 SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
 
-                if (lstat(full_src, &stat) < 0) {
-                    src_size = 0;
-                    src_mtime = 0;
-                    reason = REASON_MISSING;
-                } else {
-                    src_size = stat.st_size;
-                    src_mtime = (int64)stat.st_mtime;
+                if (get_file_info(full_src, &src_path,
+                                  &src_size, &src_mtime, &is_dir)) {
                     reason = REASON_IGNORED;
-                    is_dir = S_ISDIR(stat.st_mode);
+                } else {
+                    reason = REASON_MISSING;
                 }
 
-                get_file_info(full_dst, NULL, &dst_size, &dst_mtime, &is_dir);
+                get_file_info(full_dst, &dst_path,
+                              &dst_size, &dst_mtime, &is_dir);
 
                 if (thread_data->is_preview && (reason == REASON_MISSING)) {
                     // if source file exists, rsync will report it as ignored
@@ -879,6 +873,8 @@ work_rsync(void *user_data) {
                                                     RSYNC_IGNORE_DIR_PRE))) {
                 char *reason_sep;
                 char *ignore_pattern = NULL;
+                
+                dst_path = src_path;
 
                 if ((reason_sep = strstr(src_path, RSYNC_IGNORE_INTER))) {
                     *reason_sep = '\0';
@@ -887,7 +883,7 @@ work_rsync(void *user_data) {
                     SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
                     SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
 
-                    get_file_info(full_src, NULL,
+                    get_file_info(full_src, &src_path,
                                   &src_size, &src_mtime, &is_dir);
                     get_file_info(full_dst, &dst_path,
                                   &dst_size, &dst_mtime, &is_dir);
@@ -911,7 +907,7 @@ work_rsync(void *user_data) {
                 reason = REASON_UPDATE;
 
                 src_path = space_pos + 1;
-                dst_path = NULL;
+                dst_path = src_path;
 
                 while (isspace(*src_path)) {
                     src_path += 1;
@@ -966,8 +962,10 @@ work_rsync(void *user_data) {
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
                 SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
 
-                get_file_info(full_src, NULL, &src_size, &src_mtime, &is_dir);
-                get_file_info(full_dst, &dst_path, &dst_size, &dst_mtime, &is_dir);
+                get_file_info(full_src, &src_path,
+                              &src_size, &src_mtime, &is_dir);
+                get_file_info(full_dst, &dst_path,
+                              &dst_size, &dst_mtime, &is_dir);
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
@@ -989,7 +987,7 @@ work_rsync(void *user_data) {
                 bool attribute_changed = false;
                 char *space_pos = strchr(buf_output, ' ');
                 src_path = space_pos + 1;
-                dst_path = NULL;
+                dst_path = src_path;
 
                 action = ACTION_UPDATE;
                 reason = REASON_UPDATE;
@@ -1023,25 +1021,10 @@ work_rsync(void *user_data) {
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
                 SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
 
-                if (lstat(full_src, &stat) < 0) {
-                    src_size = 0;
-                    src_mtime = 0;
-                } else {
-                    src_size = stat.st_size;
-                    src_mtime = (int64)stat.st_mtime;
-                    is_dir = S_ISDIR(stat.st_mode);
-                }
-
-                if (lstat(full_dst, &stat) < 0) {
-                    dst_size = 0;
-                    dst_mtime = 0;
-                    dst_path = NULL;
-                } else {
-                    dst_size = stat.st_size;
-                    dst_mtime = (int64)stat.st_mtime;
-                    dst_path = src_path;
-                    is_dir = S_ISDIR(stat.st_mode);
-                }
+                get_file_info(full_src, &src_path,
+                              &src_size, &src_mtime, &is_dir);
+                get_file_info(full_src, &dst_path,
+                              &src_size, &src_mtime, &is_dir);
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
