@@ -209,8 +209,8 @@ work_send_tree(enum CecupAction action, enum CecupReason reason,
             path_len += 1;
         }
     } else {
-        error("Error: both src_path and dst_path are NULL. "
-              "(action=%d) (reason=%d)\n", action, reason);
+        /* error("Error: both src_path and dst_path are NULL. " */
+        /*       "(action=%d) (reason=%d)\n", action, reason); */
         return;
     }
 
@@ -816,11 +816,11 @@ work_rsync(void *user_data) {
             bool is_dir = false;
 
             *eol = '\0';
-            if (DEBUGGING) {
-                error("%s\n", buf_output);
-            } else if (literal_match(buf_output, "[sender] showing")) {
-                error("%s\n", buf_output);
-            }
+            /* if (DEBUGGING) { */
+            /*     error("%s\n", buf_output); */
+            /* } else if (literal_match(buf_output, "[sender] showing")) { */
+            /*     error("%s\n", buf_output); */
+            /* } */
 
             might_be_itemize_line = check_itemize_line(buf_output);
             action_char = buf_output[0];
@@ -1017,11 +1017,11 @@ work_rsync(void *user_data) {
                 }
 
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
+                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
 
                 get_file_info(full_src, &src_path,
                               &src_size, &src_mtime, &is_dir);
-                get_file_info(full_src, &dst_path,
+                get_file_info(full_dst, &dst_path,
                               &dst_size, &dst_mtime, &is_dir);
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
@@ -1132,7 +1132,7 @@ work_rsync(void *user_data) {
         break;
     case 0:
         setpgid(0, 0);
-        putenv("LC_ALL=C");
+        putenv("LC_ALL=C.UTF-8");
 
         XCLOSE(&pipe_stderr[0]);
         XCLOSE(&pipe_stdout[0]);
@@ -1407,7 +1407,7 @@ work_rsync_bulk(void *user_data) {
             error("Error setpgid: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-        putenv("LC_ALL=C");
+        putenv("LC_ALL=C.UTF-8");
 
         XCLOSE(&pipe_stderr[0]);
         XCLOSE(&pipe_stdout[0]);
