@@ -92,16 +92,28 @@ check_itemize_line(char *buf_output) {
 static void
 work_finalize(ThreadData *thread_data) {
     Message *message;
+
     ipc_send_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);
     ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
+
     message = xarena_push(cecup.ui_arena, SIZEOF(Message));
     memset64(message, 0, SIZEOF(Message));
 
     message->type = DATA_TYPE_ENABLE_BUTTONS;
 
     if (thread_data) {
+        if (thread_data->filtered && thread_data->relative_new) {
+            int32 focus_length = strlen32(thread_data->relative_new);
+
+            message->focus_len = focus_length;
+            message->path_to_focus
+                = xarena_push(cecup.ui_arena, focus_length + 1);
+            memcpy64(message->path_to_focus, thread_data->relative_new,
+                     focus_length + 1);
+        }
+
         if (thread_data->relative_new) {
             arena_pop(cecup.ui_arena, thread_data->relative_new);
         }
@@ -110,6 +122,7 @@ work_finalize(ThreadData *thread_data) {
         }
         arena_pop(cecup.ui_arena, thread_data);
     }
+
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
     g_idle_add(update_ui_handler, message);

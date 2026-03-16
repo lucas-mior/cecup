@@ -568,7 +568,7 @@ static void
 on_filter_toggled(GtkToggleButton *b, void *data) {
     (void)data;
     (void)b;
-    refresh_ui_list(REFRESH_FILTER_CHANGED);
+    refresh_ui_list(REFRESH_FILTER_CHANGED, NULL);
     save_config();
     return;
 }
@@ -582,7 +582,7 @@ on_sort_changed(GtkTreeSortable *sortable, void *data) {
     if (gtk_tree_sortable_get_sort_column_id(sortable, &id, &order)) {
         cecup.sort_col = (enum CecupColumn)id;
         cecup.sort_order = order;
-        refresh_ui_list(REFRESH_FILTER_CHANGED);
+        refresh_ui_list(REFRESH_FILTER_CHANGED, NULL);
     }
     return;
 }
@@ -683,7 +683,7 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
         gtk_tree_path_free(tree_path);
     } while (0);
 
-    refresh_ui_list(REFRESH_FINAL);
+    refresh_ui_list(REFRESH_FINAL, NULL);
     return;
 }
 
@@ -1355,8 +1355,6 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
 
             regenerate_preview_filtered(relative_old, relative_new, len_old,
                                         len_new);
-
-            refresh_ui_list(REFRESH_FINAL);
         } else {
             IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full,
                                new_full, strerror(errno));

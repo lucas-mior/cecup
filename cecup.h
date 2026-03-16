@@ -184,11 +184,13 @@ typedef struct Message {
     char *dst_path;
     char *link_target;
     char *ignore_pattern;
+    char *path_to_focus;
 
     int32 message_len;
     int32 path_len;
     int32 link_target_len;
     int32 ignore_pattern_len;
+    int32 focus_len;
 
     int64 src_size;
     int64 src_mtime;
@@ -305,7 +307,7 @@ enum PathType {
 };
 
 static gboolean update_ui_handler(void * user_data);
-static void refresh_ui_list(enum RefreshType);
+static void refresh_ui_list(enum RefreshType, char *path_to_focus);
 static gboolean refresh_ui_timeout_callback(void * data);
 static TaskList *get_target_tasks(int32 side,
                                    char *clicked_path,
