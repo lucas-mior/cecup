@@ -44,6 +44,9 @@ get_file_info(char *full_path, char **path, int64 *size, int64 *mtime,
     struct stat stat;
 
     if (lstat(full_path, &stat) < 0) {
+        if (errno != ENOENT) {
+            error("Error in lstat(%s): %s.\n", full_path, strerror(errno));
+        }
         *size = 0;
         *mtime = 0;
         *path = NULL;
@@ -208,8 +211,9 @@ work_send_tree(int32 side,
             path_len += 1;
         }
     } else {
-        error("Error: both src_path and dst_path are NULL.\n");
-        exit(EXIT_FAILURE);
+        error("Error: both src_path and dst_path are NULL. "
+              "(action=%d) (reason=%d)\n", action, reason);
+        return;
     }
 
     row = xarena_push(cecup.row_arena, SIZEOF(*row));
@@ -844,7 +848,7 @@ work_rsync(void *user_data) {
                     dst_path += 1;
                 }
 
-                SNPRINTF(full_src, "%s/%s", cecup.src_base, dst_path);
+                SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
                 SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
 
                 if (get_file_info(full_src, &src_path,
@@ -880,7 +884,7 @@ work_rsync(void *user_data) {
                     ignore_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
 
                     SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-                    SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
+                    SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
 
                     get_file_info(full_src, &src_path,
                                   &src_size, &src_mtime, &is_dir);
@@ -906,11 +910,10 @@ work_rsync(void *user_data) {
                 reason = REASON_UPDATE;
 
                 src_path = space_pos + 1;
-                dst_path = src_path;
-
                 while (isspace(*src_path)) {
                     src_path += 1;
                 }
+                dst_path = src_path;
 
                 if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
                     char *sep;
@@ -985,8 +988,6 @@ work_rsync(void *user_data) {
             } else if (might_be_itemize_line) {
                 bool attribute_changed = false;
                 char *space_pos = strchr(buf_output, ' ');
-                src_path = space_pos + 1;
-                dst_path = src_path;
 
                 action = ACTION_UPDATE;
                 reason = REASON_UPDATE;
@@ -997,9 +998,11 @@ work_rsync(void *user_data) {
                     reason = REASON_EQUAL;
                 }
 
+                src_path = space_pos + 1;
                 while (isspace(*src_path)) {
                     src_path += 1;
                 }
+                dst_path = src_path;
 
                 if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
                     char *sep;
