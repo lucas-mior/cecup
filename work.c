@@ -151,16 +151,12 @@ work_finalize(ThreadData *thread_data) {
 
 static bool
 did_attribute_change(char *buf_output) {
-    bool attribute_changed = false;
-
     for (int32 i = 2; i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS); i += 1) {
         if ((buf_output[i] != '.') && (buf_output[i] != ' ')) {
-            attribute_changed = true;
-            break;
+            return true;
         }
     }
-
-    return attribute_changed;
+    return false;
 }
 
 static void
