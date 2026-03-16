@@ -252,6 +252,7 @@ work_send_tree(int32 side,
                                       cecup.rows_capacity*SIZEOF(CecupRow *));
         g_mutex_unlock(&cecup.row_arena_mutex);
     }
+    // this does not have to be protected by mutex
     cecup.rows[cecup.rows_len] = row;
     cecup.rows_len += 1;
 
