@@ -112,7 +112,11 @@ case "$target" in
         if [ -f "po/$lang.po" ]; then
             msgmerge -U "po/$lang.po" po/${program}.pot
         else
-            msginit -l "$lang" -i po/${program}.pot -o "po/$lang.po" --no-translator
+            msginit \
+                -l "$lang" \
+                -i po/${program}.pot \
+                -o "po/$lang.po" \
+                 --no-translator
         fi
     done
     trace_off
@@ -254,7 +258,8 @@ case "$target" in
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1"
             cmdline="$cmdline $flags -o /tmp/$src.exe $src"
         else
-            cmdline="$CC $CPPFLAGS $CFLAGS -Wno-unused-variable -DTESTING_$name=1 $LDFLAGS"
+            cmdline="$CC $CPPFLAGS $CFLAGS"
+            cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 $LDFLAGS"
             cmdline="$cmdline $flags -o /tmp/$src.exe $src"
         fi
 
