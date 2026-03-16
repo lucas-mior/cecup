@@ -777,9 +777,12 @@ work_rsync(void *user_data) {
             break;
         }
 
-        if (pipes[0].revents & (POLLHUP | POLLERR)) {
+        if (pipes[0].revents & POLLERR) {
             pipes[0].fd = -1;
             goto read_error_pipe;
+        }
+        if (pipes[0].revents & POLLHUP) {
+            pipes[0].fd = -1;
         }
         if (!(pipes[0].revents & POLLIN)) {
             goto read_error_pipe;
@@ -1082,9 +1085,12 @@ work_rsync(void *user_data) {
         }
 
     read_error_pipe:
-        if (pipes[1].revents & (POLLHUP | POLLERR)) {
+        if (pipes[1].revents & POLLERR) {
             pipes[1].fd = -1;
             continue;
+        }
+        if (pipes[1].revents & POLLHUP) {
+            pipes[1].fd = -1;
         }
         if (!(pipes[1].revents & POLLIN)) {
             continue;
@@ -1206,9 +1212,12 @@ work_rsync(void *user_data) {
             break;
         }
 
-        if (pipes[0].revents & (POLLHUP | POLLERR)) {
+        if (pipes[0].revents & POLLERR) {
             pipes[0].fd = -1;
             goto read_error_pipe2;
+        }
+        if (pipes[0].revents & POLLHUP) {
+            pipes[0].fd = -1;
         }
         if (!(pipes[0].revents & POLLIN)) {
             goto read_error_pipe2;
@@ -1225,11 +1234,13 @@ work_rsync(void *user_data) {
         }
 
     read_error_pipe2:
-        if (pipes[1].revents & (POLLHUP | POLLERR)) {
+        if (pipes[1].revents & POLLERR) {
             pipes[1].fd = -1;
             continue;
         }
-
+        if (pipes[1].revents & POLLHUP) {
+            pipes[1].fd = -1;
+        }
         if (!(pipes[1].revents & POLLIN)) {
             continue;
         }
@@ -1485,9 +1496,12 @@ work_rsync_bulk(void *user_data) {
             break;
         }
 
-        if (pipes[0].revents & (POLLHUP | POLLERR)) {
+        if (pipes[0].revents & POLLERR) {
             pipes[0].fd = -1;
             goto read_error_pipe;
+        }
+        if (pipes[0].revents & POLLHUP) {
+            pipes[0].fd = -1;
         }
         if (!(pipes[0].revents & POLLIN)) {
             goto read_error_pipe;
@@ -1550,11 +1564,13 @@ work_rsync_bulk(void *user_data) {
         }
 
     read_error_pipe:
-        if (pipes[1].revents & (POLLHUP | POLLERR)) {
+        if (pipes[1].revents & POLLERR) {
             pipes[1].fd = -1;
             continue;
         }
-
+        if (pipes[1].revents & POLLHUP) {
+            pipes[1].fd = -1;
+        }
         if (!(pipes[1].revents & POLLIN)) {
             continue;
         }
