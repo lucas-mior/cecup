@@ -58,7 +58,7 @@ ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
     message->message = xarena_push(cecup.ui_arena, n + m + 1);
 
     memcpy64(message->message, fileline, m);
-    memcpy64(message->message, buffer, n + 1);
+    memcpy64(message->message + m, buffer, n + 1);
 
     g_mutex_unlock(&cecup.ui_arena_mutex);
 
