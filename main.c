@@ -442,6 +442,9 @@ main(int32 argc, char *argv[]) {
     cecup.search_entry = gtk_entry_new();
     gtk_entry_set_placeholder_text(GTK_ENTRY(cecup.search_entry),
                                    _("Search files..."));
+    gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
+                                      GTK_ENTRY_ICON_PRIMARY,
+                                      "system-search-symbolic");
     gtk_box_pack_start(GTK_BOX(search_hbox), gtk_label_new(_("🔍")), FALSE,
                        FALSE, 5);
     gtk_box_pack_start(GTK_BOX(search_hbox), cecup.search_entry, TRUE, TRUE, 0);

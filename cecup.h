@@ -265,6 +265,7 @@ static struct {
     char ignore_path[MAX_PATH_LENGTH];
     char config_path[MAX_PATH_LENGTH];
     char *search_query;
+    uint32 search_timeout_id;
     GtkWidget *l_tree;
     GtkWidget *r_tree;
     GtkWidget *stats_label;

@@ -397,6 +397,16 @@ on_config_changed(GtkWidget *widget, void *data) {
     return;
 }
 
+static gboolean
+on_search_timeout(void *data) {
+    (void)data;
+    refresh_ui_list(REFRESH_FILTER_CHANGED, NULL);
+    gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
+                                      GTK_ENTRY_ICON_SECONDARY, NULL);
+    cecup.search_timeout_id = 0;
+    return G_SOURCE_REMOVE;
+}
+
 static void
 on_search_changed(GtkEditable *editable, void *data) {
     char *text;
@@ -409,7 +419,16 @@ on_search_changed(GtkEditable *editable, void *data) {
     }
 
     cecup.search_query = xstrdup(text);
-    refresh_ui_list(REFRESH_FILTER_CHANGED, NULL);
+
+    if (cecup.search_timeout_id != 0) {
+        g_source_remove(cecup.search_timeout_id);
+    }
+
+    gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
+                                      GTK_ENTRY_ICON_SECONDARY,
+                                      "view-refresh-symbolic");
+
+    cecup.search_timeout_id = g_timeout_add(250, on_search_timeout, NULL);
     return;
 }
 
