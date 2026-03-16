@@ -141,7 +141,7 @@ get_target_tasks(int32 side, char *clicked_path,
         count += 1;
     }
 
-    tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Message *, count));
+    tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Message *, count + 1));
     tasks->count = count;
 
     if ((tasks->count == 0) && clicked_path) {
