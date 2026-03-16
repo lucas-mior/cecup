@@ -853,10 +853,10 @@ work_rsync(void *user_data) {
                                    thread_data->delete_excluded, is_dir);
                 }
             } else if (!thread_data->filtered
-                       && (src_path = literal_match(buf_output,
+                       && ((src_path = literal_match(buf_output,
                                                     RSYNC_IGNORE_PRE))
                        || (src_path = literal_match(buf_output,
-                                                    RSYNC_IGNORE_DIR_PRE))) {
+                                                    RSYNC_IGNORE_DIR_PRE)))) {
                 char *reason_sep;
                 char *ignore_pattern = NULL;
 
