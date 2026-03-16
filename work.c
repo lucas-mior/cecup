@@ -988,13 +988,13 @@ work_rsync(void *user_data) {
                     }
                 }
             } else if (might_be_itemize_line) {
-                enum CecupAction action = ACTION_UPDATE;
-                enum CecupReason reason = REASON_UPDATE;
-
                 bool attribute_changed = false;
                 char *space_pos = strchr(buf_output, ' ');
                 src_path = space_pos + 1;
                 dst_path = NULL;
+
+                action = ACTION_UPDATE;
+                reason = REASON_UPDATE;
 
                 attribute_changed = did_attribute_change(buf_output);
                 if (!attribute_changed) {
