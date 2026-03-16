@@ -38,6 +38,26 @@
 #define TESTING_work 0
 #endif
 
+static void
+get_file_info(char *full_path, char **path, int64 *size, int64 *mtime,
+              bool *is_dir) {
+    struct stat stat;
+
+    if (lstat(full_path, &stat) < 0) {
+        *size = 0;
+        *mtime = 0;
+        if (path) {
+            *path = NULL;
+        }
+    } else {
+        *size = stat.st_size;
+        *mtime = (int64)stat.st_mtime;
+        *is_dir = S_ISDIR(stat.st_mode);
+    }
+
+    return;
+}
+
 static bool
 check_itemize_line(char *buf_output) {
     switch (buf_output[0]) {
@@ -876,29 +896,11 @@ work_rsync(void *user_data) {
                     *reason_sep = '\0';
                     ignore_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
 
-                    SNPRINTF(full_src, "%s/%s", cecup.src_base,
-                             src_path);
-                    SNPRINTF(full_dst, "%s/%s", cecup.dst_base,
-                             src_path);
+                    SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
+                    SNPRINTF(full_dst, "%s/%s", cecup.dst_base, src_path);
 
-                    if (lstat(full_src, &stat) < 0) {
-                        src_size = 0;
-                        src_mtime = 0;
-                    } else {
-                        src_size = stat.st_size;
-                        src_mtime = (int64)stat.st_mtime;
-                        is_dir = S_ISDIR(stat.st_mode);
-                    }
-
-                    if (lstat(full_dst, &stat) < 0) {
-                        dst_size = 0;
-                        dst_mtime = 0;
-                        dst_path = NULL;
-                    } else {
-                        dst_size = stat.st_size;
-                        dst_mtime = (int64)stat.st_mtime;
-                        is_dir = S_ISDIR(stat.st_mode);
-                    }
+                    get_file_info(full_src, NULL, &src_size, &src_mtime, &is_dir);
+                    get_file_info(full_dst, &dst_path, &src_size, &src_mtime, &is_dir);
 
                     // Note: NEVER delete lines with // clang-format
                     // clang-format off
