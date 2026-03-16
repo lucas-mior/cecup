@@ -1831,8 +1831,8 @@ xpipe(int array[2]) {
 #endif
 
 #define HERE do { \
-    static int counter = 0; \
-    fprintf(stderr, "\n===== Here(%d): %s:%d (%s)\n", counter++, __FILE__, __LINE__, __func__); \
+    static ullong counter = 0; \
+    fprintf(stderr, "\n===== Here(%llu): %s:%d (%s)\n", counter++, __FILE__, __LINE__, __func__); \
 } while (0)
 
 #if TESTING_util
