@@ -905,7 +905,7 @@ work_rsync(void *user_data) {
                                                RSYNC_IGNORE_PRE_FILE))
                         || (src_path = begins_with(buf_output,
                                                    RSYNC_IGNORE_PRE_DIR))) {
-                path_len = src_path - buf_output;
+                path_len = (int32)(src_path - buf_output);
                 dst_path = src_path;
 
                 reason_sep = memmem64(src_path,
