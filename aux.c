@@ -445,9 +445,6 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
         }
     }
 
-    g_idle_add((GSourceFunc)gtk_widget_queue_draw, (void *)cecup.l_tree);
-    g_idle_add((GSourceFunc)gtk_widget_queue_draw, (void *)cecup.r_tree);
-
     return;
 }
 
