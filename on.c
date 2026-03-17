@@ -742,7 +742,7 @@ on_ignore_clicked(GtkWidget *b, void *data) {
     (void)data;
     dialog = gtk_dialog_new_with_buttons(
         _("Ignore Rules"), GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL,
-        _("_Save"), GTK_RESPONSE_ACCEPT, _("_Close"), GTK_RESPONSE_CLOSE, NULL);
+        "_Save", GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
     (void)b;
     gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
     scroll = gtk_scrolled_window_new(NULL, NULL);
@@ -801,8 +801,8 @@ on_browse_src(GtkWidget *b, void *data) {
     (void)b;
     dialog = gtk_file_chooser_dialog_new(
         _("Src"), GTK_WINDOW(cecup.gtk_window),
-        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, _("_Cancel"),
-        GTK_RESPONSE_CANCEL, _("_Select"), GTK_RESPONSE_ACCEPT, NULL);
+        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel",
+        GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         char *path;
 
@@ -822,8 +822,8 @@ on_browse_dst(GtkWidget *b, void *data) {
     (void)b;
     dialog = gtk_file_chooser_dialog_new(
         _("Dst"), GTK_WINDOW(cecup.gtk_window),
-        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, _("_Cancel"),
-        GTK_RESPONSE_CANCEL, _("_Select"), GTK_RESPONSE_ACCEPT, NULL);
+        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel",
+        GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         char *path;
 
