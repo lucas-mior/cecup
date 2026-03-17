@@ -507,18 +507,21 @@ work_fix_fs_worker(void *user_data) {
     Message *message;
     struct stat stat_src;
     struct stat stat_dst;
-    bool same_fs = true;
     FixFsThreadData src_fix = {cecup.src_base, 0};
     FixFsThreadData dst_fix = {cecup.dst_base, 0};
 
-    if (stat(cecup.src_base, &stat_src) == 0 && stat(cecup.dst_base, &stat_dst) == 0) {
-        if (stat_src.st_dev != stat_dst.st_dev) {
-            same_fs = false;
-        }
+    if (stat(cecup.src_base, &stat_src) < 0) {
+        error("Error in stat(%s): %s.\n", cecup.src_base, strerror(errno));
+        fatal(EXIT_FAILURE);
+    }
+
+    if (stat(cecup.dst_base, &stat_dst) < 0) {
+        error("Error in stat(%s): %s.\n", cecup.dst_base, strerror(errno));
+        fatal(EXIT_FAILURE);
     }
 
     IPC_SEND_LOG("Checking for problematic names...\n");
-    if (same_fs) {
+    if (stat_src.st_dev == stat_dst.st_dev) {
         work_fix_fs_thread_fn(&src_fix);
         work_fix_fs_thread_fn(&dst_fix);
     } else {
