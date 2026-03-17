@@ -1521,15 +1521,14 @@ on_path_edited(GtkCellRendererText *renderer,
         normalize(new_full, &new_full_length);
 
         if (rename(old_full, new_full) == 0) {
-            struct stat stat_new;
-
             IPC_SEND_LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
 
-            if (lstat(new_full, &stat_new) < 0) {
-                error("Error in lstat(%s): %s.\n", new_full, strerror(errno));
-                fatal(EXIT_FAILURE);
+            if ((relative_old[old_length - 1] == '/')
+                && (relative_new[new_length - 1] != '/')) {
+                relative_new[new_length] = '/';
+                relative_new[new_length+1] = '\0';
+                new_length += 1;
             }
-
             regenerate_preview_filtered(relative_old, relative_new,
                                         old_length, new_length);
         } else {
