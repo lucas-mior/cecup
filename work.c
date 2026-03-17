@@ -947,9 +947,12 @@ work_rsync(void *user_data) {
                 dst_path = src_path;
 
                 if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
-                    char *sep = strstr(src_path, RSYNC_HARDLINK_NOTATION);
-                    link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
-                    *sep = '\0';
+                    char *sep;
+
+                    if ((sep = strstr(src_path, RSYNC_HARDLINK_NOTATION))) {
+                        link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
+                        *sep = '\0';
+                    }
 
                     action = ACTION_HARDLINK;
                 } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
@@ -1054,10 +1057,9 @@ work_rsync(void *user_data) {
                 } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
                     char *sep;
 
-                    if ((sep = strstr(src_path, RSYNC_SYMLINK_NOTATION))) {
-                        *sep = '\0';
-                        link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
-                    }
+                    sep = strstr(src_path, RSYNC_SYMLINK_NOTATION);
+                    *sep = '\0';
+                    link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
                 }
 
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
