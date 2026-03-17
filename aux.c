@@ -331,8 +331,7 @@ refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
 
         if (visible && cecup.search_query && (cecup.search_query[0] != '\0')) {
             char *path = row->src_path ? row->src_path : row->dst_path;
-            if (path == NULL
-                || (strcasestr(path, cecup.search_query) == NULL)) {
+            if (strcasestr(path, cecup.search_query) == NULL) {
                 visible = false;
             }
         }
