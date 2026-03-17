@@ -523,6 +523,8 @@ update_ui_handler(void *data) {
         for (int32 i = 0; i < cecup.rows_len;) {
             CecupRow *row = cecup.rows[i];
             char *path_test;
+            bool match = false;
+
             if (row->src_path) {
                 path_test = row->src_path;
             } else if (row->dst_path) {
@@ -533,31 +535,29 @@ update_ui_handler(void *data) {
             }
 
             if (message->type == DATA_TYPE_REMOVE_ROW) {
-                if (row->path_len != message->path_len) {
-                    continue;
-                }
-
-                if ((row->src_path && !strcmp(row->src_path, pattern))
-                    || (row->dst_path && !strcmp(row->dst_path, pattern))) {
-                    for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
-                        cecup.rows[j] = cecup.rows[j + 1];
+                if (row->path_len == message->path_len) {
+                    if ((row->src_path && !strcmp(row->src_path, pattern))
+                        || (row->dst_path && !strcmp(row->dst_path, pattern))) {
+                        match = true;
                     }
-                    cecup.rows_len -= 1;
-                    arena_pop(cecup.row_arena, row);
-                    break;
+                }
+            } else { // DATA_TYPE_REMOVE_MATCHES
+                if (literal_match(path_test, pattern)) {
+                    match = true;
                 }
             }
-            if (message->type == DATA_TYPE_REMOVE_MATCHES) {
-                if (literal_match(path_test, pattern)) {
-                    for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
-                        cecup.rows[j] = cecup.rows[j + 1];
-                    }
-                    cecup.rows_len -= 1;
-                    arena_pop(cecup.row_arena, row);
-                } else {
-                    i += 1;
-                    continue;
+
+            if (match) {
+                for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
+                    cecup.rows[j] = cecup.rows[j + 1];
                 }
+                cecup.rows_len -= 1;
+
+                if (message->type == DATA_TYPE_REMOVE_ROW) {
+                    break; 
+                }
+            } else {
+                i += 1;
             }
         }
         g_mutex_unlock(&cecup.row_arena_mutex);
