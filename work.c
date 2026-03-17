@@ -703,7 +703,9 @@ work_rsync(void *user_data) {
             rsync_args[a++] = new_recursive;
         }
 
+        // important: --include=*/ is necessary to include any sub directory
         // important: --exclude=* has to come last
+        rsync_args[a++] = "--include=*/";
         rsync_args[a++] = "--exclude=*";
     } else {
         if (access(cecup.ignore_path, F_OK) != -1) {
