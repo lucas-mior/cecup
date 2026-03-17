@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-17 12:23-0300\n"
+"POT-Creation-Date: 2026-03-17 12:27-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -233,7 +233,8 @@ msgid "📋 Copy Whole Log"
 msgstr "📋 Copiar caminho relativo"
 
 #: on.c:110
-msgid "📍 Copy this line"
+#, fuzzy
+msgid "📍 Copy This Line"
 msgstr "📍 Copiar esta linha"
 
 #: on.c:303
@@ -259,25 +260,9 @@ msgstr "Sincronizar %s -> %s?"
 msgid "Ignore Rules"
 msgstr "Regras de Ignorados"
 
-#: on.c:745
-msgid "_Save"
-msgstr ""
-
-#: on.c:745
-msgid "_Close"
-msgstr ""
-
 #: on.c:803
 msgid "Src"
 msgstr "Original"
-
-#: on.c:804 on.c:825
-msgid "_Cancel"
-msgstr ""
-
-#: on.c:805 on.c:826
-msgid "_Select"
-msgstr "Selecionar Pasta"
 
 #: on.c:824
 msgid "Dst"
@@ -434,9 +419,3 @@ msgstr "Arquivo vinculado (link) na origem"
 #: cecup.h:108
 msgid "The original file is newer"
 msgstr "O arquivo original é mais recente"
-
-#~ msgid "Copying files"
-#~ msgstr "Copiando arquivos"
-
-#~ msgid "Unknown modification time"
-#~ msgstr "Data de modificação desconhecida"
