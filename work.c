@@ -843,7 +843,9 @@ work_rsync(void *user_data) {
             bool ignore_duplicate_dir = false;
 
             *eol = '\0';
-            error("%s\n", buf_output);
+            if (DEBUGGING) {
+                error("%s\n", buf_output);
+            }
 
             if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
                 int32 path_len = line_len - (int32)(src_path - buf_output);
