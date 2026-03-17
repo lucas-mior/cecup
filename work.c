@@ -847,19 +847,19 @@ work_rsync(void *user_data) {
             error("%s\n", buf_output);
 
             if ((src_path = literal_match(buf_output, RSYNC_SHOW_DIR_PRE))) {
-                int32 path_len = line_len - (src_path - buf_output);
+                int32 path_len = line_len - (int32)(src_path - buf_output);
                 reason_sep = strstr(src_path, RSYNC_IGNORE_INTER);
+
                 if (*(reason_sep - 1) != '/') {
-                    memmove(reason_sep + 1, reason_sep, line_len - path_len);
+                    memmove64(reason_sep + 1, reason_sep, line_len - path_len);
                     reason_sep += 1;
                     *(reason_sep - 1) = '/';
                 }
                 *reason_sep = '\0';
+
                 show_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
                 hash_insert2_map(show_patterns_map, xstrdup(src_path), xstrdup(show_pattern));
                 hash_print_map(show_patterns_map, false);
-                PRINTLN(src_path);
-                PRINTLN(show_pattern);
             }
 
             might_be_itemize_line = check_itemize_line(buf_output);
