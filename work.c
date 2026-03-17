@@ -850,7 +850,10 @@ work_rsync(void *user_data) {
 
             if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
                 int32 path_len = line_len - (int32)(src_path - buf_output);
-                reason_sep = strstr(src_path, RSYNC_IGNORE_INTER);
+                reason_sep = memmem64(src_path,
+                                      line_len - path_len,
+                                      RSYNC_IGNORE_INTER,
+                                      strlen32(RSYNC_IGNORE_INTER));
 
                 if (*(reason_sep - 1) != '/') {
                     memmove64(reason_sep + 1, reason_sep, line_len - path_len);
