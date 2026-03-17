@@ -850,21 +850,21 @@ work_rsync(void *user_data) {
 
             if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
                 int32 left = line_len - (int32)(src_path - buf_output);
-                reason_sep = memmem64(src_path,
-                                      left,
-                                      RSYNC_IGNORE_INTER,
-                                      strlen32(RSYNC_IGNORE_INTER));
+                char *interlude = memmem64(src_path,
+                                           left,
+                                           RSYNC_IGNORE_INTER,
+                                           strlen32(RSYNC_IGNORE_INTER));
 
-                left = SIZEOF(buf_output) - 1 - (reason_sep - buf_output);
+                left = SIZEOF(buf_output) - 1 - (int32)(interlude - buf_output);
 
-                if (*(reason_sep - 1) != '/') {
-                    memmove64(reason_sep + 1, reason_sep, left);
-                    reason_sep += 1;
-                    *(reason_sep - 1) = '/';
+                if (*(interlude - 1) != '/') {
+                    memmove64(interlude + 1, interlude, left);
+                    interlude += 1;
+                    *(interlude - 1) = '/';
                 }
-                *reason_sep = '\0';
+                *interlude = '\0';
 
-                show_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
+                show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
                 hash_insert2_map(show_patterns_map,
                                  src_path, xstrdup(show_pattern));
             }
