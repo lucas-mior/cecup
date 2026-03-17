@@ -1094,12 +1094,12 @@ work_rsync(void *user_data) {
             fatal(EXIT_FAILURE);
         }
         for (int32 i = 0; i < checksum_count; i += 1) {
+            char *file = checksum_files[i];
             int64 w;
             int64 written = 0;
-            int64 left = strlen32(checksum_files[i]);
+            int64 left = strlen32(file);
 
-            while ((w = write64(files_from_fd,
-                                checksum_files[i] + written, left)) > 0) {
+            while ((w = write64(files_from_fd, &file[written], left)) > 0) {
                 written += w;
                 left -= w;
                 if (left <= 0) {
