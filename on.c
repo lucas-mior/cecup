@@ -1389,22 +1389,63 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
 
 static void
 on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
-                        char *path, void *data) {
+                        char *path_str, void *data) {
+    GtkWidget *tree = data;
+    GtkTreePath *tree_path;
+    CecupRow *row;
+    int32 row_index;
+    int32 side;
+    char *current_path;
+
     (void)renderer;
-    (void)path;
-    (void)data;
 
-    if (GTK_IS_ENTRY(editable)) {
-        GtkEntry *entry = GTK_ENTRY(editable);
-        const char *text = gtk_entry_get_text(entry);
-        char *last_slash = strrchr(text, '/');
-        char *start_of_name = last_slash ? last_slash + 1 : (char *)text;
-        char *last_dot = strrchr(start_of_name, '.');
-        int32 start_pos = (int32)(start_of_name - text);
-        int32 end_pos = last_dot ? (int32)(last_dot - text) : (int32)strlen32(text);
+    if (!GTK_IS_ENTRY(editable) || (tree == NULL)) {
+        return;
+    }
 
-        if (end_pos > start_pos) {
-            gtk_editable_select_region(GTK_EDITABLE(entry), start_pos, end_pos);
+    HERE;
+
+    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
+
+    if ((tree_path = gtk_tree_path_new_from_string(path_str))) {
+        row_index = gtk_tree_path_get_indices(tree_path)[0];
+        gtk_tree_path_free(tree_path);
+    } else {
+        return;
+    }
+
+    if ((row_index >= 0) && (row_index < cecup.rows_visible_len)) {
+        row = cecup.rows_visible[row_index];
+        current_path = (side == SIDE_LEFT) ? row->src_path : row->dst_path;
+
+        if (current_path) {
+            GtkEntry *entry = GTK_ENTRY(editable);
+            char *last_slash;
+            char *start_of_name;
+            char *last_dot;
+            int32 start_pos;
+            int32 end_pos;
+
+            gtk_entry_set_text(entry, current_path);
+
+            last_slash = strrchr(current_path, '/');
+            start_of_name = last_slash ? last_slash + 1 : current_path;
+            last_dot = strrchr(start_of_name, '.');
+
+            start_pos = (int32)(start_of_name - current_path);
+
+            if (last_dot && (last_dot != start_of_name)) {
+                end_pos = (int32)(last_dot - current_path);
+            } else {
+                end_pos = (int32)strlen32(current_path);
+            }
+
+            PRINTLN(start_pos);
+            PRINTLN(end_pos);
+
+            if (end_pos > start_pos) {
+                gtk_editable_select_region(GTK_EDITABLE(entry), start_pos, end_pos);
+            }
         }
     }
     return;
