@@ -285,6 +285,8 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     show_ignore
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
+    error("%s begin\n", __func__);
+
     cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupRow *row = cecup.rows[i];
@@ -372,12 +374,12 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
 
     if (cecup.rows_visible_len > 0) {
         if (refresh_type & (REFRESH_FINAL | REFRESH_FILTER_CHANGED)) {
-            IPC_SEND_LOG("Sorting list...\n");
+            error("Sorting list...\n");
         }
         qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(CecupRow *),
                 cecup_row_compare);
         if (refresh_type & (REFRESH_FINAL | REFRESH_FILTER_CHANGED)) {
-            IPC_SEND_LOG("Finished sorting.\n");
+            error("Finished sorting.\n");
         }
     }
 
@@ -441,6 +443,8 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
 
     g_idle_add((GSourceFunc)gtk_widget_queue_draw, (void *)cecup.l_tree);
     g_idle_add((GSourceFunc)gtk_widget_queue_draw, (void *)cecup.r_tree);
+
+    error("%s end\n", __func__);
     return;
 }
 
