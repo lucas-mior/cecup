@@ -866,8 +866,7 @@ work_rsync(void *user_data) {
             action_char = buf_output[0];
             type_char = buf_output[1];
 
-            if ((dst_path
-                     = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
+            if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
 
                 while (isspace(*dst_path)) {
                     dst_path += 1;
@@ -897,9 +896,9 @@ work_rsync(void *user_data) {
                                    &processed_files_preview, total_files_preview);
                 }
             } else if ((src_path = begins_with(buf_output,
-                                                 RSYNC_IGNORE_PRE_FILE))
+                                               RSYNC_IGNORE_PRE_FILE))
                         || (src_path = begins_with(buf_output,
-                                                     RSYNC_IGNORE_PRE_DIR))) {
+                                                   RSYNC_IGNORE_PRE_DIR))) {
                 
                 dst_path = src_path;
 
