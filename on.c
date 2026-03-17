@@ -56,57 +56,32 @@ static CecupMenuItem context_menu_items[] = {
 };
 
 static void
-on_log_copy_all(GtkWidget *m, void *data) {
+on_log_copy(GtkWidget *m, void *data) {
+    char *which = data;
     GtkTextIter start;
     GtkTextIter end;
     char *text;
+    int64 line_num;
 
-    (void)m;
-    (void)data;
-    gtk_text_buffer_get_bounds(cecup.log_buffer, &start, &end);
+    if (!strcmp(which, "all")) {
+        gtk_text_buffer_get_bounds(cecup.log_buffer, &start, &end);
+    } else if (!strcmp(which, "line")) {
+        line_num = (int64)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(m), "line_num"));
+        gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &start, line_num);
+        end = start;
+
+        if (!gtk_text_iter_ends_line(&end)) {
+            gtk_text_iter_forward_to_line_end(&end);
+        }
+    } else {
+        return;
+    }
 
     if ((text = gtk_text_buffer_get_text(cecup.log_buffer, &start, &end, FALSE))) {
         gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), text, -1);
         g_free(text);
     }
 
-    return;
-}
-
-static void
-on_log_copy_line(GtkWidget *m, void *data) {
-    GtkTextIter line_start;
-    GtkTextIter line_end;
-    char *text;
-    int32 line_num;
-
-    (void)data;
-    line_num = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(m), "line_num"));
-    gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &line_start, line_num);
-    line_end = line_start;
-
-    if (!gtk_text_iter_ends_line(&line_end)) {
-        gtk_text_iter_forward_to_line_end(&line_end);
-    }
-
-    if ((text = gtk_text_buffer_get_text(cecup.log_buffer, &line_start, &line_end, FALSE))) {
-        gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), text, -1);
-        g_free(text);
-    }
-
-    return;
-}
-
-static void
-on_log_copy(GtkWidget *m, void *data) {
-    char *which = data;
-
-    if (!strcmp(which, "all")) {
-        on_log_copy_all(m, NULL);
-    }
-    if (!strcmp(which, "line")) {
-        on_log_copy_line(m, NULL);
-    }
     return;
 }
 
