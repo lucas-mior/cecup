@@ -712,9 +712,8 @@ work_rsync(void *user_data) {
 
         // important: --include=*/ is necessary to include any sub directory
         // important: --exclude=* has to come last
-        // FIXME: --include=*/ will generate duplicate dirs
-        rsync_args[a++] = "--include=*/";
-        rsync_args[a++] = "--exclude=*";
+        rsync_args[a++] = "--include="RSYNC_INCLUDE_DIRS;
+        rsync_args[a++] = "--exclude="RSYNC_WILDCARD;
 
         show_patterns_map = hash_create_map(10);
     } else {
@@ -914,7 +913,8 @@ work_rsync(void *user_data) {
                     get_file_info(full_dst, &dst_path,
                                   &dst_size, &dst_mtime, &is_dir);
 
-                    if (thread_data->is_preview && strcmp(ignore_pattern, "*")) {
+                    if (thread_data->is_preview
+                        && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
                         work_send_tree(ACTION_IGNORE, REASON_IGNORED,
                                        src_path, dst_path, NULL, ignore_pattern,
                                        src_size, src_mtime, dst_size, dst_mtime,
@@ -1006,7 +1006,8 @@ work_rsync(void *user_data) {
                         pattern_ptr = hash_lookup2_map(show_patterns_map, path);
                         if (pattern_ptr) {
                             show_pattern = *pattern_ptr;
-                            ignore_duplicate_dir = !strcmp(show_pattern, "*/");
+                            ignore_duplicate_dir = !strcmp(show_pattern,
+                                                           RSYNC_INCLUDE_DIRS);
                         }
                     }
                 }

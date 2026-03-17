@@ -390,6 +390,8 @@ enum RsyncCharAttribute {
 #define RSYNC_SHOW_PRE_FILE   "[sender] showing file "
 #define RSYNC_SHOW_PRE_DIR    "[sender] showing directory "
 #define RSYNC_IGNORE_INTER    " because of pattern "
+#define RSYNC_WILDCARD        "*"
+#define RSYNC_INCLUDE_DIRS    "*/"
 
 #define RSYNC_HARDLINK_NOTATION " => "
 #define RSYNC_SYMLINK_NOTATION " -> "
@@ -408,7 +410,7 @@ static struct {
     /* {":",                     "_colon_in_filename_"                       }, */
     /* {"|",                     "_pipe_in_filename_"                        }, */
     /* {"?",                     "_question_mark_in_filename_"               }, */
-    /* {"*",                     "_asterisk_in_filename_"                    }, */
+    {RSYNC_WILDCARD,          "_asterisk_in_filename_"                    },
     {RSYNC_HARDLINK_NOTATION, "_rsync_hardlink_notation_in_filename_"     },
     {RSYNC_SYMLINK_NOTATION,  "_rsync_symlink_notation_in_filename_"      },
     {RSYNC_IGNORE_PRE_FILE,   "rsync_ignore_prelude_file_in_filename"     },
