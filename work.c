@@ -383,7 +383,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         char old_full[MAX_PATH_LENGTH];
         char new_full[MAX_PATH_LENGTH];
         char new_name[MAX_PATH_LENGTH];
-        struct stat st;
+        struct stat stat;
         bool changed = false;
         int64 j;
         int64 k;
@@ -396,7 +396,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         }
 
         SNPRINTF(old_full, "%s/%s", base_path, sub_rel);
-        if (lstat(old_full, &st) != 0) {
+        if (lstat(old_full, &stat) != 0) {
             free(d_name);
             continue;
         }
@@ -459,7 +459,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
                                    new_name);
             } else if (rename(old_full, new_full) == 0) {
                 IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name);
-                if (S_ISDIR(st.st_mode)) {
+                if (S_ISDIR(stat.st_mode)) {
                     if (relative_path) {
                         SNPRINTF(sub_rel, "%s/%s", relative_path, new_name);
                     } else {
@@ -472,7 +472,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
             }
         }
 
-        if (S_ISDIR(st.st_mode)) {
+        if (S_ISDIR(stat.st_mode)) {
             total_files += work_fix_fs_recursive(base_path, sub_rel);
         } else {
             total_files += 1;
