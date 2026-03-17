@@ -52,7 +52,11 @@ ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
     message = xarena_push(cecup.ui_arena, SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
-    m = SNPRINTF(fileline, "%s:%d: ", file, line);
+    if (!RELEASING) {
+        m = SNPRINTF(fileline, "%s:%d: ", file, line);
+    } else {
+        m = SNPRINTF(fileline, "%s", "");
+    }
 
     message->message_len = n + m;
     message->message = xarena_push(cecup.ui_arena, n + m + 1);
