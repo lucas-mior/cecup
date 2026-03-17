@@ -1116,6 +1116,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 GtkWidget *sub = gtk_menu_new();
                 GtkWidget *sub_ext;
                 GtkWidget *sub_dir;
+                GtkWidget *sub_name;
+                GtkWidget *sub_name_any_dir;
                 char *name;
                 int32 length;
 
@@ -1134,13 +1136,20 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     char extension_label[32];
                     char directory_label[MAX_PATH_LENGTH + 64];
                     char directory_buffer[MAX_PATH_LENGTH];
+                    char *name_ptr = NULL;
+                    char name_label[MAX_PATH_LENGTH];
+                    char name_label_any_dir[MAX_PATH_LENGTH];
 
                     sub_ext = gtk_menu_item_new();
                     sub_dir = gtk_menu_item_new();
+                    sub_name = gtk_menu_item_new();
+                    sub_name_any_dir = gtk_menu_item_new();
 
                     gtk_widget_set_sensitive(item, TRUE);
                     gtk_widget_set_sensitive(sub_ext, FALSE);
                     gtk_widget_set_sensitive(sub_dir, FALSE);
+                    gtk_widget_set_sensitive(sub_name, TRUE);
+                    gtk_widget_set_sensitive(sub_name_any_dir, TRUE);
 
                     if ((extension_ptr = memchr(name, '.', length))) {
                         extension_ptr = strrchr(extension_ptr, '.');
@@ -1160,10 +1169,20 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                         SNPRINTF(directory_label, "%s", _("📁 Dir"));
                     }
 
+                    name_ptr = basename2(name, &path_len, NULL);
+                    SNPRINTF(name_label,
+                             _("This file only (/%s)"), filepath);
+                    SNPRINTF(name_label_any_dir,
+                             _("This filename on any folder (*/%s)"), name_ptr);
+
                     gtk_menu_item_set_label(GTK_MENU_ITEM(sub_ext),
                                             extension_label);
                     gtk_menu_item_set_label(GTK_MENU_ITEM(sub_dir),
                                             directory_label);
+                    gtk_menu_item_set_label(GTK_MENU_ITEM(sub_name),
+                                            name_label);
+                    gtk_menu_item_set_label(GTK_MENU_ITEM(sub_name_any_dir),
+                                            name_label_any_dir);
 
                     g_signal_connect(sub_ext, "activate",
                                      G_CALLBACK(on_menu_ignore_ext), message);
@@ -1173,8 +1192,11 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
+                    gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_name);
+                    gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_name_any_dir);
 
-                    /* If busy, block the ignore actions too since they write to the ignore file 
+                    /* If busy, block the ignore actions.
+                     * They write to the ignore file 
                      * which rsync might be reading. */
                     if (is_busy) {
                         gtk_widget_set_sensitive(item, FALSE);
