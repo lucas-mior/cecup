@@ -43,6 +43,11 @@ typedef struct FixFsThreadData {
     int64 file_count;
 } FixFsThreadData;
 
+#define HASH_VALUE_TYPE char*
+#define HASH_PADDING_TYPE uint32
+#define HASH_TYPE map
+#include "hash.c"
+
 static bool
 get_file_info(char *full_path, char **path, int64 *size, int64 *mtime,
               bool *is_dir) {
@@ -566,6 +571,7 @@ work_rsync(void *user_data) {
     struct stat stat_src;
     struct stat stat_dst;
     bool same_fs = true;
+    struct Hash_map *show_patterns_map = NULL;
 
     if (stat(cecup.src_base, &stat_src) < 0) {
         IPC_SEND_LOG_ERROR("Error in stat(%s): %s.\n",
@@ -708,6 +714,8 @@ work_rsync(void *user_data) {
         // FIXME: --include=*/ will generate duplicate dirs
         rsync_args[a++] = "--include=*/";
         rsync_args[a++] = "--exclude=*";
+
+        show_patterns_map = hash_create_map(10);
     } else {
         if (access(cecup.ignore_path, F_OK) != -1) {
             rsync_args[a++] = "--exclude-from";
@@ -832,6 +840,7 @@ work_rsync(void *user_data) {
             char action_char;
             char type_char;
             bool is_dir = false;
+            bool ignore_duplicate_dir = false;
 
             *eol = '\0';
             if ((src_path = literal_match(buf_output, RSYNC_SHOW_PRE))
@@ -844,8 +853,8 @@ work_rsync(void *user_data) {
                     *reason_sep = '\0';
                     show_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
                 }
-                PRINTLN(src_path);
-                PRINTLN(show_pattern);
+                hash_insert2_map(show_patterns_map, xstrdup(src_path), xstrdup(show_pattern));
+                hash_print_map(show_patterns_map, false);
             }
 
             might_be_itemize_line = check_itemize_line(buf_output);
@@ -979,7 +988,17 @@ work_rsync(void *user_data) {
                 get_file_info(full_dst, &dst_path,
                               &dst_size, &dst_mtime, &is_dir);
 
-                if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
+                if (thread_data->filtered) {
+                    hash_print_map(show_patterns_map, true);
+                    show_pattern = hash_lookup2_map(show_patterns_map,
+                                                    src_path ? src_path : dst_path);
+                    PRINTLN(show_pattern);
+                    ignore_duplicate_dir = show_pattern && !strcmp(show_pattern, "*/");
+                }
+
+                if (!(thread_data->filtered
+                      && (!strcmp(src_path, "./")
+                          || ignore_duplicate_dir))) {
                     if (thread_data->is_preview) {
                         work_send_tree(action, reason,
                                        src_path, dst_path, link_target, NULL,
