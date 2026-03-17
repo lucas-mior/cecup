@@ -1472,18 +1472,18 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
 }
 
 static void
-on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
-               void *data) {
+on_path_edited(GtkCellRendererText *renderer,
+               char *path_str, char *new_text, void *data) {
     GtkWidget *tree = data;
     GtkTreePath *tree_path;
     GtkTreeIter iter;
     CecupRow *row;
     int32 side;
     char *base_path;
-    int32 base_path_len;
     char old_full[MAX_PATH_LENGTH];
-    char relative_old[MAX_PATH_LENGTH];
+    char *relative_old;
     char relative_new[MAX_PATH_LENGTH];
+    int32 new_length;
 
     (void)renderer;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
@@ -1499,36 +1499,26 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
 
     if (side == SIDE_LEFT) {
         base_path = cecup.src_base;
-        base_path_len = cecup.src_base_len;
-        if (row->src_path == NULL) {
-            goto out;
-        }
-        SNPRINTF(relative_old, "/%s", row->src_path);
+        relative_old = row->src_path;
     } else {
         base_path = cecup.dst_base;
-        base_path_len = cecup.dst_base_len;
-        if (row->dst_path == NULL) {
-            goto out;
-        }
-        SNPRINTF(relative_old, "/%s", row->dst_path);
+        relative_old = row->dst_path;
+    }
+    if (relative_old == NULL) {
+        goto out;
     }
 
     SNPRINTF(old_full, "%s/%s", base_path, relative_old);
 
-    if (strlen32(new_text) > 0) {
+    if ((new_length = strlen32(new_text)) > 0) {
         char new_full[MAX_PATH_LENGTH];
-        int32 len_old = -1;
-        int32 len_new = -1;
-        char *ptr_new = new_text;
+        int32 old_length = strlen32(relative_old);
+        int32 new_full_length;
 
-        if (ptr_new[0] == '/') {
-            ptr_new += 1;
-        }
-
-        SNPRINTF(new_full, "%s/%s", base_path, ptr_new);
-        SNPRINTF(relative_new, "/%s", new_full + base_path_len);
-        normalize(relative_old, &len_old);
-        normalize(relative_new, &len_new);
+        memcpy64(relative_new, new_text, new_length + 1);
+        normalize(relative_new, &new_length);
+        new_full_length = SNPRINTF(new_full, "%s/%s", base_path, relative_new);
+        normalize(new_full, &new_full_length);
 
         if (rename(old_full, new_full) == 0) {
             struct stat stat_new;
@@ -1540,23 +1530,8 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
                 fatal(EXIT_FAILURE);
             }
 
-            if (S_ISDIR(stat_new.st_mode)) {
-
-                relative_old[len_old] = '/';
-                relative_old[len_old + 1] = '\0';
-
-                relative_new[len_new] = '/';
-                relative_new[len_new + 1] = '\0';
-
-                len_old += 1;
-                len_new += 1;
-            }
-
-            normalize(relative_old, &len_old);
-            normalize(relative_new, &len_new);
-
-            regenerate_preview_filtered(relative_old, relative_new, len_old,
-                                        len_new);
+            regenerate_preview_filtered(relative_old, relative_new,
+                                        old_length, new_length);
         } else {
             IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full,
                                new_full, strerror(errno));
