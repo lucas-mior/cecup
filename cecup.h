@@ -387,6 +387,8 @@ enum RsyncCharAttribute {
 
 #define RSYNC_IGNORE_DIR_PRE "[sender] hiding directory "
 #define RSYNC_IGNORE_PRE "[sender] hiding file "
+#define RSYNC_SHOW_PRE "[sender] showing file "
+#define RSYNC_SHOW_DIR_PRE "[sender] showing directory "
 #define RSYNC_IGNORE_INTER " because of pattern "
 
 #define RSYNC_HARDLINK_NOTATION " => "

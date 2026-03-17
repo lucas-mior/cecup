@@ -831,7 +831,8 @@ work_rsync(void *user_data) {
             bool is_dir = false;
 
             *eol = '\0';
-            if (literal_match(buf_output, "[sender] showing")) {
+            if ((src_path = literal_match(buf_output, RSYNC_SHOW_PRE))
+                    || (src_path = literal_match(buf_output, RSYNC_SHOW_DIR_PRE))) {
                 error("%s\n", buf_output);
             }
 
