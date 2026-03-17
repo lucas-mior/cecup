@@ -145,7 +145,8 @@ typedef struct CecupRow {
     enum CecupReason reason;
 
     /* relative paths.
-     * must have a slash at the end if a directory
+     * must NOT have a slash at the beginning.
+     * must have a slash at the end if a directory.
      */
     char *src_path;
     char *dst_path;
