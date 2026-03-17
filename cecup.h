@@ -385,11 +385,11 @@ enum RsyncCharAttribute {
  * [sender] hiding file <filename> because of pattern <pattern>
  */
 
-#define RSYNC_IGNORE_DIR_PRE "[sender] hiding directory "
-#define RSYNC_IGNORE_PRE "[sender] hiding file "
-#define RSYNC_SHOW_PRE "[sender] showing file "
-#define RSYNC_SHOW_DIR_PRE "[sender] showing directory "
-#define RSYNC_IGNORE_INTER " because of pattern "
+#define RSYNC_IGNORE_PRE_DIR  "[sender] hiding directory "
+#define RSYNC_IGNORE_PRE_FILE "[sender] hiding file "
+#define RSYNC_SHOW_PRE_FILE   "[sender] showing file "
+#define RSYNC_SHOW_PRE_DIR    "[sender] showing directory "
+#define RSYNC_IGNORE_INTER    " because of pattern "
 
 #define RSYNC_HARDLINK_NOTATION " => "
 #define RSYNC_SYMLINK_NOTATION " -> "
@@ -411,11 +411,11 @@ static struct {
     /* {"*",                     "_asterisk_in_filename_"                    }, */
     {RSYNC_HARDLINK_NOTATION, "_rsync_hardlink_notation_in_filename_"     },
     {RSYNC_SYMLINK_NOTATION,  "_rsync_symlink_notation_in_filename_"      },
-    {RSYNC_IGNORE_PRE,        "rsync_ignore_prelude_file_in_filename"  },
-    {RSYNC_IGNORE_DIR_PRE,    "rsync_ignore_prelude_dir_in_filename"  },
-    {RSYNC_IGNORE_INTER,      "rsync_ignore_interlude_in_filename"},
-    {RSYNC_SHOW_PRE,          "rsync_show_prelude_file_in_filename"},
-    {RSYNC_SHOW_DIR_PRE,      "rsync_show_prelude_dir_in_filename"},
+    {RSYNC_IGNORE_PRE_FILE,   "rsync_ignore_prelude_file_in_filename"     },
+    {RSYNC_IGNORE_PRE_DIR,    "rsync_ignore_prelude_dir_in_filename"      },
+    {RSYNC_IGNORE_INTER,      "rsync_ignore_interlude_in_filename"        },
+    {RSYNC_SHOW_PRE_FILE,     "rsync_show_prelude_file_in_filename"       },
+    {RSYNC_SHOW_PRE_DIR,      "rsync_show_prelude_dir_in_filename"        },
 };
 
 #endif /* CECUP_H */

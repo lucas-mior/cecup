@@ -846,7 +846,7 @@ work_rsync(void *user_data) {
             *eol = '\0';
             error("%s\n", buf_output);
 
-            if ((src_path = literal_match(buf_output, RSYNC_SHOW_DIR_PRE))) {
+            if ((src_path = literal_match(buf_output, RSYNC_SHOW_PRE_DIR))) {
                 int32 path_len = line_len - (int32)(src_path - buf_output);
                 reason_sep = strstr(src_path, RSYNC_IGNORE_INTER);
 
@@ -897,9 +897,9 @@ work_rsync(void *user_data) {
                                    &processed_files_preview, total_files_preview);
                 }
             } else if ((src_path = literal_match(buf_output,
-                                                    RSYNC_IGNORE_PRE))
+                                                 RSYNC_IGNORE_PRE_FILE))
                         || (src_path = literal_match(buf_output,
-                                                    RSYNC_IGNORE_DIR_PRE))) {
+                                                     RSYNC_IGNORE_PRE_DIR))) {
                 
                 dst_path = src_path;
 
