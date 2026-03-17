@@ -1100,7 +1100,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     gtk_widget_set_sensitive(sub_relative, TRUE);
                     gtk_widget_set_sensitive(sub_name, TRUE);
 
-                    if ((extension_ptr = memchr(name, '.', length))) {
+                    if ((extension_ptr = memchr64(name, '.', length))) {
                         extension_ptr = strrchr(extension_ptr, '.');
                         SNPRINTF(extension_label,
                                  _("by extension (*%s)"), extension_ptr);
@@ -1387,6 +1387,23 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
     return;
 }
 
+typedef struct {
+    GtkEditable *editable;
+    int32 start_pos;
+    int32 end_pos;
+} SelectionData;
+
+static gboolean
+on_path_selection_idle(void *data) {
+    SelectionData *selection_data;
+
+    selection_data = data;
+    gtk_editable_select_region(selection_data->editable, selection_data->start_pos,
+                               selection_data->end_pos);
+    free(selection_data);
+    return G_SOURCE_REMOVE;
+}
+
 static void
 on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
                         char *path_str, void *data) {
@@ -1438,7 +1455,16 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
             }
 
             if (end_pos > start_pos) {
-                gtk_editable_select_region(GTK_EDITABLE(entry), start_pos, end_pos);
+                SelectionData *selection_data;
+
+                if ((selection_data = xmalloc(SIZEOF(*selection_data)))) {
+                    memset64(selection_data, 0, SIZEOF(*selection_data));
+                    selection_data->editable = GTK_EDITABLE(entry);
+                    selection_data->start_pos = start_pos;
+                    selection_data->end_pos = end_pos;
+
+                    g_idle_add(on_path_selection_idle, selection_data);
+                }
             }
         }
     }
