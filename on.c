@@ -1065,8 +1065,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 GtkWidget *sub = gtk_menu_new();
                 GtkWidget *sub_ext;
                 GtkWidget *sub_dir;
+                GtkWidget *sub_relative;
                 GtkWidget *sub_name;
-                GtkWidget *sub_name_any_dir;
                 char *name;
                 int32 length;
 
@@ -1085,20 +1085,20 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     char extension_label[32];
                     char directory_label[MAX_PATH_LENGTH + 64];
                     char directory_buffer[MAX_PATH_LENGTH];
-                    char name_label[MAX_NAME_LENGTH];
-                    char name_label_any_dir[MAX_NAME_LENGTH + 2];
+                    char relative_label[MAX_NAME_LENGTH];
+                    char name_label[MAX_NAME_LENGTH + 2];
                     char pattern_buffer[MAX_PATH_LENGTH];
 
                     sub_ext = gtk_menu_item_new();
                     sub_dir = gtk_menu_item_new();
+                    sub_relative = gtk_menu_item_new();
                     sub_name = gtk_menu_item_new();
-                    sub_name_any_dir = gtk_menu_item_new();
 
                     gtk_widget_set_sensitive(item, TRUE);
                     gtk_widget_set_sensitive(sub_ext, FALSE);
                     gtk_widget_set_sensitive(sub_dir, FALSE);
+                    gtk_widget_set_sensitive(sub_relative, TRUE);
                     gtk_widget_set_sensitive(sub_name, TRUE);
-                    gtk_widget_set_sensitive(sub_name_any_dir, TRUE);
 
                     if ((extension_ptr = memchr(name, '.', length))) {
                         extension_ptr = strrchr(extension_ptr, '.');
@@ -1132,19 +1132,19 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                         SNPRINTF(directory_label, "%s", _("📁 Dir"));
                     }
 
-                    SNPRINTF(name_label,
+                    SNPRINTF(relative_label,
                              _("This file only (/%s)"), filepath);
-                    SNPRINTF(name_label_any_dir,
+                    SNPRINTF(name_label,
                              _("This filename on any folder (*/%s)"), name);
 
                     SNPRINTF(pattern_buffer, "/%s", filepath);
-                    g_object_set_data_full(G_OBJECT(sub_name),
+                    g_object_set_data_full(G_OBJECT(sub_relative),
                                            "ignore_pattern",
                                            g_strdup(pattern_buffer),
                                            g_free);
 
                     SNPRINTF(pattern_buffer, "*/%s", name);
-                    g_object_set_data_full(G_OBJECT(sub_name_any_dir),
+                    g_object_set_data_full(G_OBJECT(sub_name),
                                           "ignore_pattern",
                                           g_strdup(pattern_buffer),
                                           g_free);
@@ -1153,9 +1153,9 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                                      G_CALLBACK(on_menu_ignore), message);
                     g_signal_connect(sub_ext, "activate",
                                      G_CALLBACK(on_menu_ignore), message);
-                    g_signal_connect(sub_name, "activate",
+                    g_signal_connect(sub_relative, "activate",
                                      G_CALLBACK(on_menu_ignore), message);
-                    g_signal_connect(sub_name_any_dir, "activate",
+                    g_signal_connect(sub_name, "activate",
                                      G_CALLBACK(on_menu_ignore), message);
 
 
@@ -1163,15 +1163,15 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                                             extension_label);
                     gtk_menu_item_set_label(GTK_MENU_ITEM(sub_dir),
                                             directory_label);
+                    gtk_menu_item_set_label(GTK_MENU_ITEM(sub_relative),
+                                            relative_label);
                     gtk_menu_item_set_label(GTK_MENU_ITEM(sub_name),
                                             name_label);
-                    gtk_menu_item_set_label(GTK_MENU_ITEM(sub_name_any_dir),
-                                            name_label_any_dir);
 
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
+                    gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_relative);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_name);
-                    gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_name_any_dir);
 
                     if (is_busy) {
                         gtk_widget_set_sensitive(item, FALSE);
