@@ -901,9 +901,11 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
     GtkTreeModel *model;
     GtkTreeIter iter;
     gboolean handled = FALSE;
+    bool is_busy;
 
     (void)data;
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+    is_busy = gtk_widget_get_sensitive(cecup.stop_button);
 
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
         CecupRow *row;
@@ -928,6 +930,15 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
 
             if ((context_menu_items[i].keyval != 0) && (key == target)
                 && (modifiers == context_menu_items[i].mask)) {
+                
+                /* BLOCK: Rename, Delete, Apply if busy */
+                if (is_busy && (context_menu_items[i].callback == on_menu_rename ||
+                                context_menu_items[i].callback == on_menu_delete ||
+                                context_menu_items[i].callback == on_menu_apply)) {
+                    IPC_SEND_LOG_ERROR(_("Action blocked: Background task is running.\n"));
+                    return TRUE; 
+                }
+
                 if (filepath
                     || (context_menu_items[i].callback == on_menu_rename)) {
                     Message *message;
@@ -966,9 +977,11 @@ static gboolean
 on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
     int32 side;
     GtkTreePath *tree_path;
+    bool is_busy;
 
     (void)data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
+    is_busy = gtk_widget_get_sensitive(cecup.stop_button);
 
     if (event->type != GDK_BUTTON_PRESS && event->type != GDK_2BUTTON_PRESS) {
         return FALSE;
@@ -1082,6 +1095,13 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
             item = gtk_menu_item_new_with_label(label);
 
+            /* BLOCK: Disable menu item if busy and it modifies the list */
+            if (is_busy && (context_menu_items[i].callback == on_menu_apply ||
+                            context_menu_items[i].callback == on_menu_rename ||
+                            context_menu_items[i].callback == on_menu_delete)) {
+                gtk_widget_set_sensitive(item, FALSE);
+            }
+
             if (context_menu_items[i].callback == on_menu_apply) {
                 g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply),
                                  message);
@@ -1153,6 +1173,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
+
+                    /* If busy, block the ignore actions too since they write to the ignore file 
+                     * which rsync might be reading. */
+                    if (is_busy) {
+                        gtk_widget_set_sensitive(item, FALSE);
+                    }
                 }
             } else {
                 if (filepath == NULL) {
