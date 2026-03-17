@@ -937,7 +937,6 @@ work_rsync(void *user_data) {
                            || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
 
                 char *space_pos = strchr(buf_output, ' ');
-                bool attribute_changed = false;
                 action = ACTION_UPDATE;
                 reason = REASON_UPDATE;
 
@@ -1029,14 +1028,12 @@ work_rsync(void *user_data) {
                     }
                 }
             } else if (might_be_itemize_line) {
-                bool attribute_changed = false;
                 char *space_pos = strchr(buf_output, ' ');
 
                 action = ACTION_UPDATE;
                 reason = REASON_UPDATE;
 
-                attribute_changed = did_attribute_change(buf_output);
-                if (!attribute_changed) {
+                if (!did_attribute_change(buf_output)) {
                     action = ACTION_EQUAL;
                     reason = REASON_EQUAL;
                 }
