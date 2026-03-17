@@ -320,7 +320,7 @@ work_send_tree(enum CecupAction action, enum CecupReason reason,
         message->type = DATA_TYPE_TREE_UPDATE;
 
         cecup.ui_waiting = true;
-        g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
+        g_idle_add(update_ui_handler, message);
 
         while (cecup.ui_waiting) {
             g_cond_wait(&cecup.ui_ready_cond, &cecup.row_arena_mutex);
