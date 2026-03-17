@@ -271,7 +271,6 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     bool show_equal;
     bool show_delete;
     bool show_ignore;
-    GtkTreePath *visible_path = NULL;
 
     show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
@@ -385,19 +384,6 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     current_store_count
         = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(cecup.store), NULL);
 
-    if (gtk_tree_view_get_visible_range(GTK_TREE_VIEW(cecup.l_tree), &visible_path,
-                                        NULL)) {
-        int32 visible_idx;
-
-        visible_idx = gtk_tree_path_get_indices(visible_path)[0];
-        if (visible_idx >= cecup.rows_visible_len) {
-            gtk_tree_path_free(visible_path);
-            visible_path = NULL;
-        }
-    }
-
-    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.l_tree), NULL);
-    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.r_tree), NULL);
 
     if (cecup.rows_visible_len > current_store_count) {
         for (int32 i = 0; i < (cecup.rows_visible_len - current_store_count);
@@ -406,17 +392,12 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
             gtk_list_store_append(cecup.store, &iter);
         }
     } else if (cecup.rows_visible_len < current_store_count) {
-        if (cecup.rows_visible_len == 0) {
-            gtk_list_store_clear(cecup.store);
-        } else {
-            for (int32 i = 0; i < (current_store_count - cecup.rows_visible_len);
-                 i += 1) {
-                GtkTreeIter iter;
-                if (gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(cecup.store),
-                                                  &iter, NULL,
-                                                  current_store_count - 1 - i)) {
-                    gtk_list_store_remove(cecup.store, &iter);
-                }
+        for (int32 i = 0; i < (current_store_count - cecup.rows_visible_len);
+             i += 1) {
+            GtkTreeIter iter;
+            if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cecup.store),
+                                              &iter)) {
+                gtk_list_store_remove(cecup.store, &iter);
             }
         }
     }
@@ -431,11 +412,6 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
                                COL_ROW_PTR, row, -1);
         }
     }
-
-    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.l_tree),
-                            GTK_TREE_MODEL(cecup.store));
-    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.r_tree),
-                            GTK_TREE_MODEL(cecup.store));
 
     if ((refresh_type & REFRESH_FINAL) && path_to_focus) {
         for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
@@ -459,23 +435,9 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
                 gtk_tree_view_set_cursor(GTK_TREE_VIEW(cecup.r_tree),
                                          target_path, NULL, FALSE);
                 gtk_tree_path_free(target_path);
-
-                if (visible_path) {
-                    gtk_tree_path_free(visible_path);
-                    visible_path = NULL;
-                }
                 break;
             }
         }
-    } else if (visible_path) {
-        gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(cecup.l_tree), visible_path,
-                                     NULL, TRUE, 0.0, 0.0);
-        gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(cecup.r_tree), visible_path,
-                                     NULL, TRUE, 0.0, 0.0);
-    }
-
-    if (visible_path) {
-        gtk_tree_path_free(visible_path);
     }
 
     g_idle_add((GSourceFunc)gtk_widget_queue_draw, (void *)cecup.l_tree);
