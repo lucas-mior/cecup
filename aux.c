@@ -515,10 +515,6 @@ update_ui_handler(void *data) {
         char *pattern = message->src_path;
         int32 pattern_len = message->path_len;
 
-        if (pattern[0] == '/') {
-            pattern += 1;
-            pattern_len -= 1;
-        }
         PRINTLN(pattern);
         PRINTLN(pattern_len);
 
