@@ -1145,9 +1145,9 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
                     SNPRINTF(pattern_buffer, "*/%s", name);
                     g_object_set_data_full(G_OBJECT(sub_name),
-                                          "ignore_pattern",
-                                          g_strdup(pattern_buffer),
-                                          g_free);
+                                           "ignore_pattern",
+                                           g_strdup(pattern_buffer),
+                                           g_free);
 
                     g_signal_connect(sub_dir, "activate",
                                      G_CALLBACK(on_menu_ignore), message);
@@ -1301,7 +1301,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             int64 size_raw
                 = (side == SIDE_LEFT) ? row->src_size_raw : row->dst_size_raw;
             tip_text_length = SNPRINTF(tip_text_buffer, "%s: %lld bytes",
-                                        filepath, (llong)size_raw);
+                                       filepath, (llong)size_raw);
             g_mutex_lock(&cecup.ui_arena_mutex);
             tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
             g_mutex_unlock(&cecup.ui_arena_mutex);
@@ -1388,6 +1388,29 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
 }
 
 static void
+on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
+                        char *path, void *data) {
+    (void)renderer;
+    (void)path;
+    (void)data;
+
+    if (GTK_IS_ENTRY(editable)) {
+        GtkEntry *entry = GTK_ENTRY(editable);
+        const char *text = gtk_entry_get_text(entry);
+        char *last_slash = strrchr(text, '/');
+        char *start_of_name = last_slash ? last_slash + 1 : (char *)text;
+        char *last_dot = strrchr(start_of_name, '.');
+        int32 start_pos = (int32)(start_of_name - text);
+        int32 end_pos = last_dot ? (int32)(last_dot - text) : (int32)strlen32(text);
+
+        if (end_pos > start_pos) {
+            gtk_editable_select_region(GTK_EDITABLE(entry), start_pos, end_pos);
+        }
+    }
+    return;
+}
+
+static void
 on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
                void *data) {
     GtkWidget *tree = data;
@@ -1397,11 +1420,9 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
     int32 side;
     char *base_path;
     int32 base_path_len;
-    char basedir[MAX_PATH_LENGTH];
     char old_full[MAX_PATH_LENGTH];
     char relative_old[MAX_PATH_LENGTH];
     char relative_new[MAX_PATH_LENGTH];
-    int32 old_full_len;
 
     (void)renderer;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
@@ -1431,15 +1452,19 @@ on_path_edited(GtkCellRendererText *renderer, char *path_str, char *new_text,
         SNPRINTF(relative_old, "/%s", row->dst_path);
     }
 
-    old_full_len = SNPRINTF(old_full, "%s/%s", base_path, relative_old);
-    dirname2(basedir, old_full, &old_full_len);
+    SNPRINTF(old_full, "%s/%s", base_path, relative_old);
 
     if (strlen32(new_text) > 0) {
         char new_full[MAX_PATH_LENGTH];
         int32 len_old = -1;
         int32 len_new = -1;
+        char *ptr_new = new_text;
 
-        SNPRINTF(new_full, "%s/%s", basedir, new_text);
+        if (ptr_new[0] == '/') {
+            ptr_new += 1;
+        }
+
+        SNPRINTF(new_full, "%s/%s", base_path, ptr_new);
         SNPRINTF(relative_new, "/%s", new_full + base_path_len);
         normalize(relative_old, &len_old);
         normalize(relative_new, &len_new);
