@@ -642,12 +642,6 @@ main(int32 argc, char *argv[]) {
     gtk_widget_show_all(cecup.gtk_window);
     gtk_main();
 
-    arena_destroy(cecup.row_arena);
-    g_mutex_clear(&cecup.row_arena_mutex);
-    arena_destroy(cecup.ui_arena);
-    g_mutex_clear(&cecup.ui_arena_mutex);
-    g_cond_clear(&cecup.ui_ready_cond);
-
     free(cecup.rows);
     free(cecup.rows_visible);
 
