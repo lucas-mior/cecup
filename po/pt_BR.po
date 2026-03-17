@@ -190,10 +190,6 @@ msgstr "Renomeado: %s -> %s\n"
 msgid "Restore original settings"
 msgstr "Restaurar configurações originais"
 
-#: main.c:351
-msgid "Rsync transfer progress"
-msgstr "Progresso de transferência do rsync"
-
 #: work.c:478
 msgid ""
 "Safety stop: Original and backup are on the same storage device.\n"

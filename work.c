@@ -119,7 +119,6 @@ static void
 work_finalize(ThreadData *thread_data) {
     Message *message;
 
-    ipc_send_progress(DATA_TYPE_PROGRESS_RSYNC, 1.0);
     ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
     g_mutex_lock(&cecup.ui_arena_mutex);
@@ -822,19 +821,6 @@ work_rsync(void *user_data) {
             might_be_itemize_line = check_itemize_line(buf_output);
             action_char = buf_output[0];
             type_char = buf_output[1];
-
-            {
-                char *percent_pos;
-                if ((percent_pos = strstr(buf_output, "%"))) {
-                    char *start_digit = percent_pos;
-                    while ((start_digit > buf_output)
-                           && isdigit(*(start_digit - 1))) {
-                        start_digit -= 1;
-                    }
-                    ipc_send_progress(DATA_TYPE_PROGRESS_RSYNC,
-                                      atof(start_digit) / 100.0);
-                }
-            }
 
             if ((dst_path
                      = literal_match(buf_output, RSYNC_MESSAGE_DELETING))) {

@@ -488,10 +488,6 @@ update_ui_handler(void *data) {
             gtk_text_buffer_get_insert(cecup.log_buffer), 0.0, FALSE, 0.0, 0.0);
         break;
     }
-    case DATA_TYPE_PROGRESS_RSYNC:
-        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_rsync),
-                                      message->fraction);
-        break;
     case DATA_TYPE_PROGRESS_PREVIEW:
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       message->fraction);
@@ -590,8 +586,6 @@ update_ui_handler(void *data) {
         cecup.rows_len = 0;
         cecup.rows_visible_len = 0;
         gtk_list_store_clear(cecup.store);
-        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_rsync),
-                                      0.0);
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       0.0);
         break;

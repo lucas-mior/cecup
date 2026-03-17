@@ -73,9 +73,7 @@ ipc_send_progress(enum DataType type, double fraction) {
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index = 0;
 
-    if (type == DATA_TYPE_PROGRESS_RSYNC) {
-        index = 1;
-    } else if (type == DATA_TYPE_PROGRESS_PREVIEW) {
+    if (type == DATA_TYPE_PROGRESS_PREVIEW) {
         index = 3;
     }
 

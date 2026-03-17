@@ -169,7 +169,6 @@ enum DataType {
     DATA_TYPE_REMOVE_MATCHES,
     DATA_TYPE_ENABLE_BUTTONS,
     DATA_TYPE_CLEAR_TREES,
-    DATA_TYPE_PROGRESS_RSYNC,
     DATA_TYPE_PROGRESS_PREVIEW,
     DATA_TYPE_REGENERATE_PREVIEW
 };
@@ -270,7 +269,6 @@ static struct {
     GtkWidget *r_tree;
     GtkWidget *stats_label;
 
-    GtkWidget *progress_rsync;
     GtkWidget *progress_preview;
 
     CecupRow **rows;

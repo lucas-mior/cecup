@@ -348,24 +348,15 @@ main(int32 argc, char *argv[]) {
     gtk_box_pack_start(GTK_BOX(header_vbox), options_hbox, FALSE, FALSE, 0);
 
     progress_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
-    cecup.progress_rsync = gtk_progress_bar_new();
-    gtk_widget_set_tooltip_text(cecup.progress_rsync,
-                                _("Rsync transfer progress"));
     cecup.progress_preview = gtk_progress_bar_new();
     gtk_widget_set_tooltip_text(cecup.progress_preview,
                                 _("Preview analysis progress"));
 
-    gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_rsync),
-                                   TRUE);
-    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_rsync),
-                              _("Copying files"));
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_preview),
                                    TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_preview),
                               _("Analyzing changes"));
 
-    gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_rsync,
-                       EXPAND_FALSE, FILL_FALSE, 0);
     gtk_box_pack_start(GTK_BOX(progress_vbox), cecup.progress_preview,
                        EXPAND_FALSE, FILL_FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header_vbox), progress_vbox,
