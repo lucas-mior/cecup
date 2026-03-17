@@ -376,144 +376,62 @@ on_menu_diff(GtkWidget *m, void *data) {
 }
 
 static void
-on_menu_ignore_ext(GtkWidget *m, void *data) {
+on_menu_ignore(GtkWidget *m, void *data) {
     Message *message = data;
     TaskList *tasks;
     FILE *fp;
+    int32 ignore_type;
 
-    (void)m;
+    ignore_type = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(m), "ignore_type"));
 
-    do {
-        if ((tasks = get_target_tasks(message->side, message->src_path,
-                                      message->action))
-            == NULL) {
-            break;
-        }
-        if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
-            IPC_SEND_LOG_ERROR("Error opening %s: %s.\n", cecup.ignore_path,
-                               strerror(errno));
-            break;
-        }
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task = tasks->items[i];
+    if ((tasks = get_target_tasks(message->side, message->src_path,
+                                  message->action)) == NULL) {
+        free_update_data(message);
+        return;
+    }
+
+    if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
+        IPC_SEND_LOG_ERROR("Error opening %s: %s.\n", cecup.ignore_path,
+                           strerror(errno));
+        free_task_list(tasks);
+        free_update_data(message);
+        return;
+    }
+
+    for (int32 i = 0; i < tasks->count; i += 1) {
+        Task *task = tasks->items[i];
+
+        switch (ignore_type) {
+        case IGNORE_TYPE_EXT: {
             char *ext;
-
             if ((ext = strrchr(task->path, '.')) != NULL) {
                 fprintf(fp, "\n*%s", ext);
             }
-        }
-        fclose(fp);
-        free_task_list(tasks);
-    } while (0);
-
-    free_update_data(message);
-    return;
-}
-
-static void
-on_menu_ignore_dir(GtkWidget *m, void *data) {
-    Message *message = data;
-    TaskList *tasks;
-    FILE *fp;
-
-    (void)m;
-
-    do {
-        char dir_buffer[MAX_PATH_LENGTH];
-        if ((tasks = get_target_tasks(message->side, message->src_path,
-                                      message->action))
-            == NULL) {
             break;
         }
-        if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
-            break;
-        }
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task = tasks->items[i];
-
+        case IGNORE_TYPE_DIR: {
+            char dir_buffer[MAX_PATH_LENGTH];
             dirname2(dir_buffer, task->path, &(task->path_len));
             if (strcmp(dir_buffer, ".")) {
                 fprintf(fp, "\n/%s/", dir_buffer);
             }
-        }
-        fclose(fp);
-    } while (0);
-
-    if (tasks) {
-        free_task_list(tasks);
-    }
-    free_update_data(message);
-    return;
-}
-
-static void
-on_menu_ignore_name(GtkWidget *m, void *data) {
-    Message *message = data;
-    TaskList *tasks;
-    FILE *fp;
-
-    (void)m;
-
-    do {
-        if ((tasks = get_target_tasks(message->side, message->src_path,
-                                      message->action))
-            == NULL) {
             break;
         }
-        if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
-            IPC_SEND_LOG_ERROR("Error opening %s: %s.\n", cecup.ignore_path,
-                               strerror(errno));
-            break;
-        }
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task = tasks->items[i];
-
+        case IGNORE_TYPE_NAME:
             fprintf(fp, "\n/%s", task->path);
-        }
-        fclose(fp);
-    } while (0);
-
-    if (tasks) {
-        free_task_list(tasks);
-    }
-    free_update_data(message);
-    return;
-}
-
-static void
-on_menu_ignore_name_any_dir(GtkWidget *m, void *data) {
-    Message *message = data;
-    TaskList *tasks;
-    FILE *fp;
-
-    (void)m;
-
-    do {
-        if ((tasks = get_target_tasks(message->side, message->src_path,
-                                      message->action))
-            == NULL) {
             break;
-        }
-        if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
-            IPC_SEND_LOG_ERROR("Error opening %s: %s.\n", cecup.ignore_path,
-                               strerror(errno));
-            break;
-        }
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task = tasks->items[i];
-            int32 path_len;
+        case IGNORE_TYPE_NAME_ANY_DIR: {
+            int32 path_len = task->path_len;
             char *name;
-
-            path_len = task->path_len;
             name = basename2(task->path, &path_len, NULL);
             fprintf(fp, "\n*/%s", name);
+            break;
         }
-        fclose(fp);
-    } while (0);
-
-    if (tasks) {
-        free_task_list(tasks);
+        }
     }
+
+    fclose(fp);
+    free_task_list(tasks);
     free_update_data(message);
     return;
 }
@@ -1002,13 +920,13 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
 
             if ((context_menu_items[i].keyval != 0) && (key == target)
                 && (modifiers == context_menu_items[i].mask)) {
-                
+
                 /* BLOCK: Rename, Delete, Apply if busy */
                 if (is_busy && (context_menu_items[i].callback == on_menu_rename ||
                                 context_menu_items[i].callback == on_menu_delete ||
                                 context_menu_items[i].callback == on_menu_apply)) {
                     IPC_SEND_LOG_ERROR(_("Action blocked: Background task is running.\n"));
-                    return TRUE; 
+                    return TRUE;
                 }
 
                 if (filepath
@@ -1256,15 +1174,21 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     gtk_menu_item_set_label(GTK_MENU_ITEM(sub_name_any_dir),
                                             name_label_any_dir);
 
+                    g_object_set_data(G_OBJECT(sub_ext), "ignore_type", GINT_TO_POINTER(IGNORE_TYPE_EXT));
                     g_signal_connect(sub_ext, "activate",
-                                     G_CALLBACK(on_menu_ignore_ext), message);
+                                     G_CALLBACK(on_menu_ignore), message);
 
+                    g_object_set_data(G_OBJECT(sub_dir), "ignore_type", GINT_TO_POINTER(IGNORE_TYPE_DIR));
                     g_signal_connect(sub_dir, "activate",
-                                     G_CALLBACK(on_menu_ignore_dir), message);
+                                     G_CALLBACK(on_menu_ignore), message);
+
+                    g_object_set_data(G_OBJECT(sub_name), "ignore_type", GINT_TO_POINTER(IGNORE_TYPE_NAME));
                     g_signal_connect(sub_name, "activate",
-                                     G_CALLBACK(on_menu_ignore_name), message);
+                                     G_CALLBACK(on_menu_ignore), message);
+
+                    g_object_set_data(G_OBJECT(sub_name_any_dir), "ignore_type", GINT_TO_POINTER(IGNORE_TYPE_NAME_ANY_DIR));
                     g_signal_connect(sub_name_any_dir, "activate",
-                                     G_CALLBACK(on_menu_ignore_name_any_dir), message);
+                                     G_CALLBACK(on_menu_ignore), message);
 
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
@@ -1272,7 +1196,7 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_name_any_dir);
 
                     /* If busy, block the ignore actions.
-                     * They write to the ignore file 
+                     * They write to the ignore file
                      * which rsync might be reading. */
                     if (is_busy) {
                         gtk_widget_set_sensitive(item, FALSE);

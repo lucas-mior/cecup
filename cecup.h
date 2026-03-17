@@ -57,6 +57,13 @@ enum CecupReason {
     REASON_MISSING,
 };
 
+enum IgnoreType {
+    IGNORE_TYPE_EXT,
+    IGNORE_TYPE_DIR,
+    IGNORE_TYPE_NAME,
+    IGNORE_TYPE_NAME_ANY_DIR,
+};
+
 static char *action_emojis[] = {
     [ACTION_NEW]      = EMOJI_NEW,
     [ACTION_HARDLINK] = EMOJI_LINK,
