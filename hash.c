@@ -44,6 +44,7 @@
 
 #if TESTING_hash
 #define HASH_VALUE_TYPE int32
+#define HASH_VALUE_FORMATTER "%d"
 #define HASH_PADDING_TYPE uint32
 #define HASH_TYPE map
 #endif
@@ -276,7 +277,11 @@ CAT(hash_insert2_, HASH_TYPE)(struct Map *map, char *key
     );
 }
 
+#if defined(HASH_VALUE_TYPE)
+static HASH_VALUE_TYPE *
+#else
 static void *
+#endif
 CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
                                       char *key, uint64 hash, uint32 base_index) {
     uint32 capacity = map->capacity;
@@ -399,8 +404,8 @@ CAT(hash_print_, HASH_TYPE)(struct Map *map, bool verbose) {
             break;
         default:
             printf("'%s'", iterator->key);
-#if defined(HASH_VALUE_TYPE)
-            /* printf("=%u", iterator->value); */
+#if defined(HASH_VALUE_TYPE) && defined(HASH_VALUE_FORMATTER)
+            printf("="HASH_VALUE_FORMATTER, iterator->value);
 #endif
         }
     }

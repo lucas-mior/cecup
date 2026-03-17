@@ -44,6 +44,7 @@ typedef struct FixFsThreadData {
 } FixFsThreadData;
 
 #define HASH_VALUE_TYPE char*
+#define HASH_VALUE_FORMATTER "%s"
 #define HASH_PADDING_TYPE uint32
 #define HASH_TYPE map
 #include "hash.c"
@@ -843,18 +844,22 @@ work_rsync(void *user_data) {
             bool ignore_duplicate_dir = false;
 
             *eol = '\0';
-            if ((src_path = literal_match(buf_output, RSYNC_SHOW_PRE))
-                || (src_path = literal_match(buf_output,
-                                             RSYNC_SHOW_DIR_PRE))) {
+            error("%s\n", buf_output);
 
-                error("%s\n", buf_output);
-
-                if ((reason_sep = strstr(src_path, RSYNC_IGNORE_INTER))) {
-                    *reason_sep = '\0';
-                    show_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
+            if ((src_path = literal_match(buf_output, RSYNC_SHOW_DIR_PRE))) {
+                int32 path_len = line_len - (src_path - buf_output);
+                reason_sep = strstr(src_path, RSYNC_IGNORE_INTER);
+                if (*(reason_sep - 1) != '/') {
+                    memmove(reason_sep + 1, reason_sep, line_len - path_len);
+                    reason_sep += 1;
+                    *(reason_sep - 1) = '/';
                 }
+                *reason_sep = '\0';
+                show_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
                 hash_insert2_map(show_patterns_map, xstrdup(src_path), xstrdup(show_pattern));
                 hash_print_map(show_patterns_map, false);
+                PRINTLN(src_path);
+                PRINTLN(show_pattern);
             }
 
             might_be_itemize_line = check_itemize_line(buf_output);
@@ -989,11 +994,22 @@ work_rsync(void *user_data) {
                               &dst_size, &dst_mtime, &is_dir);
 
                 if (thread_data->filtered) {
-                    hash_print_map(show_patterns_map, true);
-                    show_pattern = hash_lookup2_map(show_patterns_map,
-                                                    src_path ? src_path : dst_path);
-                    PRINTLN(show_pattern);
-                    ignore_duplicate_dir = show_pattern && !strcmp(show_pattern, "*/");
+                    char *path;
+                    char **pattern_ptr;
+
+                    if (src_path) {
+                        path = src_path;
+                    } else {
+                        path = dst_path;
+                    }
+
+                    if (path) {
+                        pattern_ptr = hash_lookup2_map(show_patterns_map, path);
+                        if (pattern_ptr) {
+                            show_pattern = *pattern_ptr;
+                            ignore_duplicate_dir = !strcmp(show_pattern, "*/");
+                        }
+                    }
                 }
 
                 if (!(thread_data->filtered
