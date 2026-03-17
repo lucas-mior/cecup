@@ -50,6 +50,7 @@ CFLAGS="$CFLAGS -Wno-cast-function-type"
 CFLAGS="$CFLAGS -Wno-deprecated-declarations"
 
 LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk+-3.0) -lpthread"
+LDFLAGS="$LDFLAGS -lm"
 OS=$(uname -a)
 
 CC="${CC:-cc}"
