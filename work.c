@@ -38,6 +38,11 @@
 #define TESTING_work 0
 #endif
 
+typedef struct FixFsThreadData {
+    char *base_path;
+    int64 file_count;
+} FixFsThreadData;
+
 static bool
 get_file_info(char *full_path, char **path, int64 *size, int64 *mtime,
               bool *is_dir) {
@@ -314,70 +319,6 @@ work_send_tree(enum CecupAction action, enum CecupReason reason,
 }
 
 static int64
-work_count_files_recursive(char *base_path, char *relative_path) {
-    DIR *dir;
-    struct dirent *entry;
-    char full_path[MAX_PATH_LENGTH];
-    int64 count;
-
-    count = 0;
-    if (relative_path) {
-        SNPRINTF(full_path, "%s/%s", base_path, relative_path);
-    } else {
-        SNPRINTF(full_path, "%s", base_path);
-    }
-
-    if ((dir = opendir(full_path)) == NULL) {
-        IPC_SEND_LOG_ERROR("Error opening directory %s: %s.\n", full_path,
-                           strerror(errno));
-        return 0;
-    }
-
-    errno = 0;
-    while ((entry = readdir(dir))) {
-        char *name;
-        char sub_rel[MAX_PATH_LENGTH];
-        struct stat st;
-
-        name = entry->d_name;
-        if (name[0] == '.'
-            && (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'))) {
-            continue;
-        }
-
-        if (relative_path) {
-            SNPRINTF(sub_rel, "%s/%s", relative_path, name);
-        } else {
-            SNPRINTF(sub_rel, "%s", name);
-        }
-
-        SNPRINTF(full_path, "%s/%s", base_path, sub_rel);
-        if (lstat(full_path, &st) == 0) {
-            if (S_ISDIR(st.st_mode)) {
-                count += work_count_files_recursive(base_path, sub_rel);
-            } else {
-                count += 1;
-            }
-        } else {
-            IPC_SEND_LOG_ERROR("Error lstat %s: %s.\n", full_path,
-                               strerror(errno));
-        }
-        errno = 0;
-    }
-
-    if (errno) {
-        IPC_SEND_LOG_ERROR("Error reading directory entry in %s: %s.\n",
-                           full_path, strerror(errno));
-    }
-
-    if (closedir(dir) < 0) {
-        IPC_SEND_LOG_ERROR("Error closing directory %s: %s.\n", full_path,
-                           strerror(errno));
-    }
-    return count;
-}
-
-static void
 work_fix_fs_recursive(char *base_path, char *relative_path) {
     DIR *dir;
     struct dirent *entry;
@@ -385,6 +326,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
     char **name_list;
     int32 count = 0;
     int32 capacity = 1024;
+    int64 total_files = 0;
 
     if (relative_path) {
         SNPRINTF(full_path, "%s/%s", base_path, relative_path);
@@ -403,7 +345,7 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
             error("\"%s\" ", replacements[i].problem);
         }
         error("\n");
-        return;
+        return 0;
     }
 
     name_list = xmalloc(capacity*SIZEOF(char *));
@@ -523,24 +465,50 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         }
 
         if (S_ISDIR(st.st_mode)) {
-            work_fix_fs_recursive(base_path, sub_rel);
+            total_files += work_fix_fs_recursive(base_path, sub_rel);
+        } else {
+            total_files += 1;
         }
         free(d_name);
     }
 
     free(name_list);
-    return;
+    return total_files;
+}
+
+static void *
+work_fix_fs_thread_fn(void *user_data) {
+    FixFsThreadData *data = user_data;
+    data->file_count = work_fix_fs_recursive(data->base_path, NULL);
+    return NULL;
 }
 
 static void *
 work_fix_fs_worker(void *user_data) {
     ThreadData *thread_data = user_data;
     Message *message;
+    struct stat stat_src;
+    struct stat stat_dst;
+    bool same_fs = true;
+    FixFsThreadData src_fix = {cecup.src_base, 0};
+    FixFsThreadData dst_fix = {cecup.dst_base, 0};
 
-    IPC_SEND_LOG("Checking for problematic names in the original folder...\n");
-    work_fix_fs_recursive(cecup.src_base, NULL);
-    IPC_SEND_LOG("Checking for problematic names in the backup folder...\n");
-    work_fix_fs_recursive(cecup.dst_base, NULL);
+    if (stat(cecup.src_base, &stat_src) == 0 && stat(cecup.dst_base, &stat_dst) == 0) {
+        if (stat_src.st_dev != stat_dst.st_dev) {
+            same_fs = false;
+        }
+    }
+
+    IPC_SEND_LOG("Checking for problematic names...\n");
+    if (same_fs) {
+        work_fix_fs_thread_fn(&src_fix);
+        work_fix_fs_thread_fn(&dst_fix);
+    } else {
+        GThread *t1 = g_thread_new("fix_src", work_fix_fs_thread_fn, &src_fix);
+        GThread *t2 = g_thread_new("fix_dst", work_fix_fs_thread_fn, &dst_fix);
+        g_thread_join(t1);
+        g_thread_join(t2);
+    }
     IPC_SEND_LOG("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
@@ -584,24 +552,18 @@ work_rsync(void *user_data) {
     char old_recursive[MAX_PATH_LENGTH];
     char new_recursive[MAX_PATH_LENGTH];
 
-    if (thread_data->check_different_fs) {
-        struct stat stat_src;
-        struct stat stat_dst;
+    struct stat stat_src;
+    struct stat stat_dst;
+    bool stats_ok = false;
+    bool same_fs = true;
 
-        if (stat(cecup.src_base, &stat_src) < 0) {
-            IPC_SEND_LOG_ERROR("Error checking %s: %s.\n", cecup.src_base,
-                               strerror(errno));
-            work_finalize(thread_data);
-            return NULL;
-        }
-        if (stat(cecup.dst_base, &stat_dst) < 0) {
-            IPC_SEND_LOG_ERROR("Error checking %s: %s.\n", cecup.dst_base,
-                               strerror(errno));
-            work_finalize(thread_data);
-            return NULL;
-        }
+    if (stat(cecup.src_base, &stat_src) == 0 && stat(cecup.dst_base, &stat_dst) == 0) {
+        stats_ok = true;
+        same_fs = (stat_src.st_dev == stat_dst.st_dev);
+    }
 
-        if (stat_src.st_dev == stat_dst.st_dev) {
+    if (thread_data->check_different_fs && stats_ok) {
+        if (same_fs) {
             Message *message;
             IPC_SEND_LOG_ERROR(
                 _("Safety stop: Original and backup are on the same storage "
@@ -623,21 +585,39 @@ work_rsync(void *user_data) {
         }
     }
 
-    if (thread_data->is_preview && !thread_data->filtered) {
-        Message *message;
+    {
+        FixFsThreadData src_fix = {cecup.src_base, 0};
+        FixFsThreadData dst_fix = {cecup.dst_base, 0};
 
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-        memset64(message, 0, SIZEOF(Message));
-        g_mutex_unlock(&cecup.ui_arena_mutex);
+        IPC_SEND_LOG("Checking for problematic names and counting files...\n");
 
-        message->type = DATA_TYPE_CLEAR_TREES;
-        g_idle_add(update_ui_handler, message);
+        if (stats_ok && !same_fs) {
+            GThread *t1 = g_thread_new("fix_src", work_fix_fs_thread_fn, &src_fix);
+            GThread *t2 = g_thread_new("fix_dst", work_fix_fs_thread_fn, &dst_fix);
+            g_thread_join(t1);
+            g_thread_join(t2);
+        } else {
+            work_fix_fs_thread_fn(&src_fix);
+            work_fix_fs_thread_fn(&dst_fix);
+        }
 
-        IPC_SEND_LOG("Counting files to prepare analysis...\n");
-        total_files_preview = work_count_files_recursive(cecup.src_base, NULL);
-        IPC_SEND_LOG("Found %lld files to analyse...\n",
-                     (llong)total_files_preview);
+        IPC_SEND_LOG("Name correction finished.\n");
+
+        if (thread_data->is_preview && !thread_data->filtered) {
+            Message *message;
+
+            g_mutex_lock(&cecup.ui_arena_mutex);
+            message = xarena_push(cecup.ui_arena, SIZEOF(Message));
+            memset64(message, 0, SIZEOF(Message));
+            g_mutex_unlock(&cecup.ui_arena_mutex);
+
+            message->type = DATA_TYPE_CLEAR_TREES;
+            g_idle_add(update_ui_handler, message);
+
+            total_files_preview = src_fix.file_count;
+            IPC_SEND_LOG("Found %lld files to analyse...\n",
+                         (llong)total_files_preview);
+        }
     }
 
     xpipe(pipe_stdout);
@@ -818,7 +798,7 @@ work_rsync(void *user_data) {
 
             *eol = '\0';
             /* if (DEBUGGING) { */
-            /*     error("%s\n", buf_output); */
+            /* error("%s\n", buf_output); */
             if (literal_match(buf_output, "[sender] showing")) {
                 error("%s\n", buf_output);
             }
@@ -871,7 +851,7 @@ work_rsync(void *user_data) {
                 }
             } else if ((src_path = literal_match(buf_output,
                                                     RSYNC_IGNORE_PRE))
-                       || (src_path = literal_match(buf_output,
+                        || (src_path = literal_match(buf_output,
                                                     RSYNC_IGNORE_DIR_PRE))) {
                 char *reason_sep;
                 char *ignore_pattern = NULL;
