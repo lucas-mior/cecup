@@ -1279,8 +1279,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", filepath,
                                             translated_reason);
             }
-            tip_text = xmalloc(tip_text_length + 1);
-            memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
+            tip_text = tip_text_buffer;
             break;
         }
         case 3: {
@@ -1288,8 +1287,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 = (side == SIDE_LEFT) ? row->src_size_raw : row->dst_size_raw;
             tip_text_length = SNPRINTF(tip_text_buffer, "%s: %lld bytes",
                                        filepath, (llong)size_raw);
-            tip_text = xmalloc(tip_text_length + 1);
-            memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
+            tip_text = tip_text_buffer;
             break;
         }
         case 4: {
@@ -1297,8 +1295,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                                                    : row->dst_mtime_text;
             tip_text_length
                 = SNPRINTF(tip_text_buffer, "%s: %s", filepath, mtime_text);
-            tip_text = xmalloc(tip_text_length + 1);
-            memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
+            tip_text = tip_text_buffer;
             break;
         }
         default:
@@ -1308,7 +1305,6 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
     if (tip_text) {
         gtk_tooltip_set_text(t, tip_text);
-        free(tip_text);
         gtk_tree_path_free(tree_path);
         return TRUE;
     }
