@@ -236,9 +236,9 @@ cecup_row_compare(const void *a, const void *b) {
 
 static void
 refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
-    g_mutex_lock(&cecup.row_arena_mutex);
+    g_mutex_lock(&cecup.arena_mutex);
     refresh_ui_list_locked(refresh_type, path_to_focus);
-    g_mutex_unlock(&cecup.row_arena_mutex);
+    g_mutex_unlock(&cecup.arena_mutex);
 }
 
 static void
@@ -489,7 +489,7 @@ update_ui_handler(void *data) {
                                       message->fraction);
         break;
     case DATA_TYPE_TREE_UPDATE: {
-        g_mutex_lock(&cecup.row_arena_mutex);
+        g_mutex_lock(&cecup.arena_mutex);
         if (cecup.ui_waiting) {
             refresh_ui_list_locked(REFRESH_PARTIAL, NULL);
             cecup.ui_waiting = false;
@@ -498,7 +498,7 @@ update_ui_handler(void *data) {
             cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
                                              refresh_ui_timeout_callback, NULL);
         }
-        g_mutex_unlock(&cecup.row_arena_mutex);
+        g_mutex_unlock(&cecup.arena_mutex);
         break;
     }
     case DATA_TYPE_REMOVE_ROW: {
@@ -508,7 +508,7 @@ update_ui_handler(void *data) {
         PRINTLN(pattern);
         PRINTLN(pattern_len);
 
-        g_mutex_lock(&cecup.row_arena_mutex);
+        g_mutex_lock(&cecup.arena_mutex);
         for (int32 i = 0; i < cecup.rows_len;) {
             CecupRow *row = cecup.rows[i];
             char *path_test;
@@ -548,7 +548,7 @@ update_ui_handler(void *data) {
                 i += 1;
             }
         }
-        g_mutex_unlock(&cecup.row_arena_mutex);
+        g_mutex_unlock(&cecup.arena_mutex);
 
         if (cecup.refresh_id == 0) {
             cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,

@@ -296,8 +296,8 @@ static struct {
     GtkSortType sort_order;
     uint32 refresh_id;
 
-    Arena *row_arena;
-    GMutex row_arena_mutex;
+    Arena *arena;
+    GMutex arena_mutex;
     GCond ui_ready_cond;
     bool ui_waiting;
     bool changed_dirs;

@@ -191,7 +191,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
             slash = 1;
         }
 
-        final_src_path = xarena_push(cecup.row_arena, path_len + slash + 1);
+        final_src_path = xarena_push(cecup.arena, path_len + slash + 1);
         memcpy64(final_src_path, src_path, path_len + 1);
 
         if (is_dir && (final_src_path[path_len - 1] != '/')) {
@@ -209,7 +209,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
             slash = 1;
         }
 
-        final_dst_path = xarena_push(cecup.row_arena, path_len + slash + 1);
+        final_dst_path = xarena_push(cecup.arena, path_len + slash + 1);
         memcpy64(final_dst_path, dst_path, path_len + 1);
         if (is_dir && (final_dst_path[path_len - 1] != '/')) {
             final_dst_path[path_len] = '/';
@@ -222,7 +222,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
         fatal(EXIT_FAILURE);
     }
 
-    row = xarena_push(cecup.row_arena, SIZEOF(*row));
+    row = xarena_push(cecup.arena, SIZEOF(*row));
     memset64(row, 0, SIZEOF(*row));
 
     row->src_action = action;
@@ -281,14 +281,14 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     if (link_target) {
         target_len = strlen32(link_target);
         row->link_target_len = (int32)target_len;
-        row->link_target = xarena_push(cecup.row_arena, target_len + 1);
+        row->link_target = xarena_push(cecup.arena, target_len + 1);
         memcpy64(row->link_target, link_target, target_len + 1);
     }
 
     if (ignore_pattern) {
         pattern_len = strlen32(ignore_pattern);
         row->ignore_pattern_len = (int32)pattern_len;
-        row->ignore_pattern = xarena_push(cecup.row_arena, pattern_len + 1);
+        row->ignore_pattern = xarena_push(cecup.arena, pattern_len + 1);
         memcpy64(row->ignore_pattern, ignore_pattern, pattern_len + 1);
     }
 
@@ -324,7 +324,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
         g_idle_add(update_ui_handler, message);
 
         while (cecup.ui_waiting) {
-            g_cond_wait(&cecup.ui_ready_cond, &cecup.row_arena_mutex);
+            g_cond_wait(&cecup.ui_ready_cond, &cecup.arena_mutex);
         }
     }
 
@@ -582,7 +582,7 @@ work_rsync(void *user_data) {
 
     same_fs = (stat_src.st_dev == stat_dst.st_dev);
 
-    g_mutex_lock(&cecup.row_arena_mutex);
+    g_mutex_lock(&cecup.arena_mutex);
 
     if (thread_data->check_different_fs) {
         if (same_fs) {
@@ -597,7 +597,7 @@ work_rsync(void *user_data) {
             message = xmalloc(SIZEOF(*message));
             memset64(message, 0, SIZEOF(*message));
 
-            arena_reset(cecup.row_arena);
+            arena_reset(cecup.arena);
             cecup.rows_len = 0;
             cecup.rows_visible_len = 0;
 
@@ -636,7 +636,7 @@ work_rsync(void *user_data) {
             message->type = DATA_TYPE_CLEAR_TREES;
             g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
 
-            arena_reset(cecup.row_arena);
+            arena_reset(cecup.arena);
             cecup.rows_len = 0;
             cecup.rows_visible_len = 0;
 
@@ -1111,7 +1111,7 @@ work_rsync(void *user_data) {
         IPC_SEND_LOG_ERROR("%s", buf_error);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
-    g_mutex_unlock(&cecup.row_arena_mutex);
+    g_mutex_unlock(&cecup.arena_mutex);
 
     if (waitpid(child_pid, NULL, 0) < 0) {
         IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));

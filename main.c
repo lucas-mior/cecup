@@ -191,8 +191,8 @@ main(int32 argc, char *argv[]) {
     memset64(&cecup, 0, SIZEOF(cecup));
 
     cecup.changed_dirs = true;
-    cecup.row_arena = arena_create(SIZEMB(64));
-    g_mutex_init(&cecup.row_arena_mutex);
+    cecup.arena = arena_create(SIZEMB(64));
+    g_mutex_init(&cecup.arena_mutex);
     g_cond_init(&cecup.ui_ready_cond);
     cecup.ui_waiting = false;
 
