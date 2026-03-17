@@ -172,13 +172,13 @@ did_attribute_change(char *buf_output) {
 }
 
 static void
-work_send_tree(enum CecupAction action, enum CecupReason reason,
-               char *src_path, char *dst_path,
-               char *link_target, char *ignore_pattern,
-               int64 src_size, int64 src_mtime,
-               int64 dst_size, int64 dst_mtime,
-               bool delete_excluded, bool is_dir,
-               long *processed_files_preview, long total_files_preview) {
+work_add_row(enum CecupAction action, enum CecupReason reason,
+             char *src_path, char *dst_path,
+             char *link_target, char *ignore_pattern,
+             int64 src_size, int64 src_mtime,
+             int64 dst_size, int64 dst_mtime,
+             bool delete_excluded, bool is_dir,
+             long *processed_files_preview, long total_files_preview) {
     CecupRow *row;
     Message *message;
     char *final_src_path = NULL;
@@ -896,11 +896,11 @@ work_rsync(void *user_data) {
                 if (thread_data->is_preview && (reason == REASON_MISSING)) {
                     // if source file exists, rsync will report it as ignored
                     // so we dont send it here to avoid the duplication
-                    work_send_tree(ACTION_DELETE, reason,
-                                   src_path, dst_path, NULL, NULL,
-                                   src_size, src_mtime, dst_size, dst_mtime,
-                                   thread_data->delete_excluded, is_dir,
-                                   &processed_files_preview, total_files_preview);
+                    work_add_row(ACTION_DELETE, reason,
+                                 src_path, dst_path, NULL, NULL,
+                                 src_size, src_mtime, dst_size, dst_mtime,
+                                 thread_data->delete_excluded, is_dir,
+                                 &processed_files_preview, total_files_preview);
                 }
             } else if ((src_path = begins_with(buf_output,
                                                RSYNC_IGNORE_PRE_FILE))
@@ -926,11 +926,11 @@ work_rsync(void *user_data) {
 
                 if (thread_data->is_preview
                     && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
-                    work_send_tree(ACTION_IGNORE, REASON_IGNORED,
-                                   src_path, dst_path, NULL, ignore_pattern,
-                                   src_size, src_mtime, dst_size, dst_mtime,
-                                   thread_data->delete_excluded, is_dir,
-                                   &processed_files_preview, total_files_preview);
+                    work_add_row(ACTION_IGNORE, REASON_IGNORED,
+                                 src_path, dst_path, NULL, ignore_pattern,
+                                 src_size, src_mtime, dst_size, dst_mtime,
+                                 thread_data->delete_excluded, is_dir,
+                                 &processed_files_preview, total_files_preview);
                 }
             } else if (might_be_itemize_line
                        && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
@@ -1024,11 +1024,11 @@ work_rsync(void *user_data) {
                       && (!strcmp(src_path, "./")
                           || ignore_duplicate_dir))) {
                     if (thread_data->is_preview) {
-                        work_send_tree(action, reason,
-                                       src_path, dst_path, link_target, NULL,
-                                       src_size, src_mtime, dst_size, dst_mtime,
-                                       thread_data->delete_excluded, is_dir,
-                                       &processed_files_preview, total_files_preview);
+                        work_add_row(action, reason,
+                                     src_path, dst_path, link_target, NULL,
+                                     src_size, src_mtime, dst_size, dst_mtime,
+                                     thread_data->delete_excluded, is_dir,
+                                     &processed_files_preview, total_files_preview);
                     }
                 }
             } else if (might_be_itemize_line) {
@@ -1073,11 +1073,11 @@ work_rsync(void *user_data) {
 
                 if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
                     if (thread_data->is_preview) {
-                        work_send_tree(action, reason,
-                                       src_path, dst_path, link_target, NULL,
-                                       src_size, src_mtime, dst_size, dst_mtime,
-                                       thread_data->delete_excluded, is_dir,
-                                       &processed_files_preview, total_files_preview);
+                        work_add_row(action, reason,
+                                     src_path, dst_path, link_target, NULL,
+                                     src_size, src_mtime, dst_size, dst_mtime,
+                                     thread_data->delete_excluded, is_dir,
+                                     &processed_files_preview, total_files_preview);
                     }
                 }
             }
