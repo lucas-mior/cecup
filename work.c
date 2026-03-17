@@ -312,18 +312,19 @@ work_send_tree(enum CecupAction action, enum CecupReason reason,
     }
 
     if ((cecup.rows_len % 10000) == 0) {
-        g_mutex_unlock(&cecup.row_arena_mutex);
-
         g_mutex_lock(&cecup.ui_arena_mutex);
         message = xarena_push(cecup.ui_arena, SIZEOF(Message));
         memset64(message, 0, SIZEOF(Message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         message->type = DATA_TYPE_TREE_UPDATE;
+
+        cecup.ui_waiting = true;
         g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
 
-        g_usleep(100);
-        g_mutex_lock(&cecup.row_arena_mutex);
+        while (cecup.ui_waiting) {
+            g_cond_wait(&cecup.ui_ready_cond, &cecup.row_arena_mutex);
+        }
     }
 
     return;

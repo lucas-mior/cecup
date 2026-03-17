@@ -286,6 +286,8 @@ static struct {
     Arena *ui_arena;
     GMutex row_arena_mutex;
     GMutex ui_arena_mutex;
+    GCond ui_ready_cond;
+    bool ui_waiting;
 
     pid_t child_pid;
 } cecup;

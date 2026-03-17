@@ -194,6 +194,8 @@ main(int32 argc, char *argv[]) {
     g_mutex_init(&cecup.row_arena_mutex);
     cecup.ui_arena = arena_create(SIZEMB(16));
     g_mutex_init(&cecup.ui_arena_mutex);
+    g_cond_init(&cecup.ui_ready_cond);
+    cecup.ui_waiting = false;
 
     cecup.rows_len = 0;
     cecup.rows_capacity = 4096;
@@ -644,6 +646,7 @@ main(int32 argc, char *argv[]) {
     g_mutex_clear(&cecup.row_arena_mutex);
     arena_destroy(cecup.ui_arena);
     g_mutex_clear(&cecup.ui_arena_mutex);
+    g_cond_clear(&cecup.ui_ready_cond);
 
     free(cecup.rows);
     free(cecup.rows_visible);

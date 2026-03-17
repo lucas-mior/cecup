@@ -278,7 +278,7 @@ refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
     show_ignore
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
-    g_mutex_lock(&cecup.row_arena_mutex);
+    /* g_mutex_lock(&cecup.row_arena_mutex); */
 
     cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
@@ -434,7 +434,7 @@ refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
         }
     }
 
-    g_mutex_unlock(&cecup.row_arena_mutex);
+    /* g_mutex_unlock(&cecup.row_arena_mutex); */
 
     g_idle_add((GSourceFunc)gtk_widget_queue_draw, (void *)cecup.l_tree);
     g_idle_add((GSourceFunc)gtk_widget_queue_draw, (void *)cecup.r_tree);
@@ -492,10 +492,16 @@ update_ui_handler(void *data) {
                                       message->fraction);
         break;
     case DATA_TYPE_TREE_UPDATE: {
-        if (cecup.refresh_id == 0) {
+        g_mutex_lock(&cecup.row_arena_mutex);
+        if (cecup.ui_waiting) {
+            refresh_ui_list(REFRESH_PARTIAL, NULL);
+            cecup.ui_waiting = false;
+            g_cond_signal(&cecup.ui_ready_cond);
+        } else if (cecup.refresh_id == 0) {
             cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
                                              refresh_ui_timeout_callback, NULL);
         }
+        g_mutex_unlock(&cecup.row_arena_mutex);
         break;
     }
     case DATA_TYPE_REMOVE_MATCHES: {
