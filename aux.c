@@ -51,10 +51,8 @@ protect_interface_from_user(bool state) {
 
 static void
 free_update_data(Message *message) {
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    arena_pop(cecup.ui_arena, message->src_path);
-    arena_pop(cecup.ui_arena, message);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free(message->src_path);
+    free(message);
     return;
 }
 
@@ -64,21 +62,18 @@ free_task_list(TaskList *tasks) {
         return;
     }
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
 
         if (task->link_target) {
-            arena_pop(cecup.ui_arena, task->link_target);
+            free(task->link_target);
         }
         if (task->message) {
-            arena_pop(cecup.ui_arena, task->message);
+            free(task->message);
         }
-        arena_pop(cecup.ui_arena, task);
+        free(task);
     }
 
-    g_mutex_unlock(&cecup.ui_arena_mutex);
     free(tasks);
     return;
 }
@@ -117,22 +112,20 @@ get_target_tasks(int32 side, char *clicked_path,
             continue;
         }
 
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        task = xarena_push(cecup.ui_arena, SIZEOF(*task));
+        task = xmalloc(SIZEOF(*task));
         memset64(task, 0, SIZEOF(*task));
 
         task->path_len = path_len;
-        task->path = xarena_push(cecup.ui_arena, path_len + 1);
+        task->path = xmalloc(path_len + 1);
         memcpy64(task->path, filepath, path_len + 1);
 
         if (row->link_target) {
             task->link_target_len = row->link_target_len;
             task->link_target
-                = xarena_push(cecup.ui_arena, task->link_target_len + 1);
+                = xmalloc(task->link_target_len + 1);
             memcpy64(task->link_target, row->link_target,
                      task->link_target_len + 1);
         }
-        g_mutex_unlock(&cecup.ui_arena_mutex);
 
         task->action = action;
         task->side = side;
@@ -148,16 +141,13 @@ get_target_tasks(int32 side, char *clicked_path,
         Task *task;
         int32 path_len;
 
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        task = xarena_push(cecup.ui_arena, SIZEOF(*task));
+        task = xmalloc(SIZEOF(*task));
         memset64(task, 0, SIZEOF(*task));
 
         path_len = strlen32(clicked_path);
         task->path_len = path_len;
-        task->path = xarena_push(cecup.ui_arena, path_len + 1);
+        task->path = xmalloc(path_len + 1);
         memcpy64(task->path, clicked_path, path_len + 1);
-
-        g_mutex_unlock(&cecup.ui_arena_mutex);
 
         task->action = clicked_action;
         task->side = side;
@@ -590,15 +580,13 @@ update_ui_handler(void *data) {
         break;
     }
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
     if (message->message) {
-        arena_pop(cecup.ui_arena, message->message);
+        free(message->message);
     }
     if (message->path_to_focus) {
-        arena_pop(cecup.ui_arena, message->path_to_focus);
+        free(message->path_to_focus);
     }
-    arena_pop(cecup.ui_arena, message);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free(message);
     return G_SOURCE_REMOVE;
 }
 

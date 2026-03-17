@@ -193,8 +193,6 @@ main(int32 argc, char *argv[]) {
     cecup.changed_dirs = true;
     cecup.row_arena = arena_create(SIZEMB(64));
     g_mutex_init(&cecup.row_arena_mutex);
-    cecup.ui_arena = arena_create(SIZEMB(16));
-    g_mutex_init(&cecup.ui_arena_mutex);
     g_cond_init(&cecup.ui_ready_cond);
     cecup.ui_waiting = false;
 
@@ -372,11 +370,11 @@ main(int32 argc, char *argv[]) {
     }
 
     src_path_len = SNPRINTF(src_path_buffer, "%s/a/", cwd);
-    default_src = xarena_push(cecup.ui_arena, src_path_len + 1);
+    default_src = xmalloc(src_path_len + 1);
     memcpy64(default_src, src_path_buffer, src_path_len + 1);
 
     dst_path_len = SNPRINTF(dst_path_buffer, "%s/b/", cwd);
-    default_dst = xarena_push(cecup.ui_arena, dst_path_len + 1);
+    default_dst = xmalloc(dst_path_len + 1);
     memcpy64(default_dst, dst_path_buffer, dst_path_len + 1);
 
     paths_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);

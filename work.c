@@ -128,9 +128,7 @@ work_finalize(ThreadData *thread_data) {
 
     ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-
-    message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+    message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
     message->type = DATA_TYPE_ENABLE_BUTTONS;
@@ -141,21 +139,19 @@ work_finalize(ThreadData *thread_data) {
 
             message->focus_len = focus_length;
             message->path_to_focus
-                = xarena_push(cecup.ui_arena, focus_length + 1);
+                = xmalloc(focus_length + 1);
             memcpy64(message->path_to_focus, thread_data->relative_new,
                      focus_length + 1);
         }
 
         if (thread_data->relative_new) {
-            arena_pop(cecup.ui_arena, thread_data->relative_new);
+            free(thread_data->relative_new);
         }
         if (thread_data->relative_old) {
-            arena_pop(cecup.ui_arena, thread_data->relative_old);
+            free(thread_data->relative_old);
         }
-        arena_pop(cecup.ui_arena, thread_data);
+        free(thread_data);
     }
-
-    g_mutex_unlock(&cecup.ui_arena_mutex);
 
     g_idle_add(update_ui_handler, message);
     return;
@@ -319,10 +315,8 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     }
 
     if ((cecup.rows_len % 10000) == 0) {
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+        message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
-        g_mutex_unlock(&cecup.ui_arena_mutex);
 
         message->type = DATA_TYPE_TREE_UPDATE;
 
@@ -532,15 +526,13 @@ work_fix_fs_worker(void *user_data) {
     }
     IPC_SEND_LOG("Name correction finished.\n");
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+    message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
     message->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, message);
 
-    arena_pop(cecup.ui_arena, thread_data);
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    free(thread_data);
     return NULL;
 }
 
@@ -602,10 +594,8 @@ work_rsync(void *user_data) {
                   "To force backup on a folder in the same device, uncheck"
                   " option \"Protect same drive sync\".\n"));
 
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+            message = xmalloc(SIZEOF(*message));
             memset64(message, 0, SIZEOF(*message));
-            g_mutex_unlock(&cecup.ui_arena_mutex);
 
             arena_reset(cecup.row_arena);
             cecup.rows_len = 0;
@@ -640,10 +630,8 @@ work_rsync(void *user_data) {
         if (thread_data->is_preview && !thread_data->filtered) {
             Message *message;
 
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+            message = xmalloc(SIZEOF(*message));
             memset64(message, 0, SIZEOF(*message));
-            g_mutex_unlock(&cecup.ui_arena_mutex);
 
             message->type = DATA_TYPE_CLEAR_TREES;
             g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
@@ -1385,14 +1373,12 @@ work_rsync_bulk(void *user_data) {
             int32 path_len = task->path_len;
             char *path = task->path;
 
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+            message = xmalloc(SIZEOF(*message));
             memset64(message, 0, SIZEOF(*message));
 
             message->path_len = path_len;
-            message->src_path = xarena_push(cecup.ui_arena, path_len + 1);
+            message->src_path = xmalloc(path_len + 1);
             memcpy64(message->src_path, path, path_len + 1);
-            g_mutex_unlock(&cecup.ui_arena_mutex);
 
             message->type = DATA_TYPE_REMOVE_ROW;
             g_idle_add(update_ui_handler, message);
@@ -1575,14 +1561,12 @@ work_rsync_bulk(void *user_data) {
                     *sep = '\0';
                 }
 
-                g_mutex_lock(&cecup.ui_arena_mutex);
-                message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+                message = xmalloc(SIZEOF(*message));
                 memset64(message, 0, SIZEOF(*message));
 
                 message->path_len = path_len;
-                message->src_path = xarena_push(cecup.ui_arena, path_len + 1);
+                message->src_path = xmalloc(path_len + 1);
                 memcpy64(message->src_path, filename, path_len + 1);
-                g_mutex_unlock(&cecup.ui_arena_mutex);
 
                 message->type = DATA_TYPE_REMOVE_ROW;
                 g_idle_add(update_ui_handler, message);

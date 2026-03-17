@@ -520,10 +520,8 @@ on_preview_clicked(GtkWidget *b, void *data) {
 
     protect_interface_from_user(true);
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = xarena_push(cecup.ui_arena, SIZEOF(*thread_data));
+    thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
-    g_mutex_unlock(&cecup.ui_arena_mutex);
 
     thread_data->is_preview = true;
     thread_data->check_different_fs
@@ -554,10 +552,8 @@ on_sync_clicked(GtkWidget *b, void *data) {
 
         protect_interface_from_user(true);
 
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        thread_data = xarena_push(cecup.ui_arena, SIZEOF(*thread_data));
+        thread_data = xmalloc(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
-        g_mutex_unlock(&cecup.ui_arena_mutex);
 
         thread_data->is_preview = false;
         thread_data->check_different_fs
@@ -589,10 +585,8 @@ on_fix_clicked(GtkWidget *b, void *data) {
 
     protect_interface_from_user(true);
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = xarena_push(cecup.ui_arena, SIZEOF(*thread_data));
+    thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
-    g_mutex_unlock(&cecup.ui_arena_mutex);
 
     g_thread_new("work_fix_fs_worker", work_fix_fs_worker, thread_data);
     return;
@@ -893,17 +887,15 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
                     || (context_menu_items[i].callback == on_menu_rename)) {
                     Message *message;
 
-                    g_mutex_lock(&cecup.ui_arena_mutex);
-                    message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+                    message = xmalloc(SIZEOF(*message));
                     memset64(message, 0, SIZEOF(*message));
 
                     if (filepath) {
                         message->path_len = path_len;
                         message->src_path
-                            = xarena_push(cecup.ui_arena, path_len + 1);
+                            = xmalloc(path_len + 1);
                         memcpy64(message->src_path, filepath, path_len + 1);
                     }
-                    g_mutex_unlock(&cecup.ui_arena_mutex);
 
                     message->action = action;
                     message->side = side;
@@ -959,15 +951,13 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                 if (filepath) {
                     Message *message;
 
-                    g_mutex_lock(&cecup.ui_arena_mutex);
-                    message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+                    message = xmalloc(SIZEOF(*message));
                     memset64(message, 0, SIZEOF(*message));
 
                     message->path_len = row->path_len;
                     message->src_path
-                        = xarena_push(cecup.ui_arena, row->path_len + 1);
+                        = xmalloc(row->path_len + 1);
                     memcpy64(message->src_path, filepath, row->path_len + 1);
-                    g_mutex_unlock(&cecup.ui_arena_mutex);
 
                     message->action = action;
                     message->side = side;
@@ -1011,16 +1001,14 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             path_len = row->path_len;
         }
 
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+        message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         if (filepath) {
             message->path_len = path_len;
-            message->src_path = xarena_push(cecup.ui_arena, path_len + 1);
+            message->src_path = xmalloc(path_len + 1);
             memcpy64(message->src_path, filepath, path_len + 1);
         }
-        g_mutex_unlock(&cecup.ui_arena_mutex);
 
         message->action = action;
         message->side = side;
@@ -1291,9 +1279,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", filepath,
                                             translated_reason);
             }
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
-            g_mutex_unlock(&cecup.ui_arena_mutex);
+            tip_text = xmalloc(tip_text_length + 1);
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
         }
@@ -1302,9 +1288,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                 = (side == SIDE_LEFT) ? row->src_size_raw : row->dst_size_raw;
             tip_text_length = SNPRINTF(tip_text_buffer, "%s: %lld bytes",
                                        filepath, (llong)size_raw);
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
-            g_mutex_unlock(&cecup.ui_arena_mutex);
+            tip_text = xmalloc(tip_text_length + 1);
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
         }
@@ -1313,9 +1297,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
                                                    : row->dst_mtime_text;
             tip_text_length
                 = SNPRINTF(tip_text_buffer, "%s: %s", filepath, mtime_text);
-            g_mutex_lock(&cecup.ui_arena_mutex);
-            tip_text = xarena_push(cecup.ui_arena, tip_text_length + 1);
-            g_mutex_unlock(&cecup.ui_arena_mutex);
+            tip_text = xmalloc(tip_text_length + 1);
             memcpy64(tip_text, tip_text_buffer, tip_text_length + 1);
             break;
         }
@@ -1326,9 +1308,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
     if (tip_text) {
         gtk_tooltip_set_text(t, tip_text);
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        arena_pop(cecup.ui_arena, tip_text);
-        g_mutex_unlock(&cecup.ui_arena_mutex);
+        free(tip_text);
         gtk_tree_path_free(tree_path);
         return TRUE;
     }
@@ -1341,17 +1321,14 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
                             int32 len_old, int32 len_new) {
     ThreadData *thread_data;
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    thread_data = xarena_push(cecup.ui_arena, SIZEOF(*thread_data));
+    thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
-    thread_data->relative_old = xarena_push(cecup.ui_arena, len_old + 1);
-    thread_data->relative_new = xarena_push(cecup.ui_arena, len_new + 1);
+    thread_data->relative_old = xmalloc(len_old + 1);
+    thread_data->relative_new = xmalloc(len_new + 1);
 
     memcpy64(thread_data->relative_old, relative_old, len_old + 1);
     memcpy64(thread_data->relative_new, relative_new, len_new + 1);
-
-    g_mutex_unlock(&cecup.ui_arena_mutex);
 
     thread_data->is_preview = true;
     thread_data->check_different_fs
@@ -1368,14 +1345,12 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
     {
         Message *message;
 
-        g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+        message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         message->path_len = len_old;
-        message->src_path = xarena_push(cecup.ui_arena, len_old + 1);
+        message->src_path = xmalloc(len_old + 1);
         memcpy64(message->src_path, relative_old, len_old + 1);
-        g_mutex_unlock(&cecup.ui_arena_mutex);
 
         message->type = DATA_TYPE_REMOVE_ROW;
         g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);

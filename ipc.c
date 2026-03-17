@@ -48,8 +48,7 @@ ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
     }
     va_end(va_args);
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+    message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
     if (!RELEASING) {
@@ -59,12 +58,10 @@ ipc_send_log_internal(char *file, int line, enum DataType type, char *format,
     }
 
     message->message_len = n + m;
-    message->message = xarena_push(cecup.ui_arena, n + m + 1);
+    message->message = xmalloc(n + m + 1);
 
     memcpy64(message->message, fileline, m);
     memcpy64(message->message + m, buffer, n + 1);
-
-    g_mutex_unlock(&cecup.ui_arena_mutex);
 
     message->type = type;
     g_idle_add(update_ui_handler, message);
@@ -87,10 +84,8 @@ ipc_send_progress(enum DataType type, double fraction) {
     }
     last_fractions[index] = fraction;
 
-    g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-    memset64(message, 0, SIZEOF(Message));
-    g_mutex_unlock(&cecup.ui_arena_mutex);
+    message = xmalloc(SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
 
     message->type = type;
     message->fraction = fraction;

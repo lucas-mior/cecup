@@ -297,9 +297,7 @@ static struct {
     uint32 refresh_id;
 
     Arena *row_arena;
-    Arena *ui_arena;
     GMutex row_arena_mutex;
-    GMutex ui_arena_mutex;
     GCond ui_ready_cond;
     bool ui_waiting;
     bool changed_dirs;
