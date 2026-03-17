@@ -520,10 +520,8 @@ update_ui_handler(void *data) {
             bool match = false;
 
             if (row->src_path && literal_match(row->src_path, pattern)) {
-                printf("I am removing %s\n", row->src_path);
                 match = true;
             } else if (row->dst_path && literal_match(row->dst_path, pattern)) {
-                printf("I am removing %s\n", row->dst_path);
                 match = true;
             }
 
