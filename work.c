@@ -171,7 +171,8 @@ work_send_tree(enum CecupAction action, enum CecupReason reason,
                char *link_target, char *ignore_pattern,
                int64 src_size, int64 src_mtime,
                int64 dst_size, int64 dst_mtime,
-               bool delete_excluded, bool is_dir) {
+               bool delete_excluded, bool is_dir,
+               long *processed_files_preview, long total_files_preview) {
     CecupRow *row;
     Message *message;
     char *final_src_path = NULL;
@@ -314,6 +315,13 @@ work_send_tree(enum CecupAction action, enum CecupReason reason,
 
         message->type = DATA_TYPE_TREE_UPDATE;
         g_idle_add(update_ui_handler, message);
+    }
+
+    *processed_files_preview += 1;
+    if (total_files_preview > 0) {
+        ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                          (double)*processed_files_preview
+                          / (double)total_files_preview);
     }
     return;
 }
@@ -562,9 +570,9 @@ work_rsync(void *user_data) {
         work_finalize(thread_data);
         return NULL;
     }
-    if (stat(cecup.src_base, &stat_src) < 0) {
+    if (stat(cecup.dst_base, &stat_dst) < 0) {
         IPC_SEND_LOG_ERROR("Error in stat(%s): %s.\n",
-                           cecup.src_base, strerror(errno));
+                           cecup.dst_base, strerror(errno));
         work_finalize(thread_data);
         return NULL;
     }
@@ -856,7 +864,8 @@ work_rsync(void *user_data) {
                     work_send_tree(ACTION_DELETE, reason,
                                    src_path, dst_path, NULL, NULL,
                                    src_size, src_mtime, dst_size, dst_mtime,
-                                   thread_data->delete_excluded, is_dir);
+                                   thread_data->delete_excluded, is_dir,
+                                   &processed_files_preview, total_files_preview);
                 }
             } else if ((src_path = literal_match(buf_output,
                                                     RSYNC_IGNORE_PRE))
@@ -883,7 +892,8 @@ work_rsync(void *user_data) {
                         work_send_tree(ACTION_IGNORE, REASON_IGNORED,
                                        src_path, dst_path, NULL, ignore_pattern,
                                        src_size, src_mtime, dst_size, dst_mtime,
-                                       thread_data->delete_excluded, is_dir);
+                                       thread_data->delete_excluded, is_dir,
+                                       &processed_files_preview, total_files_preview);
                     }
                 }
             } else if (might_be_itemize_line
@@ -961,14 +971,8 @@ work_rsync(void *user_data) {
                         work_send_tree(action, reason,
                                        src_path, dst_path, link_target, NULL,
                                        src_size, src_mtime, dst_size, dst_mtime,
-                                       thread_data->delete_excluded, is_dir);
-                    }
-
-                    processed_files_preview += 1;
-                    if (total_files_preview > 0) {
-                        ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                          (double)processed_files_preview
-                                              / (double)total_files_preview);
+                                       thread_data->delete_excluded, is_dir,
+                                       &processed_files_preview, total_files_preview);
                     }
                 }
             } else if (might_be_itemize_line) {
@@ -1019,7 +1023,8 @@ work_rsync(void *user_data) {
                         work_send_tree(action, reason,
                                        src_path, dst_path, link_target, NULL,
                                        src_size, src_mtime, dst_size, dst_mtime,
-                                       thread_data->delete_excluded, is_dir);
+                                       thread_data->delete_excluded, is_dir,
+                                       &processed_files_preview, total_files_preview);
                     }
                 }
             }
