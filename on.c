@@ -1403,8 +1403,6 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
         return;
     }
 
-    HERE;
-
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
     if ((tree_path = gtk_tree_path_new_from_string(path_str))) {
