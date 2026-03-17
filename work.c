@@ -963,12 +963,12 @@ work_rsync(void *user_data) {
                     action = ACTION_NEW;
                 }
 
-                attribute_changed = did_attribute_change(buf_output);
-                if (!attribute_changed) {
+                
+                if (did_attribute_change(buf_output)) {
+                    reason = (enum CecupReason)action;
+                } else {
                     action = ACTION_EQUAL;
                     reason = REASON_EQUAL;
-                } else {
-                    reason = (enum CecupReason)action;
                 }
 
                 if ((thread_data->is_preview == 0)
