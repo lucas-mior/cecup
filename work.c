@@ -856,21 +856,12 @@ work_rsync(void *user_data) {
                                       RSYNC_IGNORE_INTER,
                                       strlen32(RSYNC_IGNORE_INTER));
 
-                left = line_len - (reason_sep - buf_output);
+                left = line_len - (int32)(reason_sep - buf_output);
 
                 if (*(reason_sep - 1) != '/') {
-                    error("before:\n");
-                    fwrite64(buf_output, 1, line_len + 1, stderr);
-                    fwrite64("\n", 1, 1, stdout);
                     memmove64(reason_sep + 1, reason_sep, left);
-                    error("after memove:\n");
-                    fwrite64(buf_output, 1, line_len + 1, stderr);
-                    fwrite64("\n", 1, 1, stdout);
                     reason_sep += 1;
                     *(reason_sep - 1) = '/';
-                    error("after slash:\n");
-                    fwrite64(buf_output, 1, line_len + 1, stderr);
-                    fwrite64("\n", 1, 1, stdout);
                 }
                 *reason_sep = '\0';
 
