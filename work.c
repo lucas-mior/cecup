@@ -850,16 +850,27 @@ work_rsync(void *user_data) {
             }
 
             if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
-                path_len = line_len - (int32)(src_path - buf_output);
+                int32 left = line_len - (int32)(src_path - buf_output);
                 reason_sep = memmem64(src_path,
-                                      path_len,
+                                      left,
                                       RSYNC_IGNORE_INTER,
                                       strlen32(RSYNC_IGNORE_INTER));
 
+                left = line_len - (reason_sep - buf_output);
+
                 if (*(reason_sep - 1) != '/') {
-                    memmove64(reason_sep + 1, reason_sep, path_len);
+                    error("before:\n");
+                    fwrite64(buf_output, 1, line_len + 1, stderr);
+                    fwrite64("\n", 1, 1, stdout);
+                    memmove64(reason_sep + 1, reason_sep, left);
+                    error("after memove:\n");
+                    fwrite64(buf_output, 1, line_len + 1, stderr);
+                    fwrite64("\n", 1, 1, stdout);
                     reason_sep += 1;
                     *(reason_sep - 1) = '/';
+                    error("after slash:\n");
+                    fwrite64(buf_output, 1, line_len + 1, stderr);
+                    fwrite64("\n", 1, 1, stdout);
                 }
                 *reason_sep = '\0';
 
