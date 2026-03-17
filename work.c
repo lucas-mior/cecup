@@ -554,15 +554,24 @@ work_rsync(void *user_data) {
 
     struct stat stat_src;
     struct stat stat_dst;
-    bool stats_ok = false;
     bool same_fs = true;
 
-    if (stat(cecup.src_base, &stat_src) == 0 && stat(cecup.dst_base, &stat_dst) == 0) {
-        stats_ok = true;
-        same_fs = (stat_src.st_dev == stat_dst.st_dev);
+    if (stat(cecup.src_base, &stat_src) < 0) {
+        IPC_SEND_LOG_ERROR("Error in stat(%s): %s.\n",
+                           cecup.src_base, strerror(errno));
+        work_finalize(thread_data);
+        return NULL;
+    }
+    if (stat(cecup.src_base, &stat_src) < 0) {
+        IPC_SEND_LOG_ERROR("Error in stat(%s): %s.\n",
+                           cecup.src_base, strerror(errno));
+        work_finalize(thread_data);
+        return NULL;
     }
 
-    if (thread_data->check_different_fs && stats_ok) {
+    same_fs = (stat_src.st_dev == stat_dst.st_dev);
+
+    if (thread_data->check_different_fs) {
         if (same_fs) {
             Message *message;
             IPC_SEND_LOG_ERROR(
@@ -591,7 +600,7 @@ work_rsync(void *user_data) {
 
         IPC_SEND_LOG("Checking for problematic names and counting files...\n");
 
-        if (stats_ok && !same_fs) {
+        if (!same_fs) {
             GThread *t1 = g_thread_new("fix_src", work_fix_fs_thread_fn, &src_fix);
             GThread *t2 = g_thread_new("fix_dst", work_fix_fs_thread_fn, &dst_fix);
             g_thread_join(t1);
