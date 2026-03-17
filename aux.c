@@ -542,7 +542,7 @@ update_ui_handler(void *data) {
                     }
                 }
             } else { // DATA_TYPE_REMOVE_MATCHES
-                if (literal_match(path_test, pattern)) {
+                if (begins_with(path_test, pattern)) {
                     match = true;
                 }
             }
