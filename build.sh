@@ -97,6 +97,9 @@ case "$target" in
 "build") 
     CFLAGS="$CFLAGS $GNUSOURCE -O2 -flto -march=native -ftree-vectorize"
     ;;
+"release") 
+    CFLAGS="$CFLAGS $GNUSOURCE -DRELEASING=1 -O2 -flto -march=native -ftree-vectorize"
+    ;;
 "po")
     mkdir -p po
 
@@ -170,7 +173,7 @@ if [ "$CC" = "clang" ]; then
 fi
 
 case "$target" in
-"build"|"debug"|"valgrind"|"callgrind")
+"build"|"debug"|"release"|"valgrind"|"callgrind")
     trace_on
 
     if [ ! -d "po" ]; then
@@ -195,9 +198,7 @@ case "$target" in
     ;;
 "install")
     trace_on
-    if [ ! -f "bin/$program" ]; then
-        $0 build
-    fi
+    $0 release
     install -Dm755 bin/${program}   ${DESTDIR}${PREFIX}/bin/${program}
     install -Dm644 ${program}.1     ${DESTDIR}${PREFIX}/man/man1/${program}.1
     
