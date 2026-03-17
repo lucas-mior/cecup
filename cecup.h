@@ -169,9 +169,6 @@ typedef struct CecupRow {
     int64 src_mtime_raw;
     int64 dst_mtime_raw;
 
-    char *src_color;
-    char *dst_color;
-
     bool selected;
 } CecupRow;
 

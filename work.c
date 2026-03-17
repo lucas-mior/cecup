@@ -256,9 +256,6 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
         break;
     }
 
-    row->src_color = colors[row->src_action];
-    row->dst_color = colors[row->dst_action];
-
     bytes_pretty(row->src_size_text, src_size);
     row->src_size_raw = src_size;
     bytes_pretty(row->dst_size_text, dst_size);

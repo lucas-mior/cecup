@@ -673,22 +673,22 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
     case COL_SRC_ACTION:
         cecup_renderer->raw_text = action_emojis[row->src_action];
         cecup_renderer->text_len = strlen32(cecup_renderer->raw_text);
-        cecup_renderer->raw_color = row->src_color;
+        cecup_renderer->raw_color = colors[row->src_action];
         break;
     case COL_DST_ACTION:
         cecup_renderer->raw_text = action_emojis[row->dst_action];
         cecup_renderer->text_len = strlen32(cecup_renderer->raw_text);
-        cecup_renderer->raw_color = row->dst_color;
+        cecup_renderer->raw_color = colors[row->dst_action];
         break;
     case COL_SRC_PATH:
         cecup_renderer->raw_text = row->src_path;
         cecup_renderer->text_len = row->src_path ? row->path_len : 0;
-        cecup_renderer->raw_color = row->src_color;
+        cecup_renderer->raw_color = colors[row->src_action];
         break;
     case COL_DST_PATH:
         cecup_renderer->raw_text = row->dst_path;
         cecup_renderer->text_len = row->dst_path ? row->path_len : 0;
-        cecup_renderer->raw_color = row->dst_color;
+        cecup_renderer->raw_color = colors[row->dst_action];
         break;
     case COL_SIZE_TEXT: {
         char *background;
@@ -696,11 +696,11 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
         int32 text_len;
 
         if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 3)) {
-            background = row->src_color;
+            background = colors[row->src_action];
             text = row->src_size_text;
             text_len = strlen32(row->src_size_text);
         } else {
-            background = row->dst_color;
+            background = colors[row->dst_action];
             text = row->dst_size_text;
             text_len = strlen32(row->dst_size_text);
         }
@@ -716,11 +716,11 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
         int32 text_len;
 
         if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.l_tree), 4)) {
-            background = row->src_color;
+            background = colors[row->src_action];
             text = row->src_mtime_text;
             text_len = strlen32(row->src_mtime_text);
         } else {
-            background = row->dst_color;
+            background = colors[row->dst_action];
             text = row->dst_mtime_text;
             text_len = strlen32(row->dst_mtime_text);
         }
