@@ -774,8 +774,8 @@ work_rsync(void *user_data) {
     do {
         int64 r;
         char *eol;
-        char buf_output[MAX_PATH_LENGTH*2];
-        char buf_error[MAX_PATH_LENGTH*2];
+        char buf_output[MAX_PATH_LENGTH*2 + 1];
+        char buf_error[MAX_PATH_LENGTH*2 + 1];
 
         pipes[0].revents = 0;
         pipes[1].revents = 0;
@@ -805,7 +805,7 @@ work_rsync(void *user_data) {
         }
 
         r = read64(pipe_stdout[0], buf_output + buf_output_pos,
-                   SIZEOF(buf_output) - 1 - buf_output_pos);
+                   SIZEOF(buf_output) - 1 - buf_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
@@ -855,7 +855,7 @@ work_rsync(void *user_data) {
                                       RSYNC_IGNORE_INTER,
                                       strlen32(RSYNC_IGNORE_INTER));
 
-                left = line_len - (int32)(reason_sep - buf_output);
+                left = SIZEOF(buf_output) - 1 - (reason_sep - buf_output);
 
                 if (*(reason_sep - 1) != '/') {
                     memmove64(reason_sep + 1, reason_sep, left);
