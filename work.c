@@ -705,6 +705,7 @@ work_rsync(void *user_data) {
 
         // important: --include=*/ is necessary to include any sub directory
         // important: --exclude=* has to come last
+        // FIXME: --include=*/ will generate duplicate dirs
         rsync_args[a++] = "--include=*/";
         rsync_args[a++] = "--exclude=*";
     } else {
