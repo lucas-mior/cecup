@@ -61,12 +61,12 @@ on_log_copy(GtkWidget *m, void *data) {
     GtkTextIter start;
     GtkTextIter end;
     char *text;
-    int64 line_num;
+    int line_num;
 
     if (!strcmp(which, "all")) {
         gtk_text_buffer_get_bounds(cecup.log_buffer, &start, &end);
     } else if (!strcmp(which, "line")) {
-        line_num = (int64)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(m), "line_num"));
+        line_num = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(m), "line_num"));
         gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &start, line_num);
         end = start;
 
