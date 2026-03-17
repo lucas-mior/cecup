@@ -682,7 +682,7 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
         break;
     case COL_SRC_PATH:
         cecup_renderer->raw_text = row->src_path;
-        cecup_renderer->text_len = row->path_len;
+        cecup_renderer->text_len = row->src_path ? row->path_len : 0;
         cecup_renderer->raw_color = row->src_color;
         break;
     case COL_DST_PATH:
