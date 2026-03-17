@@ -1387,7 +1387,7 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
     return;
 }
 
-typedef struct {
+typedef struct SelectionData {
     GtkEditable *editable;
     int32 start_pos;
     int32 end_pos;
