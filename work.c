@@ -857,7 +857,7 @@ work_rsync(void *user_data) {
                                       strlen32(RSYNC_IGNORE_INTER));
 
                 if (*(reason_sep - 1) != '/') {
-                    memmove64(reason_sep + 1, reason_sep, line_len - path_len);
+                    memmove64(reason_sep + 1, reason_sep, path_len);
                     reason_sep += 1;
                     *(reason_sep - 1) = '/';
                 }
