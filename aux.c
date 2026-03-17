@@ -623,6 +623,8 @@ cecup_get_dirs(void) {
     char *tmp_src;
     char *tmp_dst;
 
+    cecup.changed_dirs = true;
+
     tmp_src = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
     tmp_dst = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
 
