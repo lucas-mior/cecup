@@ -97,6 +97,19 @@ on_log_copy_line(GtkWidget *m, void *data) {
     return;
 }
 
+static void
+on_log_copy(GtkWidget *m, void *data) {
+    char *which = data;
+
+    if (!strcmp(which, "all")) {
+        on_log_copy_all(m, NULL);
+    }
+    if (!strcmp(which, "line")) {
+        on_log_copy_line(m, NULL);
+    }
+    return;
+}
+
 static gboolean
 on_log_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
     (void)data;
@@ -110,7 +123,7 @@ on_log_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
         menu = gtk_menu_new();
 
         item = gtk_menu_item_new_with_label(_("📋 Copy Whole Log"));
-        g_signal_connect(item, "activate", G_CALLBACK(on_log_copy_all), NULL);
+        g_signal_connect(item, "activate", G_CALLBACK(on_log_copy), "all");
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
         gtk_text_view_window_to_buffer_coords(GTK_TEXT_VIEW(widget),
@@ -121,7 +134,7 @@ on_log_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
         item = gtk_menu_item_new_with_label(_("📍 Copy This Line"));
         g_object_set_data(G_OBJECT(item), "line_num", GINT_TO_POINTER(gtk_text_iter_get_line(&iter)));
-        g_signal_connect(item, "activate", G_CALLBACK(on_log_copy_line), NULL);
+        g_signal_connect(item, "activate", G_CALLBACK(on_log_copy), "line");
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
         gtk_widget_show_all(menu);
