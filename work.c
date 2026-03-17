@@ -951,18 +951,16 @@ work_rsync(void *user_data) {
                     char *sep;
                     action = ACTION_HARDLINK;
 
-                    if ((sep = strstr(src_path, RSYNC_HARDLINK_NOTATION))) {
-                        *sep = '\0';
-                        link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
-                    }
+                    sep = strstr(src_path, RSYNC_HARDLINK_NOTATION);
+                    *sep = '\0';
+                    link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
                 } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
                     char *sep;
                     action = ACTION_SYMLINK;
 
-                    if ((sep = strstr(src_path, RSYNC_SYMLINK_NOTATION))) {
-                        *sep = '\0';
-                        link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
-                    }
+                    sep = strstr(src_path, RSYNC_SYMLINK_NOTATION);
+                    *sep = '\0';
+                    link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
                 } else if (buf_output[2] == '+') {
                     action = ACTION_NEW;
                 }
