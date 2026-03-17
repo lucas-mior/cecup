@@ -50,7 +50,7 @@ static CecupMenuItem context_menu_items[] = {
 {N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "absolute"},
 {N_("⏯️ Apply"),              0,          0,                                 on_menu_apply,     NULL},
 {N_("🔍 Diff"),               0,          0,                                 on_menu_diff,      NULL},
-{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
+{N_("✏️ Rename"),               GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
 {N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
 {N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
 };
@@ -435,6 +435,78 @@ on_menu_ignore_dir(GtkWidget *m, void *data) {
             if (strcmp(dir_buffer, ".")) {
                 fprintf(fp, "\n/%s/", dir_buffer);
             }
+        }
+        fclose(fp);
+    } while (0);
+
+    if (tasks) {
+        free_task_list(tasks);
+    }
+    free_update_data(message);
+    return;
+}
+
+static void
+on_menu_ignore_name(GtkWidget *m, void *data) {
+    Message *message = data;
+    TaskList *tasks;
+    FILE *fp;
+
+    (void)m;
+
+    do {
+        if ((tasks = get_target_tasks(message->side, message->src_path,
+                                      message->action))
+            == NULL) {
+            break;
+        }
+        if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
+            IPC_SEND_LOG_ERROR("Error opening %s: %s.\n", cecup.ignore_path,
+                               strerror(errno));
+            break;
+        }
+        for (int32 i = 0; i < tasks->count; i += 1) {
+            Task *task = tasks->items[i];
+
+            fprintf(fp, "\n/%s", task->path);
+        }
+        fclose(fp);
+    } while (0);
+
+    if (tasks) {
+        free_task_list(tasks);
+    }
+    free_update_data(message);
+    return;
+}
+
+static void
+on_menu_ignore_name_any_dir(GtkWidget *m, void *data) {
+    Message *message = data;
+    TaskList *tasks;
+    FILE *fp;
+
+    (void)m;
+
+    do {
+        if ((tasks = get_target_tasks(message->side, message->src_path,
+                                      message->action))
+            == NULL) {
+            break;
+        }
+        if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
+            IPC_SEND_LOG_ERROR("Error opening %s: %s.\n", cecup.ignore_path,
+                               strerror(errno));
+            break;
+        }
+        for (int32 i = 0; i < tasks->count; i += 1) {
+            Task *task = tasks->items[i];
+            int32 path_len;
+            char *name;
+
+            path_len = task->path_len;
+            name = basename2(task->path, &path_len, NULL);
+            fprintf(fp, "\n*/%s", name);
         }
         fclose(fp);
     } while (0);
@@ -1189,6 +1261,10 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
                     g_signal_connect(sub_dir, "activate",
                                      G_CALLBACK(on_menu_ignore_dir), message);
+                    g_signal_connect(sub_name, "activate",
+                                     G_CALLBACK(on_menu_ignore_name), message);
+                    g_signal_connect(sub_name_any_dir, "activate",
+                                     G_CALLBACK(on_menu_ignore_name_any_dir), message);
 
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
