@@ -1085,7 +1085,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     char extension_label[32];
                     char directory_label[MAX_PATH_LENGTH + 64];
                     char directory_buffer[MAX_PATH_LENGTH];
-                    char *name_ptr = NULL;
                     char name_label[MAX_PATH_LENGTH];
                     char name_label_any_dir[MAX_PATH_LENGTH];
                     char pattern_buffer[MAX_PATH_LENGTH];
@@ -1104,12 +1103,14 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     if ((extension_ptr = memchr(name, '.', length))) {
                         extension_ptr = strrchr(extension_ptr, '.');
                         gtk_widget_set_sensitive(sub_ext, TRUE);
-                        SNPRINTF(extension_label, _("by extension (*%s)"),
-                                 extension_ptr);
+                        SNPRINTF(extension_label,
+                                 _("by extension (*%s)"), extension_ptr);
 
                         SNPRINTF(pattern_buffer, "*%s", extension_ptr);
-                        g_object_set_data_full(G_OBJECT(sub_ext), "ignore_pattern", g_strdup(pattern_buffer), g_free);
-                        g_signal_connect(sub_ext, "activate", G_CALLBACK(on_menu_ignore), message);
+                        g_object_set_data_full(G_OBJECT(sub_ext),
+                                               "ignore_pattern",
+                                               g_strdup(pattern_buffer),
+                                               g_free);
                     } else {
                         SNPRINTF(extension_label, "%s", _("by extension"));
                     }
@@ -1121,25 +1122,40 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                                  directory_buffer);
 
                         SNPRINTF(pattern_buffer, "/%s/", directory_buffer);
-                        g_object_set_data_full(G_OBJECT(sub_dir), "ignore_pattern", g_strdup(pattern_buffer), g_free);
-                        g_signal_connect(sub_dir, "activate", G_CALLBACK(on_menu_ignore), message);
+                        g_object_set_data_full(G_OBJECT(sub_dir),
+                                               "ignore_pattern",
+                                               g_strdup(pattern_buffer),
+                                               g_free);
                     } else {
                         SNPRINTF(directory_label, "%s", _("📁 Dir"));
                     }
 
-                    name_ptr = basename2(name, &path_len, NULL);
                     SNPRINTF(name_label,
                              _("This file only (/%s)"), filepath);
                     SNPRINTF(name_label_any_dir,
-                             _("This filename on any folder (*/%s)"), name_ptr);
+                             _("This filename on any folder (*/%s)"), name);
 
                     SNPRINTF(pattern_buffer, "/%s", filepath);
-                    g_object_set_data_full(G_OBJECT(sub_name), "ignore_pattern", g_strdup(pattern_buffer), g_free);
-                    g_signal_connect(sub_name, "activate", G_CALLBACK(on_menu_ignore), message);
+                    g_object_set_data_full(G_OBJECT(sub_name),
+                                           "ignore_pattern",
+                                           g_strdup(pattern_buffer),
+                                           g_free);
 
-                    SNPRINTF(pattern_buffer, "*/%s", name_ptr);
-                    g_object_set_data_full(G_OBJECT(sub_name_any_dir), "ignore_pattern", g_strdup(pattern_buffer), g_free);
-                    g_signal_connect(sub_name_any_dir, "activate", G_CALLBACK(on_menu_ignore), message);
+                    SNPRINTF(pattern_buffer, "*/%s", name);
+                    g_object_set_data_full(G_OBJECT(sub_name_any_dir),
+                                          "ignore_pattern",
+                                          g_strdup(pattern_buffer),
+                                          g_free);
+
+                    g_signal_connect(sub_dir, "activate",
+                                     G_CALLBACK(on_menu_ignore), message);
+                    g_signal_connect(sub_ext, "activate",
+                                     G_CALLBACK(on_menu_ignore), message);
+                    g_signal_connect(sub_name, "activate",
+                                     G_CALLBACK(on_menu_ignore), message);
+                    g_signal_connect(sub_name_any_dir, "activate",
+                                     G_CALLBACK(on_menu_ignore), message);
+
 
                     gtk_menu_item_set_label(GTK_MENU_ITEM(sub_ext),
                                             extension_label);
