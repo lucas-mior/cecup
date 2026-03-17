@@ -581,24 +581,13 @@ update_ui_handler(void *data) {
         protect_interface_from_user(false);
         break;
     case DATA_TYPE_CLEAR_TREES:
-        g_mutex_lock(&cecup.row_arena_mutex);
-        arena_reset(cecup.row_arena);
-
         if (cecup.refresh_id != 0) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
         }
-
-        cecup.rows_len = 0;
-        cecup.rows_visible_len = 0;
         gtk_list_store_clear(cecup.store);
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       0.0);
-        if (cecup.ui_waiting) {
-            cecup.ui_waiting = false;
-            g_cond_signal(&cecup.ui_ready_cond);
-        }
-        g_mutex_unlock(&cecup.row_arena_mutex);
         break;
     case DATA_TYPE_REGENERATE_PREVIEW:
         on_preview_clicked(NULL, NULL);

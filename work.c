@@ -599,13 +599,12 @@ work_rsync(void *user_data) {
             memset64(message, 0, SIZEOF(Message));
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
-            message->type = DATA_TYPE_CLEAR_TREES;
-            cecup.ui_waiting = true;
-            g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
+            arena_reset(cecup.row_arena);
+            cecup.rows_len = 0;
+            cecup.rows_visible_len = 0;
 
-            while (cecup.ui_waiting) {
-                g_cond_wait(&cecup.ui_ready_cond, &cecup.row_arena_mutex);
-            }
+            message->type = DATA_TYPE_CLEAR_TREES;
+            g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
 
             work_finalize(thread_data);
             return NULL;
@@ -639,12 +638,11 @@ work_rsync(void *user_data) {
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
             message->type = DATA_TYPE_CLEAR_TREES;
-            cecup.ui_waiting = true;
             g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
 
-            while (cecup.ui_waiting) {
-                g_cond_wait(&cecup.ui_ready_cond, &cecup.row_arena_mutex);
-            }
+            arena_reset(cecup.row_arena);
+            cecup.rows_len = 0;
+            cecup.rows_visible_len = 0;
 
             total_files_preview = src_fix.file_count;
             IPC_SEND_LOG("Found %lld files to analyse...\n",
