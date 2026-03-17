@@ -948,19 +948,15 @@ work_rsync(void *user_data) {
                 dst_path = src_path;
 
                 if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
-                    char *sep;
-                    action = ACTION_HARDLINK;
-
-                    sep = strstr(src_path, RSYNC_HARDLINK_NOTATION);
+                    char *sep = strstr(src_path, RSYNC_HARDLINK_NOTATION);
                     *sep = '\0';
                     link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
+                    action = ACTION_HARDLINK;
                 } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
-                    char *sep;
-                    action = ACTION_SYMLINK;
-
-                    sep = strstr(src_path, RSYNC_SYMLINK_NOTATION);
+                    char *sep = strstr(src_path, RSYNC_SYMLINK_NOTATION);
                     *sep = '\0';
                     link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
+                    action = ACTION_SYMLINK;
                 } else if (buf_output[2] == '+') {
                     action = ACTION_NEW;
                 }
