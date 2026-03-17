@@ -511,13 +511,16 @@ update_ui_handler(void *data) {
         g_mutex_unlock(&cecup.row_arena_mutex);
         break;
     }
-    case DATA_TYPE_REMOVE_MATCHES:
     case DATA_TYPE_REMOVE_ROW: {
         char *pattern = message->src_path;
+        int32 pattern_len = message->path_len;
 
         if (pattern[0] == '/') {
             pattern += 1;
+            pattern_len -= 1;
         }
+        PRINTLN(pattern);
+        PRINTLN(pattern_len);
 
         g_mutex_lock(&cecup.row_arena_mutex);
         for (int32 i = 0; i < cecup.rows_len;) {
@@ -534,16 +537,18 @@ update_ui_handler(void *data) {
                 continue;
             }
 
-            if (message->type == DATA_TYPE_REMOVE_ROW) {
-                if (row->path_len == message->path_len) {
-                    if ((row->src_path && !strcmp(row->src_path, pattern))
-                        || (row->dst_path && !strcmp(row->dst_path, pattern))) {
-                        match = true;
-                    }
-                }
-            } else { // DATA_TYPE_REMOVE_MATCHES
+            PRINTLN(path_test);
+            PRINTLN(row->path_len);
+
+            if (pattern[pattern_len - 1] == '/') {
                 if (begins_with(path_test, pattern)) {
                     match = true;
+                }
+            } else {
+                if (row->path_len == pattern_len) {
+                    if (!strcmp(path_test, pattern)) {
+                        match = true;
+                    }
                 }
             }
 
