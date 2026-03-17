@@ -130,8 +130,8 @@ work_finalize(ThreadData *thread_data) {
 
     g_mutex_lock(&cecup.ui_arena_mutex);
 
-    message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-    memset64(message, 0, SIZEOF(Message));
+    message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
 
     message->type = DATA_TYPE_ENABLE_BUTTONS;
 
@@ -320,8 +320,8 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
 
     if ((cecup.rows_len % 10000) == 0) {
         g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-        memset64(message, 0, SIZEOF(Message));
+        message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         message->type = DATA_TYPE_TREE_UPDATE;
@@ -530,8 +530,8 @@ work_fix_fs_worker(void *user_data) {
     IPC_SEND_LOG("Name correction finished.\n");
 
     g_mutex_lock(&cecup.ui_arena_mutex);
-    message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-    memset64(message, 0, SIZEOF(Message));
+    message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
 
     message->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, message);
@@ -600,8 +600,8 @@ work_rsync(void *user_data) {
                   " option \"Protect same drive sync\".\n"));
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-            memset64(message, 0, SIZEOF(Message));
+            message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+            memset64(message, 0, SIZEOF(*message));
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
             arena_reset(cecup.row_arena);
@@ -638,8 +638,8 @@ work_rsync(void *user_data) {
             Message *message;
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-            memset64(message, 0, SIZEOF(Message));
+            message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+            memset64(message, 0, SIZEOF(*message));
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
             message->type = DATA_TYPE_CLEAR_TREES;
@@ -1383,8 +1383,8 @@ work_rsync_bulk(void *user_data) {
             char *path = task->path;
 
             g_mutex_lock(&cecup.ui_arena_mutex);
-            message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-            memset64(message, 0, SIZEOF(Message));
+            message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+            memset64(message, 0, SIZEOF(*message));
 
             message->path_len = path_len;
             message->src_path = xarena_push(cecup.ui_arena, path_len + 1);
