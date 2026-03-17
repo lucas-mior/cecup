@@ -327,7 +327,7 @@ work_send_tree(enum CecupAction action, enum CecupReason reason,
 }
 
 static int64
-work_fix_fs_recursive(char *base_path, char *relative_path) {
+work_fix_fs_recursive(char *base_path, char *relative) {
     DIR *dir;
     struct dirent *entry;
     char full_path[MAX_PATH_LENGTH];
@@ -336,8 +336,8 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
     int32 capacity = 1024;
     int64 total_files = 0;
 
-    if (relative_path) {
-        SNPRINTF(full_path, "%s/%s", base_path, relative_path);
+    if (relative) {
+        SNPRINTF(full_path, "%s/%s", base_path, relative);
     } else {
         SNPRINTF(full_path, "%s", base_path);
     }
@@ -389,8 +389,8 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         int64 k;
         int64 name_len = strlen32(d_name);
 
-        if (relative_path) {
-            SNPRINTF(sub_rel, "%s/%s", relative_path, d_name);
+        if (relative) {
+            SNPRINTF(sub_rel, "%s/%s", relative, d_name);
         } else {
             SNPRINTF(sub_rel, "%s", d_name);
         }
@@ -447,9 +447,8 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
         new_name[j] = '\0';
 
         if (changed) {
-            if (relative_path && relative_path[0]) {
-                SNPRINTF(new_full, "%s/%s/%s", base_path, relative_path,
-                         new_name);
+            if (relative && relative[0]) {
+                SNPRINTF(new_full, "%s/%s/%s", base_path, relative, new_name);
             } else {
                 SNPRINTF(new_full, "%s/%s", base_path, new_name);
             }
@@ -460,8 +459,8 @@ work_fix_fs_recursive(char *base_path, char *relative_path) {
             } else if (rename(old_full, new_full) == 0) {
                 IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name);
                 if (S_ISDIR(stat.st_mode)) {
-                    if (relative_path) {
-                        SNPRINTF(sub_rel, "%s/%s", relative_path, new_name);
+                    if (relative) {
+                        SNPRINTF(sub_rel, "%s/%s", relative, new_name);
                     } else {
                         SNPRINTF(sub_rel, "%s", new_name);
                     }
