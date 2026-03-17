@@ -1085,8 +1085,8 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     char extension_label[32];
                     char directory_label[MAX_PATH_LENGTH + 64];
                     char directory_buffer[MAX_PATH_LENGTH];
-                    char name_label[MAX_PATH_LENGTH];
-                    char name_label_any_dir[MAX_PATH_LENGTH];
+                    char name_label[MAX_NAME_LENGTH];
+                    char name_label_any_dir[MAX_NAME_LENGTH + 2];
                     char pattern_buffer[MAX_PATH_LENGTH];
 
                     sub_ext = gtk_menu_item_new();
@@ -1102,11 +1102,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
                     if ((extension_ptr = memchr(name, '.', length))) {
                         extension_ptr = strrchr(extension_ptr, '.');
-                        gtk_widget_set_sensitive(sub_ext, TRUE);
                         SNPRINTF(extension_label,
                                  _("by extension (*%s)"), extension_ptr);
 
                         SNPRINTF(pattern_buffer, "*%s", extension_ptr);
+
+                        gtk_widget_set_sensitive(sub_ext, TRUE);
                         g_object_set_data_full(G_OBJECT(sub_ext),
                                                "ignore_pattern",
                                                g_strdup(pattern_buffer),
@@ -1117,11 +1118,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
                     dirname2(directory_buffer, filepath, &path_len);
                     if (strcmp(directory_buffer, ".")) {
-                        gtk_widget_set_sensitive(sub_dir, TRUE);
                         SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
                                  directory_buffer);
 
                         SNPRINTF(pattern_buffer, "/%s/", directory_buffer);
+
+                        gtk_widget_set_sensitive(sub_dir, TRUE);
                         g_object_set_data_full(G_OBJECT(sub_dir),
                                                "ignore_pattern",
                                                g_strdup(pattern_buffer),

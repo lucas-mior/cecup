@@ -35,6 +35,7 @@
 #define SIDE_RIGHT 1
 
 #define MAX_PATH_LENGTH 4096
+#define MAX_NAME_LENGTH 256
 
 enum CecupAction {
     ACTION_NEW,
