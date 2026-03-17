@@ -1395,9 +1395,8 @@ typedef struct SelectionData {
 
 static gboolean
 on_path_selection_idle(void *data) {
-    SelectionData *selection_data;
+    SelectionData *selection_data = data;
 
-    selection_data = data;
     gtk_editable_select_region(selection_data->editable, selection_data->start_pos,
                                selection_data->end_pos);
     free(selection_data);
