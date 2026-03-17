@@ -818,9 +818,9 @@ work_rsync(void *user_data) {
             *eol = '\0';
             /* if (DEBUGGING) { */
             /*     error("%s\n", buf_output); */
-            /* } else if (literal_match(buf_output, "[sender] showing")) { */
-            /*     error("%s\n", buf_output); */
-            /* } */
+            if (literal_match(buf_output, "[sender] showing")) {
+                error("%s\n", buf_output);
+            }
 
             might_be_itemize_line = check_itemize_line(buf_output);
             action_char = buf_output[0];
