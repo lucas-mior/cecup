@@ -658,6 +658,7 @@ work_rsync(void *user_data) {
     rsync_args[a++] = "--times";
     rsync_args[a++] = "--owner";
     rsync_args[a++] = "--group";
+    rsync_args[a++] = "--iconv=.,.";
 
     if (thread_data->delete_excluded) {
         rsync_args[a++] = "--delete-excluded";
@@ -1112,6 +1113,7 @@ work_rsync(void *user_data) {
     rsync_args[a++] = "--times";
     rsync_args[a++] = "--owner";
     rsync_args[a++] = "--group";
+    rsync_args[a++] = "--iconv=.,.";
     rsync_args[a++] = "--files-from";
     rsync_args[a++] = files_from_filename;
     rsync_args[a++] = src_base_with_slash;
@@ -1389,6 +1391,7 @@ work_rsync_bulk(void *user_data) {
     rsync_args[a++] = "--times";
     rsync_args[a++] = "--owner";
     rsync_args[a++] = "--group";
+    rsync_args[a++] = "--iconv=.,.";
     rsync_args[a++] = "--files-from";
     rsync_args[a++] = files_from_filename;
     rsync_args[a++] = cecup.src_base;
