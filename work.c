@@ -812,6 +812,9 @@ work_rsync(void *user_data) {
                && ((eol = memchr64(buf_output, '\n', buf_output_pos))
                    || (eol = memchr64(buf_output, '\r', buf_output_pos)))) {
             char *link_target = NULL;
+            char *ignore_pattern = NULL;
+            char *show_pattern = NULL;
+            char *reason_sep;
             char full_src[MAX_PATH_LENGTH];
             char full_dst[MAX_PATH_LENGTH];
             char *src_path;
@@ -832,8 +835,17 @@ work_rsync(void *user_data) {
 
             *eol = '\0';
             if ((src_path = literal_match(buf_output, RSYNC_SHOW_PRE))
-                    || (src_path = literal_match(buf_output, RSYNC_SHOW_DIR_PRE))) {
+                || (src_path = literal_match(buf_output,
+                                             RSYNC_SHOW_DIR_PRE))) {
+
                 error("%s\n", buf_output);
+
+                if ((reason_sep = strstr(src_path, RSYNC_IGNORE_INTER))) {
+                    *reason_sep = '\0';
+                    show_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
+                }
+                PRINTLN(src_path);
+                PRINTLN(show_pattern);
             }
 
             might_be_itemize_line = check_itemize_line(buf_output);
@@ -874,8 +886,6 @@ work_rsync(void *user_data) {
                                                     RSYNC_IGNORE_PRE))
                         || (src_path = literal_match(buf_output,
                                                     RSYNC_IGNORE_DIR_PRE))) {
-                char *reason_sep;
-                char *ignore_pattern = NULL;
                 
                 dst_path = src_path;
 
