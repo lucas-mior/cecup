@@ -49,6 +49,10 @@
 #define HASH_TYPE map
 #endif
 
+#if !defined(HASH_DUPLICATE_KEYS)
+#define HASH_DUPLICATE_KEYS 0
+#endif
+
 #define SLOT_FREE   0
 #define SLOT_DELETED -1
 

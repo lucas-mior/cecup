@@ -46,6 +46,7 @@ typedef struct FixFsThreadData {
 #define HASH_VALUE_TYPE char*
 #define HASH_VALUE_FORMATTER "%s"
 #define HASH_PADDING_TYPE uint32
+#define HASH_DUPLICATE_KEYS 1
 #define HASH_TYPE map
 #include "hash.c"
 
