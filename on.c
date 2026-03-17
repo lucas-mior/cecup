@@ -1441,9 +1441,6 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
                 end_pos = (int32)strlen32(current_path);
             }
 
-            PRINTLN(start_pos);
-            PRINTLN(end_pos);
-
             if (end_pos > start_pos) {
                 gtk_editable_select_region(GTK_EDITABLE(entry), start_pos, end_pos);
             }
