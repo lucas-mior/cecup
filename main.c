@@ -424,10 +424,12 @@ main(int32 argc, char *argv[]) {
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
                                       GTK_ENTRY_ICON_PRIMARY,
                                       "system-search-symbolic");
-    gtk_box_pack_start(GTK_BOX(search_hbox), gtk_label_new(_("🔍")), FALSE,
-                       FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(search_hbox), cecup.search_entry, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(main_vbox), search_hbox, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(search_hbox), gtk_label_new(_("🔍")),
+                       EXPAND_FALSE, FILL_FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(search_hbox), cecup.search_entry,
+                       EXPAND_TRUE, FILL_TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(main_vbox), search_hbox,
+                       EXPAND_FALSE, FILL_FALSE, 0);
 
     for (int32 i = 0; i < NUM_COLS; i += 1) {
         column_types[i] = G_TYPE_INT;
