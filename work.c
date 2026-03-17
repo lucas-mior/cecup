@@ -210,7 +210,7 @@ work_send_tree(enum CecupAction action, enum CecupReason reason,
         }
     } else {
         error("Error: both src_path and dst_path are NULL. "
-              "(action=%d) (reason=%d)\n", action, reason);
+              "(action=%u) (reason=%u)\n", action, reason);
         fatal(EXIT_FAILURE);
     }
 
@@ -1094,8 +1094,24 @@ work_rsync(void *user_data) {
             fatal(EXIT_FAILURE);
         }
         for (int32 i = 0; i < checksum_count; i += 1) {
-            write64(files_from_fd, checksum_files[i],
-                    strlen32(checksum_files[i]));
+            int64 w;
+            int64 written = 0;
+            int64 left = strlen32(checksum_files[i]);
+
+            while ((w = write64(files_from_fd,
+                                checksum_files[i] + written, left)) > 0) {
+                written += w;
+                left -= w;
+                if (left <= 0) {
+                    break;
+                }
+            }
+            if (w < 0) {
+                error("Error writing to %s: %s.\n",
+                      files_from_filename, strerror(errno));
+                fatal(EXIT_FAILURE);
+            }
+
             write64(files_from_fd, "\n", 1);
         }
         XCLOSE(&files_from_fd);
