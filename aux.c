@@ -392,12 +392,17 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
             gtk_list_store_append(cecup.store, &iter);
         }
     } else if (cecup.rows_visible_len < current_store_count) {
-        for (int32 i = 0; i < (current_store_count - cecup.rows_visible_len);
-             i += 1) {
-            GtkTreeIter iter;
-            if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cecup.store),
-                                              &iter)) {
-                gtk_list_store_remove(cecup.store, &iter);
+        if (cecup.rows_visible_len == 0) {
+            gtk_list_store_clear(cecup.store);
+        } else {
+            for (int32 i = 0; i < (current_store_count - cecup.rows_visible_len);
+                 i += 1) {
+                GtkTreeIter iter;
+                if (gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(cecup.store),
+                                                  &iter, NULL,
+                                                  current_store_count - 1 - i)) {
+                    gtk_list_store_remove(cecup.store, &iter);
+                }
             }
         }
     }
