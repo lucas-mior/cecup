@@ -1372,8 +1372,8 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
         Message *message;
 
         g_mutex_lock(&cecup.ui_arena_mutex);
-        message = xarena_push(cecup.ui_arena, SIZEOF(Message));
-        memset64(message, 0, SIZEOF(Message));
+        message = xarena_push(cecup.ui_arena, SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
 
         message->path_len = len_old;
         message->src_path = xarena_push(cecup.ui_arena, len_old + 1);
