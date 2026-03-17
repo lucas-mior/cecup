@@ -852,7 +852,7 @@ work_rsync(void *user_data) {
             if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
                 path_len = line_len - (int32)(src_path - buf_output);
                 reason_sep = memmem64(src_path,
-                                      line_len - path_len,
+                                      path_len,
                                       RSYNC_IGNORE_INTER,
                                       strlen32(RSYNC_IGNORE_INTER));
 
