@@ -213,7 +213,11 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
                 target = iterator;
             }
 
+#if HASH_DUPLICATE_KEYS
+            target->key = xstrdup(key);
+#else
             target->key = key;
+#endif
             target->hash = hash;
 #if defined(HASH_VALUE_TYPE)
             target->value = value;
@@ -347,6 +351,9 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
             break;
         default:
             if ((iterator->hash == hash) && (strcmp(iterator->key, key) == 0)) {
+#if HASH_DUPLICATE_KEYS
+                free(iterator->key);
+#endif
                 iterator->key = (char *)SLOT_DELETED;
                 map->length -= 1;
                 return true;
@@ -431,6 +438,8 @@ CAT(hash_ndeleted_, HASH_TYPE)(struct Map *map) {
 #undef HASH_VALUE_TYPE
 #undef HASH_PADDING_TYPE
 #undef HASH_TYPE
+#undef HASH_DUPLICATE_KEYS
+#undef HASH_VALUE_FORMATTER
 
 #if !defined(HASH_H2)
 #define HASH_H2

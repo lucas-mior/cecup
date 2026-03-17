@@ -860,7 +860,8 @@ work_rsync(void *user_data) {
                 *reason_sep = '\0';
 
                 show_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
-                hash_insert2_map(show_patterns_map, xstrdup(src_path), xstrdup(show_pattern));
+                hash_insert2_map(show_patterns_map,
+                                 src_path, xstrdup(show_pattern));
                 hash_print_map(show_patterns_map, false);
             }
 
