@@ -833,6 +833,7 @@ work_rsync(void *user_data) {
             int64 dst_size = 0;
             int64 dst_mtime = 0;
             int32 line_len = (int32)(eol - buf_output);
+            int32 path_len = 0;
             int32 remaining;
             enum CecupAction action;
             enum CecupReason reason;
@@ -849,7 +850,7 @@ work_rsync(void *user_data) {
             }
 
             if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
-                int32 path_len = line_len - (int32)(src_path - buf_output);
+                path_len = line_len - (int32)(src_path - buf_output);
                 reason_sep = memmem64(src_path,
                                       line_len - path_len,
                                       RSYNC_IGNORE_INTER,
@@ -904,10 +905,13 @@ work_rsync(void *user_data) {
                                                RSYNC_IGNORE_PRE_FILE))
                         || (src_path = begins_with(buf_output,
                                                    RSYNC_IGNORE_PRE_DIR))) {
-                
+                path_len = src_path - buf_output;
                 dst_path = src_path;
 
-                reason_sep = strstr(src_path, RSYNC_IGNORE_INTER);
+                reason_sep = memmem64(src_path,
+                                      line_len - path_len,
+                                      RSYNC_IGNORE_INTER,
+                                      strlen32(RSYNC_IGNORE_INTER));
                 *reason_sep = '\0';
                 ignore_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
 
