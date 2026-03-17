@@ -246,6 +246,13 @@ cecup_row_compare(const void *a, const void *b) {
 
 static void
 refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
+    g_mutex_lock(&cecup.row_arena_mutex);
+    refresh_ui_list_locked(refresh_type, path_to_focus);
+    g_mutex_unlock(&cecup.row_arena_mutex);
+}
+
+static void
+refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     int32 count_new = 0;
     int32 count_hard = 0;
     int32 count_update = 0;
@@ -277,8 +284,6 @@ refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
     show_ignore
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
-
-    /* g_mutex_lock(&cecup.row_arena_mutex); */
 
     cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
@@ -434,8 +439,6 @@ refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
         }
     }
 
-    /* g_mutex_unlock(&cecup.row_arena_mutex); */
-
     g_idle_add((GSourceFunc)gtk_widget_queue_draw, (void *)cecup.l_tree);
     g_idle_add((GSourceFunc)gtk_widget_queue_draw, (void *)cecup.r_tree);
     return;
@@ -494,7 +497,7 @@ update_ui_handler(void *data) {
     case DATA_TYPE_TREE_UPDATE: {
         g_mutex_lock(&cecup.row_arena_mutex);
         if (cecup.ui_waiting) {
-            refresh_ui_list(REFRESH_PARTIAL, NULL);
+            refresh_ui_list_locked(REFRESH_PARTIAL, NULL);
             cecup.ui_waiting = false;
             g_cond_signal(&cecup.ui_ready_cond);
         } else if (cecup.refresh_id == 0) {
