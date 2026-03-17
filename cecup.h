@@ -411,8 +411,11 @@ static struct {
     /* {"*",                     "_asterisk_in_filename_"                    }, */
     {RSYNC_HARDLINK_NOTATION, "_rsync_hardlink_notation_in_filename_"     },
     {RSYNC_SYMLINK_NOTATION,  "_rsync_symlink_notation_in_filename_"      },
-    {RSYNC_IGNORE_PRE,        "rsync_ignore_message_prelude_in_filename"  },
-    {RSYNC_IGNORE_INTER,      "rsync_ignore_message_interlude_in_filename"},
+    {RSYNC_IGNORE_PRE,        "rsync_ignore_prelude_file_in_filename"  },
+    {RSYNC_IGNORE_DIR_PRE,    "rsync_ignore_prelude_dir_in_filename"  },
+    {RSYNC_IGNORE_INTER,      "rsync_ignore_interlude_in_filename"},
+    {RSYNC_SHOW_PRE,          "rsync_show_prelude_file_in_filename"},
+    {RSYNC_SHOW_DIR_PRE,      "rsync_show_prelude_dir_in_filename"},
 };
 
 #endif /* CECUP_H */
