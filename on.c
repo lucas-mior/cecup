@@ -1392,7 +1392,6 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
                         char *path_str, void *data) {
     GtkWidget *tree = data;
     GtkTreePath *tree_path;
-    CecupRow *row;
     int32 row_index;
     int32 side;
     char *current_path;
@@ -1413,7 +1412,7 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
     }
 
     if ((row_index >= 0) && (row_index < cecup.rows_visible_len)) {
-        row = cecup.rows_visible[row_index];
+        CecupRow *row = cecup.rows_visible[row_index];
         current_path = (side == SIDE_LEFT) ? row->src_path : row->dst_path;
 
         if (current_path) {
