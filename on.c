@@ -50,7 +50,7 @@ static CecupMenuItem context_menu_items[] = {
 {N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "absolute"},
 {N_("⏯️ Apply"),              0,          0,                                 on_menu_apply,     NULL},
 {N_("🔍 Diff"),               0,          0,                                 on_menu_diff,      NULL},
-{N_("✏️ Rename"),               GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
+{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
 {N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
 {N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
 };
@@ -378,60 +378,18 @@ on_menu_diff(GtkWidget *m, void *data) {
 static void
 on_menu_ignore(GtkWidget *m, void *data) {
     Message *message = data;
-    TaskList *tasks;
     FILE *fp;
-    int32 ignore_type;
 
-    ignore_type = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(m), "ignore_type"));
+    (void)m;
 
-    if ((tasks = get_target_tasks(message->side, message->src_path,
-                                  message->action)) == NULL) {
-        free_update_data(message);
-        return;
-    }
-
-    if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
+    if ((fp = fopen(cecup.ignore_path, "a"))) {
+        fprintf(fp, "\n%s", message->ignore_pattern);
+        fclose(fp);
+    } else {
         IPC_SEND_LOG_ERROR("Error opening %s: %s.\n", cecup.ignore_path,
                            strerror(errno));
-        free_task_list(tasks);
-        free_update_data(message);
-        return;
     }
 
-    for (int32 i = 0; i < tasks->count; i += 1) {
-        Task *task = tasks->items[i];
-
-        switch (ignore_type) {
-        case IGNORE_TYPE_EXT: {
-            char *ext;
-            if ((ext = strrchr(task->path, '.')) != NULL) {
-                fprintf(fp, "\n*%s", ext);
-            }
-            break;
-        }
-        case IGNORE_TYPE_DIR: {
-            char dir_buffer[MAX_PATH_LENGTH];
-            dirname2(dir_buffer, task->path, &(task->path_len));
-            if (strcmp(dir_buffer, ".")) {
-                fprintf(fp, "\n/%s/", dir_buffer);
-            }
-            break;
-        }
-        case IGNORE_TYPE_NAME:
-            fprintf(fp, "\n/%s", task->path);
-            break;
-        case IGNORE_TYPE_NAME_ANY_DIR: {
-            int32 path_len = task->path_len;
-            char *name;
-            name = basename2(task->path, &path_len, NULL);
-            fprintf(fp, "\n*/%s", name);
-            break;
-        }
-        }
-    }
-
-    fclose(fp);
-    free_task_list(tasks);
     free_update_data(message);
     return;
 }
@@ -921,7 +879,6 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
             if ((context_menu_items[i].keyval != 0) && (key == target)
                 && (modifiers == context_menu_items[i].mask)) {
 
-                /* BLOCK: Rename, Delete, Apply if busy */
                 if (is_busy && (context_menu_items[i].callback == on_menu_rename ||
                                 context_menu_items[i].callback == on_menu_delete ||
                                 context_menu_items[i].callback == on_menu_apply)) {
@@ -1085,7 +1042,6 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
 
             item = gtk_menu_item_new_with_label(label);
 
-            /* BLOCK: Disable menu item if busy and it modifies the list */
             if (is_busy && (context_menu_items[i].callback == on_menu_apply ||
                             context_menu_items[i].callback == on_menu_rename ||
                             context_menu_items[i].callback == on_menu_delete)) {
@@ -1129,6 +1085,12 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     char *name_ptr = NULL;
                     char name_label[MAX_PATH_LENGTH];
                     char name_label_any_dir[MAX_PATH_LENGTH];
+                    Message *msg_ext;
+                    Message *msg_dir;
+                    Message *msg_name;
+                    Message *msg_any;
+                    char pattern_buffer[MAX_PATH_LENGTH];
+                    int32 pattern_length;
 
                     sub_ext = gtk_menu_item_new();
                     sub_dir = gtk_menu_item_new();
@@ -1146,6 +1108,16 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                         gtk_widget_set_sensitive(sub_ext, TRUE);
                         SNPRINTF(extension_label, _("by extension (*%s)"),
                                  extension_ptr);
+
+                        pattern_length = SNPRINTF(pattern_buffer, "*%s", extension_ptr);
+                        g_mutex_lock(&cecup.ui_arena_mutex);
+                        msg_ext = xarena_push(cecup.ui_arena, SIZEOF(*msg_ext));
+                        memcpy64(msg_ext, message, SIZEOF(*msg_ext));
+                        msg_ext->ignore_pattern = xarena_push(cecup.ui_arena, pattern_length + 1);
+                        memcpy64(msg_ext->ignore_pattern, pattern_buffer, pattern_length + 1);
+                        msg_ext->ignore_pattern_len = pattern_length;
+                        g_mutex_unlock(&cecup.ui_arena_mutex);
+                        g_signal_connect(sub_ext, "activate", G_CALLBACK(on_menu_ignore), msg_ext);
                     } else {
                         SNPRINTF(extension_label, "%s", _("by extension"));
                     }
@@ -1155,6 +1127,16 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                         gtk_widget_set_sensitive(sub_dir, TRUE);
                         SNPRINTF(directory_label, _("📁 Dir (/%s/)"),
                                  directory_buffer);
+
+                        pattern_length = SNPRINTF(pattern_buffer, "/%s/", directory_buffer);
+                        g_mutex_lock(&cecup.ui_arena_mutex);
+                        msg_dir = xarena_push(cecup.ui_arena, SIZEOF(*msg_dir));
+                        memcpy64(msg_dir, message, SIZEOF(*msg_dir));
+                        msg_dir->ignore_pattern = xarena_push(cecup.ui_arena, pattern_length + 1);
+                        memcpy64(msg_dir->ignore_pattern, pattern_buffer, pattern_length + 1);
+                        msg_dir->ignore_pattern_len = pattern_length;
+                        g_mutex_unlock(&cecup.ui_arena_mutex);
+                        g_signal_connect(sub_dir, "activate", G_CALLBACK(on_menu_ignore), msg_dir);
                     } else {
                         SNPRINTF(directory_label, "%s", _("📁 Dir"));
                     }
@@ -1165,6 +1147,26 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     SNPRINTF(name_label_any_dir,
                              _("This filename on any folder (*/%s)"), name_ptr);
 
+                    pattern_length = SNPRINTF(pattern_buffer, "/%s", filepath);
+                    g_mutex_lock(&cecup.ui_arena_mutex);
+                    msg_name = xarena_push(cecup.ui_arena, SIZEOF(*msg_name));
+                    memcpy64(msg_name, message, SIZEOF(*msg_name));
+                    msg_name->ignore_pattern = xarena_push(cecup.ui_arena, pattern_length + 1);
+                    memcpy64(msg_name->ignore_pattern, pattern_buffer, pattern_length + 1);
+                    msg_name->ignore_pattern_len = pattern_length;
+                    g_mutex_unlock(&cecup.ui_arena_mutex);
+                    g_signal_connect(sub_name, "activate", G_CALLBACK(on_menu_ignore), msg_name);
+
+                    pattern_length = SNPRINTF(pattern_buffer, "*/%s", name_ptr);
+                    g_mutex_lock(&cecup.ui_arena_mutex);
+                    msg_any = xarena_push(cecup.ui_arena, SIZEOF(*msg_any));
+                    memcpy64(msg_any, message, SIZEOF(*msg_any));
+                    msg_any->ignore_pattern = xarena_push(cecup.ui_arena, pattern_length + 1);
+                    memcpy64(msg_any->ignore_pattern, pattern_buffer, pattern_length + 1);
+                    msg_any->ignore_pattern_len = pattern_length;
+                    g_mutex_unlock(&cecup.ui_arena_mutex);
+                    g_signal_connect(sub_name_any_dir, "activate", G_CALLBACK(on_menu_ignore), msg_any);
+
                     gtk_menu_item_set_label(GTK_MENU_ITEM(sub_ext),
                                             extension_label);
                     gtk_menu_item_set_label(GTK_MENU_ITEM(sub_dir),
@@ -1174,31 +1176,15 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
                     gtk_menu_item_set_label(GTK_MENU_ITEM(sub_name_any_dir),
                                             name_label_any_dir);
 
-                    g_object_set_data(G_OBJECT(sub_ext), "ignore_type", GINT_TO_POINTER(IGNORE_TYPE_EXT));
-                    g_signal_connect(sub_ext, "activate",
-                                     G_CALLBACK(on_menu_ignore), message);
-
-                    g_object_set_data(G_OBJECT(sub_dir), "ignore_type", GINT_TO_POINTER(IGNORE_TYPE_DIR));
-                    g_signal_connect(sub_dir, "activate",
-                                     G_CALLBACK(on_menu_ignore), message);
-
-                    g_object_set_data(G_OBJECT(sub_name), "ignore_type", GINT_TO_POINTER(IGNORE_TYPE_NAME));
-                    g_signal_connect(sub_name, "activate",
-                                     G_CALLBACK(on_menu_ignore), message);
-
-                    g_object_set_data(G_OBJECT(sub_name_any_dir), "ignore_type", GINT_TO_POINTER(IGNORE_TYPE_NAME_ANY_DIR));
-                    g_signal_connect(sub_name_any_dir, "activate",
-                                     G_CALLBACK(on_menu_ignore), message);
-
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_ext);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_dir);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_name);
                     gtk_menu_shell_append(GTK_MENU_SHELL(sub), sub_name_any_dir);
 
-                    /* If busy, block the ignore actions.
-                     * They write to the ignore file
-                     * which rsync might be reading. */
                     if (is_busy) {
+                        /* If busy, block the ignore actions.
+                         * They write to the ignore file
+                         * which rsync might be reading. */
                         gtk_widget_set_sensitive(item, FALSE);
                     }
                 }
