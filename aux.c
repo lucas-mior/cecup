@@ -554,10 +554,6 @@ update_ui_handler(void *data) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }
                 cecup.rows_len -= 1;
-
-                if (message->type == DATA_TYPE_REMOVE_ROW) {
-                    break; 
-                }
             } else {
                 i += 1;
             }
