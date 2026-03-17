@@ -294,34 +294,38 @@ work_send_tree(enum CecupAction action, enum CecupReason reason,
     row->path_len = path_len;
 
     if (cecup.rows_len >= cecup.rows_capacity) {
-        g_mutex_lock(&cecup.row_arena_mutex);
         cecup.rows_capacity *= 2;
         cecup.rows
             = xrealloc(cecup.rows, cecup.rows_capacity*SIZEOF(CecupRow *));
         cecup.rows_visible = xrealloc(cecup.rows_visible,
                                       cecup.rows_capacity*SIZEOF(CecupRow *));
-        g_mutex_unlock(&cecup.row_arena_mutex);
     }
-    // this does not have to be protected by mutex
+
     cecup.rows[cecup.rows_len] = row;
     cecup.rows_len += 1;
+    
+    *processed_files_preview += 1;
+    if (((cecup.rows_len % 100) == 0) && (total_files_preview > 0)) {
+        ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                          (double)*processed_files_preview
+                          / (double)total_files_preview);
+    }
 
-    if ((cecup.rows_len % 1000) == 0) {
+    if ((cecup.rows_len % 10000) == 0) {
+        g_mutex_unlock(&cecup.row_arena_mutex);
+
         g_mutex_lock(&cecup.ui_arena_mutex);
         message = xarena_push(cecup.ui_arena, SIZEOF(Message));
         memset64(message, 0, SIZEOF(Message));
         g_mutex_unlock(&cecup.ui_arena_mutex);
 
         message->type = DATA_TYPE_TREE_UPDATE;
-        g_idle_add(update_ui_handler, message);
+        g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
+
+        g_usleep(100);
+        g_mutex_lock(&cecup.row_arena_mutex);
     }
 
-    *processed_files_preview += 1;
-    if (total_files_preview > 0) {
-        ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                          (double)*processed_files_preview
-                          / (double)total_files_preview);
-    }
     return;
 }
 
@@ -746,6 +750,7 @@ work_rsync(void *user_data) {
     pipes[0].events = POLLIN;
     pipes[1].events = POLLIN;
 
+    g_mutex_lock(&cecup.row_arena_mutex);
     do {
         int64 r;
         char *eol;
@@ -812,8 +817,6 @@ work_rsync(void *user_data) {
             bool is_dir = false;
 
             *eol = '\0';
-            /* if (DEBUGGING) { */
-            /* error("%s\n", buf_output); */
             if (literal_match(buf_output, "[sender] showing")) {
                 error("%s\n", buf_output);
             }
@@ -1052,6 +1055,7 @@ work_rsync(void *user_data) {
         IPC_SEND_LOG_ERROR("%s", buf_error);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
+    g_mutex_unlock(&cecup.row_arena_mutex);
 
     if (waitpid(child_pid, NULL, 0) < 0) {
         IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
@@ -1579,4 +1583,4 @@ main(void) {
 
 #endif
 
-#endif /* WORK_C */
+#endif
