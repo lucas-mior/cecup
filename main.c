@@ -578,6 +578,11 @@ main(int32 argc, char *argv[]) {
                     g_key_file_get_boolean(key, "Options", "delete_excluded",
                                            NULL));
             }
+            if (g_key_file_has_key(key, "Options", "delete_after", NULL)) {
+                gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(cecup.delete_after),
+                    g_key_file_get_boolean(key, "Options", "delete_after", NULL));
+            }
         }
         g_free(key);
     }
@@ -603,6 +608,9 @@ main(int32 argc, char *argv[]) {
 
     g_signal_connect(cecup.search_entry, "changed",
                      G_CALLBACK(on_search_changed), NULL);
+
+    g_signal_connect(cecup.log_view, "button-press-event",
+                     G_CALLBACK(on_log_button_press), NULL);
 
     g_signal_connect(cecup.filter_new, "toggled",
                      G_CALLBACK(on_filter_toggled), NULL);

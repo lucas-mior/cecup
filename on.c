@@ -56,6 +56,82 @@ static CecupMenuItem context_menu_items[] = {
 };
 
 static void
+on_log_copy_all(GtkWidget *m, void *data) {
+    GtkTextIter start;
+    GtkTextIter end;
+    char *text;
+
+    (void)m;
+    (void)data;
+    gtk_text_buffer_get_bounds(cecup.log_buffer, &start, &end);
+
+    if ((text = gtk_text_buffer_get_text(cecup.log_buffer, &start, &end, FALSE))) {
+        gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), text, -1);
+        g_free(text);
+    }
+
+    return;
+}
+
+static void
+on_log_copy_line(GtkWidget *m, void *data) {
+    GtkTextIter line_start;
+    GtkTextIter line_end;
+    char *text;
+    int32 line_num;
+
+    (void)data;
+    line_num = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(m), "line_num"));
+    gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &line_start, line_num);
+    line_end = line_start;
+
+    if (!gtk_text_iter_ends_line(&line_end)) {
+        gtk_text_iter_forward_to_line_end(&line_end);
+    }
+
+    if ((text = gtk_text_buffer_get_text(cecup.log_buffer, &line_start, &line_end, FALSE))) {
+        gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), text, -1);
+        g_free(text);
+    }
+
+    return;
+}
+
+static gboolean
+on_log_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
+    (void)data;
+    if (event->type == GDK_BUTTON_PRESS && event->button == GDK_BUTTON_SECONDARY) {
+        GtkWidget *menu;
+        GtkWidget *item;
+        GtkTextIter iter;
+        int32 x;
+        int32 y;
+
+        menu = gtk_menu_new();
+
+        item = gtk_menu_item_new_with_label(_("📋 Copy Whole Log"));
+        g_signal_connect(item, "activate", G_CALLBACK(on_log_copy_all), NULL);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+        gtk_text_view_window_to_buffer_coords(GTK_TEXT_VIEW(widget),
+                                              GTK_TEXT_WINDOW_WIDGET,
+                                              (int32)event->x, (int32)event->y,
+                                              &x, &y);
+        gtk_text_view_get_iter_at_location(GTK_TEXT_VIEW(widget), &iter, x, y);
+
+        item = gtk_menu_item_new_with_label(_("📍 Copy This Line"));
+        g_object_set_data(G_OBJECT(item), "line_num", GINT_TO_POINTER(gtk_text_iter_get_line(&iter)));
+        g_signal_connect(item, "activate", G_CALLBACK(on_log_copy_line), NULL);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+        gtk_widget_show_all(menu);
+        gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static void
 on_menu_apply(GtkWidget *m, void *data) {
     Message *message = data;
     TaskList *tasks;
