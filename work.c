@@ -582,6 +582,8 @@ work_rsync(void *user_data) {
 
     same_fs = (stat_src.st_dev == stat_dst.st_dev);
 
+    g_mutex_lock(&cecup.row_arena_mutex);
+
     if (thread_data->check_different_fs) {
         if (same_fs) {
             Message *message;
@@ -598,7 +600,12 @@ work_rsync(void *user_data) {
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
             message->type = DATA_TYPE_CLEAR_TREES;
-            g_idle_add(update_ui_handler, message);
+            cecup.ui_waiting = true;
+            g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
+
+            while (cecup.ui_waiting) {
+                g_cond_wait(&cecup.ui_ready_cond, &cecup.row_arena_mutex);
+            }
 
             work_finalize(thread_data);
             return NULL;
@@ -632,7 +639,12 @@ work_rsync(void *user_data) {
             g_mutex_unlock(&cecup.ui_arena_mutex);
 
             message->type = DATA_TYPE_CLEAR_TREES;
-            g_idle_add(update_ui_handler, message);
+            cecup.ui_waiting = true;
+            g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
+
+            while (cecup.ui_waiting) {
+                g_cond_wait(&cecup.ui_ready_cond, &cecup.row_arena_mutex);
+            }
 
             total_files_preview = src_fix.file_count;
             IPC_SEND_LOG("Found %lld files to analyse...\n",
@@ -752,7 +764,6 @@ work_rsync(void *user_data) {
     pipes[0].events = POLLIN;
     pipes[1].events = POLLIN;
 
-    g_mutex_lock(&cecup.row_arena_mutex);
     do {
         int64 r;
         char *eol;
