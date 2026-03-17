@@ -1420,16 +1420,17 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
 
         if (current_path) {
             GtkEntry *entry = GTK_ENTRY(editable);
-            char *last_slash;
             char *start_of_name;
             char *last_dot;
+            int32 full_length;
+            int32 base_len;
             int32 start_pos;
             int32 end_pos;
 
             gtk_entry_set_text(entry, current_path);
 
-            last_slash = strrchr(current_path, '/');
-            start_of_name = last_slash ? last_slash + 1 : current_path;
+            full_length = (int32)strlen32(current_path);
+            start_of_name = basename2(current_path, &full_length, &base_len);
             last_dot = strrchr(start_of_name, '.');
 
             start_pos = (int32)(start_of_name - current_path);
