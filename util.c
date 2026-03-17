@@ -402,7 +402,7 @@ strncmp32(char *left, char *right, int64 size) {
 
 INLINE char *
 literal_match(char *string, char *literal) {
-    int64 n = strlen32(literal);
+    int32 n = strlen32(literal);
     if (strncmp32(literal, string, n) == 0) {
         return string + n;
     } else {
