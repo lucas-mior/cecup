@@ -552,10 +552,7 @@ work_rsync(void *user_data) {
     struct pollfd pipes[2];
     pid_t child_pid;
 
-    char buf_output[MAX_PATH_LENGTH*2];
     int32 buf_output_pos = 0;
-    char buf_error[MAX_PATH_LENGTH*2];
-
     char src_base_with_slash[MAX_PATH_LENGTH];
     char dst_base_with_slash[MAX_PATH_LENGTH];
     char *rsync_args[64];
@@ -777,6 +774,8 @@ work_rsync(void *user_data) {
     do {
         int64 r;
         char *eol;
+        char buf_output[MAX_PATH_LENGTH*2];
+        char buf_error[MAX_PATH_LENGTH*2];
 
         pipes[0].revents = 0;
         pipes[1].revents = 0;
@@ -1092,7 +1091,7 @@ work_rsync(void *user_data) {
 
         if (buf_output_pos >= (int32)SIZEOF(buf_output) - 1) {
             buf_output[buf_output_pos] = '\0';
-            IPC_SEND_LOG("%s.\n", buf_output);
+            IPC_SEND_LOG("%s\n", buf_output);
             buf_output_pos = 0;
         }
 
@@ -1226,6 +1225,9 @@ work_rsync(void *user_data) {
 
     do {
         int64 r;
+        char buf_output[MAX_PATH_LENGTH*2];
+        char buf_error[MAX_PATH_LENGTH*2];
+
         pipes[0].revents = 0;
         pipes[1].revents = 0;
 
@@ -1321,8 +1323,6 @@ work_rsync_bulk(void *user_data) {
     char dst_base_with_slash[MAX_PATH_LENGTH];
     char *rsync_args[32];
     int32 a = 0;
-    char buf_output[MAX_PATH_LENGTH*2];
-    char buf_error[MAX_PATH_LENGTH*2];
     int32 buf_output_pos = 0;
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
     int files_from_fd;
@@ -1510,6 +1510,8 @@ work_rsync_bulk(void *user_data) {
     do {
         int64 r;
         char *eol;
+        char buf_output[MAX_PATH_LENGTH*2];
+        char buf_error[MAX_PATH_LENGTH*2];
 
         pipes[0].revents = 0;
         pipes[1].revents = 0;
