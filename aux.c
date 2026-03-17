@@ -512,7 +512,7 @@ update_ui_handler(void *data) {
         break;
     }
     case DATA_TYPE_REMOVE_MATCHES:
-    case DATA_TYPE_REMOVE_TREE_ROW: {
+    case DATA_TYPE_REMOVE_ROW: {
         char *pattern = message->src_path;
 
         if (pattern[0] == '/') {
@@ -532,7 +532,7 @@ update_ui_handler(void *data) {
                 continue;
             }
 
-            if (message->type == DATA_TYPE_REMOVE_TREE_ROW) {
+            if (message->type == DATA_TYPE_REMOVE_ROW) {
                 if (row->path_len != message->path_len) {
                     continue;
                 }
