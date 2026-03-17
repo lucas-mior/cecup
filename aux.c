@@ -548,18 +548,22 @@ update_ui_handler(void *data) {
         break;
     }
     case DATA_TYPE_REMOVE_TREE_ROW: {
-        g_mutex_lock(&cecup.row_arena_mutex);
+        char *pattern = message->src_path;
 
+        if (pattern[0] == '/') {
+            pattern += 1;
+        }
+
+        g_mutex_lock(&cecup.row_arena_mutex);
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
             CecupRow *row = cecup.rows[i];
-            char *path = message->src_path;
 
             if (row->path_len != message->path_len) {
                 continue;
             }
 
-            if ((row->src_path && !strcmp(row->src_path, path))
-                || (row->dst_path && !strcmp(row->dst_path, path))) {
+            if ((row->src_path && !strcmp(row->src_path, pattern))
+                || (row->dst_path && !strcmp(row->dst_path, pattern))) {
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }
