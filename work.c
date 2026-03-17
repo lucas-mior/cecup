@@ -907,26 +907,25 @@ work_rsync(void *user_data) {
                 
                 dst_path = src_path;
 
-                if ((reason_sep = strstr(src_path, RSYNC_IGNORE_INTER))) {
-                    *reason_sep = '\0';
-                    ignore_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
+                reason_sep = strstr(src_path, RSYNC_IGNORE_INTER);
+                *reason_sep = '\0';
+                ignore_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
 
-                    SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-                    SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
+                SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
+                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
 
-                    get_file_info(full_src, &src_path,
-                                  &src_size, &src_mtime, &is_dir);
-                    get_file_info(full_dst, &dst_path,
-                                  &dst_size, &dst_mtime, &is_dir);
+                get_file_info(full_src, &src_path,
+                              &src_size, &src_mtime, &is_dir);
+                get_file_info(full_dst, &dst_path,
+                              &dst_size, &dst_mtime, &is_dir);
 
-                    if (thread_data->is_preview
-                        && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
-                        work_send_tree(ACTION_IGNORE, REASON_IGNORED,
-                                       src_path, dst_path, NULL, ignore_pattern,
-                                       src_size, src_mtime, dst_size, dst_mtime,
-                                       thread_data->delete_excluded, is_dir,
-                                       &processed_files_preview, total_files_preview);
-                    }
+                if (thread_data->is_preview
+                    && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
+                    work_send_tree(ACTION_IGNORE, REASON_IGNORED,
+                                   src_path, dst_path, NULL, ignore_pattern,
+                                   src_size, src_mtime, dst_size, dst_mtime,
+                                   thread_data->delete_excluded, is_dir,
+                                   &processed_files_preview, total_files_preview);
                 }
             } else if (might_be_itemize_line
                        && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
