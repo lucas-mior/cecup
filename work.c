@@ -843,9 +843,6 @@ work_rsync(void *user_data) {
 
                 left = (int32)(r - (interlude - buf_output));
 
-                error("before:\n");
-                fwrite64(buf_output, 1, line_len + 1, stderr);
-                fwrite64("\n", 1, 1, stderr);
                 if (*(interlude - 1) != '/') {
                     memmove64(interlude + 1, interlude, left);
                     interlude += 1;
@@ -853,10 +850,6 @@ work_rsync(void *user_data) {
                     line_len += 1;
                 }
                 *interlude = '\0';
-
-                error("after:\n");
-                fwrite64(buf_output, 1, line_len + 1, stderr);
-                fwrite64("\n", 1, 1, stderr);
 
                 show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
                 hash_insert2_map(show_patterns_map,
