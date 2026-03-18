@@ -867,9 +867,15 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
     gtk_tree_model_get(model, &iter, COL_ROW_PTR, &row, -1);
 
-    filepath = (side == SIDE_LEFT) ? row->src_path : row->dst_path;
+    if (side == SIDE_LEFT) {
+        filepath = row->src_path;
+        action = row->src_action;
+    } else {
+        filepath = row->dst_path;
+        action = row->dst_action;
+    }
+
     path_len = row->path_len;
-    action = (side == SIDE_LEFT) ? row->src_action : row->dst_action;
     modifiers = event->state
                 & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK);
 
