@@ -82,7 +82,7 @@ static TaskList *
 get_target_tasks(int32 side, char *clicked_path,
                  enum CecupAction clicked_action) {
     TaskList *tasks;
-    int64 tasks_size = STRUCT_ARRAY_SIZE(tasks, Message *, cecup.rows_len);
+    int64 tasks_size = STRUCT_ARRAY_SIZE(tasks, Task *, cecup.rows_len);
     int32 count = 0;
 
     tasks = xmalloc(tasks_size);
