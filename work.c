@@ -509,7 +509,6 @@ work_fix_fs_worker(void *user_data) {
         error("Error in stat(%s): %s.\n", cecup.src_base, strerror(errno));
         fatal(EXIT_FAILURE);
     }
-
     if (stat(cecup.dst_base, &stat_dst) < 0) {
         error("Error in stat(%s): %s.\n", cecup.dst_base, strerror(errno));
         fatal(EXIT_FAILURE);
