@@ -531,8 +531,8 @@ work_fix_fs_worker(void *user_data) {
 }
 
 static void
-work_rsync_parse_line(char *buf_output, int32 line_len,
-                      ThreadData *thread_data, struct Hash_map *show_patterns_map,
+work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
+                      struct Hash_map *show_patterns_map,
                       int64 *nfiles_processed, int64 nfiles_total,
                       char ***transfers, int32 *ntransfers,
                       int32 *transfers_capacity) {
