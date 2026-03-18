@@ -827,9 +827,7 @@ work_rsync(void *user_data) {
             bool ignore_duplicate_dir = false;
 
             *eol = '\0';
-            if (DEBUGGING) {
-                error("%s\n", buf_output);
-            }
+            error("%s\n", buf_output);
 
             if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
                 int32 left = line_len - (int32)(src_path - buf_output);
@@ -838,7 +836,7 @@ work_rsync(void *user_data) {
                                            RSYNC_IGNORE_INTER,
                                            strlen32(RSYNC_IGNORE_INTER));
 
-                left = SIZEOF(buf_output) - 1 - (int32)(interlude - buf_output);
+                left = r - (int32)(interlude - buf_output);
 
                 if (*(interlude - 1) != '/') {
                     memmove64(interlude + 1, interlude, left);
@@ -850,6 +848,8 @@ work_rsync(void *user_data) {
                 show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
                 hash_insert2_map(show_patterns_map,
                                  src_path, xstrdup(show_pattern));
+                PRINTLN(src_path);
+                PRINTLN(show_pattern);
             }
 
             might_be_itemize_line = check_itemize_line(buf_output);
