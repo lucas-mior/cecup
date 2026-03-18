@@ -596,35 +596,6 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         return;
     }
 
-    if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
-        // TODO: fix duplicate deletions in filtered mode
-        while (*dst_path == ' ') {
-            dst_path += 1;
-        }
-        src_path = dst_path;
-        path_len = line_len - (int32)(src_path - buf_output);
-
-        if (get_file_info(cecup.src_base, &src_path,
-                          &src_size, &src_mtime, &is_dir)) {
-            reason = REASON_IGNORED;
-        } else {
-            reason = REASON_MISSING;
-        }
-
-        get_file_info(cecup.dst_base, &dst_path,
-                      &dst_size, &dst_mtime, &is_dir);
-
-        if (thread_data->is_preview && (reason == REASON_MISSING)) {
-            work_add_row(ACTION_DELETE, reason,
-                         src_path, dst_path, NULL, NULL,
-                         path_len,
-                         src_size, src_mtime, dst_size, dst_mtime,
-                         thread_data->delete_excluded, is_dir,
-                         nfiles_processed, nfiles_total);
-        }
-        return;
-    }
-
     if ((src_path = begins_with(buf_output, RSYNC_IGNORE_PRE_FILE))
          || (src_path = begins_with(buf_output, RSYNC_IGNORE_PRE_DIR))) {
         path_len = line_len - (int32)(src_path - buf_output);
@@ -647,6 +618,35 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
             && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
             work_add_row(ACTION_IGNORE, REASON_IGNORED,
                          src_path, dst_path, NULL, ignore_pattern,
+                         path_len,
+                         src_size, src_mtime, dst_size, dst_mtime,
+                         thread_data->delete_excluded, is_dir,
+                         nfiles_processed, nfiles_total);
+        }
+        return;
+    }
+
+    if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
+        // TODO: fix duplicate deletions in filtered mode
+        while (*dst_path == ' ') {
+            dst_path += 1;
+        }
+        src_path = dst_path;
+        path_len = line_len - (int32)(src_path - buf_output);
+
+        if (get_file_info(cecup.src_base, &src_path,
+                          &src_size, &src_mtime, &is_dir)) {
+            reason = REASON_IGNORED;
+        } else {
+            reason = REASON_MISSING;
+        }
+
+        get_file_info(cecup.dst_base, &dst_path,
+                      &dst_size, &dst_mtime, &is_dir);
+
+        if (thread_data->is_preview && (reason == REASON_MISSING)) {
+            work_add_row(ACTION_DELETE, reason,
+                         src_path, dst_path, NULL, NULL,
                          path_len,
                          src_size, src_mtime, dst_size, dst_mtime,
                          thread_data->delete_excluded, is_dir,
