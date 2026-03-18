@@ -1403,7 +1403,12 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
 
     if ((row_index >= 0) && (row_index < cecup.rows_visible_len)) {
         CecupRow *row = cecup.rows_visible[row_index];
-        char *current_path = (side == SIDE_LEFT) ? row->src_path : row->dst_path;
+        char *current_path;
+        if (side == SIDE_LEFT) {
+            current_path = row->src_path;
+        } else {
+            current_path = row->dst_path;
+        }
 
         if (current_path) {
             GtkEntry *entry = GTK_ENTRY(editable);
