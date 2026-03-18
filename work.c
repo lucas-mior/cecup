@@ -838,8 +838,8 @@ work_rsync(void *user_data) {
 
     int64 buf_output_pos = 0;
     char *eol;
-    char buf_output[MAX_PATH_LENGTH*2 + 1];
-    char buf_error[MAX_PATH_LENGTH*2 + 1];
+    char buf_output[MAX_PATH_LENGTH*2];
+    char buf_error[MAX_PATH_LENGTH*2];
 
     char src_base_with_slash[MAX_PATH_LENGTH];
     char dst_base_with_slash[MAX_PATH_LENGTH];
