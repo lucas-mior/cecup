@@ -531,7 +531,7 @@ work_fix_fs_worker(void *user_data) {
 }
 
 static void
-work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
+work_rsync_parse_line(char *buf_output, int32 line_len,
                       ThreadData *thread_data, struct Hash_map *show_patterns_map,
                       int64 *nfiles_processed, int64 nfiles_total,
                       char ***transfers, int32 *ntransfers,
@@ -563,12 +563,12 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
     type_char = buf_output[1];
 
     if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
+        char buffer[MAX_PATH_LENGTH];
         path_len = line_len - (int32)(src_path - buf_output);
         interlude = memmem64(src_path,
                              path_len,
                              RSYNC_IGNORE_INTER,
                              strlen32(RSYNC_IGNORE_INTER));
-        char buffer[MAX_PATH_LENGTH];
 
         path_len -= (int32)(&buf_output[line_len] - interlude);
         *interlude = '\0';
@@ -583,8 +583,6 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
         show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
         hash_insert2_map(show_patterns_map,
                          src_path, xstrdup(show_pattern));
-        PRINTLN(src_path);
-        PRINTLN(show_pattern);
         return;
     }
     if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
@@ -1104,7 +1102,7 @@ work_rsync(void *user_data) {
             int64 remaining;
 
             *eol = '\0';
-            work_rsync_parse_line(buf_output, (int32)line_len, r, thread_data,
+            work_rsync_parse_line(buf_output, (int32)line_len, thread_data,
                                   show_patterns_map,
                                   &nfiles_processed, nfiles_total,
                                   &transfers, &ntransfers, &transfers_capacity);
