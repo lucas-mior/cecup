@@ -789,6 +789,9 @@ work_rsync(void *user_data) {
             goto read_error_pipe;
         }
 
+        if (DEBUGGING) {
+            memset64(buf_output, 0, SIZEOF(buf_output));
+        }
         r = read64(pipe_stdout[0], buf_output + buf_output_pos,
                    SIZEOF(buf_output) - 1 - buf_output_pos - 1);
         if (r <= 0) {
@@ -847,6 +850,7 @@ work_rsync(void *user_data) {
                     memmove64(interlude + 1, interlude, left);
                     interlude += 1;
                     *(interlude - 1) = '/';
+                    line_len += 1;
                 }
                 *interlude = '\0';
 

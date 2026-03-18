@@ -527,7 +527,7 @@ update_ui_handler(void *data) {
                 }
             } else {
                 if (row->path_len == pattern_len) {
-                    if (memcmp64(path_test, pattern, pattern_len)) {
+                    if (!memcmp64(path_test, pattern, pattern_len)) {
                         match = true;
                     }
                 }
