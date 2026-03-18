@@ -215,6 +215,7 @@ typedef struct Task {
     enum DataType type;
     enum CecupAction action;
     enum CecupReason reason;
+    int32 side;
 
     char *message;
     char *path;
@@ -225,12 +226,11 @@ typedef struct Task {
     int32 path_len;
     int32 link_target_len;
     int32 ignore_pattern_len;
-
-    int32 side;
 } Task;
 
 typedef struct TaskList {
     int32 count;
+    int32 padding;
     Task *items[];
 } TaskList;
 
