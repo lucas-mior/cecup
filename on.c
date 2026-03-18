@@ -387,7 +387,8 @@ on_menu_ignore(GtkWidget *m, void *data) {
         fprintf(fp, "\n%s", pattern);
         fclose(fp);
     } else if (pattern == NULL) {
-        IPC_SEND_LOG_ERROR("Internal error: Ignore pattern not found in widget data.\n");
+        error("Ignore pattern not found in widget data.\n");
+        fatal(EXIT_FAILURE);
     } else {
         IPC_SEND_LOG_ERROR("Error opening %s: %s.\n",
                            cecup.ignore_path, strerror(errno));
