@@ -563,25 +563,29 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
     type_char = buf_output[1];
 
     if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
-        int32 left = line_len - (int32)(src_path - buf_output);
+        path_len = line_len - (int32)(src_path - buf_output);
         interlude = memmem64(src_path,
-                             left,
+                             path_len,
                              RSYNC_IGNORE_INTER,
                              strlen32(RSYNC_IGNORE_INTER));
+        char buffer[MAX_PATH_LENGTH];
 
-        left = (int32)(nbytes_read - (interlude - buf_output));
-
-        if (*(interlude - 1) != '/') {
-            memmove64(interlude + 1, interlude, left);
-            interlude += 1;
-            *(interlude - 1) = '/';
-            line_len += 1;
-        }
+        path_len -= (int32)(&buf_output[line_len] - interlude);
         *interlude = '\0';
+        if (*(interlude - 1) != '/') {
+            memcpy64(buffer, src_path, path_len + 1);
+            path_len += 1;
+            buffer[path_len - 1] = '/';
+            buffer[path_len] = '\0';
+        }
+        src_path = buffer;
 
         show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
         hash_insert2_map(show_patterns_map,
                          src_path, xstrdup(show_pattern));
+        PRINTLN(src_path);
+        PRINTLN(show_pattern);
+        return;
     }
     if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
         // TODO: fix duplicate deletions in filtered mode
