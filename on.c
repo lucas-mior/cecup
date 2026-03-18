@@ -1205,7 +1205,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     int32 view_column_index;
     int32 number_of_columns;
     char *tip_text = NULL;
-    char tip_text_buffer[MAX_PATH_LENGTH*2];
+    char tip_buffer[MAX_PATH_LENGTH*2];
 
     (void)k;
     (void)d;
@@ -1267,17 +1267,17 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
             translated_reason = _(reason_strings[row->reason]);
             if (row->link_target) {
-                SNPRINTF(tip_text_buffer, 
+                SNPRINTF(tip_buffer, 
                          "%s -> %s: %s",
                          filepath, row->link_target, translated_reason);
             } else if (row->ignore_pattern) {
-                SNPRINTF(tip_text_buffer,
+                SNPRINTF(tip_buffer,
                          "%s: %s (" N_("pattern") ": %s)",
                          filepath, translated_reason, row->ignore_pattern);
             } else {
-                SNPRINTF(tip_text_buffer, "%s: %s", filepath, translated_reason);
+                SNPRINTF(tip_buffer, "%s: %s", filepath, translated_reason);
             }
-            tip_text = tip_text_buffer;
+            tip_text = tip_buffer;
             break;
         }
         case 3: {
@@ -1287,9 +1287,9 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             } else {
                 size_raw = row->dst_size_raw;
             }
-            SNPRINTF(tip_text_buffer, "%s: %lld bytes",
+            SNPRINTF(tip_buffer, "%s: %lld bytes",
                                        filepath, (llong)size_raw);
-            tip_text = tip_text_buffer;
+            tip_text = tip_buffer;
             break;
         }
         case 4: {
@@ -1299,8 +1299,8 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             } else {
                 mtime_text = row->dst_mtime_text;
             }
-            SNPRINTF(tip_text_buffer, "%s: %s", filepath, mtime_text);
-            tip_text = tip_text_buffer;
+            SNPRINTF(tip_buffer, "%s: %s", filepath, mtime_text);
+            tip_text = tip_buffer;
             break;
         }
         default:
