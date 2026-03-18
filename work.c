@@ -556,7 +556,13 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
     bool is_dir = false;
     bool ignore_duplicate_dir = false;
 
-    error("%s\n", buf_output);
+    if (DEBUGGING) {
+        error("%s\n", buf_output);
+    }
+
+    might_be_itemize_line = check_itemize_line(buf_output);
+    action_char = buf_output[0];
+    type_char = buf_output[1];
 
     if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
         int32 left = line_len - (int32)(src_path - buf_output);
@@ -578,14 +584,10 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
         show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
         hash_insert2_map(show_patterns_map,
                          src_path, xstrdup(show_pattern));
+        return;
     }
-
-    might_be_itemize_line = check_itemize_line(buf_output);
-    action_char = buf_output[0];
-    type_char = buf_output[1];
-
-    // TODO: fix duplicate deletions in filtered mode
     if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
+        // TODO: fix duplicate deletions in filtered mode
         while (*dst_path == ' ') {
             dst_path += 1;
         }
@@ -808,8 +810,13 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
                              nfiles_processed, nfiles_total);
             }
         }
+    } else {
+        if (DEBUGGING) {
+            error("Rsync output not parsed:\n");
+            error("%s\n", buf_output);
+        }
+        return;
     }
-
     return;
 }
 
