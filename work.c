@@ -1284,8 +1284,6 @@ work_rsync(void *user_data) {
 
     do {
         int64 r;
-        char buf_output_check[MAX_PATH_LENGTH*2];
-        char buf_error_check[MAX_PATH_LENGTH*2];
 
         pipes[0].revents = 0;
         pipes[1].revents = 0;
@@ -1314,7 +1312,7 @@ work_rsync(void *user_data) {
             goto read_error_pipe2;
         }
 
-        r = read64(pipe_stdout[0], buf_output_check, SIZEOF(buf_output_check) - 1);
+        r = read64(pipe_stdout[0], buf_output, SIZEOF(buf_output) - 1);
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
@@ -1336,7 +1334,7 @@ work_rsync(void *user_data) {
             continue;
         }
 
-        r = read64(pipe_stderr[0], buf_error_check, SIZEOF(buf_error_check) - 1);
+        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stderr pipe: %s.\n",
@@ -1345,8 +1343,8 @@ work_rsync(void *user_data) {
             }
             continue;
         }
-        buf_error_check[r] = '\0';
-        IPC_SEND_LOG_ERROR("%s", buf_error_check);
+        buf_error[r] = '\0';
+        IPC_SEND_LOG_ERROR("%s", buf_error);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
