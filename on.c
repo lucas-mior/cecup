@@ -1263,19 +1263,19 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             }
             break;
         case 2: {
-            char *translated_reason;
+            char *reason;
 
-            translated_reason = _(reason_strings[row->reason]);
+            reason = _(reason_strings[row->reason]);
             if (row->link_target) {
                 SNPRINTF(tip_buffer, 
                          "%s -> %s: %s",
-                         filepath, row->link_target, translated_reason);
+                         filepath, row->link_target, reason);
             } else if (row->ignore_pattern) {
                 SNPRINTF(tip_buffer,
                          "%s: %s (" N_("pattern") ": %s)",
-                         filepath, translated_reason, row->ignore_pattern);
+                         filepath, reason, row->ignore_pattern);
             } else {
-                SNPRINTF(tip_buffer, "%s: %s", filepath, translated_reason);
+                SNPRINTF(tip_buffer, "%s: %s", filepath, reason);
             }
             tip_text = tip_buffer;
             break;
