@@ -176,7 +176,6 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
              bool delete_excluded, bool is_dir,
              long *processed_files_preview, long total_files_preview) {
     CecupRow *row;
-    Message *message;
     char *final_src_path = NULL;
     char *final_dst_path = NULL;
     int32 path_len = 0;
@@ -310,7 +309,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     }
 
     if ((cecup.rows_len % 10000) == 0) {
-        message = xmalloc(SIZEOF(*message));
+        Message *message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         message->type = DATA_TYPE_TREE_UPDATE;
