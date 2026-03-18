@@ -1539,13 +1539,12 @@ work_rsync_bulk(void *user_data) {
             int32 line_len = (int32)(eol - buf_output);
             int32 itemize_length = strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
             int32 remaining;
-            bool might_be_itemize_line;
 
             *eol = '\0';
 
             IPC_SEND_LOG("%s\n", buf_output);
 
-            if ((might_be_itemize_line = check_itemize_line(buf_output))) {
+            if (check_itemize_line(buf_output)) {
                 char *filename = buf_output + itemize_length + 1;
                 char *sep;
                 Message *message;
