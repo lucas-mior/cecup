@@ -548,9 +548,9 @@ work_rsync(void *user_data) {
     int32 a = 0;
     char cmd[MAX_PATH_LENGTH*2];
 
-    char **transfer_list = NULL;
+    char **transfers = NULL;
     int32 transfer_count = 0;
-    int32 transfer_list_capacity = 0;
+    int32 transfers_capacity = 0;
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
 
     char old_recursive[MAX_PATH_LENGTH];
@@ -965,16 +965,16 @@ work_rsync(void *user_data) {
                         || (action_char == RSYNC_CHAR0_ACTION_CHANGE)
                         || (action_char == RSYNC_CHAR0_ACTION_HARDLINK))) {
 
-                    if (transfer_count >= transfer_list_capacity) {
-                        if (transfer_list_capacity == 0) {
-                            transfer_list_capacity = 256;
+                    if (transfer_count >= transfers_capacity) {
+                        if (transfers_capacity == 0) {
+                            transfers_capacity = 256;
                         } else {
-                            transfer_list_capacity *= 2;
+                            transfers_capacity *= 2;
                         }
-                        transfer_list = xrealloc(
-                            transfer_list, transfer_list_capacity*SIZEOF(*transfer_list));
+                        transfers = xrealloc(
+                            transfers, transfers_capacity*SIZEOF(*transfers));
                     }
-                    transfer_list[transfer_count] = xstrdup(src_path);
+                    transfers[transfer_count] = xstrdup(src_path);
                     transfer_count += 1;
                 }
 
@@ -1129,7 +1129,7 @@ work_rsync(void *user_data) {
             fatal(EXIT_FAILURE);
         }
         for (int32 i = 0; i < transfer_count; i += 1) {
-            char *file = transfer_list[i];
+            char *file = transfers[i];
             int64 w;
             int64 written = 0;
             int64 left = strlen32(file);
@@ -1287,9 +1287,9 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stdout[0]);
 
     for (int32 i = 0; i < transfer_count; i += 1) {
-        free(transfer_list[i]);
+        free(transfers[i]);
     }
-    free(transfer_list);
+    free(transfers);
 
     if (thread_data->is_preview) {
         IPC_SEND_LOG("Analysis complete. Review the list and click Apply.\n");
