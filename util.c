@@ -1177,7 +1177,7 @@ error_impl(char *file, int32 line, char *format, ...) {
 static void
 error_async_safe(char *message) {
     int32 len = strlen32(message);
-    write(STDERR_FILENO, message, len);
+    write(STDERR_FILENO, message, (size_t)len);
     return;
 }
 
