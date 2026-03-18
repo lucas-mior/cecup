@@ -672,23 +672,25 @@ work_rsync(void *user_data) {
     }
 
     if (thread_data->filtered) {
-        int32 len_old = strlen32(thread_data->relative_old);
-        int32 len_new = strlen32(thread_data->relative_new);
+        char *relative_old = thread_data->relative_old;
+        char *relative_new = thread_data->relative_new;
+        int32 len_old = thread_data->len_old;
+        int32 len_new = thread_data->len_new;
 
         rsync_args[a++] = "--include";
-        rsync_args[a++] = thread_data->relative_old;
+        rsync_args[a++] = relative_old;
 
-        if (thread_data->relative_old[len_old - 1] == '/') {
-            SNPRINTF(old_recursive, "%s**", thread_data->relative_old);
+        if (relative_old[len_old - 1] == '/') {
+            SNPRINTF(old_recursive, "%s**", relative_old);
             rsync_args[a++] = "--include";
             rsync_args[a++] = old_recursive;
         }
 
         rsync_args[a++] = "--include";
-        rsync_args[a++] = thread_data->relative_new;
+        rsync_args[a++] = relative_new;
 
-        if (thread_data->relative_new[len_new - 1] == '/') {
-            SNPRINTF(new_recursive, "%s**", thread_data->relative_new);
+        if (relative_new[len_new - 1] == '/') {
+            SNPRINTF(new_recursive, "%s**", relative_new);
             rsync_args[a++] = "--include";
             rsync_args[a++] = new_recursive;
         }

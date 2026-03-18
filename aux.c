@@ -505,9 +505,6 @@ update_ui_handler(void *data) {
         char *pattern = message->src_path;
         int32 pattern_len = message->path_len;
 
-        PRINTLN(pattern);
-        PRINTLN(pattern_len);
-
         g_mutex_lock(&cecup.arena_mutex);
         for (int32 i = 0; i < cecup.rows_len;) {
             CecupRow *row = cecup.rows[i];
@@ -522,9 +519,6 @@ update_ui_handler(void *data) {
                 i += 1;
                 continue;
             }
-
-            PRINTLN(path_test);
-            PRINTLN(row->path_len);
 
             if (pattern[pattern_len - 1] == '/') {
                 if (begins_with(path_test, pattern)) {
