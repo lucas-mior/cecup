@@ -376,7 +376,8 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
 
 
     if (cecup.rows_visible_len > current_store_count) {
-        for (int32 i = 0; i < (cecup.rows_visible_len - current_store_count);
+        for (int32 i = 0;
+             i < (cecup.rows_visible_len - current_store_count);
              i += 1) {
             GtkTreeIter iter;
             gtk_list_store_append(cecup.store, &iter);
