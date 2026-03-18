@@ -395,7 +395,8 @@ work_fix_fs_recursive(char *base_path, char *relative) {
         }
 
         SNPRINTF(old_full, "%s/%s", base_path, sub_rel);
-        if (lstat(old_full, &stat) != 0) {
+        if (lstat(old_full, &stat) < 0) {
+            error("Error in lstat(%s): %s.\n", old_full, strerror(errno));
             free(d_name);
             continue;
         }
