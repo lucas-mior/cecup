@@ -559,7 +559,7 @@ work_rsync(void *user_data) {
     struct stat stat_src;
     struct stat stat_dst;
     bool same_fs = true;
-    struct Hash_map *show_patterns_map = NULL;
+    struct Hash_map *show_patterns_map = hash_create_map(10);
 
     if (stat(cecup.src_base, &stat_src) < 0) {
         IPC_SEND_LOG_ERROR("Error in stat(%s): %s.\n",
@@ -697,8 +697,6 @@ work_rsync(void *user_data) {
         // important: --exclude=* has to come last
         rsync_args[a++] = "--include="RSYNC_INCLUDE_DIRS;
         rsync_args[a++] = "--exclude="RSYNC_WILDCARD;
-
-        show_patterns_map = hash_create_map(10);
     } else {
         if (access(cecup.ignore_path, F_OK) != -1) {
             rsync_args[a++] = "--exclude-from";
@@ -1118,6 +1116,7 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stdout[0]);
 
     if (transfer_count <= 0) {
+        hash_destroy_map(show_patterns_map);
         work_finalize(thread_data);
         return NULL;
     }
@@ -1295,6 +1294,7 @@ work_rsync(void *user_data) {
         IPC_SEND_LOG("Analysis complete. Review the list and click Apply.\n");
     }
 
+    hash_destroy_map(show_patterns_map);
     work_finalize(thread_data);
     return NULL;
 }
