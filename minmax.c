@@ -74,7 +74,7 @@ typedef uint64_t uint64;
 // clang-format off
 
 #define GENERATE_COMPARE_POINTERS(MODE, SYMBOL) \
-static void*\
+static void * \
 get_pointer_##MODE(void *var1, void *var2) { \
     if ((uintptr_t)var1 SYMBOL (uintptr_t)var2) { \
         return var1; \
@@ -289,17 +289,17 @@ main(void) {
     }{
         long a = -1;
         ulong b = 0;
-        long min = MIN(a, b);
-        long max = MAX(a, b);
+        long double min = MIN(a, b);
+        long double max = MAX(a, b);
         ASSERT_EQUAL(min, a);
         ASSERT_EQUAL(max, b);
     }{
         long a = MINOF(a);
         ulong b = MAXOF(b);
-        double min = MIN(a, b);
-        double max = MAX(a, b);
+        long double min = MIN(a, b);
+        long double max = MAX(a, b);
         ASSERT_EQUAL(min, a);
-        ASSERT_EQUAL(max, (double)b);
+        ASSERT_EQUAL(max, (long double)b);
     }{
         ulong a = MINOF(a);
         long b = MAXOF(b);

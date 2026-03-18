@@ -107,7 +107,7 @@ static char *program;
 #else
 static char *program = __FILE__;
 #endif
-static int32 program_len;
+static int32 program_len __attribute__((unused));
 
 static void __attribute__((format(printf, 1, 2))) error(char *format, ...);
 
@@ -856,11 +856,10 @@ static int
 strerror_r(int errnum, char *buffer, size_t size) {
     char *error_message = strerror(errnum);
     int32 len = strlen32(error_message);
-    memcpy64(buffer, error_message, MIN(len + 1, size - 1));
+    memcpy64(buffer, error_message, (llong)MIN(len + 1, size - 1));
     buffer[size] = '\0';
     return 0;
 }
-
 #endif
 
 static int
@@ -1830,7 +1829,7 @@ xpipe(int array[2]) {
 }
 #endif
 
-static ullong here_counter = 0; \
+static volatile ullong here_counter = 0; \
 
 #define HERE do { \
     fprintf(stderr, "\n===== Here(%llu): %s:%d (%s)\n", here_counter++, __FILE__, __LINE__, __func__); \
