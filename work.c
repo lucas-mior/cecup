@@ -805,7 +805,7 @@ work_rsync(void *user_data) {
             char *link_target = NULL;
             char *ignore_pattern = NULL;
             char *show_pattern = NULL;
-            char *reason_sep;
+            char *interlude;
             char full_src[MAX_PATH_LENGTH];
             char full_dst[MAX_PATH_LENGTH];
             char *src_path;
@@ -833,10 +833,10 @@ work_rsync(void *user_data) {
 
             if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
                 int32 left = line_len - (int32)(src_path - buf_output);
-                char *interlude = memmem64(src_path,
-                                           left,
-                                           RSYNC_IGNORE_INTER,
-                                           strlen32(RSYNC_IGNORE_INTER));
+                interlude = memmem64(src_path,
+                                     left,
+                                     RSYNC_IGNORE_INTER,
+                                     strlen32(RSYNC_IGNORE_INTER));
 
                 left = (int32)(r - (interlude - buf_output));
 
@@ -894,12 +894,12 @@ work_rsync(void *user_data) {
                 int32 path_len = (int32)(src_path - buf_output);
                 dst_path = src_path;
 
-                reason_sep = memmem64(src_path,
+                interlude = memmem64(src_path,
                                       line_len - path_len,
                                       RSYNC_IGNORE_INTER,
                                       strlen32(RSYNC_IGNORE_INTER));
-                *reason_sep = '\0';
-                ignore_pattern = reason_sep + strlen32(RSYNC_IGNORE_INTER);
+                *interlude = '\0';
+                ignore_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
 
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
                 SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
