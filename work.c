@@ -584,7 +584,6 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
         show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
         hash_insert2_map(show_patterns_map,
                          src_path, xstrdup(show_pattern));
-        return;
     }
     if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
         // TODO: fix duplicate deletions in filtered mode
