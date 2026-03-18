@@ -1414,15 +1414,13 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
             GtkEntry *entry = GTK_ENTRY(editable);
             char *name;
             char *last_dot;
-            int32 full_length;
             int32 base_len;
             int32 start_pos;
             int32 end_pos;
 
             gtk_entry_set_text(entry, current_path);
 
-            full_length = strlen32(current_path);
-            name = basename2(current_path, &full_length, &base_len);
+            name = basename2(current_path, &row->path_len, &base_len);
             last_dot = strrchr(name, '.');
 
             start_pos = (int32)(name - current_path);
