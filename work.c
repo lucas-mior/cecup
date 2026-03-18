@@ -528,7 +528,7 @@ work_fix_fs_worker(void *user_data) {
 }
 
 static void
-work_rsync_parse_line(char *buf_output, int32 line_len, int64 last_read_count,
+work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
                       ThreadData *thread_data, struct Hash_map *show_patterns_map,
                       int64 *nfiles_processed, int64 nfiles_total,
                       char ***transfers, int32 *ntransfers,
@@ -564,7 +564,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 last_read_count,
                              RSYNC_IGNORE_INTER,
                              strlen32(RSYNC_IGNORE_INTER));
 
-        left = (int32)(last_read_count - (interlude - buf_output));
+        left = (int32)(nbytes_read - (interlude - buf_output));
 
         if (*(interlude - 1) != '/') {
             memmove64(interlude + 1, interlude, left);
