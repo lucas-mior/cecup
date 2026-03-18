@@ -827,7 +827,9 @@ work_rsync(void *user_data) {
             bool ignore_duplicate_dir = false;
 
             *eol = '\0';
-            error("%s\n", buf_output);
+            if (DEBUGGING) {
+                error("%s\n", buf_output);
+            }
 
             if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
                 int32 left = line_len - (int32)(src_path - buf_output);
@@ -836,7 +838,7 @@ work_rsync(void *user_data) {
                                            RSYNC_IGNORE_INTER,
                                            strlen32(RSYNC_IGNORE_INTER));
 
-                left = r - (int32)(interlude - buf_output);
+                left = (int32)(r - (interlude - buf_output));
 
                 if (*(interlude - 1) != '/') {
                     memmove64(interlude + 1, interlude, left);
