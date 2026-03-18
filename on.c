@@ -1206,7 +1206,6 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
     int32 number_of_columns;
     char *tip_text = NULL;
     char tip_text_buffer[MAX_PATH_LENGTH*2];
-    int64 tip_text_length;
 
     (void)k;
     (void)d;
@@ -1268,33 +1267,39 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
 
             translated_reason = _(reason_strings[row->reason]);
             if (row->link_target) {
-                tip_text_length
-                    = SNPRINTF(tip_text_buffer, "%s -> %s: %s", filepath,
-                               row->link_target, translated_reason);
+                SNPRINTF(tip_text_buffer, 
+                         "%s -> %s: %s",
+                         filepath, row->link_target, translated_reason);
             } else if (row->ignore_pattern) {
-                tip_text_length = SNPRINTF(
-                    tip_text_buffer, "%s: %s (" N_("pattern") ": %s)", filepath,
-                    translated_reason, row->ignore_pattern);
+                SNPRINTF(tip_text_buffer,
+                         "%s: %s (" N_("pattern") ": %s)",
+                         filepath, translated_reason, row->ignore_pattern);
             } else {
-                tip_text_length = SNPRINTF(tip_text_buffer, "%s: %s", filepath,
-                                            translated_reason);
+                SNPRINTF(tip_text_buffer, "%s: %s", filepath, translated_reason);
             }
             tip_text = tip_text_buffer;
             break;
         }
         case 3: {
-            int64 size_raw
-                = (side == SIDE_LEFT) ? row->src_size_raw : row->dst_size_raw;
-            tip_text_length = SNPRINTF(tip_text_buffer, "%s: %lld bytes",
+            int64 size_raw;
+            if (side == SIDE_LEFT) {
+                size_raw = row->src_size_raw;
+            } else {
+                size_raw = row->dst_size_raw;
+            }
+            SNPRINTF(tip_text_buffer, "%s: %lld bytes",
                                        filepath, (llong)size_raw);
             tip_text = tip_text_buffer;
             break;
         }
         case 4: {
-            char *mtime_text = (side == SIDE_LEFT) ? row->src_mtime_text
-                                                   : row->dst_mtime_text;
-            tip_text_length
-                = SNPRINTF(tip_text_buffer, "%s: %s", filepath, mtime_text);
+            char *mtime_text;
+            if (side == SIDE_LEFT) {
+                mtime_text = row->src_mtime_text;
+            } else {
+                mtime_text = row->dst_mtime_text;
+            }
+            SNPRINTF(tip_text_buffer, "%s: %s", filepath, mtime_text);
             tip_text = tip_text_buffer;
             break;
         }
