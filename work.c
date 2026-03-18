@@ -528,11 +528,11 @@ work_fix_fs_worker(void *user_data) {
 }
 
 static void
-work_rsync_parse_lines(char *buf_output, int32 line_len, int64 last_read_count,
-                       ThreadData *thread_data, struct Hash_map *show_patterns_map,
-                       int64 *nfiles_processed, int64 nfiles_total,
-                       char ***transfers, int32 *transfer_count,
-                       int32 *transfers_capacity) {
+work_rsync_parse_line(char *buf_output, int32 line_len, int64 last_read_count,
+                      ThreadData *thread_data, struct Hash_map *show_patterns_map,
+                      int64 *nfiles_processed, int64 nfiles_total,
+                      char ***transfers, int32 *ntransfers,
+                      int32 *transfers_capacity) {
     char *link_target = NULL;
     char *ignore_pattern = NULL;
     char *show_pattern = NULL;
@@ -706,7 +706,7 @@ work_rsync_parse_lines(char *buf_output, int32 line_len, int64 last_read_count,
                 || (action_char == RSYNC_CHAR0_ACTION_CHANGE)
                 || (action_char == RSYNC_CHAR0_ACTION_HARDLINK))) {
 
-            if (*transfer_count >= *transfers_capacity) {
+            if (*ntransfers >= *transfers_capacity) {
                 if (*transfers_capacity == 0) {
                     *transfers_capacity = 256;
                 } else {
@@ -715,8 +715,8 @@ work_rsync_parse_lines(char *buf_output, int32 line_len, int64 last_read_count,
                 *transfers = xrealloc(
                     *transfers, (*transfers_capacity) * SIZEOF(**transfers));
             }
-            (*transfers)[*transfer_count] = xstrdup(src_path);
-            *transfer_count += 1;
+            (*transfers)[*ntransfers] = xstrdup(src_path);
+            *ntransfers += 1;
         }
 
         SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
@@ -847,7 +847,7 @@ work_rsync(void *user_data) {
     char cmd[MAX_PATH_LENGTH*2];
 
     char **transfers = NULL;
-    int32 transfer_count = 0;
+    int32 ntransfers = 0;
     int32 transfers_capacity = 0;
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
 
@@ -928,7 +928,8 @@ work_rsync(void *user_data) {
             memset64(message, 0, SIZEOF(*message));
 
             message->type = DATA_TYPE_CLEAR_TREES;
-            g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
+            g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                            update_ui_handler, message, NULL);
 
             arena_reset(cecup.arena);
             cecup.rows_len = 0;
@@ -1106,9 +1107,10 @@ work_rsync(void *user_data) {
             int64 remaining;
 
             *eol = '\0';
-            work_rsync_parse_lines(buf_output, (int32)line_len, r, thread_data,
-                                   show_patterns_map, &nfiles_processed, nfiles_total,
-                                   &transfers, &transfer_count, &transfers_capacity);
+            work_rsync_parse_line(buf_output, (int32)line_len, r, thread_data,
+                                  show_patterns_map,
+                                  &nfiles_processed, nfiles_total,
+                                  &transfers, &ntransfers, &transfers_capacity);
 
             remaining = buf_output_pos - (line_len + 1);
             if (remaining > 0) {
@@ -1158,7 +1160,7 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
 
-    if (transfer_count <= 0) {
+    if (ntransfers <= 0) {
         hash_destroy_map(show_patterns_map);
         work_finalize(thread_data);
         return NULL;
@@ -1170,7 +1172,7 @@ work_rsync(void *user_data) {
             error("Error in mkstemp: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-        for (int32 i = 0; i < transfer_count; i += 1) {
+        for (int32 i = 0; i < ntransfers; i += 1) {
             char *file = transfers[i];
             int64 w;
             int64 written = 0;
@@ -1328,7 +1330,7 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
 
-    for (int32 i = 0; i < transfer_count; i += 1) {
+    for (int32 i = 0; i < ntransfers; i += 1) {
         free(transfers[i]);
     }
     free(transfers);
