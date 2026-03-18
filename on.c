@@ -1049,14 +1049,14 @@ on_tree_button_press(GtkWidget *widget, GdkEventButton *event, void *data) {
             }
 
             if (context_menu_items[i].callback == on_menu_apply) {
-                g_signal_connect(item, "activate", G_CALLBACK(on_menu_apply),
-                                 message);
+                g_signal_connect(item, "activate",
+                                 G_CALLBACK(on_menu_apply), message);
             } else if (context_menu_items[i].callback == on_menu_diff) {
                 if ((filepath == NULL) || (other_path == NULL)) {
                     gtk_widget_set_sensitive(item, FALSE);
                 } else {
-                    g_signal_connect(item, "activate", G_CALLBACK(on_menu_diff),
-                                     message);
+                    g_signal_connect(item, "activate",
+                                     G_CALLBACK(on_menu_diff), message);
                 }
             } else if (context_menu_items[i].callback == NULL) {
                 GtkWidget *sub = gtk_menu_new();
