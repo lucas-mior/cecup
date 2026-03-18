@@ -908,8 +908,10 @@ work_rsync(void *user_data) {
         IPC_SEND_LOG("Checking for problematic names and counting files...\n");
 
         if (!same_fs) {
-            GThread *t1 = g_thread_new("fix_src", work_fix_fs_thread_fn, &src_fix);
-            GThread *t2 = g_thread_new("fix_dst", work_fix_fs_thread_fn, &dst_fix);
+            GThread *t1 = g_thread_new("fix_src",
+                                       work_fix_fs_thread_fn, &src_fix);
+            GThread *t2 = g_thread_new("fix_dst",
+                                       work_fix_fs_thread_fn, &dst_fix);
             g_thread_join(t1);
             g_thread_join(t2);
         } else {
