@@ -302,12 +302,12 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     cecup.rows_len += 1;
 
     *nfiles_processed += 1;
-    if (((cecup.rows_len % 100) == 0) && (nfiles_total > 0)) {
+    if (((cecup.rows_len % 10000) == 0) && (nfiles_total > 0)) {
         ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
                           (double)*nfiles_processed / (double)nfiles_total);
     }
 
-    if ((cecup.rows_len % 10000) == 0) {
+    if ((cecup.rows_len % 100000) == 0) {
         Message *message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
@@ -566,9 +566,9 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
     bool delete_excluded = thread_data->delete_excluded;
     bool filtered = thread_data->filtered;
 
-    /* if (DEBUGGING && !RUNNING_ON_VALGRIND) { */
+    if (DEBUGGING && !RUNNING_ON_VALGRIND) {
         error("%s\n", buf_output);
-    /* } */
+    }
 
     might_be_itemize_line = check_itemize_line(buf_output);
     action_char = buf_output[0];
@@ -771,7 +771,6 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
 
     if (might_be_itemize_line) {
         char *space_pos = strchr(buf_output, ' ');
-        error("might_be_itemize_line...\n");
 
         action = ACTION_UPDATE;
         reason = REASON_UPDATE;
