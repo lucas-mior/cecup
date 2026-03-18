@@ -724,7 +724,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
                     *transfers_capacity *= 2;
                 }
                 *transfers = xrealloc(
-                    *transfers, (*transfers_capacity) * SIZEOF(**transfers));
+                    *transfers, (*transfers_capacity)*SIZEOF(**transfers));
             }
             (*transfers)[*ntransfers] = xstrdup(src_path);
             *ntransfers += 1;
@@ -1118,7 +1118,7 @@ work_rsync(void *user_data) {
             memset64(buf_output, 0, SIZEOF(buf_output));
         }
         r = read64(pipe_stdout[0], buf_output + buf_output_pos,
-                   SIZEOF(buf_output) - 1 - buf_output_pos - 1);
+                   SIZEOF(buf_output) - buf_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
@@ -1148,7 +1148,7 @@ work_rsync(void *user_data) {
             buf_output_pos = remaining;
         }
 
-        if (buf_output_pos >= (int64)SIZEOF(buf_output) - 1) {
+        if (buf_output_pos >= (SIZEOF(buf_output) - 1)) {
             buf_output[buf_output_pos] = '\0';
             IPC_SEND_LOG("%s\n", buf_output);
             buf_output_pos = 0;
@@ -1166,7 +1166,7 @@ work_rsync(void *user_data) {
             continue;
         }
 
-        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
+        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error));
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stderr pipe: %s.\n",
@@ -1312,7 +1312,7 @@ work_rsync(void *user_data) {
             goto read_error_pipe2;
         }
 
-        r = read64(pipe_stdout[0], buf_output, SIZEOF(buf_output) - 1);
+        r = read64(pipe_stdout[0], buf_output, SIZEOF(buf_output));
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
@@ -1337,7 +1337,7 @@ work_rsync(void *user_data) {
             continue;
         }
 
-        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
+        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error));
         if (r <= 0) {
             if (r < 0) {
                 IPC_SEND_LOG_ERROR("Error reading stderr pipe: %s.\n",
