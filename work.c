@@ -871,16 +871,12 @@ work_rsync(void *user_data) {
     struct Hash_map *show_patterns_map = hash_create_map(10);
 
     if (stat(cecup.src_base, &stat_src) < 0) {
-        IPC_SEND_LOG_ERROR("Error in stat(%s): %s.\n",
-                           cecup.src_base, strerror(errno));
-        work_finalize(thread_data);
-        return NULL;
+        error("Error in stat(%s): %s.\n", cecup.src_base, strerror(errno));
+        fatal(EXIT_FAILURE);
     }
     if (stat(cecup.dst_base, &stat_dst) < 0) {
-        IPC_SEND_LOG_ERROR("Error in stat(%s): %s.\n",
-                           cecup.dst_base, strerror(errno));
-        work_finalize(thread_data);
-        return NULL;
+        error("Error in stat(%s): %s.\n", cecup.dst_base, strerror(errno));
+        fatal(EXIT_FAILURE);
     }
 
     same_fs = (stat_src.st_dev == stat_dst.st_dev);
