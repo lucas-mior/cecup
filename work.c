@@ -612,10 +612,10 @@ work_rsync_parse_lines(char *buf_output, int32 line_len, int64 last_read_count,
                          thread_data->delete_excluded, is_dir,
                          nfiles_processed, nfiles_total);
         }
-    } else if ((src_path = begins_with(buf_output,
-                                       RSYNC_IGNORE_PRE_FILE))
-                || (src_path = begins_with(buf_output,
-                                           RSYNC_IGNORE_PRE_DIR))) {
+        return;
+    }
+    if ((src_path = begins_with(buf_output, RSYNC_IGNORE_PRE_FILE))
+         || (src_path = begins_with(buf_output, RSYNC_IGNORE_PRE_DIR))) {
         path_len = line_len - (int32)(src_path - buf_output);
         dst_path = src_path;
 
@@ -644,10 +644,12 @@ work_rsync_parse_lines(char *buf_output, int32 line_len, int64 last_read_count,
                          thread_data->delete_excluded, is_dir,
                          nfiles_processed, nfiles_total);
         }
-    } else if (might_be_itemize_line
-               && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
-                   || (action_char == RSYNC_CHAR0_ACTION_HARDLINK)
-                   || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
+        return;
+    }
+    if (might_be_itemize_line
+        && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
+            || (action_char == RSYNC_CHAR0_ACTION_HARDLINK)
+            || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
 
         char *space_pos = strchr(buf_output, ' ');
 
@@ -756,7 +758,9 @@ work_rsync_parse_lines(char *buf_output, int32 line_len, int64 last_read_count,
                              nfiles_processed, nfiles_total);
             }
         }
-    } else if (might_be_itemize_line) {
+        return;
+    }
+    if (might_be_itemize_line) {
         char *space_pos = strchr(buf_output, ' ');
 
         action = ACTION_UPDATE;
