@@ -1427,6 +1427,8 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
 
             if (last_dot && (last_dot != name)) {
                 end_pos = (int32)(last_dot - relative);
+            } else if (relative[row->path_len - 1] == '/') {
+                end_pos = row->path_len - 1;
             }
 
             if (end_pos > start_pos) {
