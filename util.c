@@ -1850,7 +1850,7 @@ xpipe(int array[2]) {
 static volatile ullong here_counter = 0; \
 
 #define HERE do { \
-    fprintf(stderr, "\n===== Here(%llu): %s:%d (%s)\n", \
+    fprintf(stderr, "\n===== HERE(%llu): %s:%d (%s)\n", \
                     here_counter++, __FILE__, __LINE__, __func__); \
 } while (0)
 
