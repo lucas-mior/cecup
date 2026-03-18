@@ -652,7 +652,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         char *space_pos = strchr(buf_output, ' ');
 
         src_path = space_pos + 1;
-        while (isspace(*src_path)) {
+        while (*src_path == ' ') {
             src_path += 1;
         }
         dst_path = src_path;
@@ -767,7 +767,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         }
 
         src_path = space_pos + 1;
-        while (isspace(*src_path)) {
+        while (*src_path == ' ') {
             src_path += 1;
         }
         dst_path = src_path;
