@@ -462,10 +462,11 @@ work_fix_fs_recursive(char *base_path, char *relative) {
                 SNPRINTF(new_full, "%s/%s", base_path, new_name);
             }
 
-            if (access(new_full, F_OK) == 0) {
-                IPC_SEND_LOG_ERROR("Skip rename: %s already exists.\n",
-                                   new_name);
-            } else if (rename(old_full, new_full) == 0) {
+            if (renameat2(AT_FDCWD, old_full,
+                          AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
+                IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n", old_full,
+                                   new_full, strerror(errno));
+            } else {
                 IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name);
                 if (S_ISDIR(stat.st_mode)) {
                     if (relative) {
@@ -474,9 +475,6 @@ work_fix_fs_recursive(char *base_path, char *relative) {
                         SNPRINTF(sub_rel, "%s", new_name);
                     }
                 }
-            } else {
-                IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n", old_full,
-                                   new_full, strerror(errno));
             }
         }
 
