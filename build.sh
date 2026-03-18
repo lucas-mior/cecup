@@ -279,9 +279,10 @@ esac
 
 case "$target" in
 "valgrind")
-    vg_flags="$vg_flags --leak-check=full"
-    # vg_flags="--error-exitcode=1 --errors-for-leak-kinds=all"
-    # vg_flags="$vg_flags --leak-check=full --show-leak-kinds=all"
+    vg_flags="$vg_flags --error-exitcode=1"
+    # vg_flags="$vg_flags --errors-for-leak-kinds=all"
+    # vg_flags="$vg_flags --leak-check=full "
+    # vg_flags="$vg_flags --show-leak-kinds=all"
     # vg_flags="$vg_flags --track-origins=yes"
     trace_on
     valgrind $vg_flags -s --tool=memcheck bin/$program 2>&1 \

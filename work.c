@@ -556,7 +556,9 @@ work_rsync_parse_line(char *buf_output, int32 line_len,
     bool is_dir = false;
     bool ignore_duplicate_dir = false;
 
-    error("%s\n", buf_output);
+    if (DEBUGGING && !RUNNING_ON_VALGRIND) {
+        error("%s\n", buf_output);
+    }
 
     might_be_itemize_line = check_itemize_line(buf_output);
     action_char = buf_output[0];
@@ -810,7 +812,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len,
             }
         }
     } else {
-        if (DEBUGGING) {
+        if (DEBUGGING && !RUNNING_ON_VALGRIND) {
             error("Rsync output not parsed:\n");
             error("%s\n", buf_output);
         }
