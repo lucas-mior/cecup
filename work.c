@@ -171,6 +171,7 @@ static void
 work_add_row(enum CecupAction action, enum CecupReason reason,
              char *src_path, char *dst_path,
              char *link_target, char *ignore_pattern,
+             int32 path_len,
              int64 src_size_raw, int64 src_mtime_raw,
              int64 dst_size_raw, int64 dst_mtime_raw,
              bool delete_excluded, bool is_dir,
@@ -178,12 +179,9 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     CecupRow *row;
     char *final_src_path = NULL;
     char *final_dst_path = NULL;
-    int32 path_len = 0;
     int32 slash = 0;
 
     if (src_path) {
-        path_len = strlen32(src_path);
-
         if (is_dir) {
             slash = 1;
         }
@@ -201,7 +199,6 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
             final_dst_path = final_src_path;
         }
     } else if (dst_path) {
-        path_len = strlen32(dst_path);
         if (is_dir) {
             slash = 1;
         }
@@ -815,6 +812,7 @@ work_rsync(void *user_data) {
             char full_dst[MAX_PATH_LENGTH];
             char *src_path;
             char *dst_path;
+            int32 path_len;
             int64 src_size = 0;
             int64 src_mtime = 0;
             int64 dst_size = 0;
@@ -869,6 +867,7 @@ work_rsync(void *user_data) {
                     dst_path += 1;
                 }
                 src_path = dst_path;
+                path_len = line_len - (int32)(src_path - buf_output);
 
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
                 SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
@@ -888,6 +887,7 @@ work_rsync(void *user_data) {
                     // so we dont send it here to avoid the duplication
                     work_add_row(ACTION_DELETE, reason,
                                  src_path, dst_path, NULL, NULL,
+                                 path_len,
                                  src_size, src_mtime, dst_size, dst_mtime,
                                  thread_data->delete_excluded, is_dir,
                                  &nfiles_processed, nfiles_total);
@@ -896,14 +896,15 @@ work_rsync(void *user_data) {
                                                RSYNC_IGNORE_PRE_FILE))
                         || (src_path = begins_with(buf_output,
                                                    RSYNC_IGNORE_PRE_DIR))) {
-                int32 path_len = (int32)(src_path - buf_output);
+                path_len = line_len - (int32)(src_path - buf_output);
                 dst_path = src_path;
 
                 interlude = memmem64(src_path,
-                                     line_len - path_len,
+                                     path_len,
                                      RSYNC_IGNORE_INTER,
                                      strlen32(RSYNC_IGNORE_INTER));
                 *interlude = '\0';
+                path_len = path_len - (int32)(&buf_output[line_len] - interlude);
                 ignore_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
 
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
@@ -918,6 +919,7 @@ work_rsync(void *user_data) {
                     && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
                     work_add_row(ACTION_IGNORE, REASON_IGNORED,
                                  src_path, dst_path, NULL, ignore_pattern,
+                                 path_len,
                                  src_size, src_mtime, dst_size, dst_mtime,
                                  thread_data->delete_excluded, is_dir,
                                  &nfiles_processed, nfiles_total);
@@ -935,6 +937,8 @@ work_rsync(void *user_data) {
                 }
                 dst_path = src_path;
 
+                path_len = line_len - (int32)(src_path - buf_output);
+
                 if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
                     char *sep;
 
@@ -942,12 +946,14 @@ work_rsync(void *user_data) {
                         link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
                         *sep = '\0';
                     }
+                    path_len = path_len - (int32)(&buf_output[line_len] - sep);
 
                     action = ACTION_HARDLINK;
                 } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
                     char *sep = strstr(src_path, RSYNC_SYMLINK_NOTATION);
                     link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
                     *sep = '\0';
+                    path_len = path_len - (int32)(&buf_output[line_len] - sep);
 
                     action = ACTION_SYMLINK;
                 } else if (buf_output[2] == '+') {
@@ -1013,11 +1019,11 @@ work_rsync(void *user_data) {
                 }
 
                 if (!(thread_data->filtered
-                      && (!strcmp(src_path, "./")
-                          || ignore_duplicate_dir))) {
+                      && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
                     if (thread_data->is_preview) {
                         work_add_row(action, reason,
                                      src_path, dst_path, link_target, NULL,
+                                     path_len,
                                      src_size, src_mtime, dst_size, dst_mtime,
                                      thread_data->delete_excluded, is_dir,
                                      &nfiles_processed, nfiles_total);
@@ -1039,6 +1045,7 @@ work_rsync(void *user_data) {
                     src_path += 1;
                 }
                 dst_path = src_path;
+                path_len = line_len - (int32)(src_path - buf_output);
 
                 if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
                     char *sep;
@@ -1047,12 +1054,14 @@ work_rsync(void *user_data) {
                         *sep = '\0';
                         link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
                     }
+                    path_len = path_len - (int32)(&buf_output[line_len] - sep);
                 } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
                     char *sep;
 
                     sep = strstr(src_path, RSYNC_SYMLINK_NOTATION);
                     *sep = '\0';
                     link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
+                    path_len = path_len - (int32)(&buf_output[line_len] - sep);
                 }
 
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
@@ -1067,6 +1076,7 @@ work_rsync(void *user_data) {
                     if (thread_data->is_preview) {
                         work_add_row(action, reason,
                                      src_path, dst_path, link_target, NULL,
+                                     path_len,
                                      src_size, src_mtime, dst_size, dst_mtime,
                                      thread_data->delete_excluded, is_dir,
                                      &nfiles_processed, nfiles_total);
