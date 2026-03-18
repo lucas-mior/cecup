@@ -587,6 +587,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
                          src_path, xstrdup(show_pattern));
         return;
     }
+
     if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
         // TODO: fix duplicate deletions in filtered mode
         while (*dst_path == ' ') {
@@ -615,6 +616,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         }
         return;
     }
+
     if ((src_path = begins_with(buf_output, RSYNC_IGNORE_PRE_FILE))
          || (src_path = begins_with(buf_output, RSYNC_IGNORE_PRE_DIR))) {
         path_len = line_len - (int32)(src_path - buf_output);
@@ -644,6 +646,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         }
         return;
     }
+
     if (might_be_itemize_line
         && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
             || (action_char == RSYNC_CHAR0_ACTION_HARDLINK)
@@ -755,6 +758,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         }
         return;
     }
+
     if (might_be_itemize_line) {
         char *space_pos = strchr(buf_output, ' ');
 
