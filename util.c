@@ -1850,6 +1850,15 @@ xpipe(int array[2]) {
     }
     return;
 }
+
+static void
+xdup2(int fd1, int fd2) {
+    if (dup2(fd1, fd2) < 0) {
+        error("Error in dup2: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    }
+    return;
+}
 #endif
 
 static volatile ullong here_counter = 0; \

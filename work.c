@@ -1063,14 +1063,8 @@ work_rsync(void *user_data) {
         XCLOSE(&pipe_stdout[0]);
         XCLOSE(&pipe_stderr[0]);
 
-        if (dup2(pipe_stdout[1], STDOUT_FILENO) < 0) {
-            error("Error dup2 stdout: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
-        if (dup2(pipe_stderr[1], STDERR_FILENO) < 0) {
-            error("Error dup2 stderr: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
+        xdup2(pipe_stdout[1], STDOUT_FILENO);
+        xdup2(pipe_stderr[1], STDERR_FILENO);
 
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
@@ -1268,8 +1262,8 @@ work_rsync(void *user_data) {
         XCLOSE(&pipe_stderr[0]);
         XCLOSE(&pipe_stdout[0]);
 
-        dup2(pipe_stdout[1], STDOUT_FILENO);
-        dup2(pipe_stderr[1], STDERR_FILENO);
+        xdup2(pipe_stdout[1], STDOUT_FILENO);
+        xdup2(pipe_stderr[1], STDERR_FILENO);
 
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
@@ -1537,14 +1531,8 @@ work_rsync_bulk(void *user_data) {
         XCLOSE(&pipe_stderr[0]);
         XCLOSE(&pipe_stdout[0]);
 
-        if (dup2(pipe_stdout[1], STDOUT_FILENO) < 0) {
-            error("Error duplicating stdout: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
-        if (dup2(pipe_stderr[1], STDERR_FILENO) < 0) {
-            error("Error duplicating stderr: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
+        xdup2(pipe_stdout[1], STDOUT_FILENO);
+        xdup2(pipe_stderr[1], STDERR_FILENO);
 
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
