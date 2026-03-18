@@ -849,67 +849,69 @@ on_tree_key_press(GtkWidget *widget, GdkEventKey *event, void *data) {
     gboolean handled = FALSE;
     bool is_busy;
 
+    CecupRow *row;
+    int32 side;
+    char *filepath;
+    int32 path_len;
+    enum CecupAction action;
+    uint32 modifiers;
+
     (void)data;
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
     is_busy = gtk_widget_get_sensitive(cecup.stop_button);
 
-    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        CecupRow *row;
-        int32 side;
-        char *filepath;
-        int32 path_len;
-        enum CecupAction action;
-        uint32 modifiers;
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        return handled;
+    }
 
-        side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
-        gtk_tree_model_get(model, &iter, COL_ROW_PTR, &row, -1);
+    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
+    gtk_tree_model_get(model, &iter, COL_ROW_PTR, &row, -1);
 
-        filepath = (side == SIDE_LEFT) ? row->src_path : row->dst_path;
-        path_len = row->path_len;
-        action = (side == SIDE_LEFT) ? row->src_action : row->dst_action;
-        modifiers = event->state
-                    & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK);
+    filepath = (side == SIDE_LEFT) ? row->src_path : row->dst_path;
+    path_len = row->path_len;
+    action = (side == SIDE_LEFT) ? row->src_action : row->dst_action;
+    modifiers = event->state
+                & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK);
 
-        for (int32 i = 0; i < (int32)LENGTH(context_menu_items); i += 1) {
-            uint32 key = gdk_keyval_to_lower(event->keyval);
-            uint32 target = gdk_keyval_to_lower(context_menu_items[i].keyval);
+    for (int32 i = 0; i < (int32)LENGTH(context_menu_items); i += 1) {
+        uint32 key = gdk_keyval_to_lower(event->keyval);
+        uint32 target = gdk_keyval_to_lower(context_menu_items[i].keyval);
 
-            if ((context_menu_items[i].keyval != 0) && (key == target)
-                && (modifiers == context_menu_items[i].mask)) {
+        if ((context_menu_items[i].keyval != 0) && (key == target)
+            && (modifiers == context_menu_items[i].mask)) {
 
-                if (is_busy && (context_menu_items[i].callback == on_menu_rename ||
-                                context_menu_items[i].callback == on_menu_delete ||
-                                context_menu_items[i].callback == on_menu_apply)) {
-                    IPC_SEND_LOG_ERROR(_("Action blocked: Background task is running.\n"));
-                    return TRUE;
+            if (is_busy && (context_menu_items[i].callback == on_menu_rename ||
+                            context_menu_items[i].callback == on_menu_delete ||
+                            context_menu_items[i].callback == on_menu_apply)) {
+                IPC_SEND_LOG_ERROR(_("Action blocked: Background task is running.\n"));
+                return TRUE;
+            }
+
+            if (filepath
+                || (context_menu_items[i].callback == on_menu_rename)) {
+                Message *message;
+
+                message = xmalloc(SIZEOF(*message));
+                memset64(message, 0, SIZEOF(*message));
+
+                if (filepath) {
+                    message->path_len = path_len;
+                    message->src_path
+                        = xmalloc(path_len + 1);
+                    memcpy64(message->src_path, filepath, path_len + 1);
                 }
 
-                if (filepath
-                    || (context_menu_items[i].callback == on_menu_rename)) {
-                    Message *message;
+                message->action = action;
+                message->side = side;
 
-                    message = xmalloc(SIZEOF(*message));
-                    memset64(message, 0, SIZEOF(*message));
-
-                    if (filepath) {
-                        message->path_len = path_len;
-                        message->src_path
-                            = xmalloc(path_len + 1);
-                        memcpy64(message->src_path, filepath, path_len + 1);
-                    }
-
-                    message->action = action;
-                    message->side = side;
-
-                    if (context_menu_items[i].path_type) {
-                        g_object_set_data(G_OBJECT(widget), "path_type",
-                                          context_menu_items[i].path_type);
-                    }
-
-                    context_menu_items[i].callback(widget, message);
-                    handled = TRUE;
-                    break;
+                if (context_menu_items[i].path_type) {
+                    g_object_set_data(G_OBJECT(widget), "path_type",
+                                      context_menu_items[i].path_type);
                 }
+
+                context_menu_items[i].callback(widget, message);
+                handled = TRUE;
+                break;
             }
         }
     }
