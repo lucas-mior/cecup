@@ -1268,8 +1268,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             reason = _(reason_strings[row->reason]);
             if (row->link_target) {
                 SNPRINTF(tip_buffer, 
-                         "%s -> %s: %s",
-                         filepath, row->link_target, reason);
+                         "%s -> %s: %s", filepath, row->link_target, reason);
             } else if (row->ignore_pattern) {
                 SNPRINTF(tip_buffer,
                          "%s: %s (" N_("pattern") ": %s)",
@@ -1287,8 +1286,7 @@ on_tree_tooltip(GtkWidget *w, gint x, gint y, gboolean k, GtkTooltip *t,
             } else {
                 size_raw = row->dst_size_raw;
             }
-            SNPRINTF(tip_buffer, "%s: %lld bytes",
-                                       filepath, (llong)size_raw);
+            SNPRINTF(tip_buffer, "%s: %lld bytes", filepath, (llong)size_raw);
             tip_text = tip_buffer;
             break;
         }
