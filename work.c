@@ -180,8 +180,6 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     char *final_src_path = NULL;
     char *final_dst_path = NULL;
     int32 path_len = 0;
-    int64 target_len;
-    int64 pattern_len;
     int32 slash = 0;
 
     if (src_path) {
@@ -276,14 +274,14 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     }
 
     if (link_target) {
-        target_len = strlen32(link_target);
+        int32 target_len = strlen32(link_target);
         row->link_target_len = (int32)target_len;
         row->link_target = xarena_push(cecup.arena, target_len + 1);
         memcpy64(row->link_target, link_target, target_len + 1);
     }
 
     if (ignore_pattern) {
-        pattern_len = strlen32(ignore_pattern);
+        int32 pattern_len = strlen32(ignore_pattern);
         row->ignore_pattern_len = (int32)pattern_len;
         row->ignore_pattern = xarena_push(cecup.arena, pattern_len + 1);
         memcpy64(row->ignore_pattern, ignore_pattern, pattern_len + 1);
