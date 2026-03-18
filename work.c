@@ -577,9 +577,6 @@ work_rsync_parse_lines(char *buf_output, int32 line_len, int64 last_read_count,
         show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
         hash_insert2_map(show_patterns_map,
                          src_path, xstrdup(show_pattern));
-
-        PRINTLN(show_pattern);
-        PRINTLN(src_path);
     }
 
     might_be_itemize_line = check_itemize_line(buf_output);
