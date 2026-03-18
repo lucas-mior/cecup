@@ -613,8 +613,6 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
 
         get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
-        PRINTLN(src_path);
-        PRINTLN(dst_path);
 
         if (thread_data->is_preview && (reason == REASON_MISSING)) {
             work_add_row(ACTION_DELETE, reason,
@@ -816,9 +814,6 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
                       &src_size, &src_mtime, &is_dir);
         get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
-
-        PRINTLN(src_path);
-        PRINTLN(dst_path);
 
         if (thread_data->filtered) {
             char *path;
