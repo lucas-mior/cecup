@@ -1423,7 +1423,7 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
             name = basename2(current_path, &row->path_len, &base_len);
             last_dot = strrchr(name, '.');
 
-            start_pos = (int32)(name - current_path);
+            start_pos = row->path_len - base_len;
 
             if (last_dot && (last_dot != name)) {
                 end_pos = (int32)(last_dot - current_path);
