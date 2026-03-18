@@ -134,8 +134,6 @@ static void __attribute__((format(printf, 3, 4)))
     strftime2(BUFFER, sizeof(BUFFER), FORMAT, TIME)
 #endif
 
-#define WRITE_ERROR(X) do { write64(STDERR_FILENO, X, strlen32(X)); } while (0)
-
 #define STRUCT_ARRAY_SIZE(struct_object, ArrayType, array_length) \
     (int64)(SIZEOF(*(struct_object)) + ((array_length)*SIZEOF(ArrayType)))
 
@@ -214,6 +212,7 @@ static char *notifiers[2] = {"dunstify", "notify-send"};
 static int64 util_page_size = 0;
 
 static void error_impl(char *file, int32 line, char *, ...);
+static void error_async_safe(char *message);
 static void fatal(int) __attribute__((noreturn));
 static void util_segv_handler(int32) __attribute__((noreturn));
 static char *itoa2(long, char *);
@@ -889,14 +888,14 @@ xclose(char *file, int line, int *fd, char *fd_var_name, char *filename) {
 
         strerror_r(errno, error_buffer, sizeof(error_buffer));
 
-        WRITE_ERROR(file);
-        WRITE_ERROR(":");
-        WRITE_ERROR(itoa2(line, itoa_buffer));
-        WRITE_ERROR(" Error closing ");
-        WRITE_ERROR(filename);
-        WRITE_ERROR(": ");
-        WRITE_ERROR(error_buffer);
-        WRITE_ERROR(".\n");
+        error_async_safe(file);
+        error_async_safe(":");
+        error_async_safe(itoa2(line, itoa_buffer));
+        error_async_safe(" Error closing ");
+        error_async_safe(filename);
+        error_async_safe(": ");
+        error_async_safe(error_buffer);
+        error_async_safe(".\n");
 
         *fd = -1;
         return -1;
@@ -1172,6 +1171,13 @@ error_impl(char *file, int32 line, char *format, ...) {
     if (big_buffer) {
         free(big_buffer);
     }
+    return;
+}
+
+static void
+error_async_safe(char *message) {
+    int32 len = strlen32(message);
+    write(STDERR_FILENO, message, len);
     return;
 }
 
