@@ -618,8 +618,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
-        if (is_preview
-            && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
+        if (is_preview && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
             work_add_row(ACTION_IGNORE, REASON_IGNORED,
                          src_path, dst_path, NULL, ignore_pattern,
                          path_len,
@@ -711,7 +710,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
             reason = REASON_EQUAL;
         }
 
-        if ((is_preview == 0)
+        if (!is_preview
             && ((type_char == RSYNC_CHAR1_TYPE_FILE)
                 || (type_char == RSYNC_CHAR1_TYPE_SYMLINK))
             && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
@@ -757,8 +756,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         } else {
         }
 
-        if (!(filtered
-              && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
+        if (!(filtered && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
             if (is_preview) {
                 work_add_row(action, reason,
                              src_path, dst_path, link_target, NULL,
@@ -841,8 +839,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         } else {
         }
 
-        if (!(filtered
-              && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
+        if (!(filtered && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
             if (is_preview) {
                 work_add_row(action, reason,
                              src_path, dst_path, link_target, NULL,
