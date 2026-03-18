@@ -403,8 +403,8 @@ work_fix_fs_recursive(char *base_path, char *relative) {
             char *earliest_match = NULL;
             int32 replacement_index = -1;
 
-            for (int32 r = 0; r < LENGTH(replacements); r += 1) {
-                char *search = replacements[r].problem;
+            for (int32 ri = 0; ri < LENGTH(replacements); ri += 1) {
+                char *search = replacements[ri].problem;
                 int64 search_len = strlen32(search);
                 char *match;
 
@@ -412,7 +412,7 @@ work_fix_fs_recursive(char *base_path, char *relative) {
                                       search_len))) {
                     if (earliest_match == NULL || match < earliest_match) {
                         earliest_match = match;
-                        replacement_index = r;
+                        replacement_index = ri;
                     }
                 }
             }
@@ -1058,18 +1058,26 @@ work_rsync(void *user_data) {
                 if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
                     char *sep;
 
-                    if ((sep = strstr(src_path, RSYNC_HARDLINK_NOTATION))) {
-                        *sep = '\0';
+                    // rsync outputs notation only for one of the links?
+                    if ((sep = memmem64(src_path, path_len,
+                                        RSYNC_HARDLINK_NOTATION,
+                                        strlen32(RSYNC_HARDLINK_NOTATION)))) {
                         link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
+                        *sep = '\0';
+                        path_len -= (int32)(&buf_output[line_len] - sep);
                     }
-                    path_len = path_len - (int32)(&buf_output[line_len] - sep);
+
                 } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
                     char *sep;
 
-                    sep = strstr(src_path, RSYNC_SYMLINK_NOTATION);
-                    *sep = '\0';
-                    link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
-                    path_len = path_len - (int32)(&buf_output[line_len] - sep);
+                    // rsync outputs notation only for one of the links?
+                    if ((sep = memmem64(src_path, path_len,
+                                        RSYNC_SYMLINK_NOTATION,
+                                        strlen32(RSYNC_SYMLINK_NOTATION)))) {
+                        link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
+                        *sep = '\0';
+                        path_len -= (int32)(&buf_output[line_len] - sep);
+                    }
                 }
 
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
