@@ -382,6 +382,7 @@ work_fix_fs_recursive(char *base_path, char *relative) {
         char old_full[MAX_PATH_LENGTH];
         char new_full[MAX_PATH_LENGTH];
         char new_name[MAX_PATH_LENGTH];
+        int32 old_full_len;
         struct stat stat;
         bool changed = false;
         int64 j;
@@ -394,7 +395,15 @@ work_fix_fs_recursive(char *base_path, char *relative) {
             SNPRINTF(sub_rel, "%s", d_name);
         }
 
-        SNPRINTF(old_full, "%s/%s", base_path, sub_rel);
+        old_full_len = SNPRINTF(old_full, "%s/%s", base_path, sub_rel);
+
+        if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
+            error(_("Error: file path is too long:\n"));
+            error("%s\n", old_full);
+            error(_("Please fix your file system.\n"));
+            exit(EXIT_FAILURE);
+        }
+
         if (lstat(old_full, &stat) < 0) {
             error("Error in lstat(%s): %s.\n", old_full, strerror(errno));
             free(d_name);
@@ -412,8 +421,8 @@ work_fix_fs_recursive(char *base_path, char *relative) {
                 int64 search_len = strlen32(search);
                 char *match;
 
-                if ((match = memmem64(&d_name[k], name_len - k, search,
-                                      search_len))) {
+                if ((match = memmem64(&d_name[k], name_len - k,
+                                      search, search_len))) {
                     if (earliest_match == NULL || match < earliest_match) {
                         earliest_match = match;
                         replacement_index = ri;
