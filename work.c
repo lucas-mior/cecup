@@ -1321,6 +1321,9 @@ work_rsync(void *user_data) {
             }
             goto read_error_pipe2;
         }
+        if (DEBUGGING) {
+            IPC_SEND_LOG("%s", buf_output);
+        }
 
     read_error_pipe2:
         if (pipes[1].revents & POLLERR) {
