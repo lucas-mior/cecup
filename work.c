@@ -51,9 +51,12 @@ typedef struct FixFsThreadData {
 #include "hash.c"
 
 static bool
-get_file_info(char *full_path, char **path, int64 *size, int64 *mtime,
+get_file_info(char *base, char **path, int64 *size, int64 *mtime,
               bool *is_dir) {
+    char full_path[MAX_PATH_LENGTH];
     struct stat stat;
+
+    SNPRINTF(full_path, "%s/%s", base, *path);
 
     if (lstat(full_path, &stat) < 0) {
         if (errno != ENOENT) {
@@ -537,8 +540,6 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
     char *ignore_pattern = NULL;
     char *show_pattern = NULL;
     char *interlude;
-    char full_src[MAX_PATH_LENGTH];
-    char full_dst[MAX_PATH_LENGTH];
     char *src_path;
     char *dst_path;
     int32 path_len;
@@ -591,17 +592,14 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
         src_path = dst_path;
         path_len = line_len - (int32)(src_path - buf_output);
 
-        SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-        SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
-
-        if (get_file_info(full_src, &src_path,
+        if (get_file_info(cecup.src_base, &src_path,
                           &src_size, &src_mtime, &is_dir)) {
             reason = REASON_IGNORED;
         } else {
             reason = REASON_MISSING;
         }
 
-        get_file_info(full_dst, &dst_path,
+        get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
         if (thread_data->is_preview && (reason == REASON_MISSING)) {
@@ -627,12 +625,9 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
         path_len = path_len - (int32)(&buf_output[line_len] - interlude);
         ignore_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
 
-        SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-        SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
-
-        get_file_info(full_src, &src_path,
+        get_file_info(cecup.src_base, &src_path,
                       &src_size, &src_mtime, &is_dir);
-        get_file_info(full_dst, &dst_path,
+        get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
         if (thread_data->is_preview
@@ -719,12 +714,9 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
             *ntransfers += 1;
         }
 
-        SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-        SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
-
-        get_file_info(full_src, &src_path,
+        get_file_info(cecup.src_base, &src_path,
                       &src_size, &src_mtime, &is_dir);
-        get_file_info(full_dst, &dst_path,
+        get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
         if (thread_data->filtered) {
@@ -801,12 +793,9 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
             }
         }
 
-        SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-        SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
-
-        get_file_info(full_src, &src_path,
+        get_file_info(cecup.src_base, &src_path,
                       &src_size, &src_mtime, &is_dir);
-        get_file_info(full_dst, &dst_path,
+        get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
         if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
