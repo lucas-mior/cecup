@@ -562,6 +562,10 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
     bool is_dir = false;
     bool ignore_duplicate_dir = false;
 
+    bool is_preview = thread_data->is_preview;
+    bool delete_excluded = thread_data->delete_excluded;
+    bool filtered = thread_data->filtered;
+
     /* if (DEBUGGING && !RUNNING_ON_VALGRIND) { */
         error("%s\n", buf_output);
     /* } */
@@ -614,13 +618,13 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
-        if (thread_data->is_preview
+        if (is_preview
             && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
             work_add_row(ACTION_IGNORE, REASON_IGNORED,
                          src_path, dst_path, NULL, ignore_pattern,
                          path_len,
                          src_size, src_mtime, dst_size, dst_mtime,
-                         thread_data->delete_excluded, is_dir,
+                         delete_excluded, is_dir,
                          nfiles_processed, nfiles_total);
         }
         return;
@@ -643,12 +647,12 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
-        if (thread_data->is_preview && (reason == REASON_MISSING)) {
+        if (is_preview && (reason == REASON_MISSING)) {
             work_add_row(ACTION_DELETE, reason,
                          src_path, dst_path, NULL, NULL,
                          path_len,
                          src_size, src_mtime, dst_size, dst_mtime,
-                         thread_data->delete_excluded, is_dir,
+                         delete_excluded, is_dir,
                          nfiles_processed, nfiles_total);
         }
         return;
@@ -707,7 +711,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
             reason = REASON_EQUAL;
         }
 
-        if ((thread_data->is_preview == 0)
+        if ((is_preview == 0)
             && ((type_char == RSYNC_CHAR1_TYPE_FILE)
                 || (type_char == RSYNC_CHAR1_TYPE_SYMLINK))
             && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
@@ -732,7 +736,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
-        if (thread_data->filtered) {
+        if (filtered) {
             char *path;
             char **pattern_ptr;
 
@@ -753,14 +757,14 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         } else {
         }
 
-        if (!(thread_data->filtered
+        if (!(filtered
               && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
-            if (thread_data->is_preview) {
+            if (is_preview) {
                 work_add_row(action, reason,
                              src_path, dst_path, link_target, NULL,
                              path_len,
                              src_size, src_mtime, dst_size, dst_mtime,
-                             thread_data->delete_excluded, is_dir,
+                             delete_excluded, is_dir,
                              nfiles_processed, nfiles_total);
             }
         }
@@ -814,7 +818,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
-        if (thread_data->filtered) {
+        if (filtered) {
             char *path;
             char **pattern_ptr;
 
@@ -837,14 +841,14 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         } else {
         }
 
-        if (!(thread_data->filtered
+        if (!(filtered
               && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
-            if (thread_data->is_preview) {
+            if (is_preview) {
                 work_add_row(action, reason,
                              src_path, dst_path, link_target, NULL,
                              path_len,
                              src_size, src_mtime, dst_size, dst_mtime,
-                             thread_data->delete_excluded, is_dir,
+                             delete_excluded, is_dir,
                              nfiles_processed, nfiles_total);
             }
         }
