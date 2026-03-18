@@ -18,18 +18,14 @@
 #if !defined(HASH_H)
 #define HASH_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <sys/types.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <time.h>
 
 #include "rapidhash.h"
