@@ -1333,7 +1333,8 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
     for (int32 i = 0; i < cecup.rows_len;) {
         CecupRow *row = cecup.rows[i];
 
-        if (row->dst_action == ACTION_DELETE) {
+        if ((row->dst_action == ACTION_DELETE)
+            || (row->src_action == ACTION_IGNORE)) {
             for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                 cecup.rows[j] = cecup.rows[j + 1];
             }
