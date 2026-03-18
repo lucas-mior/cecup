@@ -829,9 +829,7 @@ work_rsync(void *user_data) {
 
             line_len = (int32)(eol - buf_output);
             *eol = '\0';
-            if (DEBUGGING) {
-                error("%s\n", buf_output);
-            }
+            error("%s\n", buf_output);
 
             if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
                 int32 left = line_len - (int32)(src_path - buf_output);
@@ -842,6 +840,9 @@ work_rsync(void *user_data) {
 
                 left = (int32)(r - (interlude - buf_output));
 
+                error("before:\n");
+                fwrite64(buf_output, 1, line_len + 1, stderr);
+                fwrite64("\n", 1, 1, stderr);
                 if (*(interlude - 1) != '/') {
                     memmove64(interlude + 1, interlude, left);
                     interlude += 1;
@@ -849,9 +850,16 @@ work_rsync(void *user_data) {
                 }
                 *interlude = '\0';
 
+                error("after:\n");
+                fwrite64(buf_output, 1, line_len + 1, stderr);
+                fwrite64("\n", 1, 1, stderr);
+
                 show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
                 hash_insert2_map(show_patterns_map,
                                  src_path, xstrdup(show_pattern));
+
+                PRINTLN(show_pattern);
+                PRINTLN(src_path);
             }
 
             might_be_itemize_line = check_itemize_line(buf_output);
@@ -895,9 +903,9 @@ work_rsync(void *user_data) {
                 dst_path = src_path;
 
                 interlude = memmem64(src_path,
-                                      line_len - path_len,
-                                      RSYNC_IGNORE_INTER,
-                                      strlen32(RSYNC_IGNORE_INTER));
+                                     line_len - path_len,
+                                     RSYNC_IGNORE_INTER,
+                                     strlen32(RSYNC_IGNORE_INTER));
                 *interlude = '\0';
                 ignore_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
 
