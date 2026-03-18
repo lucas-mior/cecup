@@ -583,6 +583,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
     action_char = buf_output[0];
     type_char = buf_output[1];
 
+    // TODO: fix duplicate deletions in filtered mode
     if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
         while (*dst_path == ' ') {
             dst_path += 1;
