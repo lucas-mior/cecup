@@ -420,17 +420,16 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
             normalize(row_full_rel, &row_rel_len);
 
             if (!strcmp(row_full_rel, path_to_focus)) {
-                GtkTreePath *target_path
-                    = gtk_tree_path_new_from_indices(i, -1);
+                GtkTreePath *tree_path = gtk_tree_path_new_from_indices(i, -1);
                 gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(cecup.l_tree),
-                                             target_path, NULL, TRUE, 0.5, 0.0);
+                                             tree_path, NULL, TRUE, 0.5, 0.0);
                 gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(cecup.r_tree),
-                                             target_path, NULL, TRUE, 0.5, 0.0);
+                                             tree_path, NULL, TRUE, 0.5, 0.0);
                 gtk_tree_view_set_cursor(GTK_TREE_VIEW(cecup.l_tree),
-                                         target_path, NULL, FALSE);
+                                         tree_path, NULL, FALSE);
                 gtk_tree_view_set_cursor(GTK_TREE_VIEW(cecup.r_tree),
-                                         target_path, NULL, FALSE);
-                gtk_tree_path_free(target_path);
+                                         tree_path, NULL, FALSE);
+                gtk_tree_path_free(tree_path);
                 break;
             }
         }
