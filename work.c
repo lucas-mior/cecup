@@ -1231,9 +1231,8 @@ work_rsync(void *user_data) {
 
     switch (child_pid = fork()) {
     case -1:
-        IPC_SEND_LOG_ERROR("Error forking for checksum: %s.\n",
-                           strerror(errno));
-        break;
+        error("Error forking:  %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
     case 0:
         setpgid(0, 0);
         putenv("LC_ALL=C.UTF-8");
