@@ -1131,7 +1131,6 @@ error_impl(char *file, int32 line, char *format, ...) {
 
     if (!RELEASING) {
         p = SNPRINTF(fileline, "%s:%d: ", file, line);
-        write(STDERR_FILENO, fileline, p);
     } else {
         p = 0;
     }
