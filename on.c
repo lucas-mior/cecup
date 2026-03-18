@@ -1407,7 +1407,7 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
 
         if (current_path) {
             GtkEntry *entry = GTK_ENTRY(editable);
-            char *start_of_name;
+            char *name;
             char *last_dot;
             int32 full_length;
             int32 base_len;
@@ -1417,12 +1417,12 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
             gtk_entry_set_text(entry, current_path);
 
             full_length = strlen32(current_path);
-            start_of_name = basename2(current_path, &full_length, &base_len);
-            last_dot = strrchr(start_of_name, '.');
+            name = basename2(current_path, &full_length, &base_len);
+            last_dot = strrchr(name, '.');
 
-            start_pos = (int32)(start_of_name - current_path);
+            start_pos = (int32)(name - current_path);
 
-            if (last_dot && (last_dot != start_of_name)) {
+            if (last_dot && (last_dot != name)) {
                 end_pos = (int32)(last_dot - current_path);
             } else {
                 end_pos = strlen32(current_path);
