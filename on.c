@@ -1506,7 +1506,11 @@ on_path_edited(GtkCellRendererText *renderer,
         new_full_length = SNPRINTF(new_full, "%s/%s", base_path, relative_new);
         normalize(new_full, &new_full_length);
 
-        if (rename(old_full, new_full) == 0) {
+        if (renameat2(AT_FDCWD, old_full,
+                      AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
+            IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full,
+                               new_full, strerror(errno));
+        } else {
             IPC_SEND_LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
 
             if ((relative_old[old_length - 1] == '/')
@@ -1517,9 +1521,6 @@ on_path_edited(GtkCellRendererText *renderer,
             }
             regenerate_preview_filtered(relative_old, relative_new,
                                         old_length, new_length);
-        } else {
-            IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full,
-                               new_full, strerror(errno));
         }
     }
 
