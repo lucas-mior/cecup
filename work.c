@@ -171,8 +171,8 @@ static void
 work_add_row(enum CecupAction action, enum CecupReason reason,
              char *src_path, char *dst_path,
              char *link_target, char *ignore_pattern,
-             int64 src_size, int64 src_mtime,
-             int64 dst_size, int64 dst_mtime,
+             int64 src_size_raw, int64 src_mtime_raw,
+             int64 dst_size_raw, int64 dst_mtime_raw,
              bool delete_excluded, bool is_dir,
              long *processed_files_preview, long total_files_preview) {
     CecupRow *row;
@@ -256,23 +256,23 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
         break;
     }
 
-    bytes_pretty(row->src_size_text, src_size);
-    bytes_pretty(row->dst_size_text, dst_size);
-    row->src_size_raw = src_size;
-    row->dst_size_raw = dst_size;
+    bytes_pretty(row->src_size_text, src_size_raw);
+    bytes_pretty(row->dst_size_text, dst_size_raw);
+    row->src_size_raw = src_size_raw;
+    row->dst_size_raw = dst_size_raw;
 
-    if (src_mtime > 0) {
-        time_t t = (time_t)src_mtime;
+    if (src_mtime_raw > 0) {
+        time_t t = (time_t)src_mtime_raw;
         struct tm *tm_info = localtime(&t);
         STRFTIME(row->src_mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
-        row->src_mtime_raw = src_mtime;
+        row->src_mtime_raw = src_mtime_raw;
     }
 
-    if (dst_mtime > 0) {
-        time_t t = (time_t)dst_mtime;
+    if (dst_mtime_raw > 0) {
+        time_t t = (time_t)dst_mtime_raw;
         struct tm *tm_info = localtime(&t);
         STRFTIME(row->dst_mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
-        row->dst_mtime_raw = dst_mtime;
+        row->dst_mtime_raw = dst_mtime_raw;
     }
 
     if (link_target) {
