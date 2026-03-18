@@ -1414,16 +1414,16 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
             GtkEntry *entry = GTK_ENTRY(editable);
             char *name;
             char *last_dot;
-            int32 base_len;
+            int32 name_len;
             int32 start_pos;
             int32 end_pos;
 
             gtk_entry_set_text(entry, relative);
 
-            name = basename2(relative, &row->path_len, &base_len);
+            name = basename2(relative, &row->path_len, &name_len);
             last_dot = strrchr(name, '.');
 
-            start_pos = row->path_len - base_len;
+            start_pos = row->path_len - name_len;
 
             if (last_dot && (last_dot != name)) {
                 end_pos = (int32)(last_dot - relative);
