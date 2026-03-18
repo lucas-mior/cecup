@@ -1403,14 +1403,14 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
 
     if ((row_index >= 0) && (row_index < cecup.rows_visible_len)) {
         CecupRow *row = cecup.rows_visible[row_index];
-        char *current_path;
+        char *relative;
         if (side == SIDE_LEFT) {
-            current_path = row->src_path;
+            relative = row->src_path;
         } else {
-            current_path = row->dst_path;
+            relative = row->dst_path;
         }
 
-        if (current_path) {
+        if (relative) {
             GtkEntry *entry = GTK_ENTRY(editable);
             char *name;
             char *last_dot;
@@ -1418,17 +1418,17 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
             int32 start_pos;
             int32 end_pos;
 
-            gtk_entry_set_text(entry, current_path);
+            gtk_entry_set_text(entry, relative);
 
-            name = basename2(current_path, &row->path_len, &base_len);
+            name = basename2(relative, &row->path_len, &base_len);
             last_dot = strrchr(name, '.');
 
             start_pos = row->path_len - base_len;
 
             if (last_dot && (last_dot != name)) {
-                end_pos = (int32)(last_dot - current_path);
+                end_pos = (int32)(last_dot - relative);
             } else {
-                end_pos = strlen32(current_path);
+                end_pos = strlen32(relative);
             }
 
             if (end_pos > start_pos) {
