@@ -814,7 +814,7 @@ work_rsync(void *user_data) {
             int64 src_mtime = 0;
             int64 dst_size = 0;
             int64 dst_mtime = 0;
-            int32 line_len = (int32)(eol - buf_output);
+            int32 line_len;
             int32 remaining;
             enum CecupAction action;
             enum CecupReason reason;
@@ -825,6 +825,7 @@ work_rsync(void *user_data) {
             bool is_dir = false;
             bool ignore_duplicate_dir = false;
 
+            line_len = (int32)(eol - buf_output);
             *eol = '\0';
             if (DEBUGGING) {
                 error("%s\n", buf_output);
