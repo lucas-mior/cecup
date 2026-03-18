@@ -174,7 +174,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
              int64 src_size_raw, int64 src_mtime_raw,
              int64 dst_size_raw, int64 dst_mtime_raw,
              bool delete_excluded, bool is_dir,
-             long *processed_files_preview, long total_files_preview) {
+             long *nfiles_processed, long nfiles_total) {
     CecupRow *row;
     char *final_src_path = NULL;
     char *final_dst_path = NULL;
@@ -301,11 +301,11 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     cecup.rows[cecup.rows_len] = row;
     cecup.rows_len += 1;
     
-    *processed_files_preview += 1;
-    if (((cecup.rows_len % 100) == 0) && (total_files_preview > 0)) {
+    *nfiles_processed += 1;
+    if (((cecup.rows_len % 100) == 0) && (nfiles_total > 0)) {
         ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                          (double)*processed_files_preview
-                          / (double)total_files_preview);
+                          (double)*nfiles_processed
+                          / (double)nfiles_total);
     }
 
     if ((cecup.rows_len % 10000) == 0) {
@@ -533,8 +533,8 @@ work_fix_fs_worker(void *user_data) {
 static void *
 work_rsync(void *user_data) {
     ThreadData *thread_data = user_data;
-    int64 total_files_preview = 0;
-    int64 processed_files_preview = 0;
+    int64 nfiles_total = 0;
+    int64 nfiles_processed = 0;
 
     int32 pipe_stdout[2];
     int32 pipe_stderr[2];
@@ -634,9 +634,9 @@ work_rsync(void *user_data) {
             cecup.rows_len = 0;
             cecup.rows_visible_len = 0;
 
-            total_files_preview = src_fix.file_count;
+            nfiles_total = src_fix.file_count;
             IPC_SEND_LOG("Found %lld files to analyse...\n",
-                         (llong)total_files_preview);
+                         (llong)nfiles_total);
         }
         cecup.changed_dirs = false;
     }
@@ -883,7 +883,7 @@ work_rsync(void *user_data) {
                                  src_path, dst_path, NULL, NULL,
                                  src_size, src_mtime, dst_size, dst_mtime,
                                  thread_data->delete_excluded, is_dir,
-                                 &processed_files_preview, total_files_preview);
+                                 &nfiles_processed, nfiles_total);
                 }
             } else if ((src_path = begins_with(buf_output,
                                                RSYNC_IGNORE_PRE_FILE))
@@ -913,7 +913,7 @@ work_rsync(void *user_data) {
                                  src_path, dst_path, NULL, ignore_pattern,
                                  src_size, src_mtime, dst_size, dst_mtime,
                                  thread_data->delete_excluded, is_dir,
-                                 &processed_files_preview, total_files_preview);
+                                 &nfiles_processed, nfiles_total);
                 }
             } else if (might_be_itemize_line
                        && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
@@ -1013,7 +1013,7 @@ work_rsync(void *user_data) {
                                      src_path, dst_path, link_target, NULL,
                                      src_size, src_mtime, dst_size, dst_mtime,
                                      thread_data->delete_excluded, is_dir,
-                                     &processed_files_preview, total_files_preview);
+                                     &nfiles_processed, nfiles_total);
                     }
                 }
             } else if (might_be_itemize_line) {
@@ -1062,7 +1062,7 @@ work_rsync(void *user_data) {
                                      src_path, dst_path, link_target, NULL,
                                      src_size, src_mtime, dst_size, dst_mtime,
                                      thread_data->delete_excluded, is_dir,
-                                     &processed_files_preview, total_files_preview);
+                                     &nfiles_processed, nfiles_total);
                     }
                 }
             }
