@@ -766,7 +766,7 @@ work_rsync(void *user_data) {
         switch (poll(pipes, 2, 100)) {
         case -1:
             if (errno != EINTR) {
-                IPC_SEND_LOG_ERROR("Error in poll: %s.\n", strerror(errno));
+                error("Error in poll: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             continue;
@@ -1220,7 +1220,7 @@ work_rsync(void *user_data) {
         switch (poll(pipes, 2, 100)) {
         case -1:
             if (errno != EINTR) {
-                IPC_SEND_LOG_ERROR("Error in poll: %s.\n", strerror(errno));
+                error("Error in poll: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             continue;
@@ -1500,7 +1500,7 @@ work_rsync_bulk(void *user_data) {
         switch (poll(pipes, 2, 100)) {
         case -1:
             if (errno != EINTR) {
-                IPC_SEND_LOG_ERROR("Error in poll: %s.\n", strerror(errno));
+                error("Error in poll: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
             continue;
