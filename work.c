@@ -257,8 +257,8 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     }
 
     bytes_pretty(row->src_size_text, src_size);
-    row->src_size_raw = src_size;
     bytes_pretty(row->dst_size_text, dst_size);
+    row->src_size_raw = src_size;
     row->dst_size_raw = dst_size;
 
     if (src_mtime > 0) {
