@@ -974,7 +974,7 @@ work_rsync(void *user_data) {
                                                 ? 256
                                                 : checksum_capacity*2;
                         checksum_files = xrealloc(
-                            checksum_files, checksum_capacity*SIZEOF(char *));
+                            checksum_files, checksum_capacity*SIZEOF(*checksum_files));
                     }
                     checksum_files[checksum_count] = xstrdup(src_path);
                     checksum_count += 1;
