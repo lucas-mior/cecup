@@ -1401,8 +1401,6 @@ work_rsync_bulk(void *user_data) {
         int child_status;
         bool removed = false;
 
-        error("task[%d]...\n", i);
-
         if (task->action != ACTION_DELETE) {
             has_transfers = true;
             continue;
