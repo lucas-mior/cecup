@@ -564,9 +564,9 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
     bool is_dir = false;
     bool ignore_duplicate_dir = false;
 
-    if (DEBUGGING && !RUNNING_ON_VALGRIND) {
+    /* if (DEBUGGING && !RUNNING_ON_VALGRIND) { */
         error("%s\n", buf_output);
-    }
+    /* } */
 
     might_be_itemize_line = check_itemize_line(buf_output);
     action_char = buf_output[0];
@@ -593,6 +593,8 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
         hash_insert2_map(show_patterns_map,
                          src_path, xstrdup(show_pattern));
+        PRINTLN(src_path);
+        PRINTLN(show_pattern);
         return;
     }
 
@@ -613,6 +615,8 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
 
         get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
+        PRINTLN(src_path);
+        PRINTLN(dst_path);
 
         if (thread_data->is_preview && (reason == REASON_MISSING)) {
             work_add_row(ACTION_DELETE, reason,
@@ -751,6 +755,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
                                                    RSYNC_INCLUDE_DIRS);
                 }
             }
+        } else {
         }
 
         if (!(thread_data->filtered
@@ -769,6 +774,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
 
     if (might_be_itemize_line) {
         char *space_pos = strchr(buf_output, ' ');
+        error("might_be_itemize_line...\n");
 
         action = ACTION_UPDATE;
         reason = REASON_UPDATE;
@@ -813,7 +819,34 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
-        if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
+        PRINTLN(src_path);
+        PRINTLN(dst_path);
+
+        if (thread_data->filtered) {
+            char *path;
+            char **pattern_ptr;
+
+            if (src_path) {
+                path = src_path;
+            } else {
+                path = dst_path;
+            }
+
+            if (path) {
+                pattern_ptr = hash_lookup2_map(show_patterns_map, path);
+                if (pattern_ptr) {
+                    show_pattern = *pattern_ptr;
+                    ignore_duplicate_dir = !strcmp(show_pattern,
+                                                   RSYNC_INCLUDE_DIRS);
+                } else {
+                }
+            } else {
+            }
+        } else {
+        }
+
+        if (!(thread_data->filtered
+              && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
             if (thread_data->is_preview) {
                 work_add_row(action, reason,
                              src_path, dst_path, link_target, NULL,
@@ -977,6 +1010,10 @@ work_rsync(void *user_data) {
         rsync_args[a++] = "--dry-run";
     }
 
+    if (access(cecup.ignore_path, F_OK) != -1) {
+            rsync_args[a++] = "--exclude-from";
+            rsync_args[a++] = cecup.ignore_path;
+    }
     if (thread_data->filtered) {
         char *relative_old = thread_data->relative_old;
         char *relative_new = thread_data->relative_new;
@@ -1003,11 +1040,6 @@ work_rsync(void *user_data) {
 
         rsync_args[a++] = "--include="RSYNC_INCLUDE_DIRS;
         rsync_args[a++] = "--exclude="RSYNC_WILDCARD;
-    } else {
-        if (access(cecup.ignore_path, F_OK) != -1) {
-            rsync_args[a++] = "--exclude-from";
-            rsync_args[a++] = cecup.ignore_path;
-        }
     }
 
     SNPRINTF(src_base_with_slash, "%s/", cecup.src_base);
