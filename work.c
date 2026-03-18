@@ -551,9 +551,9 @@ work_rsync(void *user_data) {
     int32 a = 0;
     char cmd[MAX_PATH_LENGTH*2];
 
-    char **checksum_files = NULL;
-    int32 checksum_count = 0;
-    int32 checksum_capacity = 0;
+    char **transfer_list = NULL;
+    int32 transfer_count = 0;
+    int32 transfer_list_capacity = 0;
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
 
     char old_recursive[MAX_PATH_LENGTH];
@@ -969,17 +969,17 @@ work_rsync(void *user_data) {
                         || (action_char == RSYNC_CHAR0_ACTION_CHANGE)
                         || (action_char == RSYNC_CHAR0_ACTION_HARDLINK))) {
 
-                    if (checksum_count >= checksum_capacity) {
-                        if (checksum_capacity == 0) {
-                            checksum_capacity = 256;
+                    if (transfer_count >= transfer_list_capacity) {
+                        if (transfer_list_capacity == 0) {
+                            transfer_list_capacity = 256;
                         } else {
-                            checksum_capacity *= 2;
+                            transfer_list_capacity *= 2;
                         }
-                        checksum_files = xrealloc(
-                            checksum_files, checksum_capacity*SIZEOF(*checksum_files));
+                        transfer_list = xrealloc(
+                            transfer_list, transfer_list_capacity*SIZEOF(*transfer_list));
                     }
-                    checksum_files[checksum_count] = xstrdup(src_path);
-                    checksum_count += 1;
+                    transfer_list[transfer_count] = xstrdup(src_path);
+                    transfer_count += 1;
                 }
 
                 SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
@@ -1120,7 +1120,7 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
 
-    if (checksum_count <= 0) {
+    if (transfer_count <= 0) {
         work_finalize(thread_data);
         return NULL;
     }
@@ -1131,8 +1131,8 @@ work_rsync(void *user_data) {
             error("Error in mkstemp: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
-        for (int32 i = 0; i < checksum_count; i += 1) {
-            char *file = checksum_files[i];
+        for (int32 i = 0; i < transfer_count; i += 1) {
+            char *file = transfer_list[i];
             int64 w;
             int64 written = 0;
             int64 left = strlen32(file);
@@ -1289,10 +1289,10 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
 
-    for (int32 i = 0; i < checksum_count; i += 1) {
-        free(checksum_files[i]);
+    for (int32 i = 0; i < transfer_count; i += 1) {
+        free(transfer_list[i]);
     }
-    free(checksum_files);
+    free(transfer_list);
 
     if (thread_data->is_preview) {
         IPC_SEND_LOG("Analysis complete. Review the list and click Apply.\n");
