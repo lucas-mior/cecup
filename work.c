@@ -970,9 +970,11 @@ work_rsync(void *user_data) {
                         || (action_char == RSYNC_CHAR0_ACTION_HARDLINK))) {
 
                     if (checksum_count >= checksum_capacity) {
-                        checksum_capacity = (checksum_capacity == 0)
-                                                ? 256
-                                                : checksum_capacity*2;
+                        if (checksum_capacity == 0) {
+                            checksum_capacity = 256;
+                        } else {
+                            checksum_capacity *= 2;
+                        }
                         checksum_files = xrealloc(
                             checksum_files, checksum_capacity*SIZEOF(*checksum_files));
                     }
