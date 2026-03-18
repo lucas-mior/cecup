@@ -527,6 +527,317 @@ work_fix_fs_worker(void *user_data) {
     return NULL;
 }
 
+static void
+work_rsync_parse_lines(char *buf_output, int32 *buf_output_pos, int64 last_read_count,
+                       ThreadData *thread_data, struct Hash_map *show_patterns_map,
+                       int64 *nfiles_processed, int64 nfiles_total,
+                       char ***transfers, int32 *transfer_count,
+                       int32 *transfers_capacity) {
+    char *eol;
+
+    while (*buf_output_pos > 0
+           && ((eol = memchr64(buf_output, '\n', *buf_output_pos))
+               || (eol = memchr64(buf_output, '\r', *buf_output_pos)))) {
+        char *link_target = NULL;
+        char *ignore_pattern = NULL;
+        char *show_pattern = NULL;
+        char *interlude;
+        char full_src[MAX_PATH_LENGTH];
+        char full_dst[MAX_PATH_LENGTH];
+        char *src_path;
+        char *dst_path;
+        int32 path_len;
+        int64 src_size = 0;
+        int64 src_mtime = 0;
+        int64 dst_size = 0;
+        int64 dst_mtime = 0;
+        int32 line_len;
+        int32 remaining;
+        enum CecupAction action;
+        enum CecupReason reason;
+
+        bool might_be_itemize_line;
+        char action_char;
+        char type_char;
+        bool is_dir = false;
+        bool ignore_duplicate_dir = false;
+
+        line_len = (int32)(eol - buf_output);
+        *eol = '\0';
+        error("%s\n", buf_output);
+
+        if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
+            int32 left = line_len - (int32)(src_path - buf_output);
+            interlude = memmem64(src_path,
+                                 left,
+                                 RSYNC_IGNORE_INTER,
+                                 strlen32(RSYNC_IGNORE_INTER));
+
+            left = (int32)(last_read_count - (interlude - buf_output));
+
+            if (*(interlude - 1) != '/') {
+                memmove64(interlude + 1, interlude, left);
+                interlude += 1;
+                *(interlude - 1) = '/';
+                line_len += 1;
+            }
+            *interlude = '\0';
+
+            show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
+            hash_insert2_map(show_patterns_map,
+                             src_path, xstrdup(show_pattern));
+
+            PRINTLN(show_pattern);
+            PRINTLN(src_path);
+        }
+
+        might_be_itemize_line = check_itemize_line(buf_output);
+        action_char = buf_output[0];
+        type_char = buf_output[1];
+
+        if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
+
+            while (isspace(*dst_path)) {
+                dst_path += 1;
+            }
+            src_path = dst_path;
+            path_len = line_len - (int32)(src_path - buf_output);
+
+            SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
+            SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
+
+            if (get_file_info(full_src, &src_path,
+                              &src_size, &src_mtime, &is_dir)) {
+                reason = REASON_IGNORED;
+            } else {
+                reason = REASON_MISSING;
+            }
+
+            get_file_info(full_dst, &dst_path,
+                          &dst_size, &dst_mtime, &is_dir);
+
+            if (thread_data->is_preview && (reason == REASON_MISSING)) {
+                work_add_row(ACTION_DELETE, reason,
+                             src_path, dst_path, NULL, NULL,
+                             path_len,
+                             src_size, src_mtime, dst_size, dst_mtime,
+                             thread_data->delete_excluded, is_dir,
+                             nfiles_processed, nfiles_total);
+            }
+        } else if ((src_path = begins_with(buf_output,
+                                           RSYNC_IGNORE_PRE_FILE))
+                    || (src_path = begins_with(buf_output,
+                                               RSYNC_IGNORE_PRE_DIR))) {
+            path_len = line_len - (int32)(src_path - buf_output);
+            dst_path = src_path;
+
+            interlude = memmem64(src_path,
+                                 path_len,
+                                 RSYNC_IGNORE_INTER,
+                                 strlen32(RSYNC_IGNORE_INTER));
+            *interlude = '\0';
+            path_len = path_len - (int32)(&buf_output[line_len] - interlude);
+            ignore_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
+
+            SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
+            SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
+
+            get_file_info(full_src, &src_path,
+                          &src_size, &src_mtime, &is_dir);
+            get_file_info(full_dst, &dst_path,
+                          &dst_size, &dst_mtime, &is_dir);
+
+            if (thread_data->is_preview
+                && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
+                work_add_row(ACTION_IGNORE, REASON_IGNORED,
+                             src_path, dst_path, NULL, ignore_pattern,
+                             path_len,
+                             src_size, src_mtime, dst_size, dst_mtime,
+                             thread_data->delete_excluded, is_dir,
+                             nfiles_processed, nfiles_total);
+            }
+        } else if (might_be_itemize_line
+                   && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
+                       || (action_char == RSYNC_CHAR0_ACTION_HARDLINK)
+                       || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
+
+            char *space_pos = strchr(buf_output, ' ');
+
+            src_path = space_pos + 1;
+            while (isspace(*src_path)) {
+                src_path += 1;
+            }
+            dst_path = src_path;
+
+            path_len = line_len - (int32)(src_path - buf_output);
+
+            if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
+                char *sep;
+
+                if ((sep = memmem64(src_path, path_len,
+                                    RSYNC_HARDLINK_NOTATION,
+                                    strlen32(RSYNC_HARDLINK_NOTATION)))) {
+                    link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
+                    *sep = '\0';
+                    path_len -= (int32)(&buf_output[line_len] - sep);
+                }
+
+                action = ACTION_HARDLINK;
+            } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
+                char *sep;
+
+                if ((sep = memmem64(src_path, path_len,
+                                    RSYNC_SYMLINK_NOTATION,
+                                    strlen32(RSYNC_SYMLINK_NOTATION)))) {
+                    link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
+                    *sep = '\0';
+                    path_len -= (int32)(&buf_output[line_len] - sep);
+                }
+
+                action = ACTION_SYMLINK;
+            } else if (buf_output[2] == '+') {
+                action = ACTION_NEW;
+            } else {
+                action = ACTION_UPDATE;
+            }
+
+            
+            if (did_attribute_change(buf_output)) {
+                reason = (enum CecupReason)action;
+            } else {
+                action = ACTION_EQUAL;
+                reason = REASON_EQUAL;
+            }
+
+            if ((thread_data->is_preview == 0)
+                && ((type_char == RSYNC_CHAR1_TYPE_FILE)
+                    || (type_char == RSYNC_CHAR1_TYPE_SYMLINK))
+                && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
+                    || (action_char == RSYNC_CHAR0_ACTION_CHANGE)
+                    || (action_char == RSYNC_CHAR0_ACTION_HARDLINK))) {
+
+                if (*transfer_count >= *transfers_capacity) {
+                    if (*transfers_capacity == 0) {
+                        *transfers_capacity = 256;
+                    } else {
+                        *transfers_capacity *= 2;
+                    }
+                    *transfers = xrealloc(
+                        *transfers, (*transfers_capacity) * SIZEOF(**transfers));
+                }
+                (*transfers)[*transfer_count] = xstrdup(src_path);
+                *transfer_count += 1;
+            }
+
+            SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
+            SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
+
+            get_file_info(full_src, &src_path,
+                          &src_size, &src_mtime, &is_dir);
+            get_file_info(full_dst, &dst_path,
+                          &dst_size, &dst_mtime, &is_dir);
+
+            if (thread_data->filtered) {
+                char *path;
+                char **pattern_ptr;
+
+                if (src_path) {
+                    path = src_path;
+                } else {
+                    path = dst_path;
+                }
+
+                if (path) {
+                    pattern_ptr = hash_lookup2_map(show_patterns_map, path);
+                    if (pattern_ptr) {
+                        show_pattern = *pattern_ptr;
+                        ignore_duplicate_dir = !strcmp(show_pattern,
+                                                       RSYNC_INCLUDE_DIRS);
+                    }
+                }
+            }
+
+            if (!(thread_data->filtered
+                  && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
+                if (thread_data->is_preview) {
+                    work_add_row(action, reason,
+                                 src_path, dst_path, link_target, NULL,
+                                 path_len,
+                                 src_size, src_mtime, dst_size, dst_mtime,
+                                 thread_data->delete_excluded, is_dir,
+                                 nfiles_processed, nfiles_total);
+                }
+            }
+        } else if (might_be_itemize_line) {
+            char *space_pos = strchr(buf_output, ' ');
+
+            action = ACTION_UPDATE;
+            reason = REASON_UPDATE;
+
+            if (!did_attribute_change(buf_output)) {
+                action = ACTION_EQUAL;
+                reason = REASON_EQUAL;
+            }
+
+            src_path = space_pos + 1;
+            while (isspace(*src_path)) {
+                src_path += 1;
+            }
+            dst_path = src_path;
+            path_len = line_len - (int32)(src_path - buf_output);
+
+            if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
+                char *sep;
+
+                if ((sep = memmem64(src_path, path_len,
+                                    RSYNC_HARDLINK_NOTATION,
+                                    strlen32(RSYNC_HARDLINK_NOTATION)))) {
+                    link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
+                    *sep = '\0';
+                    path_len -= (int32)(&buf_output[line_len] - sep);
+                }
+
+            } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
+                char *sep;
+
+                if ((sep = memmem64(src_path, path_len,
+                                    RSYNC_SYMLINK_NOTATION,
+                                    strlen32(RSYNC_SYMLINK_NOTATION)))) {
+                    link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
+                    *sep = '\0';
+                    path_len -= (int32)(&buf_output[line_len] - sep);
+                }
+            }
+
+            SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
+            SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
+
+            get_file_info(full_src, &src_path,
+                          &src_size, &src_mtime, &is_dir);
+            get_file_info(full_dst, &dst_path,
+                          &dst_size, &dst_mtime, &is_dir);
+
+            if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
+                if (thread_data->is_preview) {
+                    work_add_row(action, reason,
+                                 src_path, dst_path, link_target, NULL,
+                                 path_len,
+                                 src_size, src_mtime, dst_size, dst_mtime,
+                                 thread_data->delete_excluded, is_dir,
+                                 nfiles_processed, nfiles_total);
+                }
+            }
+        }
+
+        remaining = *buf_output_pos - (line_len + 1);
+        if (remaining > 0) {
+            memmove64(buf_output, eol + 1, remaining);
+        }
+        *buf_output_pos = remaining;
+    }
+    return;
+}
+
 static void *
 work_rsync(void *user_data) {
     ThreadData *thread_data = user_data;
@@ -755,7 +1066,6 @@ work_rsync(void *user_data) {
 
     do {
         int64 r;
-        char *eol;
         char buf_output[MAX_PATH_LENGTH*2 + 1];
         char buf_error[MAX_PATH_LENGTH*2 + 1];
 
@@ -801,311 +1111,9 @@ work_rsync(void *user_data) {
         }
         buf_output_pos += (int32)r;
 
-        while (buf_output_pos > 0
-               && ((eol = memchr64(buf_output, '\n', buf_output_pos))
-                   || (eol = memchr64(buf_output, '\r', buf_output_pos)))) {
-            char *link_target = NULL;
-            char *ignore_pattern = NULL;
-            char *show_pattern = NULL;
-            char *interlude;
-            char full_src[MAX_PATH_LENGTH];
-            char full_dst[MAX_PATH_LENGTH];
-            char *src_path;
-            char *dst_path;
-            int32 path_len;
-            int64 src_size = 0;
-            int64 src_mtime = 0;
-            int64 dst_size = 0;
-            int64 dst_mtime = 0;
-            int32 line_len;
-            int32 remaining;
-            enum CecupAction action;
-            enum CecupReason reason;
-
-            bool might_be_itemize_line;
-            char action_char;
-            char type_char;
-            bool is_dir = false;
-            bool ignore_duplicate_dir = false;
-
-            line_len = (int32)(eol - buf_output);
-            *eol = '\0';
-            error("%s\n", buf_output);
-
-            if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
-                int32 left = line_len - (int32)(src_path - buf_output);
-                interlude = memmem64(src_path,
-                                     left,
-                                     RSYNC_IGNORE_INTER,
-                                     strlen32(RSYNC_IGNORE_INTER));
-
-                left = (int32)(r - (interlude - buf_output));
-
-                if (*(interlude - 1) != '/') {
-                    memmove64(interlude + 1, interlude, left);
-                    interlude += 1;
-                    *(interlude - 1) = '/';
-                    line_len += 1;
-                }
-                *interlude = '\0';
-
-                show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
-                hash_insert2_map(show_patterns_map,
-                                 src_path, xstrdup(show_pattern));
-
-                PRINTLN(show_pattern);
-                PRINTLN(src_path);
-            }
-
-            might_be_itemize_line = check_itemize_line(buf_output);
-            action_char = buf_output[0];
-            type_char = buf_output[1];
-
-            if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
-
-                while (isspace(*dst_path)) {
-                    dst_path += 1;
-                }
-                src_path = dst_path;
-                path_len = line_len - (int32)(src_path - buf_output);
-
-                SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
-
-                if (get_file_info(full_src, &src_path,
-                                  &src_size, &src_mtime, &is_dir)) {
-                    reason = REASON_IGNORED;
-                } else {
-                    reason = REASON_MISSING;
-                }
-
-                get_file_info(full_dst, &dst_path,
-                              &dst_size, &dst_mtime, &is_dir);
-
-                if (thread_data->is_preview && (reason == REASON_MISSING)) {
-                    // if source file exists, rsync will report it as ignored
-                    // so we dont send it here to avoid the duplication
-                    work_add_row(ACTION_DELETE, reason,
-                                 src_path, dst_path, NULL, NULL,
-                                 path_len,
-                                 src_size, src_mtime, dst_size, dst_mtime,
-                                 thread_data->delete_excluded, is_dir,
-                                 &nfiles_processed, nfiles_total);
-                }
-            } else if ((src_path = begins_with(buf_output,
-                                               RSYNC_IGNORE_PRE_FILE))
-                        || (src_path = begins_with(buf_output,
-                                                   RSYNC_IGNORE_PRE_DIR))) {
-                path_len = line_len - (int32)(src_path - buf_output);
-                dst_path = src_path;
-
-                interlude = memmem64(src_path,
-                                     path_len,
-                                     RSYNC_IGNORE_INTER,
-                                     strlen32(RSYNC_IGNORE_INTER));
-                *interlude = '\0';
-                path_len = path_len - (int32)(&buf_output[line_len] - interlude);
-                ignore_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
-
-                SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
-
-                get_file_info(full_src, &src_path,
-                              &src_size, &src_mtime, &is_dir);
-                get_file_info(full_dst, &dst_path,
-                              &dst_size, &dst_mtime, &is_dir);
-
-                if (thread_data->is_preview
-                    && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
-                    work_add_row(ACTION_IGNORE, REASON_IGNORED,
-                                 src_path, dst_path, NULL, ignore_pattern,
-                                 path_len,
-                                 src_size, src_mtime, dst_size, dst_mtime,
-                                 thread_data->delete_excluded, is_dir,
-                                 &nfiles_processed, nfiles_total);
-                }
-            } else if (might_be_itemize_line
-                       && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
-                           || (action_char == RSYNC_CHAR0_ACTION_HARDLINK)
-                           || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
-
-                char *space_pos = strchr(buf_output, ' ');
-
-                src_path = space_pos + 1;
-                while (isspace(*src_path)) {
-                    src_path += 1;
-                }
-                dst_path = src_path;
-
-                path_len = line_len - (int32)(src_path - buf_output);
-
-                if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
-                    char *sep;
-
-                    // rsync outputs notation only for one of the links?
-                    if ((sep = memmem64(src_path, path_len,
-                                        RSYNC_HARDLINK_NOTATION,
-                                        strlen32(RSYNC_HARDLINK_NOTATION)))) {
-                        link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
-                        *sep = '\0';
-                        path_len -= (int32)(&buf_output[line_len] - sep);
-                    }
-
-                    action = ACTION_HARDLINK;
-                } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
-                    char *sep;
-
-                    if ((sep = memmem64(src_path, path_len,
-                                        RSYNC_SYMLINK_NOTATION,
-                                        strlen32(RSYNC_SYMLINK_NOTATION)))) {
-                        link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
-                        *sep = '\0';
-                        path_len -= (int32)(&buf_output[line_len] - sep);
-                    }
-
-                    action = ACTION_SYMLINK;
-                } else if (buf_output[2] == '+') {
-                    action = ACTION_NEW;
-                } else {
-                    action = ACTION_UPDATE;
-                }
-
-                
-                if (did_attribute_change(buf_output)) {
-                    reason = (enum CecupReason)action;
-                } else {
-                    action = ACTION_EQUAL;
-                    reason = REASON_EQUAL;
-                }
-
-                if ((thread_data->is_preview == 0)
-                    && ((type_char == RSYNC_CHAR1_TYPE_FILE)
-                        || (type_char == RSYNC_CHAR1_TYPE_SYMLINK))
-                    && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
-                        || (action_char == RSYNC_CHAR0_ACTION_CHANGE)
-                        || (action_char == RSYNC_CHAR0_ACTION_HARDLINK))) {
-
-                    if (transfer_count >= transfers_capacity) {
-                        if (transfers_capacity == 0) {
-                            transfers_capacity = 256;
-                        } else {
-                            transfers_capacity *= 2;
-                        }
-                        transfers = xrealloc(
-                            transfers, transfers_capacity*SIZEOF(*transfers));
-                    }
-                    transfers[transfer_count] = xstrdup(src_path);
-                    transfer_count += 1;
-                }
-
-                SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
-
-                get_file_info(full_src, &src_path,
-                              &src_size, &src_mtime, &is_dir);
-                get_file_info(full_dst, &dst_path,
-                              &dst_size, &dst_mtime, &is_dir);
-
-                if (thread_data->filtered) {
-                    char *path;
-                    char **pattern_ptr;
-
-                    if (src_path) {
-                        path = src_path;
-                    } else {
-                        path = dst_path;
-                    }
-
-                    if (path) {
-                        pattern_ptr = hash_lookup2_map(show_patterns_map, path);
-                        if (pattern_ptr) {
-                            show_pattern = *pattern_ptr;
-                            ignore_duplicate_dir = !strcmp(show_pattern,
-                                                           RSYNC_INCLUDE_DIRS);
-                        }
-                    }
-                }
-
-                if (!(thread_data->filtered
-                      && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
-                    if (thread_data->is_preview) {
-                        work_add_row(action, reason,
-                                     src_path, dst_path, link_target, NULL,
-                                     path_len,
-                                     src_size, src_mtime, dst_size, dst_mtime,
-                                     thread_data->delete_excluded, is_dir,
-                                     &nfiles_processed, nfiles_total);
-                    }
-                }
-            } else if (might_be_itemize_line) {
-                char *space_pos = strchr(buf_output, ' ');
-
-                action = ACTION_UPDATE;
-                reason = REASON_UPDATE;
-
-                if (!did_attribute_change(buf_output)) {
-                    action = ACTION_EQUAL;
-                    reason = REASON_EQUAL;
-                }
-
-                src_path = space_pos + 1;
-                while (isspace(*src_path)) {
-                    src_path += 1;
-                }
-                dst_path = src_path;
-                path_len = line_len - (int32)(src_path - buf_output);
-
-                if (action_char == RSYNC_CHAR0_ACTION_HARDLINK) {
-                    char *sep;
-
-                    // rsync outputs notation only for one of the links?
-                    if ((sep = memmem64(src_path, path_len,
-                                        RSYNC_HARDLINK_NOTATION,
-                                        strlen32(RSYNC_HARDLINK_NOTATION)))) {
-                        link_target = sep + strlen32(RSYNC_HARDLINK_NOTATION);
-                        *sep = '\0';
-                        path_len -= (int32)(&buf_output[line_len] - sep);
-                    }
-
-                } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
-                    char *sep;
-
-                    // rsync outputs notation only for one of the links?
-                    if ((sep = memmem64(src_path, path_len,
-                                        RSYNC_SYMLINK_NOTATION,
-                                        strlen32(RSYNC_SYMLINK_NOTATION)))) {
-                        link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
-                        *sep = '\0';
-                        path_len -= (int32)(&buf_output[line_len] - sep);
-                    }
-                }
-
-                SNPRINTF(full_src, "%s/%s", cecup.src_base, src_path);
-                SNPRINTF(full_dst, "%s/%s", cecup.dst_base, dst_path);
-
-                get_file_info(full_src, &src_path,
-                              &src_size, &src_mtime, &is_dir);
-                get_file_info(full_dst, &dst_path,
-                              &dst_size, &dst_mtime, &is_dir);
-
-                if (!(thread_data->filtered && !strcmp(src_path, "./"))) {
-                    if (thread_data->is_preview) {
-                        work_add_row(action, reason,
-                                     src_path, dst_path, link_target, NULL,
-                                     path_len,
-                                     src_size, src_mtime, dst_size, dst_mtime,
-                                     thread_data->delete_excluded, is_dir,
-                                     &nfiles_processed, nfiles_total);
-                    }
-                }
-            }
-
-            remaining = buf_output_pos - (line_len + 1);
-            if (remaining > 0) {
-                memmove64(buf_output, eol + 1, remaining);
-            }
-            buf_output_pos = remaining;
-        }
+        work_rsync_parse_lines(buf_output, &buf_output_pos, r, thread_data,
+                               show_patterns_map, &nfiles_processed, nfiles_total,
+                               &transfers, &transfer_count, &transfers_capacity);
 
         if (buf_output_pos >= (int32)SIZEOF(buf_output) - 1) {
             buf_output[buf_output_pos] = '\0';
