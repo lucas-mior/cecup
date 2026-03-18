@@ -304,8 +304,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     *nfiles_processed += 1;
     if (((cecup.rows_len % 100) == 0) && (nfiles_total > 0)) {
         ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                          (double)*nfiles_processed
-                          / (double)nfiles_total);
+                          (double)*nfiles_processed / (double)nfiles_total);
     }
 
     if ((cecup.rows_len % 10000) == 0) {
