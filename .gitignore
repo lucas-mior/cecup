@@ -8,13 +8,13 @@
 compile_commands.json
 tags
 .tags.vim
-callgrind.out.*
-valgrind.out.*
 *.SRCINFO
 *.git/
 *.po~
 *.mo
 *.pot
+valgrind_output*
+callgrind.out.*
 gdb_output*
 /a/
 /b/
