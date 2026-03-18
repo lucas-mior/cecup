@@ -953,10 +953,15 @@ work_rsync(void *user_data) {
 
                     action = ACTION_HARDLINK;
                 } else if (type_char == RSYNC_CHAR1_TYPE_SYMLINK) {
-                    char *sep = strstr(src_path, RSYNC_SYMLINK_NOTATION);
-                    link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
-                    *sep = '\0';
-                    path_len -= (int32)(&buf_output[line_len] - sep);
+                    char *sep;
+
+                    if ((sep = memmem64(src_path, path_len,
+                                        RSYNC_SYMLINK_NOTATION,
+                                        strlen32(RSYNC_SYMLINK_NOTATION)))) {
+                        link_target = sep + strlen32(RSYNC_SYMLINK_NOTATION);
+                        *sep = '\0';
+                        path_len -= (int32)(&buf_output[line_len] - sep);
+                    }
 
                     action = ACTION_SYMLINK;
                 } else if (buf_output[2] == '+') {
