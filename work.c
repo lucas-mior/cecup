@@ -584,10 +584,6 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
     type_char = buf_output[1];
 
     if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
-
-        while (isspace(*dst_path)) {
-            dst_path += 1;
-        }
         src_path = dst_path;
         path_len = line_len - (int32)(src_path - buf_output);
 
