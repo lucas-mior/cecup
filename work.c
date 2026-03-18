@@ -923,8 +923,6 @@ work_rsync(void *user_data) {
                            || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
 
                 char *space_pos = strchr(buf_output, ' ');
-                action = ACTION_UPDATE;
-                reason = REASON_UPDATE;
 
                 src_path = space_pos + 1;
                 while (isspace(*src_path)) {
@@ -949,6 +947,8 @@ work_rsync(void *user_data) {
                     action = ACTION_SYMLINK;
                 } else if (buf_output[2] == '+') {
                     action = ACTION_NEW;
+                } else {
+                    action = ACTION_UPDATE;
                 }
 
                 
