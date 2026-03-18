@@ -556,9 +556,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, int64 nbytes_read,
     bool is_dir = false;
     bool ignore_duplicate_dir = false;
 
-    if (DEBUGGING) {
-        error("%s\n", buf_output);
-    }
+    error("%s\n", buf_output);
 
     might_be_itemize_line = check_itemize_line(buf_output);
     action_char = buf_output[0];
