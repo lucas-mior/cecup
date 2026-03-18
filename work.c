@@ -1231,7 +1231,7 @@ work_rsync(void *user_data) {
 
     switch (child_pid = fork()) {
     case -1:
-        error("Error forking:  %s.\n", strerror(errno));
+        error("Error forking: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
     case 0:
         setpgid(0, 0);
@@ -1388,7 +1388,7 @@ work_rsync_bulk(void *user_data) {
         switch (child_rm = fork()) {
         case -1:
             error("Error forking: %s.\n", strerror(errno));
-            break;
+            fatal(EXIT_FAILURE);
         case 0: {
             char cmd_rm[MAX_PATH_LENGTH];
             char *args_rm[] = {
@@ -1499,7 +1499,7 @@ work_rsync_bulk(void *user_data) {
 
     switch (child_pid = fork()) {
     case -1:
-        error("Error forking for rsync: %s.\n", strerror(errno));
+        error("Error forking: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
     case 0:
         if (setpgid(0, 0) < 0) {
