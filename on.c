@@ -1329,6 +1329,21 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
                             int32 len_old, int32 len_new) {
     ThreadData *thread_data;
 
+    g_mutex_lock(&cecup.arena_mutex);
+    for (int32 i = 0; i < cecup.rows_len;) {
+        CecupRow *row = cecup.rows[i];
+
+        if (row->dst_action == ACTION_DELETE) {
+            for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
+                cecup.rows[j] = cecup.rows[j + 1];
+            }
+            cecup.rows_len -= 1;
+        } else {
+            i += 1;
+        }
+    }
+    g_mutex_unlock(&cecup.arena_mutex);
+
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
