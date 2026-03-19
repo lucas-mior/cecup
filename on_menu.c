@@ -90,9 +90,9 @@ on_menu_rename(GtkWidget *m, void *data) {
     message = data;
 
     if (message->side == LEFT) {
-        tree = cecup.l_tree;
+        tree = cecup.tree[LEFT];
     } else {
-        tree = cecup.r_tree;
+        tree = cecup.tree[RIGHT];
     }
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));

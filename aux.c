@@ -377,8 +377,8 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     }
 
     g_object_freeze_notify(G_OBJECT(cecup.store));
-    g_object_freeze_notify(G_OBJECT(cecup.l_tree));
-    g_object_freeze_notify(G_OBJECT(cecup.r_tree));
+    g_object_freeze_notify(G_OBJECT(cecup.tree[LEFT]));
+    g_object_freeze_notify(G_OBJECT(cecup.tree[RIGHT]));
     has_sort
         = gtk_tree_sortable_get_sort_column_id(GTK_TREE_SORTABLE(cecup.store),
                                                (int *)&saved_sort_id,
@@ -436,8 +436,8 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
 
     g_signal_handlers_unblock_by_func(cecup.store, on_sort_changed, NULL);
     g_object_thaw_notify(G_OBJECT(cecup.store));
-    g_object_thaw_notify(G_OBJECT(cecup.l_tree));
-    g_object_thaw_notify(G_OBJECT(cecup.r_tree));
+    g_object_thaw_notify(G_OBJECT(cecup.tree[LEFT]));
+    g_object_thaw_notify(G_OBJECT(cecup.tree[RIGHT]));
 
     if ((refresh_type & REFRESH_FINAL) && path_to_focus) {
         for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
@@ -451,13 +451,13 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
 
             if (!strcmp(row_full_rel, path_to_focus)) {
                 GtkTreePath *tree_path = gtk_tree_path_new_from_indices(i, -1);
-                gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(cecup.l_tree),
+                gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(cecup.tree[LEFT]),
                                              tree_path, NULL, TRUE, 0.5, 0.0);
-                gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(cecup.r_tree),
+                gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(cecup.tree[RIGHT]),
                                              tree_path, NULL, TRUE, 0.5, 0.0);
-                gtk_tree_view_set_cursor(GTK_TREE_VIEW(cecup.l_tree),
+                gtk_tree_view_set_cursor(GTK_TREE_VIEW(cecup.tree[LEFT]),
                                          tree_path, NULL, FALSE);
-                gtk_tree_view_set_cursor(GTK_TREE_VIEW(cecup.r_tree),
+                gtk_tree_view_set_cursor(GTK_TREE_VIEW(cecup.tree[RIGHT]),
                                          tree_path, NULL, FALSE);
                 gtk_tree_path_free(tree_path);
                 break;
