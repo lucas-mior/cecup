@@ -26,7 +26,7 @@
   #define BEGIN_ENUM(ENUM_NAME) enum ENUM_NAME {
 
   #define ENUM_ELEMENT_HANDLER_1(e)       CAT(CAT(ENUM_NAME_LOCAL, _), e),
-  #define ENUM_ELEMENT_HANDLER_2(e, v)    CAT(CAT(ENUM_NAME_LOCAL, _), e),
+  #define ENUM_ELEMENT_HANDLER_2(e, v)    CAT(CAT(ENUM_NAME_LOCAL, _), e), 
   #define ENUM_ELEMENT_HANDLER_3(e, v, s) CAT(CAT(ENUM_NAME_LOCAL, _), e) = v,
 
   #define END_ENUM(ENUM_NAME) }; \
