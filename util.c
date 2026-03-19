@@ -1898,15 +1898,15 @@ static volatile ullong here_counter = 0; \
 
 #if TESTING_util
 
-#define DAYS_ENUM_LIST(ACTION)                                   \
+#define DAYS_ENUM_LIST \
     BEGIN_ENUM(WEEK_DAY)                                         \
-        ACTION(ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string")) \
-        ACTION(ENUM_ELEMENT(MONDAY))                             \
-        ACTION(ENUM_ELEMENT(TUESDAY))                            \
-        ACTION(ENUM_ELEMENT(WEDNESDAY))                          \
-        ACTION(ENUM_ELEMENT(THURSDAY))                           \
-        ACTION(ENUM_ELEMENT_STR(FRIDAY, "Friday string"))        \
-        ACTION(ENUM_ELEMENT(SATURDAY))                           \
+        ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string") \
+        ENUM_ELEMENT(MONDAY)                             \
+        ENUM_ELEMENT(TUESDAY)                            \
+        ENUM_ELEMENT(WEDNESDAY)                          \
+        ENUM_ELEMENT(THURSDAY)                           \
+        ENUM_ELEMENT_STR(FRIDAY, "Friday string")        \
+        ENUM_ELEMENT(SATURDAY)                           \
     END_ENUM(WEEK_DAY)
 
 #define PASS_THROUGH(x) x
@@ -1914,13 +1914,13 @@ static volatile ullong here_counter = 0; \
 #undef ENUM_NAME_LOCAL
 #define ENUM_NAME_LOCAL WEEK_DAY
 #include "enums.h"
-DAYS_ENUM_LIST(PASS_THROUGH)
+DAYS_ENUM_LIST
 
 #define GENERATE_ENUM_STRINGS
 #undef ENUM_NAME_LOCAL
 #define ENUM_NAME_LOCAL WEEK_DAY
 #include "enums.h"
-DAYS_ENUM_LIST(PASS_THROUGH)
+DAYS_ENUM_LIST
 
 static void
 write_file(char *path, void *data, int64 len) {
