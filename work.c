@@ -411,73 +411,73 @@ work_fix_fs_recursive(char *base_path, char *relative) {
             continue;
         }
 
-        j = 0;
-        k = 0;
-        while (k < name_len) {
-            char *earliest_match = NULL;
-            int32 replacement_index = -1;
+        /* j = 0; */
+        /* k = 0; */
+        /* while (k < name_len) { */
+        /*     char *earliest_match = NULL; */
+        /*     int32 replacement_index = -1; */
 
-            for (int32 ri = 0; ri < LENGTH(replacements); ri += 1) {
-                char *search = replacements[ri].problem;
-                int64 search_len = strlen32(search);
-                char *match;
+        /*     for (int32 ri = 0; ri < LENGTH(replacements); ri += 1) { */
+        /*         char *search = replacements[ri].problem; */
+        /*         int64 search_len = strlen32(search); */
+        /*         char *match; */
 
-                if ((match = memmem64(&d_name[k], name_len - k,
-                                      search, search_len))) {
-                    if (earliest_match == NULL || match < earliest_match) {
-                        earliest_match = match;
-                        replacement_index = ri;
-                    }
-                }
-            }
+        /*         if ((match = memmem64(&d_name[k], name_len - k, */
+        /*                               search, search_len))) { */
+        /*             if (earliest_match == NULL || match < earliest_match) { */
+        /*                 earliest_match = match; */
+        /*                 replacement_index = ri; */
+        /*             } */
+        /*         } */
+        /*     } */
 
-            if (earliest_match) {
-                int64 prefix_len = (int64)(earliest_match - &d_name[k]);
-                char *replace_str = replacements[replacement_index].rename;
-                int64 replace_len = strlen32(replace_str);
+        /*     if (earliest_match) { */
+        /*         int64 prefix_len = (int64)(earliest_match - &d_name[k]); */
+        /*         char *replace_str = replacements[replacement_index].rename; */
+        /*         int64 replace_len = strlen32(replace_str); */
 
-                if (prefix_len > 0) {
-                    memcpy64(&new_name[j], &d_name[k], prefix_len);
-                    j += prefix_len;
-                    k += prefix_len;
-                }
+        /*         if (prefix_len > 0) { */
+        /*             memcpy64(&new_name[j], &d_name[k], prefix_len); */
+        /*             j += prefix_len; */
+        /*             k += prefix_len; */
+        /*         } */
 
-                memcpy64(&new_name[j], replace_str, replace_len);
+        /*         memcpy64(&new_name[j], replace_str, replace_len); */
 
-                j += replace_len;
-                k += strlen32(replacements[replacement_index].problem);
-                changed = true;
-            } else {
-                int64 remaining = name_len - k;
-                memcpy64(&new_name[j], &d_name[k], remaining);
-                j += remaining;
-                k += remaining;
-            }
-        }
-        new_name[j] = '\0';
+        /*         j += replace_len; */
+        /*         k += strlen32(replacements[replacement_index].problem); */
+        /*         changed = true; */
+        /*     } else { */
+        /*         int64 remaining = name_len - k; */
+        /*         memcpy64(&new_name[j], &d_name[k], remaining); */
+        /*         j += remaining; */
+        /*         k += remaining; */
+        /*     } */
+        /* } */
+        /* new_name[j] = '\0'; */
 
-        if (changed) {
-            if (relative && relative[0]) {
-                SNPRINTF(new_full, "%s/%s/%s", base_path, relative, new_name);
-            } else {
-                SNPRINTF(new_full, "%s/%s", base_path, new_name);
-            }
+        /* if (changed) { */
+        /*     if (relative && relative[0]) { */
+        /*         SNPRINTF(new_full, "%s/%s/%s", base_path, relative, new_name); */
+        /*     } else { */
+        /*         SNPRINTF(new_full, "%s/%s", base_path, new_name); */
+        /*     } */
 
-            if (renameat2(AT_FDCWD, old_full,
-                          AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
-                IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n", old_full,
-                                   new_full, strerror(errno));
-            } else {
-                IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name);
-                if (S_ISDIR(stat.st_mode)) {
-                    if (relative) {
-                        SNPRINTF(sub_rel, "%s/%s", relative, new_name);
-                    } else {
-                        SNPRINTF(sub_rel, "%s", new_name);
-                    }
-                }
-            }
-        }
+        /*     if (renameat2(AT_FDCWD, old_full, */
+        /*                   AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) { */
+        /*         IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n", old_full, */
+        /*                            new_full, strerror(errno)); */
+        /*     } else { */
+        /*         IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name); */
+        /*         if (S_ISDIR(stat.st_mode)) { */
+        /*             if (relative) { */
+        /*                 SNPRINTF(sub_rel, "%s/%s", relative, new_name); */
+        /*             } else { */
+        /*                 SNPRINTF(sub_rel, "%s", new_name); */
+        /*             } */
+        /*         } */
+        /*     } */
+        /* } */
 
         if (S_ISDIR(stat.st_mode)) {
             total_files += work_fix_fs_recursive(base_path, sub_rel);
@@ -933,46 +933,46 @@ work_rsync(void *user_data) {
         }
     }
 
-    /* if (cecup.changed_dirs) { */
-    /*     FixFsThreadData src_fix = {cecup.src_base, 0}; */
-    /*     FixFsThreadData dst_fix = {cecup.dst_base, 0}; */
+    if (cecup.changed_dirs) {
+        FixFsThreadData src_fix = {cecup.src_base, 0};
+        FixFsThreadData dst_fix = {cecup.dst_base, 0};
 
-    /*     IPC_SEND_LOG("Checking for problematic names and counting files...\n"); */
+        IPC_SEND_LOG("Checking for problematic names and counting files...\n");
 
-    /*     if (!same_fs) { */
-    /*         GThread *t1 = g_thread_new("fix_src", */
-    /*                                    work_fix_fs_thread_fn, &src_fix); */
-    /*         GThread *t2 = g_thread_new("fix_dst", */
-    /*                                    work_fix_fs_thread_fn, &dst_fix); */
-    /*         g_thread_join(t1); */
-    /*         g_thread_join(t2); */
-    /*     } else { */
-    /*         work_fix_fs_thread_fn(&src_fix); */
-    /*         work_fix_fs_thread_fn(&dst_fix); */
-    /*     } */
+        if (!same_fs) {
+            GThread *t1 = g_thread_new("fix_src",
+                                       work_fix_fs_thread_fn, &src_fix);
+            GThread *t2 = g_thread_new("fix_dst",
+                                       work_fix_fs_thread_fn, &dst_fix);
+            g_thread_join(t1);
+            g_thread_join(t2);
+        } else {
+            work_fix_fs_thread_fn(&src_fix);
+            work_fix_fs_thread_fn(&dst_fix);
+        }
 
-    /*     IPC_SEND_LOG("Name correction finished.\n"); */
+        IPC_SEND_LOG("Name correction finished.\n");
 
-    /*     if (thread_data->is_preview && !thread_data->filtered) { */
-    /*         Message *message; */
+        if (thread_data->is_preview && !thread_data->filtered) {
+            Message *message;
 
-    /*         message = xmalloc(SIZEOF(*message)); */
-    /*         memset64(message, 0, SIZEOF(*message)); */
+            message = xmalloc(SIZEOF(*message));
+            memset64(message, 0, SIZEOF(*message));
 
-    /*         message->type = DATA_TYPE_CLEAR_TREES; */
-    /*         g_idle_add_full(G_PRIORITY_HIGH_IDLE, */
-    /*                         update_ui_handler, message, NULL); */
+            message->type = DATA_TYPE_CLEAR_TREES;
+            g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                            update_ui_handler, message, NULL);
 
-    /*         arena_reset(cecup.arena); */
-    /*         cecup.rows_len = 0; */
-    /*         cecup.rows_visible_len = 0; */
+            arena_reset(cecup.arena);
+            cecup.rows_len = 0;
+            cecup.rows_visible_len = 0;
 
-    /*         nfiles_total = src_fix.file_count; */
-    /*         IPC_SEND_LOG("Found %lld files to analyse...\n", */
-    /*                      (llong)nfiles_total); */
-    /*     } */
-    /*     cecup.changed_dirs = false; */
-    /* } */
+            nfiles_total = src_fix.file_count;
+            IPC_SEND_LOG("Found %lld files to analyse...\n",
+                         (llong)nfiles_total);
+        }
+        cecup.changed_dirs = false;
+    }
 
     xpipe(pipe_stdout);
     xpipe(pipe_stderr);
