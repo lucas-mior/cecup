@@ -405,73 +405,75 @@ work_fix_fs_recursive(char *base_path, char *relative) {
             continue;
         }
 
-        /* j = 0; */
-        /* k = 0; */
-        /* while (k < name_len) { */
-        /*     char *earliest_match = NULL; */
-        /*     int32 replacement_index = -1; */
+#if 0
+        j = 0;
+        k = 0;
+        while (k < name_len) {
+            char *earliest_match = NULL;
+            int32 replacement_index = -1;
 
-        /*     for (int32 ri = 0; ri < LENGTH(replacements); ri += 1) { */
-        /*         char *search = replacements[ri].problem; */
-        /*         int64 search_len = strlen32(search); */
-        /*         char *match; */
+            for (int32 ri = 0; ri < LENGTH(replacements); ri += 1) {
+                char *search = replacements[ri].problem;
+                int64 search_len = strlen32(search);
+                char *match;
 
-        /*         if ((match = memmem64(&d_name[k], name_len - k, */
-        /*                               search, search_len))) { */
-        /*             if (earliest_match == NULL || match < earliest_match) { */
-        /*                 earliest_match = match; */
-        /*                 replacement_index = ri; */
-        /*             } */
-        /*         } */
-        /*     } */
+                if ((match = memmem64(&d_name[k], name_len - k,
+                                      search, search_len))) {
+                    if (earliest_match == NULL || match < earliest_match) {
+                        earliest_match = match;
+                        replacement_index = ri;
+                    }
+                }
+            }
 
-        /*     if (earliest_match) { */
-        /*         int64 prefix_len = (int64)(earliest_match - &d_name[k]); */
-        /*         char *replace_str = replacements[replacement_index].rename; */
-        /*         int64 replace_len = strlen32(replace_str); */
+            if (earliest_match) {
+                int64 prefix_len = (int64)(earliest_match - &d_name[k]);
+                char *replace_str = replacements[replacement_index].rename;
+                int64 replace_len = strlen32(replace_str);
 
-        /*         if (prefix_len > 0) { */
-        /*             memcpy64(&new_name[j], &d_name[k], prefix_len); */
-        /*             j += prefix_len; */
-        /*             k += prefix_len; */
-        /*         } */
+                if (prefix_len > 0) {
+                    memcpy64(&new_name[j], &d_name[k], prefix_len);
+                    j += prefix_len;
+                    k += prefix_len;
+                }
 
-        /*         memcpy64(&new_name[j], replace_str, replace_len); */
+                memcpy64(&new_name[j], replace_str, replace_len);
 
-        /*         j += replace_len; */
-        /*         k += strlen32(replacements[replacement_index].problem); */
-        /*         changed = true; */
-        /*     } else { */
-        /*         int64 remaining = name_len - k; */
-        /*         memcpy64(&new_name[j], &d_name[k], remaining); */
-        /*         j += remaining; */
-        /*         k += remaining; */
-        /*     } */
-        /* } */
-        /* new_name[j] = '\0'; */
+                j += replace_len;
+                k += strlen32(replacements[replacement_index].problem);
+                changed = true;
+            } else {
+                int64 remaining = name_len - k;
+                memcpy64(&new_name[j], &d_name[k], remaining);
+                j += remaining;
+                k += remaining;
+            }
+        }
+        new_name[j] = '\0';
 
-        /* if (changed) { */
-        /*     if (relative && relative[0]) { */
-        /*         SNPRINTF(new_full, "%s/%s/%s", base_path, relative, new_name); */
-        /*     } else { */
-        /*         SNPRINTF(new_full, "%s/%s", base_path, new_name); */
-        /*     } */
+        if (changed) {
+            if (relative && relative[0]) {
+                SNPRINTF(new_full, "%s/%s/%s", base_path, relative, new_name);
+            } else {
+                SNPRINTF(new_full, "%s/%s", base_path, new_name);
+            }
 
-        /*     if (renameat2(AT_FDCWD, old_full, */
-        /*                   AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) { */
-        /*         IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n", old_full, */
-        /*                            new_full, strerror(errno)); */
-        /*     } else { */
-        /*         IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name); */
-        /*         if (S_ISDIR(stat.st_mode)) { */
-        /*             if (relative) { */
-        /*                 SNPRINTF(sub_rel, "%s/%s", relative, new_name); */
-        /*             } else { */
-        /*                 SNPRINTF(sub_rel, "%s", new_name); */
-        /*             } */
-        /*         } */
-        /*     } */
-        /* } */
+            if (renameat2(AT_FDCWD, old_full,
+                          AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
+                IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n", old_full,
+                                   new_full, strerror(errno));
+            } else {
+                IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name);
+                if (S_ISDIR(stat.st_mode)) {
+                    if (relative) {
+                        SNPRINTF(sub_rel, "%s/%s", relative, new_name);
+                    } else {
+                        SNPRINTF(sub_rel, "%s", new_name);
+                    }
+                }
+            }
+        }
+#endif
 
         if (S_ISDIR(stat.st_mode)) {
             total_files += work_fix_fs_recursive(base_path, sub_rel);
