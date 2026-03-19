@@ -1900,13 +1900,13 @@ static volatile ullong here_counter = 0; \
 
 #define DAYS_ENUM_LIST(ACTION) \
     BEGIN_ENUM(Days) \
-        ACTION(DECL_ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string")) \
-        ACTION(DECL_ENUM_ELEMENT(Monday)) \
-        ACTION(DECL_ENUM_ELEMENT(Tuesday)) \
-        ACTION(DECL_ENUM_ELEMENT(Wednesday)) \
-        ACTION(DECL_ENUM_ELEMENT(Thursday)) \
-        ACTION(DECL_ENUM_ELEMENT_STR(Friday, "Friday string")) \
-        ACTION(DECL_ENUM_ELEMENT(Saturday)) \
+        ACTION(ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string")) \
+        ACTION(ENUM_ELEMENT(Monday)) \
+        ACTION(ENUM_ELEMENT(Tuesday)) \
+        ACTION(ENUM_ELEMENT(Wednesday)) \
+        ACTION(ENUM_ELEMENT(Thursday)) \
+        ACTION(ENUM_ELEMENT_STR(Friday, "Friday string")) \
+        ACTION(ENUM_ELEMENT(Saturday)) \
     END_ENUM(Days)
 
 #define PASS_THROUGH(x) x
