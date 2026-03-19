@@ -1898,16 +1898,16 @@ static volatile ullong here_counter = 0; \
 
 #if TESTING_util
 
-#define DAYS_ENUM_LIST \
-    BEGIN_ENUM(WEEK_DAY)                                         \
-        ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string") \
-        ENUM_ELEMENT(MONDAY)                             \
-        ENUM_ELEMENT(TUESDAY)                            \
-        ENUM_ELEMENT(WEDNESDAY)                          \
-        ENUM_ELEMENT(THURSDAY)                           \
-        ENUM_ELEMENT_STR(FRIDAY, "Friday string")        \
-        ENUM_ELEMENT(SATURDAY)                           \
-    END_ENUM(WEEK_DAY)
+#define DAYS_ENUM_LIST                               \
+  BEGIN_ENUM(WEEK_DAY)                               \
+    ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string") \
+    ENUM_ELEMENT(MONDAY)                             \
+    ENUM_ELEMENT(TUESDAY)                            \
+    ENUM_ELEMENT(WEDNESDAY)                          \
+    ENUM_ELEMENT(THURSDAY)                           \
+    ENUM_ELEMENT_STR(FRIDAY, "Friday string")        \
+    ENUM_ELEMENT(SATURDAY)                           \
+  END_ENUM(WEEK_DAY)
 
 #define PASS_THROUGH(x) x
 
