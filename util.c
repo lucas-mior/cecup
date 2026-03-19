@@ -1898,6 +1898,34 @@ static volatile ullong here_counter = 0; \
 
 #if TESTING_util
 
+#include "enums.h"
+
+BEGIN_ENUM(Days) {
+    DECL_ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string")
+    DECL_ENUM_ELEMENT(Monday)
+    DECL_ENUM_ELEMENT(Tuesday)
+    DECL_ENUM_ELEMENT(Wednesday)
+    DECL_ENUM_ELEMENT(Thursday)
+    DECL_ENUM_ELEMENT_STR(Fryday, "Friday string")
+    DECL_ENUM_ELEMENT(Saturday)
+}
+END_ENUM(Days)
+
+#define GENERATE_ENUM_STRINGS
+
+#include "enums.h"
+
+BEGIN_ENUM(Days) {
+    DECL_ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string")
+    DECL_ENUM_ELEMENT(Monday)
+    DECL_ENUM_ELEMENT(Tuesday)
+    DECL_ENUM_ELEMENT(Wednesday)
+    DECL_ENUM_ELEMENT(Thursday)
+    DECL_ENUM_ELEMENT_STR(Fryday, "Friday string")
+    DECL_ENUM_ELEMENT(Saturday)
+}
+END_ENUM(Days)
+
 static void
 write_file(char *path, void *data, int64 len) {
     int fd;
@@ -1933,6 +1961,11 @@ main(int argc, char **argv) {
 
     (void)argc;
     (void)argv;
+
+    for (uint32 i = 0; i < Saturday; i += 1) {
+        printf("enum[%d] = %s\n", i, GetStringDays(i));
+    }
+    exit(0);
 
     if (OS_LINUX && !DEBUGGING) {
         struct sigaction signal_action;
