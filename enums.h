@@ -18,8 +18,8 @@
   #define BEGIN_ENUM(ENUM_NAME) char* GetString##ENUM_NAME(int32 index) {\
       switch (index) {
 
-  #define ENUM_ELEMENT(ENUM_NAME, element)                       case ENUM_NAME##_##element: return #element;
-  #define ENUM_ELEMENT_VAL(ENUM_NAME, element, value)            case ENUM_NAME##_##element: return #element;
+  #define ENUM_ELEMENT(ENUM_NAME, element)                       case ENUM_NAME##_##element: return #ENUM_NAME #element;
+  #define ENUM_ELEMENT_VAL(ENUM_NAME, element, value)            case ENUM_NAME##_##element: return #ENUM_NAME #element;
   #define ENUM_ELEMENT_STR(ENUM_NAME, element, descr)            case ENUM_NAME##_##element: return descr;
   #define ENUM_ELEMENT_VAL_STR(ENUM_NAME, element, value, descr) case ENUM_NAME##_##element: return descr;
 
