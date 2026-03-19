@@ -49,6 +49,8 @@ CFLAGS="$CFLAGS -Wno-cast-qual"
 CFLAGS="$CFLAGS -Wno-cast-function-type"
 CFLAGS="$CFLAGS -Wno-deprecated-declarations"
 CFLAGS="$CFLAGS -Wno-missing-field-initializers"
+CFLAGS="$CFLAGS -Wno-unused-parameter"
+CFLAGS="$CFLAGS -Wno-unused-variable"
 
 LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk4) -lpthread"
 LDFLAGS="$LDFLAGS -lm"
