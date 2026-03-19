@@ -770,14 +770,18 @@ activate(GtkApplication *application, gpointer user_data) {
                      G_CALLBACK(on_search_changed), NULL);
 
     {
+        GMenu *menu = g_menu_new();
         GtkGesture *log_gesture = gtk_gesture_click_new();
+
+        g_menu_append(menu, "Say Hello", "app.hello");
         gtk_widget_add_controller(cecup.log_view,
                                   GTK_EVENT_CONTROLLER(log_gesture));
         gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(log_gesture),
                                                    GTK_PHASE_CAPTURE);
         gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(log_gesture), 0); // 0 allows all buttons
+                                                                           //
         g_signal_connect(log_gesture, "pressed",
-                         G_CALLBACK(on_log_button_press), NULL);
+                         G_CALLBACK(on_log_button_press), menu);
     }
 
     g_signal_connect(cecup.filter_new, "toggled",
