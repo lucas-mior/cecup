@@ -8,6 +8,8 @@
 #if !defined(CAT)
 #define CAT_(a, b) a##b
 #define CAT(a, b) CAT_(a, b)
+#define CAT3_(a, b, c) a##b##c
+#define CAT3(a, b, c) CAT3_(a, b, c)
 #endif
 
 #define NUM_ARGS_(_1, _2, _3, _4, _5, _6, _7, _8, n, ...) n
@@ -25,25 +27,25 @@
 #if !defined(GENERATE_ENUM_STRINGS)
   #define BEGIN_ENUM(ENUM_NAME)           enum ENUM_NAME {
 
-  #define ENUM_ELEMENT_HANDLER_1(e)       CAT(CAT(ENUM_NAME_LOCAL, _), e),
-  #define ENUM_ELEMENT_HANDLER_2(e, v)    CAT(CAT(ENUM_NAME_LOCAL, _), e), 
-  #define ENUM_ELEMENT_HANDLER_3(e, v, s) CAT(CAT(ENUM_NAME_LOCAL, _), e) = v,
+  #define ENUM_ELEMENT_HANDLER_1(e)       CAT3(ENUM_NAME_LOCAL, _, e),
+  #define ENUM_ELEMENT_HANDLER_2(e, v)    CAT3(ENUM_NAME_LOCAL, _, e), 
+  #define ENUM_ELEMENT_HANDLER_3(e, v, s) CAT3(ENUM_NAME_LOCAL, _, e) = v,
 
-  #define END_ENUM(ENUM_NAME)             CAT(CAT(ENUM_NAME_LOCAL, _), LAST) \
+  #define END_ENUM(ENUM_NAME)             CAT3(ENUM_NAME_LOCAL, _, LAST) \
                                           }; \
                                           char *enum_string_##ENUM_NAME(int index);
 #else
   #define BEGIN_ENUM(ENUM_NAME)           char *enum_string_##ENUM_NAME(int index) { \
                                           switch (index) {
 
-  #define ENUM_ELEMENT_HANDLER_1(e)       case CAT(CAT(ENUM_NAME_LOCAL, _), e): \
+  #define ENUM_ELEMENT_HANDLER_1(e)       case CAT3(ENUM_NAME_LOCAL, _, e): \
                                               return QUOTE(ENUM_NAME_LOCAL) "_" #e;
-  #define ENUM_ELEMENT_HANDLER_2(e, v)    case CAT(CAT(ENUM_NAME_LOCAL, _), e): \
+  #define ENUM_ELEMENT_HANDLER_2(e, v)    case CAT3(ENUM_NAME_LOCAL, _, e): \
                                               return _Generic((v), \
                                                   char*: (char*)(v), \
                                                   default: QUOTE(ENUM_NAME_LOCAL) "_" #e \
                                               );
-  #define ENUM_ELEMENT_HANDLER_3(e, v, s) case CAT(CAT(ENUM_NAME_LOCAL, _), e): \
+  #define ENUM_ELEMENT_HANDLER_3(e, v, s) case CAT3(ENUM_NAME_LOCAL, _, e): \
                                               return s;
 
   #define END_ENUM(ENUM_NAME)             default: \

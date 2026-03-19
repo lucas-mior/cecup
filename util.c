@@ -224,6 +224,8 @@ static int xclose(char *file, int line, int *fd, char *fd_var_name,
 #if !defined(CAT)
 #define CAT_(a, b) a##b
 #define CAT(a, b) CAT_(a, b)
+#define CAT3_(a, b, c) a##b##c
+#define CAT3(a, b, c) CAT3_(a, b, c)
 #endif
 
 #define NUM_ARGS_(_1, _2, _3, _4, _5, _6, _7, _8, n, ...) n
