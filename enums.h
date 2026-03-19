@@ -16,24 +16,25 @@
 #endif
 
 #ifndef GENERATE_ENUM_STRINGS
-    #define BEGIN_ENUM(ENUM_NAME) enum ENUM_NAME {
+  #define BEGIN_ENUM(ENUM_NAME) enum ENUM_NAME {
 
-    #define ENUM_ELEMENT(element)                       CONCAT(ENUM_NAME_LOCAL, element),
-    #define ENUM_ELEMENT_VAL(element, value)            CONCAT(ENUM_NAME_LOCAL, element) = value,
-    #define ENUM_ELEMENT_STR(element, descr)            CONCAT(ENUM_NAME_LOCAL, element),
-    #define ENUM_ELEMENT_VAL_STR(element, value, descr) CONCAT(ENUM_NAME_LOCAL, element) = value,
+  #define ENUM_ELEMENT(element)                       CONCAT(ENUM_NAME_LOCAL, element),
+  #define ENUM_ELEMENT_VAL(element, value)            CONCAT(ENUM_NAME_LOCAL, element) = value,
+  #define ENUM_ELEMENT_STR(element, descr)            CONCAT(ENUM_NAME_LOCAL, element),
+  #define ENUM_ELEMENT_VAL_STR(element, value, descr) CONCAT(ENUM_NAME_LOCAL, element) = value,
 
-    #define END_ENUM(ENUM_NAME) }; char* GetString##ENUM_NAME(int32 index);
+  #define END_ENUM(ENUM_NAME) }; \
+      char *enum_string_##ENUM_NAME(int32 index);
 #else
-    #define BEGIN_ENUM(ENUM_NAME) char* GetString##ENUM_NAME(int32 index) {\
-        switch (index) {
+  #define BEGIN_ENUM(ENUM_NAME) char *enum_string_##ENUM_NAME(int32 index) {\
+      switch (index) {
 
-    #define ENUM_ELEMENT(element)                       case CONCAT(ENUM_NAME_LOCAL, element): return QUOTE(ENUM_NAME_LOCAL) "_" #element;
-    #define ENUM_ELEMENT_VAL(element, value)            case CONCAT(ENUM_NAME_LOCAL, element): return QUOTE(ENUM_NAME_LOCAL) "_" #element;
-    #define ENUM_ELEMENT_STR(element, descr)            case CONCAT(ENUM_NAME_LOCAL, element): return descr;
-    #define ENUM_ELEMENT_VAL_STR(element, value, descr) case CONCAT(ENUM_NAME_LOCAL, element): return descr;
+  #define ENUM_ELEMENT(element)                       case CONCAT(ENUM_NAME_LOCAL, element): return QUOTE(ENUM_NAME_LOCAL) "_" #element;
+  #define ENUM_ELEMENT_VAL(element, value)            case CONCAT(ENUM_NAME_LOCAL, element): return QUOTE(ENUM_NAME_LOCAL) "_" #element;
+  #define ENUM_ELEMENT_STR(element, descr)            case CONCAT(ENUM_NAME_LOCAL, element): return descr;
+  #define ENUM_ELEMENT_VAL_STR(element, value, descr) case CONCAT(ENUM_NAME_LOCAL, element): return descr;
 
-    #define END_ENUM(ENUM_NAME) default: return "Unknown value"; \
-        } \
-    }
+  #define END_ENUM(ENUM_NAME) default: return "Unknown value"; \
+      } \
+  }
 #endif

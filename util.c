@@ -1922,11 +1922,6 @@ DAYS_ENUM_LIST(PASS_THROUGH)
 #include "enums.h"
 DAYS_ENUM_LIST(PASS_THROUGH)
 
-// this is called on main()
-// for (uint32 i = 0; i < WEEK_DAY_SATURDAY; i += 1) {
-//      printf("enum[%d] = %s\n", i, GetStringWEEK_DAY(i));
-// }
-
 static void
 write_file(char *path, void *data, int64 len) {
     int fd;
@@ -1964,7 +1959,7 @@ main(int argc, char **argv) {
     (void)argv;
 
     for (uint32 i = 0; i < WEEK_DAY_SATURDAY; i += 1) {
-        printf("enum[%d] = %s\n", i, GetStringWEEK_DAY(i));
+        printf("enum[%d] = %s\n", i, enum_string_WEEK_DAY(i));
     }
     exit(0);
 
