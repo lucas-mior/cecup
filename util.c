@@ -1898,33 +1898,26 @@ static volatile ullong here_counter = 0; \
 
 #if TESTING_util
 
+#define DAYS_ENUM_LIST(ACTION) \
+    BEGIN_ENUM(Days) \
+        ACTION(DECL_ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string")) \
+        ACTION(DECL_ENUM_ELEMENT(Monday)) \
+        ACTION(DECL_ENUM_ELEMENT(Tuesday)) \
+        ACTION(DECL_ENUM_ELEMENT(Wednesday)) \
+        ACTION(DECL_ENUM_ELEMENT(Thursday)) \
+        ACTION(DECL_ENUM_ELEMENT_STR(Friday, "Friday string")) \
+        ACTION(DECL_ENUM_ELEMENT(Saturday)) \
+    END_ENUM(Days)
+
+#define PASS_THROUGH(x) x
+
 #include "enums.h"
+DAYS_ENUM_LIST(PASS_THROUGH)
 
-BEGIN_ENUM(Days) {
-    DECL_ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string")
-    DECL_ENUM_ELEMENT(Monday)
-    DECL_ENUM_ELEMENT(Tuesday)
-    DECL_ENUM_ELEMENT(Wednesday)
-    DECL_ENUM_ELEMENT(Thursday)
-    DECL_ENUM_ELEMENT_STR(Fryday, "Friday string")
-    DECL_ENUM_ELEMENT(Saturday)
-}
-END_ENUM(Days)
-
+/* Second pass: Generate the function implementation */
 #define GENERATE_ENUM_STRINGS
-
 #include "enums.h"
-
-BEGIN_ENUM(Days) {
-    DECL_ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string")
-    DECL_ENUM_ELEMENT(Monday)
-    DECL_ENUM_ELEMENT(Tuesday)
-    DECL_ENUM_ELEMENT(Wednesday)
-    DECL_ENUM_ELEMENT(Thursday)
-    DECL_ENUM_ELEMENT_STR(Fryday, "Friday string")
-    DECL_ENUM_ELEMENT(Saturday)
-}
-END_ENUM(Days)
+DAYS_ENUM_LIST(PASS_THROUGH)
 
 static void
 write_file(char *path, void *data, int64 len) {

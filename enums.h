@@ -6,21 +6,23 @@
 #undef END_ENUM
 
 #ifndef GENERATE_ENUM_STRINGS
-    #define DECL_ENUM_ELEMENT( element ) element,
-    #define DECL_ENUM_ELEMENT_VAL( element, value ) element = value,
-    #define DECL_ENUM_ELEMENT_STR( element, descr ) DECL_ENUM_ELEMENT( element )
-    #define DECL_ENUM_ELEMENT_VAL_STR( element, value, descr ) DECL_ENUM_ELEMENT_VAL( element, value )
-    #define BEGIN_ENUM( ENUM_NAME ) enum ENUM_NAME
-    #define END_ENUM( ENUM_NAME ) ENUM_NAME; \
-            const char* GetString##ENUM_NAME(enum ENUM_NAME index);
+    #define BEGIN_ENUM(ENUM_NAME) enum ENUM_NAME {
+
+    #define DECL_ENUM_ELEMENT(element)                       element,
+    #define DECL_ENUM_ELEMENT_VAL(element, value)            element = value,
+    #define DECL_ENUM_ELEMENT_STR(element, descr)            element,
+    #define DECL_ENUM_ELEMENT_VAL_STR(element, value, descr) element = value,
+    
+    #define END_ENUM(ENUM_NAME) }; char* GetString##ENUM_NAME(int32 index);
 #else
-    #define BEGIN_ENUM( ENUM_NAME) const char * GetString##ENUM_NAME( enum ENUM_NAME index ) {\
-        switch( index ) { 
-    #define DECL_ENUM_ELEMENT( element ) case element: return #element; break;
-    #define DECL_ENUM_ELEMENT_VAL( element, value ) DECL_ENUM_ELEMENT( element )
-    #define DECL_ENUM_ELEMENT_STR( element, descr ) case element: return descr; break;
-    #define DECL_ENUM_ELEMENT_VAL_STR( element, value, descr ) DECL_ENUM_ELEMENT_STR( element, descr )
+    #define BEGIN_ENUM(ENUM_NAME) char* GetString##ENUM_NAME(int32 index) { \
+        switch (index) {
+    #define DECL_ENUM_ELEMENT(element)                       case element: return #element;
+    #define DECL_ENUM_ELEMENT_VAL(element, value)            case element: return #element;
+    #define DECL_ENUM_ELEMENT_STR(element, descr)            case element: return descr;
+    #define DECL_ENUM_ELEMENT_VAL_STR(element, value, descr) case element: return descr;
 
-    #define END_ENUM( ENUM_NAME ) default: return "Unknown value"; } } ;
-
+    #define END_ENUM(ENUM_NAME) default: return "Unknown value"; \
+        } \
+    }
 #endif
