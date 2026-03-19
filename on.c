@@ -185,7 +185,8 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
         return;
     }
 
-    if ((text = gtk_text_buffer_get_text(cecup.log_buffer, &start, &end, FALSE))) {
+    if ((text = gtk_text_buffer_get_text(cecup.log_buffer,
+                                         &start, &end, FALSE))) {
         gdk_clipboard_set_text(clipboard, text);
         g_free(text);
     }
@@ -194,7 +195,8 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
 }
 
 static void
-on_log_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y, void *data) {
+on_log_button_press(GtkGestureClick *gesture,
+                    int32 n_press, double x, double y, void *data) {
     GtkWidget *widget;
     GtkWidget *parent;
     GtkWidget *popover;
@@ -205,12 +207,12 @@ on_log_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y,
     GMenuItem *item;
     GdkRectangle rect;
     GSimpleActionGroup *group;
-    int32 button;
+    uint32 button;
     double translated_x;
     double translated_y;
 
     (void)data;
-    button = (int32)gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
+    button = gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
 
     if (n_press != 1) {
         return;
@@ -225,6 +227,7 @@ on_log_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y,
     gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
 
     if (g_object_get_data(G_OBJECT(widget), "actions_initialized") == NULL) {
+        error("initializing action group...\n");
         group = g_simple_action_group_new();
 
         g_action_map_add_action(G_ACTION_MAP(group),
@@ -232,7 +235,8 @@ on_log_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y,
                                 NULL)));
         g_action_map_add_action(G_ACTION_MAP(group),
                                 G_ACTION(g_simple_action_new_stateful("copy_line",
-                                G_VARIANT_TYPE_INT32, NULL)));
+                                                                      G_VARIANT_TYPE_INT32,
+                                                                      NULL)));
 
         g_signal_connect(g_action_map_lookup_action(G_ACTION_MAP(group), "copy_all"),
                          "activate", G_CALLBACK(on_log_copy), "all");
@@ -241,24 +245,28 @@ on_log_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y,
 
         gtk_widget_insert_action_group(widget, "log", G_ACTION_GROUP(group));
         g_object_unref(group);
-        g_object_set_data(G_OBJECT(widget), "actions_initialized", GINT_TO_POINTER(1));
+        g_object_set_data(G_OBJECT(widget),
+                          "actions_initialized", GINT_TO_POINTER(1));
     }
 
     gtk_text_view_window_to_buffer_coords(GTK_TEXT_VIEW(widget),
                                           GTK_TEXT_WINDOW_WIDGET,
                                           (int32)x, (int32)y,
                                           &buffer_x, &buffer_y);
-    gtk_text_view_get_iter_at_location(GTK_TEXT_VIEW(widget), &iter, buffer_x, buffer_y);
+    gtk_text_view_get_iter_at_location(GTK_TEXT_VIEW(widget),
+                                       &iter, buffer_x, buffer_y);
 
     menu = g_menu_new();
     g_menu_append(menu, _("📋 Copy Whole Log"), "log.copy_all");
 
     item = g_menu_item_new(_("📍 Copy This Line"), NULL);
-    g_menu_item_set_action_and_target(item, "log.copy_line", "i", gtk_text_iter_get_line(&iter));
+    g_menu_item_set_action_and_target(item, "log.copy_line",
+                                      "i", gtk_text_iter_get_line(&iter));
     g_menu_append_item(menu, item);
     g_object_unref(item);
 
-    if (gtk_widget_translate_coordinates(widget, parent, x, y, &translated_x, &translated_y) == FALSE) {
+    if (!gtk_widget_translate_coordinates(widget, parent,
+                                          x, y, &translated_x, &translated_y)) {
         g_object_unref(menu);
         return;
     }
@@ -488,7 +496,8 @@ on_menu_delete(GtkWidget *m, void *data) {
     (void)m;
     message = data;
 
-    if ((tasks = get_target_tasks(message->side, message->src_path, ACTION_DELETE))) {
+    if ((tasks = get_target_tasks(message->side,
+                                  message->src_path, ACTION_DELETE))) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             tasks->items[i]->action = ACTION_DELETE;
         }
@@ -498,7 +507,8 @@ on_menu_delete(GtkWidget *m, void *data) {
             GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
             GTK_BUTTONS_YES_NO, _("Permanently delete %d item(s)?"), count);
 
-        g_signal_connect(dialog, "response", G_CALLBACK(on_delete_response), tasks);
+        g_signal_connect(dialog, "response",
+                         G_CALLBACK(on_delete_response), tasks);
         gtk_widget_show(dialog);
     }
 
@@ -658,7 +668,8 @@ on_delete_after_toggled(GtkCheckButton *b, void *data) {
               " Files in the backup folder"
               " that do not exist in the source folder"
               " will be PERMANENTLY DELETED."));
-        g_signal_connect(dialog, "response", G_CALLBACK(gtk_window_destroy), NULL);
+        g_signal_connect(dialog, "response",
+                         G_CALLBACK(gtk_window_destroy), NULL);
         gtk_widget_show(dialog);
     }
 
@@ -718,9 +729,12 @@ on_preview_clicked(GtkWidget *b, void *data) {
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
     thread_data->is_preview = true;
-    thread_data->check_different_fs = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
-    thread_data->delete_excluded = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
-    thread_data->delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
+    thread_data->check_different_fs
+        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
+    thread_data->delete_excluded
+        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
+    thread_data->delete_after
+        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
     g_thread_new("work_rsync", work_rsync, thread_data);
 
     return;
@@ -738,9 +752,12 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
         memset64(thread_data, 0, SIZEOF(*thread_data));
 
         thread_data->is_preview = false;
-        thread_data->check_different_fs = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
-        thread_data->delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
-        thread_data->delete_excluded = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
+        thread_data->check_different_fs
+            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
+        thread_data->delete_after
+            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
+        thread_data->delete_excluded
+            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
         g_thread_new("work_rsync", work_rsync, thread_data);
     }
     gtk_window_destroy(GTK_WINDOW(dialog));
@@ -965,10 +982,12 @@ on_ignore_clicked(GtkWidget *b, void *data) {
     }
 
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), view);
-    gtk_box_append(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), scroll);
+    gtk_box_append(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
+                   scroll);
     gtk_widget_set_vexpand(scroll, TRUE);
 
-    g_signal_connect(dialog, "response", G_CALLBACK(on_ignore_response), buffer);
+    g_signal_connect(dialog, "response",
+                     G_CALLBACK(on_ignore_response), buffer);
     gtk_widget_show(dialog);
     return;
 }
@@ -1021,7 +1040,8 @@ on_browse_src(GtkWidget *b, void *data) {
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel",
         GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
-    g_signal_connect(dialog, "response", G_CALLBACK(on_browse_response_src), NULL);
+    g_signal_connect(dialog, "response",
+                     G_CALLBACK(on_browse_response_src), NULL);
     gtk_widget_show(dialog);
     return;
 }
@@ -1054,7 +1074,8 @@ on_browse_dst(GtkWidget *b, void *data) {
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel",
         GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
-    g_signal_connect(dialog, "response", G_CALLBACK(on_browse_response_dst), NULL);
+    g_signal_connect(dialog, "response",
+                     G_CALLBACK(on_browse_response_dst), NULL);
     gtk_widget_show(dialog);
     return;
 }
@@ -1071,7 +1092,9 @@ on_scroll_sync(GtkAdjustment *s, void *d) {
 }
 
 static gboolean
-on_tree_key_press(GtkEventControllerKey *controller, uint32 keyval, uint32 keycode, GdkModifierType state, void *data) {
+on_tree_key_press(GtkEventControllerKey *controller,
+                  uint32 keyval, uint32 keycode, GdkModifierType state,
+                  void *data) {
     GtkWidget *widget;
     GtkTreeSelection *selection;
     GtkTreeModel *model;
@@ -1098,7 +1121,9 @@ on_tree_key_press(GtkEventControllerKey *controller, uint32 keyval, uint32 keyco
         key = gdk_keyval_to_lower(keyval);
         target = gdk_keyval_to_lower(context_menu_items[i].keyval);
 
-        if ((context_menu_items[i].keyval != 0) && (key == target) && (modifiers == context_menu_items[i].mask)) {
+        if (context_menu_items[i].keyval
+            && (key == target)
+            && (modifiers == context_menu_items[i].mask)) {
             execute_menu_item(widget, i);
             handled = TRUE;
             break;
@@ -1109,28 +1134,42 @@ on_tree_key_press(GtkEventControllerKey *controller, uint32 keyval, uint32 keyco
 }
 
 static void
-on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y, void *data) {
+on_tree_button_press(GtkGestureClick *gesture,
+                     int32 n_press, double x, double y, void *data) {
     GtkWidget *widget;
     GtkTreePath *tree_path;
     GtkWidget *parent;
     double translated_x;
     double translated_y;
     int32 side;
-    int32 button;
+    uint32 button;
     int32 bin_x;
     int32 bin_y;
+
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+    GMenu *menu;
+    GtkWidget *popover;
+    CecupRow *row;
+    char *filepath;
+    char *other_path;
+    GdkRectangle rect;
+    GSimpleActionGroup *group;
 
     (void)data;
     widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
-    button = (int32)gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
+    button = gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
 
-    gtk_tree_view_convert_widget_to_bin_window_coords(GTK_TREE_VIEW(widget), (int32)x, (int32)y, &bin_x, &bin_y);
+    gtk_tree_view_convert_widget_to_bin_window_coords(GTK_TREE_VIEW(widget),
+                                                      (int32)x, (int32)y,
+                                                      &bin_x, &bin_y);
 
     switch (button) {
     case GDK_BUTTON_PRIMARY:
         if (n_press == 2) {
-            if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), bin_x, bin_y,
+            if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
+                                              bin_x, bin_y,
                                               &tree_path, NULL, NULL, NULL)) {
                 execute_menu_item(widget, 0);
                 gtk_tree_path_free(tree_path);
@@ -1142,96 +1181,89 @@ on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y
             break;
         }
 
-        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), bin_x, bin_y,
+        if (!gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), bin_x, bin_y,
                                           &tree_path, NULL, NULL, NULL)) {
-            GtkTreeSelection *selection;
-            GtkTreeIter iter;
-            GMenu *menu;
-            GtkWidget *popover;
-            CecupRow *row;
-            char *filepath;
-            char *other_path;
-            GdkRectangle rect;
-            GSimpleActionGroup *group;
-
-            gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
-
-            if (g_object_get_data(G_OBJECT(widget), "tree_actions_initialized") == NULL) {
-                group = g_simple_action_group_new();
-
-                g_action_map_add_action(G_ACTION_MAP(group),
-                                        G_ACTION(g_simple_action_new("activate",
-                                        G_VARIANT_TYPE_INT32)));
-                g_action_map_add_action(G_ACTION_MAP(group),
-                                        G_ACTION(g_simple_action_new("ignore",
-                                        G_VARIANT_TYPE_STRING)));
-
-                g_signal_connect(g_action_map_lookup_action(G_ACTION_MAP(group), "activate"),
-                                 "activate", G_CALLBACK(on_tree_action_activate), widget);
-                g_signal_connect(g_action_map_lookup_action(G_ACTION_MAP(group), "ignore"),
-                                 "activate", G_CALLBACK(on_tree_ignore_action), widget);
-
-                gtk_widget_insert_action_group(widget, "tree", G_ACTION_GROUP(group));
-                g_object_unref(group);
-                g_object_set_data(G_OBJECT(widget), "tree_actions_initialized", GINT_TO_POINTER(1));
-            }
-
-            selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
-            gtk_tree_selection_select_path(selection, tree_path);
-
-            if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter, tree_path)) {
-                gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR, &row, -1);
-
-                if (side == SIDE_LEFT) {
-                    filepath = row->src_path;
-                    other_path = row->dst_path;
-                } else {
-                    filepath = row->dst_path;
-                    other_path = row->src_path;
-                }
-
-                menu = g_menu_new();
-                for (int32 i = 0; i < (int32)LENGTH(context_menu_items); i += 1) {
-                    GMenuItem *item;
-                    item = g_menu_item_new(_(context_menu_items[i].label), NULL);
-                    g_menu_item_set_action_and_target(item, "tree.activate", "i", i);
-
-                    if (context_menu_items[i].callback == on_menu_diff) {
-                        if (filepath == NULL || other_path == NULL) {
-                            g_menu_item_set_action_and_target(item, "none.none", NULL);
-                        }
-                    }
-
-                    g_menu_append_item(menu, item);
-                    g_object_unref(item);
-                }
-
-                parent = gtk_widget_get_parent(widget);
-
-                if (gtk_widget_translate_coordinates(widget, parent, x, y, &translated_x, &translated_y) == FALSE) {
-                    /* g_object_unref(menu); */
-                    /* gtk_tree_path_free(tree_path); */
-                    error("error translating coords\n");
-                    return;
-                }
-
-                popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
-                gtk_widget_set_parent(popover, parent);
-
-                rect.x = (int32)translated_x;
-                rect.y = (int32)translated_y;
-                rect.width = 1;
-                rect.height = 1;
-
-                gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
-                gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
-                /* g_signal_connect(popover, "closed", G_CALLBACK(gtk_widget_unparent), NULL); */
-                gtk_popover_popup(GTK_POPOVER(popover));
-
-                g_object_unref(menu);
-            }
-            gtk_tree_path_free(tree_path);
+            break;
         }
+
+        gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+
+        if (g_object_get_data(G_OBJECT(widget),
+                              "tree_actions_initialized") == NULL) {
+            group = g_simple_action_group_new();
+
+            g_action_map_add_action(G_ACTION_MAP(group),
+                                    G_ACTION(g_simple_action_new("activate",
+                                    G_VARIANT_TYPE_INT32)));
+            g_action_map_add_action(G_ACTION_MAP(group),
+                                    G_ACTION(g_simple_action_new("ignore",
+                                    G_VARIANT_TYPE_STRING)));
+
+            g_signal_connect(g_action_map_lookup_action(G_ACTION_MAP(group),"activate"),
+                             "activate", G_CALLBACK(on_tree_action_activate), widget);
+            g_signal_connect(g_action_map_lookup_action(G_ACTION_MAP(group), "ignore"),
+                             "activate", G_CALLBACK(on_tree_ignore_action), widget);
+
+            gtk_widget_insert_action_group(widget, "tree", G_ACTION_GROUP(group));
+            g_object_unref(group);
+            g_object_set_data(G_OBJECT(widget), "tree_actions_initialized", GINT_TO_POINTER(1));
+        }
+
+        selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+        gtk_tree_selection_select_path(selection, tree_path);
+
+        if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter, tree_path)) {
+            gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR, &row, -1);
+
+            if (side == SIDE_LEFT) {
+                filepath = row->src_path;
+                other_path = row->dst_path;
+            } else {
+                filepath = row->dst_path;
+                other_path = row->src_path;
+            }
+
+            menu = g_menu_new();
+            for (int32 i = 0; i < (int32)LENGTH(context_menu_items); i += 1) {
+                GMenuItem *item;
+                item = g_menu_item_new(_(context_menu_items[i].label), NULL);
+                g_menu_item_set_action_and_target(item, "tree.activate", "i", i);
+
+                if (context_menu_items[i].callback == on_menu_diff) {
+                    if (filepath == NULL || other_path == NULL) {
+                        g_menu_item_set_action_and_target(item, "none.none", NULL);
+                    }
+                }
+
+                g_menu_append_item(menu, item);
+                g_object_unref(item);
+            }
+
+            parent = gtk_widget_get_parent(widget);
+
+            if (gtk_widget_translate_coordinates(widget, parent, x, y, &translated_x, &translated_y) == FALSE) {
+                /* g_object_unref(menu); */
+                /* gtk_tree_path_free(tree_path); */
+                error("error translating coords\n");
+                return;
+            }
+
+            popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
+            gtk_widget_set_parent(popover, parent);
+
+            rect.x = (int32)translated_x;
+            rect.y = (int32)translated_y;
+            rect.width = 1;
+            rect.height = 1;
+
+            gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
+            gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
+            /* g_signal_connect(popover, "closed", G_CALLBACK(gtk_widget_unparent), NULL); */
+            gtk_popover_popup(GTK_POPOVER(popover));
+
+            g_object_unref(menu);
+        }
+        gtk_tree_path_free(tree_path);
         break;
     default:
         break;
