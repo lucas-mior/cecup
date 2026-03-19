@@ -7,10 +7,10 @@
 
 static void
 on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
-    GtkWidget *tree;
-    Message *message;
     int32 index;
     CecupMenuItem *menu_item;
+    GtkWidget *tree;
+    Message *message;
 
     (void)action;
     (void)data;
@@ -18,13 +18,16 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     index = g_variant_get_int32(parameter);
     menu_item = &tree_menu_items[index];
 
-    /* We'll store the tree and message context in the application temporarily */
     tree = g_object_get_data(G_OBJECT(cecup.application), "active_tree");
     message = g_object_get_data(G_OBJECT(cecup.application), "active_message");
 
     if (tree && message && menu_item->callback) {
+        if (menu_item->variant) {
+            g_object_set_data(G_OBJECT(tree), "variant", menu_item->variant);
+        }
         menu_item->callback(tree, message);
     }
+
     return;
 }
 
@@ -47,6 +50,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
         IPC_SEND_LOG_ERROR("Error opening %s: %s.\n",
                            cecup.ignore_path, strerror(errno));
     }
+
     return;
 }
 
@@ -66,6 +70,7 @@ on_menu_apply(GtkWidget *m, void *data) {
 
     XFREE(message->src_path);
     XFREE(message);
+
     return;
 }
 
@@ -100,6 +105,7 @@ on_menu_rename(GtkWidget *m, void *data) {
 
     XFREE(message->src_path);
     XFREE(message);
+
     return;
 }
 
@@ -158,6 +164,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
 
     XFREE(message->src_path);
     XFREE(message);
+
     return;
 }
 
@@ -233,6 +240,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     XFREE(buffer);
     XFREE(message->src_path);
     XFREE(message);
+
     return;
 }
 
@@ -248,6 +256,7 @@ on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
         free_task_list(tasks);
     }
     gtk_window_destroy(GTK_WINDOW(dialog));
+
     return;
 }
 
@@ -279,6 +288,7 @@ on_menu_delete(GtkWidget *m, void *data) {
 
     XFREE(message->src_path);
     XFREE(message);
+
     return;
 }
 
@@ -340,6 +350,7 @@ on_menu_diff(GtkWidget *m, void *data) {
 
     XFREE(message->src_path);
     XFREE(message);
+
     return;
 }
 
@@ -365,6 +376,7 @@ on_menu_ignore(GtkWidget *m, void *data) {
 
     XFREE(message->src_path);
     XFREE(message);
+
     return;
 }
 
