@@ -235,6 +235,7 @@ typedef struct TaskList {
 } TaskList;
 
 static struct {
+    GtkApplication *application;
     GtkWidget *gtk_window;
 
     GtkWidget *invert_button;
@@ -339,6 +340,16 @@ static void *work_rsync_bulk(void *user_data);
 static void *work_rsync(void *user_data);
 static void *work_fix_fs_worker(void *user_data);
 
+static gboolean unparent_popover_idle(void *data);
+static void on_popover_closed(GtkWidget *popover, void *data);
+static void on_menu_open_item(GtkWidget *m, void *data);
+static void on_menu_copy_path(GtkWidget *m, void *data);
+static void on_menu_apply(GtkWidget *m, void *data);
+static void on_menu_diff(GtkWidget *m, void *data);
+static void on_menu_rename(GtkWidget *m, void *data);
+static void on_menu_delete(GtkWidget *m, void *data);
+static void on_menu_ignore(GtkWidget *m, void *data);
+
 #define IPC_SEND_LOG(...)        \
     ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG, __VA_ARGS__)
 #define IPC_SEND_LOG_ERROR(...)  \
@@ -419,6 +430,27 @@ static struct {
     {RSYNC_IGNORE_INTER,      "rsync_ignore_interlude_in_filename"        },
     {RSYNC_SHOW_PRE_FILE,     "rsync_show_prelude_file_in_filename"       },
     {RSYNC_SHOW_PRE_DIR,      "rsync_show_prelude_dir_in_filename"        },
+};
+
+typedef struct {
+    char *label;
+    uint32 keyval;
+    GdkModifierType mask;
+    char *action;
+    void (*callback)(GtkWidget *, void *);
+    char *path_type;
+} CecupMenuItem;
+
+static CecupMenuItem context_menu_items[] = {
+{N_("📄 Open File"),          0,          0,                                 "open",   on_menu_open_item, "file"},
+{N_("📂 Open Folder"),        0,          0,                                 "open",   on_menu_open_item, "folder"},
+{N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK,                  "copy",   on_menu_copy_path, "absolute"},
+{N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, "copy",   on_menu_copy_path, "relative"},
+{N_("⏯️ Apply"),              0,          0,                                 "apply",  on_menu_apply,     NULL},
+{N_("🔍 Diff"),               0,          0,                                 "diff",   on_menu_diff,      NULL},
+{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                 "rename", on_menu_rename,    NULL},
+{N_("🗑️ Delete"),             0,          0,                                 "delete", on_menu_delete,    NULL},
+{N_("💤 Ignore..."),          0,          0,                                 "ignore", NULL,              NULL},
 };
 
 #endif /* CECUP_H */

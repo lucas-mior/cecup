@@ -28,36 +28,6 @@
 #define TESTING_on 0
 #endif
 
-static gboolean unparent_popover_idle(void *data);
-static void on_popover_closed(GtkWidget *popover, void *data);
-static void on_menu_open_item(GtkWidget *m, void *data);
-static void on_menu_copy_path(GtkWidget *m, void *data);
-static void on_menu_apply(GtkWidget *m, void *data);
-static void on_menu_diff(GtkWidget *m, void *data);
-static void on_menu_rename(GtkWidget *m, void *data);
-static void on_menu_delete(GtkWidget *m, void *data);
-static void on_menu_ignore(GtkWidget *m, void *data);
-
-typedef struct {
-    char *label;
-    uint32 keyval;
-    GdkModifierType mask;
-    void (*callback)(GtkWidget *, void *);
-    char *path_type;
-} CecupMenuItem;
-
-static CecupMenuItem context_menu_items[] = {
-{N_("📄 Open File"),          0,          0,                                 on_menu_open_item, "file"},
-{N_("📂 Open Folder"),        0,          0,                                 on_menu_open_item, "folder"},
-{N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK,                  on_menu_copy_path, "absolute"},
-{N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "relative"},
-{N_("⏯️ Apply"),             0,          0,                                 on_menu_apply,     NULL},
-{N_("🔍 Diff"),               0,          0,                                 on_menu_diff,      NULL},
-{N_("✏️ Rename"),             GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
-{N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
-{N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
-};
-
 static gboolean
 unparent_popover_idle(void *data) {
     GtkWidget *widget;
@@ -1238,7 +1208,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                             SNPRINTF(extension_label, _("by extension (*%s)"), extension_ptr);
                             SNPRINTF(pattern_buffer, "*%s", extension_ptr);
                             sub_ext = g_menu_item_new(extension_label, NULL);
-                            g_menu_item_set_action_and_target(sub_ext, "tree.ignore", "s", pattern_buffer);
+                            g_menu_item_set_action_and_target(sub_ext, "app.ignore", "s", pattern_buffer);
                         } else {
                             SNPRINTF(extension_label, "%s", _("by extension"));
                             sub_ext = g_menu_item_new(extension_label, NULL);
@@ -1250,7 +1220,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                             SNPRINTF(directory_label, _("📁 Dir (/%s/)"), directory_buffer);
                             SNPRINTF(pattern_buffer, "/%s/", directory_buffer);
                             sub_dir = g_menu_item_new(directory_label, NULL);
-                            g_menu_item_set_action_and_target(sub_dir, "tree.ignore", "s", pattern_buffer);
+                            g_menu_item_set_action_and_target(sub_dir, "app.ignore", "s", pattern_buffer);
                         } else {
                             SNPRINTF(directory_label, "%s", _("📁 Dir"));
                             sub_dir = g_menu_item_new(directory_label, NULL);
@@ -1260,12 +1230,12 @@ on_tree_button_press(GtkGestureClick *gesture,
                         SNPRINTF(relative_label, _("This file only (/%s)"), filepath);
                         SNPRINTF(pattern_buffer, "/%s", filepath);
                         sub_relative = g_menu_item_new(relative_label, NULL);
-                        g_menu_item_set_action_and_target(sub_relative, "tree.ignore", "s", pattern_buffer);
+                        g_menu_item_set_action_and_target(sub_relative, "app.ignore", "s", pattern_buffer);
 
                         SNPRINTF(name_label, _("This filename on any folder (*/%s)"), name);
                         SNPRINTF(pattern_buffer, "*/%s", name);
                         sub_name = g_menu_item_new(name_label, NULL);
-                        g_menu_item_set_action_and_target(sub_name, "tree.ignore", "s", pattern_buffer);
+                        g_menu_item_set_action_and_target(sub_name, "app.ignore", "s", pattern_buffer);
 
                         g_menu_append_item(submenu, sub_ext);
                         g_menu_append_item(submenu, sub_dir);
@@ -1288,7 +1258,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                 } else {
                     GMenuItem *item;
                     item = g_menu_item_new(_(context_menu_items[i].label), NULL);
-                    g_menu_item_set_action_and_target(item, "tree.activate", "i", i);
+                    g_menu_item_set_action_and_target(item, context_menu_items[i].action, "i", i);
 
                     if (is_busy && ((context_menu_items[i].callback == on_menu_apply) ||
                                     (context_menu_items[i].callback == on_menu_rename) ||

@@ -235,22 +235,13 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     GtkCellRenderer *renderer_path = cecup_cell_renderer_text_new();
     GtkTreeViewColumn *column;
     GtkEventController *key;
-    GSimpleActionGroup *group;
-    GSimpleAction *action_activate;
-    GSimpleAction *action_ignore;
 
-    group = g_simple_action_group_new();
-
-    action_activate = g_simple_action_new("activate", G_VARIANT_TYPE_INT32);
-    g_signal_connect(action_activate, "activate", G_CALLBACK(on_tree_action_activate), tree);
-    g_action_map_add_action(G_ACTION_MAP(group), G_ACTION(action_activate));
-
-    action_ignore = g_simple_action_new("ignore", G_VARIANT_TYPE_STRING);
-    g_signal_connect(action_ignore, "activate", G_CALLBACK(on_tree_ignore_action), tree);
-    g_action_map_add_action(G_ACTION_MAP(group), G_ACTION(action_ignore));
-
-    gtk_widget_insert_action_group(tree, "tree", G_ACTION_GROUP(group));
-    g_object_unref(group);
+    for (uint32 i = 0; i < LENGTH(context_menu_items); i += 1) {
+        CecupMenuItem *menu_item = &context_menu_items[i];
+        GSimpleAction *action = g_simple_action_new(menu_item->action, NULL);
+        g_signal_connect(action, "activate", G_CALLBACK(menu_item->callback), tree);
+        g_action_map_add_action(G_ACTION_MAP(cecup.application), G_ACTION(action));
+    }
 
     gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(tree), TRUE);
 
@@ -841,7 +832,6 @@ activate(GtkApplication *application, gpointer user_data) {
 
 int32
 main(int32 argc, char **argv) {
-    GtkApplication *application;
     int32 status;
 
     program = argv[0];
@@ -918,10 +908,10 @@ main(int32 argc, char **argv) {
         SNPRINTF(cecup.config_path, "%s/cecup.conf", config_base);
     }
 
-    application = gtk_application_new("com.example.cecup", G_APPLICATION_DEFAULT_FLAGS);
-    g_signal_connect(application, "activate", G_CALLBACK(activate), NULL);
-    status = g_application_run(G_APPLICATION(application), argc, argv);
-    g_object_unref(application);
+    cecup.application = gtk_application_new("app", G_APPLICATION_DEFAULT_FLAGS);
+    g_signal_connect(cecup.application, "activate", G_CALLBACK(activate), NULL);
+    status = g_application_run(G_APPLICATION(cecup.application), argc, argv);
+    g_object_unref(cecup.application);
 
     end_and_print_profile();
 
