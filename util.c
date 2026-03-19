@@ -1898,26 +1898,26 @@ static volatile ullong here_counter = 0; \
 
 #if TESTING_util
 
-#define DAYS_ENUM_LIST(ACTION) \
-    BEGIN_ENUM(WEEK_DAY) \
-        ACTION(ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string")) \
-        ACTION(ENUM_ELEMENT(MONDAY)) \
-        ACTION(ENUM_ELEMENT(TUESDAY)) \
-        ACTION(ENUM_ELEMENT(WEDNESDAY)) \
-        ACTION(ENUM_ELEMENT(THURSDAY)) \
-        ACTION(ENUM_ELEMENT_STR(FRIDAY, "Friday string")) \
-        ACTION(ENUM_ELEMENT(SATURDAY)) \
+#define DAYS_ENUM_LIST(ENUM_NAME, ACTION) \
+    BEGIN_ENUM(ENUM_NAME) \
+        ACTION(ENUM_ELEMENT_VAL_STR(ENUM_NAME, Sunday, 0, "Sunday string")) \
+        ACTION(ENUM_ELEMENT(ENUM_NAME, MONDAY)) \
+        ACTION(ENUM_ELEMENT(ENUM_NAME, TUESDAY)) \
+        ACTION(ENUM_ELEMENT(ENUM_NAME, WEDNESDAY)) \
+        ACTION(ENUM_ELEMENT(ENUM_NAME, THURSDAY)) \
+        ACTION(ENUM_ELEMENT_STR(ENUM_NAME, FRIDAY, "Friday string")) \
+        ACTION(ENUM_ELEMENT(ENUM_NAME, SATURDAY)) \
     END_ENUM(WEEK_DAY)
 
 #define PASS_THROUGH(x) x
 
 #include "enums.h"
-DAYS_ENUM_LIST(PASS_THROUGH)
+DAYS_ENUM_LIST(WEEK_DAY, PASS_THROUGH)
 
 /* Second pass: Generate the function implementation */
 #define GENERATE_ENUM_STRINGS
 #include "enums.h"
-DAYS_ENUM_LIST(PASS_THROUGH)
+DAYS_ENUM_LIST(WEEK_DAY, PASS_THROUGH)
 
 static void
 write_file(char *path, void *data, int64 len) {
@@ -1956,7 +1956,7 @@ main(int argc, char **argv) {
     (void)argv;
 
     for (uint32 i = 0; i < WEEK_DAY_SATURDAY; i += 1) {
-        printf("enum[%d] = %s\n", i, GetStringDays(i));
+        printf("enum[%d] = %s\n", i, GetStringWEEK_DAY(i));
     }
     exit(0);
 
