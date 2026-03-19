@@ -411,7 +411,7 @@ static struct {
     {RSYNC_SHOW_PRE_DIR,      "rsync_show_prelude_dir_in_filename"        },
 };
 
-typedef struct {
+typedef struct CecupMenuItem {
     char *label;
     uint32 keyval;
     GdkModifierType mask;
