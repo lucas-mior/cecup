@@ -895,7 +895,7 @@ main(int32 argc, char **argv) {
     cecup.ui_waiting = false;
 
     cecup.rows_len = 0;
-    cecup.rows_capacity = 4096;
+    cecup.rows_capacity = 256;
     cecup.rows = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
     cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
 
@@ -943,7 +943,7 @@ main(int32 argc, char **argv) {
     XFREE(cecup.rows);
     XFREE(cecup.rows_visible);
 
-    return status;
+    exit(status);
 }
 
 profiler_end_of_compilation_unit;
