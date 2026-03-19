@@ -1146,6 +1146,7 @@ on_tree_button_press(GtkGestureClick *gesture,
         }
     } else if (button == GDK_BUTTON_SECONDARY) {
         bool is_busy;
+        char action_buf[128];
 
         if (n_press != 1) {
             return;
@@ -1177,7 +1178,8 @@ on_tree_button_press(GtkGestureClick *gesture,
 
             menu = g_menu_new();
             for (int32 i = 0; i < (int32)LENGTH(context_menu_items); i += 1) {
-                if (context_menu_items[i].callback == NULL) {
+                CecupMenuItem *menu_item = &context_menu_items[i];
+                if (menu_item->callback == NULL) {
                     GMenu *submenu;
                     GMenuItem *item;
                     char *name;
@@ -1248,7 +1250,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                         g_object_unref(sub_name);
                     }
 
-                    item = g_menu_item_new_submenu(_(context_menu_items[i].label), G_MENU_MODEL(submenu));
+                    item = g_menu_item_new_submenu(_(menu_item->label), G_MENU_MODEL(submenu));
                     if (is_busy || (filepath == NULL)) {
                         g_menu_item_set_action_and_target(item, "none.none", NULL);
                     }
@@ -1257,14 +1259,16 @@ on_tree_button_press(GtkGestureClick *gesture,
                     g_object_unref(submenu);
                 } else {
                     GMenuItem *item;
-                    item = g_menu_item_new(_(context_menu_items[i].label), NULL);
-                    g_menu_item_set_action_and_target(item, context_menu_items[i].action, "i", i);
 
-                    if (is_busy && ((context_menu_items[i].callback == on_menu_apply) ||
-                                    (context_menu_items[i].callback == on_menu_rename) ||
-                                    (context_menu_items[i].callback == on_menu_delete))) {
+                    SNPRINTF(action_buf, "app.%s", menu_item->action);
+                    item = g_menu_item_new(_(menu_item->label), NULL);
+                    g_menu_item_set_action_and_target(item, action_buf, "i", i);
+
+                    if (is_busy && ((menu_item->callback == on_menu_apply) ||
+                                    (menu_item->callback == on_menu_rename) ||
+                                    (menu_item->callback == on_menu_delete))) {
                         g_menu_item_set_action_and_target(item, "none.none", NULL);
-                    } else if (context_menu_items[i].callback == on_menu_diff) {
+                    } else if (menu_item->callback == on_menu_diff) {
                         if ((filepath == NULL) || (other_path == NULL)) {
                             g_menu_item_set_action_and_target(item, "none.none", NULL);
                         }
