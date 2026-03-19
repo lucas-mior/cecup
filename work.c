@@ -317,10 +317,6 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
 
         cecup.ui_waiting = true;
         g_idle_add(update_ui_handler, message);
-
-        while (cecup.ui_waiting) {
-            g_cond_wait(&cecup.ui_ready_cond, &cecup.arena_mutex);
-        }
     }
 
     return;
@@ -1086,18 +1082,22 @@ work_rsync(void *user_data) {
         pipes[0].revents = 0;
         pipes[1].revents = 0;
 
-        switch (poll(pipes, 2, 100)) {
+        g_mutex_unlock(&cecup.arena_mutex);
+        switch (poll(pipes, 2, 1000)) {
         case -1:
             if (errno != EINTR) {
                 error("Error in poll: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
+            g_mutex_lock(&cecup.arena_mutex);
             continue;
         case 0:
+            g_mutex_lock(&cecup.arena_mutex);
             continue;
         default:
             break;
         }
+        g_mutex_lock(&cecup.arena_mutex);
 
         if (pipes[0].revents & POLLERR) {
             pipes[0].fd = -1;

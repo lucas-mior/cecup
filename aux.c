@@ -523,11 +523,7 @@ update_ui_handler(void *data) {
         break;
     case DATA_TYPE_TREE_UPDATE: {
         g_mutex_lock(&cecup.arena_mutex);
-        if (cecup.ui_waiting) {
-            refresh_ui_list_locked(REFRESH_PARTIAL, NULL);
-            cecup.ui_waiting = false;
-            g_cond_signal(&cecup.ui_ready_cond);
-        } else if (cecup.refresh_id == 0) {
+        if (cecup.refresh_id == 0) {
             cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
                                              refresh_ui_timeout_callback, NULL);
         }
