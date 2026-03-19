@@ -396,9 +396,6 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
                                          GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID,
                                          GTK_SORT_ASCENDING);
 
-    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.l_tree), NULL);
-    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.r_tree), NULL);
-
     current_store_count
         = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(cecup.store), NULL);
 
@@ -439,9 +436,6 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
             valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(cecup.store), &iter);
         }
     }
-
-    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.l_tree), GTK_TREE_MODEL(cecup.store));
-    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.r_tree), GTK_TREE_MODEL(cecup.store));
 
     if (has_sort) {
         gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(cecup.store), saved_sort_id, saved_sort_order);
