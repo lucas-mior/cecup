@@ -904,9 +904,20 @@ xclose(char *file, int line, int *fd, char *fd_var_name, char *filename) {
     return 0;
 }
 
+static void
+xfree(char *file, int32 line, void *pointer) {
+    if (DEBUGGING) {
+        error_impl(file, line, "Freeing pointer %p\n", pointer);
+    }
+    free(pointer);
+    return;
+}
+
 #define xclose_1(FD)       xclose(__FILE__, __LINE__, FD, #FD, NULL)
 #define xclose_2(FD, NAME) xclose(__FILE__, __LINE__, FD, #FD, NAME)
 #define XCLOSE(...) SELECT_ON_NUM_ARGS(xclose_, __VA_ARGS__)
+
+#define XFREE(P) xfree(__FILE__, __LINE__, P)
 
 static int
 xunlink(char *filename) {
