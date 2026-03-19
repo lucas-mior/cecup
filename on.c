@@ -269,6 +269,7 @@ on_log_button_press(GtkGestureClick *gesture,
 
     if (!gtk_widget_translate_coordinates(widget, parent,
                                           x, y, &translated_x, &translated_y)) {
+        error("error tranlating coords...\n");
         g_object_unref(menu);
         return;
     }
