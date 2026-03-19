@@ -315,11 +315,6 @@ typedef struct ThreadData {
     int32 len_new;
 } ThreadData;
 
-enum PathType {
-    PATH_RELATIVE,
-    PATH_ABSOLUTE,
-};
-
 static gboolean update_ui_handler(void * user_data);
 static void refresh_ui_list(enum RefreshType, char *path_to_focus);
 static void refresh_ui_list_locked(enum RefreshType, char *path_to_focus);
@@ -438,7 +433,7 @@ typedef struct {
     GdkModifierType mask;
     char *action;
     void (*callback)(GtkWidget *, void *);
-    char *path_type;
+    char *variant;
 } CecupMenuItem;
 
 static CecupMenuItem context_menu_items[] = {

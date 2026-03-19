@@ -46,7 +46,7 @@ on_popover_closed(GtkWidget *popover, void *data) {
 }
 
 static void
-execute_menu_item(GtkWidget *tree, int32 item_index) {
+execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     GtkTreeSelection *selection;
     GtkTreeModel *model;
     GtkTreeIter iter;
@@ -62,9 +62,9 @@ execute_menu_item(GtkWidget *tree, int32 item_index) {
     is_busy = gtk_widget_get_sensitive(cecup.stop_button);
 
     if (is_busy
-        && ((context_menu_items[item_index].callback == on_menu_rename)
-            || (context_menu_items[item_index].callback == on_menu_delete)
-            || (context_menu_items[item_index].callback == on_menu_apply))) {
+        && ((menu_item->callback == on_menu_rename)
+            || (menu_item->callback == on_menu_delete)
+            || (menu_item->callback == on_menu_apply))) {
         IPC_SEND_LOG_ERROR(_("Action blocked: Background task is running.\n"));
         return;
     }
@@ -81,7 +81,7 @@ execute_menu_item(GtkWidget *tree, int32 item_index) {
         path_len = row->path_len;
 
         if (filepath
-            || (context_menu_items[item_index].callback == on_menu_rename)) {
+            || (menu_item->callback == on_menu_rename)) {
             message = xmalloc(SIZEOF(*message));
             memset64(message, 0, SIZEOF(*message));
 
@@ -99,13 +99,12 @@ execute_menu_item(GtkWidget *tree, int32 item_index) {
 
             message->side = side;
 
-            if (context_menu_items[item_index].path_type) {
+            if (menu_item->variant) {
                 g_object_set_data(G_OBJECT(tree),
-                                  "path_type",
-                                  context_menu_items[item_index].path_type);
+                                  "variant", menu_item->variant);
             }
 
-            context_menu_items[item_index].callback(tree, message);
+            menu_item->callback(tree, message);
         }
     }
 
@@ -740,16 +739,17 @@ on_tree_key_press(GtkEventControllerKey *controller,
     modifiers = state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_ALT_MASK);
 
     for (int32 i = 0; i < (int32)LENGTH(context_menu_items); i += 1) {
+        CecupMenuItem *menu_item = &context_menu_items[i];
         uint32 key;
         uint32 target;
 
         key = gdk_keyval_to_lower(keyval);
-        target = gdk_keyval_to_lower(context_menu_items[i].keyval);
+        target = gdk_keyval_to_lower(menu_item->keyval);
 
-        if (context_menu_items[i].keyval
+        if (menu_item->keyval
             && (key == target)
-            && (modifiers == context_menu_items[i].mask)) {
-            execute_menu_item(widget, i);
+            && (modifiers == menu_item->mask)) {
+            execute_menu_item(widget, menu_item);
             handled = TRUE;
             break;
         }

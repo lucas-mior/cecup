@@ -59,14 +59,14 @@ static void
 on_menu_open_item(GtkWidget *m, void *data) {
     Message *message;
     TaskList *tasks;
-    char *path_type;
+    char *variant;
 
     message = data;
 
     if (m) {
-        path_type = g_object_get_data(G_OBJECT(m), "path_type");
+        variant = g_object_get_data(G_OBJECT(m), "variant");
     } else {
-        path_type = NULL;
+        variant = NULL;
     }
 
     if ((tasks = get_target_tasks(message->side, message->src_path,
@@ -87,7 +87,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
 
             n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
 
-            if (path_type && (strcmp(path_type, "folder") == 0)) {
+            if (variant && (strcmp(variant, "folder") == 0)) {
                 int32 path_len;
                 path_len = n;
                 dirname2(full_path, full_path, &path_len);
@@ -143,12 +143,12 @@ on_menu_copy_path(GtkWidget *m, void *data) {
             int32 path_len;
             char path_full[MAX_PATH_LENGTH];
             char *path;
-            char *path_type;
+            char *variant;
 
             task = tasks->items[i];
-            path_type = g_object_get_data(G_OBJECT(m), "path_type");
+            variant = g_object_get_data(G_OBJECT(m), "variant");
 
-            if (path_type && (strcmp(path_type, "absolute") == 0)) {
+            if (variant && (strcmp(variant, "absolute") == 0)) {
                 char path_relative[MAX_PATH_LENGTH];
 
                 SNPRINTF(path_relative, "%s/%s", base_path, task->path);
