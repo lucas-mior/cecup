@@ -1911,13 +1911,11 @@ static volatile ullong here_counter = 0; \
     XENUM(SATURDAY, 20)               \
   END_ENUM(WEEK_DAY)
 
-#undef ENUM_NAME_LOCAL
 #define ENUM_NAME_LOCAL WEEK_DAY
 #include "enums.h"
 DAYS_ENUM_LIST
 
 #define GENERATE_ENUM_STRINGS
-#undef ENUM_NAME_LOCAL
 #define ENUM_NAME_LOCAL WEEK_DAY
 #include "enums.h"
 DAYS_ENUM_LIST
