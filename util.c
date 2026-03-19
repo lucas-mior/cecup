@@ -284,21 +284,21 @@ memrchr(const void *memory_pointer, int32 character_to_find, size_t size) {
 
 #define X64(func) \
 INLINE void \
-CAT(func, 64)(void *dest, void *source, int64 size) { \
-    if (size == 0) \
+CAT(func, 64)(void *dest, void *source, int64 n) { \
+    if (n == 0) \
         return; \
     if (DEBUGGING) { \
-        if (size < 0) { \
-            error("Error in %s: Invalid size = %lld\n", __func__, (llong)size); \
+        if (n < 0) { \
+            error("Error in %s: Invalid n = %lld\n", __func__, (llong)n); \
             fatal(EXIT_FAILURE); \
         } \
-        if ((ullong)size >= (ullong)SIZE_MAX) { \
-            error("Error in %s: Size (%lld) is bigger than SIZEMAX\n", \
-                   __func__, (llong)size); \
+        if ((ullong)n >= (ullong)SIZE_MAX) { \
+            error("Error in %s: n (%lld) is bigger than SIZEMAX\n", \
+                   __func__, (llong)n); \
             fatal(EXIT_FAILURE); \
         } \
     } \
-    func(dest, source, (size_t)size); \
+    func(dest, source, (size_t)n); \
     return; \
 }
 
