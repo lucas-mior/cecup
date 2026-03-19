@@ -357,8 +357,10 @@ activate(GtkApplication *application, gpointer user_data) {
     GtkWidget *log_scroll;
     GtkWidget *progress_vbox;
     GtkWidget *paths_hbox;
+
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
+
     GType column_types[NUM_COLS];
     char cwd[MAX_PATH_LENGTH];
     char *default_src;

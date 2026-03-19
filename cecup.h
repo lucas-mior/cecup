@@ -31,8 +31,8 @@
 #define EMOJI_DELETE "❌"
 #define EMOJI_IGNORE "💤"
 
-#define SIDE_LEFT 0
-#define SIDE_RIGHT 1
+#define LEFT 0
+#define RIGHT 1
 
 #define MAX_PATH_LENGTH 4096
 #define MAX_NAME_LENGTH 256

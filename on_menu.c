@@ -89,7 +89,7 @@ on_menu_rename(GtkWidget *m, void *data) {
     (void)m;
     message = data;
 
-    if (message->side == SIDE_LEFT) {
+    if (message->side == LEFT) {
         tree = cecup.l_tree;
     } else {
         tree = cecup.r_tree;
@@ -137,7 +137,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
 
             task = tasks->items[i];
 
-            if (message->side == SIDE_LEFT) {
+            if (message->side == LEFT) {
                 base_path = cecup.src_base;
             } else {
                 base_path = cecup.dst_base;
@@ -190,7 +190,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     write_pointer = buffer;
     remaining_capacity = buffer_size - 1;
 
-    if (message->side == SIDE_LEFT) {
+    if (message->side == LEFT) {
         base_path = cecup.src_base;
     } else {
         base_path = cecup.dst_base;

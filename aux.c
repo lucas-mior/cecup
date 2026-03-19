@@ -95,7 +95,7 @@ get_target_tasks(int32 side, char *clicked_path,
             continue;
         }
 
-        if (side == SIDE_LEFT) {
+        if (side == LEFT) {
             filepath = row->src_path;
             action = row->src_action;
         } else {
