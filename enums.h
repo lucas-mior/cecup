@@ -29,7 +29,8 @@
   #define ENUM_ELEMENT_HANDLER_2(e, v)    CAT(CAT(ENUM_NAME_LOCAL, _), e), 
   #define ENUM_ELEMENT_HANDLER_3(e, v, s) CAT(CAT(ENUM_NAME_LOCAL, _), e) = v,
 
-  #define END_ENUM(ENUM_NAME) }; \
+  #define END_ENUM(ENUM_NAME)             CAT(CAT(ENUM_NAME_LOCAL, _), LAST) \
+      }; \
       char *enum_string_##ENUM_NAME(int32 index);
 #else
   #define BEGIN_ENUM(ENUM_NAME) char *enum_string_##ENUM_NAME(int32 index) {\

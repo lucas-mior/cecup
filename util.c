@@ -1906,7 +1906,7 @@ static volatile ullong here_counter = 0; \
     ENUM_ELEMENT(WEDNESDAY)                  \
     ENUM_ELEMENT(THURSDAY)                   \
     ENUM_ELEMENT(FRIDAY, "Friday string")    \
-    ENUM_ELEMENT(SATURDAY)                   \
+    ENUM_ELEMENT(SATURDAY, 20)               \
   END_ENUM(WEEK_DAY)
 
 #define PASS_THROUGH(x) x
@@ -1958,7 +1958,7 @@ main(int argc, char **argv) {
     (void)argc;
     (void)argv;
 
-    for (uint32 i = 0; i < WEEK_DAY_SATURDAY; i += 1) {
+    for (int32 i = 0; i < WEEK_DAY_LAST; i += 1) {
         printf("enum[%d] = %s\n", i, enum_string_WEEK_DAY(i));
     }
     exit(0);
