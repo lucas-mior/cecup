@@ -1902,13 +1902,13 @@ static volatile ullong here_counter = 0; \
 
 #define DAYS_ENUM_LIST                       \
   BEGIN_ENUM(WEEK_DAY)                       \
-    ENUM_ELEMENT(SUNDAY, 0, "Sunday string") \
-    ENUM_ELEMENT(MONDAY)                     \
-    ENUM_ELEMENT(TUESDAY, 10)                \
-    ENUM_ELEMENT(WEDNESDAY)                  \
-    ENUM_ELEMENT(THURSDAY)                   \
-    ENUM_ELEMENT(FRIDAY, "Friday string")    \
-    ENUM_ELEMENT(SATURDAY, 20)               \
+    XENUM(SUNDAY, 0, "Sunday string") \
+    XENUM(MONDAY)                     \
+    XENUM(TUESDAY, 10)                \
+    XENUM(WEDNESDAY)                  \
+    XENUM(THURSDAY)                   \
+    XENUM(FRIDAY, "Friday string")    \
+    XENUM(SATURDAY, 20)               \
   END_ENUM(WEEK_DAY)
 
 #undef ENUM_NAME_LOCAL
