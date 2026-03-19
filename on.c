@@ -53,7 +53,7 @@ static CecupMenuItem context_menu_items[] = {
 {N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "relative"},
 {N_("⏯️ Apply"),              0,          0,                                 on_menu_apply,     NULL},
 {N_("🔍 Diff"),               0,          0,                                 on_menu_diff,      NULL},
-{N_("✏️ Rename"),               GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
+{N_("✏️ Rename"),               GDK_KEY_F2, 0,                                on_menu_rename,    NULL},
 {N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
 };
 
