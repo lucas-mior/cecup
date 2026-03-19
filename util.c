@@ -1898,14 +1898,14 @@ static volatile ullong here_counter = 0; \
 
 #if TESTING_util
 
-#define DAYS_ENUM_LIST                    \
-  BEGIN_ENUM(WEEK_DAY)                    \
-    ENUM_ELEMENT(Sunday, 0, "Sunday string") /* 3 args: ID, VAL, STR */ \
-    ENUM_ELEMENT(MONDAY)                     /* 1 arg:  ID (auto val, stringified name) */ \
-    ENUM_ELEMENT(TUESDAY, 10)                /* 2 args: ID, VAL (sets val, stringified name) */ \
+#define DAYS_ENUM_LIST                       \
+  BEGIN_ENUM(WEEK_DAY)                       \
+    ENUM_ELEMENT(SUNDAY, 0, "Sunday string") \
+    ENUM_ELEMENT(MONDAY)                     \
+    ENUM_ELEMENT(TUESDAY, 10)                \
     ENUM_ELEMENT(WEDNESDAY)                  \
     ENUM_ELEMENT(THURSDAY)                   \
-    ENUM_ELEMENT(FRIDAY, "Friday string")    /* 2 args: ID, STR (auto val, custom string) */ \
+    ENUM_ELEMENT(FRIDAY, "Friday string")    \
     ENUM_ELEMENT(SATURDAY)                   \
   END_ENUM(WEEK_DAY)
 
