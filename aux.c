@@ -34,6 +34,8 @@
 
 #define UI_INTERVAL_MS 100
 
+static void on_sort_changed(GtkTreeSortable *sortable, void *data);
+
 static void
 protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.preview_button, !state);
@@ -261,6 +263,8 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     bool show_equal;
     bool show_delete;
     bool show_ignore;
+    GtkTreeIter iter;
+    bool valid;
 
     show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
@@ -371,15 +375,17 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
         }
     }
 
+    g_signal_handlers_block_by_func(cecup.store, on_sort_changed, NULL);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.l_tree), NULL);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.r_tree), NULL);
+
     current_store_count
         = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(cecup.store), NULL);
-
 
     if (cecup.rows_visible_len > current_store_count) {
         for (int32 i = 0;
              i < (cecup.rows_visible_len - current_store_count);
              i += 1) {
-            GtkTreeIter iter;
             gtk_list_store_append(cecup.store, &iter);
         }
     } else if (cecup.rows_visible_len < current_store_count) {
@@ -388,26 +394,29 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
         } else {
             for (int32 i = 0; i < (current_store_count - cecup.rows_visible_len);
                  i += 1) {
-                GtkTreeIter iter;
                 if (gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(cecup.store),
                                                   &iter, NULL,
-                                                  current_store_count - 1 - i)) {
+                                                  cecup.rows_visible_len)) {
                     gtk_list_store_remove(cecup.store, &iter);
                 }
             }
         }
     }
 
+    valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cecup.store), &iter);
     for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
-        GtkTreeIter iter;
         CecupRow *row = cecup.rows_visible[i];
 
-        if (gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(cecup.store), &iter,
-                                          NULL, i)) {
+        if (valid) {
             gtk_list_store_set(cecup.store, &iter, COL_SELECTED, row->selected,
                                COL_ROW_PTR, row, -1);
+            valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(cecup.store), &iter);
         }
     }
+
+    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.l_tree), GTK_TREE_MODEL(cecup.store));
+    gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.r_tree), GTK_TREE_MODEL(cecup.store));
+    g_signal_handlers_unblock_by_func(cecup.store, on_sort_changed, NULL);
 
     if ((refresh_type & REFRESH_FINAL) && path_to_focus) {
         for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {

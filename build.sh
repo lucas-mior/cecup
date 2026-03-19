@@ -70,11 +70,6 @@ case "$target" in
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     exe="bin/${program}_debug"
     ;;
-"benchmark")
-    CFLAGS="$CFLAGS -O2 -flto -march=native -ftree-vectorize"
-    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DBRN2_BENCHMARK=1"
-    exe="bin/${program}_benchmark"
-    ;;
 "perf")
     CFLAGS="$CFLAGS -g3 -Og -flto"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DBRN2_BENCHMARK=1"
@@ -174,7 +169,7 @@ if [ "$CC" = "clang" ]; then
 fi
 
 case "$target" in
-"build"|"debug"|"release"|"valgrind"|"callgrind")
+"build"|"debug"|"release"|"valgrind"|"callgrind"|"perf")
     trace_on
 
     if [ ! -d "po" ]; then
@@ -301,6 +296,14 @@ case "$target" in
 "check")
     CC=gcc CFLAGS="-fanalyzer" ./build.sh
     scan-build --view -analyze-headers --status-bugs ./build.sh
+    exit
+    ;;
+"perf")
+    trace_on
+    perf record --call-graph dwarf -o bin/perf.data $exe
+    # perf annotate bin/$exe
+    perf report -i bin/perf.data
+    trace_off
     exit
     ;;
 esac
