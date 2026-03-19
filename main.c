@@ -19,6 +19,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#define PROFILER 1
+#include "profiler.c"
+
 #include "cecup.h"
 #include "util.c"
 #include "on.c"
@@ -161,6 +164,8 @@ main(int32 argc, char *argv[]) {
 
     (void)program;
     (void)program_len;
+
+    begin_profile();
 
     {
         char *locale_devel = "./po";
@@ -643,6 +648,8 @@ main(int32 argc, char *argv[]) {
     gtk_widget_show_all(cecup.gtk_window);
     gtk_main();
 
+    end_and_print_profile();
+
     free(cecup.rows);
     free(cecup.rows_visible);
 
@@ -819,3 +826,4 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
                      G_CALLBACK(on_tree_key_press), NULL);
     return;
 }
+profiler_end_of_compilation_unit;
