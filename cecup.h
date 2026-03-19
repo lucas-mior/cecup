@@ -402,7 +402,7 @@ static struct {
     char *problem;
     char *rename;
 } replacements[] = {
-    {"\n",                    "_newline_in_filename_"                     },
+    {"\n",                    "_newline_in_filename_"                    },
     /* {"\\",                    "_backslash_in_filename_"                   }, */
     /* {"\"",                    "_double_quote_in_filename_"                }, */
     /* {"\'",                    "_single_quote_in_filename_"                }, */

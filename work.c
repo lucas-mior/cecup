@@ -141,8 +141,7 @@ work_finalize(ThreadData *thread_data) {
             int32 focus_length = strlen32(thread_data->relative_new);
 
             message->focus_len = focus_length;
-            message->path_to_focus
-                = xmalloc(focus_length + 1);
+            message->path_to_focus = xmalloc(focus_length + 1);
             memcpy64(message->path_to_focus, thread_data->relative_new,
                      focus_length + 1);
         }
@@ -329,6 +328,7 @@ work_fix_fs_recursive(char *base_path, char *relative) {
     int32 count = 0;
     int32 capacity = 1024;
     int64 total_files = 0;
+    bool renaming_problematic = false;
 
     if (relative) {
         SNPRINTF(full_path, "%s/%s", base_path, relative);
@@ -380,8 +380,6 @@ work_fix_fs_recursive(char *base_path, char *relative) {
         int32 old_full_len;
         struct stat stat;
         bool changed = false;
-        int64 j;
-        int64 k;
         int64 name_len = strlen32(d_name);
 
         if (relative) {
@@ -405,75 +403,75 @@ work_fix_fs_recursive(char *base_path, char *relative) {
             continue;
         }
 
-#if 0
-        j = 0;
-        k = 0;
-        while (k < name_len) {
-            char *earliest_match = NULL;
-            int32 replacement_index = -1;
+        if (renaming_problematic) {
+            int32 j = 0;
+            int32 k = 0;
+            while (k < name_len) {
+                char *earliest_match = NULL;
+                int32 replacement_index = -1;
 
-            for (int32 ri = 0; ri < LENGTH(replacements); ri += 1) {
-                char *search = replacements[ri].problem;
-                int64 search_len = strlen32(search);
-                char *match;
+                for (int32 ri = 0; ri < LENGTH(replacements); ri += 1) {
+                    char *search = replacements[ri].problem;
+                    int64 search_len = strlen32(search);
+                    char *match;
 
-                if ((match = memmem64(&d_name[k], name_len - k,
-                                      search, search_len))) {
-                    if (earliest_match == NULL || match < earliest_match) {
-                        earliest_match = match;
-                        replacement_index = ri;
+                    if ((match = memmem64(&d_name[k], name_len - k,
+                                          search, search_len))) {
+                        if (earliest_match == NULL || match < earliest_match) {
+                            earliest_match = match;
+                            replacement_index = ri;
+                        }
+                    }
+                }
+
+                if (earliest_match) {
+                    int64 prefix_len = (int64)(earliest_match - &d_name[k]);
+                    char *replace_str = replacements[replacement_index].rename;
+                    int64 replace_len = strlen32(replace_str);
+
+                    if (prefix_len > 0) {
+                        memcpy64(&new_name[j], &d_name[k], prefix_len);
+                        j += prefix_len;
+                        k += prefix_len;
+                    }
+
+                    memcpy64(&new_name[j], replace_str, replace_len);
+
+                    j += replace_len;
+                    k += strlen32(replacements[replacement_index].problem);
+                    changed = true;
+                } else {
+                    int64 remaining = name_len - k;
+                    memcpy64(&new_name[j], &d_name[k], remaining);
+                    j += remaining;
+                    k += remaining;
+                }
+            }
+            new_name[j] = '\0';
+
+            if (changed) {
+                if (relative && relative[0]) {
+                    SNPRINTF(new_full, "%s/%s/%s", base_path, relative, new_name);
+                } else {
+                    SNPRINTF(new_full, "%s/%s", base_path, new_name);
+                }
+
+                if (renameat2(AT_FDCWD, old_full,
+                              AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
+                    IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n", old_full,
+                                       new_full, strerror(errno));
+                } else {
+                    IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name);
+                    if (S_ISDIR(stat.st_mode)) {
+                        if (relative) {
+                            SNPRINTF(sub_rel, "%s/%s", relative, new_name);
+                        } else {
+                            SNPRINTF(sub_rel, "%s", new_name);
+                        }
                     }
                 }
             }
-
-            if (earliest_match) {
-                int64 prefix_len = (int64)(earliest_match - &d_name[k]);
-                char *replace_str = replacements[replacement_index].rename;
-                int64 replace_len = strlen32(replace_str);
-
-                if (prefix_len > 0) {
-                    memcpy64(&new_name[j], &d_name[k], prefix_len);
-                    j += prefix_len;
-                    k += prefix_len;
-                }
-
-                memcpy64(&new_name[j], replace_str, replace_len);
-
-                j += replace_len;
-                k += strlen32(replacements[replacement_index].problem);
-                changed = true;
-            } else {
-                int64 remaining = name_len - k;
-                memcpy64(&new_name[j], &d_name[k], remaining);
-                j += remaining;
-                k += remaining;
-            }
         }
-        new_name[j] = '\0';
-
-        if (changed) {
-            if (relative && relative[0]) {
-                SNPRINTF(new_full, "%s/%s/%s", base_path, relative, new_name);
-            } else {
-                SNPRINTF(new_full, "%s/%s", base_path, new_name);
-            }
-
-            if (renameat2(AT_FDCWD, old_full,
-                          AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
-                IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n", old_full,
-                                   new_full, strerror(errno));
-            } else {
-                IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name);
-                if (S_ISDIR(stat.st_mode)) {
-                    if (relative) {
-                        SNPRINTF(sub_rel, "%s/%s", relative, new_name);
-                    } else {
-                        SNPRINTF(sub_rel, "%s", new_name);
-                    }
-                }
-            }
-        }
-#endif
 
         if (S_ISDIR(stat.st_mode)) {
             total_files += work_fix_fs_recursive(base_path, sub_rel);
@@ -593,8 +591,6 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         show_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
         hash_insert2_map(show_patterns_map,
                          src_path, xstrdup(show_pattern));
-        PRINTLN(src_path);
-        PRINTLN(show_pattern);
         return;
     }
 
@@ -751,7 +747,6 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
                                                    RSYNC_INCLUDE_DIRS);
                 }
             }
-        } else {
         }
 
         if (!(filtered && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
@@ -829,11 +824,8 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
                     show_pattern = *pattern_ptr;
                     ignore_duplicate_dir = !strcmp(show_pattern,
                                                    RSYNC_INCLUDE_DIRS);
-                } else {
                 }
-            } else {
             }
-        } else {
         }
 
         if (!(filtered && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
@@ -925,6 +917,7 @@ work_rsync(void *user_data) {
             g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
 
             work_finalize(thread_data);
+            g_mutex_unlock(&cecup.arena_mutex);
             return NULL;
         }
     }

@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#ifndef PROFILER
+#if !defined(PROFILER)
 #define PROFILER 0
 #endif
 
@@ -20,12 +20,13 @@ typedef uint32_t uint32;
 static uint64_t
 get_os_timer_freq(void) {
     struct timespec res;
+    uint64 freq;
     if (clock_getres(CLOCK_MONOTONIC, &res) != 0) {
         return 0;
     }
 
     // Frequency = 1 / resolution (in seconds)
-    uint64 freq = (uint64)1e9*(uint64)res.tv_nsec;
+    freq = (uint64)1e9*(uint64)res.tv_nsec;
     if (freq == 0) {
         freq = 1000000000ULL;  // assume 1 GHz fallback for ns precision clocks
     }
@@ -117,11 +118,52 @@ end_profile_block(ProfileBlock *block) {
     _Static_assert(__COUNTER__ < ARRAY_LENGTH(profiler_anchors),               \
                    "too many profiler anchors.\n")
 
+static void
+end_and_print_profile(void) {
+    uint64 timer_freq;
+    uint64 total_tsc_elapsed;
+    profiler_global.end_tsc = read_cpu_timer();
+    timer_freq = estimate_block_timer_freq();
+
+    total_tsc_elapsed = profiler_global.end_tsc - profiler_global.start_tsc;
+
+    if (timer_freq) {
+        printf("\nTotal time: %0.4fms (timer freq %lu)\n",
+               1000.0*(double)total_tsc_elapsed / (double)timer_freq,
+               timer_freq);
+    }
+
+    for (uint32 i = 0; i < ARRAY_LENGTH(profiler_anchors); i += 1) {
+        ProfileAnchor *anchor = &profiler_anchors[i];
+        double percent_exclusive;
+
+        if (anchor->tsc_elapsed_inclusive == 0) {
+            continue;
+        }
+
+        percent_exclusive = 100.0
+                            * ((double)anchor->tsc_elapsed_exclusive
+                               / (double)total_tsc_elapsed);
+        printf("  %s[%lu]: %lu (%.2f%%", anchor->label, anchor->hit_count,
+               anchor->tsc_elapsed_exclusive, percent_exclusive);
+        if (anchor->tsc_elapsed_inclusive != anchor->tsc_elapsed_exclusive) {
+            double percent_with_children;
+            percent_with_children = 100.0
+                                    * ((double)anchor->tsc_elapsed_inclusive
+                                       / (double)total_tsc_elapsed);
+            printf(", %.2f%% w/children", percent_with_children);
+        }
+        printf(")\n");
+    }
+    return;
+}
+
 #else
 
-#define time_block(...)
+#define time_block(...)(void)0
 #define print_anchor_data(...)
 #define profiler_end_of_compilation_unit
+#define end_and_print_profile(...)
 
 #endif
 
@@ -174,46 +216,6 @@ estimate_block_timer_freq(void) {
 static void
 begin_profile(void) {
     profiler_global.start_tsc = read_cpu_timer();
-    return;
-}
-
-static void
-end_and_print_profile(void) {
-    uint64 timer_freq;
-    uint64 total_tsc_elapsed;
-    profiler_global.end_tsc = read_cpu_timer();
-    timer_freq = estimate_block_timer_freq();
-
-    total_tsc_elapsed = profiler_global.end_tsc - profiler_global.start_tsc;
-
-    if (timer_freq) {
-        printf("\nTotal time: %0.4fms (timer freq %lu)\n",
-               1000.0*(double)total_tsc_elapsed / (double)timer_freq,
-               timer_freq);
-    }
-
-    for (uint32 i = 0; i < ARRAY_LENGTH(profiler_anchors); i += 1) {
-        ProfileAnchor *anchor = &profiler_anchors[i];
-        double percent_exclusive;
-
-        if (anchor->tsc_elapsed_inclusive == 0) {
-            continue;
-        }
-
-        percent_exclusive = 100.0
-                            * ((double)anchor->tsc_elapsed_exclusive
-                               / (double)total_tsc_elapsed);
-        printf("  %s[%lu]: %lu (%.2f%%", anchor->label, anchor->hit_count,
-               anchor->tsc_elapsed_exclusive, percent_exclusive);
-        if (anchor->tsc_elapsed_inclusive != anchor->tsc_elapsed_exclusive) {
-            double percent_with_children;
-            percent_with_children = 100.0
-                                    * ((double)anchor->tsc_elapsed_inclusive
-                                       / (double)total_tsc_elapsed);
-            printf(", %.2f%% w/children", percent_with_children);
-        }
-        printf(")\n");
-    }
     return;
 }
 

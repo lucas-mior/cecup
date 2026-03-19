@@ -629,8 +629,8 @@ cecup_get_dirs(void) {
 
     cecup.changed_dirs = true;
 
-    tmp_src = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.src_entry));
-    tmp_dst = (char *)gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry));
+    tmp_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.src_entry));
+    tmp_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dst_entry));
 
     save_config();
 
@@ -659,8 +659,8 @@ cecup_get_dirs(void) {
     g_signal_handler_block(cecup.src_entry, cecup.src_entry_id);
     g_signal_handler_block(cecup.dst_entry, cecup.dst_entry_id);
 
-    gtk_entry_set_text(GTK_ENTRY(cecup.src_entry), cecup.src_base);
-    gtk_entry_set_text(GTK_ENTRY(cecup.dst_entry), cecup.dst_base);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), cecup.src_base);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), cecup.dst_base);
 
     g_signal_handler_unblock(cecup.src_entry, cecup.src_entry_id);
     g_signal_handler_unblock(cecup.dst_entry, cecup.dst_entry_id);
@@ -678,13 +678,13 @@ save_config(void) {
 
     key = g_key_file_new();
     g_key_file_set_string(key, "Paths", "src",
-                          gtk_entry_get_text(GTK_ENTRY(cecup.src_entry)));
+                          gtk_editable_get_text(GTK_EDITABLE(cecup.src_entry)));
     g_key_file_set_string(key, "Paths", "dst",
-                          gtk_entry_get_text(GTK_ENTRY(cecup.dst_entry)));
+                          gtk_editable_get_text(GTK_EDITABLE(cecup.dst_entry)));
     g_key_file_set_string(key, "Tools", "diff",
-                          gtk_entry_get_text(GTK_ENTRY(cecup.diff_entry)));
+                          gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry)));
     g_key_file_set_string(key, "Tools", "term",
-                          gtk_entry_get_text(GTK_ENTRY(cecup.term_entry)));
+                          gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry)));
     g_key_file_set_boolean(
         key, "Filters", "new",
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new)));
@@ -705,13 +705,13 @@ save_config(void) {
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore)));
     g_key_file_set_boolean(
         key, "Options", "check_fs",
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.check_fs)));
+        gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs)));
     g_key_file_set_boolean(
         key, "Options", "delete_after",
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.delete_after)));
+        gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after)));
     g_key_file_set_boolean(
         key, "Options", "delete_excluded",
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.delete_excluded)));
+        gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded)));
 
     out = g_key_file_to_data(key, &len, NULL);
     g_file_set_contents(cecup.config_path, out, (gssize)len, NULL);

@@ -18,3 +18,4 @@ callgrind.out.*
 gdb_output*
 /a/
 /b/
+gtk3/

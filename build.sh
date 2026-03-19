@@ -35,7 +35,7 @@ CPPFLAGS="$CPPFLAGS -DLOCALEDIR=\"$PREFIX/share/locale\""
 CFLAGS="$CFLAGS -std=c11"
 CFLAGS="$CFLAGS -Wfatal-errors"
 CFLAGS="$CFLAGS -Wextra -Wall"
-# CFLAGS="$CFLAGS -Werror"
+CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-format-pedantic"
 CFLAGS="$CFLAGS -Wno-unknown-warning-option"
 CFLAGS="$CFLAGS -Wno-gnu-union-cast"
@@ -48,8 +48,9 @@ CFLAGS="$CFLAGS -Wno-discarded-qualifiers"
 CFLAGS="$CFLAGS -Wno-cast-qual"
 CFLAGS="$CFLAGS -Wno-cast-function-type"
 CFLAGS="$CFLAGS -Wno-deprecated-declarations"
+CFLAGS="$CFLAGS -Wno-missing-field-initializers"
 
-LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk+-3.0) -lpthread"
+LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk4) -lpthread"
 LDFLAGS="$LDFLAGS -lm"
 OS=$(uname -a)
 
@@ -72,8 +73,13 @@ case "$target" in
     ;;
 "perf")
     CFLAGS="$CFLAGS -g3 -Og -flto"
-    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DBRN2_BENCHMARK=1"
+    CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     exe="bin/${program}_perf"
+    ;;
+"profile")
+    CFLAGS="$CFLAGS -g3 -Og -flto"
+    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DPROFILE=1 -Wno-declaration-after-statement"
+    exe="bin/${program}_profile"
     ;;
 "valgrind") 
     CFLAGS="$CFLAGS -g -O0 -ftree-vectorize"
@@ -104,17 +110,17 @@ case "$target" in
         --keyword=N_ \
         --language=C \
         --from-code=UTF-8 \
-        -o po/${program}.pot \
+        --output po/${program}.pot \
         ./*.c ./*.h
 
     for lang in $LANGS; do
         if [ -f "po/$lang.po" ]; then
-            msgmerge -U "po/$lang.po" po/${program}.pot
+            msgmerge --update "po/$lang.po" po/${program}.pot
         else
             msginit \
-                -l "$lang" \
-                -i po/${program}.pot \
-                -o "po/$lang.po" \
+                --locale "$lang" \
+                --input po/${program}.pot \
+                --output "po/$lang.po" \
                  --no-translator
         fi
     done
@@ -166,10 +172,11 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
     CFLAGS="$CFLAGS -Wno-assign-enum"
     CFLAGS="$CFLAGS -Wno-used-but-marked-unused"
+    CFLAGS="$CFLAGS -Wno-double-promotion"
 fi
 
 case "$target" in
-"build"|"debug"|"release"|"valgrind"|"callgrind"|"perf")
+"build"|"debug"|"release"|"valgrind"|"callgrind"|"perf"|"profile")
     trace_on
 
     if [ ! -d "po" ]; then
@@ -302,7 +309,7 @@ case "$target" in
     trace_on
     perf record --call-graph dwarf -o bin/perf.data $exe
     # perf annotate bin/$exe
-    perf report -n -i bin/perf.data
+    perf report -n --input bin/perf.data
     trace_off
     exit
     ;;
