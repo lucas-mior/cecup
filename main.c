@@ -661,11 +661,13 @@ activate(GtkApplication *application, gpointer user_data) {
         GActionMap *action_map = G_ACTION_MAP(cecup.application);
 
         action_copy_all = g_simple_action_new("copy_all", NULL);
-        g_signal_connect(action_copy_all, "activate", G_CALLBACK(on_log_copy), "all");
+        g_signal_connect(action_copy_all, "activate",
+                         G_CALLBACK(on_log_copy), "all");
         g_action_map_add_action(action_map, G_ACTION(action_copy_all));
 
         action_copy_line = g_simple_action_new("copy_line", G_VARIANT_TYPE_INT32);
-        g_signal_connect(action_copy_line, "activate", G_CALLBACK(on_log_copy), "line");
+        g_signal_connect(action_copy_line, "activate",
+                         G_CALLBACK(on_log_copy), "line");
         g_action_map_add_action(action_map, G_ACTION(action_copy_line));
     }
 
