@@ -53,7 +53,7 @@ static CecupMenuItem context_menu_items[] = {
 {N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "relative"},
 {N_("⏯️ Apply"),              0,          0,                                 on_menu_apply,     NULL},
 {N_("🔍 Diff"),               0,          0,                                 on_menu_diff,      NULL},
-{N_("✏️ Rename"),               GDK_KEY_F2, 0,                                on_menu_rename,    NULL},
+{N_("✏️ Rename"),               GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
 {N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
 };
 
@@ -220,10 +220,12 @@ on_log_button_press(GtkGestureClick *gesture,
     GtkWidget *widget;
     GtkWidget *parent;
     GtkWidget *popover;
-    GMenuModel *menu = data;
+    GMenu *menu;
+    GMenuItem *item;
     GtkTextIter iter;
     int32 buffer_x;
     int32 buffer_y;
+    int32 line_num;
     GdkRectangle rect;
     uint32 button;
     double translated_x;
@@ -251,14 +253,23 @@ on_log_button_press(GtkGestureClick *gesture,
     gtk_text_view_get_iter_at_location(GTK_TEXT_VIEW(widget),
                                        &iter, buffer_x, buffer_y);
 
+    line_num = gtk_text_iter_get_line(&iter);
+
     if (!gtk_widget_translate_coordinates(widget, parent,
                                           x, y, &translated_x, &translated_y)) {
         error("error tranlating coords...\n");
-        g_object_unref(menu);
         return;
     }
 
-    popover = gtk_popover_menu_new_from_model(menu);
+    menu = g_menu_new();
+    g_menu_append(menu, _("📋 Copy Whole Log"), "app.copy_all");
+
+    item = g_menu_item_new(_("📝 Copy Line"), NULL);
+    g_menu_item_set_action_and_target(item, "app.copy_line", "i", line_num);
+    g_menu_append_item(menu, item);
+    g_object_unref(item);
+
+    popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
     gtk_widget_set_parent(popover, parent);
 
     rect.x = (int32)translated_x;
@@ -271,7 +282,7 @@ on_log_button_press(GtkGestureClick *gesture,
     g_signal_connect(popover, "closed", G_CALLBACK(on_popover_closed), NULL);
     gtk_popover_popup(GTK_POPOVER(popover));
 
-    /* g_object_unref(menu); */
+    g_object_unref(menu);
 
     return;
 }

@@ -325,7 +325,7 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     {
         GtkGesture *click = gtk_gesture_click_new();
         gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(click));
-        gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click), 0); // 0 allows all buttons
+        gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click), 0);
         g_signal_connect(click, "pressed", G_CALLBACK(on_tree_button_press), NULL);
     }
 
@@ -639,9 +639,6 @@ activate(GtkApplication *application, gpointer user_data) {
     gtk_paned_set_end_child(GTK_PANED(v_paned), log_scroll);
 
     {
-        GMenu *menu = g_menu_new();
-        g_menu_append(menu, _("📋 Copy Whole Log"), "app.copy_all");
-
         GtkGesture *log_gesture = gtk_gesture_click_new();
 
         gtk_widget_add_controller(cecup.log_view,
@@ -650,7 +647,7 @@ activate(GtkApplication *application, gpointer user_data) {
                                                    GTK_PHASE_CAPTURE);
         gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(log_gesture), 0);
         g_signal_connect(log_gesture, "pressed",
-                         G_CALLBACK(on_log_button_press), menu);
+                         G_CALLBACK(on_log_button_press), NULL);
     }
 
     {
