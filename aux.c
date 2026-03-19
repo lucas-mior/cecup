@@ -25,6 +25,7 @@
 #include "i18n.h"
 #include "cecup.h"
 #include "util.c"
+#include "profiler.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_aux 1
@@ -266,6 +267,10 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     GtkTreeIter iter;
     bool valid;
 
+    int32 saved_sort_id;
+    GtkSortType saved_sort_order;
+    bool has_sort;
+
     show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
     show_link
@@ -379,7 +384,14 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
         }
     }
 
+    g_object_freeze_notify(G_OBJECT(cecup.store));
+    g_object_freeze_notify(G_OBJECT(cecup.l_tree));
+    g_object_freeze_notify(G_OBJECT(cecup.r_tree));
+    has_sort = gtk_tree_sortable_get_sort_column_id(GTK_TREE_SORTABLE(cecup.store), (int *)&saved_sort_id, &saved_sort_order);
+
     g_signal_handlers_block_by_func(cecup.store, on_sort_changed, NULL);
+    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(cecup.store), GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID, GTK_SORT_ASCENDING);
+
     gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.l_tree), NULL);
     gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.r_tree), NULL);
 
@@ -426,7 +438,15 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
 
     gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.l_tree), GTK_TREE_MODEL(cecup.store));
     gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.r_tree), GTK_TREE_MODEL(cecup.store));
+
+    if (has_sort) {
+        gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(cecup.store), saved_sort_id, saved_sort_order);
+    }
+
     g_signal_handlers_unblock_by_func(cecup.store, on_sort_changed, NULL);
+    g_object_thaw_notify(G_OBJECT(cecup.store));
+    g_object_thaw_notify(G_OBJECT(cecup.l_tree));
+    g_object_thaw_notify(G_OBJECT(cecup.r_tree));
 
     if ((refresh_type & REFRESH_FINAL) && path_to_focus) {
         for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
