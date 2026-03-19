@@ -386,10 +386,15 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     g_object_freeze_notify(G_OBJECT(cecup.store));
     g_object_freeze_notify(G_OBJECT(cecup.l_tree));
     g_object_freeze_notify(G_OBJECT(cecup.r_tree));
-    has_sort = gtk_tree_sortable_get_sort_column_id(GTK_TREE_SORTABLE(cecup.store), (int *)&saved_sort_id, &saved_sort_order);
+    has_sort
+        = gtk_tree_sortable_get_sort_column_id(GTK_TREE_SORTABLE(cecup.store),
+                                               (int *)&saved_sort_id,
+                                               &saved_sort_order);
 
     g_signal_handlers_block_by_func(cecup.store, on_sort_changed, NULL);
-    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(cecup.store), GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID, GTK_SORT_ASCENDING);
+    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(cecup.store),
+                                         GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID,
+                                         GTK_SORT_ASCENDING);
 
     gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.l_tree), NULL);
     gtk_tree_view_set_model(GTK_TREE_VIEW(cecup.r_tree), NULL);
