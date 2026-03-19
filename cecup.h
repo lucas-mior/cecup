@@ -31,6 +31,7 @@
 #define EMOJI_DELETE "❌"
 #define EMOJI_IGNORE "💤"
 
+// LEFT and RIGHT
 #define L 0
 #define R 1
 
