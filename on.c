@@ -28,6 +28,8 @@
 #define TESTING_on 0
 #endif
 
+static gboolean unparent_popover_idle(void *data);
+static void on_popover_closed(GtkWidget *popover, void *data);
 static void on_menu_open_item(GtkWidget *m, void *data);
 static void on_menu_copy_path(GtkWidget *m, void *data);
 static void on_menu_apply(GtkWidget *m, void *data);
@@ -54,6 +56,22 @@ static CecupMenuItem context_menu_items[] = {
 {N_("✏️ Rename"),               GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
 {N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
 };
+
+static gboolean
+unparent_popover_idle(void *data) {
+    GtkWidget *widget;
+
+    widget = data;
+    gtk_widget_unparent(widget);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+on_popover_closed(GtkWidget *popover, void *data) {
+    (void)data;
+    g_idle_add(unparent_popover_idle, popover);
+    return;
+}
 
 static void
 execute_menu_item(GtkWidget *tree, int32 item_index) {
@@ -250,7 +268,7 @@ on_log_button_press(GtkGestureClick *gesture,
 
     gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
     gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
-    g_signal_connect(popover, "closed", G_CALLBACK(gtk_widget_unparent), NULL);
+    g_signal_connect(popover, "closed", G_CALLBACK(on_popover_closed), NULL);
     gtk_popover_popup(GTK_POPOVER(popover));
 
     /* g_object_unref(menu); */
@@ -1212,7 +1230,7 @@ on_tree_button_press(GtkGestureClick *gesture,
 
             gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
             gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
-            g_signal_connect(popover, "closed", G_CALLBACK(gtk_widget_unparent), NULL);
+            g_signal_connect(popover, "closed", G_CALLBACK(on_popover_closed), NULL);
             gtk_popover_popup(GTK_POPOVER(popover));
 
             g_object_unref(menu);

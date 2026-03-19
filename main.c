@@ -639,6 +639,21 @@ activate(GtkApplication *application, gpointer user_data) {
     gtk_paned_set_end_child(GTK_PANED(v_paned), log_scroll);
 
     {
+        GMenu *menu = g_menu_new();
+        g_menu_append(menu, _("📋 Copy Whole Log"), "app.copy_all");
+
+        GtkGesture *log_gesture = gtk_gesture_click_new();
+
+        gtk_widget_add_controller(cecup.log_view,
+                                  GTK_EVENT_CONTROLLER(log_gesture));
+        gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(log_gesture),
+                                                   GTK_PHASE_CAPTURE);
+        gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(log_gesture), 0);
+        g_signal_connect(log_gesture, "pressed",
+                         G_CALLBACK(on_log_button_press), menu);
+    }
+
+    {
         GSimpleAction *action_copy_all;
         GSimpleAction *action_copy_line;
 
@@ -797,21 +812,6 @@ activate(GtkApplication *application, gpointer user_data) {
 
     g_signal_connect(cecup.search_entry, "changed",
                      G_CALLBACK(on_search_changed), NULL);
-
-    {
-        GMenu *menu = g_menu_new();
-        g_menu_append(menu, _("📋 Copy Whole Log"), "app.copy_all");
-
-        GtkGesture *log_gesture = gtk_gesture_click_new();
-
-        gtk_widget_add_controller(cecup.log_view,
-                                  GTK_EVENT_CONTROLLER(log_gesture));
-        gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(log_gesture),
-                                                   GTK_PHASE_CAPTURE);
-        gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(log_gesture), 0);
-        g_signal_connect(log_gesture, "pressed",
-                         G_CALLBACK(on_log_button_press), menu);
-    }
 
     g_signal_connect(cecup.filter_new, "toggled",
                      G_CALLBACK(on_filter_toggled), NULL);
