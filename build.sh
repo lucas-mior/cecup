@@ -302,7 +302,7 @@ case "$target" in
     trace_on
     perf record --call-graph dwarf -o bin/perf.data $exe
     # perf annotate bin/$exe
-    perf report -i bin/perf.data
+    perf report -n -i bin/perf.data
     trace_off
     exit
     ;;

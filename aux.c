@@ -246,6 +246,7 @@ refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
 
 static void
 refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
+    static int64 count_refresh = 0;
     int32 count_new = 0;
     int32 count_hard = 0;
     int32 count_update = 0;
@@ -270,6 +271,10 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     int32 saved_sort_id;
     GtkSortType saved_sort_order;
     bool has_sort;
+    struct timespec t0;
+    struct timespec t1;
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
 
     show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
@@ -468,6 +473,9 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
         }
     }
 
+    PRINT(count_refresh);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
+    PRINT_TIMINGS(cecup.rows_visible_len, (char *)__func__, t0, t1);
     return;
 }
 

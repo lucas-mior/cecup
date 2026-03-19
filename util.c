@@ -1841,6 +1841,30 @@ dirname2(char *buffer, char *path, int32 *path_len) {
     return dir_length;
 }
 
+static void
+print_timings(char *file, int32 line, int32 n,
+              char *name, struct timespec t0, struct timespec t1) {
+    long seconds = t1.tv_sec - t0.tv_sec;
+    long nanos = t1.tv_nsec - t0.tv_nsec;
+    static FILE *save_results = NULL;
+
+    if (save_results == NULL) {
+        save_results = fopen("results.csv", "w");
+        fprintf(save_results, "number,time\n");
+    }
+
+    double total_seconds = (double)seconds + (double)nanos / 1.0e9;
+    double micros_per = 1e6*(total_seconds / (double)n);
+
+    printf("\ntime elapsed %s:%d:%s\n", file, line, name);
+    printf("%gs = %gus per item.\n\n", total_seconds, micros_per);
+    fprintf(save_results, "%d,%f\n", n, total_seconds);
+    return;
+}
+
+#define PRINT_TIMINGS(N, NAME, T0, T1) \
+    print_timings(__FILE__, __LINE__, N, NAME, T0, T1)
+
 #if OS_UNIX
 static void
 xpipe(int array[2]) {
