@@ -85,8 +85,11 @@ cecup_cell_renderer_text_snapshot(GtkCellRenderer *cell, GtkSnapshot *snapshot,
         if (!is_selected && self->raw_color) {
             if (gdk_rgba_parse(&color, self->raw_color)) {
                 gdk_cairo_set_source_rgba(cr, &color);
-                cairo_rectangle(cr, (double)background_area->x, (double)background_area->y,
-                                (double)background_area->width, (double)background_area->height);
+                cairo_rectangle(cr,
+                                (double)background_area->x,
+                                (double)background_area->y,
+                                (double)background_area->width,
+                                (double)background_area->height);
                 cairo_fill(cr);
             }
         }
