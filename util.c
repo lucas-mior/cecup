@@ -1900,8 +1900,8 @@ static volatile ullong here_counter = 0; \
 
 #if TESTING_util
 
-#define DAYS_ENUM_LIST                       \
-  BEGIN_ENUM(WEEK_DAY)                       \
+#define DAYS_ENUM_LIST                \
+  BEGIN_ENUM(WEEK_DAY)                \
     XENUM(SUNDAY, 0, "Sunday string") \
     XENUM(MONDAY)                     \
     XENUM(TUESDAY, 10)                \
