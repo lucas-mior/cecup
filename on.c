@@ -51,7 +51,7 @@ static CecupMenuItem context_menu_items[] = {
 {N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "relative"},
 {N_("⏯️ Apply"),              0,          0,                                 on_menu_apply,     NULL},
 {N_("🔍 Diff"),               0,          0,                                 on_menu_diff,      NULL},
-{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
+{N_("✏️ Rename"),               GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
 {N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
 };
 
@@ -171,6 +171,8 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     which = data;
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
 
+    HERE;
+
     if (strcmp(which, "all") == 0) {
         gtk_text_buffer_get_bounds(cecup.log_buffer, &start, &end);
     } else if (strcmp(which, "line") == 0) {
@@ -200,13 +202,11 @@ on_log_button_press(GtkGestureClick *gesture,
     GtkWidget *widget;
     GtkWidget *parent;
     GtkWidget *popover;
-    GMenu *menu;
+    GMenuModel *menu = data;
     GtkTextIter iter;
     int32 buffer_x;
     int32 buffer_y;
-    GMenuItem *item;
     GdkRectangle rect;
-    GSimpleActionGroup *group;
     uint32 button;
     double translated_x;
     double translated_y;
@@ -226,46 +226,12 @@ on_log_button_press(GtkGestureClick *gesture,
     parent = gtk_widget_get_parent(widget);
     gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
 
-    if (g_object_get_data(G_OBJECT(widget), "actions_initialized") == NULL) {
-        GAction *action;
-        error("initializing action group...\n");
-        group = g_simple_action_group_new();
-
-        action = G_ACTION(g_simple_action_new("copy_all", NULL));
-        g_action_map_add_action(G_ACTION_MAP(group), action);
-
-        action = G_ACTION(g_simple_action_new_stateful("copy_line",
-                                                       G_VARIANT_TYPE_INT32,
-                                                       NULL));
-        g_action_map_add_action(G_ACTION_MAP(group), action);
-
-        action = g_action_map_lookup_action(G_ACTION_MAP(group), "copy_all");
-        g_signal_connect(action, "activate",
-                         G_CALLBACK(on_log_copy), "all");
-        action = g_action_map_lookup_action(G_ACTION_MAP(group), "copy_line");
-        g_signal_connect(action, "activate", G_CALLBACK(on_log_copy), "line");
-
-        gtk_widget_insert_action_group(widget, "log", G_ACTION_GROUP(group));
-        g_object_unref(group);
-        g_object_set_data(G_OBJECT(widget),
-                          "actions_initialized", GINT_TO_POINTER(1));
-    }
-
     gtk_text_view_window_to_buffer_coords(GTK_TEXT_VIEW(widget),
                                           GTK_TEXT_WINDOW_WIDGET,
                                           (int32)x, (int32)y,
                                           &buffer_x, &buffer_y);
     gtk_text_view_get_iter_at_location(GTK_TEXT_VIEW(widget),
                                        &iter, buffer_x, buffer_y);
-
-    menu = g_menu_new();
-    g_menu_append(menu, _("📋 Copy Whole Log"), "log.copy_all");
-
-    item = g_menu_item_new(_("📍 Copy This Line"), NULL);
-    g_menu_item_set_action_and_target(item, "log.copy_line",
-                                      "i", gtk_text_iter_get_line(&iter));
-    g_menu_append_item(menu, item);
-    g_object_unref(item);
 
     if (!gtk_widget_translate_coordinates(widget, parent,
                                           x, y, &translated_x, &translated_y)) {
@@ -274,7 +240,7 @@ on_log_button_press(GtkGestureClick *gesture,
         return;
     }
 
-    popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
+    popover = gtk_popover_menu_new_from_model(menu);
     gtk_widget_set_parent(popover, parent);
 
     rect.x = (int32)translated_x;
@@ -287,7 +253,7 @@ on_log_button_press(GtkGestureClick *gesture,
     g_signal_connect(popover, "closed", G_CALLBACK(gtk_widget_unparent), NULL);
     gtk_popover_popup(GTK_POPOVER(popover));
 
-    g_object_unref(menu);
+    /* g_object_unref(menu); */
 
     return;
 }
@@ -1190,33 +1156,6 @@ on_tree_button_press(GtkGestureClick *gesture,
 
         gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
 
-        if (g_object_get_data(G_OBJECT(widget),
-                              "tree_actions_initialized") == NULL) {
-            GSimpleActionGroup *group;
-            GAction *action;
-            group = g_simple_action_group_new();
-
-            g_action_map_add_action(G_ACTION_MAP(group),
-                                    G_ACTION(g_simple_action_new("activate",
-                                    G_VARIANT_TYPE_INT32)));
-            g_action_map_add_action(G_ACTION_MAP(group),
-                                    G_ACTION(g_simple_action_new("ignore",
-                                    G_VARIANT_TYPE_STRING)));
-
-            action = g_action_map_lookup_action(G_ACTION_MAP(group), "activate");
-            g_signal_connect(action, "activate",
-                             G_CALLBACK(on_tree_action_activate), widget);
-
-            action = g_action_map_lookup_action(G_ACTION_MAP(group), "ignore");
-            g_signal_connect(action, "activate",
-                             G_CALLBACK(on_tree_ignore_action), widget);
-
-            gtk_widget_insert_action_group(widget, "tree", G_ACTION_GROUP(group));
-            g_object_unref(group);
-            g_object_set_data(G_OBJECT(widget),
-                              "tree_actions_initialized", GINT_TO_POINTER(1));
-        }
-
         selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
         gtk_tree_selection_select_path(selection, tree_path);
 
@@ -1257,9 +1196,9 @@ on_tree_button_press(GtkGestureClick *gesture,
                                                   x, y,
                                                   &translated_x,
                                                   &translated_y)) {
-                /* g_object_unref(menu); */
-                /* gtk_tree_path_free(tree_path); */
                 error("error translating coords\n");
+                g_object_unref(menu);
+                gtk_tree_path_free(tree_path);
                 return;
             }
 

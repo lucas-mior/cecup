@@ -235,6 +235,22 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     GtkCellRenderer *renderer_path = cecup_cell_renderer_text_new();
     GtkTreeViewColumn *column;
     GtkEventController *key;
+    GSimpleActionGroup *group;
+    GSimpleAction *action_activate;
+    GSimpleAction *action_ignore;
+
+    group = g_simple_action_group_new();
+
+    action_activate = g_simple_action_new("activate", G_VARIANT_TYPE_INT32);
+    g_signal_connect(action_activate, "activate", G_CALLBACK(on_tree_action_activate), tree);
+    g_action_map_add_action(G_ACTION_MAP(group), G_ACTION(action_activate));
+
+    action_ignore = g_simple_action_new("ignore", G_VARIANT_TYPE_STRING);
+    g_signal_connect(action_ignore, "activate", G_CALLBACK(on_tree_ignore_action), tree);
+    g_action_map_add_action(G_ACTION_MAP(group), G_ACTION(action_ignore));
+
+    gtk_widget_insert_action_group(tree, "tree", G_ACTION_GROUP(group));
+    g_object_unref(group);
 
     gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(tree), TRUE);
 
@@ -622,6 +638,19 @@ activate(GtkApplication *application, gpointer user_data) {
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(log_scroll), cecup.log_view);
     gtk_paned_set_end_child(GTK_PANED(v_paned), log_scroll);
 
+    {
+        GSimpleAction *action_copy_all;
+        GSimpleAction *action_copy_line;
+
+        action_copy_all = g_simple_action_new("copy_all", NULL);
+        g_signal_connect(action_copy_all, "activate", G_CALLBACK(on_log_copy), "all");
+        g_action_map_add_action(G_ACTION_MAP(application), G_ACTION(action_copy_all));
+
+        action_copy_line = g_simple_action_new("copy_line", G_VARIANT_TYPE_INT32);
+        g_signal_connect(action_copy_line, "activate", G_CALLBACK(on_log_copy), "line");
+        g_action_map_add_action(G_ACTION_MAP(application), G_ACTION(action_copy_line));
+    }
+
     filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     gtk_widget_set_halign(filter_hbox, GTK_ALIGN_CENTER);
     cecup.filter_new = gtk_toggle_button_new_with_label(EMOJI_NEW);
@@ -771,15 +800,15 @@ activate(GtkApplication *application, gpointer user_data) {
 
     {
         GMenu *menu = g_menu_new();
+        g_menu_append(menu, _("📋 Copy Whole Log"), "app.copy_all");
+
         GtkGesture *log_gesture = gtk_gesture_click_new();
 
-        g_menu_append(menu, "Say Hello", "app.hello");
         gtk_widget_add_controller(cecup.log_view,
                                   GTK_EVENT_CONTROLLER(log_gesture));
         gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(log_gesture),
                                                    GTK_PHASE_CAPTURE);
-        gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(log_gesture), 0); // 0 allows all buttons
-                                                                           //
+        gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(log_gesture), 0);
         g_signal_connect(log_gesture, "pressed",
                          G_CALLBACK(on_log_button_press), menu);
     }
