@@ -234,7 +234,6 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     GtkCellRenderer *renderer_text = cecup_cell_renderer_text_new();
     GtkCellRenderer *renderer_path = cecup_cell_renderer_text_new();
     GtkTreeViewColumn *column;
-    GtkGesture *click;
     GtkEventController *key;
 
     gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(tree), TRUE);
@@ -307,10 +306,12 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     g_signal_connect(tree, "query-tooltip",
                      G_CALLBACK(on_tree_tooltip), NULL);
 
-    click = gtk_gesture_click_new();
-    gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(click));
-    gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click), 0); // 0 allows all buttons
-    g_signal_connect(click, "pressed", G_CALLBACK(on_tree_button_press), NULL);
+    {
+        GtkGesture *click = gtk_gesture_click_new();
+        gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(click));
+        gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click), 0); // 0 allows all buttons
+        g_signal_connect(click, "pressed", G_CALLBACK(on_tree_button_press), NULL);
+    }
 
     key = gtk_event_controller_key_new();
     gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(key));
@@ -770,8 +771,10 @@ activate(GtkApplication *application, gpointer user_data) {
 
     {
         GtkGesture *log_gesture = gtk_gesture_click_new();
-        gtk_widget_add_controller(cecup.log_view, GTK_EVENT_CONTROLLER(log_gesture));
-        gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(log_gesture), GTK_PHASE_CAPTURE);
+        gtk_widget_add_controller(cecup.log_view,
+                                  GTK_EVENT_CONTROLLER(log_gesture));
+        gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(log_gesture),
+                                                   GTK_PHASE_CAPTURE);
         gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(log_gesture), 0); // 0 allows all buttons
         g_signal_connect(log_gesture, "pressed",
                          G_CALLBACK(on_log_button_press), NULL);
