@@ -46,7 +46,8 @@
   #define ENUM_ELEMENT_HANDLER_3(e, v, s) case CAT(CAT(ENUM_NAME_LOCAL, _), e): \
                                               return s;
 
-  #define END_ENUM(ENUM_NAME) default: return "Unknown value"; \
-      } \
+  #define END_ENUM(ENUM_NAME)             default: \
+                                              return "Unknown value"; \
+                                          } \
   }
 #endif
