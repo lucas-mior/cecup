@@ -57,16 +57,21 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     int32 path_len;
     bool is_busy;
 
+    if (menu_item == NULL) {
+        return;
+    }
+
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
     is_busy = gtk_widget_get_sensitive(cecup.stop_button);
 
-    if (is_busy
-        && ((menu_item->callback == on_menu_rename)
+    if (is_busy) {
+        if ((menu_item->callback == on_menu_rename)
             || (menu_item->callback == on_menu_delete)
-            || (menu_item->callback == on_menu_apply))) {
-        IPC_SEND_LOG_ERROR(_("Action blocked: Background task is running.\n"));
-        return;
+            || (menu_item->callback == on_menu_apply)) {
+            IPC_SEND_LOG_ERROR(_("Action blocked: Background task is running.\n"));
+            return;
+        }
     }
 
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
@@ -80,8 +85,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
 
         path_len = row->path_len;
 
-        if (filepath
-            || (menu_item->callback == on_menu_rename)) {
+        if (filepath || (menu_item->callback == on_menu_rename)) {
             message = xmalloc(SIZEOF(*message));
             memset64(message, 0, SIZEOF(*message));
 
@@ -794,13 +798,12 @@ on_tree_button_press(GtkGestureClick *gesture,
             if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
                                               bin_x, bin_y,
                                               &tree_path, NULL, NULL, NULL)) {
-                execute_menu_item(widget, 0);
+                execute_menu_item(widget, &tree_menu_items[0]);
                 gtk_tree_path_free(tree_path);
             }
         }
     } else if (button == GDK_BUTTON_SECONDARY) {
         bool is_busy;
-        char action_buf[128];
 
         if (n_press != 1) {
             return;
@@ -819,6 +822,8 @@ on_tree_button_press(GtkGestureClick *gesture,
 
         if (gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store),
                                     &iter, tree_path)) {
+            Message *message;
+
             gtk_tree_model_get(GTK_TREE_MODEL(cecup.store),
                                &iter, COL_ROW_PTR, &row, -1);
 
@@ -829,6 +834,23 @@ on_tree_button_press(GtkGestureClick *gesture,
                 filepath = row->dst_path;
                 other_path = row->src_path;
             }
+
+            message = xmalloc(SIZEOF(*message));
+            memset64(message, 0, SIZEOF(*message));
+            if (filepath) {
+                message->path_len = row->path_len;
+                message->src_path = xmalloc(row->path_len + 1);
+                memcpy64(message->src_path, filepath, row->path_len + 1);
+            }
+            message->side = side;
+            if (side == SIDE_LEFT) {
+                message->action = row->src_action;
+            } else {
+                message->action = row->dst_action;
+            }
+
+            g_object_set_data(G_OBJECT(cecup.application), "active_tree", widget);
+            g_object_set_data_full(G_OBJECT(cecup.application), "active_message", message, (GDestroyNotify)free_update_data);
 
             menu = g_menu_new();
             for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {
@@ -845,64 +867,51 @@ on_tree_button_press(GtkGestureClick *gesture,
 
                     if (filepath) {
                         char *extension_ptr;
-                        char extension_label[32];
+                        char extension_label[64];
                         char directory_label[MAX_PATH_LENGTH + 64];
                         char directory_buffer[MAX_PATH_LENGTH];
-                        char relative_label[MAX_NAME_LENGTH];
-                        char name_label[MAX_NAME_LENGTH + 2];
+                        char relative_label[MAX_PATH_LENGTH + 64];
+                        char name_label[MAX_NAME_LENGTH + 64];
                         char pattern_buffer[MAX_PATH_LENGTH];
-                        GMenuItem *sub_ext;
-                        GMenuItem *sub_dir;
-                        GMenuItem *sub_relative;
-                        GMenuItem *sub_name;
 
-                        extension_ptr = NULL;
                         path_len = row->path_len;
                         name = basename2(filepath, &path_len, &length);
+                        extension_ptr = strrchr(name, '.');
 
-                        if ((extension_ptr = memchr64(name, '.', length))) {
-                            extension_ptr = strrchr(extension_ptr, '.');
-                            SNPRINTF(extension_label, _("by extension (*%s)"), extension_ptr);
-                            SNPRINTF(pattern_buffer, "*%s", extension_ptr);
-                            sub_ext = g_menu_item_new(extension_label, NULL);
-                            g_menu_item_set_action_and_target(sub_ext, "app.ignore", "s", pattern_buffer);
-                        } else {
-                            SNPRINTF(extension_label, "%s", _("by extension"));
-                            sub_ext = g_menu_item_new(extension_label, NULL);
-                            g_menu_item_set_action_and_target(sub_ext, "none.none", NULL);
+                        if (extension_ptr) {
+                            if (extension_ptr != name) {
+                                SNPRINTF(extension_label, _("by extension (*%s)"), extension_ptr);
+                                SNPRINTF(pattern_buffer, "*%s", extension_ptr);
+                                item = g_menu_item_new(extension_label, NULL);
+                                g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern_buffer);
+                                g_menu_append_item(submenu, item);
+                                g_object_unref(item);
+                            }
                         }
 
                         dirname2(directory_buffer, filepath, &path_len);
                         if (strcmp(directory_buffer, ".")) {
                             SNPRINTF(directory_label, _("📁 Dir (/%s/)"), directory_buffer);
                             SNPRINTF(pattern_buffer, "/%s/", directory_buffer);
-                            sub_dir = g_menu_item_new(directory_label, NULL);
-                            g_menu_item_set_action_and_target(sub_dir, "app.ignore", "s", pattern_buffer);
-                        } else {
-                            SNPRINTF(directory_label, "%s", _("📁 Dir"));
-                            sub_dir = g_menu_item_new(directory_label, NULL);
-                            g_menu_item_set_action_and_target(sub_dir, "none.none", NULL);
+                            item = g_menu_item_new(directory_label, NULL);
+                            g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern_buffer);
+                            g_menu_append_item(submenu, item);
+                            g_object_unref(item);
                         }
 
                         SNPRINTF(relative_label, _("This file only (/%s)"), filepath);
+                        item = g_menu_item_new(relative_label, NULL);
                         SNPRINTF(pattern_buffer, "/%s", filepath);
-                        sub_relative = g_menu_item_new(relative_label, NULL);
-                        g_menu_item_set_action_and_target(sub_relative, "app.ignore", "s", pattern_buffer);
+                        g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern_buffer);
+                        g_menu_append_item(submenu, item);
+                        g_object_unref(item);
 
                         SNPRINTF(name_label, _("This filename on any folder (*/%s)"), name);
+                        item = g_menu_item_new(name_label, NULL);
                         SNPRINTF(pattern_buffer, "*/%s", name);
-                        sub_name = g_menu_item_new(name_label, NULL);
-                        g_menu_item_set_action_and_target(sub_name, "app.ignore", "s", pattern_buffer);
-
-                        g_menu_append_item(submenu, sub_ext);
-                        g_menu_append_item(submenu, sub_dir);
-                        g_menu_append_item(submenu, sub_relative);
-                        g_menu_append_item(submenu, sub_name);
-
-                        g_object_unref(sub_ext);
-                        g_object_unref(sub_dir);
-                        g_object_unref(sub_relative);
-                        g_object_unref(sub_name);
+                        g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern_buffer);
+                        g_menu_append_item(submenu, item);
+                        g_object_unref(item);
                     }
 
                     item = g_menu_item_new_submenu(_(menu_item->label), G_MENU_MODEL(submenu));
@@ -914,23 +923,30 @@ on_tree_button_press(GtkGestureClick *gesture,
                     g_object_unref(submenu);
                 } else {
                     GMenuItem *item;
-
-                    SNPRINTF(action_buf, "app.%s", menu_item->action);
+                    bool disabled = false;
                     item = g_menu_item_new(_(menu_item->label), NULL);
-                    g_menu_item_set_action_and_target(item, action_buf, "i", i);
+                    g_menu_item_set_action_and_target(item, "app.tree_dispatch", "i", i);
 
-                    if (is_busy && ((menu_item->callback == on_menu_apply) ||
-                                    (menu_item->callback == on_menu_rename) ||
-                                    (menu_item->callback == on_menu_delete))) {
+                    if (is_busy) {
+                        if ((menu_item->callback == on_menu_apply) ||
+                            (menu_item->callback == on_menu_rename) ||
+                            (menu_item->callback == on_menu_delete)) {
+                            disabled = true;
+                        }
+                    }
+
+                    if (filepath == NULL) {
+                        disabled = true;
+                    }
+
+                    if (menu_item->callback == on_menu_diff) {
+                        if (other_path == NULL) {
+                            disabled = true;
+                        }
+                    }
+
+                    if (disabled) {
                         g_menu_item_set_action_and_target(item, "none.none", NULL);
-                    } else if (menu_item->callback == on_menu_diff) {
-                        if ((filepath == NULL) || (other_path == NULL)) {
-                            g_menu_item_set_action_and_target(item, "none.none", NULL);
-                        }
-                    } else {
-                        if (filepath == NULL) {
-                            g_menu_item_set_action_and_target(item, "none.none", NULL);
-                        }
                     }
 
                     g_menu_append_item(menu, item);
@@ -944,7 +960,6 @@ on_tree_button_press(GtkGestureClick *gesture,
                                                   x, y,
                                                   &translated_x,
                                                   &translated_y)) {
-                error("error translating coords\n");
                 g_object_unref(menu);
                 gtk_tree_path_free(tree_path);
                 return;

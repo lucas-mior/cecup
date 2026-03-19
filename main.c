@@ -236,11 +236,17 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
     GtkTreeViewColumn *column;
     GtkEventController *key;
 
-    for (uint32 i = 0; i < LENGTH(tree_menu_items); i += 1) {
-        CecupMenuItem *menu_item = &tree_menu_items[i];
-        GSimpleAction *action = g_simple_action_new(menu_item->action, G_VARIANT_TYPE_INT32);
-        g_signal_connect(action, "activate", G_CALLBACK(menu_item->callback), menu_item->variant);
-        g_action_map_add_action(G_ACTION_MAP(cecup.application), G_ACTION(action));
+    if (g_action_map_lookup_action(G_ACTION_MAP(cecup.application), "tree_dispatch") == NULL) {
+        GSimpleAction *dispatch;
+        GSimpleAction *ignore;
+
+        dispatch = g_simple_action_new("tree_dispatch", G_VARIANT_TYPE_INT32);
+        g_signal_connect(dispatch, "activate", G_CALLBACK(on_menu_dispatch), NULL);
+        g_action_map_add_action(G_ACTION_MAP(cecup.application), G_ACTION(dispatch));
+
+        ignore = g_simple_action_new("ignore", G_VARIANT_TYPE_STRING);
+        g_signal_connect(ignore, "activate", G_CALLBACK(on_menu_ignore_action), NULL);
+        g_action_map_add_action(G_ACTION_MAP(cecup.application), G_ACTION(ignore));
     }
 
     gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(tree), TRUE);

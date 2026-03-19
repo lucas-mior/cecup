@@ -5,6 +5,51 @@
 #include "cecup.h"
 
 static void
+on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
+    GtkWidget *tree;
+    Message *message;
+    int32 index;
+    CecupMenuItem *menu_item;
+
+    (void)action;
+    (void)data;
+
+    index = g_variant_get_int32(parameter);
+    menu_item = &tree_menu_items[index];
+
+    /* We'll store the tree and message context in the application temporarily */
+    tree = g_object_get_data(G_OBJECT(cecup.application), "active_tree");
+    message = g_object_get_data(G_OBJECT(cecup.application), "active_message");
+
+    if (tree && message && menu_item->callback) {
+        menu_item->callback(tree, message);
+    }
+    return;
+}
+
+static void
+on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
+    char *pattern;
+    FILE *fp;
+
+    (void)action;
+    (void)data;
+
+    pattern = (char *)g_variant_get_string(parameter, NULL);
+
+    if (pattern && (fp = fopen(cecup.ignore_path, "a"))) {
+        fprintf(fp, "\n%s", pattern);
+        fclose(fp);
+    } else if (pattern == NULL) {
+        error("Ignore pattern is NULL.\n");
+    } else {
+        IPC_SEND_LOG_ERROR("Error opening %s: %s.\n",
+                           cecup.ignore_path, strerror(errno));
+    }
+    return;
+}
+
+static void
 on_menu_apply(GtkWidget *m, void *data) {
     Message *message;
     TaskList *tasks;
