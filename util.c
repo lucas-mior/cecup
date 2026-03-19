@@ -618,6 +618,17 @@ xstrdup(char *string) {
     return p;
 }
 
+static void
+xfree(char *file, int32 line, void *pointer) {
+    if (DEBUGGING) {
+        error_impl(file, line, "Freeing pointer %p\n", pointer);
+    }
+    free(pointer);
+    return;
+}
+
+#define XFREE(P) xfree(__FILE__, __LINE__, P)
+
 #if OS_UNIX
 static void *
 xmmap_commit(int64 *size) {
@@ -661,7 +672,7 @@ xmmap_commit(int64 *size) {
 static void
 xmunmap(void *p, int64 size) {
     if (RUNNING_ON_VALGRIND) {
-        free(p);
+        XFREE(p);
         return;
     }
     if (munmap(p, (size_t)size) < 0) {
@@ -703,7 +714,7 @@ static void
 xmunmap(void *p, size_t size) {
     (void)size;
     if (RUNNING_ON_VALGRIND) {
-        free(p);
+        XFREE(p);
         return;
     }
     if (!VirtualFree(p, 0, MEM_RELEASE)) {
@@ -904,20 +915,9 @@ xclose(char *file, int line, int *fd, char *fd_var_name, char *filename) {
     return 0;
 }
 
-static void
-xfree(char *file, int32 line, void *pointer) {
-    if (DEBUGGING) {
-        error_impl(file, line, "Freeing pointer %p\n", pointer);
-    }
-    free(pointer);
-    return;
-}
-
 #define xclose_1(FD)       xclose(__FILE__, __LINE__, FD, #FD, NULL)
 #define xclose_2(FD, NAME) xclose(__FILE__, __LINE__, FD, #FD, NAME)
 #define XCLOSE(...) SELECT_ON_NUM_ARGS(xclose_, __VA_ARGS__)
-
-#define XFREE(P) xfree(__FILE__, __LINE__, P)
 
 static int
 xunlink(char *filename) {
@@ -1180,7 +1180,7 @@ error_impl(char *file, int32 line, char *format, ...) {
 #endif
 
     if (big_buffer) {
-        free(big_buffer);
+        XFREE(big_buffer);
     }
     return;
 }
@@ -1408,7 +1408,7 @@ util_copy_file_async_thread(void *arg) {
             pipes[i].revents = 0;
         }
     }
-    free(copy_files);
+    XFREE(copy_files);
     pthread_exit(NULL);
     return NULL;
 }
@@ -1993,14 +1993,14 @@ main(int argc, char **argv) {
             char *base = bases[i];
             int32 path_len = strlen32(path);
             ASSERT_EQUAL(basename2(path, &path_len, NULL), base);
-            free(path);
+            XFREE(path);
         }
         for (int64 i = 0; i < LENGTH(paths); i += 1) {
             char *copy = xstrdup(paths[i]);
             int len = strlen32(copy);
             normalize(copy, &len);
             ASSERT_EQUAL(copy, normalized[i]);
-            free(copy);
+            XFREE(copy);
         }
 
         for (int64 i = 0; i < LENGTH(paths); i += 1) {
@@ -2091,9 +2091,9 @@ main(int argc, char **argv) {
         // clang-format on
     }
 
-    free(p1);
-    free(p2);
-    free(p3);
+    XFREE(p1);
+    XFREE(p2);
+    XFREE(p3);
 
     ASSERT_EQUAL(deg2rad(180.0), 3.141592653589793);
     ASSERT_EQUAL(rad2deg(3.141592653589793), 180.0);

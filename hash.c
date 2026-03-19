@@ -188,7 +188,7 @@ CAT(hash_destroy_, HASH_TYPE)(struct Map *map) {
         case SLOT_FREE:
             break;
         default:
-            free(map->array[i].key);
+            XFREE(map->array[i].key);
             break;
         }
     }
@@ -360,7 +360,7 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
         default:
             if ((iterator->hash == hash) && (strcmp(iterator->key, key) == 0)) {
 #if HASH_DUPLICATE_KEYS
-                free(iterator->key);
+                XFREE(iterator->key);
 #endif
                 iterator->key = (char *)SLOT_DELETED;
                 map->length -= 1;
@@ -614,7 +614,7 @@ main(void) {
     }
 
     hash_destroy_map(map);
-    free(strings);
+    XFREE(strings);
 
     exit(EXIT_SUCCESS);
 }

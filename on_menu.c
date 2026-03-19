@@ -181,7 +181,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
         free_task_list(tasks);
     }
 
-    free(buffer);
+    XFREE(buffer);
     free_update_data(message);
     return;
 }
@@ -284,7 +284,7 @@ on_menu_diff(GtkWidget *m, void *data) {
             }
         }
 
-        free(tasks);
+        XFREE(tasks);
     }
 
     free_update_data(message);

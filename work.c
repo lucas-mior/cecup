@@ -147,12 +147,12 @@ work_finalize(ThreadData *thread_data) {
         }
 
         if (thread_data->relative_new) {
-            free(thread_data->relative_new);
+            XFREE(thread_data->relative_new);
         }
         if (thread_data->relative_old) {
-            free(thread_data->relative_old);
+            XFREE(thread_data->relative_old);
         }
-        free(thread_data);
+        XFREE(thread_data);
     }
 
     g_idle_add(update_ui_handler, message);
@@ -399,7 +399,7 @@ work_fix_fs_recursive(char *base_path, char *relative) {
 
         if (lstat(old_full, &stat) < 0) {
             error("Error in lstat(%s): %s.\n", old_full, strerror(errno));
-            free(d_name);
+            XFREE(d_name);
             continue;
         }
 
@@ -478,10 +478,10 @@ work_fix_fs_recursive(char *base_path, char *relative) {
         } else {
             total_files += 1;
         }
-        free(d_name);
+        XFREE(d_name);
     }
 
-    free(name_list);
+    XFREE(name_list);
     return total_files;
 }
 
@@ -528,7 +528,7 @@ work_fix_fs_worker(void *user_data) {
     message->type = DATA_TYPE_ENABLE_BUTTONS;
     g_idle_add(update_ui_handler, message);
 
-    free(thread_data);
+    XFREE(thread_data);
     return NULL;
 }
 
@@ -1349,9 +1349,9 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stdout[0]);
 
     for (int32 i = 0; i < ntransfers; i += 1) {
-        free(transfers[i]);
+        XFREE(transfers[i]);
     }
-    free(transfers);
+    XFREE(transfers);
 
     if (thread_data->is_preview) {
         IPC_SEND_LOG("Analysis complete. Review the list and click Apply.\n");

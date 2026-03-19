@@ -915,8 +915,8 @@ main(int32 argc, char **argv) {
 
     end_and_print_profile();
 
-    free(cecup.rows);
-    free(cecup.rows_visible);
+    XFREE(cecup.rows);
+    XFREE(cecup.rows_visible);
 
     return status;
 }

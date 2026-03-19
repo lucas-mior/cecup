@@ -54,8 +54,8 @@ protect_interface_from_user(bool state) {
 
 static void
 free_update_data(Message *message) {
-    free(message->src_path);
-    free(message);
+    XFREE(message->src_path);
+    XFREE(message);
     return;
 }
 
@@ -69,15 +69,15 @@ free_task_list(TaskList *tasks) {
         Task *task = tasks->items[i];
 
         if (task->link_target) {
-            free(task->link_target);
+            XFREE(task->link_target);
         }
         if (task->message) {
-            free(task->message);
+            XFREE(task->message);
         }
-        free(task);
+        XFREE(task);
     }
 
-    free(tasks);
+    XFREE(tasks);
     return;
 }
 
@@ -160,7 +160,7 @@ get_target_tasks(int32 side, char *clicked_path,
     }
 
     if (tasks->count == 0) {
-        free(tasks);
+        XFREE(tasks);
         return NULL;
     }
 
@@ -611,12 +611,12 @@ update_ui_handler(void *data) {
     }
 
     if (message->message) {
-        free(message->message);
+        XFREE(message->message);
     }
     if (message->path_to_focus) {
-        free(message->path_to_focus);
+        XFREE(message->path_to_focus);
     }
-    free(message);
+    XFREE(message);
     return G_SOURCE_REMOVE;
 }
 
@@ -650,8 +650,8 @@ cecup_get_dirs(void) {
         return;
     }
 
-    free(cecup.src_base);
-    free(cecup.dst_base);
+    XFREE(cecup.src_base);
+    XFREE(cecup.dst_base);
 
     cecup.src_base = full_src;
     cecup.dst_base = full_dst;
