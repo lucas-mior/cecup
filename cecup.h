@@ -393,14 +393,14 @@ static struct {
     char *rename;
 } replacements[] = {
     {"\n",                    "_newline_in_filename_"                    },
-    /* {"\\",                    "_backslash_in_filename_"                   }, */
-    /* {"\"",                    "_double_quote_in_filename_"                }, */
-    /* {"\'",                    "_single_quote_in_filename_"                }, */
-    /* {"<",                     "_less_than_in_filename_"                   }, */
-    /* {">",                     "_greater_than_in_filename_"                }, */
-    /* {":",                     "_colon_in_filename_"                       }, */
-    /* {"|",                     "_pipe_in_filename_"                        }, */
-    /* {"?",                     "_question_mark_in_filename_"               }, */
+    /* {"\\",                    "_backslash_in_filename_"                }, */
+    /* {"\"",                    "_double_quote_in_filename_"             }, */
+    /* {"\'",                    "_single_quote_in_filename_"             }, */
+    /* {"<",                     "_less_than_in_filename_"                }, */
+    /* {">",                     "_greater_than_in_filename_"             }, */
+    /* {":",                     "_colon_in_filename_"                    }, */
+    /* {"|",                     "_pipe_in_filename_"                     }, */
+    /* {"?",                     "_question_mark_in_filename_"            }, */
     {RSYNC_WILDCARD,          "_asterisk_in_filename_"                    },
     {RSYNC_HARDLINK_NOTATION, "_rsync_hardlink_notation_in_filename_"     },
     {RSYNC_SYMLINK_NOTATION,  "_rsync_symlink_notation_in_filename_"      },
