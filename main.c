@@ -118,7 +118,9 @@ cecup_cell_renderer_text_snapshot(GtkCellRenderer *cell, GtkSnapshot *snapshot,
         gtk_style_context_get_color(style_context, &color);
         gdk_cairo_set_source_rgba(cr, &color);
 
-        cairo_move_to(cr, (double)cell_area->x + x_pad, (double)cell_area->y + y_pad);
+        cairo_move_to(cr,
+                      (double)cell_area->x + x_pad,
+                      (double)cell_area->y + y_pad);
         pango_cairo_show_layout(cr, layout);
 
         gtk_style_context_restore(style_context);
