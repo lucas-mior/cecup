@@ -3,6 +3,7 @@
 
 #include <gtk/gtk.h>
 #include "cecup.h"
+#include "util.c"
 
 static void
 on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
@@ -63,7 +64,8 @@ on_menu_apply(GtkWidget *m, void *data) {
         g_thread_new("bulk_sync", work_rsync_bulk, tasks);
     }
 
-    free_update_data(message);
+    XFREE(message->src_path);
+    XFREE(message);
     return;
 }
 
@@ -96,7 +98,8 @@ on_menu_rename(GtkWidget *m, void *data) {
         gtk_tree_path_free(tree_path);
     }
 
-    free_update_data(message);
+    XFREE(message->src_path);
+    XFREE(message);
     return;
 }
 
@@ -153,7 +156,8 @@ on_menu_open_item(GtkWidget *m, void *data) {
         free_task_list(tasks);
     }
 
-    free_update_data(message);
+    XFREE(message->src_path);
+    XFREE(message);
     return;
 }
 
@@ -227,7 +231,8 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     }
 
     XFREE(buffer);
-    free_update_data(message);
+    XFREE(message->src_path);
+    XFREE(message);
     return;
 }
 
@@ -272,7 +277,8 @@ on_menu_delete(GtkWidget *m, void *data) {
         gtk_widget_show(dialog);
     }
 
-    free_update_data(message);
+    XFREE(message->src_path);
+    XFREE(message);
     return;
 }
 
@@ -332,7 +338,8 @@ on_menu_diff(GtkWidget *m, void *data) {
         XFREE(tasks);
     }
 
-    free_update_data(message);
+    XFREE(message->src_path);
+    XFREE(message);
     return;
 }
 
@@ -356,7 +363,8 @@ on_menu_ignore(GtkWidget *m, void *data) {
                            cecup.ignore_path, strerror(errno));
     }
 
-    free_update_data(message);
+    XFREE(message->src_path);
+    XFREE(message);
     return;
 }
 

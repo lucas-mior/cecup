@@ -850,7 +850,7 @@ on_tree_button_press(GtkGestureClick *gesture,
             }
 
             g_object_set_data(G_OBJECT(cecup.application), "active_tree", widget);
-            g_object_set_data_full(G_OBJECT(cecup.application), "active_message", message, (GDestroyNotify)free_update_data);
+            g_object_set_data_full(G_OBJECT(cecup.application), "active_message", message, NULL);
 
             menu = g_menu_new();
             for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {

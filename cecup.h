@@ -322,7 +322,6 @@ static gboolean refresh_ui_timeout_callback(void * data);
 static TaskList *get_target_tasks(int32 side,
                                    char *clicked_path,
                                    enum CecupAction clicked_action);
-static void free_update_data(Message *message);
 static void free_task_list(TaskList *tasks);
 static void protect_interface_from_user(bool state);
 static void cecup_get_dirs(void);

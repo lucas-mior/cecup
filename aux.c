@@ -53,13 +53,6 @@ protect_interface_from_user(bool state) {
 }
 
 static void
-free_update_data(Message *message) {
-    XFREE(message->src_path);
-    XFREE(message);
-    return;
-}
-
-static void
 free_task_list(TaskList *tasks) {
     if (tasks == NULL) {
         return;
