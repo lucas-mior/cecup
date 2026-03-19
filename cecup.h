@@ -415,21 +415,20 @@ typedef struct CecupMenuItem {
     char *label;
     uint32 keyval;
     GdkModifierType mask;
-    char *action;
     void (*callback)(GtkWidget *, void *);
     char *variant;
 } CecupMenuItem;
 
 static CecupMenuItem tree_menu_items[] = {
-{N_("📄 Open File"),          0,          0,                                 "open",   on_menu_open_item, "file"},
-{N_("📂 Open Folder"),        0,          0,                                 "open",   on_menu_open_item, "folder"},
-{N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK,                  "copy",   on_menu_copy_path, "absolute"},
-{N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, "copy",   on_menu_copy_path, "relative"},
-{N_("⏯️ Apply"),              0,          0,                                 "apply",  on_menu_apply,     NULL},
-{N_("🔍 Diff"),               0,          0,                                 "diff",   on_menu_diff,      NULL},
-{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                 "rename", on_menu_rename,    NULL},
-{N_("🗑️ Delete"),             0,          0,                                 "delete", on_menu_delete,    NULL},
-{N_("💤 Ignore..."),          0,          0,                                 "ignore", NULL,              NULL},
+{N_("📄 Open File"),          0,          0,                                 on_menu_open_item, "file"},
+{N_("📂 Open Folder"),        0,          0,                                 on_menu_open_item, "folder"},
+{N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK,                  on_menu_copy_path, "absolute"},
+{N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "relative"},
+{N_("⏯️ Apply"),              0,          0,                                 on_menu_apply,     NULL},
+{N_("🔍 Diff"),               0,          0,                                 on_menu_diff,      NULL},
+{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
+{N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
+{N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
 };
 
 #endif /* CECUP_H */
