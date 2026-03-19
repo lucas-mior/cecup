@@ -436,7 +436,7 @@ typedef struct {
     char *variant;
 } CecupMenuItem;
 
-static CecupMenuItem context_menu_items[] = {
+static CecupMenuItem tree_menu_items[] = {
 {N_("📄 Open File"),          0,          0,                                 "open",   on_menu_open_item, "file"},
 {N_("📂 Open Folder"),        0,          0,                                 "open",   on_menu_open_item, "folder"},
 {N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK,                  "copy",   on_menu_copy_path, "absolute"},

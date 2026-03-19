@@ -738,8 +738,8 @@ on_tree_key_press(GtkEventControllerKey *controller,
 
     modifiers = state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_ALT_MASK);
 
-    for (int32 i = 0; i < (int32)LENGTH(context_menu_items); i += 1) {
-        CecupMenuItem *menu_item = &context_menu_items[i];
+    for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {
+        CecupMenuItem *menu_item = &tree_menu_items[i];
         uint32 key;
         uint32 target;
 
@@ -831,8 +831,8 @@ on_tree_button_press(GtkGestureClick *gesture,
             }
 
             menu = g_menu_new();
-            for (int32 i = 0; i < (int32)LENGTH(context_menu_items); i += 1) {
-                CecupMenuItem *menu_item = &context_menu_items[i];
+            for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {
+                CecupMenuItem *menu_item = &tree_menu_items[i];
 
                 if (menu_item->callback == NULL) {
                     GMenu *submenu;
