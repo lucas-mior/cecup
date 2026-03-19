@@ -157,8 +157,6 @@ work_finalize(ThreadData *thread_data) {
     }
 
     g_idle_add(update_ui_handler, message);
-    sleep(1);
-    exit(0);
     return;
 }
 
@@ -1083,7 +1081,7 @@ work_rsync(void *user_data) {
         pipes[1].revents = 0;
 
         g_mutex_unlock(&cecup.arena_mutex);
-        switch (poll(pipes, 2, 1000)) {
+        switch (poll(pipes, 2, 500)) {
         case -1:
             if (errno != EINTR) {
                 error("Error in poll: %s.\n", strerror(errno));
