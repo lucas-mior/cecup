@@ -374,14 +374,8 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
 
     if (cecup.rows_visible_len > 0) {
         time_block("sorting");
-        if (refresh_type & (REFRESH_FINAL | REFRESH_FILTER_CHANGED)) {
-            error("Sorting list...\n");
-        }
         qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(CecupRow *),
                 cecup_row_compare);
-        if (refresh_type & (REFRESH_FINAL | REFRESH_FILTER_CHANGED)) {
-            error("Finished sorting.\n");
-        }
     }
 
     g_object_freeze_notify(G_OBJECT(cecup.store));
