@@ -302,12 +302,12 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     cecup.rows_len += 1;
 
     *nfiles_processed += 1;
-    if (((cecup.rows_len % 10000) == 0) && (nfiles_total > 0)) {
+    if (((cecup.rows_len % 1000) == 0) && (nfiles_total > 0)) {
         ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
                           (double)*nfiles_processed / (double)nfiles_total);
     }
 
-    if ((cecup.rows_len % 100000) == 0) {
+    if ((cecup.rows_len % 10000) == 0) {
         Message *message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
@@ -931,46 +931,46 @@ work_rsync(void *user_data) {
         }
     }
 
-    if (cecup.changed_dirs) {
-        FixFsThreadData src_fix = {cecup.src_base, 0};
-        FixFsThreadData dst_fix = {cecup.dst_base, 0};
+    /* if (cecup.changed_dirs) { */
+    /*     FixFsThreadData src_fix = {cecup.src_base, 0}; */
+    /*     FixFsThreadData dst_fix = {cecup.dst_base, 0}; */
 
-        IPC_SEND_LOG("Checking for problematic names and counting files...\n");
+    /*     IPC_SEND_LOG("Checking for problematic names and counting files...\n"); */
 
-        if (!same_fs) {
-            GThread *t1 = g_thread_new("fix_src",
-                                       work_fix_fs_thread_fn, &src_fix);
-            GThread *t2 = g_thread_new("fix_dst",
-                                       work_fix_fs_thread_fn, &dst_fix);
-            g_thread_join(t1);
-            g_thread_join(t2);
-        } else {
-            work_fix_fs_thread_fn(&src_fix);
-            work_fix_fs_thread_fn(&dst_fix);
-        }
+    /*     if (!same_fs) { */
+    /*         GThread *t1 = g_thread_new("fix_src", */
+    /*                                    work_fix_fs_thread_fn, &src_fix); */
+    /*         GThread *t2 = g_thread_new("fix_dst", */
+    /*                                    work_fix_fs_thread_fn, &dst_fix); */
+    /*         g_thread_join(t1); */
+    /*         g_thread_join(t2); */
+    /*     } else { */
+    /*         work_fix_fs_thread_fn(&src_fix); */
+    /*         work_fix_fs_thread_fn(&dst_fix); */
+    /*     } */
 
-        IPC_SEND_LOG("Name correction finished.\n");
+    /*     IPC_SEND_LOG("Name correction finished.\n"); */
 
-        if (thread_data->is_preview && !thread_data->filtered) {
-            Message *message;
+    /*     if (thread_data->is_preview && !thread_data->filtered) { */
+    /*         Message *message; */
 
-            message = xmalloc(SIZEOF(*message));
-            memset64(message, 0, SIZEOF(*message));
+    /*         message = xmalloc(SIZEOF(*message)); */
+    /*         memset64(message, 0, SIZEOF(*message)); */
 
-            message->type = DATA_TYPE_CLEAR_TREES;
-            g_idle_add_full(G_PRIORITY_HIGH_IDLE,
-                            update_ui_handler, message, NULL);
+    /*         message->type = DATA_TYPE_CLEAR_TREES; */
+    /*         g_idle_add_full(G_PRIORITY_HIGH_IDLE, */
+    /*                         update_ui_handler, message, NULL); */
 
-            arena_reset(cecup.arena);
-            cecup.rows_len = 0;
-            cecup.rows_visible_len = 0;
+    /*         arena_reset(cecup.arena); */
+    /*         cecup.rows_len = 0; */
+    /*         cecup.rows_visible_len = 0; */
 
-            nfiles_total = src_fix.file_count;
-            IPC_SEND_LOG("Found %lld files to analyse...\n",
-                         (llong)nfiles_total);
-        }
-        cecup.changed_dirs = false;
-    }
+    /*         nfiles_total = src_fix.file_count; */
+    /*         IPC_SEND_LOG("Found %lld files to analyse...\n", */
+    /*                      (llong)nfiles_total); */
+    /*     } */
+    /*     cecup.changed_dirs = false; */
+    /* } */
 
     xpipe(pipe_stdout);
     xpipe(pipe_stderr);
