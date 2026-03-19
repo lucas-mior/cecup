@@ -49,10 +49,10 @@ static CecupMenuItem context_menu_items[] = {
 {N_("📂 Open Folder"),        0,          0,                                       on_menu_open_item, "folder"},
 {N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK,                        on_menu_copy_path, "absolute"},
 {N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK,       on_menu_copy_path, "relative"},
-{N_("⏯️ Apply"),              0,          0,                                       on_menu_apply,      NULL},
-{N_("🔍 Diff"),               0,          0,                                       on_menu_diff,       NULL},
-{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                       on_menu_rename,     NULL},
-{N_("🗑️ Delete"),              0,          0,                                       on_menu_delete,     NULL},
+{N_("⏯️ Apply"),              0,          0,                                       on_menu_apply,     NULL},
+{N_("🔍 Diff"),               0,          0,                                       on_menu_diff,      NULL},
+{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                       on_menu_rename,    NULL},
+{N_("🗑️ Delete"),              0,          0,                                       on_menu_delete,    NULL},
 };
 
 static void
@@ -192,6 +192,7 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
 static void
 on_log_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y, void *data) {
     GtkWidget *widget;
+    GtkWidget *parent;
     GtkWidget *menu_button;
     GtkPopover *popover;
     GMenu *menu;
@@ -202,6 +203,8 @@ on_log_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y,
     GdkRectangle rect;
     GSimpleActionGroup *group;
     int32 button;
+    double translated_x;
+    double translated_y;
 
     (void)data;
     button = (int32)gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
@@ -215,6 +218,7 @@ on_log_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y,
     }
 
     widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+    parent = gtk_widget_get_parent(widget);
     gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
 
     if (g_object_get_data(G_OBJECT(widget), "actions_initialized") == NULL) {
@@ -253,20 +257,22 @@ on_log_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y,
 
     if ((menu_button = g_object_get_data(G_OBJECT(widget), "log_menu_button")) == NULL) {
         menu_button = gtk_menu_button_new();
-        gtk_widget_set_parent(menu_button, widget);
+        gtk_widget_set_parent(menu_button, parent);
         g_object_set_data_full(G_OBJECT(widget), "log_menu_button", menu_button, (GDestroyNotify)gtk_widget_unparent);
     }
 
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(menu_button), G_MENU_MODEL(menu));
     popover = gtk_menu_button_get_popover(GTK_MENU_BUTTON(menu_button));
 
-    rect.x = (int32)x;
-    rect.y = (int32)y;
-    rect.width = 1;
-    rect.height = 1;
+    if (gtk_widget_translate_coordinates(widget, parent, x, y, &translated_x, &translated_y)) {
+        rect.x = (int32)translated_x;
+        rect.y = (int32)translated_y;
+        rect.width = 1;
+        rect.height = 1;
 
-    gtk_popover_set_pointing_to(popover, &rect);
-    gtk_popover_popup(popover);
+        gtk_popover_set_pointing_to(popover, &rect);
+        gtk_popover_popup(popover);
+    }
     g_object_unref(menu);
 
     return;
@@ -1103,6 +1109,9 @@ static void
 on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y, void *data) {
     GtkWidget *widget;
     GtkTreePath *tree_path;
+    GtkWidget *parent;
+    double translated_x;
+    double translated_y;
     int32 side;
     int32 button;
     int32 bin_x;
@@ -1110,6 +1119,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y
 
     (void)data;
     widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+    parent = gtk_widget_get_parent(widget);
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
     button = (int32)gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
 
@@ -1197,20 +1207,22 @@ on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y
 
                 if ((menu_button = g_object_get_data(G_OBJECT(widget), "tree_menu_button")) == NULL) {
                     menu_button = gtk_menu_button_new();
-                    gtk_widget_set_parent(menu_button, widget);
+                    gtk_widget_set_parent(menu_button, parent);
                     g_object_set_data_full(G_OBJECT(widget), "tree_menu_button", menu_button, (GDestroyNotify)gtk_widget_unparent);
                 }
 
                 gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(menu_button), G_MENU_MODEL(menu));
                 popover = gtk_menu_button_get_popover(GTK_MENU_BUTTON(menu_button));
 
-                rect.x = (int32)x;
-                rect.y = (int32)y;
-                rect.width = 1;
-                rect.height = 1;
+                if (gtk_widget_translate_coordinates(widget, parent, x, y, &translated_x, &translated_y)) {
+                    rect.x = (int32)translated_x;
+                    rect.y = (int32)translated_y;
+                    rect.width = 1;
+                    rect.height = 1;
 
-                gtk_popover_set_pointing_to(popover, &rect);
-                gtk_popover_popup(popover);
+                    gtk_popover_set_pointing_to(popover, &rect);
+                    gtk_popover_popup(popover);
+                }
                 g_object_unref(menu);
             }
             gtk_tree_path_free(tree_path);
