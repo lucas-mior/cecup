@@ -1899,15 +1899,15 @@ static volatile ullong here_counter = 0; \
 #if TESTING_util
 
 #define DAYS_ENUM_LIST(ACTION) \
-    BEGIN_ENUM(Days) \
+    BEGIN_ENUM(WEEK_DAY) \
         ACTION(ENUM_ELEMENT_VAL_STR(Sunday, 0, "Sunday string")) \
-        ACTION(ENUM_ELEMENT(Monday)) \
-        ACTION(ENUM_ELEMENT(Tuesday)) \
-        ACTION(ENUM_ELEMENT(Wednesday)) \
-        ACTION(ENUM_ELEMENT(Thursday)) \
-        ACTION(ENUM_ELEMENT_STR(Friday, "Friday string")) \
-        ACTION(ENUM_ELEMENT(Saturday)) \
-    END_ENUM(Days)
+        ACTION(ENUM_ELEMENT(MONDAY)) \
+        ACTION(ENUM_ELEMENT(TUESDAY)) \
+        ACTION(ENUM_ELEMENT(WEDNESDAY)) \
+        ACTION(ENUM_ELEMENT(THURSDAY)) \
+        ACTION(ENUM_ELEMENT_STR(FRIDAY, "Friday string")) \
+        ACTION(ENUM_ELEMENT(SATURDAY)) \
+    END_ENUM(WEEK_DAY)
 
 #define PASS_THROUGH(x) x
 
@@ -1955,7 +1955,7 @@ main(int argc, char **argv) {
     (void)argc;
     (void)argv;
 
-    for (uint32 i = 0; i < Saturday; i += 1) {
+    for (uint32 i = 0; i < WEEK_DAY_SATURDAY; i += 1) {
         printf("enum[%d] = %s\n", i, GetStringDays(i));
     }
     exit(0);
