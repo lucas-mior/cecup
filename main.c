@@ -247,11 +247,13 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
         GSimpleAction *ignore;
 
         dispatch = g_simple_action_new("tree_dispatch", G_VARIANT_TYPE_INT32);
-        g_signal_connect(dispatch, "activate", G_CALLBACK(on_menu_dispatch), NULL);
+        g_signal_connect(dispatch, "activate",
+                         G_CALLBACK(on_menu_dispatch), NULL);
         g_action_map_add_action(action_map, G_ACTION(dispatch));
 
         ignore = g_simple_action_new("ignore", G_VARIANT_TYPE_STRING);
-        g_signal_connect(ignore, "activate", G_CALLBACK(on_menu_ignore_action), NULL);
+        g_signal_connect(ignore, "activate",
+                         G_CALLBACK(on_menu_ignore_action), NULL);
         g_action_map_add_action(action_map, G_ACTION(ignore));
     }
 
@@ -329,7 +331,8 @@ setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
         GtkGesture *click = gtk_gesture_click_new();
         gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(click));
         gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click), 0);
-        g_signal_connect(click, "pressed", G_CALLBACK(on_tree_button_press), NULL);
+        g_signal_connect(click, "pressed",
+                         G_CALLBACK(on_tree_button_press), NULL);
     }
 
     key = gtk_event_controller_key_new();
@@ -557,7 +560,8 @@ activate(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(paths_hbox), l_entry_hbox);
 
     cecup.invert_button = gtk_button_new_with_label("<--->");
-    gtk_widget_set_tooltip_text(cecup.invert_button, _("Invert Original and Backup"));
+    gtk_widget_set_tooltip_text(cecup.invert_button,
+                                _("Invert Original and Backup"));
     gtk_box_append(GTK_BOX(paths_hbox), cecup.invert_button);
 
     r_entry_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -640,7 +644,8 @@ activate(GtkApplication *application, gpointer user_data) {
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(cecup.log_view),
                                 GTK_WRAP_WORD_CHAR);
     cecup.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(cecup.log_view));
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(log_scroll), cecup.log_view);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(log_scroll),
+                                  cecup.log_view);
     gtk_paned_set_end_child(GTK_PANED(v_paned), log_scroll);
 
     {
@@ -665,7 +670,8 @@ activate(GtkApplication *application, gpointer user_data) {
                          G_CALLBACK(on_log_copy), "all");
         g_action_map_add_action(action_map, G_ACTION(action_copy_all));
 
-        action_copy_line = g_simple_action_new("copy_line", G_VARIANT_TYPE_INT32);
+        action_copy_line = g_simple_action_new("copy_line",
+                                               G_VARIANT_TYPE_INT32);
         g_signal_connect(action_copy_line, "activate",
                          G_CALLBACK(on_log_copy), "line");
         g_action_map_add_action(action_map, G_ACTION(action_copy_line));
@@ -723,78 +729,82 @@ activate(GtkApplication *application, gpointer user_data) {
     cecup.dst_entry_id = g_signal_connect(cecup.dst_entry, "activate",
                                           G_CALLBACK(on_config_changed), NULL);
 
-    {
+    do {
         GKeyFile *key = g_key_file_new();
         char *value;
 
-        if (g_key_file_load_from_file(key, cecup.config_path, G_KEY_FILE_NONE,
-                                      NULL)) {
-            if ((value = g_key_file_get_string(key, "Paths", "src", NULL))) {
-                gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), value);
-                g_free(value);
-            }
-            if ((value = g_key_file_get_string(key, "Paths", "dst", NULL))) {
-                gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), value);
-                g_free(value);
-            }
-            if ((value = g_key_file_get_string(key, "Tools", "diff", NULL))) {
-                gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), value);
-                g_free(value);
-            }
-            if ((value = g_key_file_get_string(key, "Tools", "term", NULL))) {
-                gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), value);
-                g_free(value);
-            }
-
-            if (g_key_file_has_key(key, "Filters", "new", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup.filter_new),
-                    g_key_file_get_boolean(key, "Filters", "new", NULL));
-            }
-            if (g_key_file_has_key(key, "Filters", "hard", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup.filter_hard),
-                    g_key_file_get_boolean(key, "Filters", "hard", NULL));
-            }
-            if (g_key_file_has_key(key, "Filters", "update", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup.filter_update),
-                    g_key_file_get_boolean(key, "Filters", "update", NULL));
-            }
-            if (g_key_file_has_key(key, "Filters", "equal", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup.filter_equal),
-                    g_key_file_get_boolean(key, "Filters", "equal", NULL));
-            }
-            if (g_key_file_has_key(key, "Filters", "delete", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup.filter_delete),
-                    g_key_file_get_boolean(key, "Filters", "delete", NULL));
-            }
-            if (g_key_file_has_key(key, "Filters", "ignore", NULL)) {
-                gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(cecup.filter_ignore),
-                    g_key_file_get_boolean(key, "Filters", "ignore", NULL));
-            }
-            if (g_key_file_has_key(key, "Options", "check_fs", NULL)) {
-                gtk_check_button_set_active(
-                    GTK_CHECK_BUTTON(cecup.check_fs),
-                    g_key_file_get_boolean(key, "Options", "check_fs", NULL));
-            }
-            if (g_key_file_has_key(key, "Options", "delete_excluded", NULL)) {
-                gtk_check_button_set_active(
-                    GTK_CHECK_BUTTON(cecup.delete_excluded),
-                    g_key_file_get_boolean(key, "Options", "delete_excluded",
-                                           NULL));
-            }
-            if (g_key_file_has_key(key, "Options", "delete_after", NULL)) {
-                gtk_check_button_set_active(
-                    GTK_CHECK_BUTTON(cecup.delete_after),
-                    g_key_file_get_boolean(key, "Options", "delete_after", NULL));
-            }
+        if (!g_key_file_load_from_file(key, cecup.config_path,
+                                       G_KEY_FILE_NONE, NULL)) {
+            g_free(key);
+            break;
         }
+
+        if ((value = g_key_file_get_string(key, "Paths", "src", NULL))) {
+            gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), value);
+            g_free(value);
+        }
+        if ((value = g_key_file_get_string(key, "Paths", "dst", NULL))) {
+            gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), value);
+            g_free(value);
+        }
+        if ((value = g_key_file_get_string(key, "Tools", "diff", NULL))) {
+            gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), value);
+            g_free(value);
+        }
+        if ((value = g_key_file_get_string(key, "Tools", "term", NULL))) {
+            gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), value);
+            g_free(value);
+        }
+
+        if (g_key_file_has_key(key, "Filters", "new", NULL)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_new),
+                g_key_file_get_boolean(key, "Filters", "new", NULL));
+        }
+        if (g_key_file_has_key(key, "Filters", "hard", NULL)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_hard),
+                g_key_file_get_boolean(key, "Filters", "hard", NULL));
+        }
+        if (g_key_file_has_key(key, "Filters", "update", NULL)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_update),
+                g_key_file_get_boolean(key, "Filters", "update", NULL));
+        }
+        if (g_key_file_has_key(key, "Filters", "equal", NULL)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_equal),
+                g_key_file_get_boolean(key, "Filters", "equal", NULL));
+        }
+        if (g_key_file_has_key(key, "Filters", "delete", NULL)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_delete),
+                g_key_file_get_boolean(key, "Filters", "delete", NULL));
+        }
+        if (g_key_file_has_key(key, "Filters", "ignore", NULL)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_ignore),
+                g_key_file_get_boolean(key, "Filters", "ignore", NULL));
+        }
+        if (g_key_file_has_key(key, "Options", "check_fs", NULL)) {
+            gtk_check_button_set_active(
+                GTK_CHECK_BUTTON(cecup.check_fs),
+                g_key_file_get_boolean(key, "Options", "check_fs", NULL));
+        }
+        if (g_key_file_has_key(key, "Options", "delete_excluded", NULL)) {
+            gtk_check_button_set_active(
+                GTK_CHECK_BUTTON(cecup.delete_excluded),
+                g_key_file_get_boolean(key, "Options", "delete_excluded",
+                                       NULL));
+        }
+        if (g_key_file_has_key(key, "Options", "delete_after", NULL)) {
+            gtk_check_button_set_active(
+                GTK_CHECK_BUTTON(cecup.delete_after),
+                g_key_file_get_boolean(key, "Options", "delete_after", NULL));
+        }
+
         g_free(key);
-    }
+    } while (0);
 
     g_signal_connect(browse_src, "clicked",
                      G_CALLBACK(on_browse_src), NULL);
