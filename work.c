@@ -157,6 +157,8 @@ work_finalize(ThreadData *thread_data) {
     }
 
     g_idle_add(update_ui_handler, message);
+    sleep(1);
+    exit(0);
     return;
 }
 
