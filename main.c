@@ -931,7 +931,8 @@ main(int32 argc, char **argv) {
         SNPRINTF(cecup.config_path, "%s/cecup.conf", config_base);
     }
 
-    cecup.application = gtk_application_new("com.cecup.app", G_APPLICATION_DEFAULT_FLAGS);
+    cecup.application = gtk_application_new("com.cecup.app",
+                                            G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(cecup.application, "activate",
                      G_CALLBACK(application_run), NULL);
     status = g_application_run(G_APPLICATION(cecup.application), argc, argv);
