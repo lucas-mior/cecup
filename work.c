@@ -1390,7 +1390,7 @@ work_rsync_bulk(void *user_data) {
             continue;
         }
 
-        if (task->side == LEFT) {
+        if (task->side == L) {
             SNPRINTF(full_path, "%s/%s", cecup.src_base, task->path);
         } else {
             SNPRINTF(full_path, "%s/%s", cecup.dst_base, task->path);

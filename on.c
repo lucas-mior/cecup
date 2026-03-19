@@ -77,7 +77,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
         gtk_tree_model_get(model, &iter, COL_ROW_PTR, &row, -1);
 
-        if (side == LEFT) {
+        if (side == L) {
             filepath = row->src_path;
         } else {
             filepath = row->dst_path;
@@ -95,7 +95,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
                 memcpy64(message->src_path, filepath, path_len + 1);
             }
 
-            if (side == LEFT) {
+            if (side == L) {
                 message->action = row->src_action;
             } else {
                 message->action = row->dst_action;
@@ -839,7 +839,7 @@ on_tree_button_press(GtkGestureClick *gesture,
             gtk_tree_model_get(GTK_TREE_MODEL(cecup.store),
                                &iter, COL_ROW_PTR, &row, -1);
 
-            if (side == LEFT) {
+            if (side == L) {
                 filepath = row->src_path;
                 other_path = row->dst_path;
             } else {
@@ -855,7 +855,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                 memcpy64(message->src_path, filepath, row->path_len + 1);
             }
             message->side = side;
-            if (side == LEFT) {
+            if (side == L) {
                 message->action = row->src_action;
             } else {
                 message->action = row->dst_action;
@@ -1049,7 +1049,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
 
         row = cecup.rows_visible[index];
 
-        if (side == LEFT) {
+        if (side == L) {
             filepath = row->src_path;
             action = row->src_action;
         } else {
@@ -1058,7 +1058,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         }
 
         if (filepath == NULL) {
-            if (side == LEFT) {
+            if (side == L) {
                 filepath = row->dst_path;
             } else {
                 filepath = row->src_path;
@@ -1070,7 +1070,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         }
 
         if (view_column_index == 1) {
-            if (side == LEFT) {
+            if (side == L) {
                 tip_text = _(src_action_strings[action]);
             } else {
                 tip_text = _(dst_action_strings[action]);
@@ -1091,7 +1091,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             tip_text = tip_buffer;
         } else if (view_column_index == 3) {
             int64 size_raw;
-            if (side == LEFT) {
+            if (side == L) {
                 size_raw = row->src_size_raw;
             } else {
                 size_raw = row->dst_size_raw;
@@ -1100,7 +1100,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             tip_text = tip_buffer;
         } else if (view_column_index == 4) {
             char *mtime_text;
-            if (side == LEFT) {
+            if (side == L) {
                 mtime_text = row->src_mtime_text;
             } else {
                 mtime_text = row->dst_mtime_text;
@@ -1225,7 +1225,7 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
 
         row = cecup.rows_visible[row_index];
 
-        if (side == LEFT) {
+        if (side == L) {
             relative = row->src_path;
         } else {
             relative = row->dst_path;
@@ -1303,7 +1303,7 @@ on_path_edited(GtkCellRendererText *renderer,
     gtk_tree_model_get(GTK_TREE_MODEL(cecup.store),
                        &iter, COL_ROW_PTR, &row, -1);
 
-    if (side == LEFT) {
+    if (side == L) {
         base_path = cecup.src_base;
         relative_old = row->src_path;
     } else {

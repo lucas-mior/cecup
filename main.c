@@ -191,7 +191,7 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
         char *text;
         int32 text_len;
 
-        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.tree[LEFT]), 3)) {
+        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.tree[L]), 3)) {
             background = colors[row->src_action];
             text = row->src_size_text;
             text_len = strlen32(row->src_size_text);
@@ -211,7 +211,7 @@ cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
         char *text;
         int32 text_len;
 
-        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.tree[LEFT]), 4)) {
+        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.tree[L]), 4)) {
             background = colors[row->src_action];
             text = row->src_mtime_text;
             text_len = strlen32(row->src_mtime_text);
@@ -542,36 +542,36 @@ application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_bottom(paths_hbox, 10);
     gtk_box_append(GTK_BOX(main_vbox), paths_hbox);
 
-    entry_hbox[LEFT] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    entry_hbox[L] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     cecup.src_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.src_entry,
                                 _("Folder containing your original files"));
     gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), default_src);
-    browse[LEFT] = gtk_button_new_with_label(_("Select Folder"));
+    browse[L] = gtk_button_new_with_label(_("Select Folder"));
 
     gtk_widget_set_hexpand(cecup.src_entry, TRUE);
-    gtk_box_append(GTK_BOX(entry_hbox[LEFT]), cecup.src_entry);
-    gtk_box_append(GTK_BOX(entry_hbox[LEFT]), browse[LEFT]);
-    gtk_widget_set_hexpand(entry_hbox[LEFT], TRUE);
-    gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[LEFT]);
+    gtk_box_append(GTK_BOX(entry_hbox[L]), cecup.src_entry);
+    gtk_box_append(GTK_BOX(entry_hbox[L]), browse[L]);
+    gtk_widget_set_hexpand(entry_hbox[L], TRUE);
+    gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[L]);
 
     cecup.invert_button = gtk_button_new_with_label("<--->");
     gtk_widget_set_tooltip_text(cecup.invert_button,
                                 _("Invert Original and Backup"));
     gtk_box_append(GTK_BOX(paths_hbox), cecup.invert_button);
 
-    entry_hbox[RIGHT] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    entry_hbox[R] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     cecup.dst_entry = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.dst_entry,
                                 _("Folder where the backup will be stored"));
     gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), default_dst);
-    browse[RIGHT] = gtk_button_new_with_label(_("Select Folder"));
+    browse[R] = gtk_button_new_with_label(_("Select Folder"));
 
     gtk_widget_set_hexpand(cecup.dst_entry, TRUE);
-    gtk_box_append(GTK_BOX(entry_hbox[RIGHT]), cecup.dst_entry);
-    gtk_box_append(GTK_BOX(entry_hbox[RIGHT]), browse[RIGHT]);
-    gtk_widget_set_hexpand(entry_hbox[RIGHT], TRUE);
-    gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[RIGHT]);
+    gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.dst_entry);
+    gtk_box_append(GTK_BOX(entry_hbox[R]), browse[R]);
+    gtk_widget_set_hexpand(entry_hbox[R], TRUE);
+    gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[R]);
 
     search_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     gtk_widget_set_margin_start(search_hbox, 10);
@@ -604,30 +604,30 @@ application_run(GtkApplication *application, gpointer user_data) {
     paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_paned_set_start_child(GTK_PANED(v_paned), paned);
 
-    vbox[LEFT] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    scroll[LEFT] = gtk_scrolled_window_new();
-    tree[LEFT] = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup.store));
-    cecup.tree[LEFT] = tree[LEFT];
-    g_object_set_data(G_OBJECT(tree[LEFT]), "side", GINT_TO_POINTER(LEFT));
-    setup_tree_columns(tree[LEFT], COL_SRC_ACTION, COL_SRC_PATH);
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[LEFT]), tree[LEFT]);
-    gtk_box_append(GTK_BOX(vbox[LEFT]), scroll[LEFT]);
-    gtk_widget_set_vexpand(scroll[LEFT], TRUE);
-    gtk_paned_set_start_child(GTK_PANED(paned), vbox[LEFT]);
+    vbox[L] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    scroll[L] = gtk_scrolled_window_new();
+    tree[L] = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup.store));
+    cecup.tree[L] = tree[L];
+    g_object_set_data(G_OBJECT(tree[L]), "side", GINT_TO_POINTER(L));
+    setup_tree_columns(tree[L], COL_SRC_ACTION, COL_SRC_PATH);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[L]), tree[L]);
+    gtk_box_append(GTK_BOX(vbox[L]), scroll[L]);
+    gtk_widget_set_vexpand(scroll[L], TRUE);
+    gtk_paned_set_start_child(GTK_PANED(paned), vbox[L]);
 
-    vbox[RIGHT] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    scroll[RIGHT] = gtk_scrolled_window_new();
-    tree[RIGHT] = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup.store));
-    cecup.tree[RIGHT] = tree[RIGHT];
-    g_object_set_data(G_OBJECT(tree[RIGHT]), "side", GINT_TO_POINTER(RIGHT));
-    setup_tree_columns(tree[RIGHT], COL_DST_ACTION, COL_DST_PATH);
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[RIGHT]), tree[RIGHT]);
-    gtk_box_append(GTK_BOX(vbox[RIGHT]), scroll[RIGHT]);
-    gtk_widget_set_vexpand(scroll[RIGHT], TRUE);
-    gtk_paned_set_end_child(GTK_PANED(paned), vbox[RIGHT]);
+    vbox[R] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    scroll[R] = gtk_scrolled_window_new();
+    tree[R] = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup.store));
+    cecup.tree[R] = tree[R];
+    g_object_set_data(G_OBJECT(tree[R]), "side", GINT_TO_POINTER(R));
+    setup_tree_columns(tree[R], COL_DST_ACTION, COL_DST_PATH);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[R]), tree[R]);
+    gtk_box_append(GTK_BOX(vbox[R]), scroll[R]);
+    gtk_widget_set_vexpand(scroll[R], TRUE);
+    gtk_paned_set_end_child(GTK_PANED(paned), vbox[R]);
 
-    l_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[LEFT]));
-    r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[RIGHT]));
+    l_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[L]));
+    r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[R]));
     g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
     g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
     g_signal_connect(cecup.store, "sort-column-changed",
@@ -802,9 +802,9 @@ application_run(GtkApplication *application, gpointer user_data) {
         g_free(key);
     } while (0);
 
-    g_signal_connect(browse[LEFT], "clicked",
+    g_signal_connect(browse[L], "clicked",
                      G_CALLBACK(on_browse_src), NULL);
-    g_signal_connect(browse[RIGHT], "clicked",
+    g_signal_connect(browse[R], "clicked",
                      G_CALLBACK(on_browse_dst), NULL);
     g_signal_connect(cecup.invert_button, "clicked",
                      G_CALLBACK(on_invert_clicked), NULL);
