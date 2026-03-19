@@ -1911,8 +1911,6 @@ static volatile ullong here_counter = 0; \
     ENUM_ELEMENT(SATURDAY, 20)               \
   END_ENUM(WEEK_DAY)
 
-#define PASS_THROUGH(x) x
-
 #undef ENUM_NAME_LOCAL
 #define ENUM_NAME_LOCAL WEEK_DAY
 #include "enums.h"
