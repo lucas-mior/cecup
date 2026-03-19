@@ -112,42 +112,6 @@ execute_menu_item(GtkWidget *tree, int32 item_index) {
 }
 
 static void
-on_tree_action_activate(GSimpleAction *action,
-                        GVariant *parameter, void *data) {
-    GtkWidget *tree;
-    int32 item_index;
-
-    (void)action;
-    tree = data;
-    item_index = g_variant_get_int32(parameter);
-
-    if ((item_index >= 0) && (item_index < (int32)LENGTH(context_menu_items))) {
-        execute_menu_item(tree, item_index);
-    }
-
-    return;
-}
-
-static void
-on_tree_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
-    GtkWidget *tree;
-    char *pattern;
-    Message *message;
-
-    (void)action;
-    tree = data;
-    pattern = (char *)g_variant_get_string(parameter, NULL);
-    message = xmalloc(SIZEOF(*message));
-    memset64(message, 0, SIZEOF(*message));
-
-    g_object_set_data_full(G_OBJECT(tree),
-                           "ignore_pattern", xstrdup(pattern), free);
-    on_menu_ignore(tree, message);
-
-    return;
-}
-
-static void
 on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     char *which;
     GtkTextIter start;
