@@ -763,6 +763,18 @@ on_tree_key_press(GtkEventControllerKey *controller,
 }
 
 static void
+free_message(void *data) {
+    Message *message;
+    message = data;
+
+    if (message->src_path) {
+        XFREE(message->src_path);
+    }
+    XFREE(message);
+    return;
+}
+
+static void
 on_tree_button_press(GtkGestureClick *gesture,
                      int32 n_press, double x, double y, void *data) {
     GtkWidget *widget;
@@ -850,7 +862,7 @@ on_tree_button_press(GtkGestureClick *gesture,
             }
 
             g_object_set_data(G_OBJECT(cecup.application), "active_tree", widget);
-            g_object_set_data_full(G_OBJECT(cecup.application), "active_message", message, NULL);
+            g_object_set_data_full(G_OBJECT(cecup.application), "active_message", message, free_message);
 
             menu = g_menu_new();
             for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {
@@ -873,9 +885,12 @@ on_tree_button_press(GtkGestureClick *gesture,
                         char relative_label[MAX_PATH_LENGTH + 64];
                         char name_label[MAX_NAME_LENGTH + 64];
                         char pattern_buffer[MAX_PATH_LENGTH];
+                        char path_copy[MAX_PATH_LENGTH];
 
                         path_len = row->path_len;
-                        name = basename2(filepath, &path_len, &length);
+                        memcpy64(path_copy, filepath, path_len + 1);
+
+                        name = basename2(path_copy, &path_len, &length);
                         extension_ptr = strrchr(name, '.');
 
                         if (extension_ptr) {
@@ -889,7 +904,10 @@ on_tree_button_press(GtkGestureClick *gesture,
                             }
                         }
 
-                        dirname2(directory_buffer, filepath, &path_len);
+                        path_len = row->path_len;
+                        memcpy64(path_copy, filepath, path_len + 1);
+                        dirname2(directory_buffer, path_copy, &path_len);
+
                         if (strcmp(directory_buffer, ".")) {
                             SNPRINTF(directory_label, _("📁 Dir (/%s/)"), directory_buffer);
                             SNPRINTF(pattern_buffer, "/%s/", directory_buffer);
@@ -957,9 +975,9 @@ on_tree_button_press(GtkGestureClick *gesture,
             parent = gtk_widget_get_parent(widget);
 
             if (!gtk_widget_translate_coordinates(widget, parent,
-                                                  x, y,
-                                                  &translated_x,
-                                                  &translated_y)) {
+                                                   x, y,
+                                                   &translated_x,
+                                                   &translated_y)) {
                 g_object_unref(menu);
                 gtk_tree_path_free(tree_path);
                 return;

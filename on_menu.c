@@ -5,6 +5,8 @@
 #include "cecup.h"
 #include "util.c"
 
+static void free_message(void *data);
+
 static void
 on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     int32 index;
@@ -19,13 +21,15 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     menu_item = &tree_menu_items[index];
 
     tree = g_object_get_data(G_OBJECT(cecup.application), "active_tree");
-    message = g_object_get_data(G_OBJECT(cecup.application), "active_message");
+    message = g_object_steal_data(G_OBJECT(cecup.application), "active_message");
 
     if (tree && message && menu_item->callback) {
         if (menu_item->variant) {
             g_object_set_data(G_OBJECT(tree), "variant", menu_item->variant);
         }
         menu_item->callback(tree, message);
+    } else if (message) {
+        free_message(message);
     }
 
     return;
@@ -345,7 +349,7 @@ on_menu_diff(GtkWidget *m, void *data) {
             }
         }
 
-        XFREE(tasks);
+        free_task_list(tasks);
     }
 
     XFREE(message->src_path);
@@ -353,6 +357,7 @@ on_menu_diff(GtkWidget *m, void *data) {
 
     return;
 }
+
 
 static void
 on_menu_ignore(GtkWidget *m, void *data) {
