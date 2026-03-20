@@ -1914,14 +1914,14 @@ static volatile ullong here_counter = 0; \
 #define ENUM_NAME_LOCAL WEEK_DAY
 #include "enums.h"
 DAYS_ENUM_LIST
-#undef ENUM_NAME_LOCAL
 
 #define GENERATE_ENUM_STRINGS
 #define ENUM_NAME_LOCAL WEEK_DAY
 #include "enums.h"
 DAYS_ENUM_LIST
-#undef ENUM_NAME_LOCAL
 #undef DAYS_ENUM_LIST
+#undef GENERATE_ENUM_STRINGS
+#undef ENUM_NAME_LOCAL
 
 #define POWERS_OF_TWO_LIST     \
   BEGIN_ENUM(POWER_OF_TWO)    \
@@ -1937,12 +1937,13 @@ DAYS_ENUM_LIST
 #define ENUM_NAME_LOCAL POWER_OF_TWO
 #include "enums.h"
 POWERS_OF_TWO_LIST
-#undef ENUM_NAME_LOCAL
 
 #define GENERATE_ENUM_STRINGS
 #define ENUM_NAME_LOCAL POWER_OF_TWO
 #include "enums.h"
 POWERS_OF_TWO_LIST
+#undef GENERATE_ENUM_STRINGS
+#undef ENUM_NAME_LOCAL
 
 static void
 write_file(char *path, void *data, int64 len) {

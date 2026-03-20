@@ -5,6 +5,10 @@
 #undef BEGIN_ENUM
 #undef END_ENUM
 
+#if !defined(ENUM_NAME_LOCAL)
+#error "enums.h included but ENUM_NAME_LOCAL is not defined"
+#endif
+
 #if !defined(CAT)
   #define CAT_(a, b) a##b
   #define CAT(a, b) CAT_(a, b)
@@ -50,5 +54,3 @@
                                 } \
   }
 #endif
-
-#undef GENERATE_ENUM_STRINGS
