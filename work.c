@@ -1584,13 +1584,16 @@ work_rsync_bulk(void *user_data) {
             int32 line_len = (int32)(eol - buf_output_bulk);
             int32 itemize_length = strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
             int32 remaining;
+            char *filename;
 
             *eol = '\0';
 
             IPC_SEND_LOG("%s\n", buf_output_bulk);
 
-            if (check_itemize_line(buf_output_bulk)) {
-                char *filename = buf_output_bulk + itemize_length + 1;
+            if ((filename = check_itemize_line(buf_output_bulk))) {
+                while (*filename == ' ') {
+                    filename += 1;
+                }
                 int32 path_len = (int32)(eol - filename);
                 char *sep;
                 Message *message;
