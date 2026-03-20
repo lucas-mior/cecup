@@ -1582,7 +1582,6 @@ work_rsync_bulk(void *user_data) {
                && ((eol = memchr64(buf_output_bulk, '\n', buf_output_pos))
                    || (eol = memchr64(buf_output_bulk, '\r', buf_output_pos)))) {
             int32 line_len = (int32)(eol - buf_output_bulk);
-            int32 itemize_length = strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
             int32 remaining;
             char *filename;
 
