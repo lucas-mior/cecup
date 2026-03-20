@@ -5,7 +5,7 @@
 #undef BEGIN_ENUM
 #undef END_ENUM
 
-#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ > 1)
+#if !defined(__INCLUDE_LEVEL__) || (__INCLUDE_LEVEL__ >= 1)
 #if !defined(ENUM_PREFIX_)
 #error "enums.h included but ENUM_PREFIX_ is not defined"
 #endif
