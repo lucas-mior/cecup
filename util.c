@@ -1908,7 +1908,7 @@ static volatile ullong here_counter = 0; \
 #if TESTING_util
 
 #define DAYS_ENUM_LIST                \
-  BEGIN_ENUM(WEEK_DAY)                \
+  BEGIN_ENUM(WeekDay)                \
     XENUM(SUNDAY, 0, "Sunday string") \
     XENUM(MONDAY)                     \
     XENUM(TUESDAY, 10)                \
@@ -1916,20 +1916,20 @@ static volatile ullong here_counter = 0; \
     XENUM(THURSDAY)                   \
     XENUM(FRIDAY, 5, "Friday string") \
     XENUM(SATURDAY, 20)               \
-  END_ENUM(WEEK_DAY)
+  END_ENUM(WeekDay)
 
-#define ENUM_NAME_LOCAL WEEK_DAY
+#define ENUM_PREFIX_ WEEK_DAY_
 #include "enums.h"
 DAYS_ENUM_LIST
 
-#define ENUM_NAME_LOCAL WEEK_DAY
+#define ENUM_PREFIX_ WEEK_DAY_
 #include "enums.h"
 DAYS_ENUM_LIST
 #undef DAYS_ENUM_LIST
-#undef ENUM_NAME_LOCAL
+#undef ENUM_PREFIX_
 
 #define POWERS_OF_TWO_LIST     \
-  BEGIN_ENUM(POWER_OF_TWO)    \
+  BEGIN_ENUM(PowerOfTwo)    \
     XENUM(ONE,     1 << 0)     \
     XENUM(TWO,     1 << 1)     \
     XENUM(FOUR,    1 << 2)     \
@@ -1937,16 +1937,16 @@ DAYS_ENUM_LIST
     XENUM(SIXTEEN, 1 << 4)     \
     XENUM(THIRTY2, 1 << 5)     \
     XENUM(SIXTY4,  1 << 6)     \
-  END_ENUM(POWER_OF_TWO)
+  END_ENUM(PowerOfTwo)
 
-#define ENUM_NAME_LOCAL POWER_OF_TWO
+#define ENUM_PREFIX_ POWER_OF_TWO_
 #include "enums.h"
 POWERS_OF_TWO_LIST
 
-#define ENUM_NAME_LOCAL POWER_OF_TWO
+#define ENUM_PREFIX_ POWER_OF_TWO_
 #include "enums.h"
 POWERS_OF_TWO_LIST
-#undef ENUM_NAME_LOCAL
+#undef ENUM_PREFIX_
 
 static void
 write_file(char *path, void *data, int64 len) {

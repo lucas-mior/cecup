@@ -6,8 +6,8 @@
 #undef END_ENUM
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ > 1)
-#if !defined(ENUM_NAME_LOCAL)
-#error "enums.h included but ENUM_NAME_LOCAL is not defined"
+#if !defined(ENUM_PREFIX_)
+#error "enums.h included but ENUM_PREFIX_ is not defined"
 #endif
 #endif
 
@@ -51,22 +51,22 @@ _Static_assert((ENUM_GENERATE_STRINGS == 0) || (ENUM_GENERATE_STRINGS == 1),
 #if ENUM_GENERATE_STRINGS == 0
   #define BEGIN_ENUM(ENUM_NAME) enum ENUM_NAME {
 
-  #define XENUM_1(e)            CAT3(ENUM_NAME_LOCAL, _, e),
-  #define XENUM_2(e, v)         CAT3(ENUM_NAME_LOCAL, _, e) = v, 
-  #define XENUM_3(e, v, s)      CAT3(ENUM_NAME_LOCAL, _, e) = v,
+  #define XENUM_1(e)            CAT(ENUM_PREFIX_, e),
+  #define XENUM_2(e, v)         CAT(ENUM_PREFIX_, e) = v, 
+  #define XENUM_3(e, v, s)      CAT(ENUM_PREFIX_, e) = v,
 
-  #define END_ENUM(ENUM_NAME)   CAT3(ENUM_NAME_LOCAL, _, LAST) \
+  #define END_ENUM(ENUM_NAME)   CAT(ENUM_PREFIX_, LAST) \
                                 }; \
-                                char *ENUM_NAME##_string(int index);
+                                char *CAT(ENUM_PREFIX_, string)(int index);
 #else
-  #define BEGIN_ENUM(ENUM_NAME) char *ENUM_NAME##_string(int index) { \
+  #define BEGIN_ENUM(ENUM_NAME) char *CAT(ENUM_PREFIX_, string)(int index) { \
                                 switch (index) {
 
-  #define XENUM_1(e)            case CAT3(ENUM_NAME_LOCAL, _, e): \
-                                    return QUOTE(ENUM_NAME_LOCAL) "_" #e;
-  #define XENUM_2(e, v)         case CAT3(ENUM_NAME_LOCAL, _, e): \
-                                    return QUOTE(ENUM_NAME_LOCAL) "_" #e;
-  #define XENUM_3(e, v, s)      case CAT3(ENUM_NAME_LOCAL, _, e): \
+  #define XENUM_1(e)            case CAT(ENUM_PREFIX_, e): \
+                                    return QUOTE(ENUM_PREFIX_) #e;
+  #define XENUM_2(e, v)         case CAT(ENUM_PREFIX_, e): \
+                                    return QUOTE(ENUM_PREFIX_) #e;
+  #define XENUM_3(e, v, s)      case CAT(ENUM_PREFIX_, e): \
                                     return s;
 
   #define END_ENUM(ENUM_NAME)   default: \
