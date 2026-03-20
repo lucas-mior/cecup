@@ -834,7 +834,7 @@ on_tree_button_press(GtkGestureClick *gesture,
         is_busy = gtk_widget_get_sensitive(cecup.stop_button);
 
         if (!gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store),
-                                    &iter, tree_path)) {
+                                     &iter, tree_path)) {
             break;
         }
 
