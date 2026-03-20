@@ -53,21 +53,22 @@
   #define XENUM_2(e, v)          CAT(ENUM_PREFIX_, e) = v, 
   #define XENUM_3(e, v, s)       CAT(ENUM_PREFIX_, e) = v,
 
-  #define END_ENUM(EnumName)     CAT(ENUM_PREFIX_, LAST) \
-                               }; \
+  #define END_ENUM(EnumName)     CAT(ENUM_PREFIX_, LAST)                       \
+                               };                                              \
                                char *CAT(ENUM_PREFIX_, str)(enum EnumName v);
 #else
   #define BEGIN_ENUM(EnumName) char *CAT(ENUM_PREFIX_, str)(enum EnumName v) { \
                                    switch (v) {
 
-  #define XENUM_1(e)               case CAT(ENUM_PREFIX_, e): \
+  #define XENUM_1(e)               case CAT(ENUM_PREFIX_, e):             \
                                        return QUOTE(ENUM_PREFIX_) #e;
-  #define XENUM_2(e, v)            case CAT(ENUM_PREFIX_, e): \
+  #define XENUM_2(e, v)            case CAT(ENUM_PREFIX_, e):             \
                                        return QUOTE(ENUM_PREFIX_) #e;
-  #define XENUM_3(e, v, s)         case CAT(ENUM_PREFIX_, e): \
+  #define XENUM_3(e, v, s)         case CAT(ENUM_PREFIX_, e):             \
                                        return s;
-
-  #define END_ENUM(EnumName)       default: \
+  #define END_ENUM(EnumName)       case CAT(ENUM_PREFIX_, LAST):          \
+                                       return QUOTE(ENUM_PREFIX_) "LAST"; \
+                                   default:                               \
                                        return "Unknown value"; \
                                  } \
                                }
