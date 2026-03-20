@@ -878,7 +878,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                     submenu = g_menu_new();
 
                     if (filepath) {
-                        char *extension_ptr;
+                        char *extension;
                         char label[MAX_PATH_LENGTH];
                         char directory[MAX_PATH_LENGTH];
                         char pattern[MAX_PATH_LENGTH];
@@ -888,12 +888,12 @@ on_tree_button_press(GtkGestureClick *gesture,
                         memcpy64(path_copy, filepath, path_len + 1);
 
                         name = basename2(path_copy, &path_len, &length);
-                        extension_ptr = memrchr64(name, '.', length);
+                        extension = memrchr64(name, '.', length);
                         dirname2(directory, path_copy, &path_len);
 
-                        if (extension_ptr && (extension_ptr != name)) {
-                            SNPRINTF(label, _("by extension (*%s)"), extension_ptr);
-                            SNPRINTF(pattern, "*%s", extension_ptr);
+                        if (extension && (extension != name)) {
+                            SNPRINTF(label, _("by extension (*%s)"), extension);
+                            SNPRINTF(pattern, "*%s", extension);
                             item = g_menu_item_new(label, NULL);
                             g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
                             g_menu_append_item(submenu, item);
