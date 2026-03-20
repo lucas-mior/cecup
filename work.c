@@ -394,7 +394,20 @@ work_fix_fs_recursive(char *base_path, char *relative) {
             error(_("Error: file path is too long:\n"));
             error("%s\n", old_full);
             error(_("Please fix your file system.\n"));
-            exit(EXIT_FAILURE);
+            fatal(EXIT_FAILURE);
+        }
+
+        if (isspace(d_name[0])) {
+            error(_("Error: there is a space in the start of the fileneme:\n"));
+            error("'%s'\n", full_path);
+            error(_("Please fix your file system.\n"));
+            fatal(EXIT_FAILURE);
+        }
+        if (isspace(d_name[name_len - 1])) {
+            error(_("Error: there is space in the end of the fileneme:\n"));
+            error("'%s'\n", full_path);
+            error(_("Please fix your file system.\n"));
+            fatal(EXIT_FAILURE);
         }
 
         if (lstat(old_full, &stat) < 0) {
