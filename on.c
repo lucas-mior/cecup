@@ -888,7 +888,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                         memcpy64(path_copy, filepath, path_len + 1);
 
                         name = basename2(path_copy, &path_len, &length);
-                        extension_ptr = strrchr(name, '.');
+                        extension_ptr = memrchr64(name, '.', length);
 
                         if (extension_ptr && (extension_ptr != name)) {
                             SNPRINTF(label, _("by extension (*%s)"), extension_ptr);
