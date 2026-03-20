@@ -573,10 +573,8 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
     if ((src_path = BEGINS_WITH(buf_output, RSYNC_SHOW_PRE_DIR))) {
         char buffer[MAX_PATH_LENGTH];
         path_len = line_len - (int32)(src_path - buf_output);
-        interlude = memmem64(src_path,
-                             path_len,
-                             RSYNC_IGNORE_INTER,
-                             strlen32(RSYNC_IGNORE_INTER));
+        interlude = memmem64(src_path, path_len,
+                             RSYNC_IGNORE_INTER, strlen32(RSYNC_IGNORE_INTER));
 
         path_len -= (int32)(&buf_output[line_len] - interlude);
         *interlude = '\0';
