@@ -975,8 +975,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                                                &translated_x,
                                                &translated_y)) {
             g_object_unref(menu);
-            gtk_tree_path_free(tree_path);
-            return;
+            break;
         }
 
         popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
