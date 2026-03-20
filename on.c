@@ -971,9 +971,8 @@ on_tree_button_press(GtkGestureClick *gesture,
         parent = gtk_widget_get_parent(widget);
 
         if (!gtk_widget_translate_coordinates(widget, parent,
-                                               x, y,
-                                               &translated_x,
-                                               &translated_y)) {
+                                              x, y,
+                                              &translated_x, &translated_y)) {
             g_object_unref(menu);
             break;
         }
