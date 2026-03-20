@@ -1919,7 +1919,6 @@ DAYS_ENUM_LIST
 #include "enums.h"
 DAYS_ENUM_LIST
 #undef DAYS_ENUM_LIST
-#undef GENERATE_ENUM_STRINGS
 #undef ENUM_NAME_LOCAL
 
 #define POWERS_OF_TWO_LIST     \
@@ -1940,7 +1939,6 @@ POWERS_OF_TWO_LIST
 #define ENUM_NAME_LOCAL POWER_OF_TWO
 #include "enums.h"
 POWERS_OF_TWO_LIST
-#undef GENERATE_ENUM_STRINGS
 #undef ENUM_NAME_LOCAL
 
 static void
@@ -1983,10 +1981,14 @@ main(int argc, char **argv) {
         printf("enum[%d] = %s\n", i, enum_string_WEEK_DAY(i));
     }
 
+    printf("\n");
+
     for (int32 i = 0; i < POWER_OF_TWO_LAST; i += 1) {
-        printf("enum[%d] = %s\n", i, enum_string_POWER_OF_TWO(i));
+        char *value_name = enum_string_POWER_OF_TWO(i);
+        if (!begins_with(value_name, "Unknown")) {
+            printf("enum[%d] = %s\n", i, value_name);
+        }
     }
-    exit(0);
 
     if (OS_LINUX && !DEBUGGING) {
         struct sigaction signal_action;
