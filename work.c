@@ -570,7 +570,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
     action_char = buf_output[0];
     type_char = buf_output[1];
 
-    if ((src_path = begins_with(buf_output, RSYNC_SHOW_PRE_DIR))) {
+    if ((src_path = BEGINS_WITH(buf_output, RSYNC_SHOW_PRE_DIR))) {
         char buffer[MAX_PATH_LENGTH];
         path_len = line_len - (int32)(src_path - buf_output);
         interlude = memmem64(src_path,
@@ -594,8 +594,8 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         return;
     }
 
-    if ((src_path = begins_with(buf_output, RSYNC_IGNORE_PRE_FILE))
-         || (src_path = begins_with(buf_output, RSYNC_IGNORE_PRE_DIR))) {
+    if ((src_path = BEGINS_WITH(buf_output, RSYNC_IGNORE_PRE_FILE))
+         || (src_path = BEGINS_WITH(buf_output, RSYNC_IGNORE_PRE_DIR))) {
         path_len = line_len - (int32)(src_path - buf_output);
         dst_path = src_path;
 
@@ -623,7 +623,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         return;
     }
 
-    if ((dst_path = begins_with(buf_output, RSYNC_MESSAGE_DELETING))) {
+    if ((dst_path = BEGINS_WITH(buf_output, RSYNC_MESSAGE_DELETING))) {
         while (*dst_path == ' ') {
             dst_path += 1;
         }

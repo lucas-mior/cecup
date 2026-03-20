@@ -550,7 +550,7 @@ update_ui_handler(void *data) {
             }
 
             if (pattern[pattern_len - 1] == '/') {
-                if (begins_with(path_test, pattern)) {
+                if (BEGINS_WITH(path_test, pattern, pattern_len)) {
                     match = true;
                 }
             } else {
