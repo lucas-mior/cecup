@@ -74,7 +74,7 @@ get_file_info(char *base, char **path, int64 *size, int64 *mtime,
     }
 }
 
-static bool
+static char *
 check_itemize_line(char *buf_output) {
     switch (buf_output[0]) {
     case RSYNC_CHAR0_ACTION_SEND:
@@ -84,7 +84,7 @@ check_itemize_line(char *buf_output) {
     case RSYNC_CHAR0_ACTION_NO_UPDATE:
         break;
     default:
-        return false;
+        return NULL;
     }
 
     switch (buf_output[1]) {
@@ -95,7 +95,7 @@ check_itemize_line(char *buf_output) {
     case RSYNC_CHAR1_TYPE_SPECIAL:
         break;
     default:
-        return false;
+        return NULL;
     }
 
     for (int32 i = 2; i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS); i += 1) {
@@ -114,15 +114,15 @@ check_itemize_line(char *buf_output) {
         case RSYNC_CHAR_ATTR_XATTR:
             break;
         default:
-            return false;
+            return NULL;
         }
     }
 
     if (buf_output[strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)] != ' ') {
-        return false;
+        return NULL;
     }
 
-    return true;
+    return buf_output + strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
 }
 
 static void
@@ -552,7 +552,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
     enum CecupAction action;
     enum CecupReason reason;
 
-    bool might_be_itemize_line;
+    char *itemize_parsed;
     char action_char;
     char type_char;
     bool is_dir = false;
@@ -566,7 +566,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         error("%s\n", buf_output);
     }
 
-    might_be_itemize_line = check_itemize_line(buf_output);
+    itemize_parsed = check_itemize_line(buf_output);
     action_char = buf_output[0];
     type_char = buf_output[1];
 
@@ -649,14 +649,12 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         return;
     }
 
-    if (might_be_itemize_line
+    if (itemize_parsed
         && ((action_char == RSYNC_CHAR0_ACTION_RECEIVE)
             || (action_char == RSYNC_CHAR0_ACTION_HARDLINK)
             || (action_char == RSYNC_CHAR0_ACTION_CHANGE))) {
 
-        char *space_pos = strchr(buf_output, ' ');
-
-        src_path = space_pos + 1;
+        src_path = itemize_parsed;
         while (*src_path == ' ') {
             src_path += 1;
         }
@@ -760,9 +758,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         return;
     }
 
-    if (might_be_itemize_line) {
-        char *space_pos = strchr(buf_output, ' ');
-
+    if (itemize_parsed) {
         action = ACTION_UPDATE;
         reason = REASON_UPDATE;
 
@@ -771,7 +767,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
             reason = REASON_EQUAL;
         }
 
-        src_path = space_pos + 1;
+        src_path = itemize_parsed;
         while (*src_path == ' ') {
             src_path += 1;
         }
