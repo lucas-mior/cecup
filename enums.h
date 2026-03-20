@@ -5,8 +5,24 @@
 #undef BEGIN_ENUM
 #undef END_ENUM
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ > 1)
 #if !defined(ENUM_NAME_LOCAL)
 #error "enums.h included but ENUM_NAME_LOCAL is not defined"
+#endif
+#endif
+
+#if !defined(INCLUDE_COUNT)
+#define INCLUDE_COUNT 0
+#endif
+
+#pragma GCC diagnostic ignored "-Wmacro-redefined"
+
+#if INCLUDE_COUNT == 0
+#define INCLUDE_COUNT 1
+#define GENERATE_ENUM_STRINGS 0
+#else
+#define INCLUDE_COUNT 0
+#define GENERATE_ENUM_STRINGS 1
 #endif
 
 #if !defined(CAT)
