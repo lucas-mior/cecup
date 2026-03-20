@@ -879,11 +879,8 @@ on_tree_button_press(GtkGestureClick *gesture,
 
                     if (filepath) {
                         char *extension_ptr;
-                        char extension_label[64];
-                        char directory_label[MAX_PATH_LENGTH + 64];
+                        char label[MAX_PATH_LENGTH];
                         char directory_buffer[MAX_PATH_LENGTH];
-                        char relative_label[MAX_PATH_LENGTH + 64];
-                        char name_label[MAX_NAME_LENGTH + 64];
                         char pattern_buffer[MAX_PATH_LENGTH];
                         char path_copy[MAX_PATH_LENGTH];
 
@@ -893,15 +890,13 @@ on_tree_button_press(GtkGestureClick *gesture,
                         name = basename2(path_copy, &path_len, &length);
                         extension_ptr = strrchr(name, '.');
 
-                        if (extension_ptr) {
-                            if (extension_ptr != name) {
-                                SNPRINTF(extension_label, _("by extension (*%s)"), extension_ptr);
-                                SNPRINTF(pattern_buffer, "*%s", extension_ptr);
-                                item = g_menu_item_new(extension_label, NULL);
-                                g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern_buffer);
-                                g_menu_append_item(submenu, item);
-                                g_object_unref(item);
-                            }
+                        if (extension_ptr && (extension_ptr != name)) {
+                            SNPRINTF(label, _("by extension (*%s)"), extension_ptr);
+                            SNPRINTF(pattern_buffer, "*%s", extension_ptr);
+                            item = g_menu_item_new(label, NULL);
+                            g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern_buffer);
+                            g_menu_append_item(submenu, item);
+                            g_object_unref(item);
                         }
 
                         path_len = row->path_len;
@@ -909,23 +904,23 @@ on_tree_button_press(GtkGestureClick *gesture,
                         dirname2(directory_buffer, path_copy, &path_len);
 
                         if (strcmp(directory_buffer, ".")) {
-                            SNPRINTF(directory_label, _("📁 Dir (/%s/)"), directory_buffer);
+                            SNPRINTF(label, _("📁 Dir (/%s/)"), directory_buffer);
                             SNPRINTF(pattern_buffer, "/%s/", directory_buffer);
-                            item = g_menu_item_new(directory_label, NULL);
+                            item = g_menu_item_new(label, NULL);
                             g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern_buffer);
                             g_menu_append_item(submenu, item);
                             g_object_unref(item);
                         }
 
-                        SNPRINTF(relative_label, _("This file only (/%s)"), filepath);
-                        item = g_menu_item_new(relative_label, NULL);
+                        SNPRINTF(label, _("This file only (/%s)"), filepath);
+                        item = g_menu_item_new(label, NULL);
                         SNPRINTF(pattern_buffer, "/%s", filepath);
                         g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern_buffer);
                         g_menu_append_item(submenu, item);
                         g_object_unref(item);
 
-                        SNPRINTF(name_label, _("This filename on any folder (*/%s)"), name);
-                        item = g_menu_item_new(name_label, NULL);
+                        SNPRINTF(label, _("This filename on any folder (*/%s)"), name);
+                        item = g_menu_item_new(label, NULL);
                         SNPRINTF(pattern_buffer, "*/%s", name);
                         g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern_buffer);
                         g_menu_append_item(submenu, item);
