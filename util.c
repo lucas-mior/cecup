@@ -221,11 +221,11 @@ INLINE void *memchr64(void *pointer, int32 value, int64 size);
 static int xclose(char *file, int line, int *fd, char *fd_var_name,
                   char *filename);
 
-#if !defined(CAT)
-#define CAT_(a, b) a##b
-#define CAT(a, b) CAT_(a, b)
-#define CAT3_(a, b, c) a##b##c
-#define CAT3(a, b, c) CAT3_(a, b, c)
+#if !defined(CAT) || !defined(CAT3)
+  #define CAT_(a, b)     a##b
+  #define CAT3_(a, b, c) a##b##c
+  #define CAT(a, b)      CAT_(a, b)
+  #define CAT3(a, b, c)  CAT3_(a, b, c)
 #endif
 
 #define NUM_ARGS_(_1, _2, _3, _4, _5, _6, _7, _8, n, ...) n
