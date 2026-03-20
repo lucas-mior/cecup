@@ -914,15 +914,15 @@ on_tree_button_press(GtkGestureClick *gesture,
                     }
 
                     SNPRINTF(label, _("This file only (/%s)"), filepath);
-                    item = g_menu_item_new(label, NULL);
                     SNPRINTF(pattern, "/%s", filepath);
+                    item = g_menu_item_new(label, NULL);
                     g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
                     g_menu_append_item(submenu, item);
                     g_object_unref(item);
 
                     SNPRINTF(label, _("This filename on any folder (*/%s)"), name);
-                    item = g_menu_item_new(label, NULL);
                     SNPRINTF(pattern, "*/%s", name);
+                    item = g_menu_item_new(label, NULL);
                     g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
                     g_menu_append_item(submenu, item);
                     g_object_unref(item);
