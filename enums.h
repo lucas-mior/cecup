@@ -26,8 +26,8 @@
 #define GENERATE_ENUM_STRINGS 1
 #endif
 
-static_assert((INCLUDE_COUNT == 0) || (INCLUDE_COUNT == 1),
-              "INCLUDE_COUNT must alternate between 0 and 1");
+_Static_assert((INCLUDE_COUNT == 0) || (INCLUDE_COUNT == 1),
+               "INCLUDE_COUNT must alternate between 0 and 1");
 
 #pragma clang diagnostic pop
 
