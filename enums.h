@@ -60,17 +60,17 @@ _Static_assert((ENUM_GENERATE_STRINGS == 0) || (ENUM_GENERATE_STRINGS == 1),
                                 char *CAT(ENUM_PREFIX_, string)(int index);
 #else
   #define BEGIN_ENUM(ENUM_NAME) char *CAT(ENUM_PREFIX_, string)(int index) { \
-                                switch (index) {
+                                  switch (index) {
 
-  #define XENUM_1(e)            case CAT(ENUM_PREFIX_, e): \
+  #define XENUM_1(e)              case CAT(ENUM_PREFIX_, e): \
                                     return QUOTE(ENUM_PREFIX_) #e;
-  #define XENUM_2(e, v)         case CAT(ENUM_PREFIX_, e): \
+  #define XENUM_2(e, v)           case CAT(ENUM_PREFIX_, e): \
                                     return QUOTE(ENUM_PREFIX_) #e;
-  #define XENUM_3(e, v, s)      case CAT(ENUM_PREFIX_, e): \
+  #define XENUM_3(e, v, s)        case CAT(ENUM_PREFIX_, e): \
                                     return s;
 
-  #define END_ENUM(ENUM_NAME)   default: \
+  #define END_ENUM(ENUM_NAME)     default: \
                                     return "Unknown value"; \
-                                } \
-  }
+                                  } \
+                                }
 #endif
