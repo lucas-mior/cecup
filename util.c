@@ -1978,13 +1978,13 @@ main(int argc, char **argv) {
     (void)argv;
 
     for (int32 i = 0; i < WEEK_DAY_LAST; i += 1) {
-        printf("enum[%d] = %s\n", i, enum_string_WEEK_DAY(i));
+        printf("enum[%d] = %s\n", i, WEEK_DAY_string(i));
     }
 
     printf("\n");
 
     for (int32 i = 0; i < POWER_OF_TWO_LAST; i += 1) {
-        char *value_name = enum_string_POWER_OF_TWO(i);
+        char *value_name = POWER_OF_TWO_string(i);
         if (!begins_with(value_name, "Unknown")) {
             printf("enum[%d] = %s\n", i, value_name);
         }

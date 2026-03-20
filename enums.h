@@ -57,9 +57,9 @@ _Static_assert((ENUM_GENERATE_STRINGS == 0) || (ENUM_GENERATE_STRINGS == 1),
 
   #define END_ENUM(ENUM_NAME)   CAT3(ENUM_NAME_LOCAL, _, LAST) \
                                 }; \
-                                char *enum_string_##ENUM_NAME(int index);
+                                char *ENUM_NAME##_string(int index);
 #else
-  #define BEGIN_ENUM(ENUM_NAME) char *enum_string_##ENUM_NAME(int index) { \
+  #define BEGIN_ENUM(ENUM_NAME) char *ENUM_NAME##_string(int index) { \
                                 switch (index) {
 
   #define XENUM_1(e)            case CAT3(ENUM_NAME_LOCAL, _, e): \
