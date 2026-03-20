@@ -1608,10 +1608,12 @@ work_rsync_bulk(void *user_data) {
                                     RSYNC_HARDLINK_NOTATION,
                                     strlen32(RSYNC_HARDLINK_NOTATION)))) {
                     *sep = '\0';
+                    path_len = (int32)(sep - filename);
                 } else if ((sep = memmem64(filename, path_len,
                                            RSYNC_SYMLINK_NOTATION,
                                            strlen32(RSYNC_SYMLINK_NOTATION)))) {
                     *sep = '\0';
+                    path_len = (int32)(sep - filename);
                 }
 
                 message = xmalloc(SIZEOF(*message));
