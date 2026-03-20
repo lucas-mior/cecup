@@ -1914,9 +1914,33 @@ static volatile ullong here_counter = 0; \
 #define ENUM_NAME_LOCAL WEEK_DAY
 #include "enums.h"
 DAYS_ENUM_LIST
+#undef ENUM_NAME_LOCAL
 
 #define GENERATE_ENUM_STRINGS
 #define ENUM_NAME_LOCAL WEEK_DAY
+#include "enums.h"
+DAYS_ENUM_LIST
+
+#undef DAYS_ENUM_LIST
+
+#define POWERS_OF_TWO_LSIT     \
+  BEGIN_ENUM(POWERS_OF_TWO)    \
+    XENUM(ONE,     1 << 0)     \
+    XENUM(TWO,     1 << 1      \
+    XENUM(FOUR,    1 << 2)     \
+    XENUM(EIGHT,   1 << 3)     \
+    XENUM(SIXTEEN, 1 << 4)     \
+    XENUM(THIRTY2, 1 << 5)     \
+    XENUM(SIXTY4,  1 << 6)     \
+  END_ENUM(POWERS_OF_TWO)
+
+#define ENUM_NAME_LOCAL POWERS_OF_TWO
+#include "enums.h"
+DAYS_ENUM_LIST
+#undef ENUM_NAME_LOCAL
+
+#define GENERATE_ENUM_STRINGS
+#define ENUM_NAME_LOCAL POWERS_OF_TWO
 #include "enums.h"
 DAYS_ENUM_LIST
 
