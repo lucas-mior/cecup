@@ -1907,7 +1907,7 @@ static volatile ullong here_counter = 0; \
     XENUM(TUESDAY, 10)                \
     XENUM(WEDNESDAY)                  \
     XENUM(THURSDAY)                   \
-    XENUM(FRIDAY, "Friday string")    \
+    XENUM(FRIDAY, 5, "Friday string") \
     XENUM(SATURDAY, 20)               \
   END_ENUM(WEEK_DAY)
 

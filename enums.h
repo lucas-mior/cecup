@@ -28,7 +28,7 @@
   #define BEGIN_ENUM(ENUM_NAME) enum ENUM_NAME {
 
   #define XENUM_1(e)            CAT3(ENUM_NAME_LOCAL, _, e),
-  #define XENUM_2(e, v)         CAT3(ENUM_NAME_LOCAL, _, e), 
+  #define XENUM_2(e, v)         CAT3(ENUM_NAME_LOCAL, _, e) = v, 
   #define XENUM_3(e, v, s)      CAT3(ENUM_NAME_LOCAL, _, e) = v,
 
   #define END_ENUM(ENUM_NAME)   CAT3(ENUM_NAME_LOCAL, _, LAST) \
@@ -41,10 +41,7 @@
   #define XENUM_1(e)            case CAT3(ENUM_NAME_LOCAL, _, e): \
                                     return QUOTE(ENUM_NAME_LOCAL) "_" #e;
   #define XENUM_2(e, v)         case CAT3(ENUM_NAME_LOCAL, _, e): \
-                                    return _Generic((v), \
-                                        char*: (char*)(v), \
-                                        default: QUOTE(ENUM_NAME_LOCAL) "_" #e \
-                                     );
+                                    return QUOTE(ENUM_NAME_LOCAL) "_" #e;
   #define XENUM_3(e, v, s)      case CAT3(ENUM_NAME_LOCAL, _, e): \
                                     return s;
 
