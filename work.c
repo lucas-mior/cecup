@@ -1604,9 +1604,13 @@ work_rsync_bulk(void *user_data) {
                 char *sep;
                 Message *message;
 
-                if ((sep = strstr(filename, RSYNC_HARDLINK_NOTATION))) {
+                if ((sep = memmem64(filename, path_len,
+                                    RSYNC_HARDLINK_NOTATION,
+                                    strlen32(RSYNC_HARDLINK_NOTATION)))) {
                     *sep = '\0';
-                } else if ((sep = strstr(filename, RSYNC_SYMLINK_NOTATION))) {
+                } else if ((sep = memmem64(filename, path_len,
+                                           RSYNC_SYMLINK_NOTATION,
+                                           strlen32(RSYNC_SYMLINK_NOTATION)))) {
                     *sep = '\0';
                 }
 
