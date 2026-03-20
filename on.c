@@ -889,6 +889,7 @@ on_tree_button_press(GtkGestureClick *gesture,
 
                         name = basename2(path_copy, &path_len, &length);
                         extension_ptr = memrchr64(name, '.', length);
+                        dirname2(directory, path_copy, &path_len);
 
                         if (extension_ptr && (extension_ptr != name)) {
                             SNPRINTF(label, _("by extension (*%s)"), extension_ptr);
@@ -898,10 +899,6 @@ on_tree_button_press(GtkGestureClick *gesture,
                             g_menu_append_item(submenu, item);
                             g_object_unref(item);
                         }
-
-                        path_len = row->path_len;
-                        memcpy64(path_copy, filepath, path_len + 1);
-                        dirname2(directory, path_copy, &path_len);
 
                         if (strcmp(directory, ".")) {
                             SNPRINTF(label, _("📁 Dir (/%s/)"), directory);
