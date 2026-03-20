@@ -11,23 +11,21 @@
 #endif
 #endif
 
+// use 1234 and 4321 to decrease the chance of someone else using this macro
+// (even though the compiler should emit a warning anyway)
 #if !defined(ENUM_GENERATE_STRINGS)
-#define ENUM_GENERATE_STRINGS 1
+#define ENUM_GENERATE_STRINGS 4321
 #endif
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmacro-redefined"
-
-#if ENUM_GENERATE_STRINGS == 0
-#define ENUM_GENERATE_STRINGS 1
+#if ENUM_GENERATE_STRINGS == 1234
+#undef ENUM_GENERATE_STRINGS
+#define ENUM_GENERATE_STRINGS 4321
+#elif ENUM_GENERATE_STRINGS == 4321
+#undef ENUM_GENERATE_STRINGS
+#define ENUM_GENERATE_STRINGS 1234
 #else
-#define ENUM_GENERATE_STRINGS 0
+#error "ENUM_GENERATE_STRINGS must alternate between 1234 and 4321"
 #endif
-
-_Static_assert((ENUM_GENERATE_STRINGS == 0) || (ENUM_GENERATE_STRINGS == 1),
-               "ENUM_GENERATE_STRINGS must alternate between 0 and 1");
-
-#pragma clang diagnostic pop
 
 #if !defined(CAT) || !defined(CAT3)
   #define CAT_(a, b)     a##b
@@ -48,7 +46,7 @@ _Static_assert((ENUM_GENERATE_STRINGS == 0) || (ENUM_GENERATE_STRINGS == 1),
 
 #define XENUM(...) SELECT_ON_NUM_ARGS(XENUM_, __VA_ARGS__)
 
-#if ENUM_GENERATE_STRINGS == 0
+#if ENUM_GENERATE_STRINGS == 1234
   #define BEGIN_ENUM(EnumName) enum EnumName {
 
   #define XENUM_1(e)             CAT(ENUM_PREFIX_, e),
