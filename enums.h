@@ -57,9 +57,9 @@ _Static_assert((ENUM_GENERATE_STRINGS == 0) || (ENUM_GENERATE_STRINGS == 1),
 
   #define END_ENUM(ENUM_NAME)   CAT(ENUM_PREFIX_, LAST) \
                                 }; \
-                                char *CAT(ENUM_PREFIX_, string)(int index);
+                                char *CAT(ENUM_PREFIX_, string)(enum ENUM_NAME index);
 #else
-  #define BEGIN_ENUM(ENUM_NAME) char *CAT(ENUM_PREFIX_, string)(int index) { \
+  #define BEGIN_ENUM(ENUM_NAME) char *CAT(ENUM_PREFIX_, string)(enum ENUM_NAME index) { \
                                   switch (index) {
 
   #define XENUM_1(e)              case CAT(ENUM_PREFIX_, e): \
