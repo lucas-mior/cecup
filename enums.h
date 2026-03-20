@@ -15,7 +15,8 @@
 #define INCLUDE_COUNT 0
 #endif
 
-#pragma GCC diagnostic ignored "-Wmacro-redefined"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmacro-redefined"
 
 #if INCLUDE_COUNT == 0
 #define INCLUDE_COUNT 1
@@ -24,6 +25,11 @@
 #define INCLUDE_COUNT 0
 #define GENERATE_ENUM_STRINGS 1
 #endif
+
+static_assert((INCLUDE_COUNT == 0) || (INCLUDE_COUNT == 1),
+              "INCLUDE_COUNT must alternate between 0 and 1");
+
+#pragma clang diagnostic pop
 
 #if !defined(CAT)
   #define CAT_(a, b) a##b
@@ -44,7 +50,7 @@
 
 #define XENUM(...) SELECT_ON_NUM_ARGS(XENUM_, __VA_ARGS__)
 
-#if !defined(GENERATE_ENUM_STRINGS)
+#if GENERATE_ENUM_STRINGS == 0
   #define BEGIN_ENUM(ENUM_NAME) enum ENUM_NAME {
 
   #define XENUM_1(e)            CAT3(ENUM_NAME_LOCAL, _, e),
