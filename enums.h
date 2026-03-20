@@ -18,13 +18,13 @@
 #endif
 
 #if ENUM_GENERATE_STRINGS == 1234
-#undef ENUM_GENERATE_STRINGS
-#define ENUM_GENERATE_STRINGS 4321
+  #undef ENUM_GENERATE_STRINGS
+  #define ENUM_GENERATE_STRINGS 4321
 #elif ENUM_GENERATE_STRINGS == 4321
-#undef ENUM_GENERATE_STRINGS
-#define ENUM_GENERATE_STRINGS 1234
+  #undef ENUM_GENERATE_STRINGS
+  #define ENUM_GENERATE_STRINGS 1234
 #else
-#error "ENUM_GENERATE_STRINGS must alternate between 1234 and 4321"
+  #error "ENUM_GENERATE_STRINGS must alternate between 1234 and 4321"
 #endif
 
 #if !defined(CAT) || !defined(CAT3)
@@ -70,6 +70,6 @@
                                        return QUOTE(ENUM_PREFIX_) "LAST"; \
                                    default:                               \
                                        return "Unknown value"; \
-                                 } \
+                                   } \
                                }
 #endif
