@@ -1921,6 +1921,7 @@ static volatile ullong here_counter = 0; \
 #define ENUM_PREFIX_ WEEK_DAY_
 #include "enums.h"
 DAYS_ENUM_LIST
+#undef ENUM_PREFIX_
 
 #define ENUM_PREFIX_ WEEK_DAY_
 #include "enums.h"
@@ -1942,6 +1943,7 @@ DAYS_ENUM_LIST
 #define ENUM_PREFIX_ POWER_OF_TWO_
 #include "enums.h"
 POWERS_OF_TWO_LIST
+#undef ENUM_PREFIX_
 
 #define ENUM_PREFIX_ POWER_OF_TWO_
 #include "enums.h"
