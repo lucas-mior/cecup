@@ -214,9 +214,12 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
         }
     } else {
         error("Error: both src_path and dst_path are NULL. "
-              "(action=%u) (reason=%u)\n", action, reason);
+              "(action=%s) (reason=%s)\n",
+              ACTION_string(action), REASON_string(reason));
         fatal(EXIT_FAILURE);
     }
+    printf("(action=%s) (reason=%s)\n",
+           ACTION_string(action), REASON_string(reason));
 
     row = xarena_push(cecup.arena, SIZEOF(*row));
     memset64(row, 0, SIZEOF(*row));
