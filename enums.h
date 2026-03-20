@@ -29,7 +29,7 @@ _Static_assert((ENUM_GENERATE_STRINGS == 0) || (ENUM_GENERATE_STRINGS == 1),
 
 #pragma clang diagnostic pop
 
-#if !defined(CAT)
+#if !defined(CAT) || !defined(CAT3)
   #define CAT_(a, b) a##b
   #define CAT(a, b) CAT_(a, b)
   #define CAT3_(a, b, c) a##b##c
