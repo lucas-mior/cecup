@@ -896,30 +896,28 @@ work_rsync(void *user_data) {
 
     g_mutex_lock(&cecup.arena_mutex);
 
-    if (thread_data->check_different_fs) {
-        if (same_fs) {
-            Message *message;
-            IPC_SEND_LOG_ERROR(
-                _("Safety stop: Original and backup are on the same storage "
-                  "device.\n"
-                  "Check if the backup device is connected.\n"
-                  "To force backup on a folder in the same device, uncheck"
-                  " option \"Protect same drive sync\".\n"));
+    if (thread_data->check_different_fs && same_fs) {
+        Message *message;
+        IPC_SEND_LOG_ERROR(
+            _("Safety stop: Original and backup are on the same storage "
+              "device.\n"
+              "Check if the backup device is connected.\n"
+              "To force backup on a folder in the same device, uncheck"
+              " option \"Protect same drive sync\".\n"));
 
-            message = xmalloc(SIZEOF(*message));
-            memset64(message, 0, SIZEOF(*message));
+        message = xmalloc(SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
 
-            arena_reset(cecup.arena);
-            cecup.rows_len = 0;
-            cecup.rows_visible_len = 0;
+        arena_reset(cecup.arena);
+        cecup.rows_len = 0;
+        cecup.rows_visible_len = 0;
 
-            message->type = DATA_TYPE_CLEAR_TREES;
-            g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
+        message->type = DATA_TYPE_CLEAR_TREES;
+        g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
 
-            work_finalize(thread_data);
-            g_mutex_unlock(&cecup.arena_mutex);
-            return NULL;
-        }
+        work_finalize(thread_data);
+        g_mutex_unlock(&cecup.arena_mutex);
+        return NULL;
     }
 
     if (cecup.changed_dirs) {
