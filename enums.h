@@ -49,28 +49,28 @@ _Static_assert((ENUM_GENERATE_STRINGS == 0) || (ENUM_GENERATE_STRINGS == 1),
 #define XENUM(...) SELECT_ON_NUM_ARGS(XENUM_, __VA_ARGS__)
 
 #if ENUM_GENERATE_STRINGS == 0
-  #define BEGIN_ENUM(ENUM_NAME) enum ENUM_NAME {
+  #define BEGIN_ENUM(EnumName) enum EnumName {
 
-  #define XENUM_1(e)            CAT(ENUM_PREFIX_, e),
-  #define XENUM_2(e, v)         CAT(ENUM_PREFIX_, e) = v, 
-  #define XENUM_3(e, v, s)      CAT(ENUM_PREFIX_, e) = v,
+  #define XENUM_1(e)             CAT(ENUM_PREFIX_, e),
+  #define XENUM_2(e, v)          CAT(ENUM_PREFIX_, e) = v, 
+  #define XENUM_3(e, v, s)       CAT(ENUM_PREFIX_, e) = v,
 
-  #define END_ENUM(ENUM_NAME)   CAT(ENUM_PREFIX_, LAST) \
-                                }; \
-                                char *CAT(ENUM_PREFIX_, string)(enum ENUM_NAME index);
+  #define END_ENUM(EnumName)     CAT(ENUM_PREFIX_, LAST) \
+                               }; \
+                               char *CAT(ENUM_PREFIX_, string)(enum EnumName index);
 #else
-  #define BEGIN_ENUM(ENUM_NAME) char *CAT(ENUM_PREFIX_, string)(enum ENUM_NAME index) { \
-                                  switch (index) {
+  #define BEGIN_ENUM(EnumName) char *CAT(ENUM_PREFIX_, string)(enum EnumName index) { \
+                                   switch (index) {
 
-  #define XENUM_1(e)              case CAT(ENUM_PREFIX_, e): \
-                                    return QUOTE(ENUM_PREFIX_) #e;
-  #define XENUM_2(e, v)           case CAT(ENUM_PREFIX_, e): \
-                                    return QUOTE(ENUM_PREFIX_) #e;
-  #define XENUM_3(e, v, s)        case CAT(ENUM_PREFIX_, e): \
-                                    return s;
+  #define XENUM_1(e)               case CAT(ENUM_PREFIX_, e): \
+                                       return QUOTE(ENUM_PREFIX_) #e;
+  #define XENUM_2(e, v)            case CAT(ENUM_PREFIX_, e): \
+                                       return QUOTE(ENUM_PREFIX_) #e;
+  #define XENUM_3(e, v, s)         case CAT(ENUM_PREFIX_, e): \
+                                       return s;
 
-  #define END_ENUM(ENUM_NAME)     default: \
-                                    return "Unknown value"; \
-                                  } \
-                                }
+  #define END_ENUM(EnumName)       default: \
+                                       return "Unknown value"; \
+                                 } \
+                               }
 #endif
