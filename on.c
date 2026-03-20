@@ -863,8 +863,10 @@ on_tree_button_press(GtkGestureClick *gesture,
             message->action = row->dst_action;
         }
 
-        g_object_set_data(G_OBJECT(cecup.application), "active_tree", widget);
-        g_object_set_data_full(G_OBJECT(cecup.application), "active_message", message, free_message);
+        g_object_set_data(G_OBJECT(cecup.application),
+                          "active_tree", widget);
+        g_object_set_data_full(G_OBJECT(cecup.application),
+                               "active_message", message, free_message);
 
         menu = g_menu_new();
         for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {
