@@ -1907,15 +1907,15 @@ static volatile ullong here_counter = 0; \
 
 #if TESTING_util
 
-#define DAYS_ENUM_LIST                \
-  BEGIN_ENUM(WeekDay)                \
-    XENUM(SUNDAY, 0, "Sunday string") \
-    XENUM(MONDAY)                     \
-    XENUM(TUESDAY, 10)                \
-    XENUM(WEDNESDAY)                  \
-    XENUM(THURSDAY)                   \
-    XENUM(FRIDAY, 5, "Friday string") \
-    XENUM(SATURDAY, 20)               \
+#define DAYS_ENUM_LIST                 \
+  BEGIN_ENUM(WeekDay)                  \
+    XENUM(SUNDAY, 0, "Sunday string")  \
+    XENUM(MONDAY)                      \
+    XENUM(TUESDAY, 10)                 \
+    XENUM(WEDNESDAY)                   \
+    XENUM(THURSDAY)                    \
+    XENUM(FRIDAY, 5, "Friday string")  \
+    XENUM(SATURDAY, 20)                \
   END_ENUM(WeekDay)
 
 #define ENUM_PREFIX_ WEEK_DAY_
@@ -1929,15 +1929,15 @@ DAYS_ENUM_LIST
 #undef DAYS_ENUM_LIST
 #undef ENUM_PREFIX_
 
-#define POWERS_OF_TWO_LIST     \
-  BEGIN_ENUM(PowerOfTwo)    \
-    XENUM(ONE,     1 << 0)     \
-    XENUM(TWO,     1 << 1)     \
-    XENUM(FOUR,    1 << 2)     \
-    XENUM(EIGHT,   1 << 3)     \
-    XENUM(SIXTEEN, 1 << 4)     \
-    XENUM(THIRTY2, 1 << 5)     \
-    XENUM(SIXTY4,  1 << 6)     \
+#define POWERS_OF_TWO_LIST             \
+  BEGIN_ENUM(PowerOfTwo)               \
+    XENUM(ONE,     1 << 0)             \
+    XENUM(TWO,     1 << 1)             \
+    XENUM(FOUR,    1 << 2)             \
+    XENUM(EIGHT,   1 << 3)             \
+    XENUM(SIXTEEN, 1 << 4)             \
+    XENUM(THIRTY2, 1 << 5)             \
+    XENUM(SIXTY4,  1 << 6)             \
   END_ENUM(PowerOfTwo)
 
 #define ENUM_PREFIX_ POWER_OF_TWO_
