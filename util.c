@@ -1949,6 +1949,7 @@ POWERS_OF_TWO_LIST
 #include "enums.h"
 POWERS_OF_TWO_LIST
 #undef ENUM_PREFIX_
+#undef POWERS_OF_TWO_LIST
 
 static void
 write_file(char *path, void *data, int64 len) {
