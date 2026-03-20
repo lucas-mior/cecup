@@ -1920,29 +1920,29 @@ DAYS_ENUM_LIST
 #define ENUM_NAME_LOCAL WEEK_DAY
 #include "enums.h"
 DAYS_ENUM_LIST
-
+#undef ENUM_NAME_LOCAL
 #undef DAYS_ENUM_LIST
 
-#define POWERS_OF_TWO_LSIT     \
-  BEGIN_ENUM(POWERS_OF_TWO)    \
+#define POWERS_OF_TWO_LIST     \
+  BEGIN_ENUM(POWER_OF_TWO)    \
     XENUM(ONE,     1 << 0)     \
-    XENUM(TWO,     1 << 1      \
+    XENUM(TWO,     1 << 1)     \
     XENUM(FOUR,    1 << 2)     \
     XENUM(EIGHT,   1 << 3)     \
     XENUM(SIXTEEN, 1 << 4)     \
     XENUM(THIRTY2, 1 << 5)     \
     XENUM(SIXTY4,  1 << 6)     \
-  END_ENUM(POWERS_OF_TWO)
+  END_ENUM(POWER_OF_TWO)
 
-#define ENUM_NAME_LOCAL POWERS_OF_TWO
+#define ENUM_NAME_LOCAL POWER_OF_TWO
 #include "enums.h"
-DAYS_ENUM_LIST
+POWERS_OF_TWO_LIST
 #undef ENUM_NAME_LOCAL
 
 #define GENERATE_ENUM_STRINGS
-#define ENUM_NAME_LOCAL POWERS_OF_TWO
+#define ENUM_NAME_LOCAL POWER_OF_TWO
 #include "enums.h"
-DAYS_ENUM_LIST
+POWERS_OF_TWO_LIST
 
 static void
 write_file(char *path, void *data, int64 len) {
@@ -1982,6 +1982,10 @@ main(int argc, char **argv) {
 
     for (int32 i = 0; i < WEEK_DAY_LAST; i += 1) {
         printf("enum[%d] = %s\n", i, enum_string_WEEK_DAY(i));
+    }
+
+    for (int32 i = 0; i < POWER_OF_TWO_LAST; i += 1) {
+        printf("enum[%d] = %s\n", i, enum_string_POWER_OF_TWO(i));
     }
     exit(0);
 

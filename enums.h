@@ -50,3 +50,5 @@
                                 } \
   }
 #endif
+
+#undef GENERATE_ENUM_STRINGS
