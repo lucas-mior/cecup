@@ -25,7 +25,6 @@
 #include "i18n.h"
 #include "cecup.h"
 #include "util.c"
-#include "profiler.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_aux 1
@@ -282,13 +281,10 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     show_ignore
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
-    time_function;
-
     cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupRow *row = cecup.rows[i];
         bool visible = false;
-        time_block("visible rows loop");
 
         if (row->selected) {
             count_selected += 1;
@@ -371,7 +367,6 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
 
     if (cecup.rows_visible_len > 0) {
-        time_block("sorting");
         qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(CecupRow *),
                 cecup_row_compare);
     }
@@ -393,14 +388,12 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
         = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(cecup.store), NULL);
 
     if (cecup.rows_visible_len > current_store_count) {
-        time_block("rows > store count");
         for (int64 i = 0;
              i < (cecup.rows_visible_len - current_store_count);
              i += 1) {
             gtk_list_store_append(cecup.store, &iter);
         }
     } else if (cecup.rows_visible_len < current_store_count) {
-        time_block("rows < store count");
         if (cecup.rows_visible_len == 0) {
             gtk_list_store_clear(cecup.store);
         } else {
@@ -416,7 +409,6 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     for (int64 i = 0; i < cecup.rows_visible_len; i += 1) {
         CecupRow *row = cecup.rows_visible[i];
         CecupRow *old_row;
-        time_block("store_set loop");
 
         if (valid) {
             gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR, &old_row, -1);

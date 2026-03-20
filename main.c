@@ -19,8 +19,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "profiler.c"
-
 #include "cecup.h"
 #include "util.c"
 #include "on.c"
@@ -860,8 +858,6 @@ main(int32 argc, char **argv) {
     program = argv[0];
     (void)program_len;
 
-    begin_profile();
-
     {
         char *locale_devel = "./po";
         char *locale_system = "/usr/share/locale/";
@@ -938,12 +934,8 @@ main(int32 argc, char **argv) {
     status = g_application_run(G_APPLICATION(cecup.application), argc, argv);
     g_object_unref(cecup.application);
 
-    end_and_print_profile();
-
     XFREE(cecup.rows);
     XFREE(cecup.rows_visible);
 
     exit(status);
 }
-
-profiler_end_of_compilation_unit;
