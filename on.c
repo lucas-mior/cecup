@@ -778,8 +778,8 @@ static void
 on_tree_button_press(GtkGestureClick *gesture,
                      int32 n_press, double x, double y, void *data) {
     GtkWidget *widget;
-    GtkTreePath *tree_path = NULL;
     GtkWidget *parent;
+    GtkTreePath *tree_path = NULL;
     double translated_x;
     double translated_y;
     int32 side;
