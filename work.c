@@ -1603,12 +1603,15 @@ work_rsync_bulk(void *user_data) {
             IPC_SEND_LOG("%s\n", buf_output_bulk);
 
             if ((filename = check_itemize_line(buf_output_bulk))) {
+                int32 path_len;
+                char *sep;
+                Message *message;
+
                 while (*filename == ' ') {
                     filename += 1;
                 }
-                int32 path_len = (int32)(eol - filename);
-                char *sep;
-                Message *message;
+
+                path_len = (int32)(eol - filename);
 
                 if ((sep = memmem64(filename, path_len,
                                     RSYNC_HARDLINK_NOTATION,
