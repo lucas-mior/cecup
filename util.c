@@ -218,8 +218,8 @@ static void util_segv_handler(int32) __attribute__((noreturn));
 static char *itoa2(long, char *);
 static long atoi2(char *);
 INLINE void *memchr64(void *pointer, int32 value, int64 size);
-static int xclose(char *file, int line, int *fd, char *fd_var_name,
-                  char *filename);
+static int xclose(char *file, int line,
+                  int *fd, char *fd_var_name, char *filename);
 
 #if !defined(CAT) || !defined(CAT3)
   #define CAT_(a, b)     a##b
