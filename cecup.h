@@ -53,12 +53,13 @@
 #define ENUM_PREFIX_ ACTION_
 #include "enums.h"
 ACTION_LIST
+#undef ENUM_PREFIX_
 
 #define ENUM_PREFIX_ ACTION_
 #include "enums.h"
 ACTION_LIST
-#undef ACTION_LIST
 #undef ENUM_PREFIX_
+#undef ACTION_LIST
 
 #define REASON_LIST         \
   BEGIN_ENUM(CecupReason)   \
@@ -74,12 +75,13 @@ ACTION_LIST
 #define ENUM_PREFIX_ REASON_
 #include "enums.h"
 REASON_LIST
+#undef ENUM_PREFIX_
 
 #define ENUM_PREFIX_ REASON_
 #include "enums.h"
 REASON_LIST
-#undef REASON_LIST
 #undef ENUM_PREFIX_
+#undef REASON_LIST
 
 enum IgnoreType {
     IGNORE_TYPE_EXT,
