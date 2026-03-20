@@ -795,6 +795,7 @@ on_tree_button_press(GtkGestureClick *gesture,
     char *filepath;
     char *other_path;
     GdkRectangle rect;
+    bool is_busy;
 
     (void)data;
     widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
@@ -805,7 +806,8 @@ on_tree_button_press(GtkGestureClick *gesture,
                                                       (int32)x, (int32)y,
                                                       &bin_x, &bin_y);
 
-    if (button == GDK_BUTTON_PRIMARY) {
+    switch (button) {
+    case GDK_BUTTON_PRIMARY:
         if (n_press == 2) {
             if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
                                               bin_x, bin_y,
@@ -814,9 +816,8 @@ on_tree_button_press(GtkGestureClick *gesture,
                 gtk_tree_path_free(tree_path);
             }
         }
-    } else if (button == GDK_BUTTON_SECONDARY) {
-        bool is_busy;
-
+        break;
+    case GDK_BUTTON_SECONDARY:
         if (n_press != 1) {
             return;
         }
@@ -991,6 +992,7 @@ on_tree_button_press(GtkGestureClick *gesture,
             g_object_unref(menu);
         }
         gtk_tree_path_free(tree_path);
+        break;
     }
 
     return;
