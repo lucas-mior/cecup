@@ -94,6 +94,8 @@
 #define TESTING_util 0
 #endif
 
+static void __attribute__((format(printf, 3, 4))) 
+    error_impl(char *file, int32 line, char *format, ...);
 #define error(...) error_impl(__FILE__, __LINE__, __VA_ARGS__)
 
 #if !TESTING_util
@@ -102,9 +104,6 @@ static char *program;
 static char *program = __FILE__;
 #endif
 static int32 program_len __attribute__((unused));
-
-static void __attribute__((format(printf, 3, 4))) 
-    error_impl(char *file, int32 line, char *format, ...);
 
 #define SIZEOF(X) ((int64)sizeof(X))
 
