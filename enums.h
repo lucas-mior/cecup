@@ -105,8 +105,8 @@
                                  *buffer_ptr = '\0';                           \
                                  length = buffer_ptr - buffer;                 \
                                  buffer_copy = xmalloc(length);                \
-                                 memcpy64(copy, buffer, length);               \
-                                 return copy;                                  \
+                                 memcpy64(buffer_copy, buffer, length);        \
+                                 return buffer_copy;                           \
                                }
 #endif
 #endif
