@@ -88,7 +88,7 @@
                                  char *buffer_end = buffer + sizeof(buffer) - 1; \
                                  bool is_first_flag = true;                    \
                                  int64 length;
-                                 char *copy;
+                                 char *buffer_copy;;
 
   #define XENUM_1(e)             if (v & CAT(ENUM_PREFIX_, e)) {               \
                                    if (is_first_flag == false) {               \
@@ -104,8 +104,8 @@
                                  }                                             \
                                  *buffer_ptr = '\0';                           \
                                  length = buffer_ptr - buffer;                 \
-                                 copy = xmalloc(length);                       \
-                                 memcpy64(copy, buffer, (buffer_ptr - buffer + 1)); \
+                                 buffer_copy = xmalloc(length);                \
+                                 memcpy64(copy, buffer, length);               \
                                  return copy;                                  \
                                }
 #endif
