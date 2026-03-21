@@ -1,7 +1,6 @@
 #undef XENUM
 #undef XENUM_1
 #undef XENUM_2
-#undef XENUM_3
 #undef BEGIN_ENUM
 #undef END_ENUM
 
