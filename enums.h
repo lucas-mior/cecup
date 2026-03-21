@@ -49,7 +49,7 @@
 #if ENUM_GENERATE_STRINGS == 1234
   #define BEGIN_ENUM(EnumName) enum EnumName {
 
-#if !defined(ENUM_IS_FLAGS)
+#if !defined(ENUM_IS_FLAGS) // don't allow automatic value in the flags case
   #define XENUM_1(e)             CAT(ENUM_PREFIX_, e),
 #endif
   #define XENUM_2(e, v)          CAT(ENUM_PREFIX_, e) = v, 
@@ -99,7 +99,7 @@
                                    return "NONE";                              \
                                  }                                             \
                                  *buffer_ptr = '\0';                           \
-                                 final_length = buffer_ptr - buffer;           \
+                                 final_length = buffer_ptr - buffer + 1;       \
                                  buffer_copy = xmalloc(final_length);          \
                                  memcpy64(buffer_copy, buffer, final_length);  \
                                  return buffer_copy;                           \
