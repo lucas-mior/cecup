@@ -49,9 +49,9 @@
 #define SELECT_ON_NUM_ARGS(macro, ...) \
     CAT(macro, NUM_ARGS(__VA_ARGS__))(__VA_ARGS__)
 
-#if !defined(Q)
-#define Q(x) #x
-#define QUOTE(x) Q(x)
+#if !defined(QUOTE)
+#define QUOTE_(x) #x
+#define QUOTE(x) QUOTE_(x)
 #endif
 
 #define XENUM(...) SELECT_ON_NUM_ARGS(XENUM_, __VA_ARGS__)
