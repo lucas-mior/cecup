@@ -61,7 +61,6 @@
 
   #define XENUM_1(e)             CAT(ENUM_PREFIX_, e),
   #define XENUM_2(e, v)          CAT(ENUM_PREFIX_, e) = v, 
-  #define XENUM_3(e, v, s)       CAT(ENUM_PREFIX_, e) = v,
 
   #define END_ENUM(EnumName)     CAT(ENUM_PREFIX_, LAST) \
                                }; \
@@ -75,8 +74,6 @@
                                      return QUOTE(ENUM_PREFIX_) #e;
   #define XENUM_2(e, v)            case CAT(ENUM_PREFIX_, e):                  \
                                      return QUOTE(ENUM_PREFIX_) #e;
-  #define XENUM_3(e, v, s)         case CAT(ENUM_PREFIX_, e):                  \
-                                     return s;
 
   #define END_ENUM(EnumName)       case CAT(ENUM_PREFIX_, LAST):               \
                                      return QUOTE(ENUM_PREFIX_) "LAST";        \
@@ -101,13 +98,6 @@
                                    is_first_flag = false; \
                                  }
   #define XENUM_2(e, v)          XENUM_1(e)
-  #define XENUM_3(e, v, s)       if (v & CAT(ENUM_PREFIX_, e)) { \
-                                   if (is_first_flag == false) { \
-                                     *buffer_ptr++ = '|'; \
-                                   } \
-                                   MEMCAT(buffer_ptr, buffer_end, s); \
-                                   is_first_flag = false; \
-                                 }
 
   #define END_ENUM(EnumName)     if (buffer_ptr == buffer) { \
                                    return "NONE"; \
