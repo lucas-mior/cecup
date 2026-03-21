@@ -1940,12 +1940,12 @@ DAYS_ENUM_LIST
     XENUM(SIXTY4,  1 << 6)             \
   END_ENUM(PowerOfTwo)
 
-#define ENUM_PREFIX_ POWER_OF_TWO_
+#define ENUM_PREFIX_ POWER_OF2_
 #include "enums.h"
 POWERS_OF_TWO_LIST
 #undef ENUM_PREFIX_
 
-#define ENUM_PREFIX_ POWER_OF_TWO_
+#define ENUM_PREFIX_ POWER_OF2_
 #define ENUM_IS_FLAGS
 #include "enums.h"
 POWERS_OF_TWO_LIST
@@ -1994,8 +1994,8 @@ main(int argc, char **argv) {
 
     printf("\n");
 
-    for (int32 i = 0; i < POWER_OF_TWO_LAST; i += 1) {
-        char *value_name = POWER_OF_TWO_str(i);
+    for (int32 i = 0; i < POWER_OF2_LAST; i += 1) {
+        char *value_name = POWER_OF2_str(i);
         if (!BEGINS_WITH(value_name, "Unknown")) {
             printf("enum[%d] = %s\n", i, value_name);
         }
