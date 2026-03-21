@@ -83,30 +83,30 @@
                                }
 #else
   #define BEGIN_ENUM(EnumName) char *CAT(ENUM_PREFIX_, str)(enum EnumName v) { \
-                                 char buffer[4096];                          \
-                                 char *buffer_ptr = buffer;                  \
+                                 char buffer[4096];                            \
+                                 char *buffer_ptr = buffer;                    \
                                  char *buffer_end = buffer + sizeof(buffer) - 1; \
-                                 bool is_first_flag = true;                  \
+                                 bool is_first_flag = true;                    \
                                  int64 length;
                                  char *copy;
 
-  #define XENUM_1(e)             if (v & CAT(ENUM_PREFIX_, e)) {             \
-                                   if (is_first_flag == false) {             \
-                                     *buffer_ptr++ = '|';                    \
-                                   }                                         \
+  #define XENUM_1(e)             if (v & CAT(ENUM_PREFIX_, e)) {               \
+                                   if (is_first_flag == false) {               \
+                                     *buffer_ptr++ = '|';                      \
+                                   }                                           \
                                    MEMCAT(buffer_ptr, buffer_end, QUOTE(ENUM_PREFIX_) #e); \
-                                   is_first_flag = false; \
+                                   is_first_flag = false;                      \
                                  }
   #define XENUM_2(e, v)          XENUM_1(e)
 
-  #define END_ENUM(EnumName)     if (buffer_ptr == buffer) { \
-                                   return "NONE"; \
-                                 } \
-                                 *buffer_ptr = '\0'; \
-                                 length = buffer_ptr - buffer; \
-                                 copy = xmalloc(length); \
+  #define END_ENUM(EnumName)     if (buffer_ptr == buffer) {                   \
+                                   return "NONE";                              \
+                                 }                                             \
+                                 *buffer_ptr = '\0';                           \
+                                 length = buffer_ptr - buffer;                 \
+                                 copy = xmalloc(length);                       \
                                  memcpy64(copy, buffer, (buffer_ptr - buffer + 1)); \
-                                 return copy; \
+                                 return copy;                                  \
                                }
 #endif
 #endif
