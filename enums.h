@@ -53,7 +53,9 @@
 #if ENUM_GENERATE_STRINGS == 1234
   #define BEGIN_ENUM(EnumName) enum EnumName {
 
+#if !defined(ENUM_IS_FLAGS)
   #define XENUM_1(e)             CAT(ENUM_PREFIX_, e),
+#endif
   #define XENUM_2(e, v)          CAT(ENUM_PREFIX_, e) = v, 
 
   #define END_ENUM(EnumName)     CAT(ENUM_PREFIX_, LAST) \
@@ -76,7 +78,7 @@
                                  }                                             \
                                }
 #else
-  #define BEGIN_ENUM(EnumName) char *CAT(ENUM_PREFIX_, str)(enum EnumName v) { \
+  #define BEGIN_ENUM(EnumName) char *CAT(ENUM_PREFIX_, str)(enum EnumName x) { \
                                  char buffer[4096];                            \
                                  char *buffer_ptr = buffer;                    \
                                  char *buffer_end = buffer + sizeof(buffer);   \
@@ -84,7 +86,7 @@
                                  int64 final_length;                           \
                                  char *buffer_copy;
 
-  #define XENUM_1(e)             if (v & CAT(ENUM_PREFIX_, e)) {               \
+  #define XENUM_2(e, v)          if (x & CAT(ENUM_PREFIX_, e)) {               \
                                    char *flag = QUOTE(ENUM_PREFIX_) #e;        \
                                    int32 len = strlen32(flag);                 \
                                    if (is_first_flag == false) {               \
@@ -96,7 +98,6 @@
                                    }                                           \
                                    is_first_flag = false;                      \
                                  }
-  #define XENUM_2(e, v)          XENUM_1(e)
 
   #define END_ENUM(EnumName)     if (buffer_ptr == buffer) {                   \
                                    return "NONE";                              \
