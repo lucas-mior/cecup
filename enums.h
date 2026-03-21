@@ -107,14 +107,7 @@
                                      is_first_flag = 0; \
                                    }
 
-  #define END_ENUM(EnumName)       if ((v & CAT(ENUM_PREFIX_, LAST))) { \
-                                     if (is_first_flag == 0) { \
-                                       MEMCAT(buffer_ptr, buffer_limit, "|"); \
-                                     } \
-                                     MEMCAT(buffer_ptr, buffer_limit, QUOTE(ENUM_PREFIX_) "LAST"); \
-                                     is_first_flag = 0; \
-                                   } \
-                                   if (buffer_ptr == string_buffer) { \
+  #define END_ENUM(EnumName)       if (buffer_ptr == string_buffer) { \
                                      return "NONE"; \
                                    } \
                                    *buffer_ptr = '\0'; \
