@@ -82,14 +82,6 @@
 #include "generic.c"
 #include "minmax.c"
 
-#if !defined(DEBUGGING)
-#define DEBUGGING 0
-#endif
-
-#if !defined(ERROR_NOTIFY)
-#define ERROR_NOTIFY 0
-#endif
-
 #if defined(__has_include) && __has_include(<valgrind/valgrind.h>)
 #include <valgrind/valgrind.h>
 #else
@@ -151,6 +143,10 @@ _Generic((ARRAY), \
 
 #ifndef RELEASING
 #define RELEASING 0
+#endif
+
+#if !defined(ERROR_NOTIFY)
+#define ERROR_NOTIFY 0
 #endif
 
 #include "assert.c"
