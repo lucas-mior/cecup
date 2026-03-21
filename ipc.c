@@ -41,7 +41,7 @@ ipc_send_log_internal(char *file, int line,
     va_start(va_args, format);
     n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
 
-    if ((n <= 0) || (n >= SIZEOF(buffer))) {
+    if ((n < 0) || (n >= SIZEOF(buffer))) {
         error("%s:%d: Error in vsnprintf(%s) (n = %lld)\n",
               file, line, format, (llong)n);
         fatal(EXIT_FAILURE);

@@ -206,7 +206,6 @@ _Generic((SIZE), \
 static char *notifiers[2] = {"dunstify", "notify-send"};
 static int64 util_page_size = 0;
 
-static void error_impl(char *file, int32 line, char *, ...);
 static void error_async_safe(char *message);
 static void fatal(int) __attribute__((noreturn));
 static void util_segv_handler(int32) __attribute__((noreturn));
