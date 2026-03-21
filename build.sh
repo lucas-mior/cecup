@@ -6,7 +6,8 @@ set -e
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
 
-program=$(basename "$(readlink -f "$(dirname "$0")")")
+dir=$(dirname "$0")
+program=$(basename "$(readlink -f "$dir")")
 script=$(basename "$0")
 
 LANGS="pt_BR"
