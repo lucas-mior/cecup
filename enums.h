@@ -1,11 +1,5 @@
-#define MEMCAT(dest, end, src) \
+#define APPEND_FLAG(dest, end, src) \
     do { \
-        char *source_string = (src); \
-        uint32 source_length = strlen32(source_string); \
-        if ((dest) + source_length < (end - 1)) { \
-            memcpy64((dest), source_string, source_length); \
-            (dest) += source_length; \
-        } \
     } while (0)
 
 #undef XENUM
@@ -85,16 +79,21 @@
   #define BEGIN_ENUM(EnumName) char *CAT(ENUM_PREFIX_, str)(enum EnumName v) { \
                                  char buffer[4096];                            \
                                  char *buffer_ptr = buffer;                    \
-                                 char *buffer_end = buffer + sizeof(buffer) - 1; \
+                                 char *buffer_end = buffer + sizeof(buffer);   \
                                  bool is_first_flag = true;                    \
-                                 int64 length;
-                                 char *buffer_copy;;
+                                 int64 final_length;                           \
+                                 char *buffer_copy;
 
   #define XENUM_1(e)             if (v & CAT(ENUM_PREFIX_, e)) {               \
+                                   char *flag = QUOTE(ENUM_PREFIX_) #e;        \
+                                   int32 length = strlen32(flag);              \
                                    if (is_first_flag == false) {               \
                                      *buffer_ptr++ = '|';                      \
                                    }                                           \
-                                   MEMCAT(buffer_ptr, buffer_end, QUOTE(ENUM_PREFIX_) #e); \
+                                   if (buffer_ptr + length < (buffer_end - 1)) { \
+                                       memcpy64(buffer_ptr, flag, length);     \
+                                       buffer_ptr += length;                   \
+                                   }                                           \
                                    is_first_flag = false;                      \
                                  }
   #define XENUM_2(e, v)          XENUM_1(e)
@@ -103,9 +102,9 @@
                                    return "NONE";                              \
                                  }                                             \
                                  *buffer_ptr = '\0';                           \
-                                 length = buffer_ptr - buffer;                 \
-                                 buffer_copy = xmalloc(length);                \
-                                 memcpy64(buffer_copy, buffer, length);        \
+                                 final_length = buffer_ptr - buffer;           \
+                                 buffer_copy = xmalloc(final_length);          \
+                                 memcpy64(buffer_copy, buffer, final_length);  \
                                  return buffer_copy;                           \
                                }
 #endif
