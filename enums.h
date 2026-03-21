@@ -86,13 +86,13 @@
 
   #define XENUM_1(e)             if (v & CAT(ENUM_PREFIX_, e)) {               \
                                    char *flag = QUOTE(ENUM_PREFIX_) #e;        \
-                                   int32 length = strlen32(flag);              \
+                                   int32 len = strlen32(flag);                 \
                                    if (is_first_flag == false) {               \
                                      *buffer_ptr++ = '|';                      \
                                    }                                           \
-                                   if (buffer_ptr + length < (buffer_end - 1)) { \
-                                       memcpy64(buffer_ptr, flag, length);     \
-                                       buffer_ptr += length;                   \
+                                   if (buffer_ptr + len < (buffer_end - 1)) {  \
+                                       memcpy64(buffer_ptr, flag, len);        \
+                                       buffer_ptr += len;                      \
                                    }                                           \
                                    is_first_flag = false;                      \
                                  }
