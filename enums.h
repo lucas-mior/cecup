@@ -86,9 +86,9 @@
                                }
 #else
   #define BEGIN_ENUM(EnumName) char *CAT(ENUM_PREFIX_, str)(enum EnumName v) { \
-                                   static char string_buffer[1024]; \
-                                   char *buffer_ptr = string_buffer; \
-                                   char *buffer_limit = string_buffer + sizeof(string_buffer) - 1; \
+                                   static char buffer[1024]; \
+                                   char *buffer_ptr = buffer; \
+                                   char *buffer_limit = buffer + sizeof(buffer) - 1; \
                                    int32 is_first_flag = 1;
 
   #define XENUM_1(e)               if ((v & CAT(ENUM_PREFIX_, e))) { \
@@ -107,11 +107,11 @@
                                      is_first_flag = 0; \
                                    }
 
-  #define END_ENUM(EnumName)       if (buffer_ptr == string_buffer) { \
+  #define END_ENUM(EnumName)       if (buffer_ptr == buffer) { \
                                      return "NONE"; \
                                    } \
                                    *buffer_ptr = '\0'; \
-                                   return string_buffer; \
+                                   return buffer; \
                                }
 #endif
 #endif
