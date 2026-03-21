@@ -126,7 +126,7 @@ static void __attribute__((format(printf, 3, 4)))
 #define LENGTH(x) (int64)((sizeof(x) / sizeof(*x)))
 #endif
 #if !defined(SNPRINTF)
-#define SNPRINTF(BUFFER, FORMAT, ...)                                          \
+#define SNPRINTF(BUFFER, FORMAT, ...) \
     snprintf2(BUFFER, sizeof(BUFFER), FORMAT, __VA_ARGS__)
 #endif
 #if !defined(STRFTIME)
