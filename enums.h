@@ -1,3 +1,13 @@
+#define MEMCAT(dest, end, src) \
+    do { \
+        char *source_string = (src); \
+        uint32 source_length = strlen32(source_string); \
+        if ((dest) + source_length < (end)) { \
+            memcpy64((dest), source_string, source_length); \
+            (dest) += source_length; \
+        } \
+    } while (0)
+
 #undef XENUM
 #undef XENUM_1
 #undef XENUM_2
@@ -53,23 +63,62 @@
   #define XENUM_2(e, v)          CAT(ENUM_PREFIX_, e) = v, 
   #define XENUM_3(e, v, s)       CAT(ENUM_PREFIX_, e) = v,
 
-  #define END_ENUM(EnumName)     CAT(ENUM_PREFIX_, LAST)                       \
-                               };                                              \
+  #define END_ENUM(EnumName)     CAT(ENUM_PREFIX_, LAST) \
+                               }; \
                                char *CAT(ENUM_PREFIX_, str)(enum EnumName v);
 #else
+#if !defined(ENUM_IS_FLAGS)
   #define BEGIN_ENUM(EnumName) char *CAT(ENUM_PREFIX_, str)(enum EnumName v) { \
-                                   switch (v) {
+                                 switch (v) {
 
-  #define XENUM_1(e)               case CAT(ENUM_PREFIX_, e):             \
-                                       return QUOTE(ENUM_PREFIX_) #e;
-  #define XENUM_2(e, v)            case CAT(ENUM_PREFIX_, e):             \
-                                       return QUOTE(ENUM_PREFIX_) #e;
-  #define XENUM_3(e, v, s)         case CAT(ENUM_PREFIX_, e):             \
-                                       return s;
-  #define END_ENUM(EnumName)       case CAT(ENUM_PREFIX_, LAST):          \
-                                       return QUOTE(ENUM_PREFIX_) "LAST"; \
-                                   default:                               \
-                                       return "Unknown value"; \
+  #define XENUM_1(e)                 case CAT(ENUM_PREFIX_, e):                \
+                                         return QUOTE(ENUM_PREFIX_) #e;
+  #define XENUM_2(e, v)              case CAT(ENUM_PREFIX_, e):                \
+                                         return QUOTE(ENUM_PREFIX_) #e;
+  #define XENUM_3(e, v, s)           case CAT(ENUM_PREFIX_, e):                \
+                                         return s;
+
+  #define END_ENUM(EnumName)         case CAT(ENUM_PREFIX_, LAST): \
+                                         return QUOTE(ENUM_PREFIX_) "LAST"; \
+                                     default: \
+                                         return "Unknown value"; \
                                    } \
                                }
+#else
+  #define BEGIN_ENUM(EnumName) char *CAT(ENUM_PREFIX_, str)(enum EnumName v) { \
+                                   static char string_buffer[1024]; \
+                                   char *buffer_ptr = string_buffer; \
+                                   char *buffer_limit = string_buffer + sizeof(string_buffer) - 1; \
+                                   int32 is_first_flag = 1;
+
+  #define XENUM_1(e)               if ((v & CAT(ENUM_PREFIX_, e))) { \
+                                     if (is_first_flag == 0) { \
+                                       MEMCAT(buffer_ptr, buffer_limit, "|"); \
+                                     } \
+                                     MEMCAT(buffer_ptr, buffer_limit, QUOTE(ENUM_PREFIX_) #e); \
+                                     is_first_flag = 0; \
+                                   }
+  #define XENUM_2(e, v)            XENUM_1(e)
+  #define XENUM_3(e, v, s)         if ((v & CAT(ENUM_PREFIX_, e))) { \
+                                     if (is_first_flag == 0) { \
+                                       MEMCAT(buffer_ptr, buffer_limit, "|"); \
+                                     } \
+                                     MEMCAT(buffer_ptr, buffer_limit, s); \
+                                     is_first_flag = 0; \
+                                   }
+
+  #define END_ENUM(EnumName)       if ((v & CAT(ENUM_PREFIX_, LAST))) { \
+                                     if (is_first_flag == 0) { \
+                                       MEMCAT(buffer_ptr, buffer_limit, "|"); \
+                                     } \
+                                     MEMCAT(buffer_ptr, buffer_limit, QUOTE(ENUM_PREFIX_) "LAST"); \
+                                     is_first_flag = 0; \
+                                   } \
+                                   if (buffer_ptr == string_buffer) { \
+                                     return "NONE"; \
+                                   } \
+                                   *buffer_ptr = '\0'; \
+                                   return string_buffer; \
+                               }
+#endif
 #endif
