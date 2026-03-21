@@ -1,7 +1,3 @@
-#define APPEND_FLAG(dest, end, src) \
-    do { \
-    } while (0)
-
 #undef XENUM
 #undef XENUM_1
 #undef XENUM_2
