@@ -1996,9 +1996,7 @@ main(int argc, char **argv) {
 
     for (enum PowerOfTwo x = 0; x < POWER_OF2_LAST; x += 1) {
         char *value_name = POWER_OF2_str(x);
-        if (!BEGINS_WITH(value_name, "Unknown")) {
-            printf("enum[%d] = %s\n", x, value_name);
-        }
+        printf("enum[%d] = %s\n", x, value_name);
     }
 
     if (OS_LINUX && !DEBUGGING) {
