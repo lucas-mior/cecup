@@ -99,7 +99,7 @@
                                    return "NONE";                              \
                                  }                                             \
                                  *buffer_ptr = '\0';                           \
-                                 final_length = buffer_ptr - buffer + 1;       \
+                                 final_length = buffer_ptr - buffer;           \
                                  buffer_copy = xmalloc(final_length);          \
                                  memcpy64(buffer_copy, buffer, final_length);  \
                                  return buffer_copy;                           \
