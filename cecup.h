@@ -38,50 +38,32 @@
 #define MAX_PATH_LENGTH 4096
 #define MAX_NAME_LENGTH 256
 
-#define ACTION_LIST         \
-  BEGIN_ENUM(CecupAction)   \
-    XENUM(NEW)              \
-    XENUM(UPDATE)           \
-    XENUM(HARDLINK)         \
-    XENUM(SYMLINK)          \
-    XENUM(EQUAL)            \
-    XENUM(DELETED)          \
-    XENUM(DELETE)           \
-    XENUM(IGNORE)           \
-  END_ENUM(CecupAction)
-
+#define ENUM_BITFLAGS 0
+#define ENUM_NAME CecupAction
 #define ENUM_PREFIX_ ACTION_
-#include "enums.h"
-ACTION_LIST
-#undef ENUM_PREFIX_
+#define ENUM_FIELDS     \
+    X(NEW)              \
+    X(UPDATE)           \
+    X(HARDLINK)         \
+    X(SYMLINK)          \
+    X(EQUAL)            \
+    X(DELETED)          \
+    X(DELETE)           \
+    X(IGNORE)
+#include "xenums.c"
 
-#define ENUM_PREFIX_ ACTION_
-#include "enums.h"
-ACTION_LIST
-#undef ENUM_PREFIX_
-#undef ACTION_LIST
-
-#define REASON_LIST         \
-  BEGIN_ENUM(CecupReason)   \
-    XENUM(NEW)              \
-    XENUM(UPDATE)           \
-    XENUM(HARDLINK)         \
-    XENUM(SYMLINK)          \
-    XENUM(EQUAL)            \
-    XENUM(IGNORED)          \
-    XENUM(MISSING)          \
-  END_ENUM(CecupReason)
-
+#define ENUM_BITFLAGS 0
+#define ENUM_NAME CecupReason
 #define ENUM_PREFIX_ REASON_
-#include "enums.h"
-REASON_LIST
-#undef ENUM_PREFIX_
-
-#define ENUM_PREFIX_ REASON_
-#include "enums.h"
-REASON_LIST
-#undef ENUM_PREFIX_
-#undef REASON_LIST
+#define ENUM_FIELDS     \
+    X(NEW)              \
+    X(UPDATE)           \
+    X(HARDLINK)         \
+    X(SYMLINK)          \
+    X(EQUAL)            \
+    X(IGNORED)          \
+    X(MISSING)
+#include "xenums.c"
 
 enum IgnoreType {
     IGNORE_TYPE_EXT,
