@@ -31,9 +31,7 @@
 
 static gboolean
 unparent_popover_idle(void *data) {
-    GtkWidget *widget;
-
-    widget = data;
+    GtkWidget *widget = data;
     gtk_widget_unparent(widget);
     return G_SOURCE_REMOVE;
 }
@@ -47,9 +45,8 @@ on_popover_closed(GtkWidget *popover, void *data) {
 
 static void
 execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
-    GtkTreeSelection *selection;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
+    GtkSelectionModel *selection;
+    uint32 pos;
     CecupRow *row;
     Message *message;
     char *filepath;
@@ -61,7 +58,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
         return;
     }
 
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+    selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
     is_busy = gtk_widget_get_sensitive(cecup.stop_button);
 
@@ -74,8 +71,10 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
         }
     }
 
-    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        gtk_tree_model_get(model, &iter, COL_ROW_PTR, &row, -1);
+    pos = gtk_single_selection_get_selected(GTK_SINGLE_SELECTION(selection));
+
+    if (pos != GTK_INVALID_LIST_POSITION) {
+        row = cecup.rows_visible[pos];
 
         if (side == L) {
             filepath = row->src_path;
@@ -117,7 +116,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
 
 static void
 on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
-    char *which;
+    char *which = data;
     GtkTextIter start;
     GtkTextIter end;
     char *text;
@@ -125,7 +124,6 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     GdkClipboard *clipboard;
 
     (void)action;
-    which = data;
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
 
     HERE;
@@ -308,9 +306,9 @@ on_delete_excluded_toggled(GtkCheckButton *b, void *data) {
         g_signal_handlers_block_by_func(cecup.delete_after,
                                         on_delete_after_toggled, NULL);
         gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after),
-                                     TRUE);
+                                    TRUE);
         g_signal_handlers_unblock_by_func(cecup.delete_after,
-                                           on_delete_after_toggled, NULL);
+                                          on_delete_after_toggled, NULL);
     }
     save_config();
     return;
@@ -451,107 +449,146 @@ on_filter_toggled(GtkToggleButton *b, void *data) {
 }
 
 static void
-on_sort_changed(GtkTreeSortable *sortable, void *data) {
-    int32 id;
+on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
+    GtkColumnView *view;
+    GtkSorter *view_sorter;
+    GtkColumnViewColumn *col;
     GtkSortType order;
 
-    (void)data;
-    if (gtk_tree_sortable_get_sort_column_id(sortable, &id, &order)) {
-        cecup.sort_col = (enum CecupColumn)id;
-        cecup.sort_order = order;
-        refresh_ui_list(REFRESH_FILTER_CHANGED, NULL);
+    (void)sorter;
+    (void)change;
+
+    view = GTK_COLUMN_VIEW(data);
+    view_sorter = gtk_column_view_get_sorter(view);
+
+    if (GTK_IS_COLUMN_VIEW_SORTER(view_sorter)) {
+        col = gtk_column_view_sorter_get_primary_sort_column(GTK_COLUMN_VIEW_SORTER(view_sorter));
+        order = gtk_column_view_sorter_get_primary_sort_order(GTK_COLUMN_VIEW_SORTER(view_sorter));
+
+        if (col) {
+            cecup.sort_col = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(col), "col_id"));
+            cecup.sort_order = order;
+            refresh_ui_list(REFRESH_FILTER_CHANGED, NULL);
+        }
     }
+
+    return;
+}
+
+static void on_cell_toggled(GtkCheckButton *renderer, void *user_data);
+
+static void
+update_visible_checkboxes(GtkWidget *widget) {
+    GtkWidget *child;
+    CecupRow *row;
+
+    if (widget == NULL) {
+        return;
+    }
+
+    if (GTK_IS_CHECK_BUTTON(widget)) {
+        if ((row = g_object_get_data(G_OBJECT(widget), "cecup-row"))) {
+            g_signal_handlers_block_by_func(widget, on_cell_toggled, NULL);
+            gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), row->selected);
+            g_signal_handlers_unblock_by_func(widget, on_cell_toggled, NULL);
+        }
+    }
+
+    child = gtk_widget_get_first_child(widget);
+
+    while (child != NULL) {
+        update_visible_checkboxes(child);
+        child = gtk_widget_get_next_sibling(child);
+    }
+
     return;
 }
 
 static void
-on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
-                void *user_data) {
-    (void)renderer;
+on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
+    CecupRow *parent_row;
+    char *parent_path;
+    int32 parent_path_len;
+    bool is_root;
+    bool is_active;
+
     (void)user_data;
 
-    do {
-        GtkTreePath *tree_path;
-        GtkTreeIter iter;
-        CecupRow *parent_row;
-        char *parent_path;
-        int32 parent_path_len;
-        bool is_root;
+    HERE;
+    if ((parent_row = g_object_get_data(G_OBJECT(renderer), "cecup-row")) == NULL) {
+        HERE;
+        return;
+    }
 
-        if ((tree_path = gtk_tree_path_new_from_string(path_string)) == NULL) {
-            break;
-        }
-        if (!gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store), &iter,
-                                     tree_path)) {
-            gtk_tree_path_free(tree_path);
-            break;
-        }
+    is_active = gtk_check_button_get_active(renderer);
 
-        gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR,
-                           &parent_row, -1);
+    if (parent_row->selected == is_active) {
+        return;
+    }
 
-        parent_row->selected = !parent_row->selected;
+    parent_row->selected = is_active;
 
-        if (parent_row->src_path) {
-            parent_path = parent_row->src_path;
+    if (parent_row->src_path) {
+        parent_path = parent_row->src_path;
+    } else {
+        parent_path = parent_row->dst_path;
+    }
+
+    if (parent_path == NULL) {
+        return;
+    }
+
+    parent_path_len = strlen32(parent_path);
+    if (strcmp(parent_path, "./") == 0) {
+        is_root = true;
+    } else {
+        is_root = false;
+    }
+
+    for (int32 i = 0; i < cecup.rows_len; i += 1) {
+        CecupRow *row;
+        char *path;
+        int32 path_len;
+
+        row = cecup.rows[i];
+
+        if (row->src_path) {
+            path = row->src_path;
         } else {
-            parent_path = parent_row->dst_path;
+            path = row->dst_path;
         }
+        path_len = row->path_len;
 
-        if (parent_path == NULL) {
-            gtk_tree_path_free(tree_path);
-            break;
-        }
-
-        parent_path_len = strlen32(parent_path);
-        if (strcmp(parent_path, "./") == 0) {
-            is_root = true;
-        } else {
-            is_root = false;
-        }
-
-        for (int32 i = 0; i < cecup.rows_len; i += 1) {
-            CecupRow *row;
-            char *path;
-            int32 path_len;
-
-            row = cecup.rows[i];
-
-            if (row->src_path) {
-                path = row->src_path;
-            } else {
-                path = row->dst_path;
-            }
-            path_len = row->path_len;
-
-            if (parent_row->selected) {
-                if (is_root) {
-                    row->selected = true;
-                } else if ((parent_path_len > 0)
-                            && (parent_path[parent_path_len - 1] == '/')) {
-                    if ((path_len >= parent_path_len)
-                        && (strncmp32(path, parent_path, parent_path_len)
-                            == 0)) {
-                        row->selected = true;
-                    }
-                }
-            } else {
-                if (is_root) {
-                    row->selected = false;
-                } else {
-                    if ((parent_path_len > 0)
-                        && (parent_path[parent_path_len - 1] == '/')) {
-                        if ((path_len >= parent_path_len)
-                            && (strncmp32(path, parent_path, parent_path_len)
-                                == 0)) {
-                            row->selected = false;
+        if (parent_row->selected) {
+            if (is_root) {
+                row->selected = true;
+            } else if (parent_path_len > 0) {
+                if (parent_path[parent_path_len - 1] == '/') {
+                    if (path_len >= parent_path_len) {
+                        if (strncmp32(path, parent_path, parent_path_len) == 0) {
+                            row->selected = true;
                         }
                     }
+                }
+            }
+        } else {
+            if (is_root) {
+                row->selected = false;
+            } else {
+                if (parent_path_len > 0) {
+                    if (parent_path[parent_path_len - 1] == '/') {
+                        if (path_len >= parent_path_len) {
+                            if (strncmp32(path, parent_path, parent_path_len) == 0) {
+                                row->selected = false;
+                            }
+                        }
+                    }
+                }
 
-                    if (strcmp(path, "./") == 0) {
-                        row->selected = false;
-                    } else if ((path_len < parent_path_len)
-                               && (path[path_len - 1] == '/')) {
+                if (strcmp(path, "./") == 0) {
+                    row->selected = false;
+                } else if (path_len < parent_path_len) {
+                    if (path[path_len - 1] == '/') {
                         if (strncmp32(parent_path, path, path_len) == 0) {
                             row->selected = false;
                         }
@@ -559,17 +596,19 @@ on_cell_toggled(GtkCellRendererToggle *renderer, char *path_string,
                 }
             }
         }
-        gtk_tree_path_free(tree_path);
-    } while (0);
+    }
 
     refresh_ui_list(REFRESH_FINAL, NULL);
+    HERE;
+    g_list_model_items_changed(cecup.store, 0, (uint32)cecup.rows_visible_len, (uint32)cecup.rows_visible_len);
+    update_visible_checkboxes(cecup.tree[L]);
+    update_visible_checkboxes(cecup.tree[R]);
     return;
 }
 
 static void
 on_ignore_response(GtkDialog *dialog, int32 response_id, void *data) {
-    GtkTextBuffer *buffer;
-    buffer = data;
+    GtkTextBuffer *buffer = data;
 
     if (response_id == GTK_RESPONSE_ACCEPT) {
         GtkTextIter start;
@@ -724,35 +763,35 @@ on_tree_key_press(GtkEventControllerKey *controller,
                   uint32 keyval, uint32 keycode, GdkModifierType state,
                   void *data) {
     GtkWidget *widget;
-    GtkTreeSelection *selection;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
+    GtkSelectionModel *selection;
+    uint32 pos;
     gboolean handled;
-    uint32 modifiers;
+    GdkModifierType modifiers;
 
     (void)data;
     (void)keycode;
     handled = FALSE;
     widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+    selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
 
-    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        return handled;
+    pos = gtk_single_selection_get_selected(GTK_SINGLE_SELECTION(selection));
+    if (pos == GTK_INVALID_LIST_POSITION) {
+        return FALSE;
     }
 
-    modifiers = state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_ALT_MASK);
+    modifiers = state & gtk_accelerator_get_default_mod_mask();
 
     for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {
         CecupMenuItem *menu_item = &tree_menu_items[i];
-        uint32 key;
-        uint32 target;
 
-        key = gdk_keyval_to_lower(keyval);
-        target = gdk_keyval_to_lower(menu_item->keyval);
+        if (menu_item->keyval == 0) {
+            continue;
+        }
 
-        if (menu_item->keyval
-            && (key == target)
-            && (modifiers == menu_item->mask)) {
+        uint32 target = gdk_keyval_to_lower(menu_item->keyval);
+        uint32 pressed = gdk_keyval_to_lower(keyval);
+
+        if ((pressed == target) && (modifiers == menu_item->mask)) {
             execute_menu_item(widget, menu_item);
             handled = TRUE;
             break;
@@ -764,8 +803,7 @@ on_tree_key_press(GtkEventControllerKey *controller,
 
 static void
 free_message(void *data) {
-    Message *message;
-    message = data;
+    Message *message = data;
 
     if (message->src_path) {
         XFREE(message->src_path);
@@ -775,228 +813,285 @@ free_message(void *data) {
 }
 
 static void
+on_path_click_pressed(GtkGestureClick *gesture, int32 n_press, double x, double y, void *data) {
+    GtkWidget *editable;
+    GtkWidget *tree;
+    uint32 button;
+
+    (void)x;
+    (void)y;
+
+    editable = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+    tree = data;
+    button = gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
+
+    if (button != GDK_BUTTON_PRIMARY) {
+        return;
+    }
+
+    gtk_widget_grab_focus(tree);
+
+    if (gtk_editable_label_get_editing(GTK_EDITABLE_LABEL(editable))) {
+        return;
+    }
+
+    if (n_press == 1) {
+        void *pos_ptr;
+
+        if ((pos_ptr = g_object_get_data(G_OBJECT(editable), "cecup-pos"))) {
+            GtkSelectionModel *model;
+            uint32 pos;
+
+            model = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
+            pos = GPOINTER_TO_UINT(pos_ptr);
+            gtk_selection_model_select_item(model, pos, TRUE);
+        }
+
+        gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+    } else if (n_press == 2) {
+        gtk_editable_label_start_editing(GTK_EDITABLE_LABEL(editable));
+        gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+    }
+
+    return;
+}
+
+static void
 on_tree_button_press(GtkGestureClick *gesture,
                      int32 n_press, double x, double y, void *data) {
     GtkWidget *widget;
     GtkWidget *parent;
-    GtkTreePath *tree_path = NULL;
     double translated_x;
     double translated_y;
     int32 side;
     int32 button;
-    int32 bin_x;
-    int32 bin_y;
-
-    GtkTreeSelection *selection;
-    GtkTreeIter iter;
-    GMenu *menu;
-    GtkWidget *popover;
-    CecupRow *row;
-    char *filepath;
-    char *other_path;
-    GdkRectangle rect;
-    bool is_busy;
-    Message *message;
 
     (void)data;
     widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+
+    gtk_widget_grab_focus(widget);
+
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
     button = (int32)gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
 
-    gtk_tree_view_convert_widget_to_bin_window_coords(GTK_TREE_VIEW(widget),
-                                                      (int32)x, (int32)y,
-                                                      &bin_x, &bin_y);
+    if (button == GDK_BUTTON_SECONDARY && n_press == 1) {
+        GtkWidget *child;
+        void *position_pointer;
+
+        if ((child = gtk_widget_pick(widget, x, y, GTK_PICK_DEFAULT))) {
+            while (child && (position_pointer = g_object_get_data(G_OBJECT(child), "cecup-pos")) == NULL) {
+                child = gtk_widget_get_parent(child);
+            }
+
+            if (child) {
+                uint32 position = GPOINTER_TO_UINT(position_pointer);
+                gtk_selection_model_select_item(gtk_column_view_get_model(GTK_COLUMN_VIEW(widget)), position, TRUE);
+            }
+        }
+    }
 
     switch (button) {
     case GDK_BUTTON_PRIMARY:
         if (n_press == 2) {
-            if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
-                                              bin_x, bin_y,
-                                              &tree_path, NULL, NULL, NULL)) {
-                execute_menu_item(widget, &tree_menu_items[0]);
+            GtkWidget *child;
+            void *col_pointer = NULL;
+
+            if ((child = gtk_widget_pick(widget, x, y, GTK_PICK_DEFAULT))) {
+                while (child && (col_pointer = g_object_get_data(G_OBJECT(child), "cecup-col")) == NULL) {
+                    child = gtk_widget_get_parent(child);
+                }
             }
+
+            if (col_pointer && GPOINTER_TO_INT(col_pointer) == 2) {
+                break;
+            }
+
+            execute_menu_item(widget, &tree_menu_items[0]);
         }
         break;
-    case GDK_BUTTON_SECONDARY:
-        if (n_press != 1) {
-            return;
-        }
+    case GDK_BUTTON_SECONDARY: {
+        if (n_press == 1) {
+            GtkSelectionModel *selection;
+            uint32 pos;
 
-        if (!gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), bin_x, bin_y,
-                                           &tree_path, NULL, NULL, NULL)) {
-            return;
-        }
+            selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
+            pos = gtk_single_selection_get_selected(GTK_SINGLE_SELECTION(selection));
 
-        gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+            if (pos != GTK_INVALID_LIST_POSITION) {
+                GMenu *menu;
+                GtkWidget *popover;
+                CecupRow *row;
+                char *filepath;
+                char *other_path;
+                GdkRectangle rect;
+                bool is_busy;
+                Message *message;
 
-        selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
-        gtk_tree_selection_select_path(selection, tree_path);
-        is_busy = gtk_widget_get_sensitive(cecup.stop_button);
+                gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+                is_busy = gtk_widget_get_sensitive(cecup.stop_button);
+                row = cecup.rows_visible[pos];
 
-        if (!gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store),
-                                     &iter, tree_path)) {
-            break;
-        }
+                if (side == L) {
+                    filepath = row->src_path;
+                    other_path = row->dst_path;
+                } else {
+                    filepath = row->dst_path;
+                    other_path = row->src_path;
+                }
 
-        gtk_tree_model_get(GTK_TREE_MODEL(cecup.store),
-                           &iter, COL_ROW_PTR, &row, -1);
-
-        if (side == L) {
-            filepath = row->src_path;
-            other_path = row->dst_path;
-        } else {
-            filepath = row->dst_path;
-            other_path = row->src_path;
-        }
-
-        message = xmalloc(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
-        if (filepath) {
-            message->path_len = row->path_len;
-            message->src_path = xmalloc(row->path_len + 1);
-            memcpy64(message->src_path, filepath, row->path_len + 1);
-        }
-        message->side = side;
-        if (side == L) {
-            message->action = row->src_action;
-        } else {
-            message->action = row->dst_action;
-        }
-
-        g_object_set_data(G_OBJECT(cecup.application),
-                          "active_tree", widget);
-        g_object_set_data_full(G_OBJECT(cecup.application),
-                               "active_message", message, free_message);
-
-        menu = g_menu_new();
-        for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {
-            CecupMenuItem *menu_item = &tree_menu_items[i];
-
-            if (menu_item->callback == NULL) {
-                GMenu *submenu;
-                GMenuItem *item;
-                char *name;
-                int32 path_len;
-                int32 length;
-
-                submenu = g_menu_new();
-
+                message = xmalloc(SIZEOF(*message));
+                memset64(message, 0, SIZEOF(*message));
                 if (filepath) {
-                    char *extension;
-                    char label[MAX_PATH_LENGTH];
-                    char directory[MAX_PATH_LENGTH];
-                    char pattern[MAX_PATH_LENGTH];
-                    char path_copy[MAX_PATH_LENGTH];
+                    message->path_len = row->path_len;
+                    message->src_path = xmalloc(row->path_len + 1);
+                    memcpy64(message->src_path, filepath, row->path_len + 1);
+                }
+                message->side = side;
+                if (side == L) {
+                    message->action = row->src_action;
+                } else {
+                    message->action = row->dst_action;
+                }
 
-                    path_len = row->path_len;
-                    memcpy64(path_copy, filepath, path_len + 1);
+                g_object_set_data(G_OBJECT(cecup.application),
+                                  "active_tree", widget);
+                g_object_set_data_full(G_OBJECT(cecup.application),
+                                       "active_message", message, free_message);
 
-                    name = basename2(path_copy, &path_len, &length);
-                    extension = memrchr64(name, '.', length);
-                    dirname2(directory, path_copy, &path_len);
+                menu = g_menu_new();
+                for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {
+                    CecupMenuItem *menu_item;
 
-                    if (extension && (extension != name)) {
-                        SNPRINTF(label, _("by extension (*%s)"), extension);
-                        SNPRINTF(pattern, "*%s", extension);
-                        item = g_menu_item_new(label, NULL);
-                        g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
-                        g_menu_append_item(submenu, item);
+                    menu_item = &tree_menu_items[i];
+
+                    if (menu_item->callback == NULL) {
+                        GMenu *submenu;
+                        GMenuItem *item;
+                        char *name;
+                        int32 path_len;
+                        int32 length;
+
+                        submenu = g_menu_new();
+
+                        if (filepath) {
+                            char *extension;
+                            char label[MAX_PATH_LENGTH];
+                            char directory[MAX_PATH_LENGTH];
+                            char pattern[MAX_PATH_LENGTH];
+                            char path_copy[MAX_PATH_LENGTH];
+
+                            path_len = row->path_len;
+                            memcpy64(path_copy, filepath, path_len + 1);
+
+                            name = basename2(path_copy, &path_len, &length);
+                            extension = memrchr64(name, '.', length);
+                            dirname2(directory, path_copy, &path_len);
+
+                            if (extension) {
+                                if (extension != name) {
+                                    SNPRINTF(label, _("by extension (*%s)"), extension);
+                                    SNPRINTF(pattern, "*%s", extension);
+                                    item = g_menu_item_new(label, NULL);
+                                    g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
+                                    g_menu_append_item(submenu, item);
+                                    g_object_unref(item);
+                                }
+                            }
+
+                            if (strcmp(directory, ".")) {
+                                SNPRINTF(label, _("📁 Dir (/%s/)"), directory);
+                                SNPRINTF(pattern, "/%s/", directory);
+                                item = g_menu_item_new(label, NULL);
+                                g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
+                                g_menu_append_item(submenu, item);
+                                g_object_unref(item);
+                            }
+
+                            SNPRINTF(label, _("This file only (/%s)"), filepath);
+                            SNPRINTF(pattern, "/%s", filepath);
+                            item = g_menu_item_new(label, NULL);
+                            g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
+                            g_menu_append_item(submenu, item);
+                            g_object_unref(item);
+
+                            SNPRINTF(label, _("This filename on any folder (*/%s)"), name);
+                            SNPRINTF(pattern, "*/%s", name);
+                            item = g_menu_item_new(label, NULL);
+                            g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
+                            g_menu_append_item(submenu, item);
+                            g_object_unref(item);
+                        }
+
+                        item = g_menu_item_new_submenu(_(menu_item->label), G_MENU_MODEL(submenu));
+                        if (is_busy) {
+                            g_menu_item_set_action_and_target(item, "none.none", NULL);
+                        } else if (filepath == NULL) {
+                            g_menu_item_set_action_and_target(item, "none.none", NULL);
+                        }
+                        g_menu_append_item(menu, item);
+                        g_object_unref(item);
+                        g_object_unref(submenu);
+                    } else {
+                        GMenuItem *item;
+                        bool disabled;
+
+                        disabled = false;
+                        item = g_menu_item_new(_(menu_item->label), NULL);
+                        g_menu_item_set_action_and_target(item, "app.tree_dispatch", "i", i);
+
+                        if (is_busy) {
+                            if ((menu_item->callback == on_menu_apply) ||
+                                (menu_item->callback == on_menu_rename) ||
+                                (menu_item->callback == on_menu_delete)) {
+                                disabled = true;
+                            }
+                        }
+
+                        if (filepath == NULL) {
+                            disabled = true;
+                        }
+
+                        if (menu_item->callback == on_menu_diff) {
+                            if (other_path == NULL) {
+                                disabled = true;
+                            }
+                        }
+
+                        if (disabled) {
+                            g_menu_item_set_action_and_target(item, "none.none", NULL);
+                        }
+
+                        g_menu_append_item(menu, item);
                         g_object_unref(item);
                     }
-
-                    if (strcmp(directory, ".")) {
-                        SNPRINTF(label, _("📁 Dir (/%s/)"), directory);
-                        SNPRINTF(pattern, "/%s/", directory);
-                        item = g_menu_item_new(label, NULL);
-                        g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
-                        g_menu_append_item(submenu, item);
-                        g_object_unref(item);
-                    }
-
-                    SNPRINTF(label, _("This file only (/%s)"), filepath);
-                    SNPRINTF(pattern, "/%s", filepath);
-                    item = g_menu_item_new(label, NULL);
-                    g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
-                    g_menu_append_item(submenu, item);
-                    g_object_unref(item);
-
-                    SNPRINTF(label, _("This filename on any folder (*/%s)"), name);
-                    SNPRINTF(pattern, "*/%s", name);
-                    item = g_menu_item_new(label, NULL);
-                    g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
-                    g_menu_append_item(submenu, item);
-                    g_object_unref(item);
                 }
 
-                item = g_menu_item_new_submenu(_(menu_item->label), G_MENU_MODEL(submenu));
-                if (is_busy || (filepath == NULL)) {
-                    g_menu_item_set_action_and_target(item, "none.none", NULL);
-                }
-                g_menu_append_item(menu, item);
-                g_object_unref(item);
-                g_object_unref(submenu);
-            } else {
-                GMenuItem *item;
-                bool disabled = false;
-                item = g_menu_item_new(_(menu_item->label), NULL);
-                g_menu_item_set_action_and_target(item, "app.tree_dispatch", "i", i);
+                parent = gtk_widget_get_parent(widget);
 
-                if (is_busy) {
-                    if ((menu_item->callback == on_menu_apply) ||
-                        (menu_item->callback == on_menu_rename) ||
-                        (menu_item->callback == on_menu_delete)) {
-                        disabled = true;
-                    }
+                if (gtk_widget_translate_coordinates(widget, parent,
+                                                     x, y,
+                                                     &translated_x, &translated_y)) {
+                    popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
+                    gtk_widget_set_parent(popover, parent);
+
+                    rect.x = (int32)translated_x;
+                    rect.y = (int32)translated_y;
+                    rect.width = 1;
+                    rect.height = 1;
+
+                    gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
+                    gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
+                    g_signal_connect(popover, "closed", G_CALLBACK(on_popover_closed), NULL);
+                    gtk_popover_popup(GTK_POPOVER(popover));
                 }
 
-                if (filepath == NULL) {
-                    disabled = true;
-                }
-
-                if (menu_item->callback == on_menu_diff) {
-                    if (other_path == NULL) {
-                        disabled = true;
-                    }
-                }
-
-                if (disabled) {
-                    g_menu_item_set_action_and_target(item, "none.none", NULL);
-                }
-
-                g_menu_append_item(menu, item);
-                g_object_unref(item);
+                g_object_unref(menu);
             }
         }
-
-        parent = gtk_widget_get_parent(widget);
-
-        if (!gtk_widget_translate_coordinates(widget, parent,
-                                              x, y,
-                                              &translated_x, &translated_y)) {
-            g_object_unref(menu);
-            break;
-        }
-
-        popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
-        gtk_widget_set_parent(popover, parent);
-
-        rect.x = (int32)translated_x;
-        rect.y = (int32)translated_y;
-        rect.width = 1;
-        rect.height = 1;
-
-        gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
-        gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
-        g_signal_connect(popover, "closed", G_CALLBACK(on_popover_closed), NULL);
-        gtk_popover_popup(GTK_POPOVER(popover));
-
-        g_object_unref(menu);
-        break;
-    default:
         break;
     }
-    if (tree_path) {
-        gtk_tree_path_free(tree_path);
+    default:
+        break;
     }
 
     return;
@@ -1005,47 +1100,40 @@ on_tree_button_press(GtkGestureClick *gesture,
 static gboolean
 on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                 void *d) {
-    GtkTreePath *tree_path;
-    GtkTreeViewColumn *col;
-    int32 bin_x;
-    int32 bin_y;
-    int32 index;
+    GtkWidget *child;
+    CecupRow *row;
+    int32 col_index;
     int32 side;
-    int32 view_column_index;
-    int32 number_of_columns;
     char *tip_text;
     char tip_buffer[MAX_PATH_LENGTH*2];
 
     (void)k;
     (void)d;
     tip_text = NULL;
+    row = NULL;
+    col_index = -1;
 
-    gtk_tree_view_convert_widget_to_bin_window_coords(GTK_TREE_VIEW(w),
-                                                      x, y, &bin_x, &bin_y);
-
-    if (!gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(w), bin_x, bin_y,
-                                       &tree_path, &col, NULL, NULL)) {
+    if ((child = gtk_widget_pick(w, (double)x, (double)y, GTK_PICK_DEFAULT)) == NULL) {
         return FALSE;
     }
 
-    index = gtk_tree_path_get_indices(tree_path)[0];
-    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
-    view_column_index = -1;
-
-    number_of_columns = (int32)gtk_tree_view_get_n_columns(GTK_TREE_VIEW(w));
-    for (int32 i = 0; i < number_of_columns; i += 1) {
-        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(w), i)) {
-            view_column_index = i;
+    while (child) {
+        if ((row = g_object_get_data(G_OBJECT(child), "cecup-row"))) {
+            col_index = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(child), "cecup-col"));
             break;
         }
+        child = gtk_widget_get_parent(child);
     }
 
-    if ((index >= 0) && (index < cecup.rows_visible_len)) {
-        CecupRow *row;
+    if (child == NULL) {
+        return FALSE;
+    }
+
+    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
+
+    if (row) {
         char *filepath;
         enum CecupAction action;
-
-        row = cecup.rows_visible[index];
 
         if (side == L) {
             filepath = row->src_path;
@@ -1067,18 +1155,20 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             filepath = "";
         }
 
-        if (view_column_index == 1) {
+        if (col_index == 1) {
             if (side == L) {
                 tip_text = _(src_action_strings[action]);
             } else {
                 tip_text = _(dst_action_strings[action]);
             }
-        } else if (view_column_index == 2) {
+        } else if (col_index == 2) {
             char *reason;
+
             reason = _(reason_strings[row->reason]);
+
             if (row->link_target) {
                 SNPRINTF(tip_buffer,
-                        "%s -> %s: %s", filepath, row->link_target, reason);
+                         "%s -> %s: %s", filepath, row->link_target, reason);
             } else if (row->ignore_pattern) {
                 SNPRINTF(tip_buffer,
                          "%s: %s (" N_("pattern") ": %s)",
@@ -1087,8 +1177,9 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                 SNPRINTF(tip_buffer, "%s: %s", filepath, reason);
             }
             tip_text = tip_buffer;
-        } else if (view_column_index == 3) {
+        } else if (col_index == 3) {
             int64 size_raw;
+
             if (side == L) {
                 size_raw = row->src_size_raw;
             } else {
@@ -1096,8 +1187,9 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             }
             SNPRINTF(tip_buffer, "%s: %lld bytes", filepath, (llong)size_raw);
             tip_text = tip_buffer;
-        } else if (view_column_index == 4) {
+        } else if (col_index == 4) {
             char *mtime_text;
+
             if (side == L) {
                 mtime_text = row->src_mtime_text;
             } else {
@@ -1110,10 +1202,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
 
     if (tip_text) {
         gtk_tooltip_set_text(t, tip_text);
-        gtk_tree_path_free(tree_path);
         return TRUE;
     }
-    gtk_tree_path_free(tree_path);
     return FALSE;
 }
 
@@ -1183,8 +1273,7 @@ typedef struct SelectionData {
 
 static gboolean
 on_path_selection_idle(void *data) {
-    SelectionData *selection_data;
-    selection_data = data;
+    SelectionData *selection_data = data;
 
     gtk_editable_select_region(selection_data->editable,
                                selection_data->start_pos,
@@ -1194,14 +1283,12 @@ on_path_selection_idle(void *data) {
 }
 
 static void
-on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
-                        char *path_str, void *data) {
+on_path_editing_started(GtkEditable *editable, void *data) {
     GtkWidget *tree;
-    GtkTreePath *tree_path;
-    int32 row_index;
     int32 side;
+    CecupRow *row;
+    char *relative;
 
-    (void)renderer;
     tree = data;
 
     if (!GTK_IS_EDITABLE(editable) || (tree == NULL)) {
@@ -1210,60 +1297,48 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
 
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
-    if ((tree_path = gtk_tree_path_new_from_string(path_str))) {
-        row_index = gtk_tree_path_get_indices(tree_path)[0];
-        gtk_tree_path_free(tree_path);
-    } else {
+    if ((row = g_object_get_data(G_OBJECT(editable), "cecup-row")) == NULL) {
         return;
     }
 
-    if ((row_index >= 0) && (row_index < cecup.rows_visible_len)) {
-        CecupRow *row;
-        char *relative;
+    if (side == L) {
+        relative = row->src_path;
+    } else {
+        relative = row->dst_path;
+    }
 
-        row = cecup.rows_visible[row_index];
+    if (relative) {
+        char *name;
+        char *last_dot;
+        int32 name_len;
+        int32 start_pos;
+        int32 end_pos;
 
-        if (side == L) {
-            relative = row->src_path;
-        } else {
-            relative = row->dst_path;
+        end_pos = row->path_len;
+
+        name = basename2(relative, &row->path_len, &name_len);
+        last_dot = strrchr(name, '.');
+
+        start_pos = row->path_len - name_len;
+
+        if (last_dot) {
+            if (last_dot != name) {
+                end_pos = (int32)(last_dot - relative);
+            }
+        } else if (relative[row->path_len - 1] == '/') {
+            end_pos = row->path_len - 1;
         }
 
-        if (relative) {
-            GtkEditable *edit;
-            char *name;
-            char *last_dot;
-            int32 name_len;
-            int32 start_pos;
-            int32 end_pos;
+        if (end_pos > start_pos) {
+            SelectionData *selection_data;
 
-            edit = GTK_EDITABLE(editable);
-            end_pos = row->path_len;
+            selection_data = xmalloc(SIZEOF(*selection_data));
+            memset64(selection_data, 0, SIZEOF(*selection_data));
+            selection_data->editable = editable;
+            selection_data->start_pos = start_pos;
+            selection_data->end_pos = end_pos;
 
-            gtk_editable_set_text(edit, relative);
-
-            name = basename2(relative, &row->path_len, &name_len);
-            last_dot = strrchr(name, '.');
-
-            start_pos = row->path_len - name_len;
-
-            if (last_dot && (last_dot != name)) {
-                end_pos = (int32)(last_dot - relative);
-            } else if (relative[row->path_len - 1] == '/') {
-                end_pos = row->path_len - 1;
-            }
-
-            if (end_pos > start_pos) {
-                SelectionData *selection_data;
-
-                selection_data = xmalloc(SIZEOF(*selection_data));
-                memset64(selection_data, 0, SIZEOF(*selection_data));
-                selection_data->editable = edit;
-                selection_data->start_pos = start_pos;
-                selection_data->end_pos = end_pos;
-
-                g_idle_add(on_path_selection_idle, selection_data);
-            }
+            g_idle_add(on_path_selection_idle, selection_data);
         }
     }
 
@@ -1271,11 +1346,8 @@ on_path_editing_started(GtkCellRenderer *renderer, GtkCellEditable *editable,
 }
 
 static void
-on_path_edited(GtkCellRendererText *renderer,
-               char *path_str, char *new_text, void *data) {
+on_path_edited(GtkEditable *editable, void *data) {
     GtkWidget *tree;
-    GtkTreePath *tree_path;
-    GtkTreeIter iter;
     CecupRow *row;
     int32 side;
     char *base_path;
@@ -1283,23 +1355,18 @@ on_path_edited(GtkCellRendererText *renderer,
     char *relative_old;
     char relative_new[MAX_PATH_LENGTH];
     int32 new_length;
+    char *new_text;
 
-    (void)renderer;
+    HERE;
+
     tree = data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
-    if ((tree_path = gtk_tree_path_new_from_string(path_str)) == NULL) {
+    if ((row = g_object_get_data(G_OBJECT(editable), "cecup-row")) == NULL) {
         return;
     }
 
-    if (!gtk_tree_model_get_iter(GTK_TREE_MODEL(cecup.store),
-                                 &iter, tree_path)) {
-        gtk_tree_path_free(tree_path);
-        return;
-    }
-
-    gtk_tree_model_get(GTK_TREE_MODEL(cecup.store),
-                       &iter, COL_ROW_PTR, &row, -1);
+    new_text = (char *)gtk_editable_get_text(editable);
 
     if (side == L) {
         base_path = cecup.src_base;
@@ -1310,7 +1377,11 @@ on_path_edited(GtkCellRendererText *renderer,
     }
 
     if (relative_old == NULL) {
-        goto out;
+        return;
+    }
+
+    if (strcmp(relative_old, new_text) == 0) {
+        return;
     }
 
     SNPRINTF(old_full, "%s/%s", base_path, relative_old);
@@ -1345,8 +1416,22 @@ on_path_edited(GtkCellRendererText *renderer,
         }
     }
 
-out:
-    gtk_tree_path_free(tree_path);
+    return;
+}
+
+static void
+on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
+    gboolean is_editing;
+
+    (void)pspec;
+    is_editing = gtk_editable_label_get_editing(GTK_EDITABLE_LABEL(object));
+
+    if (is_editing) {
+        on_path_editing_started(GTK_EDITABLE(object), data);
+    } else {
+        on_path_edited(GTK_EDITABLE(object), data);
+    }
+
     return;
 }
 

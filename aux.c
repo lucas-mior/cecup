@@ -35,7 +35,7 @@
 
 #define UI_INTERVAL_MS 100
 
-static void on_sort_changed(GtkTreeSortable *sortable, void *data);
+static void on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data);
 
 static void
 protect_interface_from_user(bool state) {
@@ -233,11 +233,11 @@ cecup_row_compare(const void *a, const void *b) {
 static void
 refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
     refresh_ui_list_locked(refresh_type, path_to_focus);
+    return;
 }
 
 static void
 refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
-    static int64 count_refresh = 0;
     int32 count_new = 0;
     int32 count_hard = 0;
     int32 count_update = 0;
@@ -262,7 +262,7 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
 
-    current_store_count = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(cecup.store), NULL);
+    current_store_count = (int64)g_list_model_get_n_items(cecup.store);
 
     show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
@@ -328,7 +328,14 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
         }
 
         if (visible && cecup.search_query && (cecup.search_query[0] != '\0')) {
-            char *path = row->src_path ? row->src_path : row->dst_path;
+            char *path;
+
+            if (row->src_path) {
+                path = row->src_path;
+            } else {
+                path = row->dst_path;
+            }
+
             if (strcasestr(path, cecup.search_query) == NULL) {
                 visible = false;
             }
@@ -368,37 +375,42 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
                 cecup_row_compare);
     }
 
-    cecup_tree_model_update(CECUP_TREE_MODEL(cecup.store),
+    cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
                             (int32)current_store_count,
                             cecup.rows_visible_len);
 
     if ((refresh_type & REFRESH_FINAL) && path_to_focus) {
         for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
             CecupRow *row = cecup.rows_visible[i];
-            char *row_path = row->src_path ? row->src_path : row->dst_path;
+            char *row_path;
             char row_full_rel[MAX_PATH_LENGTH];
             int32 row_rel_len;
+
+            row = cecup.rows_visible[i];
+
+            if (row->src_path) {
+                row_path = row->src_path;
+            } else {
+                row_path = row->dst_path;
+            }
 
             row_rel_len = SNPRINTF(row_full_rel, "/%s", row_path);
             normalize(row_full_rel, &row_rel_len);
 
             if (!strcmp(row_full_rel, path_to_focus)) {
-                GtkTreePath *tree_path = gtk_tree_path_new_from_indices(i, -1);
-                gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(cecup.tree[L]),
-                                             tree_path, NULL, TRUE, 0.5, 0.0);
-                gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(cecup.tree[R]),
-                                             tree_path, NULL, TRUE, 0.5, 0.0);
-                gtk_tree_view_set_cursor(GTK_TREE_VIEW(cecup.tree[L]),
-                                         tree_path, NULL, FALSE);
-                gtk_tree_view_set_cursor(GTK_TREE_VIEW(cecup.tree[R]),
-                                         tree_path, NULL, FALSE);
-                gtk_tree_path_free(tree_path);
+                GtkSelectionModel *sel_l;
+                GtkSelectionModel *sel_r;
+
+                sel_l = gtk_column_view_get_model(GTK_COLUMN_VIEW(cecup.tree[L]));
+                sel_r = gtk_column_view_get_model(GTK_COLUMN_VIEW(cecup.tree[R]));
+
+                gtk_selection_model_select_item(sel_l, (uint32)i, TRUE);
+                gtk_selection_model_select_item(sel_r, (uint32)i, TRUE);
                 break;
             }
         }
     }
 
-    PRINT(count_refresh);
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
     PRINT_TIMINGS(cecup.rows_visible_len, (char *)__func__, t0, t1);
     return;
@@ -531,8 +543,8 @@ update_ui_handler(void *data) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
         }
-        current_store_count = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(cecup.store), NULL);
-        cecup_tree_model_update(CECUP_TREE_MODEL(cecup.store), current_store_count, 0);
+        current_store_count = (int32)g_list_model_get_n_items(cecup.store);
+        cecup_list_model_update(CECUP_LIST_MODEL(cecup.store), current_store_count, 0);
 
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       0.0);
@@ -734,6 +746,7 @@ cecup_reset_dir(int32 side) {
     } else {
         gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), "./");
     }
+    return;
 }
 
 static void

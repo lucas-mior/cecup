@@ -18,18 +18,14 @@
 #if !defined(ON_MENU_C)
 #define ON_MENU_C
 
-#include <gtk/gtk.h>
-#include "cecup.h"
-#include "util.c"
-
 static void free_message(void *data);
 
 static void
 on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
-    GtkWidget *tree;
-    CecupMenuItem *menu_item;
-    Message *message;
     int32 index;
+    CecupMenuItem *menu_item;
+    GtkWidget *tree;
+    Message *message;
 
     (void)action;
     (void)data;
@@ -40,11 +36,17 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     tree = g_object_get_data(G_OBJECT(cecup.application), "active_tree");
     message = g_object_steal_data(G_OBJECT(cecup.application), "active_message");
 
-    if (tree && message && menu_item->callback) {
-        if (menu_item->variant) {
-            g_object_set_data(G_OBJECT(tree), "variant", menu_item->variant);
+    if (tree) {
+        if (message) {
+            if (menu_item->callback) {
+                if (menu_item->variant) {
+                    g_object_set_data(G_OBJECT(tree), "variant", menu_item->variant);
+                }
+                menu_item->callback(tree, message);
+            } else {
+                free_message(message);
+            }
         }
-        menu_item->callback(tree, message);
     } else if (message) {
         free_message(message);
     }
@@ -62,14 +64,16 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
 
     pattern = (char *)g_variant_get_string(parameter, NULL);
 
-    if (pattern && (fp = fopen(cecup.ignore_path, "a"))) {
-        fprintf(fp, "\n%s", pattern);
-        fclose(fp);
-    } else if (pattern == NULL) {
-        error("Ignore pattern is NULL.\n");
+    if (pattern) {
+        if ((fp = fopen(cecup.ignore_path, "a"))) {
+            fprintf(fp, "\n%s", pattern);
+            fclose(fp);
+        } else {
+            IPC_SEND_LOG_ERROR("Error opening %s: %s.\n",
+                               cecup.ignore_path, strerror(errno));
+        }
     } else {
-        IPC_SEND_LOG_ERROR("Error opening %s: %s.\n",
-                           cecup.ignore_path, strerror(errno));
+        error("Ignore pattern is NULL.\n");
     }
 
     return;
@@ -83,8 +87,9 @@ on_menu_apply(GtkWidget *m, void *data) {
     (void)m;
     message = data;
 
-    if ((tasks = get_target_tasks(message->side, message->src_path,
-                                  message->action))) {
+    tasks = get_target_tasks(message->side, message->src_path, message->action);
+
+    if (tasks) {
         protect_interface_from_user(true);
         g_thread_new("bulk_sync", work_rsync_bulk, tasks);
     }
@@ -96,32 +101,57 @@ on_menu_apply(GtkWidget *m, void *data) {
 }
 
 static void
-on_menu_rename(GtkWidget *m, void *data) {
+on_menu_rename(GtkWidget *tree, void *data) {
     Message *message;
-    GtkWidget *tree;
-    GtkTreeSelection *selection;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
+    GtkSelectionModel *selection;
+    uint32 pos;
+    GtkWidget *current;
 
-    (void)m;
+    HERE;
+
     message = data;
+    selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
+    pos = gtk_single_selection_get_selected(GTK_SINGLE_SELECTION(selection));
 
-    if (message->side == L) {
-        tree = cecup.tree[L];
-    } else {
-        tree = cecup.tree[R];
+    if (pos == GTK_INVALID_LIST_POSITION) {
+        XFREE(message->src_path);
+        XFREE(message);
+        return;
     }
 
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+    current = tree;
 
-    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        GtkTreePath *tree_path;
-        GtkTreeViewColumn *col;
+    while (current != NULL) {
+        void *col_ptr;
+        void *pos_ptr;
+        GtkWidget *next_child;
 
-        tree_path = gtk_tree_model_get_path(model, &iter);
-        col = gtk_tree_view_get_column(GTK_TREE_VIEW(tree), 2);
-        gtk_tree_view_set_cursor(GTK_TREE_VIEW(tree), tree_path, col, TRUE);
-        gtk_tree_path_free(tree_path);
+        col_ptr = g_object_get_data(G_OBJECT(current), "cecup-col");
+        pos_ptr = g_object_get_data(G_OBJECT(current), "cecup-pos");
+
+        if (col_ptr && (GPOINTER_TO_INT(col_ptr) == 2)) {
+            if (pos_ptr && (GPOINTER_TO_UINT(pos_ptr) == pos)) {
+                gtk_editable_label_start_editing(GTK_EDITABLE_LABEL(current));
+                break;
+            }
+        }
+
+        if ((next_child = gtk_widget_get_first_child(current))) {
+            current = next_child;
+            continue;
+        }
+
+        while ((current != NULL) && (current != tree) && (gtk_widget_get_next_sibling(current) == NULL)) {
+            current = gtk_widget_get_parent(current);
+        }
+
+        if (current == tree) {
+            break;
+        }
+
+        if (current != NULL) {
+            current = gtk_widget_get_next_sibling(current);
+        }
     }
 
     XFREE(message->src_path);
@@ -144,8 +174,9 @@ on_menu_open_item(GtkWidget *m, void *data) {
         variant = NULL;
     }
 
-    if ((tasks = get_target_tasks(message->side, message->src_path,
-                                  message->action))) {
+    tasks = get_target_tasks(message->side, message->src_path, message->action);
+
+    if (tasks) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Task *task;
             char full_path[MAX_PATH_LENGTH];
@@ -162,10 +193,12 @@ on_menu_open_item(GtkWidget *m, void *data) {
 
             n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
 
-            if (variant && (strcmp(variant, "folder") == 0)) {
-                int32 path_len;
-                path_len = n;
-                dirname2(full_path, full_path, &path_len);
+            if (variant) {
+                if (strcmp(variant, "folder") == 0) {
+                    int32 path_len;
+                    path_len = n;
+                    dirname2(full_path, full_path, &path_len);
+                }
             }
 
             {
@@ -213,8 +246,9 @@ on_menu_copy_path(GtkWidget *m, void *data) {
         base_path = cecup.dst_base;
     }
 
-    if ((tasks = get_target_tasks(message->side, message->src_path,
-                                  message->action))) {
+    tasks = get_target_tasks(message->side, message->src_path, message->action);
+
+    if (tasks) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Task *task;
             int32 path_len;
@@ -225,26 +259,33 @@ on_menu_copy_path(GtkWidget *m, void *data) {
             task = tasks->items[i];
             variant = g_object_get_data(G_OBJECT(m), "variant");
 
-            if (variant && (strcmp(variant, "absolute") == 0)) {
-                char path_relative[MAX_PATH_LENGTH];
+            if (variant) {
+                if (strcmp(variant, "absolute") == 0) {
+                    char path_relative[MAX_PATH_LENGTH];
 
-                SNPRINTF(path_relative, "%s/%s", base_path, task->path);
-                if (realpath(path_relative, path_full) == NULL) {
-                    IPC_SEND_LOG_ERROR("Error resolving full path of %s: %s.\n",
-                                       path_relative, strerror(errno));
-                    continue;
+                    SNPRINTF(path_relative, "%s/%s", base_path, task->path);
+                    if (realpath(path_relative, path_full) == NULL) {
+                        IPC_SEND_LOG_ERROR("Error resolving full path of %s: %s.\n",
+                                           path_relative, strerror(errno));
+                        continue;
+                    }
+                    path = path_full;
+                    path_len = strlen32(path_full);
+                } else {
+                    path = task->path;
+                    path_len = task->path_len;
                 }
-                path = path_full;
-                path_len = strlen32(path_full);
             } else {
                 path = task->path;
                 path_len = task->path_len;
             }
 
-            if ((i > 0) && (remaining_capacity > 0)) {
-                *write_pointer = '\n';
-                write_pointer += 1;
-                remaining_capacity -= 1;
+            if (i > 0) {
+                if (remaining_capacity > 0) {
+                    *write_pointer = '\n';
+                    write_pointer += 1;
+                    remaining_capacity -= 1;
+                }
             }
 
             if (remaining_capacity >= path_len) {
@@ -291,8 +332,9 @@ on_menu_delete(GtkWidget *m, void *data) {
     (void)m;
     message = data;
 
-    if ((tasks = get_target_tasks(message->side,
-                                  message->src_path, ACTION_DELETE))) {
+    tasks = get_target_tasks(message->side, message->src_path, ACTION_DELETE);
+
+    if (tasks) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             tasks->items[i]->action = ACTION_DELETE;
         }
@@ -325,8 +367,9 @@ on_menu_diff(GtkWidget *m, void *data) {
     diff_tool = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry));
     term_cmd = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry));
 
-    if ((tasks = get_target_tasks(message->side, message->src_path,
-                                  message->action))) {
+    tasks = get_target_tasks(message->side, message->src_path, message->action);
+
+    if (tasks) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Task *task;
             char *path_src;
@@ -384,15 +427,17 @@ on_menu_ignore(GtkWidget *m, void *data) {
     message = data;
     pattern = (char *)g_object_get_data(G_OBJECT(m), "ignore_pattern");
 
-    if (pattern && (fp = fopen(cecup.ignore_path, "a"))) {
-        fprintf(fp, "\n%s", pattern);
-        fclose(fp);
-    } else if (pattern == NULL) {
+    if (pattern) {
+        if ((fp = fopen(cecup.ignore_path, "a"))) {
+            fprintf(fp, "\n%s", pattern);
+            fclose(fp);
+        } else {
+            IPC_SEND_LOG_ERROR("Error opening %s: %s.\n",
+                               cecup.ignore_path, strerror(errno));
+        }
+    } else {
         error("Ignore pattern not found in widget data.\n");
         fatal(EXIT_FAILURE);
-    } else {
-        IPC_SEND_LOG_ERROR("Error opening %s: %s.\n",
-                           cecup.ignore_path, strerror(errno));
     }
 
     XFREE(message->src_path);

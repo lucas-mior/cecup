@@ -212,7 +212,7 @@ typedef struct Message {
 
     int32 side;
     double fraction;
-    
+
     bool delete_excluded;
     bool is_dir;
 } Message;
@@ -245,6 +245,12 @@ typedef struct TaskList {
     int32 padding;
     Task *items[];
 } TaskList;
+
+#define CECUP_TYPE_ROW_PROXY (cecup_row_proxy_get_type())
+G_DECLARE_FINAL_TYPE(CecupRowProxy, cecup_row_proxy, CECUP, ROW_PROXY, GObject)
+
+#define CECUP_TYPE_LIST_MODEL (cecup_list_model_get_type())
+G_DECLARE_FINAL_TYPE(CecupListModel, cecup_list_model, CECUP, LIST_MODEL, GObject)
 
 static struct {
     GtkApplication *application;
@@ -282,7 +288,7 @@ static struct {
     GtkWidget *filter_delete;
     GtkWidget *filter_ignore;
 
-    GtkTreeModel *store;
+    GListModel *store;
     GtkWidget *log_view;
     GtkTextBuffer *log_buffer;
     char ignore_path[MAX_PATH_LENGTH];

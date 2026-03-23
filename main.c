@@ -34,307 +34,346 @@
 #define FILL_TRUE true
 #define EXPAND_TRUE true
 
-#define CECUP_TYPE_CELL_RENDERER_TEXT (cecup_cell_renderer_text_get_type())
-G_DECLARE_FINAL_TYPE(CecupCellRendererText, cecup_cell_renderer_text, CECUP,
-                     CELL_RENDERER_TEXT, GtkCellRendererText)
-
-struct _CecupCellRendererText {
-    GtkCellRendererText parent_instance;
-    char *raw_text;
-    int32 text_len;
-    char *raw_color;
-};
-
-G_DEFINE_TYPE(CecupCellRendererText, cecup_cell_renderer_text,
-              GTK_TYPE_CELL_RENDERER_TEXT)
+CecupListModel *cecup_list_model_new(void);
+CecupRow *cecup_row_proxy_get_row(CecupRowProxy *proxy);
 
 static void
-cecup_cell_renderer_text_init(CecupCellRendererText *self) {
-    self->raw_text = NULL;
-    self->text_len = 0;
-    self->raw_color = NULL;
-    return;
-}
+setup_selected_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+    GtkWidget *check;
 
-static void
-cecup_cell_renderer_text_snapshot(GtkCellRenderer *cell, GtkSnapshot *snapshot,
-                                  GtkWidget *widget,
-                                  const GdkRectangle *background_area,
-                                  const GdkRectangle *cell_area,
-                                  GtkCellRendererState flags) {
-    CecupCellRendererText *self = CECUP_CELL_RENDERER_TEXT(cell);
-    PangoLayout *layout;
-    PangoContext *context;
-    GdkRGBA color;
-    int32 x_pad;
-    int32 y_pad;
-    GtkStyleContext *style_context = gtk_widget_get_style_context(widget);
-    bool is_selected = (flags & GTK_CELL_RENDERER_SELECTED) != 0;
-    cairo_t *cr;
-    graphene_rect_t bounds;
+    (void)factory;
+    (void)data;
 
-    graphene_rect_init(&bounds,
-                       (float)background_area->x,
-                       (float)background_area->y,
-                       (float)background_area->width,
-                       (float)background_area->height);
-
-    if ((cr = gtk_snapshot_append_cairo(snapshot, &bounds))) {
-        if (!is_selected && self->raw_color) {
-            if (gdk_rgba_parse(&color, self->raw_color)) {
-                gdk_cairo_set_source_rgba(cr, &color);
-                cairo_rectangle(cr,
-                                (double)background_area->x,
-                                (double)background_area->y,
-                                (double)background_area->width,
-                                (double)background_area->height);
-                cairo_fill(cr);
-            }
-        }
-
-        if ((context = gtk_widget_get_pango_context(widget)) == NULL) {
-            cairo_destroy(cr);
-            return;
-        }
-
-        if ((layout = pango_layout_new(context)) == NULL) {
-            cairo_destroy(cr);
-            return;
-        }
-
-        pango_layout_set_text(layout, self->raw_text, self->text_len);
-        pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-        pango_layout_set_width(layout, (cell_area->width) * PANGO_SCALE);
-
-        gtk_cell_renderer_get_padding(cell, &x_pad, &y_pad);
-
-        gtk_style_context_save(style_context);
-        if (is_selected) {
-            gtk_style_context_set_state(style_context, GTK_STATE_FLAG_SELECTED);
-        }
-
-        gtk_style_context_get_color(style_context, &color);
-        gdk_cairo_set_source_rgba(cr, &color);
-
-        cairo_move_to(cr,
-                      (double)cell_area->x + x_pad,
-                      (double)cell_area->y + y_pad);
-        pango_cairo_show_layout(cr, layout);
-
-        gtk_style_context_restore(style_context);
-        g_object_unref(layout);
-        cairo_destroy(cr);
-    }
+    check = gtk_check_button_new();
+    gtk_widget_set_halign(check, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(check, GTK_ALIGN_CENTER);
+    g_signal_connect(check, "toggled", G_CALLBACK(on_cell_toggled), NULL);
+    gtk_list_item_set_child(list_item, check);
 
     return;
 }
 
 static void
-cecup_cell_renderer_text_class_init(CecupCellRendererTextClass *klass) {
-    GtkCellRendererClass *cell_class = GTK_CELL_RENDERER_CLASS(klass);
-    cell_class->snapshot = cecup_cell_renderer_text_snapshot;
-    return;
-}
-
-static GtkCellRenderer *
-cecup_cell_renderer_text_new(void) {
-    return g_object_new(CECUP_TYPE_CELL_RENDERER_TEXT, NULL);
-}
-
-static void setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path);
-
-static void
-cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
-                GtkTreeModel *model, GtkTreeIter *iter, void *data) {
-    GtkTreePath *tree_path = gtk_tree_model_get_path(model, iter);
-    int32 col_id = GPOINTER_TO_INT(data);
+bind_selected_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+    GtkWidget *check;
+    CecupRowProxy *proxy;
     CecupRow *row;
-    int32 row_idx;
-    CecupCellRendererText *cecup_renderer = (CecupCellRendererText *)renderer;
+    uint32 position;
 
-    row_idx = gtk_tree_path_get_indices(tree_path)[0];
-    gtk_tree_path_free(tree_path);
+    (void)factory;
+    (void)data;
 
-    if ((row_idx < 0) || (row_idx >= cecup.rows_visible_len)) {
-        return;
-    }
-    row = cecup.rows_visible[row_idx];
+    check = gtk_list_item_get_child(list_item);
+    proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
+    row = cecup_row_proxy_get_row(proxy);
+    position = gtk_list_item_get_position(list_item);
 
-    switch (col_id) {
-    case COL_SELECTED:
-        g_object_set(renderer, "active", row->selected, NULL);
-        break;
-    case COL_SRC_ACTION:
-        cecup_renderer->raw_text = action_emojis[row->src_action];
-        cecup_renderer->text_len = strlen32(cecup_renderer->raw_text);
-        cecup_renderer->raw_color = colors[row->src_action];
-        break;
-    case COL_DST_ACTION:
-        cecup_renderer->raw_text = action_emojis[row->dst_action];
-        cecup_renderer->text_len = strlen32(cecup_renderer->raw_text);
-        cecup_renderer->raw_color = colors[row->dst_action];
-        break;
-    case COL_SRC_PATH:
-        cecup_renderer->raw_text = row->src_path;
-        cecup_renderer->text_len = row->src_path ? row->path_len : 0;
-        cecup_renderer->raw_color = colors[row->src_action];
-        break;
-    case COL_DST_PATH:
-        cecup_renderer->raw_text = row->dst_path;
-        cecup_renderer->text_len = row->dst_path ? row->path_len : 0;
-        cecup_renderer->raw_color = colors[row->dst_action];
-        break;
-    case COL_SIZE_TEXT: {
-        char *background;
-        char *text;
-        int32 text_len;
+    g_signal_handlers_block_by_func(check, on_cell_toggled, NULL);
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(check), row->selected);
+    g_signal_handlers_unblock_by_func(check, on_cell_toggled, NULL);
 
-        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.tree[L]), 3)) {
-            background = colors[row->src_action];
-            text = row->src_size_text;
-            text_len = strlen32(row->src_size_text);
-        } else {
-            background = colors[row->dst_action];
-            text = row->dst_size_text;
-            text_len = strlen32(row->dst_size_text);
-        }
-
-        cecup_renderer->raw_text = text;
-        cecup_renderer->text_len = text_len;
-        cecup_renderer->raw_color = background;
-        break;
-    }
-    case COL_MTIME_TEXT: {
-        char *background;
-        char *text;
-        int32 text_len;
-
-        if (col == gtk_tree_view_get_column(GTK_TREE_VIEW(cecup.tree[L]), 4)) {
-            background = colors[row->src_action];
-            text = row->src_mtime_text;
-            text_len = strlen32(row->src_mtime_text);
-        } else {
-            background = colors[row->dst_action];
-            text = row->dst_mtime_text;
-            text_len = strlen32(row->dst_mtime_text);
-        }
-
-        cecup_renderer->raw_text = text;
-        cecup_renderer->text_len = text_len;
-        cecup_renderer->raw_color = background;
-        break;
-    }
-    default:
-        error("Invalid col_id = %d\n", col_id);
-        exit(EXIT_FAILURE);
-    }
+    g_object_set_data(G_OBJECT(check), "cecup-row", row);
+    g_object_set_data(G_OBJECT(check), "cecup-pos", GUINT_TO_POINTER(position));
     return;
 }
 
 static void
-setup_tree_columns(GtkWidget *tree, int32 col_act, int32 col_path) {
-    GtkCellRenderer *renderer_toggle = gtk_cell_renderer_toggle_new();
-    GtkCellRenderer *renderer_text = cecup_cell_renderer_text_new();
-    GtkCellRenderer *renderer_path = cecup_cell_renderer_text_new();
-    GtkTreeViewColumn *column;
+setup_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+    GtkWidget *label;
+
+    (void)factory;
+    (void)data;
+
+    label = gtk_label_new(NULL);
+    gtk_widget_set_halign(label, GTK_ALIGN_FILL);
+    gtk_widget_set_valign(label, GTK_ALIGN_FILL);
+    gtk_label_set_xalign(GTK_LABEL(label), 0.0);
+    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+    gtk_list_item_set_child(list_item, label);
+
+    return;
+}
+
+static void
+bind_action_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+    GtkWidget *label;
+    CecupRowProxy *proxy;
+    CecupRow *row;
+    int32 side;
+    enum CecupAction action;
+    char class_name[32];
+    char *classes[2];
+    uint32 position;
+
+    (void)factory;
+
+    label = gtk_list_item_get_child(list_item);
+    proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
+    row = cecup_row_proxy_get_row(proxy);
+    side = GPOINTER_TO_INT(data);
+    position = gtk_list_item_get_position(list_item);
+
+    if (side == L) {
+        action = row->src_action;
+    } else {
+        action = row->dst_action;
+    }
+
+    gtk_label_set_text(GTK_LABEL(label), action_emojis[action]);
+
+    SNPRINTF(class_name, "cell-color-%u", action);
+    classes[0] = class_name;
+    classes[1] = NULL;
+    gtk_widget_set_css_classes(label, (const char **)classes);
+
+    g_object_set_data(G_OBJECT(label), "cecup-row", row);
+    g_object_set_data(G_OBJECT(label), "cecup-pos", GUINT_TO_POINTER(position));
+    g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(1));
+
+    return;
+}
+
+static void
+setup_path_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+    GtkWidget *editable;
+    GtkWidget *tree;
+    GtkGesture *click;
+
+    (void)factory;
+    tree = data;
+
+    editable = gtk_editable_label_new("");
+    gtk_widget_set_halign(editable, GTK_ALIGN_FILL);
+    gtk_widget_set_valign(editable, GTK_ALIGN_FILL);
+    gtk_editable_set_alignment(GTK_EDITABLE(editable), 0.0);
+    gtk_editable_set_width_chars(GTK_EDITABLE(editable), 1);
+
+    g_signal_connect(editable, "notify::editing",
+                     G_CALLBACK(on_path_editing_notify), tree);
+
+    click = gtk_gesture_click_new();
+    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(click), GTK_PHASE_CAPTURE);
+    g_signal_connect(click, "pressed", G_CALLBACK(on_path_click_pressed), tree);
+    gtk_widget_add_controller(editable, GTK_EVENT_CONTROLLER(click));
+
+    gtk_list_item_set_child(list_item, editable);
+
+    return;
+}
+
+static void
+bind_path_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+    GtkWidget *editable;
+    CecupRowProxy *proxy;
+    CecupRow *row;
+    GtkWidget *tree;
+    int32 side;
+    enum CecupAction action;
+    char class_name[32];
+    char *classes[2];
+    uint32 position;
+
+    (void)factory;
+    tree = data;
+
+    editable = gtk_list_item_get_child(list_item);
+    proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
+    row = cecup_row_proxy_get_row(proxy);
+    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
+    position = gtk_list_item_get_position(list_item);
+
+    if (side == L) {
+        if (row->src_path) {
+            gtk_editable_set_text(GTK_EDITABLE(editable), row->src_path);
+        } else {
+            gtk_editable_set_text(GTK_EDITABLE(editable), "");
+        }
+        action = row->src_action;
+    } else {
+        if (row->dst_path) {
+            gtk_editable_set_text(GTK_EDITABLE(editable), row->dst_path);
+        } else {
+            gtk_editable_set_text(GTK_EDITABLE(editable), "");
+        }
+        action = row->dst_action;
+    }
+
+    SNPRINTF(class_name, "cell-color-%u", action);
+    classes[0] = class_name;
+    classes[1] = NULL;
+    gtk_widget_set_css_classes(editable, (const char **)classes);
+
+    g_object_set_data(G_OBJECT(editable), "cecup-row", row);
+    g_object_set_data(G_OBJECT(editable), "cecup-pos", GUINT_TO_POINTER(position));
+    g_object_set_data(G_OBJECT(editable), "cecup-col", GINT_TO_POINTER(2));
+
+    return;
+}
+
+static void
+bind_size_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+    GtkWidget *label;
+    CecupRowProxy *proxy;
+    CecupRow *row;
+    int32 side;
+    enum CecupAction action;
+    char class_name[32];
+    char *classes[2];
+    uint32 position;
+
+    (void)factory;
+
+    label = gtk_list_item_get_child(list_item);
+    proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
+    row = cecup_row_proxy_get_row(proxy);
+    side = GPOINTER_TO_INT(data);
+    position = gtk_list_item_get_position(list_item);
+
+    if (side == L) {
+        gtk_label_set_text(GTK_LABEL(label), row->src_size_text);
+        action = row->src_action;
+    } else {
+        gtk_label_set_text(GTK_LABEL(label), row->dst_size_text);
+        action = row->dst_action;
+    }
+
+    SNPRINTF(class_name, "cell-color-%u", action);
+    classes[0] = class_name;
+    classes[1] = NULL;
+    gtk_widget_set_css_classes(label, (const char **)classes);
+
+    g_object_set_data(G_OBJECT(label), "cecup-row", row);
+    g_object_set_data(G_OBJECT(label), "cecup-pos", GUINT_TO_POINTER(position));
+    g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(3));
+    return;
+}
+
+static void
+bind_mtime_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+    GtkWidget *label;
+    CecupRowProxy *proxy;
+    CecupRow *row;
+    int32 side;
+    enum CecupAction action;
+    char class_name[32];
+    char *classes[2];
+    uint32 position;
+
+    (void)factory;
+
+    label = gtk_list_item_get_child(list_item);
+    proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
+    row = cecup_row_proxy_get_row(proxy);
+    side = GPOINTER_TO_INT(data);
+    position = gtk_list_item_get_position(list_item);
+
+    if (side == L) {
+        gtk_label_set_text(GTK_LABEL(label), row->src_mtime_text);
+        action = row->src_action;
+    } else {
+        gtk_label_set_text(GTK_LABEL(label), row->dst_mtime_text);
+        action = row->dst_action;
+    }
+
+    SNPRINTF(class_name, "cell-color-%u", action);
+    classes[0] = class_name;
+    classes[1] = NULL;
+    gtk_widget_set_css_classes(label, (const char **)classes);
+
+    g_object_set_data(G_OBJECT(label), "cecup-row", row);
+    g_object_set_data(G_OBJECT(label), "cecup-pos", GUINT_TO_POINTER(position));
+    g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(4));
+    return;
+}
+
+static void
+setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupColumn col_path) {
+    GtkListItemFactory *factory;
+    GtkColumnViewColumn *column;
     GtkEventController *key;
-    GActionMap *action_map = G_ACTION_MAP(cecup.application);
+    GActionMap *action_map;
+    int32 side;
+
+    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
+    action_map = G_ACTION_MAP(cecup.application);
 
     if (g_action_map_lookup_action(action_map, "tree_dispatch") == NULL) {
         GSimpleAction *dispatch;
         GSimpleAction *ignore;
 
         dispatch = g_simple_action_new("tree_dispatch", G_VARIANT_TYPE_INT32);
-        g_signal_connect(dispatch, "activate",
-                         G_CALLBACK(on_menu_dispatch), NULL);
+        g_signal_connect(dispatch, "activate", G_CALLBACK(on_menu_dispatch), NULL);
         g_action_map_add_action(action_map, G_ACTION(dispatch));
 
         ignore = g_simple_action_new("ignore", G_VARIANT_TYPE_STRING);
-        g_signal_connect(ignore, "activate",
-                         G_CALLBACK(on_menu_ignore_action), NULL);
+        g_signal_connect(ignore, "activate", G_CALLBACK(on_menu_ignore_action), NULL);
         g_action_map_add_action(action_map, G_ACTION(ignore));
     }
 
-    gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(tree), TRUE);
+    factory = gtk_signal_list_item_factory_new();
+    g_signal_connect(factory, "setup", G_CALLBACK(setup_selected_cb), NULL);
+    g_signal_connect(factory, "bind", G_CALLBACK(bind_selected_cb), NULL);
+    column = gtk_column_view_column_new(NULL, factory);
+    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
 
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_pack_start(column, renderer_toggle, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_toggle, cell_data_func, GINT_TO_POINTER(COL_SELECTED),
-        NULL);
-    g_signal_connect(renderer_toggle, "toggled", G_CALLBACK(on_cell_toggled),
-                     NULL);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    factory = gtk_signal_list_item_factory_new();
+    g_signal_connect(factory, "setup", G_CALLBACK(setup_text_cb), NULL);
+    g_signal_connect(factory, "bind", G_CALLBACK(bind_action_cb), GINT_TO_POINTER(side));
+    column = gtk_column_view_column_new(_("Task"), factory);
+    gtk_column_view_column_set_resizable(column, TRUE);
+    gtk_column_view_column_set_sorter(column, GTK_SORTER(gtk_string_sorter_new(NULL)));
+    g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(col_act));
+    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
 
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_title(column, _("Task"));
-    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_text, cell_data_func, GINT_TO_POINTER(col_act), NULL);
-    gtk_tree_view_column_set_sort_column_id(column, col_act);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_min_width(column, 80);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    factory = gtk_signal_list_item_factory_new();
+    g_signal_connect(factory, "setup", G_CALLBACK(setup_path_cb), tree);
+    g_signal_connect(factory, "bind", G_CALLBACK(bind_path_cb), tree);
+    column = gtk_column_view_column_new(_("Name"), factory);
+    gtk_column_view_column_set_resizable(column, TRUE);
+    gtk_column_view_column_set_fixed_width(column, 500);
+    gtk_column_view_column_set_sorter(column, GTK_SORTER(gtk_string_sorter_new(NULL)));
+    g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(col_path));
+    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
 
-    g_signal_connect(renderer_path, "edited",
-                     G_CALLBACK(on_path_edited), tree);
-    g_signal_connect(renderer_path, "editing-started",
-                     G_CALLBACK(on_path_editing_started), tree);
-    g_object_set(renderer_path, "editable", TRUE, NULL);
+    factory = gtk_signal_list_item_factory_new();
+    g_signal_connect(factory, "setup", G_CALLBACK(setup_text_cb), NULL);
+    g_signal_connect(factory, "bind", G_CALLBACK(bind_size_cb), GINT_TO_POINTER(side));
+    column = gtk_column_view_column_new(_("Size"), factory);
+    gtk_column_view_column_set_resizable(column, TRUE);
+    gtk_column_view_column_set_sorter(column, GTK_SORTER(gtk_string_sorter_new(NULL)));
+    g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_SIZE_RAW));
+    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
 
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_title(column, _("Name"));
-    gtk_tree_view_column_pack_start(column, renderer_path, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_path, cell_data_func, GINT_TO_POINTER(col_path), NULL);
-    gtk_tree_view_column_set_sort_column_id(column, col_path);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_expand(column, TRUE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_title(column, _("Size"));
-    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_text, cell_data_func, GINT_TO_POINTER(COL_SIZE_TEXT),
-        NULL);
-    gtk_tree_view_column_set_sort_column_id(column, COL_SIZE_RAW);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_min_width(column, 100);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_column_set_title(column, _("Modification Time"));
-    gtk_tree_view_column_pack_start(column, renderer_text, TRUE);
-    gtk_tree_view_column_set_cell_data_func(
-        column, renderer_text, cell_data_func, GINT_TO_POINTER(COL_MTIME_TEXT),
-        NULL);
-    gtk_tree_view_column_set_sort_column_id(column, COL_MTIME_RAW);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_min_width(column, 150);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+    factory = gtk_signal_list_item_factory_new();
+    g_signal_connect(factory, "setup", G_CALLBACK(setup_text_cb), NULL);
+    g_signal_connect(factory, "bind", G_CALLBACK(bind_mtime_cb), GINT_TO_POINTER(side));
+    column = gtk_column_view_column_new(_("Modification Time"), factory);
+    gtk_column_view_column_set_expand(column, TRUE);
+    gtk_column_view_column_set_resizable(column, TRUE);
+    gtk_column_view_column_set_sorter(column, GTK_SORTER(gtk_string_sorter_new(NULL)));
+    g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_MTIME_RAW));
+    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
 
     gtk_widget_set_has_tooltip(tree, TRUE);
+    gtk_widget_set_focusable(tree, TRUE);
 
-    g_signal_connect(tree, "query-tooltip",
-                     G_CALLBACK(on_tree_tooltip), NULL);
+    g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
+    g_signal_connect(gtk_column_view_get_sorter(GTK_COLUMN_VIEW(tree)), "changed", G_CALLBACK(on_sort_changed), tree);
 
     {
-        GtkGesture *click = gtk_gesture_click_new();
+        GtkGesture *click;
+
+        click = gtk_gesture_click_new();
         gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(click));
+        gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(click),
+                                                   GTK_PHASE_CAPTURE);
         gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click), 0);
-        g_signal_connect(click, "pressed",
-                         G_CALLBACK(on_tree_button_press), NULL);
+        g_signal_connect(click, "pressed", G_CALLBACK(on_tree_button_press), NULL);
     }
 
     key = gtk_event_controller_key_new();
     gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(key));
+    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(key), GTK_PHASE_BUBBLE);
     g_signal_connect(key, "key-pressed", G_CALLBACK(on_tree_key_press), NULL);
 
     return;
@@ -363,6 +402,7 @@ application_run(GtkApplication *application, gpointer user_data) {
 
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
+    GtkSelectionModel *selection_model;
 
     char cwd[MAX_PATH_LENGTH];
     char *default_src;
@@ -373,6 +413,41 @@ application_run(GtkApplication *application, gpointer user_data) {
     int32 src_path_len;
 
     (void)user_data;
+
+    {
+        GtkCssProvider *provider;
+        char css[4096];
+        int32 offset;
+        int32 n;
+
+        provider = gtk_css_provider_new();
+        offset = 0;
+
+        n = snprintf2(css + offset, SIZEOF(css) - offset,
+                      "columnview row { min-height: 0px; }\n"
+                      "columnview cell { padding: 0px; }\n");
+        offset += n;
+
+        for (int32 i = 0; i < LENGTH(colors); i += 1) {
+            int32 m;
+
+            if (colors[i] == NULL) {
+                continue;
+            }
+
+            m = snprintf2(css + offset, SIZEOF(css) - offset,
+                          "row:not(:selected) .cell-color-%d { background-color: %s; }\n",
+                          i, colors[i]);
+            offset += m;
+        }
+
+        gtk_css_provider_load_from_string(provider, css);
+        gtk_style_context_add_provider_for_display(
+            gdk_display_get_default(),
+            GTK_STYLE_PROVIDER(provider),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        g_object_unref(provider);
+    }
 
     cecup.gtk_window = gtk_application_window_new(application);
     gtk_window_set_title(GTK_WINDOW(cecup.gtk_window), "cecup");
@@ -597,7 +672,8 @@ application_run(GtkApplication *application, gpointer user_data) {
 
     vbox[L] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[L] = gtk_scrolled_window_new();
-    tree[L] = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup.store));
+    selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(cecup.store));
+    tree[L] = gtk_column_view_new(selection_model);
     cecup.tree[L] = tree[L];
     g_object_set_data(G_OBJECT(tree[L]), "side", GINT_TO_POINTER(L));
     setup_tree_columns(tree[L], COL_SRC_ACTION, COL_SRC_PATH);
@@ -608,7 +684,8 @@ application_run(GtkApplication *application, gpointer user_data) {
 
     vbox[R] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[R] = gtk_scrolled_window_new();
-    tree[R] = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cecup.store));
+    selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(cecup.store));
+    tree[R] = gtk_column_view_new(selection_model);
     cecup.tree[R] = tree[R];
     g_object_set_data(G_OBJECT(tree[R]), "side", GINT_TO_POINTER(R));
     setup_tree_columns(tree[R], COL_DST_ACTION, COL_DST_PATH);
@@ -621,8 +698,6 @@ application_run(GtkApplication *application, gpointer user_data) {
     r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[R]));
     g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
     g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
-    g_signal_connect(cecup.store, "sort-column-changed",
-                     G_CALLBACK(on_sort_changed), NULL);
 
     log_scroll = gtk_scrolled_window_new();
     gtk_widget_set_size_request(log_scroll, -1, 150);
@@ -843,6 +918,7 @@ application_run(GtkApplication *application, gpointer user_data) {
     cecup_get_dirs();
 
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
+
     return;
 }
 
@@ -922,7 +998,7 @@ main(int32 argc, char **argv) {
         SNPRINTF(cecup.config_path, "%s/cecup.conf", config_base);
     }
 
-    cecup.store = GTK_TREE_MODEL(cecup_tree_model_new());
+    cecup.store = G_LIST_MODEL(cecup_list_model_new());
 
     cecup.application = gtk_application_new("com.cecup.app",
                                             G_APPLICATION_DEFAULT_FLAGS);
