@@ -248,6 +248,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     case ACTION_SYMLINK:
     case ACTION_NEW:
     case ACTION_UPDATE:
+    case ACTION_LAST:
     default:
         break;
     }
