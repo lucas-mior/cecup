@@ -325,6 +325,7 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
             }
             break;
         case ACTION_DELETE:
+        case ACTION_LAST:
         default:
             error("Invalid row->src_action: %u\n", row->src_action);
             fatal(EXIT_FAILURE);

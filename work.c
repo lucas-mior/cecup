@@ -1495,6 +1495,7 @@ work_rsync_bulk(void *user_data) {
         case ACTION_NEW:
         case ACTION_UPDATE:
         case ACTION_SYMLINK:
+        case ACTION_LAST:
         default:
             write64(files_from_fd, task->path, task->path_len);
             write64(files_from_fd, "\n", 1);
