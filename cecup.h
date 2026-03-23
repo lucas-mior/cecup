@@ -181,7 +181,8 @@ enum DataType {
     DATA_TYPE_ENABLE_BUTTONS,
     DATA_TYPE_CLEAR_TREES,
     DATA_TYPE_PROGRESS_PREVIEW,
-    DATA_TYPE_REGENERATE_PREVIEW
+    DATA_TYPE_REGENERATE_PREVIEW,
+    DATA_TYPE_ADD_ROW,
 };
 
 typedef struct Message {
@@ -209,6 +210,9 @@ typedef struct Message {
 
     int32 side;
     double fraction;
+    
+    bool delete_excluded;
+    bool is_dir;
 } Message;
 
 typedef struct Task {

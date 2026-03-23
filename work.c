@@ -196,140 +196,49 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
              int64 src_size_raw, int64 src_mtime_raw,
              int64 dst_size_raw, int64 dst_mtime_raw,
              bool delete_excluded, bool is_dir) {
-    CecupRow *row;
-    char *final_src_path = NULL;
-    char *final_dst_path = NULL;
-    int32 slash = 0;
+    Message *message;
+    int32 target_len;
+    int32 pattern_len;
+
+    message = xmalloc(SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
+
+    message->type = DATA_TYPE_ADD_ROW;
+    message->action = action;
+    message->reason = reason;
+    message->path_len = path_len;
+    message->src_size = src_size_raw;
+    message->src_mtime = src_mtime_raw;
+    message->dst_size = dst_size_raw;
+    message->dst_mtime = dst_mtime_raw;
+    message->delete_excluded = delete_excluded;
+    message->is_dir = is_dir;
 
     if (src_path) {
-        if (is_dir) {
-            slash = 1;
-        }
-
-        final_src_path = xarena_push(cecup.arena, path_len + slash + 1);
-        memcpy64(final_src_path, src_path, path_len + 1);
-
-        if (is_dir && (final_src_path[path_len - 1] != '/')) {
-            final_src_path[path_len] = '/';
-            final_src_path[path_len + 1] = '\0';
-            path_len += 1;
-        }
-
-        if (dst_path) {
-            final_dst_path = final_src_path;
-        }
-    } else if (dst_path) {
-        if (is_dir) {
-            slash = 1;
-        }
-
-        final_dst_path = xarena_push(cecup.arena, path_len + slash + 1);
-        memcpy64(final_dst_path, dst_path, path_len + 1);
-        if (is_dir && (final_dst_path[path_len - 1] != '/')) {
-            final_dst_path[path_len] = '/';
-            final_dst_path[path_len + 1] = '\0';
-            path_len += 1;
-        }
-    } else {
-        error("Error: both src_path and dst_path are NULL. "
-              "(action=%s) (reason=%s)\n",
-              ACTION_str(action), REASON_str(reason));
-        fatal(EXIT_FAILURE);
+        message->src_path = xmalloc(path_len + 1);
+        memcpy64(message->src_path, src_path, path_len + 1);
     }
 
-    row = xarena_push(cecup.arena, SIZEOF(*row));
-    memset64(row, 0, SIZEOF(*row));
-
-    row->src_action = action;
-    row->dst_action = action;
-    row->reason = reason;
-
-    switch (action) {
-    case ACTION_IGNORE:
-        row->src_action = ACTION_IGNORE;
-        if (final_dst_path) {
-            if (delete_excluded) {
-                row->dst_action = ACTION_DELETE;
-            } else {
-                row->dst_action = ACTION_IGNORE;
-            }
-        } else {
-            row->dst_action = ACTION_IGNORE;
-        }
-        break;
-    case ACTION_DELETE:
-        row->dst_action = ACTION_DELETE;
-        row->src_action = ACTION_IGNORE;
-        break;
-    case ACTION_DELETED:
-    case ACTION_EQUAL:
-    case ACTION_HARDLINK:
-    case ACTION_SYMLINK:
-    case ACTION_NEW:
-    case ACTION_UPDATE:
-    case ACTION_LAST:
-    default:
-        break;
-    }
-
-    bytes_pretty(row->src_size_text, src_size_raw);
-    bytes_pretty(row->dst_size_text, dst_size_raw);
-    row->src_size_raw = src_size_raw;
-    row->dst_size_raw = dst_size_raw;
-
-    if (src_mtime_raw > 0) {
-        time_t t = (time_t)src_mtime_raw;
-        struct tm *tm_info = localtime(&t);
-        STRFTIME(row->src_mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
-        row->src_mtime_raw = src_mtime_raw;
-    }
-
-    if (dst_mtime_raw > 0) {
-        time_t t = (time_t)dst_mtime_raw;
-        struct tm *tm_info = localtime(&t);
-        STRFTIME(row->dst_mtime_text, "%Y-%m-%d %H:%M:%S", tm_info);
-        row->dst_mtime_raw = dst_mtime_raw;
+    if (dst_path) {
+        message->dst_path = xmalloc(path_len + 1);
+        memcpy64(message->dst_path, dst_path, path_len + 1);
     }
 
     if (link_target) {
-        int32 target_len = strlen32(link_target);
-        row->link_target_len = (int32)target_len;
-        row->link_target = xarena_push(cecup.arena, target_len + 1);
-        memcpy64(row->link_target, link_target, target_len + 1);
+        target_len = strlen32(link_target);
+        message->link_target_len = target_len;
+        message->link_target = xmalloc(target_len + 1);
+        memcpy64(message->link_target, link_target, target_len + 1);
     }
 
     if (ignore_pattern) {
-        int32 pattern_len = strlen32(ignore_pattern);
-        row->ignore_pattern_len = (int32)pattern_len;
-        row->ignore_pattern = xarena_push(cecup.arena, pattern_len + 1);
-        memcpy64(row->ignore_pattern, ignore_pattern, pattern_len + 1);
+        pattern_len = strlen32(ignore_pattern);
+        message->ignore_pattern_len = pattern_len;
+        message->ignore_pattern = xmalloc(pattern_len + 1);
+        memcpy64(message->ignore_pattern, ignore_pattern, pattern_len + 1);
     }
 
-    row->src_path = final_src_path;
-    row->dst_path = final_dst_path;
-    row->path_len = path_len;
-
-    if (cecup.rows_len >= cecup.rows_capacity) {
-        cecup.rows_capacity *= 2;
-        cecup.rows
-            = xrealloc(cecup.rows, cecup.rows_capacity*SIZEOF(CecupRow *));
-        cecup.rows_visible = xrealloc(cecup.rows_visible,
-                                      cecup.rows_capacity*SIZEOF(CecupRow *));
-    }
-
-    cecup.rows[cecup.rows_len] = row;
-    cecup.rows_len += 1;
-
-    if ((cecup.rows_len % 100000) == 0) {
-        Message *message = xmalloc(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
-
-        message->type = DATA_TYPE_TREE_UPDATE;
-
-        cecup.ui_waiting = true;
-        g_idle_add(update_ui_handler, message);
-    }
-
+    g_idle_add(update_ui_handler, message);
     return;
 }
 
@@ -945,8 +854,6 @@ work_rsync(void *user_data) {
 
     same_fs = (stat_src.st_dev == stat_dst.st_dev);
 
-    g_mutex_lock(&cecup.arena_mutex);
-
     if (thread_data->check_different_fs && same_fs) {
         Message *message;
         IPC_SEND_LOG_ERROR(
@@ -967,7 +874,6 @@ work_rsync(void *user_data) {
         g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
 
         work_finalize(thread_data);
-        g_mutex_unlock(&cecup.arena_mutex);
         return NULL;
     }
 
@@ -1124,22 +1030,18 @@ work_rsync(void *user_data) {
         pipes[0].revents = 0;
         pipes[1].revents = 0;
 
-        g_mutex_unlock(&cecup.arena_mutex);
         switch (poll(pipes, 2, -1)) {
         case -1:
             if (errno != EINTR) {
                 error("Error in poll: %s.\n", strerror(errno));
                 fatal(EXIT_FAILURE);
             }
-            g_mutex_lock(&cecup.arena_mutex);
             continue;
         case 0:
-            g_mutex_lock(&cecup.arena_mutex);
             continue;
         default:
             break;
         }
-        g_mutex_lock(&cecup.arena_mutex);
 
         if (pipes[0].revents & POLLERR) {
             pipes[0].fd = -1;
@@ -1217,7 +1119,6 @@ work_rsync(void *user_data) {
         IPC_SEND_LOG_ERROR("%s", buf_error);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
-    g_mutex_unlock(&cecup.arena_mutex);
 
     if (waitpid(child_pid, NULL, 0) < 0) {
         IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
