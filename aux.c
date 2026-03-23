@@ -257,8 +257,6 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     bool show_equal;
     bool show_delete;
     bool show_ignore;
-    GtkTreeIter iter;
-    bool valid;
 
     int32 saved_sort_id;
     GtkSortType saved_sort_order;
@@ -267,6 +265,8 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     struct timespec t1;
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
+
+    current_store_count = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(cecup.store), NULL);
 
     show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
@@ -385,43 +385,9 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
                                          GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID,
                                          GTK_SORT_ASCENDING);
 
-    current_store_count
-        = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(cecup.store), NULL);
-
-    if (cecup.rows_visible_len > current_store_count) {
-        for (int64 i = 0;
-             i < (cecup.rows_visible_len - current_store_count);
-             i += 1) {
-            gtk_list_store_append(cecup.store, &iter);
-        }
-    } else if (cecup.rows_visible_len < current_store_count) {
-        if (cecup.rows_visible_len == 0) {
-            gtk_list_store_clear(cecup.store);
-        } else {
-            if (gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(cecup.store),
-                                              &iter, NULL,
-                                              (int)cecup.rows_visible_len)) {
-                while (gtk_list_store_remove(cecup.store, &iter));
-            }
-        }
-    }
-
-    valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cecup.store), &iter);
-    for (int64 i = 0; i < cecup.rows_visible_len; i += 1) {
-        CecupRow *row = cecup.rows_visible[i];
-        CecupRow *old_row;
-
-        if (valid) {
-            gtk_tree_model_get(GTK_TREE_MODEL(cecup.store), &iter, COL_ROW_PTR, &old_row, -1);
-
-            if (old_row != row) {
-                gtk_list_store_set(cecup.store, &iter, COL_SELECTED, row->selected,
-                                   COL_ROW_PTR, row, -1);
-            }
-
-            valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(cecup.store), &iter);
-        }
-    }
+    cecup_tree_model_update(CECUP_TREE_MODEL(cecup.store),
+                            (int32)current_store_count,
+                            cecup.rows_visible_len);
 
     if (has_sort) {
         gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(cecup.store), saved_sort_id, saved_sort_order);
@@ -580,15 +546,19 @@ update_ui_handler(void *data) {
         refresh_ui_list(REFRESH_FINAL, message->path_to_focus);
         protect_interface_from_user(false);
         break;
-    case DATA_TYPE_CLEAR_TREES:
+    case DATA_TYPE_CLEAR_TREES: {
+        int32 current_store_count;
         if (cecup.refresh_id != 0) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
         }
-        gtk_list_store_clear(cecup.store);
+        current_store_count = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(cecup.store), NULL);
+        cecup_tree_model_update(CECUP_TREE_MODEL(cecup.store), current_store_count, 0);
+
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       0.0);
         break;
+    }
     case DATA_TYPE_REGENERATE_PREVIEW:
         on_preview_clicked(NULL, NULL);
         break;
@@ -605,6 +575,7 @@ update_ui_handler(void *data) {
     XFREE(message);
     return G_SOURCE_REMOVE;
 }
+
 
 static void
 cecup_get_dirs(void) {

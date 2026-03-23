@@ -270,7 +270,7 @@ static struct {
     GtkWidget *filter_delete;
     GtkWidget *filter_ignore;
 
-    GtkListStore *store;
+    GtkTreeModel *store;
     GtkWidget *log_view;
     GtkTextBuffer *log_buffer;
     char ignore_path[MAX_PATH_LENGTH];
@@ -429,5 +429,7 @@ static CecupMenuItem tree_menu_items[] = {
 {N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
 {N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
 };
+
+#include "tree_model.c"
 
 #endif /* CECUP_H */

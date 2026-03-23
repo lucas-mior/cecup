@@ -364,7 +364,6 @@ application_run(GtkApplication *application, gpointer user_data) {
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
 
-    GType column_types[NUM_COLS];
     char cwd[MAX_PATH_LENGTH];
     char *default_src;
     char *default_dst;
@@ -589,12 +588,6 @@ application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_hexpand(cecup.search_entry, TRUE);
     gtk_box_append(GTK_BOX(search_hbox), cecup.search_entry);
     gtk_box_append(GTK_BOX(main_vbox), search_hbox);
-
-    for (int32 i = 0; i < NUM_COLS; i += 1) {
-        column_types[i] = G_TYPE_INT;
-    }
-    column_types[COL_ROW_PTR] = G_TYPE_POINTER;
-    cecup.store = gtk_list_store_newv(NUM_COLS, column_types);
 
     v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
     gtk_widget_set_vexpand(v_paned, TRUE);
@@ -926,6 +919,8 @@ main(int32 argc, char **argv) {
         SNPRINTF(cecup.ignore_path, "%s/ignore.conf", config_base);
         SNPRINTF(cecup.config_path, "%s/cecup.conf", config_base);
     }
+
+    cecup.store = GTK_TREE_MODEL(cecup_tree_model_new());
 
     cecup.application = gtk_application_new("com.cecup.app",
                                             G_APPLICATION_DEFAULT_FLAGS);
