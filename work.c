@@ -1163,6 +1163,9 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stdout[0]);
 
     if (ntransfers <= 0) {
+        for (uint32 i = 0; i < hash_length(show_patterns_map); i += 1) {
+            XFREE(show_patterns_map->array[i].value);
+        }
         hash_destroy_map(show_patterns_map);
         work_finalize(thread_data);
         return NULL;
