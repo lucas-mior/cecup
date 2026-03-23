@@ -51,7 +51,7 @@ typedef struct FixFsThreadData {
 #include "hash.c"
 
 static bool
-get_file_info(char *base, char **path, int64 *size, int64 *mtime,
+get_file_info(char *base, char **path, int64 *mtime,
               bool *is_dir) {
     char full_path[MAX_PATH_LENGTH];
     struct stat stat;
@@ -62,12 +62,10 @@ get_file_info(char *base, char **path, int64 *size, int64 *mtime,
         if (errno != ENOENT) {
             error("Error in lstat(%s): %s.\n", full_path, strerror(errno));
         }
-        *size = 0;
         *mtime = 0;
         *path = NULL;
         return false;
     } else {
-        *size = stat.st_size;
         *mtime = (int64)stat.st_mtime;
         *is_dir = S_ISDIR(stat.st_mode);
         return true;
@@ -75,7 +73,11 @@ get_file_info(char *base, char **path, int64 *size, int64 *mtime,
 }
 
 static char *
-check_itemize_line(char *buf_output) {
+check_itemize_line(char *buf_output, int64 *parsed_size) {
+    char *size_str;
+    char *endptr;
+    int64 size_val;
+
     switch (buf_output[0]) {
     case RSYNC_CHAR0_ACTION_SEND:
     case RSYNC_CHAR0_ACTION_RECEIVE:
@@ -122,7 +124,21 @@ check_itemize_line(char *buf_output) {
         return NULL;
     }
 
-    return buf_output + strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
+    size_str = buf_output + strlen32(RSYNC_ITEMIZE_PLACEHOLDERS) + 1;
+    while (*size_str == ' ') {
+        size_str += 1;
+    }
+    size_val = (int64)strtoll(size_str, &endptr, 10);
+
+    if ((endptr == size_str) || (*endptr != ' ')) {
+        return NULL;
+    }
+
+    if (parsed_size) {
+        *parsed_size = size_val;
+    }
+
+    return endptr + 1;
 }
 
 static void
@@ -557,6 +573,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
     int64 src_mtime = 0;
     int64 dst_size = 0;
     int64 dst_mtime = 0;
+    int64 parsed_size = 0;
     enum CecupAction action;
     enum CecupReason reason;
 
@@ -574,7 +591,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         error("%s\n", buf_output);
     }
 
-    itemize_parsed = check_itemize_line(buf_output);
+    itemize_parsed = check_itemize_line(buf_output, &parsed_size);
     action_char = buf_output[0];
     type_char = buf_output[1];
 
@@ -614,9 +631,9 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         ignore_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
 
         get_file_info(cecup.src_base, &src_path,
-                      &src_size, &src_mtime, &is_dir);
+                      &src_mtime, &is_dir);
         get_file_info(cecup.dst_base, &dst_path,
-                      &dst_size, &dst_mtime, &is_dir);
+                      &dst_mtime, &is_dir);
 
         *nfiles_processed += 1;
         if (((*nfiles_processed % 1000) == 0) && (nfiles_total > 0)) {
@@ -643,14 +660,14 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         path_len = line_len - (int32)(src_path - buf_output);
 
         if (get_file_info(cecup.src_base, &src_path,
-                          &src_size, &src_mtime, &is_dir)) {
+                          &src_mtime, &is_dir)) {
             reason = REASON_IGNORED;
         } else {
             reason = REASON_MISSING;
         }
 
         get_file_info(cecup.dst_base, &dst_path,
-                      &dst_size, &dst_mtime, &is_dir);
+                      &dst_mtime, &is_dir);
 
         *nfiles_processed += 1;
         if (((*nfiles_processed % 1000) == 0) && (nfiles_total > 0)) {
@@ -740,9 +757,12 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         }
 
         get_file_info(cecup.src_base, &src_path,
-                      &src_size, &src_mtime, &is_dir);
+                      &src_mtime, &is_dir);
         get_file_info(cecup.dst_base, &dst_path,
-                      &dst_size, &dst_mtime, &is_dir);
+                      &dst_mtime, &is_dir);
+
+        src_size = parsed_size;
+        dst_size = parsed_size;
 
         if (filtered) {
             char *path;
@@ -822,9 +842,12 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         }
 
         get_file_info(cecup.src_base, &src_path,
-                      &src_size, &src_mtime, &is_dir);
+                      &src_mtime, &is_dir);
         get_file_info(cecup.dst_base, &dst_path,
-                      &dst_size, &dst_mtime, &is_dir);
+                      &dst_mtime, &is_dir);
+
+        src_size = parsed_size;
+        dst_size = parsed_size;
 
         if (filtered) {
             char *path;
@@ -999,7 +1022,7 @@ work_rsync(void *user_data) {
     rsync_args[a++] = "--info=progress2";
     rsync_args[a++] = "--links";
     rsync_args[a++] = "--hard-links";
-    rsync_args[a++] = "--itemize-changes";
+    rsync_args[a++] = "--out-format=%i %l %n%L";
     rsync_args[a++] = "--perms";
     rsync_args[a++] = "--times";
     rsync_args[a++] = "--owner";
@@ -1515,7 +1538,7 @@ work_rsync_bulk(void *user_data) {
     rsync_args[a++] = "--info=progress2";
     rsync_args[a++] = "--links";
     rsync_args[a++] = "--hard-links";
-    rsync_args[a++] = "--itemize-changes";
+    rsync_args[a++] = "--out-format=%i %l %n%L";
     rsync_args[a++] = "--perms";
     rsync_args[a++] = "--times";
     rsync_args[a++] = "--owner";
@@ -1621,7 +1644,7 @@ work_rsync_bulk(void *user_data) {
 
             IPC_SEND_LOG("%s\n", buf_output_bulk);
 
-            if ((filename = check_itemize_line(buf_output_bulk))) {
+            if ((filename = check_itemize_line(buf_output_bulk, NULL))) {
                 int32 path_len;
                 char *sep;
                 Message *message;
