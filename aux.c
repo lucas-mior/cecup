@@ -415,6 +415,7 @@ refresh_ui_timeout_callback(void *data) {
 static gboolean
 update_ui_handler(void *data) {
     Message *message;
+    MessageBatch *batch;
     GtkTextIter end;
     GtkTextTagTable *table;
     char *pattern;
@@ -540,139 +541,165 @@ update_ui_handler(void *data) {
         on_preview_clicked(NULL, NULL);
         break;
     case DATA_TYPE_ADD_ROW:
-        final_src_path = NULL;
-        final_dst_path = NULL;
-        slash = 0;
+        batch = (MessageBatch *)data;
 
-        if (message->src_path) {
-            if (message->is_dir) {
-                slash = 1;
-            }
+        for (int32 i = 0; i < batch->count; i += 1) {
+            message = batch->messages[i];
+            final_src_path = NULL;
+            final_dst_path = NULL;
+            slash = 0;
 
-            final_src_path = xarena_push(cecup.arena, message->path_len + slash + 1);
-            memcpy64(final_src_path, message->src_path, message->path_len + 1);
-
-            if (message->is_dir) {
-                if (final_src_path[message->path_len - 1] != '/') {
-                    final_src_path[message->path_len] = '/';
-                    final_src_path[message->path_len + 1] = '\0';
-                    message->path_len += 1;
+            if (message->src_path) {
+                if (message->is_dir) {
+                    slash = 1;
                 }
-            }
 
-            if (message->dst_path) {
-                final_dst_path = final_src_path;
-            }
-        } else if (message->dst_path) {
-            if (message->is_dir) {
-                slash = 1;
-            }
+                final_src_path = xarena_push(cecup.arena, message->path_len + slash + 1);
+                memcpy64(final_src_path, message->src_path, message->path_len + 1);
 
-            final_dst_path = xarena_push(cecup.arena, message->path_len + slash + 1);
-            memcpy64(final_dst_path, message->dst_path, message->path_len + 1);
-
-            if (message->is_dir) {
-                if (final_dst_path[message->path_len - 1] != '/') {
-                    final_dst_path[message->path_len] = '/';
-                    final_dst_path[message->path_len + 1] = '\0';
-                    message->path_len += 1;
+                if (message->is_dir) {
+                    if (final_src_path[message->path_len - 1] != '/') {
+                        final_src_path[message->path_len] = '/';
+                        final_src_path[message->path_len + 1] = '\0';
+                        message->path_len += 1;
+                    }
                 }
+
+                if (message->dst_path) {
+                    final_dst_path = final_src_path;
+                }
+            } else if (message->dst_path) {
+                if (message->is_dir) {
+                    slash = 1;
+                }
+
+                final_dst_path = xarena_push(cecup.arena, message->path_len + slash + 1);
+                memcpy64(final_dst_path, message->dst_path, message->path_len + 1);
+
+                if (message->is_dir) {
+                    if (final_dst_path[message->path_len - 1] != '/') {
+                        final_dst_path[message->path_len] = '/';
+                        final_dst_path[message->path_len + 1] = '\0';
+                        message->path_len += 1;
+                    }
+                }
+            } else {
+                error("Error: both src_path and dst_path are NULL. "
+                      "(action=%s) (reason=%s)\n",
+                      ACTION_str(message->action), REASON_str(message->reason));
+                fatal(EXIT_FAILURE);
             }
-        } else {
-            error("Error: both src_path and dst_path are NULL. "
-                  "(action=%s) (reason=%s)\n",
-                  ACTION_str(message->action), REASON_str(message->reason));
-            fatal(EXIT_FAILURE);
-        }
 
-        row = xarena_push(cecup.arena, SIZEOF(*row));
-        memset64(row, 0, SIZEOF(*row));
+            row = xarena_push(cecup.arena, SIZEOF(*row));
+            memset64(row, 0, SIZEOF(*row));
 
-        row->src_action = message->action;
-        row->dst_action = message->action;
-        row->reason = message->reason;
+            row->src_action = message->action;
+            row->dst_action = message->action;
+            row->reason = message->reason;
 
-        switch (message->action) {
-        case ACTION_IGNORE:
-            row->src_action = ACTION_IGNORE;
-            if (final_dst_path) {
-                if (message->delete_excluded) {
-                    row->dst_action = ACTION_DELETE;
+            switch (message->action) {
+            case ACTION_IGNORE:
+                row->src_action = ACTION_IGNORE;
+                if (final_dst_path) {
+                    if (message->delete_excluded) {
+                        row->dst_action = ACTION_DELETE;
+                    } else {
+                        row->dst_action = ACTION_IGNORE;
+                    }
                 } else {
                     row->dst_action = ACTION_IGNORE;
                 }
-            } else {
-                row->dst_action = ACTION_IGNORE;
+                break;
+            case ACTION_DELETE:
+                row->dst_action = ACTION_DELETE;
+                row->src_action = ACTION_IGNORE;
+                break;
+            case ACTION_DELETED:
+            case ACTION_EQUAL:
+            case ACTION_HARDLINK:
+            case ACTION_SYMLINK:
+            case ACTION_NEW:
+            case ACTION_UPDATE:
+            case ACTION_LAST:
+            default:
+                break;
             }
-            break;
-        case ACTION_DELETE:
-            row->dst_action = ACTION_DELETE;
-            row->src_action = ACTION_IGNORE;
-            break;
-        case ACTION_DELETED:
-        case ACTION_EQUAL:
-        case ACTION_HARDLINK:
-        case ACTION_SYMLINK:
-        case ACTION_NEW:
-        case ACTION_UPDATE:
-        case ACTION_LAST:
-        default:
-            break;
-        }
 
-        bytes_pretty(row->src_size_text, message->src_size);
-        bytes_pretty(row->dst_size_text, message->dst_size);
-        row->src_size_raw = message->src_size;
-        row->dst_size_raw = message->dst_size;
+            bytes_pretty(row->src_size_text, message->src_size);
+            bytes_pretty(row->dst_size_text, message->dst_size);
+            row->src_size_raw = message->src_size;
+            row->dst_size_raw = message->dst_size;
 
-        if (message->src_mtime > 0) {
-            unix_timestamp = (time_t)message->src_mtime;
-            time_information = localtime(&unix_timestamp);
-            STRFTIME(row->src_mtime_text, "%Y-%m-%d %H:%M:%S", time_information);
-            row->src_mtime_raw = message->src_mtime;
-        }
-
-        if (message->dst_mtime > 0) {
-            unix_timestamp = (time_t)message->dst_mtime;
-            time_information = localtime(&unix_timestamp);
-            STRFTIME(row->dst_mtime_text, "%Y-%m-%d %H:%M:%S", time_information);
-            row->dst_mtime_raw = message->dst_mtime;
-        }
-
-        if (message->link_target) {
-            row->link_target_len = message->link_target_len;
-            row->link_target = xarena_push(cecup.arena, row->link_target_len + 1);
-            memcpy64(row->link_target, message->link_target, row->link_target_len + 1);
-        }
-
-        if (message->ignore_pattern) {
-            row->ignore_pattern_len = message->ignore_pattern_len;
-            row->ignore_pattern = xarena_push(cecup.arena, row->ignore_pattern_len + 1);
-            memcpy64(row->ignore_pattern, message->ignore_pattern, row->ignore_pattern_len + 1);
-        }
-
-        row->src_path = final_src_path;
-        row->dst_path = final_dst_path;
-        row->path_len = message->path_len;
-
-        if (cecup.rows_len >= cecup.rows_capacity) {
-            cecup.rows_capacity *= 2;
-            cecup.rows = xrealloc(cecup.rows, cecup.rows_capacity * SIZEOF(CecupRow *));
-            cecup.rows_visible = xrealloc(cecup.rows_visible, cecup.rows_capacity * SIZEOF(CecupRow *));
-        }
-
-        cecup.rows[cecup.rows_len] = row;
-        cecup.rows_len += 1;
-
-        if ((cecup.rows_len % 100000) == 0) {
-            cecup.ui_waiting = true;
-            if (cecup.refresh_id == 0) {
-                cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
-                                                 refresh_ui_timeout_callback, NULL);
+            if (message->src_mtime > 0) {
+                unix_timestamp = (time_t)message->src_mtime;
+                time_information = localtime(&unix_timestamp);
+                STRFTIME(row->src_mtime_text, "%Y-%m-%d %H:%M:%S", time_information);
+                row->src_mtime_raw = message->src_mtime;
             }
+
+            if (message->dst_mtime > 0) {
+                unix_timestamp = (time_t)message->dst_mtime;
+                time_information = localtime(&unix_timestamp);
+                STRFTIME(row->dst_mtime_text, "%Y-%m-%d %H:%M:%S", time_information);
+                row->dst_mtime_raw = message->dst_mtime;
+            }
+
+            if (message->link_target) {
+                row->link_target_len = message->link_target_len;
+                row->link_target = xarena_push(cecup.arena, row->link_target_len + 1);
+                memcpy64(row->link_target, message->link_target, row->link_target_len + 1);
+            }
+
+            if (message->ignore_pattern) {
+                row->ignore_pattern_len = message->ignore_pattern_len;
+                row->ignore_pattern = xarena_push(cecup.arena, row->ignore_pattern_len + 1);
+                memcpy64(row->ignore_pattern, message->ignore_pattern, row->ignore_pattern_len + 1);
+            }
+
+            row->src_path = final_src_path;
+            row->dst_path = final_dst_path;
+            row->path_len = message->path_len;
+
+            if (cecup.rows_len >= cecup.rows_capacity) {
+                cecup.rows_capacity *= 2;
+                cecup.rows = xrealloc(cecup.rows, cecup.rows_capacity * SIZEOF(CecupRow *));
+                cecup.rows_visible = xrealloc(cecup.rows_visible, cecup.rows_capacity * SIZEOF(CecupRow *));
+            }
+
+            cecup.rows[cecup.rows_len] = row;
+            cecup.rows_len += 1;
+
+            if ((cecup.rows_len % 100000) == 0) {
+                cecup.ui_waiting = true;
+                if (cecup.refresh_id == 0) {
+                    cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
+                                                     refresh_ui_timeout_callback, NULL);
+                }
+            }
+
+            if (message->message) {
+                XFREE(message->message);
+            }
+            if (message->path_to_focus) {
+                XFREE(message->path_to_focus);
+            }
+            if (message->src_path) {
+                XFREE(message->src_path);
+            }
+            if (message->dst_path) {
+                XFREE(message->dst_path);
+            }
+            if (message->link_target) {
+                XFREE(message->link_target);
+            }
+            if (message->ignore_pattern) {
+                XFREE(message->ignore_pattern);
+            }
+            XFREE(message);
         }
 
-        break;
+        XFREE(batch);
+        return G_SOURCE_REMOVE;
     default:
         break;
     }

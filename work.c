@@ -50,6 +50,29 @@ typedef struct FixFsThreadData {
 #define HASH_TYPE map
 #include "hash.c"
 
+static Message *add_row_batch_messages[BATCH_SIZE];
+static int32 add_row_batch_count = 0;
+
+static void
+work_flush_add_rows(void) {
+    MessageBatch *batch;
+    int64 messages_size;
+
+    if (add_row_batch_count == 0) {
+        return;
+    }
+
+    messages_size = add_row_batch_count * SIZEOF(Message *);
+    batch = xmalloc(SIZEOF(*batch) + messages_size);
+    batch->type = DATA_TYPE_ADD_ROW;
+    batch->count = add_row_batch_count;
+    memcpy64(batch->messages, add_row_batch_messages, messages_size);
+
+    g_idle_add(update_ui_handler, batch);
+    add_row_batch_count = 0;
+    return;
+}
+
 static bool
 get_file_info(char *base, char **path,
               int64 *mtime, int64 *size, bool *is_dir) {
@@ -148,6 +171,8 @@ static void
 work_finalize(ThreadData *thread_data) {
     Message *message;
 
+    work_flush_add_rows();
+
     ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
     message = xmalloc(SIZEOF(*message));
@@ -196,9 +221,9 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
              int64 src_size_raw, int64 src_mtime_raw,
              int64 dst_size_raw, int64 dst_mtime_raw,
              bool delete_excluded, bool is_dir) {
-    Message *message;
     int32 target_len;
     int32 pattern_len;
+    Message *message;
 
     message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
@@ -238,7 +263,12 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
         memcpy64(message->ignore_pattern, ignore_pattern, pattern_len + 1);
     }
 
-    g_idle_add(update_ui_handler, message);
+    add_row_batch_messages[add_row_batch_count] = message;
+    add_row_batch_count += 1;
+
+    if (add_row_batch_count >= BATCH_SIZE) {
+        work_flush_add_rows();
+    }
     return;
 }
 

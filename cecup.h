@@ -38,6 +38,8 @@
 #define MAX_PATH_LENGTH 4096
 #define MAX_NAME_LENGTH 256
 
+#define MESSAGES_BUF_SIZE 256
+
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME CecupAction
 #define ENUM_PREFIX_ ACTION_
@@ -214,6 +216,12 @@ typedef struct Message {
     bool delete_excluded;
     bool is_dir;
 } Message;
+
+typedef struct MessageBatch {
+    enum DataType type;
+    int32 count;
+    Message *messages[];
+} MessageBatch;
 
 typedef struct Task {
     enum DataType type;
