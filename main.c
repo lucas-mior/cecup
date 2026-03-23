@@ -840,6 +840,8 @@ application_run(GtkApplication *application, gpointer user_data) {
     g_signal_connect(cecup.delete_after, "toggled",
                      G_CALLBACK(on_delete_after_toggled), NULL);
 
+    cecup_get_dirs();
+
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
     return;
 }

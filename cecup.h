@@ -430,6 +430,4 @@ static CecupMenuItem tree_menu_items[] = {
 {N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
 };
 
-#include "tree_model.c"
-
 #endif /* CECUP_H */

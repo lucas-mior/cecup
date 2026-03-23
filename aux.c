@@ -22,9 +22,10 @@
 #include <glib/gmain.h>
 #include <stdlib.h>
 
+#include "util.c"
 #include "i18n.h"
 #include "cecup.h"
-#include "util.c"
+#include "tree_model.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_aux 1
@@ -576,6 +577,14 @@ update_ui_handler(void *data) {
     return G_SOURCE_REMOVE;
 }
 
+static void
+cecup_reset_dir(int32 side) {
+    if (side == L) {
+        gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), "./");
+    } else {
+        gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), "./");
+    }
+}
 
 static void
 cecup_get_dirs(void) {
@@ -591,19 +600,27 @@ cecup_get_dirs(void) {
 
     save_config();
 
-    if ((strlen32(tmp_src) <= 0) || (strlen32(tmp_dst) <= 0)) {
-        IPC_SEND_LOG_ERROR("Error: Invalid source and/or destination\n");
+    if (strlen32(tmp_src) <= 0) {
+        IPC_SEND_LOG_ERROR("Error: Invalid source directory.\n");
+        cecup_reset_dir(L);
+        return;
+    }
+    if (strlen32(tmp_dst) <= 0) {
+        IPC_SEND_LOG_ERROR("Error: Invalid source directory.\n");
+        cecup_reset_dir(R);
         return;
     }
 
     if ((full_src = realpath(tmp_src, NULL)) == NULL) {
         IPC_SEND_LOG_ERROR("Error getting full path of %s: %s.\n", tmp_src,
                            strerror(errno));
+        cecup_reset_dir(L);
         return;
     }
     if ((full_dst = realpath(tmp_dst, NULL)) == NULL) {
         IPC_SEND_LOG_ERROR("Error getting full path of %s: %s.\n", tmp_dst,
                            strerror(errno));
+        cecup_reset_dir(R);
         return;
     }
 
