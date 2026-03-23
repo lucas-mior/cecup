@@ -1125,7 +1125,7 @@ work_rsync(void *user_data) {
         pipes[1].revents = 0;
 
         g_mutex_unlock(&cecup.arena_mutex);
-        switch (poll(pipes, 2, 200)) {
+        switch (poll(pipes, 2, 500)) {
         case -1:
             if (errno != EINTR) {
                 error("Error in poll: %s.\n", strerror(errno));
@@ -1326,7 +1326,7 @@ work_rsync(void *user_data) {
         pipes[0].revents = 0;
         pipes[1].revents = 0;
 
-        switch (poll(pipes, 2, 200)) {
+        switch (poll(pipes, 2, 500)) {
         case -1:
             if (errno != EINTR) {
                 error("Error in poll: %s.\n", strerror(errno));
@@ -1600,7 +1600,7 @@ work_rsync_bulk(void *user_data) {
         pipes[0].revents = 0;
         pipes[1].revents = 0;
 
-        switch (poll(pipes, 2, 200)) {
+        switch (poll(pipes, 2, 500)) {
         case -1:
             if (errno != EINTR) {
                 error("Error in poll: %s.\n", strerror(errno));
