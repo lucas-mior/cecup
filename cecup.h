@@ -369,7 +369,7 @@ enum RsyncCharAttribute {
 
 #define RSYNC_ITEMIZE_PLACEHOLDERS "YXcstpoguax"
 
-#define RSYNC_MESSAGE_DELETING "*deleting "
+#define RSYNC_MESSAGE_DELETING "*deleting   0 "
 
 /* for ignored files on the source, rsync --verbose --verbose outputs:
  * [sender] hiding file <filename> because of pattern <pattern>
