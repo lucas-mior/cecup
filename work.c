@@ -176,8 +176,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
              int32 path_len,
              int64 src_size_raw, int64 src_mtime_raw,
              int64 dst_size_raw, int64 dst_mtime_raw,
-             bool delete_excluded, bool is_dir,
-             int64 *nfiles_processed, int64 nfiles_total) {
+             bool delete_excluded, bool is_dir) {
     CecupRow *row;
     char *final_src_path = NULL;
     char *final_dst_path = NULL;
@@ -302,12 +301,6 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
 
     cecup.rows[cecup.rows_len] = row;
     cecup.rows_len += 1;
-
-    *nfiles_processed += 1;
-    if (((cecup.rows_len % 1000) == 0) && (nfiles_total > 0)) {
-        ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                          (double)*nfiles_processed / (double)nfiles_total);
-    }
 
     if ((cecup.rows_len % 10000) == 0) {
         Message *message = xmalloc(SIZEOF(*message));
@@ -626,18 +619,24 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
+        *nfiles_processed += 1;
+        if (((*nfiles_processed % 1000) == 0) && (nfiles_total > 0)) {
+            ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                              (double)*nfiles_processed / (double)nfiles_total);
+        }
+
         if (is_preview && strcmp(ignore_pattern, RSYNC_WILDCARD)) {
             work_add_row(ACTION_IGNORE, REASON_IGNORED,
                          src_path, dst_path, NULL, ignore_pattern,
                          path_len,
                          src_size, src_mtime, dst_size, dst_mtime,
-                         delete_excluded, is_dir,
-                         nfiles_processed, nfiles_total);
+                         delete_excluded, is_dir);
         }
         return;
     }
 
     if ((dst_path = BEGINS_WITH(buf_output, RSYNC_MESSAGE_DELETING))) {
+
         while (*dst_path == ' ') {
             dst_path += 1;
         }
@@ -654,13 +653,18 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         get_file_info(cecup.dst_base, &dst_path,
                       &dst_size, &dst_mtime, &is_dir);
 
+        *nfiles_processed += 1;
+        if (((*nfiles_processed % 1000) == 0) && (nfiles_total > 0)) {
+            ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                              (double)*nfiles_processed / (double)nfiles_total);
+        }
+
         if (is_preview && (reason == REASON_MISSING)) {
             work_add_row(ACTION_DELETE, reason,
                          src_path, dst_path, NULL, NULL,
                          path_len,
                          src_size, src_mtime, dst_size, dst_mtime,
-                         delete_excluded, is_dir,
-                         nfiles_processed, nfiles_total);
+                         delete_excluded, is_dir);
         }
         return;
     }
@@ -761,14 +765,19 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
             }
         }
 
+        *nfiles_processed += 1;
+        if (((*nfiles_processed % 1000) == 0) && (nfiles_total > 0)) {
+            ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                              (double)*nfiles_processed / (double)nfiles_total);
+        }
+
         if (!(filtered && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
             if (is_preview) {
                 work_add_row(action, reason,
                              src_path, dst_path, link_target, NULL,
                              path_len,
                              src_size, src_mtime, dst_size, dst_mtime,
-                             delete_excluded, is_dir,
-                             nfiles_processed, nfiles_total);
+                             delete_excluded, is_dir);
             }
         }
         return;
@@ -838,14 +847,19 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
             }
         }
 
+        *nfiles_processed += 1;
+        if (((*nfiles_processed % 1000) == 0) && (nfiles_total > 0)) {
+            ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                              (double)*nfiles_processed / (double)nfiles_total);
+        }
+
         if (!(filtered && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
             if (is_preview) {
                 work_add_row(action, reason,
                              src_path, dst_path, link_target, NULL,
                              path_len,
                              src_size, src_mtime, dst_size, dst_mtime,
-                             delete_excluded, is_dir,
-                             nfiles_processed, nfiles_total);
+                             delete_excluded, is_dir);
             }
         }
     } else {
