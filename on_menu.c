@@ -9,10 +9,10 @@ static void free_message(void *data);
 
 static void
 on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
-    int32 index;
-    CecupMenuItem *menu_item;
     GtkWidget *tree;
+    CecupMenuItem *menu_item;
     Message *message;
+    int32 index;
 
     (void)action;
     (void)data;
@@ -316,7 +316,7 @@ on_menu_diff(GtkWidget *m, void *data) {
             char *path_dst;
             int64 size_dst;
             int64 size_src;
-            int32 pid;
+            pid_t pid;
 
             task = tasks->items[i];
             size_src = strlen32(cecup.src_base) + strlen32(task->path) + 2;
@@ -357,7 +357,6 @@ on_menu_diff(GtkWidget *m, void *data) {
 
     return;
 }
-
 
 static void
 on_menu_ignore(GtkWidget *m, void *data) {
