@@ -325,7 +325,7 @@ cecup_tree_model_tree_sortable_init(GtkTreeSortableIface *iface) {
     return;
 }
 
-void
+static void
 cecup_tree_model_update(CecupTreeModel *self, int32 old_count, int32 new_count) {
     GtkTreePath *path;
     GtkTreeIter iter;

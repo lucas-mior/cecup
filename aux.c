@@ -259,9 +259,6 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     bool show_delete;
     bool show_ignore;
 
-    int32 saved_sort_id;
-    GtkSortType saved_sort_order;
-    bool has_sort;
     struct timespec t0;
     struct timespec t1;
 
