@@ -373,31 +373,9 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
                 cecup_row_compare);
     }
 
-    g_object_freeze_notify(G_OBJECT(cecup.store));
-    g_object_freeze_notify(G_OBJECT(cecup.tree[L]));
-    g_object_freeze_notify(G_OBJECT(cecup.tree[R]));
-    has_sort
-        = gtk_tree_sortable_get_sort_column_id(GTK_TREE_SORTABLE(cecup.store),
-                                               (int *)&saved_sort_id,
-                                               &saved_sort_order);
-
-    g_signal_handlers_block_by_func(cecup.store, on_sort_changed, NULL);
-    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(cecup.store),
-                                         GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID,
-                                         GTK_SORT_ASCENDING);
-
     cecup_tree_model_update(CECUP_TREE_MODEL(cecup.store),
                             (int32)current_store_count,
                             cecup.rows_visible_len);
-
-    if (has_sort) {
-        gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(cecup.store), saved_sort_id, saved_sort_order);
-    }
-
-    g_signal_handlers_unblock_by_func(cecup.store, on_sort_changed, NULL);
-    g_object_thaw_notify(G_OBJECT(cecup.store));
-    g_object_thaw_notify(G_OBJECT(cecup.tree[L]));
-    g_object_thaw_notify(G_OBJECT(cecup.tree[R]));
 
     if ((refresh_type & REFRESH_FINAL) && path_to_focus) {
         for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
