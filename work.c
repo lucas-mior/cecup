@@ -320,7 +320,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     cecup.rows[cecup.rows_len] = row;
     cecup.rows_len += 1;
 
-    if ((cecup.rows_len % 10000) == 0) {
+    if ((cecup.rows_len % 100000) == 0) {
         Message *message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
@@ -1125,7 +1125,7 @@ work_rsync(void *user_data) {
         pipes[1].revents = 0;
 
         g_mutex_unlock(&cecup.arena_mutex);
-        switch (poll(pipes, 2, 500)) {
+        switch (poll(pipes, 2, -1)) {
         case -1:
             if (errno != EINTR) {
                 error("Error in poll: %s.\n", strerror(errno));
@@ -1326,7 +1326,7 @@ work_rsync(void *user_data) {
         pipes[0].revents = 0;
         pipes[1].revents = 0;
 
-        switch (poll(pipes, 2, 500)) {
+        switch (poll(pipes, 2, -1)) {
         case -1:
             if (errno != EINTR) {
                 error("Error in poll: %s.\n", strerror(errno));
@@ -1600,7 +1600,7 @@ work_rsync_bulk(void *user_data) {
         pipes[0].revents = 0;
         pipes[1].revents = 0;
 
-        switch (poll(pipes, 2, 500)) {
+        switch (poll(pipes, 2, -1)) {
         case -1:
             if (errno != EINTR) {
                 error("Error in poll: %s.\n", strerror(errno));
