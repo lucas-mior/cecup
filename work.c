@@ -217,8 +217,6 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
               ACTION_str(action), REASON_str(reason));
         fatal(EXIT_FAILURE);
     }
-    printf("(action=%s) (reason=%s)\n",
-           ACTION_str(action), REASON_str(reason));
 
     row = xarena_push(cecup.arena, SIZEOF(*row));
     memset64(row, 0, SIZEOF(*row));
