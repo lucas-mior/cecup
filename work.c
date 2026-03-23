@@ -732,7 +732,9 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
                               (double)*nfiles_processed / (double)nfiles_total);
         }
 
-        if (!(filtered && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
+        if (!(filtered
+              && ((src_path && !strcmp(src_path, "./"))
+                  || ignore_duplicate_dir))) {
             if (is_preview) {
                 work_add_row(action, reason,
                              src_path, dst_path, link_target, NULL,
@@ -817,7 +819,9 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
                               (double)*nfiles_processed / (double)nfiles_total);
         }
 
-        if (!(filtered && (!strcmp(src_path, "./") || ignore_duplicate_dir))) {
+        if (!(filtered
+              && ((src_path && !strcmp(src_path, "./"))
+                  || ignore_duplicate_dir))) {
             if (is_preview) {
                 work_add_row(action, reason,
                              src_path, dst_path, link_target, NULL,
