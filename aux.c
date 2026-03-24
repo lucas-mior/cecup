@@ -132,16 +132,12 @@ get_target_tasks(int32 side, char *clicked_path,
     tasks->count = count;
 
     if ((tasks->count == 0) && clicked_path) {
-        Task *task;
-        int32 path_len;
-
-        task = xmalloc(SIZEOF(*task));
+        Task *task = xmalloc(SIZEOF(*task));
         memset64(task, 0, SIZEOF(*task));
 
-        path_len = strlen32(clicked_path);
-        task->path_len = path_len;
-        task->path = xmalloc(path_len + 1);
-        memcpy64(task->path, clicked_path, path_len + 1);
+        task->path_len = strlen32(clicked_path);
+        task->path = xmalloc(task->path_len + 1);
+        memcpy64(task->path, clicked_path, task->path_len + 1);
 
         task->action = clicked_action;
         task->side = side;
