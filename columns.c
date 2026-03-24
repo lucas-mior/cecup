@@ -47,12 +47,11 @@ bind_selected_cb(GtkSignalListItemFactory *factory,
 static void
 setup_action_cb(GtkSignalListItemFactory *factory,
                 GtkListItem *list_item, void *data) {
-    GtkWidget *label;
+    GtkWidget *label = gtk_label_new(NULL);
 
     (void)factory;
     (void)data;
 
-    label = gtk_label_new(NULL);
     gtk_widget_set_halign(label, GTK_ALIGN_FILL);
     gtk_widget_set_valign(label, GTK_ALIGN_FILL);
     gtk_label_set_xalign(GTK_LABEL(label), 0.5);
