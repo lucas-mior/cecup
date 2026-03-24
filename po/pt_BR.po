@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-24 03:17-0300\n"
+"POT-Creation-Date: 2026-03-24 03:22-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -26,6 +26,11 @@ msgid ""
 msgstr ""
 "Arquivos selecionados: %lld\n"
 "Tamanho total a copiar: 📦 %s"
+
+#: aux.c:487
+#, c-format
+msgid "Removing %s from list...\n"
+msgstr "Removendo %s da lista...\n"
 
 #: main.c:87
 msgid "Task"
@@ -255,7 +260,7 @@ msgstr "Esse nome de arquivo em qualquer pasta (*/%s)"
 msgid "pattern"
 msgstr "padrão"
 
-#: on.c:1417
+#: on.c:1417 work.c:450
 #, c-format
 msgid "Error renaming %s to %s: %s\n"
 msgstr "Error renomeando %s to %s: %s\n"
@@ -265,10 +270,20 @@ msgstr "Error renomeando %s to %s: %s\n"
 msgid "Renamed: %s -> %s\n"
 msgstr "Renomeado: %s -> %s\n"
 
+#: on_menu.c:70 on_menu.c:414
+#, fuzzy, c-format
+msgid "Error opening %s: %s.\n"
+msgstr "Error abrindo pasta %s: %s\n"
+
 #: on_menu.c:204
 #, c-format
 msgid "Launching %s...\n"
 msgstr "Executando %s...\n"
+
+#: on_menu.c:255
+#, fuzzy, c-format
+msgid "Error resolving full path of %s: %s.\n"
+msgstr "Error renomeando %s to %s: %s\n"
 
 #: on_menu.c:327
 #, c-format
@@ -308,6 +323,19 @@ msgstr "Erro: há espaço em braco no começo do nome do arquivo:\n"
 msgid "Error: there is space in the end of the fileneme:\n"
 msgstr "Erro: há espaço em braco no final do nome do arquivo:\n"
 
+#: work.c:453
+#, fuzzy, c-format
+msgid "Fixed: %s -> %s\n"
+msgstr "Renomeado: %s -> %s\n"
+
+#: work.c:501
+msgid "Checking for problematic names...\n"
+msgstr "Procurando nomes de arquivo problemáticos...\n"
+
+#: work.c:511 work.c:932
+msgid "Name correction finished.\n"
+msgstr "Correção de nomes finalizada.\n"
+
 #: work.c:898
 msgid ""
 "Safety stop: Original and backup are on the same storage device.\n"
@@ -320,6 +348,27 @@ msgstr ""
 "Verifique se o dispositivo de backup está conectado.\n"
 "Para forçar o backup em pasta do mesmo dispositivo, desmarcar opção "
 "\"Impedir cópia no mesmo disco\".\n"
+
+#: work.c:912
+msgid "Checking for problematic names and counting files...\n"
+msgstr "Procurando nomes de arquivo problemáticos e contando arquivos...\n"
+
+#: work.c:927 work.c:1163 work.c:1391 work.c:1680
+msgid "Stop requested.\n"
+msgstr "Parada solicitada.\n"
+
+#: work.c:935
+#, c-format
+msgid "Found %lld files to analyse...\n"
+msgstr "%lld arquivos encontrados para analisar...\n"
+
+#: work.c:1230
+msgid "Verifying transfers with checksum...\n"
+msgstr "Verificando cópias com checksum...\n"
+
+#: work.c:1351
+msgid "Analysis complete. Review the list and click Apply.\n"
+msgstr "Análise completa. Verifique a lista e clique em \"aplicar\".\n"
 
 #: cecup.h:101
 msgid "Copy to backup"
