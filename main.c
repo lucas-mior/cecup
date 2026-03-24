@@ -440,7 +440,7 @@ main_setup_tree_columns(GtkWidget *tree,
 }
 
 static void
-application_run(GtkApplication *application, gpointer user_data) {
+main_application_run(GtkApplication *application, gpointer user_data) {
     GtkWidget *main_vbox;
     GtkWidget *header_vbox;
     GtkWidget *button_hbox;
@@ -1065,7 +1065,7 @@ main(int32 argc, char **argv) {
     cecup.application = gtk_application_new("com.cecup.app",
                                             G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(cecup.application, "activate",
-                     G_CALLBACK(application_run), NULL);
+                     G_CALLBACK(main_application_run), NULL);
     status = g_application_run(G_APPLICATION(cecup.application), argc, argv);
 
     g_object_unref(cecup.store);
