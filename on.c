@@ -510,8 +510,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     int32 parent_path_len;
     bool is_root;
     bool is_active;
-
-    (void)user_data;
+    int32 side = GPOINTER_TO_INT(user_data);
 
     if ((row_toggled
          = g_object_get_data(G_OBJECT(renderer), "cecup-row")) == NULL) {
@@ -592,8 +591,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                                0,
                                (uint32)cecup.rows_visible_len,
                                (uint32)cecup.rows_visible_len);
-    update_visible_checkboxes(cecup.tree[L]);
-    update_visible_checkboxes(cecup.tree[R]);
+    update_visible_checkboxes(cecup.tree[side]);
     return;
 }
 
