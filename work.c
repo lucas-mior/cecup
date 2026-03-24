@@ -18,6 +18,7 @@
 #if !defined(WORK_C)
 #define WORK_C
 
+#include <ftw.h>
 #include <gtk/gtk.h>
 #include <ctype.h>
 #include <sys/wait.h>
@@ -52,6 +53,7 @@ typedef struct FixFsThreadData {
 
 static Message *add_row_batch_messages[BATCH_SIZE];
 static int32 add_row_batch_count = 0;
+static __thread int64 nftw_file_count = 0;
 
 static bool
 work_check_reshowed_dir(struct Hash_map *show_patterns_map,
@@ -290,16 +292,126 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     return;
 }
 
+static int
+work_fix_fs_cb(const char *fpath,
+               const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+    char *d_name;
+    int64 name_len;
+    int32 old_full_len;
+    bool changed;
+    bool renaming_problematic;
+
+    if (cecup.stop_working) {
+        return 1;
+    }
+
+    if (ftwbuf->level == 0) {
+        return 0;
+    }
+
+    d_name = fpath + ftwbuf->base;
+    name_len = (int64)strlen32(d_name);
+    old_full_len = strlen32(fpath);
+
+    if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
+        IPC_SEND_LOG_ERROR(_("Error: file path is too long:\n"));
+        IPC_SEND_LOG_ERROR("%s\n", fpath);
+        IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
+        cecup.stop_working = true;
+        return 1;
+    }
+
+    if (isspace(d_name[0])) {
+        IPC_SEND_LOG_ERROR(_("Error: there is a space in the start of the fileneme:\n"));
+        IPC_SEND_LOG_ERROR("'%s'\n", fpath);
+        IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
+        cecup.stop_working = true;
+        return 1;
+    }
+
+    if (isspace(d_name[name_len - 1])) {
+        IPC_SEND_LOG_ERROR(_("Error: there is space in the end of the fileneme:\n"));
+        IPC_SEND_LOG_ERROR("'%s'\n", fpath);
+        IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
+        cecup.stop_working = true;
+        return 1;
+    }
+
+    changed = false;
+    renaming_problematic = false;
+
+    if (renaming_problematic) {
+        char new_name[MAX_PATH_LENGTH];
+        char new_full[MAX_PATH_LENGTH];
+        int32 j = 0;
+        int32 k = 0;
+
+        while (k < name_len) {
+            char *earliest_match = NULL;
+            int32 replacement_index = -1;
+
+            for (int32 ri = 0; ri < (int32)LENGTH(replacements); ri += 1) {
+                char *search = replacements[ri].problem;
+                int64 search_len = strlen32(search);
+                char *match;
+
+                if ((match = memmem64(&d_name[k], name_len - k, search, search_len))) {
+                    if (earliest_match == NULL || match < earliest_match) {
+                        earliest_match = match;
+                        replacement_index = ri;
+                    }
+                }
+            }
+
+            if (earliest_match) {
+                int64 prefix_len = (int64)(earliest_match - &d_name[k]);
+                char *replace_str = replacements[replacement_index].rename;
+                int64 replace_len = strlen32(replace_str);
+
+                if (prefix_len > 0) {
+                    memcpy64(&new_name[j], &d_name[k], prefix_len);
+                    j += (int32)prefix_len;
+                    k += (int32)prefix_len;
+                }
+
+                memcpy64(&new_name[j], replace_str, replace_len);
+                j += (int32)replace_len;
+                k += (int32)strlen32(replacements[replacement_index].problem);
+                changed = true;
+            } else {
+                int64 remaining = name_len - k;
+                memcpy64(&new_name[j], &d_name[k], remaining);
+                j += (int32)remaining;
+                k += (int32)remaining;
+            }
+        }
+        new_name[j] = '\0';
+
+        if (changed) {
+            int32 base_len = ftwbuf->base;
+
+            memcpy64(new_full, fpath, base_len);
+            memcpy64(new_full + base_len, new_name, j + 1);
+
+            if (renameat2(AT_FDCWD, fpath, AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
+                IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"),
+                                   fpath, new_full, strerror(errno));
+            } else {
+                IPC_SEND_LOG(_("Fixed: %s -> %s\n"), d_name, new_name);
+            }
+        }
+    }
+
+    if (typeflag != FTW_D && typeflag != FTW_DP) {
+        nftw_file_count += 1;
+    }
+
+    return 0;
+}
+
 static int64
 work_fix_fs_recursive(char *base_path, char *relative) {
-    DIR *dir;
-    struct dirent *entry;
     char full_path[MAX_PATH_LENGTH];
-    char **name_list;
-    int32 count = 0;
-    int32 capacity = 1024;
-    int64 total_files = 0;
-    bool renaming_problematic = false;
 
     if (cecup.stop_working) {
         return 0;
@@ -311,170 +423,22 @@ work_fix_fs_recursive(char *base_path, char *relative) {
         SNPRINTF(full_path, "%s", base_path);
     }
 
-    if ((dir = opendir(full_path)) == NULL) {
-        error(_("Error opening directory %s: %s.\n"), full_path,
-              strerror(errno));
-        error(_("Warning: Problematic file names will not be renamed.\n"));
-        error(_("This is only a problem if you have problematic filenames.\n"));
-        error(_(
-            "Problematic filenames are the ones that contain the strings:\n"));
-        for (int32 i = 0; i < LENGTH(replacements); i += 1) {
-            error("\"%s\" ", replacements[i].problem);
-        }
-        error("\n");
-        return 0;
-    }
-
-    name_list = xmalloc(capacity*SIZEOF(char *));
-
-    while ((entry = readdir(dir))) {
-        char *d_name = entry->d_name;
-
-        if (d_name[0] == '.'
-            && (d_name[1] == '\0' || (d_name[1] == '.' && d_name[2] == '\0'))) {
-            continue;
-        }
-
-        if (count >= capacity) {
-            capacity *= 2;
-            name_list = xrealloc(name_list, capacity*SIZEOF(char *));
-        }
-
-        name_list[count] = xstrdup(d_name);
-        count += 1;
-    }
-
-    closedir(dir);
-
-    for (int32 i = 0; i < count; i += 1) {
-        char *d_name = name_list[i];
-        char sub_rel[MAX_PATH_LENGTH];
-        char old_full[MAX_PATH_LENGTH];
-        char new_full[MAX_PATH_LENGTH];
-        char new_name[MAX_PATH_LENGTH];
-        int32 old_full_len;
-        struct stat stat;
-        bool changed = false;
-        int64 name_len = strlen32(d_name);
-
-        if (relative) {
-            SNPRINTF(sub_rel, "%s/%s", relative, d_name);
-        } else {
-            SNPRINTF(sub_rel, "%s", d_name);
-        }
-
-        old_full_len = SNPRINTF(old_full, "%s/%s", base_path, sub_rel);
-
-        if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
-            IPC_SEND_LOG_ERROR(_("Error: file path is too long:\n"));
-            IPC_SEND_LOG_ERROR("%s\n", old_full);
-            IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
-            cecup.stop_working = true;
-            return 0;
-        }
-
-        if (isspace(d_name[0])) {
-            IPC_SEND_LOG_ERROR(_("Error: there is a space in the start of the fileneme:\n"));
-            IPC_SEND_LOG_ERROR("'%s'\n", full_path);
-            IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
-            cecup.stop_working = true;
-            return 0;
-        }
-        if (isspace(d_name[name_len - 1])) {
-            IPC_SEND_LOG_ERROR(_("Error: there is space in the end of the fileneme:\n"));
-            IPC_SEND_LOG_ERROR("'%s'\n", full_path);
-            IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
-            cecup.stop_working = true;
-            return 0;
-        }
-
-        if (lstat(old_full, &stat) < 0) {
-            error("Error in lstat(%s): %s.\n", old_full, strerror(errno));
-            XFREE(d_name);
-            continue;
-        }
-
-        if (renaming_problematic) {
-            int32 j = 0;
-            int32 k = 0;
-            while (k < name_len) {
-                char *earliest_match = NULL;
-                int32 replacement_index = -1;
-
-                for (int32 ri = 0; ri < LENGTH(replacements); ri += 1) {
-                    char *search = replacements[ri].problem;
-                    int64 search_len = strlen32(search);
-                    char *match;
-
-                    if ((match = memmem64(&d_name[k], name_len - k,
-                                          search, search_len))) {
-                        if (earliest_match == NULL || match < earliest_match) {
-                            earliest_match = match;
-                            replacement_index = ri;
-                        }
-                    }
-                }
-
-                if (earliest_match) {
-                    int64 prefix_len = (int64)(earliest_match - &d_name[k]);
-                    char *replace_str = replacements[replacement_index].rename;
-                    int64 replace_len = strlen32(replace_str);
-
-                    if (prefix_len > 0) {
-                        memcpy64(&new_name[j], &d_name[k], prefix_len);
-                        j += prefix_len;
-                        k += prefix_len;
-                    }
-
-                    memcpy64(&new_name[j], replace_str, replace_len);
-
-                    j += replace_len;
-                    k += strlen32(replacements[replacement_index].problem);
-                    changed = true;
-                } else {
-                    int64 remaining = name_len - k;
-                    memcpy64(&new_name[j], &d_name[k], remaining);
-                    j += remaining;
-                    k += remaining;
-                }
+    nftw_file_count = 0;
+    if (nftw(full_path, work_fix_fs_cb, 64, FTW_PHYS | FTW_DEPTH) != 0) {
+        if (cecup.stop_working == false) {
+            error(_("Error walking directory %s: %s.\n"), full_path,
+                  strerror(errno));
+            error(_("Warning: Problematic file names will not be renamed.\n"));
+            error(_("This is only a problem if you have problematic filenames.\n"));
+            error(_("Problematic filenames are the ones that contain the strings:\n"));
+            for (int32 i = 0; i < (int32)LENGTH(replacements); i += 1) {
+                error("\"%s\" ", replacements[i].problem);
             }
-            new_name[j] = '\0';
-
-            if (changed) {
-                if (relative && relative[0]) {
-                    SNPRINTF(new_full,
-                             "%s/%s/%s", base_path, relative, new_name);
-                } else {
-                    SNPRINTF(new_full, "%s/%s", base_path, new_name);
-                }
-
-                if (renameat2(AT_FDCWD, old_full,
-                              AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
-                    IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"),
-                                       old_full, new_full, strerror(errno));
-                } else {
-                    IPC_SEND_LOG(_("Fixed: %s -> %s\n"), d_name, new_name);
-                    if (S_ISDIR(stat.st_mode)) {
-                        if (relative) {
-                            SNPRINTF(sub_rel, "%s/%s", relative, new_name);
-                        } else {
-                            SNPRINTF(sub_rel, "%s", new_name);
-                        }
-                    }
-                }
-            }
+            error("\n");
         }
-
-        if (S_ISDIR(stat.st_mode)) {
-            total_files += work_fix_fs_recursive(base_path, sub_rel);
-        } else {
-            total_files += 1;
-        }
-        XFREE(d_name);
     }
 
-    XFREE(name_list);
-    return total_files;
+    return nftw_file_count;
 }
 
 static void *
