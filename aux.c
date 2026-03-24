@@ -328,13 +328,7 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
         }
 
         if (visible && cecup.search_query && (cecup.search_query[0] != '\0')) {
-            char *path;
-
-            if (row->src_path) {
-                path = row->src_path;
-            } else {
-                path = row->dst_path;
-            }
+            char *path = row_path_get(row);
 
             if (strcasestr(path, cecup.search_query) == NULL) {
                 visible = false;
@@ -381,18 +375,9 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
 
     if ((refresh_type & REFRESH_FINAL) && path_to_focus) {
         for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
-            CecupRow *row = cecup.rows_visible[i];
-            char *row_path;
+            char *row_path = row_path_get(cecup.rows_visible[i]);
             char row_full_rel[MAX_PATH_LENGTH];
             int32 row_rel_len;
-
-            row = cecup.rows_visible[i];
-
-            if (row->src_path) {
-                row_path = row->src_path;
-            } else {
-                row_path = row->dst_path;
-            }
 
             row_rel_len = SNPRINTF(row_full_rel, "/%s", row_path);
             normalize(row_full_rel, &row_rel_len);

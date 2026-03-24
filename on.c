@@ -542,18 +542,9 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     }
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupRow *row;
-        char *path;
-        int32 path_len;
-
-        row = cecup.rows[i];
-
-        if (row->src_path) {
-            path = row->src_path;
-        } else {
-            path = row->dst_path;
-        }
-        path_len = row->path_len;
+        CecupRow *row = cecup.rows[i];
+        char *path = row_path_get(row);
+        int32 path_len = row->path_len;
 
         if (parent_row->selected) {
             if (is_root) {
