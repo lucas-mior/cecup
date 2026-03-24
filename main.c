@@ -38,6 +38,24 @@ CecupListModel *cecup_list_model_new(void);
 CecupRow *cecup_row_proxy_get_row(CecupRowProxy *proxy);
 
 static void
+setup_action_cb(GtkSignalListItemFactory *factory,
+                GtkListItem *list_item, void *data) {
+    GtkWidget *label;
+
+    (void)factory;
+    (void)data;
+
+    label = gtk_label_new(NULL);
+    gtk_widget_set_halign(label, GTK_ALIGN_FILL);
+    gtk_widget_set_valign(label, GTK_ALIGN_FILL);
+    gtk_label_set_xalign(GTK_LABEL(label), 0.5);
+    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+    gtk_list_item_set_child(list_item, label);
+
+    return;
+}
+
+static void
 setup_selected_cb(GtkSignalListItemFactory *factory,
                   GtkListItem *list_item, void *data) {
     GtkWidget *check;
@@ -337,7 +355,7 @@ main_setup_tree_columns(GtkWidget *tree,
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
 
         g_signal_connect(factory, "setup",
-                         G_CALLBACK(setup_text_cb), NULL);
+                         G_CALLBACK(setup_action_cb), NULL);
         g_signal_connect(factory, "bind",
                          G_CALLBACK(bind_action_cb), GINT_TO_POINTER(side));
 
