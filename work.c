@@ -1551,7 +1551,7 @@ work_rsync_bulk(void *user_data) {
 }
 
 #if TESTING_work
-#include <assert.h>
+#include "assert.c"
 #include <string.h>
 #include <stdio.h>
 #include "aux.c"
@@ -1562,52 +1562,38 @@ main(void) {
     char *patterns[3];
 
     patterns[0] = "*.c";
-    if ((pattern = work_path_matches_ignore("main.c", "main.c", false, patterns, 1)) == NULL) {
-        ASSERT(false);
-    }
-    ASSERT(!strcmp(pattern, "*.c"));
+    pattern = work_path_matches_ignore("main.c", "main.c", false, patterns, 1);
+    ASSERT_EQUAL(pattern, "*.c");
 
     patterns[0] = "build/";
-    if ((pattern = work_path_matches_ignore("build", "build", true, patterns, 1)) == NULL) {
-        ASSERT(false);
-    }
-    ASSERT(!strcmp(pattern, "build/"));
+    pattern = work_path_matches_ignore("build", "build", true, patterns, 1);
+    ASSERT_EQUAL(pattern, "build/");
 
     patterns[0] = "build/";
-    if ((pattern = work_path_matches_ignore("build", "build", false, patterns, 1))) {
-        ASSERT(false);
-    }
+    pattern = work_path_matches_ignore("build", "build", false, patterns, 1);
+    ASSERT_NULL(pattern);
 
     patterns[0] = "obj";
-    if ((pattern = work_path_matches_ignore("src/obj/main.o", "main.o", false, patterns, 1)) == NULL) {
-        ASSERT(false);
-    }
-    ASSERT(!strcmp(pattern, "obj"));
+    pattern = work_path_matches_ignore("src/obj/main.o", "main.o", false, patterns, 1);
+    ASSERT_EQUAL(pattern, "obj");
 
     patterns[0] = "/src";
-    if ((pattern = work_path_matches_ignore("src/main.c", "main.c", false, patterns, 1)) == NULL) {
-        ASSERT(false);
-    }
-    ASSERT(!strcmp(pattern, "/src"));
+    pattern = work_path_matches_ignore("src/main.c", "main.c", false, patterns, 1);
+    ASSERT_EQUAL(pattern, "/src");
 
     patterns[0] = "/src";
-    if ((pattern = work_path_matches_ignore("lib/src/main.c", "main.c", false, patterns, 1))) {
-        ASSERT(false);
-    }
+    pattern = work_path_matches_ignore("lib/src/main.c", "main.c", false, patterns, 1);
+    ASSERT_NULL(pattern);
 
     patterns[0] = "foo/bar";
-    if ((pattern = work_path_matches_ignore("foo/bar/baz.c", "baz.c", false, patterns, 1)) == NULL) {
-        ASSERT(false);
-    }
-    ASSERT(!strcmp(pattern, "foo/bar"));
+    pattern = work_path_matches_ignore("foo/bar/baz.c", "baz.c", false, patterns, 1);
+    ASSERT_EQUAL(pattern, "foo/bar");
 
     patterns[0] = "*.h";
     patterns[1] = "build/";
     patterns[2] = "*.o";
-    if ((pattern = work_path_matches_ignore("src/main.o", "main.o", false, patterns, 3)) == NULL) {
-        ASSERT(false);
-    }
-    ASSERT(!strcmp(pattern, "*.o"));
+    pattern = work_path_matches_ignore("src/main.o", "main.o", false, patterns, 3);
+    ASSERT_EQUAL(pattern, "*.o");
 
     exit(EXIT_SUCCESS);
 }
