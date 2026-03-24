@@ -182,30 +182,48 @@ bind_column_path(GtkSignalListItemFactory *factory,
 }
 
 static void
-bind_size_cb(GtkSignalListItemFactory *factory,
+bind_text_cb(GtkSignalListItemFactory *factory,
              GtkListItem *list_item, void *data) {
     GtkWidget *label;
     CecupRowProxy *proxy;
     CecupRow *row;
-    int32 side;
     enum CecupAction action;
     char class_name[32];
     char *classes[2];
     uint32 position;
+
+    TextInfo *text_info = data;
 
     (void)factory;
 
     label = gtk_list_item_get_child(list_item);
     proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
     row = cecup_row_proxy_get_row(proxy);
-    side = GPOINTER_TO_INT(data);
     position = gtk_list_item_get_position(list_item);
 
-    if (side == L) {
-        gtk_label_set_text(GTK_LABEL(label), row->src_size_text);
+    if (text_info->side == L) {
+        switch (text_info->type) {
+        case MTIME:
+            gtk_label_set_text(GTK_LABEL(label), row->src_mtime_text);
+            break;
+        case SIZE:
+            gtk_label_set_text(GTK_LABEL(label), row->src_size_text);
+            break;
+        default:
+            break;
+        }
         action = row->src_action;
     } else {
-        gtk_label_set_text(GTK_LABEL(label), row->dst_size_text);
+        switch (text_info->type) {
+        case MTIME:
+            gtk_label_set_text(GTK_LABEL(label), row->dst_mtime_text);
+            break;
+        case SIZE:
+            gtk_label_set_text(GTK_LABEL(label), row->dst_size_text);
+            break;
+        default:
+            break;
+        }
         action = row->dst_action;
     }
 
@@ -216,46 +234,10 @@ bind_size_cb(GtkSignalListItemFactory *factory,
 
     g_object_set_data(G_OBJECT(label), "cecup-row", row);
     g_object_set_data(G_OBJECT(label), "cecup-pos", GUINT_TO_POINTER(position));
-    g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(3));
-    return;
-}
+    g_object_set_data(G_OBJECT(label),
+                      "cecup-col", GINT_TO_POINTER(text_info->type));
 
-static void
-bind_mtime_cb(GtkSignalListItemFactory *factory,
-              GtkListItem *list_item, void *data) {
-    GtkWidget *label;
-    CecupRowProxy *proxy;
-    CecupRow *row;
-    int32 side;
-    enum CecupAction action;
-    char class_name[32];
-    char *classes[2];
-    uint32 position;
-
-    (void)factory;
-
-    label = gtk_list_item_get_child(list_item);
-    proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
-    row = cecup_row_proxy_get_row(proxy);
-    side = GPOINTER_TO_INT(data);
-    position = gtk_list_item_get_position(list_item);
-
-    if (side == L) {
-        gtk_label_set_text(GTK_LABEL(label), row->src_mtime_text);
-        action = row->src_action;
-    } else {
-        gtk_label_set_text(GTK_LABEL(label), row->dst_mtime_text);
-        action = row->dst_action;
-    }
-
-    SNPRINTF(class_name, "cell-color-%u", action);
-    classes[0] = class_name;
-    classes[1] = NULL;
-    gtk_widget_set_css_classes(label, (const char **)classes);
-
-    g_object_set_data(G_OBJECT(label), "cecup-row", row);
-    g_object_set_data(G_OBJECT(label), "cecup-pos", GUINT_TO_POINTER(position));
-    g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(4));
+    XFREE(text_info);
     return;
 }
 

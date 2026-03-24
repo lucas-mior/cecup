@@ -116,11 +116,14 @@ main_setup_tree_columns(GtkWidget *tree,
     {
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+        TextInfo *text_info = xmalloc(SIZEOF(*text_info));
+        text_info->side = side;
+        text_info->type = SIZE;
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_text_cb), NULL);
         g_signal_connect(factory, "bind",
-                         G_CALLBACK(bind_size_cb), GINT_TO_POINTER(side));
+                         G_CALLBACK(bind_text_cb), text_info);
 
         column = gtk_column_view_column_new(_("Size"), factory);
 
@@ -135,11 +138,14 @@ main_setup_tree_columns(GtkWidget *tree,
     {
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+        TextInfo *text_info = xmalloc(SIZEOF(*text_info));
+        text_info->side = side;
+        text_info->type = MTIME;
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_text_cb), NULL);
         g_signal_connect(factory, "bind",
-                         G_CALLBACK(bind_mtime_cb), GINT_TO_POINTER(side));
+                         G_CALLBACK(bind_text_cb), text_info);
 
         column = gtk_column_view_column_new(_("Modification Time"), factory);
 

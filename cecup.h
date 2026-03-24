@@ -71,6 +71,14 @@
 #define error2(...) fprintf(stderr, __VA_ARGS__)
 #endif
 
+typedef struct TextInfo {
+    int32 side;
+    enum TextType {
+        SIZE = 3,
+        MTIME = 4
+    } type;
+} TextInfo;
+
 static char *action_emojis[] = {
     [ACTION_NEW]      = EMOJI_NEW,
     [ACTION_HARDLINK] = EMOJI_LINK,
