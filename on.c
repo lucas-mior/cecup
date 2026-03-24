@@ -49,7 +49,6 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     GtkSingleSelection *single_sel;
     uint32 pos;
     CecupRow *row;
-    Message *message;
     char *filepath;
     int32 side;
     int32 path_len;
@@ -88,7 +87,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     path_len = row->path_len;
 
     if (filepath || (menu_item->callback == on_menu_rename)) {
-        message = xmalloc(SIZEOF(*message));
+        Message *message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         if (filepath) {
