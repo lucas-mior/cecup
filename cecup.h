@@ -317,7 +317,6 @@ static struct {
 
     Arena *arena;
     GMutex arena_mutex;
-    GCond ui_ready_cond;
     bool changed_dirs;
 
     pid_t child_pid;

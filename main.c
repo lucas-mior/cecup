@@ -1019,7 +1019,6 @@ main(int32 argc, char **argv) {
     cecup.changed_dirs = true;
     cecup.arena = arena_create(SIZEMB(64));
     g_mutex_init(&cecup.arena_mutex);
-    g_cond_init(&cecup.ui_ready_cond);
 
     cecup.rows_len = 0;
     cecup.rows_capacity = 256;
