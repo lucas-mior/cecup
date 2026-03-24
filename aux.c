@@ -636,14 +636,16 @@ update_ui_handler(void *data) {
             if (message->src_mtime > 0) {
                 unix_timestamp = (time_t)message->src_mtime;
                 time_information = localtime(&unix_timestamp);
-                STRFTIME(row->src_mtime_text, "%Y-%m-%d %H:%M:%S", time_information);
+                STRFTIME(row->src_mtime_text,
+                         "%Y-%m-%d %H:%M:%S", time_information);
                 row->src_mtime_raw = message->src_mtime;
             }
 
             if (message->dst_mtime > 0) {
                 unix_timestamp = (time_t)message->dst_mtime;
                 time_information = localtime(&unix_timestamp);
-                STRFTIME(row->dst_mtime_text, "%Y-%m-%d %H:%M:%S", time_information);
+                STRFTIME(row->dst_mtime_text,
+                         "%Y-%m-%d %H:%M:%S", time_information);
                 row->dst_mtime_raw = message->dst_mtime;
             }
 
@@ -679,7 +681,6 @@ update_ui_handler(void *data) {
             cecup.rows_len += 1;
 
             if ((cecup.rows_len % 100000) == 0) {
-                cecup.ui_waiting = true;
                 if (cecup.refresh_id == 0) {
                     cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
                                                      refresh_ui_timeout_callback, NULL);
