@@ -227,7 +227,7 @@ work_finalize(ThreadData *thread_data) {
 }
 
 static bool
-did_attribute_change(char *buf_output) {
+work_did_attribute_change(char *buf_output) {
     for (int32 i = 2; i < strlen32(RSYNC_ITEMIZE_PLACEHOLDERS); i += 1) {
         if ((buf_output[i] != '.') && (buf_output[i] != ' ')) {
             return true;
@@ -697,7 +697,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         }
 
 
-        if (did_attribute_change(buf_output)) {
+        if (work_did_attribute_change(buf_output)) {
             reason = (enum CecupReason)action;
         } else {
             action = ACTION_EQUAL;
@@ -761,7 +761,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         action = ACTION_UPDATE;
         reason = REASON_UPDATE;
 
-        if (!did_attribute_change(buf_output)) {
+        if (!work_did_attribute_change(buf_output)) {
             action = ACTION_EQUAL;
             reason = REASON_EQUAL;
         }
