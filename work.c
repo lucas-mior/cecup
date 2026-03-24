@@ -53,6 +53,29 @@ typedef struct FixFsThreadData {
 static Message *add_row_batch_messages[BATCH_SIZE];
 static int32 add_row_batch_count = 0;
 
+static bool
+check_hash_table(struct Hash_map *show_patterns_map,
+                 char *src_path, char *dst_path) {
+    char *path;
+    char **pattern_ptr;
+    char *show_pattern;
+
+    if (src_path) {
+        path = src_path;
+    } else {
+        path = dst_path;
+    }
+
+    if (path) {
+        pattern_ptr = hash_lookup2_map(show_patterns_map, path);
+        if (pattern_ptr) {
+            show_pattern = *pattern_ptr;
+            return !strcmp(show_pattern, RSYNC_INCLUDE_DIRS);
+        }
+    }
+    return false;
+}
+
 static void
 work_flush_add_rows(void) {
     MessageBatch *batch;
@@ -543,6 +566,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         path_len = line_len - (int32)(src_path - buf_output);
         interlude = memmem64(src_path, path_len,
                              RSYNC_IGNORE_INTER, strlen32(RSYNC_IGNORE_INTER));
+        ASSERT(interlude);
 
         path_len -= (int32)(&buf_output[line_len] - interlude);
         *interlude = '\0';
@@ -569,6 +593,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
                              path_len,
                              RSYNC_IGNORE_INTER,
                              strlen32(RSYNC_IGNORE_INTER));
+        ASSERT(interlude);
         *interlude = '\0';
         path_len = path_len - (int32)(&buf_output[line_len] - interlude);
         ignore_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
@@ -708,23 +733,8 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         dst_size = parsed_size;
 
         if (filtered) {
-            char *path;
-            char **pattern_ptr;
-
-            if (src_path) {
-                path = src_path;
-            } else {
-                path = dst_path;
-            }
-
-            if (path) {
-                pattern_ptr = hash_lookup2_map(show_patterns_map, path);
-                if (pattern_ptr) {
-                    show_pattern = *pattern_ptr;
-                    ignore_duplicate_dir = !strcmp(show_pattern,
-                                                   RSYNC_INCLUDE_DIRS);
-                }
-            }
+            ignore_duplicate_dir = check_hash_table(show_patterns_map,
+                                                    src_path, dst_path);
         }
 
         *nfiles_processed += 1;
@@ -795,23 +805,8 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         dst_size = parsed_size;
 
         if (filtered) {
-            char *path;
-            char **pattern_ptr;
-
-            if (src_path) {
-                path = src_path;
-            } else {
-                path = dst_path;
-            }
-
-            if (path) {
-                pattern_ptr = hash_lookup2_map(show_patterns_map, path);
-                if (pattern_ptr) {
-                    show_pattern = *pattern_ptr;
-                    ignore_duplicate_dir = !strcmp(show_pattern,
-                                                   RSYNC_INCLUDE_DIRS);
-                }
-            }
+            ignore_duplicate_dir = check_hash_table(show_patterns_map,
+                                                    src_path, dst_path);
         }
 
         *nfiles_processed += 1;
@@ -1336,6 +1331,9 @@ work_rsync(void *user_data) {
         IPC_SEND_LOG("Analysis complete. Review the list and click Apply.\n");
     }
 
+    for (uint32 i = 0; i < hash_length(show_patterns_map); i += 1) {
+        XFREE(show_patterns_map->array[i].value);
+    }
     hash_destroy_map(show_patterns_map);
     work_finalize(thread_data);
     return NULL;
