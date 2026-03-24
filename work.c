@@ -841,6 +841,10 @@ work_rsync(void *user_data) {
                             reason |= REASON_MTIME;
                             attributes_differ = true;
                         }
+                        if (stat_src->st_ctime != stat_dst->st_ctime) {
+                            reason |= REASON_CTIME;
+                            attributes_differ = true;
+                        }
                         if (stat_src->st_uid != stat_dst->st_uid) {
                             reason |= REASON_OWNER;
                             attributes_differ = true;

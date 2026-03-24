@@ -62,6 +62,7 @@
     X(NEW)              \
     X(SIZE)             \
     X(MTIME)            \
+    X(CTIME)            \
     X(OWNER)            \
     X(GROUP)            \
     X(PERM)             \
@@ -133,6 +134,7 @@ static char *reason_strings[] = {
     [REASON_SYMLINK_BIT_IDX]  = N_("Symlink in the original folder"),
     [REASON_SIZE_BIT_IDX]     = N_("File sizes differ"),
     [REASON_MTIME_BIT_IDX]    = N_("Modification times differ"),
+    [REASON_CTIME_BIT_IDX]    = N_("Metadata change times differ"),
     [REASON_OWNER_BIT_IDX]    = N_("Owners differ"),
     [REASON_GROUP_BIT_IDX]    = N_("Groups differ"),
     [REASON_PERM_BIT_IDX]     = N_("Permissions differ"),
