@@ -122,7 +122,7 @@ work_get_file_info(char *base, char **path,
 }
 
 static char *
-check_itemize_line(char *buf_output, int64 *parsed_size) {
+work_check_itemize_line(char *buf_output, int64 *parsed_size) {
     char *size_str;
     char *endptr;
     int64 size_val;
@@ -557,7 +557,7 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         error("%s\n", buf_output);
     }
 
-    itemize_parsed = check_itemize_line(buf_output, &parsed_size);
+    itemize_parsed = work_check_itemize_line(buf_output, &parsed_size);
     action_char = buf_output[0];
     type_char = buf_output[1];
 
@@ -1576,7 +1576,7 @@ work_rsync_bulk(void *user_data) {
 
             IPC_SEND_LOG("%s\n", buf_output_bulk);
 
-            if ((filename = check_itemize_line(buf_output_bulk, NULL))) {
+            if ((filename = work_check_itemize_line(buf_output_bulk, NULL))) {
                 int32 path_len;
                 char *sep;
                 Message *message;
