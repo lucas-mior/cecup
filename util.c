@@ -1856,21 +1856,23 @@ dirname2(char *buffer, char *path, int32 *path_len) {
 }
 
 static void
-print_timings(char *file, int32 line, int32 n,
-              char *name, struct timespec t0, struct timespec t1) {
+print_timings(char *file, int32 line, const char *func,
+              int32 n, struct timespec t0, struct timespec t1) {
     long seconds = t1.tv_sec - t0.tv_sec;
     long nanos = t1.tv_nsec - t0.tv_nsec;
 
     double total_seconds = (double)seconds + (double)nanos / 1.0e9;
     double micros_per = 1e6*(total_seconds / (double)n);
 
-    printf("\ntime elapsed %s:%d:%s\n", file, line, name);
+    printf("\ntime elapsed %s:%d:%s\n", file, line, func);
     printf("%gs = %gus per item.\n\n", total_seconds, micros_per);
     return;
 }
-
-#define PRINT_TIMINGS(N, NAME, T0, T1) \
-    print_timings(__FILE__, __LINE__, N, NAME, T0, T1)
+#define PRINT_TIMINGS_3(N, T0, T1) \
+        print_timings(__FILE__, __LINE__, __func__, N, T0, T1)
+#define PRINT_TIMINGS_4(N, T0, T1, NAME) \
+        print_timings(__FILE__, __LINE__, NAME, N, T0, T1)
+#define PRINT_TIMINGS(...) SELECT_ON_NUM_ARGS(PRINT_TIMINGS_, __VA_ARGS__)
 
 #if OS_UNIX
 

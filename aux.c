@@ -394,7 +394,7 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     }
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
-    PRINT_TIMINGS(cecup.rows_visible_len, (char *)__func__, t0, t1);
+    PRINT_TIMINGS(cecup.rows_visible_len, t0, t1);
     return;
 }
 

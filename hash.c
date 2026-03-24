@@ -569,7 +569,7 @@ main(void) {
                                strings[i].value));
     }
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
-    PRINT_TIMINGS(NSTRINGS, "insertion", t0, t1);
+    PRINT_TIMINGS(NSTRINGS, t0, t1, "insertion");
 
     for (uint32 i = 0; i < NSTRINGS; i += 1) {
         uint32 *stored;

@@ -1178,7 +1178,7 @@ work_rsync(void *user_data) {
     }
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
-    PRINT_TIMINGS(nfiles_total, __func__, t0_work, t1_work);
+    PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
 
     if (ntransfers <= 0) {
         for (uint32 i = 0; i < hash_length(show_patterns_map); i += 1) {
