@@ -1579,7 +1579,8 @@ work_rsync_bulk(void *user_data) {
             if ((filename = work_check_itemize_line(buf_output_bulk, NULL))) {
                 int32 path_len;
                 char *sep;
-                Message *message;
+                Message *message = xmalloc(SIZEOF(*message));
+                memset64(message, 0, SIZEOF(*message));
 
                 while (*filename == ' ') {
                     filename += 1;
@@ -1598,9 +1599,6 @@ work_rsync_bulk(void *user_data) {
                     *sep = '\0';
                     path_len = (int32)(sep - filename);
                 }
-
-                message = xmalloc(SIZEOF(*message));
-                memset64(message, 0, SIZEOF(*message));
 
                 message->path_len = path_len;
                 message->src_path = xmalloc(path_len + 1);
