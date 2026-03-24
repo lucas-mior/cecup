@@ -6,12 +6,11 @@
 static void
 setup_selected_cb(GtkSignalListItemFactory *factory,
                   GtkListItem *list_item, void *data) {
-    GtkWidget *check;
+    GtkWidget *check = gtk_check_button_new();
 
     (void)factory;
     (void)data;
 
-    check = gtk_check_button_new();
     gtk_widget_set_halign(check, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(check, GTK_ALIGN_CENTER);
     g_signal_connect(check, "toggled", G_CALLBACK(on_cell_toggled), data);
