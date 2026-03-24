@@ -45,7 +45,7 @@ bind_column_checkbox(GtkSignalListItemFactory *factory,
 }
 
 static void
-setup_action_cb(GtkSignalListItemFactory *factory,
+setup_column_action(GtkSignalListItemFactory *factory,
                 GtkListItem *list_item, void *data) {
     GtkWidget *label = gtk_label_new(NULL);
 
@@ -62,7 +62,7 @@ setup_action_cb(GtkSignalListItemFactory *factory,
 }
 
 static void
-bind_action_cb(GtkSignalListItemFactory *factory,
+bind_column_action(GtkSignalListItemFactory *factory,
                GtkListItem *list_item, void *data) {
     GtkWidget *label;
     CecupRowProxy *proxy;

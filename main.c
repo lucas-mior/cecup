@@ -80,9 +80,9 @@ main_setup_tree_columns(GtkWidget *tree,
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
 
         g_signal_connect(factory, "setup",
-                         G_CALLBACK(setup_action_cb), NULL);
+                         G_CALLBACK(setup_column_action), NULL);
         g_signal_connect(factory, "bind",
-                         G_CALLBACK(bind_action_cb), GINT_TO_POINTER(side));
+                         G_CALLBACK(bind_column_action), GINT_TO_POINTER(side));
 
         column = gtk_column_view_column_new(_("Task"), factory);
 
