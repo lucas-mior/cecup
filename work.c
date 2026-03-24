@@ -432,10 +432,6 @@ work_fix_fs_cb(const char *fpath,
         return 1;
     }
 
-    if (ftwbuf->level == 0) {
-        return 0;
-    }
-
     data = nftw_current_data;
     d_name = (char *)fpath + ftwbuf->base;
     name_len = strlen32(d_name);
@@ -449,20 +445,22 @@ work_fix_fs_cb(const char *fpath,
         return 1;
     }
 
-    if (isspace(d_name[0])) {
-        IPC_SEND_LOG_ERROR(_("Error: there is a space in the start of the fileneme:\n"));
-        IPC_SEND_LOG_ERROR("'%s'\n", fpath);
-        IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
-        cecup.stop_working = true;
-        return 1;
-    }
+    if (name_len > 0) {
+        if (isspace(d_name[0])) {
+            IPC_SEND_LOG_ERROR(_("Error: there is a space in the start of the fileneme:\n"));
+            IPC_SEND_LOG_ERROR("'%s'\n", fpath);
+            IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
+            cecup.stop_working = true;
+            return 1;
+        }
 
-    if (isspace(d_name[name_len - 1])) {
-        IPC_SEND_LOG_ERROR(_("Error: there is space in the end of the fileneme:\n"));
-        IPC_SEND_LOG_ERROR("'%s'\n", fpath);
-        IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
-        cecup.stop_working = true;
-        return 1;
+        if (isspace(d_name[name_len - 1])) {
+            IPC_SEND_LOG_ERROR(_("Error: there is space in the end of the fileneme:\n"));
+            IPC_SEND_LOG_ERROR("'%s'\n", fpath);
+            IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
+            cecup.stop_working = true;
+            return 1;
+        }
     }
 
     changed = false;
@@ -790,9 +788,6 @@ work_rsync(void *user_data) {
             if ((int64)bucket_src->key <= 0) {
                 continue;
             }
-            if (!strcmp(bucket_src->key, "./")) {
-                continue;
-            }
 
             src_idx = bucket_src->value;
             stat_src = &src_fix.stat_array[src_idx];
@@ -949,9 +944,6 @@ work_rsync(void *user_data) {
             if ((int64)bucket_dst->key <= 0) {
                 continue;
             }
-            if (!strcmp(bucket_dst->key, "./")) {
-                continue;
-            }
 
             if (hash_lookup2_fs_map(src_map, bucket_dst->key) == NULL) {
                 dst_idx = bucket_dst->value;
@@ -1031,7 +1023,7 @@ work_rsync(void *user_data) {
     a = 0;
     rsync_args[a++] = "rsync";
     rsync_args[a++] = "--verbose";
-    rsync_args[a++] = "--recursive";
+    rsync_args[a++] = "--dirs";
     rsync_args[a++] = "--partial";
     rsync_args[a++] = "--progress";
     rsync_args[a++] = "--info=progress2";
@@ -1151,6 +1143,14 @@ work_rsync(void *user_data) {
                     *sep = '\0';
                     path_len = (int32)(sep - filename);
                 }
+
+                if (path_len == 1) {
+                    if (filename[0] == '.') {
+                        filename = "./";
+                        path_len = 2;
+                    }
+                }
+
                 msg->path_len = path_len;
                 msg->src_path = xmalloc(path_len + 1);
                 memcpy64(msg->src_path, filename, path_len + 1);
@@ -1296,6 +1296,19 @@ work_rsync_bulk(void *user_data) {
             continue;
         }
 
+        if (strcmp(task->path, "./") == 0) {
+            Message *message = xmalloc(SIZEOF(*message));
+            memset64(message, 0, SIZEOF(*message));
+
+            message->path_len = task->path_len;
+            message->src_path = xmalloc(task->path_len + 1);
+            memcpy64(message->src_path, task->path, task->path_len + 1);
+
+            message->type = DATA_TYPE_REMOVE_ROW;
+            g_idle_add(update_ui_handler, message);
+            continue;
+        }
+
         if (cecup.stop_working) {
             IPC_SEND_LOG_ERROR(_("Stop requested.\n"));
             free_task_list(tasks);
@@ -1395,7 +1408,7 @@ work_rsync_bulk(void *user_data) {
     rsync_args[a++] = "--verbose";
     rsync_args[a++] = "--update";
     rsync_args[a++] = "--checksum";
-    rsync_args[a++] = "--recursive";
+    rsync_args[a++] = "--dirs";
     rsync_args[a++] = "--partial";
     rsync_args[a++] = "--progress";
     rsync_args[a++] = "--info=progress2";
@@ -1527,6 +1540,13 @@ work_rsync_bulk(void *user_data) {
                                            strlen32(RSYNC_SYMLINK_NOTATION)))) {
                     *sep = '\0';
                     path_len = (int32)(sep - filename);
+                }
+
+                if (path_len == 1) {
+                    if (filename[0] == '.') {
+                        filename = "./";
+                        path_len = 2;
+                    }
                 }
 
                 message->path_len = path_len;
