@@ -440,6 +440,8 @@ on_menu_ignore(GtkWidget *m, void *data) {
 
 #if TESTING_on_menu
 
+#include "on.c"
+
 int
 main(void) {
     exit(EXIT_SUCCESS);
