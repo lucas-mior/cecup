@@ -102,7 +102,7 @@ bind_column_action(GtkSignalListItemFactory *factory,
 }
 
 static void
-setup_path_cb(GtkSignalListItemFactory *factory,
+setup_column_path(GtkSignalListItemFactory *factory,
               GtkListItem *list_item, void *data) {
     GtkWidget *editable = gtk_editable_label_new("");
     GtkWidget *tree;
@@ -131,7 +131,7 @@ setup_path_cb(GtkSignalListItemFactory *factory,
 }
 
 static void
-bind_path_cb(GtkSignalListItemFactory *factory,
+bind_column_path(GtkSignalListItemFactory *factory,
              GtkListItem *list_item, void *data) {
     GtkWidget *editable;
     CecupRowProxy *proxy;

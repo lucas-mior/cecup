@@ -98,9 +98,9 @@ main_setup_tree_columns(GtkWidget *tree,
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
 
         g_signal_connect(factory, "setup",
-                         G_CALLBACK(setup_path_cb), tree);
+                         G_CALLBACK(setup_column_path), tree);
         g_signal_connect(factory, "bind",
-                         G_CALLBACK(bind_path_cb), tree);
+                         G_CALLBACK(bind_column_path), tree);
 
         column = gtk_column_view_column_new(_("Name"), factory);
 
