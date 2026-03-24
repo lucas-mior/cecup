@@ -417,15 +417,16 @@ work_fix_fs_recursive(char *base_path, char *relative) {
 
             if (changed) {
                 if (relative && relative[0]) {
-                    SNPRINTF(new_full, "%s/%s/%s", base_path, relative, new_name);
+                    SNPRINTF(new_full,
+                             "%s/%s/%s", base_path, relative, new_name);
                 } else {
                     SNPRINTF(new_full, "%s/%s", base_path, new_name);
                 }
 
                 if (renameat2(AT_FDCWD, old_full,
                               AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
-                    IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n", old_full,
-                                       new_full, strerror(errno));
+                    IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n",
+                                       old_full, new_full, strerror(errno));
                 } else {
                     IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name);
                     if (S_ISDIR(stat.st_mode)) {
