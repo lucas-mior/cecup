@@ -46,6 +46,7 @@ on_popover_closed(GtkWidget *popover, void *data) {
 static void
 execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     GtkSelectionModel *selection;
+    GtkSingleSelection *single_sel;
     uint32 pos;
     CecupRow *row;
     Message *message;
@@ -61,6 +62,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
     is_busy = gtk_widget_get_sensitive(cecup.stop_button);
+    single_sel = GTK_SINGLE_SELECTION(selection);
 
     if (is_busy) {
         if ((menu_item->callback == on_menu_rename)
@@ -71,44 +73,45 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
         }
     }
 
-    pos = gtk_single_selection_get_selected(GTK_SINGLE_SELECTION(selection));
+    if ((pos = gtk_single_selection_get_selected(single_sel))
+         == GTK_INVALID_LIST_POSITION) {
+        return;
+    }
 
-    if (pos != GTK_INVALID_LIST_POSITION) {
-        row = cecup.rows_visible[pos];
+    row = cecup.rows_visible[pos];
+
+    if (side == L) {
+        filepath = row->src_path;
+    } else {
+        filepath = row->dst_path;
+    }
+
+    path_len = row->path_len;
+
+    if (filepath || (menu_item->callback == on_menu_rename)) {
+        message = xmalloc(SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
+
+        if (filepath) {
+            message->path_len = path_len;
+            message->src_path = xmalloc(path_len + 1);
+            memcpy64(message->src_path, filepath, path_len + 1);
+        }
 
         if (side == L) {
-            filepath = row->src_path;
+            message->action = row->src_action;
         } else {
-            filepath = row->dst_path;
+            message->action = row->dst_action;
         }
 
-        path_len = row->path_len;
+        message->side = side;
 
-        if (filepath || (menu_item->callback == on_menu_rename)) {
-            message = xmalloc(SIZEOF(*message));
-            memset64(message, 0, SIZEOF(*message));
-
-            if (filepath) {
-                message->path_len = path_len;
-                message->src_path = xmalloc(path_len + 1);
-                memcpy64(message->src_path, filepath, path_len + 1);
-            }
-
-            if (side == L) {
-                message->action = row->src_action;
-            } else {
-                message->action = row->dst_action;
-            }
-
-            message->side = side;
-
-            if (menu_item->variant) {
-                g_object_set_data(G_OBJECT(tree),
-                                  "variant", menu_item->variant);
-            }
-
-            menu_item->callback(tree, message);
+        if (menu_item->variant) {
+            g_object_set_data(G_OBJECT(tree),
+                              "variant", menu_item->variant);
         }
+
+        menu_item->callback(tree, message);
     }
 
     return;
