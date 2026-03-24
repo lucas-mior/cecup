@@ -505,7 +505,7 @@ update_visible_checkboxes(GtkWidget *widget) {
 
 static void
 on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
-    CecupRow *parent_row;
+    CecupRow *row_toggled;
     char *parent_path;
     int32 parent_path_len;
     bool is_root;
@@ -513,22 +513,23 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 
     (void)user_data;
 
-    if ((parent_row = g_object_get_data(G_OBJECT(renderer), "cecup-row")) == NULL) {
+    if ((row_toggled
+         = g_object_get_data(G_OBJECT(renderer), "cecup-row")) == NULL) {
         return;
     }
 
     is_active = gtk_check_button_get_active(renderer);
 
-    if (parent_row->selected == is_active) {
+    if (row_toggled->selected == is_active) {
         return;
     }
 
-    parent_row->selected = is_active;
+    row_toggled->selected = is_active;
 
-    if (parent_row->src_path) {
-        parent_path = parent_row->src_path;
+    if (row_toggled->src_path) {
+        parent_path = row_toggled->src_path;
     } else {
-        parent_path = parent_row->dst_path;
+        parent_path = row_toggled->dst_path;
     }
 
     if (parent_path == NULL) {
@@ -547,13 +548,13 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         char *path = row_path_get(row);
         int32 path_len = row->path_len;
 
-        if (parent_row->selected) {
+        if (row_toggled->selected) {
             if (is_root) {
                 row->selected = true;
             } else if (parent_path_len > 0) {
                 if (parent_path[parent_path_len - 1] == '/') {
                     if (path_len >= parent_path_len) {
-                        if (strncmp32(path, parent_path, parent_path_len) == 0) {
+                        if (!strncmp32(path, parent_path, parent_path_len)) {
                             row->selected = true;
                         }
                     }
@@ -566,7 +567,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                 if (parent_path_len > 0) {
                     if (parent_path[parent_path_len - 1] == '/') {
                         if (path_len >= parent_path_len) {
-                            if (strncmp32(path, parent_path, parent_path_len) == 0) {
+                            if (!strncmp32(path, parent_path, parent_path_len)) {
                                 row->selected = false;
                             }
                         }
@@ -587,7 +588,10 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     }
 
     refresh_ui_list(REFRESH_FINAL, NULL);
-    g_list_model_items_changed(cecup.store, 0, (uint32)cecup.rows_visible_len, (uint32)cecup.rows_visible_len);
+    g_list_model_items_changed(cecup.store,
+                               0,
+                               (uint32)cecup.rows_visible_len,
+                               (uint32)cecup.rows_visible_len);
     update_visible_checkboxes(cecup.tree[L]);
     update_visible_checkboxes(cecup.tree[R]);
     return;
