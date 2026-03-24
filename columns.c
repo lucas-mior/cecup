@@ -4,8 +4,8 @@
 #include "on.c"
 
 static void
-setup_selected_cb(GtkSignalListItemFactory *factory,
-                  GtkListItem *list_item, void *data) {
+setup_column_checkbox(GtkSignalListItemFactory *factory,
+                      GtkListItem *list_item, void *data) {
     GtkWidget *check = gtk_check_button_new();
 
     (void)factory;
@@ -20,8 +20,8 @@ setup_selected_cb(GtkSignalListItemFactory *factory,
 }
 
 static void
-bind_selected_cb(GtkSignalListItemFactory *factory,
-                 GtkListItem *list_item, void *data) {
+bind_column_checkbox(GtkSignalListItemFactory *factory,
+                     GtkListItem *list_item, void *data) {
     GtkWidget *check;
     CecupRowProxy *proxy;
     CecupRow *row;

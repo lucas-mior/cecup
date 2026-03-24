@@ -68,9 +68,9 @@ main_setup_tree_columns(GtkWidget *tree,
     {
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         g_signal_connect(factory, "setup",
-                         G_CALLBACK(setup_selected_cb), GINT_TO_POINTER(side));
+                         G_CALLBACK(setup_column_checkbox), GINT_TO_POINTER(side));
         g_signal_connect(factory, "bind",
-                         G_CALLBACK(bind_selected_cb), GINT_TO_POINTER(side));
+                         G_CALLBACK(bind_column_checkbox), GINT_TO_POINTER(side));
         column = gtk_column_view_column_new(NULL, factory);
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
     }
