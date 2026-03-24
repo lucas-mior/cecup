@@ -36,16 +36,14 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     tree = g_object_get_data(G_OBJECT(cecup.application), "active_tree");
     message = g_object_steal_data(G_OBJECT(cecup.application), "active_message");
 
-    if (tree) {
-        if (message) {
-            if (menu_item->callback) {
-                if (menu_item->variant) {
-                    g_object_set_data(G_OBJECT(tree), "variant", menu_item->variant);
-                }
-                menu_item->callback(tree, message);
-            } else {
-                free_message(message);
+    if (tree && message) {
+        if (menu_item->callback) {
+            if (menu_item->variant) {
+                g_object_set_data(G_OBJECT(tree), "variant", menu_item->variant);
             }
+            menu_item->callback(tree, message);
+        } else {
+            free_message(message);
         }
     } else if (message) {
         free_message(message);
