@@ -1156,15 +1156,21 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             rb_pos = 0;
             reason_buf[0] = '\0';
             for (int32 i = 0; i < REASON_BIT_COUNT; i += 1) {
-                if (row->reason & (1 << i)) {
-                    if (rb_pos > 0) {
-                        rb_pos += snprintf2(reason_buf + rb_pos,
-                                            SIZEOF(reason_buf) - rb_pos, ", ");
-                    }
-                    rb_pos += snprintf2(reason_buf + rb_pos,
-                                        SIZEOF(reason_buf) - rb_pos,
-                                        "%s", _(reason_strings[i]));
+                if (!(row->reason & (1 << i))) {
+                    continue;
                 }
+
+                if (i >= (int32)LENGTH(reason_strings) || reason_strings[i] == NULL) {
+                    continue;
+                }
+
+                if (rb_pos > 0) {
+                    rb_pos += snprintf2(reason_buf + rb_pos,
+                                        SIZEOF(reason_buf) - rb_pos, ", ");
+                }
+                rb_pos += snprintf2(reason_buf + rb_pos,
+                                    SIZEOF(reason_buf) - rb_pos,
+                                    "%s", _(reason_strings[i]));
             }
 
             if (row->link_target) {
