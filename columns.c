@@ -192,7 +192,7 @@ bind_text_cb(GtkSignalListItemFactory *factory,
     char *classes[2];
     uint32 position;
 
-    TextInfo *text_info = data;
+    TextInfo *text_info = g_object_get_data(G_OBJECT(factory), "text_info");
 
     (void)factory;
 

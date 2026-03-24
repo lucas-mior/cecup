@@ -119,6 +119,7 @@ main_setup_tree_columns(GtkWidget *tree,
         TextInfo *text_info = xmalloc(SIZEOF(*text_info));
         text_info->side = side;
         text_info->type = SIZE;
+        g_object_set_data_full(G_OBJECT(factory), "text_info", text_info, free);
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_text_cb), NULL);
@@ -141,6 +142,7 @@ main_setup_tree_columns(GtkWidget *tree,
         TextInfo *text_info = xmalloc(SIZEOF(*text_info));
         text_info->side = side;
         text_info->type = MTIME;
+        g_object_set_data_full(G_OBJECT(factory), "text_info", text_info, free);
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_text_cb), NULL);
