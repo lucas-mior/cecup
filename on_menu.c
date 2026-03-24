@@ -172,12 +172,10 @@ on_menu_open_item(GtkWidget *m, void *data) {
 
     if (tasks) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task;
+            Task *task = tasks->items[i];
             char full_path[MAX_PATH_LENGTH];
             char *base_path;
             int32 n;
-
-            task = tasks->items[i];
 
             if (message->side == L) {
                 base_path = cecup.src_base;
@@ -243,14 +241,11 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 
     if (tasks) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task;
+            Task *task = tasks->items[i];
             int32 path_len;
             char path_full[MAX_PATH_LENGTH];
             char *path;
-            char *variant;
-
-            task = tasks->items[i];
-            variant = g_object_get_data(G_OBJECT(m), "variant");
+            char *variant = g_object_get_data(G_OBJECT(m), "variant");
 
             if (variant && !strcmp(variant, "absolute")) {
                 char path_relative[MAX_PATH_LENGTH];
@@ -357,14 +352,13 @@ on_menu_diff(GtkWidget *m, void *data) {
 
     if (tasks) {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task;
+            Task *task = tasks->items[i];
             char *path_src;
             char *path_dst;
             int64 size_dst;
             int64 size_src;
             pid_t pid;
 
-            task = tasks->items[i];
             size_src = strlen32(cecup.src_base) + strlen32(task->path) + 2;
             size_dst = strlen32(cecup.dst_base) + strlen32(task->path) + 2;
 
