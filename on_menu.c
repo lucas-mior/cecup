@@ -25,6 +25,12 @@
 #include "aux.c"
 #include "work.c"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_on_menu 1
+#elif !defined(TESTING_on_menu)
+#define TESTING_on_menu 0
+#endif
+
 static void
 on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     int32 index;
@@ -431,5 +437,14 @@ on_menu_ignore(GtkWidget *m, void *data) {
 
     return;
 }
+
+#if TESTING_on_menu
+
+int
+main(void) {
+    exit(EXIT_SUCCESS);
+}
+
+#endif
 
 #endif /* ON_MENU_C */
