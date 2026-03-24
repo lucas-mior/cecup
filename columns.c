@@ -237,7 +237,6 @@ bind_text_cb(GtkSignalListItemFactory *factory,
     g_object_set_data(G_OBJECT(label),
                       "cecup-col", GINT_TO_POINTER(text_info->type));
 
-    XFREE(text_info);
     return;
 }
 
