@@ -15,10 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if !defined(COLUMNS_C)
+#define COLUMNS_C
+
 #include <gtk/gtk.h>
 
 #include "cecup.h"
 #include "on.c"
+
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_columns 1
+#elif !defined(TESTING_columns)
+#define TESTING_columns 0
+#endif
 
 static void
 setup_column_checkbox(GtkSignalListItemFactory *factory,
@@ -282,3 +291,13 @@ setup_text_cb(GtkSignalListItemFactory *factory,
     return;
 }
 
+#if TESTING_columns
+
+int
+main(void) {
+    exit(EXIT_SUCCESS);
+}
+
+#endif
+
+#endif /* COLUMNS_C */
