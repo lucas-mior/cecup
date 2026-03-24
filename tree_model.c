@@ -46,7 +46,7 @@ cecup_row_proxy_new(CecupRow *row) {
     return self;
 }
 
-CecupRow *
+static CecupRow *
 cecup_row_proxy_get_row(CecupRowProxy *proxy) {
     return proxy->row;
 }
@@ -100,7 +100,7 @@ cecup_list_model_class_init(CecupListModelClass *klass) {
     return;
 }
 
-CecupListModel *
+static CecupListModel *
 cecup_list_model_new(void) {
     return g_object_new(CECUP_TYPE_LIST_MODEL, NULL);
 }
@@ -166,8 +166,9 @@ cecup_list_model_list_model_init(GListModelInterface *iface) {
     return;
 }
 
-void
-cecup_list_model_update(CecupListModel *self, int32 old_count, int32 new_count) {
+static void
+cecup_list_model_update(CecupListModel *self,
+                        int32 old_count, int32 new_count) {
     for (int32 i = new_count; i < old_count; i += 1) {
         if ((i < self->proxies_capacity) && self->proxies[i]) {
             g_object_unref(self->proxies[i]);

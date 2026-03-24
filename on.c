@@ -464,7 +464,8 @@ on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
         order = gtk_column_view_sorter_get_primary_sort_order(GTK_COLUMN_VIEW_SORTER(view_sorter));
 
         if (col) {
-            cecup.sort_col = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(col), "col_id"));
+            void *col_data = g_object_get_data(G_OBJECT(col), "col_id");
+            cecup.sort_col = (enum CecupColumn)GPOINTER_TO_INT(col_data);
             cecup.sort_order = order;
             refresh_ui_list(REFRESH_FILTER_CHANGED, NULL);
         }
@@ -769,13 +770,15 @@ on_tree_key_press(GtkEventControllerKey *controller,
 
     for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {
         CecupMenuItem *menu_item = &tree_menu_items[i];
+        uint32 target;
+        uint32 pressed;
 
         if (menu_item->keyval == 0) {
             continue;
         }
 
-        uint32 target = gdk_keyval_to_lower(menu_item->keyval);
-        uint32 pressed = gdk_keyval_to_lower(keyval);
+        target = gdk_keyval_to_lower(menu_item->keyval);
+        pressed = gdk_keyval_to_lower(keyval);
 
         if ((pressed == target) && (modifiers == menu_item->mask)) {
             execute_menu_item(widget, menu_item);
@@ -862,10 +865,13 @@ on_tree_button_press(GtkGestureClick *gesture,
 
     if (button == GDK_BUTTON_SECONDARY && n_press == 1) {
         GtkWidget *child;
-        void *position_pointer;
+        void *position_pointer = NULL;
 
         if ((child = gtk_widget_pick(widget, x, y, GTK_PICK_DEFAULT))) {
-            while (child && (position_pointer = g_object_get_data(G_OBJECT(child), "cecup-pos")) == NULL) {
+            while (child
+                   && (position_pointer = g_object_get_data(G_OBJECT(child),
+                                                            "cecup-pos"))
+                                                            == NULL) {
                 child = gtk_widget_get_parent(child);
             }
 
