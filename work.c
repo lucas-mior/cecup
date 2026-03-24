@@ -54,8 +54,8 @@ static Message *add_row_batch_messages[BATCH_SIZE];
 static int32 add_row_batch_count = 0;
 
 static bool
-check_hash_table(struct Hash_map *show_patterns_map,
-                 char *src_path, char *dst_path) {
+work_check_reshowed_dir(struct Hash_map *show_patterns_map,
+                        char *src_path, char *dst_path) {
     char *path;
     char **pattern_ptr;
     char *show_pattern;
@@ -733,8 +733,8 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         dst_size = parsed_size;
 
         if (filtered) {
-            ignore_duplicate_dir = check_hash_table(show_patterns_map,
-                                                    src_path, dst_path);
+            ignore_duplicate_dir = work_check_reshowed_dir(show_patterns_map,
+                                                           src_path, dst_path);
         }
 
         *nfiles_processed += 1;
@@ -805,8 +805,8 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         dst_size = parsed_size;
 
         if (filtered) {
-            ignore_duplicate_dir = check_hash_table(show_patterns_map,
-                                                    src_path, dst_path);
+            ignore_duplicate_dir = work_check_reshowed_dir(show_patterns_map,
+                                                           src_path, dst_path);
         }
 
         *nfiles_processed += 1;
