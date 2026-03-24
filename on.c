@@ -992,22 +992,22 @@ on_tree_button_press(GtkGestureClick *gesture,
                     extension = memrchr64(name, '.', length);
                     dirname2(directory, path_copy, &path_len);
 
-                    if (extension) {
-                        if (extension != name) {
-                            SNPRINTF(label, _("by extension (*%s)"), extension);
-                            SNPRINTF(pattern, "*%s", extension);
-                            item = g_menu_item_new(label, NULL);
-                            g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
-                            g_menu_append_item(submenu, item);
-                            g_object_unref(item);
-                        }
+                    if (extension && (extension != name)) {
+                        SNPRINTF(label, _("by extension (*%s)"), extension);
+                        SNPRINTF(pattern, "*%s", extension);
+                        item = g_menu_item_new(label, NULL);
+                        g_menu_item_set_action_and_target(item,
+                                                          "app.ignore", "s", pattern);
+                        g_menu_append_item(submenu, item);
+                        g_object_unref(item);
                     }
 
                     if (strcmp(directory, ".")) {
                         SNPRINTF(label, _("📁 Dir (/%s/)"), directory);
                         SNPRINTF(pattern, "/%s/", directory);
                         item = g_menu_item_new(label, NULL);
-                        g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
+                        g_menu_item_set_action_and_target(item,
+                                                          "app.ignore", "s", pattern);
                         g_menu_append_item(submenu, item);
                         g_object_unref(item);
                     }
@@ -1015,24 +1015,27 @@ on_tree_button_press(GtkGestureClick *gesture,
                     SNPRINTF(label, _("This file only (/%s)"), filepath);
                     SNPRINTF(pattern, "/%s", filepath);
                     item = g_menu_item_new(label, NULL);
-                    g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
+                    g_menu_item_set_action_and_target(item,
+                                                      "app.ignore", "s", pattern);
                     g_menu_append_item(submenu, item);
                     g_object_unref(item);
 
                     SNPRINTF(label, _("This filename on any folder (*/%s)"), name);
                     SNPRINTF(pattern, "*/%s", name);
                     item = g_menu_item_new(label, NULL);
-                    g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
+                    g_menu_item_set_action_and_target(item,
+                                                      "app.ignore", "s", pattern);
                     g_menu_append_item(submenu, item);
                     g_object_unref(item);
                 }
 
-                item = g_menu_item_new_submenu(_(menu_item->label), G_MENU_MODEL(submenu));
-                if (is_busy) {
-                    g_menu_item_set_action_and_target(item, "none.none", NULL);
-                } else if (filepath == NULL) {
+                item = g_menu_item_new_submenu(_(menu_item->label),
+                                               G_MENU_MODEL(submenu));
+
+                if (is_busy || (filepath == NULL)) {
                     g_menu_item_set_action_and_target(item, "none.none", NULL);
                 }
+
                 g_menu_append_item(menu, item);
                 g_object_unref(item);
                 g_object_unref(submenu);
@@ -1042,7 +1045,8 @@ on_tree_button_press(GtkGestureClick *gesture,
 
                 disabled = false;
                 item = g_menu_item_new(_(menu_item->label), NULL);
-                g_menu_item_set_action_and_target(item, "app.tree_dispatch", "i", i);
+                g_menu_item_set_action_and_target(item,
+                                                  "app.tree_dispatch", "i", i);
 
                 if (is_busy) {
                     if ((menu_item->callback == on_menu_apply) ||
