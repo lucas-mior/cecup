@@ -63,7 +63,8 @@ static gpointer cecup_list_model_get_item(GListModel *list, guint position);
 static void cecup_list_model_list_model_init(GListModelInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(CecupListModel, cecup_list_model, G_TYPE_OBJECT,
-                        G_IMPLEMENT_INTERFACE(G_TYPE_LIST_MODEL, cecup_list_model_list_model_init))
+                        G_IMPLEMENT_INTERFACE(G_TYPE_LIST_MODEL,
+                        cecup_list_model_list_model_init))
 
 static void
 cecup_list_model_init(CecupListModel *self) {
@@ -139,7 +140,8 @@ cecup_list_model_get_item(GListModel *list, guint position) {
             self->proxies_capacity = pos + 256;
         }
 
-        self->proxies = xrealloc(self->proxies, self->proxies_capacity * SIZEOF(CecupRowProxy *));
+        self->proxies = xrealloc(self->proxies,
+                                 self->proxies_capacity*SIZEOF(CecupRowProxy *));
 
         for (int32 i = old_capacity; i < self->proxies_capacity; i += 1) {
             self->proxies[i] = NULL;
@@ -176,7 +178,8 @@ cecup_list_model_update(CecupListModel *self,
         }
     }
 
-    g_list_model_items_changed(G_LIST_MODEL(self), 0, (guint)old_count, (guint)new_count);
+    g_list_model_items_changed(G_LIST_MODEL(self),
+                               0, (guint)old_count, (guint)new_count);
     return;
 }
 
