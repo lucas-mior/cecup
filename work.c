@@ -1156,6 +1156,16 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
 
+    if (cecup.stop_working) {
+        IPC_SEND_LOG_ERROR("Stop requested.\n");
+        for (int32 i = 0; i < ntransfers; i += 1) {
+            XFREE(transfers[i]);
+        }
+        XFREE(transfers);
+        work_finalize(thread_data);
+        g_thread_exit(NULL);
+    }
+
     if (ntransfers <= 0) {
         for (uint32 i = 0; i < hash_length(show_patterns_map); i += 1) {
             XFREE(show_patterns_map->array[i].value);
