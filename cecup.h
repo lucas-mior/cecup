@@ -22,6 +22,7 @@
 #include "generic.c"
 #include "arena.c"
 #include "i18n.h"
+#include "util.c"
 
 #define EMOJI_NEW "➕"
 #define EMOJI_LINK "🔗"
@@ -54,7 +55,7 @@
     X(IGNORE)
 #include "xenums.c"
 
-#define ENUM_BITFLAGS 0
+#define ENUM_BITFLAGS 1
 #define ENUM_NAME CecupReason
 #define ENUM_PREFIX_ REASON_
 #define ENUM_FIELDS     \
@@ -120,13 +121,13 @@ static char *dst_action_strings[] = {
 };
 
 static char *reason_strings[] = {
-    [REASON_EQUAL]    = N_("Files have the same size and modification time"),
-    [REASON_IGNORED]  = N_("Matches an ignore pattern"),
-    [REASON_MISSING]  = N_("File does not exist in the original folder"),
-    [REASON_NEW]      = N_("New file found in the original folder"),
-    [REASON_HARDLINK] = N_("Hardlinked file in the original folder"),
-    [REASON_SYMLINK]  = N_("Symlink in the original folder"),
-    [REASON_UPDATE]   = N_("The original file is newer"),
+    [REASON_EQUAL_BIT_IDX]    = N_("Files have the same size and modification time"),
+    [REASON_IGNORED_BIT_IDX]  = N_("Matches an ignore pattern"),
+    [REASON_MISSING_BIT_IDX]  = N_("File does not exist in the original folder"),
+    [REASON_NEW_BIT_IDX]      = N_("New file found in the original folder"),
+    [REASON_HARDLINK_BIT_IDX] = N_("Hardlinked file in the original folder"),
+    [REASON_SYMLINK_BIT_IDX]  = N_("Symlink in the original folder"),
+    [REASON_UPDATE_BIT_IDX]   = N_("The original file is newer"),
 };
 
 static char *colors[] = {
