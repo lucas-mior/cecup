@@ -47,6 +47,7 @@ protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.invert_button, !state);
 
     gtk_widget_set_sensitive(cecup.stop_button, state);
+    cecup.stop_working = false;
     return;
 }
 

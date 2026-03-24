@@ -435,6 +435,7 @@ on_stop_clicked(GtkWidget *b, void *data) {
     if (cecup.child_pid > 0) {
         kill(-cecup.child_pid, SIGTERM);
     }
+    cecup.stop_working = true;
     return;
 }
 

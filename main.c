@@ -813,6 +813,7 @@ main(int32 argc, char **argv) {
     }
 
     cecup.store = G_LIST_MODEL(cecup_list_model_new());
+    cecup.stop_working = false;
 
     cecup.application = gtk_application_new("com.cecup.app",
                                             G_APPLICATION_DEFAULT_FLAGS);

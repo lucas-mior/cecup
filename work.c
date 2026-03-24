@@ -478,7 +478,7 @@ static void *
 work_fix_fs_thread_fn(void *user_data) {
     FixFsThreadData *data = user_data;
     data->file_count = work_fix_fs_recursive(data->base_path, NULL);
-    g_thread_exit(NULL);
+    return NULL;
 }
 
 static void *
@@ -922,6 +922,7 @@ work_rsync(void *user_data) {
 
         if (cecup.stop_working) {
             IPC_SEND_LOG_ERROR("Stop requested.\n");
+            work_finalize(thread_data);
             g_thread_exit(NULL);
         }
 
