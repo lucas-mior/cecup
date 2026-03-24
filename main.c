@@ -227,7 +227,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     {
         GtkCssProvider *provider;
-        char css[4096];
+        char css[BUFSIZ];
         int32 offset;
         int32 n;
 
@@ -801,7 +801,7 @@ main(int32 argc, char **argv) {
         SNPRINTF(config_base, "%s/cecup", XDG_CONFIG_HOME);
 
         if (access(config_base, F_OK) == -1) {
-            char cmd[4096];
+            char cmd[MAX_PATH_LENGTH];
             g_mkdir_with_parents(config_base, 0755);
 
             SNPRINTF(cmd, "cp -r /etc/cecup/* '%s/'", config_base);
