@@ -38,7 +38,7 @@
 #define TESTING_hash 0
 #endif
 
-#if TESTING_hash
+#if 1 == TESTING_hash
 #define HASH_VALUE_TYPE int32
 #define HASH_VALUE_FORMATTER "%d"
 #define HASH_PADDING_TYPE uint32
