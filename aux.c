@@ -471,21 +471,9 @@ update_ui_handler(void *data) {
         pattern_len = message->path_len;
 
         for (int32 i = 0; i < cecup.rows_len;) {
-            CecupRow *row_test;
-            char *path_test;
-            bool match;
-
-            row_test = cecup.rows[i];
-            match = false;
-
-            if (row_test->src_path) {
-                path_test = row_test->src_path;
-            } else if (row_test->dst_path) {
-                path_test = row_test->dst_path;
-            } else {
-                i += 1;
-                continue;
-            }
+            CecupRow *row_test = cecup.rows[i];
+            char *path_test = row_path_get(row_test);
+            bool match = false;
 
             if (pattern[pattern_len - 1] == '/') {
                 if (BEGINS_WITH(path_test, pattern, pattern_len)) {
