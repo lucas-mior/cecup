@@ -97,8 +97,8 @@ work_flush_add_rows(void) {
 }
 
 static bool
-get_file_info(char *base, char **path,
-              int64 *mtime, int64 *size, bool *is_dir) {
+work_get_file_info(char *base, char **path,
+                   int64 *mtime, int64 *size, bool *is_dir) {
     char full_path[MAX_PATH_LENGTH];
     struct stat stat;
 
@@ -598,10 +598,10 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         path_len = path_len - (int32)(&buf_output[line_len] - interlude);
         ignore_pattern = interlude + strlen32(RSYNC_IGNORE_INTER);
 
-        get_file_info(cecup.src_base, &src_path,
-                      &src_mtime, &src_size, &is_dir);
-        get_file_info(cecup.dst_base, &dst_path,
-                      &dst_mtime, &dst_size, &is_dir);
+        work_get_file_info(cecup.src_base, &src_path,
+                           &src_mtime, &src_size, &is_dir);
+        work_get_file_info(cecup.dst_base, &dst_path,
+                           &dst_mtime, &dst_size, &is_dir);
 
         *nfiles_processed += 1;
         if (((*nfiles_processed % 1000) == 0) && (nfiles_total > 0)) {
@@ -627,15 +627,15 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
         src_path = dst_path;
         path_len = line_len - (int32)(src_path - buf_output);
 
-        if (get_file_info(cecup.src_base, &src_path,
-                          &src_mtime, &src_size, &is_dir)) {
+        if (work_get_file_info(cecup.src_base, &src_path,
+                               &src_mtime, &src_size, &is_dir)) {
             reason = REASON_IGNORED;
         } else {
             reason = REASON_MISSING;
         }
 
-        get_file_info(cecup.dst_base, &dst_path,
-                      &dst_mtime, &dst_size, &is_dir);
+        work_get_file_info(cecup.dst_base, &dst_path,
+                           &dst_mtime, &dst_size, &is_dir);
 
         *nfiles_processed += 1;
         if (((*nfiles_processed % 1000) == 0) && (nfiles_total > 0)) {
@@ -724,10 +724,10 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
             *ntransfers += 1;
         }
 
-        get_file_info(cecup.src_base, &src_path,
-                      &src_mtime, NULL, &is_dir);
-        get_file_info(cecup.dst_base, &dst_path,
-                      &dst_mtime, &dst_size, &is_dir);
+        work_get_file_info(cecup.src_base, &src_path,
+                           &src_mtime, NULL, &is_dir);
+        work_get_file_info(cecup.dst_base, &dst_path,
+                           &dst_mtime, &dst_size, &is_dir);
 
         src_size = parsed_size;
         dst_size = parsed_size;
@@ -796,10 +796,10 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
             }
         }
 
-        get_file_info(cecup.src_base, &src_path,
-                      &src_mtime, NULL, &is_dir);
-        get_file_info(cecup.dst_base, &dst_path,
-                      &dst_mtime, &dst_size, &is_dir);
+        work_get_file_info(cecup.src_base, &src_path,
+                           &src_mtime, NULL, &is_dir);
+        work_get_file_info(cecup.dst_base, &dst_path,
+                           &dst_mtime, &dst_size, &is_dir);
 
         src_size = parsed_size;
         dst_size = parsed_size;
