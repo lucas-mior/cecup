@@ -55,17 +55,20 @@ typedef struct FixFsThreadData {
     char *base_path;
     int32 base_path_len;
     int64 file_count;
+
     struct Hash_fs_map *map;
     struct Hash_fs_map *inode_map;
+
+    int32 array_capacity;
+    int32 array_count;
+
+    struct stat *stat_array;
     char **ignore_patterns;
     int32 ignore_count;
-    struct stat *stat_array;
     char **matched_pattern_array;
     bool *ignored_array;
     char **link_target_array;
     char **relative_path_array;
-    int32 array_capacity;
-    int32 array_count;
 } FixFsThreadData;
 
 static __thread FixFsThreadData *nftw_current_data = NULL;
