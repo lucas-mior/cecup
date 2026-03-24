@@ -872,10 +872,15 @@ work_rsync(void *user_data) {
     char old_recursive[MAX_PATH_LENGTH];
     char new_recursive[MAX_PATH_LENGTH];
 
+    struct timespec t0_work;
+    struct timespec t1_work;
+
     struct stat stat_src;
     struct stat stat_dst;
     bool same_fs = true;
     struct Hash_map *show_patterns_map = hash_create_map(10);
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t0_work);
 
     if (stat(cecup.src_base, &stat_src) < 0) {
         IPC_SEND_LOG_ERROR("Error getting directory info from %s: %s.\n",
@@ -1171,6 +1176,9 @@ work_rsync(void *user_data) {
         work_finalize(thread_data);
         g_thread_exit(NULL);
     }
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
+    PRINT_TIMINGS(nfiles_total, __func__, t0_work, t1_work);
 
     if (ntransfers <= 0) {
         for (uint32 i = 0; i < hash_length(show_patterns_map); i += 1) {
