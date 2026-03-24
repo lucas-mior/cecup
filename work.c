@@ -447,10 +447,10 @@ work_fix_fs_recursive(char *base_path, char *relative) {
 
                 if (renameat2(AT_FDCWD, old_full,
                               AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
-                    IPC_SEND_LOG_ERROR("Error renaming %s to %s: %s\n",
+                    IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"),
                                        old_full, new_full, strerror(errno));
                 } else {
-                    IPC_SEND_LOG("Fixed: %s -> %s\n", d_name, new_name);
+                    IPC_SEND_LOG(_("Fixed: %s -> %s\n"), d_name, new_name);
                     if (S_ISDIR(stat.st_mode)) {
                         if (relative) {
                             SNPRINTF(sub_rel, "%s/%s", relative, new_name);
@@ -498,7 +498,7 @@ work_fix_fs_worker(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
-    IPC_SEND_LOG("Checking for problematic names...\n");
+    IPC_SEND_LOG(_("Checking for problematic names...\n"));
     if (stat_src.st_dev == stat_dst.st_dev) {
         work_fix_fs_thread_fn(&src_fix);
         work_fix_fs_thread_fn(&dst_fix);
@@ -508,7 +508,7 @@ work_fix_fs_worker(void *user_data) {
         g_thread_join(t1);
         g_thread_join(t2);
     }
-    IPC_SEND_LOG("Name correction finished.\n");
+    IPC_SEND_LOG(_("Name correction finished.\n"));
 
     {
         Message *message = xmalloc(SIZEOF(*message));
@@ -909,7 +909,7 @@ work_rsync(void *user_data) {
         FixFsThreadData src_fix = {cecup.src_base, 0};
         FixFsThreadData dst_fix = {cecup.dst_base, 0};
 
-        IPC_SEND_LOG("Checking for problematic names and counting files...\n");
+        IPC_SEND_LOG(_("Checking for problematic names and counting files...\n"));
 
         if (!same_fs) {
             GThread *t1 = g_thread_new("fix_src",
@@ -924,15 +924,15 @@ work_rsync(void *user_data) {
         }
 
         if (cecup.stop_working) {
-            IPC_SEND_LOG_ERROR("Stop requested.\n");
+            IPC_SEND_LOG_ERROR(_("Stop requested.\n"));
             work_finalize(thread_data);
             g_thread_exit(NULL);
         }
 
-        IPC_SEND_LOG("Name correction finished.\n");
+        IPC_SEND_LOG(_("Name correction finished.\n"));
 
         nfiles_total = src_fix.file_count;
-        IPC_SEND_LOG("Found %lld files to analyse...\n",
+        IPC_SEND_LOG(_("Found %lld files to analyse...\n"),
                      (llong)nfiles_total);
 
         cecup.changed_dirs = false;
@@ -1160,7 +1160,7 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stdout[0]);
 
     if (cecup.stop_working) {
-        IPC_SEND_LOG_ERROR("Stop requested.\n");
+        IPC_SEND_LOG_ERROR(_("Stop requested.\n"));
         for (int32 i = 0; i < ntransfers; i += 1) {
             XFREE(transfers[i]);
         }
@@ -1227,7 +1227,7 @@ work_rsync(void *user_data) {
     rsync_args[a++] = dst_base_with_slash;
     rsync_args[a++] = NULL;
 
-    IPC_SEND_LOG("Verifying transfers with checksum...\n");
+    IPC_SEND_LOG(_("Verifying transfers with checksum...\n"));
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
     IPC_SEND_LOG_CMD("%s\n", cmd);
 
@@ -1348,7 +1348,7 @@ work_rsync(void *user_data) {
     XFREE(transfers);
 
     if (thread_data->is_preview) {
-        IPC_SEND_LOG("Analysis complete. Review the list and click Apply.\n");
+        IPC_SEND_LOG(_("Analysis complete. Review the list and click Apply.\n"));
     }
 
     for (uint32 i = 0; i < hash_length(show_patterns_map); i += 1) {
@@ -1388,7 +1388,7 @@ work_rsync_bulk(void *user_data) {
         }
 
         if (cecup.stop_working) {
-            IPC_SEND_LOG_ERROR("Stop requested.\n");
+            IPC_SEND_LOG_ERROR(_("Stop requested.\n"));
             free_task_list(tasks);
             work_finalize(NULL);
             g_thread_exit(NULL);
@@ -1677,7 +1677,7 @@ work_rsync_bulk(void *user_data) {
     work_finalize(NULL);
     free_task_list(tasks);
     if (cecup.stop_working) {
-        IPC_SEND_LOG_ERROR("Stop requested.\n");
+        IPC_SEND_LOG_ERROR(_("Stop requested.\n"));
     }
     g_thread_exit(NULL);
 }

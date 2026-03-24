@@ -67,7 +67,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
             fprintf(fp, "\n%s", pattern);
             fclose(fp);
         } else {
-            IPC_SEND_LOG_ERROR("Error opening %s: %s.\n",
+            IPC_SEND_LOG_ERROR(_("Error opening %s: %s.\n"),
                                cecup.ignore_path, strerror(errno));
         }
     } else {
@@ -252,7 +252,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 
                 SNPRINTF(path_relative, "%s/%s", base_path, task->path);
                 if (realpath(path_relative, path_full) == NULL) {
-                    IPC_SEND_LOG_ERROR("Error resolving full path of %s: %s.\n",
+                    IPC_SEND_LOG_ERROR(_("Error resolving full path of %s: %s.\n"),
                                        path_relative, strerror(errno));
                     continue;
                 }
@@ -357,15 +357,15 @@ on_menu_diff(GtkWidget *m, void *data) {
             char *path_dst;
             int64 size_dst;
             int64 size_src;
-            pid_t pid;
 
             size_src = strlen32(cecup.src_base) + strlen32(task->path) + 2;
             size_dst = strlen32(cecup.dst_base) + strlen32(task->path) + 2;
 
-            pid = fork();
-            if (pid == -1) {
-                IPC_SEND_LOG_ERROR("Error forking: %s.\n", strerror(errno));
-            } else if (pid == 0) {
+            switch (fork()) {
+            case -1:
+                error("Error forking: %s.\n", strerror(errno));
+                fatal(EXIT_FAILURE);
+            case 0:
                 path_src = xmalloc(size_src);
                 path_dst = xmalloc(size_dst);
 
@@ -411,7 +411,7 @@ on_menu_ignore(GtkWidget *m, void *data) {
             fprintf(fp, "\n%s", pattern);
             fclose(fp);
         } else {
-            IPC_SEND_LOG_ERROR("Error opening %s: %s.\n",
+            IPC_SEND_LOG_ERROR(_("Error opening %s: %s.\n"),
                                cecup.ignore_path, strerror(errno));
         }
     } else {

@@ -484,7 +484,7 @@ update_ui_handler(void *data) {
             }
 
             if (match) {
-                IPC_SEND_LOG("Removing %s from list...\n", path_test);
+                IPC_SEND_LOG(_("Removing %s from list...\n"), path_test);
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }
