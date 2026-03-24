@@ -853,7 +853,7 @@ on_tree_button_press(GtkGestureClick *gesture,
             while (child
                    && (position_pointer = g_object_get_data(G_OBJECT(child),
                                                             "cecup-pos"))
-                                                            == NULL) {
+                                          == NULL) {
                 child = gtk_widget_get_parent(child);
             }
 
@@ -1091,7 +1091,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
     int32 side;
     char *tip_text;
     char tip_buffer[MAX_PATH_LENGTH*2];
-    char *reason;
+    char reason_buf[1024];
+    int32 rb_pos;
     int64 size_raw;
     char *mtime_text;
 
@@ -1152,18 +1153,29 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             }
             break;
         case COLUMN_PATH:
-
-            reason = _(reason_strings[row->reason]);
+            rb_pos = 0;
+            reason_buf[0] = '\0';
+            for (int32 i = 0; i < REASON_BIT_COUNT; i += 1) {
+                if (row->reason & (1 << i)) {
+                    if (rb_pos > 0) {
+                        rb_pos += snprintf2(reason_buf + rb_pos,
+                                            SIZEOF(reason_buf) - rb_pos, ", ");
+                    }
+                    rb_pos += snprintf2(reason_buf + rb_pos,
+                                        SIZEOF(reason_buf) - rb_pos,
+                                        "%s", _(reason_strings[i]));
+                }
+            }
 
             if (row->link_target) {
                 SNPRINTF(tip_buffer,
-                         "%s -> %s: %s", filepath, row->link_target, reason);
+                         "%s -> %s: %s", filepath, row->link_target, reason_buf);
             } else if (row->ignore_pattern) {
                 SNPRINTF(tip_buffer,
                          "%s: %s (" N_("pattern") ": %s)",
-                         filepath, reason, row->ignore_pattern);
+                         filepath, reason_buf, row->ignore_pattern);
             } else {
-                SNPRINTF(tip_buffer, "%s: %s", filepath, reason);
+                SNPRINTF(tip_buffer, "%s: %s", filepath, reason_buf);
             }
             tip_text = tip_buffer;
             break;
