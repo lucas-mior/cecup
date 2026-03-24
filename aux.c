@@ -543,8 +543,17 @@ update_ui_handler(void *data) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
         }
+        g_mutex_lock(&cecup.arena_mutex);
+
         current_store_count = (int32)g_list_model_get_n_items(cecup.store);
+
+        arena_reset(cecup.arena);
+        cecup.rows_len = 0;
+        cecup.rows_visible_len = 0;
+
         cecup_list_model_update(CECUP_LIST_MODEL(cecup.store), current_store_count, 0);
+
+        g_mutex_unlock(&cecup.arena_mutex);
 
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       0.0);

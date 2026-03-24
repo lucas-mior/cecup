@@ -899,11 +899,6 @@ work_rsync(void *user_data) {
 
         message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
-
-        arena_reset(cecup.arena);
-        cecup.rows_len = 0;
-        cecup.rows_visible_len = 0;
-
         message->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
 
@@ -943,14 +938,9 @@ work_rsync(void *user_data) {
 
         message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
-
         message->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add_full(G_PRIORITY_HIGH_IDLE,
                         update_ui_handler, message, NULL);
-
-        arena_reset(cecup.arena);
-        cecup.rows_len = 0;
-        cecup.rows_visible_len = 0;
     }
 
     xpipe(pipe_stdout);
