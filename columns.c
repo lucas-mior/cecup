@@ -225,9 +225,13 @@ bind_text_cb(GtkSignalListItemFactory *factory,
         case COLUMN_SIZE:
             gtk_label_set_text(GTK_LABEL(label), row->src_size_text);
             break;
+        case COLUMN_PATH:
+        case COLUMN_ACTION:
+        case COLUMN_LAST:
         default:
             break;
         }
+
         action = row->src_action;
     } else {
         switch (text_info->type) {
@@ -237,9 +241,13 @@ bind_text_cb(GtkSignalListItemFactory *factory,
         case COLUMN_SIZE:
             gtk_label_set_text(GTK_LABEL(label), row->dst_size_text);
             break;
+        case COLUMN_PATH:
+        case COLUMN_ACTION:
+        case COLUMN_LAST:
         default:
             break;
         }
+
         action = row->dst_action;
     }
 
