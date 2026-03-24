@@ -18,6 +18,11 @@
 #if !defined(TREE_MODEL_C)
 #define TREE_MODEL_C
 
+#include <gtk/gtk.h>
+
+#include "cecup.h"
+#include "util.c"
+
 struct _CecupRowProxy {
     GObject parent_instance;
     CecupRow *row;
