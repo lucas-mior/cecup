@@ -41,7 +41,7 @@
 #define TESTING_generic 0
 #endif
 
-#if TESTING_generic
+#if 1 == TESTING_generic
 #define TRAP(...) raise(SIGILL)
 #elif !defined(TRAP)
 #if defined(__GNUC__) || defined(__clang__)

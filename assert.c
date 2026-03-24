@@ -39,7 +39,7 @@
 #define TESTING_assert 0
 #endif
 
-#if TESTING_assert
+#if 1 == TESTING_assert
 #define TRAP(...) raise(SIGILL)
 #elif !defined(TRAP)
 #if defined(__GNUC__) || defined(__clang__)
