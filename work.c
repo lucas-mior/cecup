@@ -301,6 +301,8 @@ work_fix_fs_cb(const char *fpath,
     bool changed;
     bool renaming_problematic;
 
+    (void)sb;
+
     if (cecup.stop_working) {
         return 1;
     }
@@ -309,9 +311,9 @@ work_fix_fs_cb(const char *fpath,
         return 0;
     }
 
-    d_name = fpath + ftwbuf->base;
+    d_name = (char *)fpath + ftwbuf->base;
     name_len = (int64)strlen32(d_name);
-    old_full_len = strlen32(fpath);
+    old_full_len = strlen32((char *)fpath);
 
     if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
         IPC_SEND_LOG_ERROR(_("Error: file path is too long:\n"));
@@ -390,7 +392,7 @@ work_fix_fs_cb(const char *fpath,
         if (changed) {
             int32 base_len = ftwbuf->base;
 
-            memcpy64(new_full, fpath, base_len);
+            memcpy64(new_full, (char *)fpath, base_len);
             memcpy64(new_full + base_len, new_name, j + 1);
 
             if (renameat2(AT_FDCWD, fpath, AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
