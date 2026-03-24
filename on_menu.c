@@ -201,7 +201,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
                     NULL,
                 };
                 STRING_FROM_ARRAY(cmd, " ", command, LENGTH(command));
-                IPC_SEND_LOG("Launching %s...\n", cmd);
+                IPC_SEND_LOG(_("Launching %s...\n"), cmd);
                 util_command_launch(LENGTH(command), command);
             }
         }
