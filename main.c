@@ -22,6 +22,7 @@
 #include "cecup.h"
 #include "util.c"
 #include "on.c"
+#include "on_menu.c"
 #include "i18n.h"
 
 #define SPACING_BOX 5
