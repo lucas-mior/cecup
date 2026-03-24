@@ -35,7 +35,8 @@
 
 #define UI_INTERVAL_MS 100
 
-static void on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data);
+static void on_sort_changed(GtkSorter *sorter,
+                            GtkSorterChange change, void *data);
 
 static void
 protect_interface_from_user(bool state) {
@@ -385,9 +386,11 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
             if (!strcmp(row_full_rel, path_to_focus)) {
                 GtkSelectionModel *sel_l;
                 GtkSelectionModel *sel_r;
+                GtkColumnView *view_left = GTK_COLUMN_VIEW(cecup.tree[L]);
+                GtkColumnView *view_right = GTK_COLUMN_VIEW(cecup.tree[R]);
 
-                sel_l = gtk_column_view_get_model(GTK_COLUMN_VIEW(cecup.tree[L]));
-                sel_r = gtk_column_view_get_model(GTK_COLUMN_VIEW(cecup.tree[R]));
+                sel_l = gtk_column_view_get_model(view_left);
+                sel_r = gtk_column_view_get_model(view_right);
 
                 gtk_selection_model_select_item(sel_l, (uint32)i, TRUE);
                 gtk_selection_model_select_item(sel_r, (uint32)i, TRUE);
