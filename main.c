@@ -38,7 +38,8 @@ CecupListModel *cecup_list_model_new(void);
 CecupRow *cecup_row_proxy_get_row(CecupRowProxy *proxy);
 
 static void
-setup_selected_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+setup_selected_cb(GtkSignalListItemFactory *factory,
+                  GtkListItem *list_item, void *data) {
     GtkWidget *check;
 
     (void)factory;
@@ -54,7 +55,8 @@ setup_selected_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, voi
 }
 
 static void
-bind_selected_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+bind_selected_cb(GtkSignalListItemFactory *factory,
+                 GtkListItem *list_item, void *data) {
     GtkWidget *check;
     CecupRowProxy *proxy;
     CecupRow *row;
@@ -78,7 +80,8 @@ bind_selected_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
 }
 
 static void
-setup_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+setup_text_cb(GtkSignalListItemFactory *factory,
+              GtkListItem *list_item, void *data) {
     GtkWidget *label;
 
     (void)factory;
@@ -95,7 +98,8 @@ setup_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *d
 }
 
 static void
-bind_action_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+bind_action_cb(GtkSignalListItemFactory *factory,
+               GtkListItem *list_item, void *data) {
     GtkWidget *label;
     CecupRowProxy *proxy;
     CecupRow *row;
@@ -134,7 +138,8 @@ bind_action_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *
 }
 
 static void
-setup_path_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+setup_path_cb(GtkSignalListItemFactory *factory,
+              GtkListItem *list_item, void *data) {
     GtkWidget *editable;
     GtkWidget *tree;
     GtkGesture *click;
@@ -152,7 +157,8 @@ setup_path_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *d
                      G_CALLBACK(on_path_editing_notify), tree);
 
     click = gtk_gesture_click_new();
-    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(click), GTK_PHASE_CAPTURE);
+    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(click),
+                                               GTK_PHASE_CAPTURE);
     g_signal_connect(click, "pressed", G_CALLBACK(on_path_click_pressed), tree);
     gtk_widget_add_controller(editable, GTK_EVENT_CONTROLLER(click));
 
@@ -162,7 +168,8 @@ setup_path_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *d
 }
 
 static void
-bind_path_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+bind_path_cb(GtkSignalListItemFactory *factory,
+             GtkListItem *list_item, void *data) {
     GtkWidget *editable;
     CecupRowProxy *proxy;
     CecupRow *row;
@@ -204,14 +211,16 @@ bind_path_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *da
     gtk_widget_set_css_classes(editable, (const char **)classes);
 
     g_object_set_data(G_OBJECT(editable), "cecup-row", row);
-    g_object_set_data(G_OBJECT(editable), "cecup-pos", GUINT_TO_POINTER(position));
     g_object_set_data(G_OBJECT(editable), "cecup-col", GINT_TO_POINTER(2));
+    g_object_set_data(G_OBJECT(editable), "cecup-pos",
+                      GUINT_TO_POINTER(position));
 
     return;
 }
 
 static void
-bind_size_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+bind_size_cb(GtkSignalListItemFactory *factory,
+             GtkListItem *list_item, void *data) {
     GtkWidget *label;
     CecupRowProxy *proxy;
     CecupRow *row;
@@ -249,7 +258,8 @@ bind_size_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *da
 }
 
 static void
-bind_mtime_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+bind_mtime_cb(GtkSignalListItemFactory *factory,
+              GtkListItem *list_item, void *data) {
     GtkWidget *label;
     CecupRowProxy *proxy;
     CecupRow *row;
@@ -287,8 +297,8 @@ bind_mtime_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *d
 }
 
 static void
-setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupColumn col_path) {
-    GtkListItemFactory *factory;
+setup_tree_columns(GtkWidget *tree,
+                   enum CecupColumn col_act, enum CecupColumn col_path) {
     GtkColumnViewColumn *column;
     GtkEventController *key;
     GActionMap *action_map;
@@ -302,63 +312,111 @@ setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupColumn c
         GSimpleAction *ignore;
 
         dispatch = g_simple_action_new("tree_dispatch", G_VARIANT_TYPE_INT32);
-        g_signal_connect(dispatch, "activate", G_CALLBACK(on_menu_dispatch), NULL);
+        g_signal_connect(dispatch, "activate",
+                         G_CALLBACK(on_menu_dispatch), NULL);
         g_action_map_add_action(action_map, G_ACTION(dispatch));
 
         ignore = g_simple_action_new("ignore", G_VARIANT_TYPE_STRING);
-        g_signal_connect(ignore, "activate", G_CALLBACK(on_menu_ignore_action), NULL);
+        g_signal_connect(ignore, "activate",
+                         G_CALLBACK(on_menu_ignore_action), NULL);
         g_action_map_add_action(action_map, G_ACTION(ignore));
     }
 
-    factory = gtk_signal_list_item_factory_new();
-    g_signal_connect(factory, "setup", G_CALLBACK(setup_selected_cb), NULL);
-    g_signal_connect(factory, "bind", G_CALLBACK(bind_selected_cb), NULL);
-    column = gtk_column_view_column_new(NULL, factory);
-    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+    {
+        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+        g_signal_connect(factory, "setup",
+                         G_CALLBACK(setup_selected_cb), NULL);
+        g_signal_connect(factory, "bind",
+                         G_CALLBACK(bind_selected_cb), NULL);
+        column = gtk_column_view_column_new(NULL, factory);
+        gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+    }
 
-    factory = gtk_signal_list_item_factory_new();
-    g_signal_connect(factory, "setup", G_CALLBACK(setup_text_cb), NULL);
-    g_signal_connect(factory, "bind", G_CALLBACK(bind_action_cb), GINT_TO_POINTER(side));
-    column = gtk_column_view_column_new(_("Task"), factory);
-    gtk_column_view_column_set_resizable(column, TRUE);
-    gtk_column_view_column_set_sorter(column, GTK_SORTER(gtk_string_sorter_new(NULL)));
-    g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(col_act));
-    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+    {
+        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
 
-    factory = gtk_signal_list_item_factory_new();
-    g_signal_connect(factory, "setup", G_CALLBACK(setup_path_cb), tree);
-    g_signal_connect(factory, "bind", G_CALLBACK(bind_path_cb), tree);
-    column = gtk_column_view_column_new(_("Name"), factory);
-    gtk_column_view_column_set_resizable(column, TRUE);
-    gtk_column_view_column_set_fixed_width(column, 500);
-    gtk_column_view_column_set_sorter(column, GTK_SORTER(gtk_string_sorter_new(NULL)));
-    g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(col_path));
-    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+        g_signal_connect(factory, "setup",
+                         G_CALLBACK(setup_text_cb), NULL);
+        g_signal_connect(factory, "bind",
+                         G_CALLBACK(bind_action_cb), GINT_TO_POINTER(side));
 
-    factory = gtk_signal_list_item_factory_new();
-    g_signal_connect(factory, "setup", G_CALLBACK(setup_text_cb), NULL);
-    g_signal_connect(factory, "bind", G_CALLBACK(bind_size_cb), GINT_TO_POINTER(side));
-    column = gtk_column_view_column_new(_("Size"), factory);
-    gtk_column_view_column_set_resizable(column, TRUE);
-    gtk_column_view_column_set_sorter(column, GTK_SORTER(gtk_string_sorter_new(NULL)));
-    g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_SIZE_RAW));
-    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+        column = gtk_column_view_column_new(_("Task"), factory);
 
-    factory = gtk_signal_list_item_factory_new();
-    g_signal_connect(factory, "setup", G_CALLBACK(setup_text_cb), NULL);
-    g_signal_connect(factory, "bind", G_CALLBACK(bind_mtime_cb), GINT_TO_POINTER(side));
-    column = gtk_column_view_column_new(_("Modification Time"), factory);
-    gtk_column_view_column_set_expand(column, TRUE);
-    gtk_column_view_column_set_resizable(column, TRUE);
-    gtk_column_view_column_set_sorter(column, GTK_SORTER(gtk_string_sorter_new(NULL)));
-    g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_MTIME_RAW));
-    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+        gtk_column_view_column_set_resizable(column, TRUE);
+        gtk_column_view_column_set_sorter(column, sorter);
+
+        g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(col_act));
+        gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+    }
+
+    {
+        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+
+        g_signal_connect(factory, "setup",
+                         G_CALLBACK(setup_path_cb), tree);
+        g_signal_connect(factory, "bind",
+                         G_CALLBACK(bind_path_cb), tree);
+
+        column = gtk_column_view_column_new(_("Name"), factory);
+
+        gtk_column_view_column_set_resizable(column, TRUE);
+        gtk_column_view_column_set_fixed_width(column, 500);
+        gtk_column_view_column_set_sorter(column, sorter);
+
+        g_object_set_data(G_OBJECT(column),
+                          "col_id", GINT_TO_POINTER(col_path));
+        gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+    }
+
+    {
+        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+
+        g_signal_connect(factory, "setup",
+                         G_CALLBACK(setup_text_cb), NULL);
+        g_signal_connect(factory, "bind",
+                         G_CALLBACK(bind_size_cb), GINT_TO_POINTER(side));
+
+        column = gtk_column_view_column_new(_("Size"), factory);
+
+        gtk_column_view_column_set_resizable(column, TRUE);
+        gtk_column_view_column_set_sorter(column, sorter);
+
+        g_object_set_data(G_OBJECT(column),
+                          "col_id", GINT_TO_POINTER(COL_SIZE_RAW));
+        gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+    }
+
+    {
+        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+
+        g_signal_connect(factory, "setup",
+                         G_CALLBACK(setup_text_cb), NULL);
+        g_signal_connect(factory, "bind",
+                         G_CALLBACK(bind_mtime_cb), GINT_TO_POINTER(side));
+
+        column = gtk_column_view_column_new(_("Modification Time"), factory);
+
+        gtk_column_view_column_set_expand(column, TRUE);
+        gtk_column_view_column_set_resizable(column, TRUE);
+        gtk_column_view_column_set_sorter(column, sorter);
+
+        g_object_set_data(G_OBJECT(column),
+                          "col_id", GINT_TO_POINTER(COL_MTIME_RAW));
+        gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+    }
 
     gtk_widget_set_has_tooltip(tree, TRUE);
     gtk_widget_set_focusable(tree, TRUE);
 
     g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
-    g_signal_connect(gtk_column_view_get_sorter(GTK_COLUMN_VIEW(tree)), "changed", G_CALLBACK(on_sort_changed), tree);
+    {
+        GtkSorter *sorter = gtk_column_view_get_sorter(GTK_COLUMN_VIEW(tree));
+        g_signal_connect(sorter, "changed", G_CALLBACK(on_sort_changed), tree);
+    }
 
     {
         GtkGesture *click;
@@ -368,12 +426,14 @@ setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupColumn c
         gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(click),
                                                    GTK_PHASE_CAPTURE);
         gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click), 0);
-        g_signal_connect(click, "pressed", G_CALLBACK(on_tree_button_press), NULL);
+        g_signal_connect(click, "pressed",
+                         G_CALLBACK(on_tree_button_press), NULL);
     }
 
     key = gtk_event_controller_key_new();
     gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(key));
-    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(key), GTK_PHASE_BUBBLE);
+    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(key),
+                                               GTK_PHASE_BUBBLE);
     g_signal_connect(key, "key-pressed", G_CALLBACK(on_tree_key_press), NULL);
 
     return;
@@ -436,7 +496,8 @@ application_run(GtkApplication *application, gpointer user_data) {
             }
 
             m = snprintf2(css + offset, SIZEOF(css) - offset,
-                          "row:not(:selected) .cell-color-%d { background-color: %s; }\n",
+                          "row:not(:selected)"
+                          " .cell-color-%d { background-color: %s; }\n",
                           i, colors[i]);
             offset += m;
         }
