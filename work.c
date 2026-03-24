@@ -833,7 +833,7 @@ work_rsync(void *user_data) {
                             reason |= REASON_HARDLINK;
                         }
 
-                        if (is_dir && (stat_src->st_size != stat_dst->st_size)) {
+                        if (!is_dir && (stat_src->st_size != stat_dst->st_size)) {
                             reason |= REASON_SIZE;
                             attributes_differ = true;
                         }
