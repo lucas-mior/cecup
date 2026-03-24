@@ -18,7 +18,12 @@
 #if !defined(ON_MENU_C)
 #define ON_MENU_C
 
-static void free_message(void *data);
+#include <gtk/gtk.h>
+
+#include "cecup.h"
+#include "util.c"
+#include "aux.c"
+#include "work.c"
 
 static void
 on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
@@ -386,6 +391,8 @@ on_menu_diff(GtkWidget *m, void *data) {
                     error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
                     _exit(1);
                 }
+            default:
+                break;
             }
         }
 

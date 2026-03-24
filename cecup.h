@@ -355,6 +355,7 @@ static void refresh_ui_list_locked(enum RefreshType, char *path_to_focus);
 static void free_task_list(TaskList *tasks);
 static void save_config(void);
 static void on_preview_clicked(GtkWidget *b, void *data);
+static void free_message(void *data);
 
 static void on_menu_open_item(GtkWidget *m, void *data);
 static void on_menu_copy_path(GtkWidget *m, void *data);
