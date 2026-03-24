@@ -202,7 +202,6 @@ enum DataType {
     DATA_TYPE_ENABLE_BUTTONS,
     DATA_TYPE_CLEAR_TREES,
     DATA_TYPE_PROGRESS_PREVIEW,
-    DATA_TYPE_REGENERATE_PREVIEW,
     DATA_TYPE_ADD_ROW,
 };
 
@@ -352,17 +351,8 @@ static gboolean update_ui_handler(void * user_data);
 static void refresh_ui_list_locked(enum RefreshType, char *path_to_focus);
 static void free_task_list(TaskList *tasks);
 static void save_config(void);
-static void on_preview_clicked(GtkWidget *b, void *data);
 static void free_message(void *data);
 static void protect_interface_from_user(bool state);
-
-static void on_menu_open_item(GtkWidget *m, void *data);
-static void on_menu_copy_path(GtkWidget *m, void *data);
-static void on_menu_apply(GtkWidget *m, void *data);
-static void on_menu_diff(GtkWidget *m, void *data);
-static void on_menu_rename(GtkWidget *m, void *data);
-static void on_menu_delete(GtkWidget *m, void *data);
-static void on_menu_ignore(GtkWidget *m, void *data);
 
 static char *row_path_get(CecupRow *row) {
     if (row->src_path) {
@@ -467,17 +457,5 @@ typedef struct CecupMenuItem {
     void (*callback)(GtkWidget *, void *);
     char *variant;
 } CecupMenuItem;
-
-static CecupMenuItem tree_menu_items[] = {
-{N_("📄 Open File"),          0,          0,                                 on_menu_open_item, "file"},
-{N_("📂 Open Folder"),        0,          0,                                 on_menu_open_item, "folder"},
-{N_("📍 Copy Full Path"),     GDK_KEY_c,  GDK_CONTROL_MASK,                  on_menu_copy_path, "absolute"},
-{N_("📋 Copy Relative Path"), GDK_KEY_c,  GDK_CONTROL_MASK | GDK_SHIFT_MASK, on_menu_copy_path, "relative"},
-{N_("⏯️ Apply"),              0,          0,                                 on_menu_apply,     NULL},
-{N_("🔍 Diff"),               0,          0,                                 on_menu_diff,      NULL},
-{N_("✏️ Rename"),              GDK_KEY_F2, 0,                                 on_menu_rename,    NULL},
-{N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
-{N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
-};
 
 #endif /* CECUP_H */

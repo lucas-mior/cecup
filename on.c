@@ -21,6 +21,7 @@
 #include "cecup.h"
 #include "work.c"
 #include "aux.c"
+#include "on.h"
 #include "on_menu.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)

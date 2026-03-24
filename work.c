@@ -1558,7 +1558,57 @@ work_rsync_bulk(void *user_data) {
 
 int
 main(void) {
-    ASSERT(true);
+    char *pattern;
+    char *patterns[3];
+
+    patterns[0] = "*.c";
+    if ((pattern = work_path_matches_ignore("main.c", "main.c", false, patterns, 1)) == NULL) {
+        ASSERT(false);
+    }
+    ASSERT(!strcmp(pattern, "*.c"));
+
+    patterns[0] = "build/";
+    if ((pattern = work_path_matches_ignore("build", "build", true, patterns, 1)) == NULL) {
+        ASSERT(false);
+    }
+    ASSERT(!strcmp(pattern, "build/"));
+
+    patterns[0] = "build/";
+    if ((pattern = work_path_matches_ignore("build", "build", false, patterns, 1))) {
+        ASSERT(false);
+    }
+
+    patterns[0] = "obj";
+    if ((pattern = work_path_matches_ignore("src/obj/main.o", "main.o", false, patterns, 1)) == NULL) {
+        ASSERT(false);
+    }
+    ASSERT(!strcmp(pattern, "obj"));
+
+    patterns[0] = "/src";
+    if ((pattern = work_path_matches_ignore("src/main.c", "main.c", false, patterns, 1)) == NULL) {
+        ASSERT(false);
+    }
+    ASSERT(!strcmp(pattern, "/src"));
+
+    patterns[0] = "/src";
+    if ((pattern = work_path_matches_ignore("lib/src/main.c", "main.c", false, patterns, 1))) {
+        ASSERT(false);
+    }
+
+    patterns[0] = "foo/bar";
+    if ((pattern = work_path_matches_ignore("foo/bar/baz.c", "baz.c", false, patterns, 1)) == NULL) {
+        ASSERT(false);
+    }
+    ASSERT(!strcmp(pattern, "foo/bar"));
+
+    patterns[0] = "*.h";
+    patterns[1] = "build/";
+    patterns[2] = "*.o";
+    if ((pattern = work_path_matches_ignore("src/main.o", "main.o", false, patterns, 3)) == NULL) {
+        ASSERT(false);
+    }
+    ASSERT(!strcmp(pattern, "*.o"));
+
     exit(EXIT_SUCCESS);
 }
 
