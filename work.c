@@ -817,7 +817,11 @@ work_rsync(void *user_data) {
                     action = ACTION_IGNORE;
                     reason |= REASON_IGNORED;
                 } else {
-                    bool equal = false;
+                    bool equal;
+                    bool attributes_differ;
+
+                    equal = false;
+                    attributes_differ = false;
 
                     if (is_symlink) {
                         reason |= REASON_SYMLINK;
@@ -827,17 +831,43 @@ work_rsync(void *user_data) {
                             && !strcmp(link_target_src, link_target_dst)) {
                             equal = true;
                         }
-                    } else if (is_hardlink) {
-                        reason |= REASON_HARDLINK;
-                        if (S_ISREG(stat_dst->st_mode)
-                            && link_target_dst
-                            && !strcmp(link_target_src, link_target_dst)
-                            && (stat_src->st_size == stat_dst->st_size) && (stat_src->st_mtime == stat_dst->st_mtime)) {
-                            equal = true;
-                        }
                     } else {
-                        if ((stat_src->st_size == stat_dst->st_size) && (stat_src->st_mtime == stat_dst->st_mtime)) {
-                            equal = true;
+                        if (is_hardlink) {
+                            reason |= REASON_HARDLINK;
+                        }
+
+                        if (stat_src->st_size != stat_dst->st_size) {
+                            reason |= REASON_SIZE;
+                            attributes_differ = true;
+                        }
+                        if (stat_src->st_mtime != stat_dst->st_mtime) {
+                            reason |= REASON_MTIME;
+                            attributes_differ = true;
+                        }
+                        if (stat_src->st_uid != stat_dst->st_uid) {
+                            reason |= REASON_OWNER;
+                            attributes_differ = true;
+                        }
+                        if (stat_src->st_gid != stat_dst->st_gid) {
+                            reason |= REASON_GROUP;
+                            attributes_differ = true;
+                        }
+                        if ((stat_src->st_mode & 07777) != (stat_dst->st_mode & 07777)) {
+                            reason |= REASON_PERM;
+                            attributes_differ = true;
+                        }
+
+                        if (is_hardlink) {
+                            if (S_ISREG(stat_dst->st_mode)
+                                && link_target_dst
+                                && !strcmp(link_target_src, link_target_dst)
+                                && !attributes_differ) {
+                                equal = true;
+                            }
+                        } else {
+                            if (!attributes_differ) {
+                                equal = true;
+                            }
                         }
                     }
 
@@ -845,7 +875,6 @@ work_rsync(void *user_data) {
                         action = ACTION_EQUAL;
                         reason |= REASON_EQUAL;
                     } else {
-                        reason |= REASON_UPDATE;
                         if (is_hardlink) {
                             action = ACTION_HARDLINK;
                         } else if (is_symlink) {

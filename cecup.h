@@ -60,7 +60,11 @@
 #define ENUM_PREFIX_ REASON_
 #define ENUM_FIELDS     \
     X(NEW)              \
-    X(UPDATE)           \
+    X(SIZE)             \
+    X(MTIME)            \
+    X(OWNER)            \
+    X(GROUP)            \
+    X(PERM)             \
     X(HARDLINK)         \
     X(SYMLINK)          \
     X(EQUAL)            \
@@ -72,9 +76,9 @@
 #define ENUM_NAME ColumnType
 #define ENUM_PREFIX_ COLUMN_
 #define ENUM_FIELDS     \
-    X(ACTION)              \
-    X(PATH)           \
-    X(SIZE)         \
+    X(ACTION)           \
+    X(PATH)             \
+    X(SIZE)             \
     X(MTIME)
 #include "xenums.c"
 
@@ -127,7 +131,11 @@ static char *reason_strings[] = {
     [REASON_NEW_BIT_IDX]      = N_("New file found in the original folder"),
     [REASON_HARDLINK_BIT_IDX] = N_("Hardlinked file in the original folder"),
     [REASON_SYMLINK_BIT_IDX]  = N_("Symlink in the original folder"),
-    [REASON_UPDATE_BIT_IDX]   = N_("The original file is newer"),
+    [REASON_SIZE_BIT_IDX]     = N_("File sizes differ"),
+    [REASON_MTIME_BIT_IDX]    = N_("Modification times differ"),
+    [REASON_OWNER_BIT_IDX]    = N_("Owners differ"),
+    [REASON_GROUP_BIT_IDX]    = N_("Groups differ"),
+    [REASON_PERM_BIT_IDX]     = N_("Permissions differ"),
 };
 
 static char *colors[] = {
@@ -441,7 +449,7 @@ static struct {
     /* {":",                     "_colon_in_filename_"                    }, */
     /* {"|",                     "_pipe_in_filename_"                     }, */
     /* {"?",                     "_question_mark_in_filename_"            }, */
-    {RSYNC_WILDCARD,          "_asterisk_in_filename_"                    },
+    {RSYNC_WILDCARD,          "_asterisk_in_filename_"                   },
     {RSYNC_HARDLINK_NOTATION, "_rsync_hardlink_notation_in_filename_"     },
     {RSYNC_SYMLINK_NOTATION,  "_rsync_symlink_notation_in_filename_"      },
     {RSYNC_IGNORE_PRE_FILE,   "rsync_ignore_prelude_file_in_filename"     },
