@@ -53,7 +53,6 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     char *filepath;
     int32 side;
     int32 path_len;
-    bool is_busy;
 
     if (menu_item == NULL) {
         return;
@@ -61,10 +60,10 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
 
     selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
-    is_busy = gtk_widget_get_sensitive(cecup.stop_button);
+    
     single_sel = GTK_SINGLE_SELECTION(selection);
 
-    if (is_busy) {
+    if ((gtk_widget_get_sensitive(cecup.stop_button))) {
         if ((menu_item->callback == on_menu_rename)
             || (menu_item->callback == on_menu_delete)
             || (menu_item->callback == on_menu_apply)) {
