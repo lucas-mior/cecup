@@ -433,7 +433,7 @@ on_stop_clicked(GtkWidget *b, void *data) {
     (void)b;
     (void)data;
     if (cecup.child_pid > 0) {
-        kill(-cecup.child_pid, SIGTERM);
+        xkill(-cecup.child_pid, SIGTERM);
     }
     cecup.stop_working = true;
     return;
@@ -1455,7 +1455,7 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
     (void)user_data;
 
     if (cecup.child_pid > 0) {
-        kill(-cecup.child_pid, SIGTERM);
+        xkill(-cecup.child_pid, SIGTERM);
     }
 
     if (cecup.refresh_id != 0) {

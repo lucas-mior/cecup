@@ -1890,6 +1890,15 @@ xdup2(int fd1, int fd2) {
     }
     return;
 }
+
+static void
+xkill(pid_t pid, int signum) {
+    if (kill(pid, signum) < 0) {
+        error("Error sending signal %d to %d: %s.\n",
+              signum, pid, strerror(errno));
+    }
+    return;
+}
 #endif
 
 static volatile ullong here_counter = 0; \
