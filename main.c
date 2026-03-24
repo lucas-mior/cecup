@@ -760,7 +760,7 @@ main(int32 argc, char **argv) {
         } else if (access(locale_system, F_OK) == 0) {
             bindtextdomain("cecup", locale_system);
         } else if (access(locale_local_system, F_OK) == 0) {
-            bindtextdomain("cecup", locale_system);
+            bindtextdomain("cecup", locale_local_system);
         } else {
             error("Can't find any locale directory available.\n");
         }
