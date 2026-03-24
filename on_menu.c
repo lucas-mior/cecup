@@ -137,7 +137,9 @@ on_menu_rename(GtkWidget *tree, void *data) {
             continue;
         }
 
-        while ((current != NULL) && (current != tree) && (gtk_widget_get_next_sibling(current) == NULL)) {
+        while (current
+               && (current != tree)
+               && (gtk_widget_get_next_sibling(current) == NULL)) {
             current = gtk_widget_get_parent(current);
         }
 
@@ -255,22 +257,17 @@ on_menu_copy_path(GtkWidget *m, void *data) {
             task = tasks->items[i];
             variant = g_object_get_data(G_OBJECT(m), "variant");
 
-            if (variant) {
-                if (strcmp(variant, "absolute") == 0) {
-                    char path_relative[MAX_PATH_LENGTH];
+            if (variant && !strcmp(variant, "absolute")) {
+                char path_relative[MAX_PATH_LENGTH];
 
-                    SNPRINTF(path_relative, "%s/%s", base_path, task->path);
-                    if (realpath(path_relative, path_full) == NULL) {
-                        IPC_SEND_LOG_ERROR("Error resolving full path of %s: %s.\n",
-                                           path_relative, strerror(errno));
-                        continue;
-                    }
-                    path = path_full;
-                    path_len = strlen32(path_full);
-                } else {
-                    path = task->path;
-                    path_len = task->path_len;
+                SNPRINTF(path_relative, "%s/%s", base_path, task->path);
+                if (realpath(path_relative, path_full) == NULL) {
+                    IPC_SEND_LOG_ERROR("Error resolving full path of %s: %s.\n",
+                                       path_relative, strerror(errno));
+                    continue;
                 }
+                path = path_full;
+                path_len = strlen32(path_full);
             } else {
                 path = task->path;
                 path_len = task->path_len;
