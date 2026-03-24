@@ -1384,6 +1384,13 @@ work_rsync_bulk(void *user_data) {
             continue;
         }
 
+        if (cecup.stop_working) {
+            IPC_SEND_LOG_ERROR("Stop requested.\n");
+            free_task_list(tasks);
+            work_finalize(NULL);
+            g_thread_exit(NULL);
+        }
+
         if (task->side == L) {
             SNPRINTF(full_path, "%s/%s", cecup.src_base, task->path);
         } else {
@@ -1436,7 +1443,7 @@ work_rsync_bulk(void *user_data) {
     if (!has_transfers) {
         work_finalize(NULL);
         free_task_list(tasks);
-        return NULL;
+        g_thread_exit(NULL);
     }
 
     xpipe(pipe_stdout);
@@ -1666,7 +1673,10 @@ work_rsync_bulk(void *user_data) {
 
     work_finalize(NULL);
     free_task_list(tasks);
-    return NULL;
+    if (cecup.stop_working) {
+        IPC_SEND_LOG_ERROR("Stop requested.\n");
+    }
+    g_thread_exit(NULL);
 }
 
 #if TESTING_work
