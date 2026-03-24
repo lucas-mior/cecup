@@ -297,8 +297,8 @@ bind_mtime_cb(GtkSignalListItemFactory *factory,
 }
 
 static void
-setup_tree_columns(GtkWidget *tree,
-                   enum CecupColumn col_act, enum CecupColumn col_path) {
+main_setup_tree_columns(GtkWidget *tree,
+                        enum CecupColumn col_act, enum CecupColumn col_path) {
     GtkColumnViewColumn *column;
     GtkEventController *key;
     GActionMap *action_map;
@@ -740,7 +740,7 @@ application_run(GtkApplication *application, gpointer user_data) {
     tree[L] = gtk_column_view_new(selection_model);
     cecup.tree[L] = tree[L];
     g_object_set_data(G_OBJECT(tree[L]), "side", GINT_TO_POINTER(L));
-    setup_tree_columns(tree[L], COL_SRC_ACTION, COL_SRC_PATH);
+    main_setup_tree_columns(tree[L], COL_SRC_ACTION, COL_SRC_PATH);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[L]), tree[L]);
     gtk_box_append(GTK_BOX(vbox[L]), scroll[L]);
     gtk_widget_set_vexpand(scroll[L], TRUE);
@@ -752,7 +752,7 @@ application_run(GtkApplication *application, gpointer user_data) {
     tree[R] = gtk_column_view_new(selection_model);
     cecup.tree[R] = tree[R];
     g_object_set_data(G_OBJECT(tree[R]), "side", GINT_TO_POINTER(R));
-    setup_tree_columns(tree[R], COL_DST_ACTION, COL_DST_PATH);
+    main_setup_tree_columns(tree[R], COL_DST_ACTION, COL_DST_PATH);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[R]), tree[R]);
     gtk_box_append(GTK_BOX(vbox[R]), scroll[R]);
     gtk_widget_set_vexpand(scroll[R], TRUE);
