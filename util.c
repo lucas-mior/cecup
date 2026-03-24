@@ -1857,7 +1857,7 @@ dirname2(char *buffer, char *path, int32 *path_len) {
 
 static void
 print_timings(char *file, int32 line, const char *func,
-              int32 n, struct timespec t0, struct timespec t1) {
+              int64 n, struct timespec t0, struct timespec t1) {
     long seconds = t1.tv_sec - t0.tv_sec;
     long nanos = t1.tv_nsec - t0.tv_nsec;
 
