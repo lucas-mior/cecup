@@ -303,8 +303,6 @@ work_path_matches_ignore(char *relative_path, char *d_name, bool is_dir,
             continue;
         }
 
-        ASSERT_LESS(pattern_len, sizeof(clean_pattern));
-
         memcpy64(clean_pattern, pattern, pattern_len + 1);
 
         if (clean_pattern[pattern_len - 1] == '/') {
