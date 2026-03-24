@@ -1406,16 +1406,12 @@ work_rsync_bulk(void *user_data) {
         }
 
         if (removed) {
-            Message *message;
-            int32 path_len = task->path_len;
-            char *path = task->path;
-
-            message = xmalloc(SIZEOF(*message));
+            Message *message = xmalloc(SIZEOF(*message));
             memset64(message, 0, SIZEOF(*message));
 
-            message->path_len = path_len;
-            message->src_path = xmalloc(path_len + 1);
-            memcpy64(message->src_path, path, path_len + 1);
+            message->path_len = task->path_len;
+            message->src_path = xmalloc(task->path_len + 1);
+            memcpy64(message->src_path, task->path, task->path_len + 1);
 
             message->type = DATA_TYPE_REMOVE_ROW;
             g_idle_add(update_ui_handler, message);
