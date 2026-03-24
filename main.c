@@ -485,7 +485,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
         n = snprintf2(css + offset, SIZEOF(css) - offset,
                       "columnview row { min-height: 0px; }\n"
-                      "columnview cell { padding: 0px; }\n");
+                      "columnview cell { padding: 0px; }\n"
+                      "paned > separator { min-width: 10px; min-height: 10px; }\n");
         offset += n;
 
         for (int32 i = 0; i < LENGTH(colors); i += 1) {
