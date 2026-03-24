@@ -779,6 +779,7 @@ work_rsync(void *user_data) {
             char *link_target_src;
             bool is_symlink;
             bool is_hardlink;
+            bool is_dir;
             enum CecupAction action;
             enum CecupReason reason;
             char *src_path = NULL;
@@ -802,6 +803,7 @@ work_rsync(void *user_data) {
 
             is_symlink = S_ISLNK(stat_src->st_mode);
             is_hardlink = (S_ISREG(stat_src->st_mode) && link_target_src != NULL);
+            is_dir = S_ISDIR(stat_src->st_mode);
 
             if ((dst_idx_ptr = hash_lookup2_fs_map(dst_map, bucket_src->key))) {
                 int32 dst_idx = *dst_idx_ptr;
@@ -836,7 +838,7 @@ work_rsync(void *user_data) {
                             reason |= REASON_HARDLINK;
                         }
 
-                        if (stat_src->st_size != stat_dst->st_size) {
+                        if (is_dir && (stat_src->st_size != stat_dst->st_size)) {
                             reason |= REASON_SIZE;
                             attributes_differ = true;
                         }
