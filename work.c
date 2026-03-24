@@ -1090,9 +1090,8 @@ work_rsync(void *user_data) {
         }
         buf_output_pos += (int64)r;
 
-        while (buf_output_pos > 0
-               && ((eol = memchr64(buf_output, '\n', buf_output_pos))
-                   || (eol = memchr64(buf_output, '\r', buf_output_pos)))) {
+        while ((eol = memchr64(buf_output, '\n', buf_output_pos))
+                || (eol = memchr64(buf_output, '\r', buf_output_pos))) {
             int64 line_len = (int64)(eol - buf_output);
             int64 remaining;
 
@@ -1107,6 +1106,9 @@ work_rsync(void *user_data) {
                 memmove64(buf_output, eol + 1, remaining);
             }
             buf_output_pos = remaining;
+            if (buf_output_pos <= 0) {
+                break;
+            }
         }
 
         if (buf_output_pos >= (SIZEOF(buf_output) - 1)) {
@@ -1564,9 +1566,8 @@ work_rsync_bulk(void *user_data) {
         }
         buf_output_pos += (int32)r;
 
-        while (buf_output_pos > 0
-               && ((eol = memchr64(buf_output_bulk, '\n', buf_output_pos))
-                   || (eol = memchr64(buf_output_bulk, '\r', buf_output_pos)))) {
+        while ((eol = memchr64(buf_output_bulk, '\n', buf_output_pos))
+               || (eol = memchr64(buf_output_bulk, '\r', buf_output_pos))) {
             int32 line_len = (int32)(eol - buf_output_bulk);
             int32 remaining;
             char *filename;
@@ -1614,6 +1615,9 @@ work_rsync_bulk(void *user_data) {
                 memmove64(buf_output_bulk, eol + 1, remaining);
             }
             buf_output_pos = remaining;
+            if (buf_output_pos <= 0) {
+                break;
+            }
         }
 
     read_error_pipe:
