@@ -514,6 +514,9 @@ application_run(GtkApplication *application, gpointer user_data) {
     gtk_window_set_title(GTK_WINDOW(cecup.gtk_window), "cecup");
     gtk_window_set_default_size(GTK_WINDOW(cecup.gtk_window), 1100, 800);
 
+    g_signal_connect(cecup.gtk_window, "destroy",
+                     G_CALLBACK(on_window_destroy), NULL);
+
     main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, SPACING_BOX);
     gtk_window_set_child(GTK_WINDOW(cecup.gtk_window), main_vbox);
 
@@ -1064,6 +1067,8 @@ main(int32 argc, char **argv) {
     g_signal_connect(cecup.application, "activate",
                      G_CALLBACK(application_run), NULL);
     status = g_application_run(G_APPLICATION(cecup.application), argc, argv);
+
+    g_object_unref(cecup.store);
     g_object_unref(cecup.application);
 
     XFREE(cecup.rows);

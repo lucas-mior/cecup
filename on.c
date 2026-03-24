@@ -1441,6 +1441,28 @@ on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
     return;
 }
 
+static void
+on_window_destroy(GtkWidget *widget, void *user_data) {
+    (void)widget;
+    (void)user_data;
+
+    if (cecup.child_pid > 0) {
+        kill(-cecup.child_pid, SIGTERM);
+    }
+
+    if (cecup.refresh_id != 0) {
+        g_source_remove(cecup.refresh_id);
+        cecup.refresh_id = 0;
+    }
+
+    if (cecup.search_timeout_id != 0) {
+        g_source_remove(cecup.search_timeout_id);
+        cecup.search_timeout_id = 0;
+    }
+
+    return;
+}
+
 #if TESTING_on
 int
 main(void) {
