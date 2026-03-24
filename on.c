@@ -1210,6 +1210,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             SNPRINTF(tip_buffer, "%s: %s", filepath, mtime_text);
             tip_text = tip_buffer;
             break;
+        case COLUMN_LAST:
         default:
             break;
         }
