@@ -764,7 +764,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
 
     log_scroll = gtk_scrolled_window_new();
-    gtk_widget_set_size_request(log_scroll, -1, 150);
+    gtk_widget_set_size_request(log_scroll, -1, 30);
     cecup.log_view = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(cecup.log_view), FALSE);
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(cecup.log_view),
