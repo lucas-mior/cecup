@@ -19,11 +19,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "i18n.h"
+
 #include "cecup.h"
 #include "util.c"
 #include "on.c"
 #include "on_menu.c"
-#include "i18n.h"
+#include "columns.c"
 
 #define SPACING_BOX 5
 #define PADDING_BUTTON 5
@@ -37,8 +39,6 @@
 
 CecupListModel *cecup_list_model_new(void);
 CecupRow *cecup_row_proxy_get_row(CecupRowProxy *proxy);
-
-#include "columns.c"
 
 static void
 main_setup_tree_columns(GtkWidget *tree,
