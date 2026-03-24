@@ -113,7 +113,7 @@ bind_column_action(GtkSignalListItemFactory *factory,
 
     g_object_set_data(G_OBJECT(label), "cecup-row", row);
     g_object_set_data(G_OBJECT(label), "cecup-pos", GUINT_TO_POINTER(position));
-    g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(1));
+    g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(COLUMN_ACTION));
 
     return;
 }
@@ -191,7 +191,7 @@ bind_column_path(GtkSignalListItemFactory *factory,
     gtk_widget_set_css_classes(editable, (const char **)classes);
 
     g_object_set_data(G_OBJECT(editable), "cecup-row", row);
-    g_object_set_data(G_OBJECT(editable), "cecup-col", GINT_TO_POINTER(2));
+    g_object_set_data(G_OBJECT(editable), "cecup-col", GINT_TO_POINTER(COLUMN_PATH));
     g_object_set_data(G_OBJECT(editable), "cecup-pos",
                       GUINT_TO_POINTER(position));
 
@@ -219,10 +219,10 @@ bind_text_cb(GtkSignalListItemFactory *factory,
 
     if (text_info->side == L) {
         switch (text_info->type) {
-        case MTIME:
+        case COLUMN_MTIME:
             gtk_label_set_text(GTK_LABEL(label), row->src_mtime_text);
             break;
-        case SIZE:
+        case COLUMN_SIZE:
             gtk_label_set_text(GTK_LABEL(label), row->src_size_text);
             break;
         default:
@@ -231,10 +231,10 @@ bind_text_cb(GtkSignalListItemFactory *factory,
         action = row->src_action;
     } else {
         switch (text_info->type) {
-        case MTIME:
+        case COLUMN_MTIME:
             gtk_label_set_text(GTK_LABEL(label), row->dst_mtime_text);
             break;
-        case SIZE:
+        case COLUMN_SIZE:
             gtk_label_set_text(GTK_LABEL(label), row->dst_size_text);
             break;
         default:

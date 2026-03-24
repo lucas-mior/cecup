@@ -67,16 +67,23 @@
     X(MISSING)
 #include "xenums.c"
 
+#define ENUM_BITFLAGS 0
+#define ENUM_NAME ColumnType
+#define ENUM_PREFIX_ COLUMN_
+#define ENUM_FIELDS     \
+    X(ACTION)              \
+    X(PATH)           \
+    X(SIZE)         \
+    X(MTIME)
+#include "xenums.c"
+
 #if !defined(error2)
 #define error2(...) fprintf(stderr, __VA_ARGS__)
 #endif
 
 typedef struct TextInfo {
     int32 side;
-    enum TextType {
-        SIZE = 3,
-        MTIME = 4
-    } type;
+    enum ColumnType type;
 } TextInfo;
 
 static char *action_emojis[] = {

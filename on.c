@@ -902,7 +902,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                 }
             }
 
-            if (col_pointer && GPOINTER_TO_INT(col_pointer) == 2) {
+            if (col_pointer && GPOINTER_TO_INT(col_pointer) == COLUMN_PATH) {
                 break;
             }
 
@@ -1110,16 +1110,18 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                 void *d) {
     GtkWidget *child;
     CecupRow *row;
-    int32 col_index;
+    enum ColumnType column_type = COLUMN_LAST;
     int32 side;
     char *tip_text;
     char tip_buffer[MAX_PATH_LENGTH*2];
+    char *reason;
+    int64 size_raw;
+    char *mtime_text;
 
     (void)k;
     (void)d;
     tip_text = NULL;
     row = NULL;
-    col_index = -1;
 
     if ((child = gtk_widget_pick(w, (double)x, (double)y, GTK_PICK_DEFAULT)) == NULL) {
         return FALSE;
@@ -1128,7 +1130,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
     while (child) {
         if ((row = g_object_get_data(G_OBJECT(child), "cecup-row"))) {
             void *col_data = g_object_get_data(G_OBJECT(child), "cecup-col");
-            col_index = GPOINTER_TO_INT(col_data);
+            column_type = (enum ColumnType)GPOINTER_TO_INT(col_data);
             break;
         }
         child = gtk_widget_get_parent(child);
@@ -1164,14 +1166,15 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             filepath = "";
         }
 
-        if (col_index == 1) {
+        switch (column_type) {
+        case COLUMN_ACTION:
             if (side == L) {
                 tip_text = _(src_action_strings[action]);
             } else {
                 tip_text = _(dst_action_strings[action]);
             }
-        } else if (col_index == 2) {
-            char *reason;
+            break;
+        case COLUMN_PATH:
 
             reason = _(reason_strings[row->reason]);
 
@@ -1186,8 +1189,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                 SNPRINTF(tip_buffer, "%s: %s", filepath, reason);
             }
             tip_text = tip_buffer;
-        } else if (col_index == 3) {
-            int64 size_raw;
+            break;
+        case COLUMN_SIZE:
 
             if (side == L) {
                 size_raw = row->src_size_raw;
@@ -1196,8 +1199,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             }
             SNPRINTF(tip_buffer, "%s: %lld bytes", filepath, (llong)size_raw);
             tip_text = tip_buffer;
-        } else if (col_index == 4) {
-            char *mtime_text;
+            break;
+        case COLUMN_MTIME:
 
             if (side == L) {
                 mtime_text = row->src_mtime_text;
@@ -1206,6 +1209,9 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             }
             SNPRINTF(tip_buffer, "%s: %s", filepath, mtime_text);
             tip_text = tip_buffer;
+            break;
+        default:
+            break;
         }
     }
 

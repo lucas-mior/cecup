@@ -118,7 +118,7 @@ main_setup_tree_columns(GtkWidget *tree,
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
         TextInfo *text_info = xmalloc(SIZEOF(*text_info));
         text_info->side = side;
-        text_info->type = SIZE;
+        text_info->type = COLUMN_SIZE;
         g_object_set_data_full(G_OBJECT(factory), "text_info", text_info, free);
 
         g_signal_connect(factory, "setup",
@@ -141,7 +141,7 @@ main_setup_tree_columns(GtkWidget *tree,
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
         TextInfo *text_info = xmalloc(SIZEOF(*text_info));
         text_info->side = side;
-        text_info->type = MTIME;
+        text_info->type = COLUMN_MTIME;
         g_object_set_data_full(G_OBJECT(factory), "text_info", text_info, free);
 
         g_signal_connect(factory, "setup",
