@@ -59,12 +59,13 @@ typedef struct FixFsThreadData {
     struct Hash_fs_map *map;
     struct Hash_fs_map *inode_map;
 
+    char **ignore_patterns;
+    int32 ignore_count;
+
     int32 array_capacity;
     int32 array_count;
 
     struct stat *stat_array;
-    char **ignore_patterns;
-    int32 ignore_count;
     char **matched_pattern_array;
     bool *ignored_array;
     char **link_target_array;
@@ -231,6 +232,44 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     if (add_row_batch_count >= BATCH_SIZE) {
         work_flush_add_rows();
     }
+    return;
+}
+
+static void
+work_load_ignore_patterns(char ***patterns, int32 *count) {
+    FILE *file;
+    char line_buffer[MAX_PATH_LENGTH];
+    int32 length;
+
+    *patterns = NULL;
+    *count = 0;
+
+    if ((file = fopen(cecup.ignore_path, "r")) == NULL) {
+        return;
+    }
+
+    while (fgets(line_buffer, SIZEOF(line_buffer), file)) {
+        length = strlen32(line_buffer);
+
+        if (length > 0 && line_buffer[length - 1] == '\n') {
+            line_buffer[length - 1] = '\0';
+            length -= 1;
+        }
+
+        if (length == 0) {
+            continue;
+        }
+
+        if (line_buffer[0] == '#') {
+            continue;
+        }
+
+        *patterns = xrealloc(*patterns, (*count + 1) * SIZEOF(char *));
+        (*patterns)[*count] = xstrdup(line_buffer);
+        *count += 1;
+    }
+
+    fclose(file);
     return;
 }
 
@@ -608,44 +647,6 @@ work_fix_fs_thread_fn(void *user_data) {
 static void
 work_destroy_fs_map(struct Hash_fs_map *map) {
     hash_destroy_fs_map(map);
-    return;
-}
-
-static void
-work_load_ignore_patterns(char ***patterns, int32 *count) {
-    FILE *file;
-    char line_buffer[MAX_PATH_LENGTH];
-    int32 length;
-
-    *patterns = NULL;
-    *count = 0;
-
-    if ((file = fopen(cecup.ignore_path, "r")) == NULL) {
-        return;
-    }
-
-    while (fgets(line_buffer, SIZEOF(line_buffer), file)) {
-        length = strlen32(line_buffer);
-
-        if (length > 0 && line_buffer[length - 1] == '\n') {
-            line_buffer[length - 1] = '\0';
-            length -= 1;
-        }
-
-        if (length == 0) {
-            continue;
-        }
-
-        if (line_buffer[0] == '#') {
-            continue;
-        }
-
-        *patterns = xrealloc(*patterns, (*count + 1) * SIZEOF(char *));
-        (*patterns)[*count] = xstrdup(line_buffer);
-        *count += 1;
-    }
-
-    fclose(file);
     return;
 }
 
