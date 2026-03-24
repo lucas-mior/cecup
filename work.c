@@ -273,12 +273,11 @@ work_load_ignore_patterns(char ***patterns, int32 *count) {
 }
 
 static char *
-work_path_matches_ignore(char *relative_path, char *d_name, bool is_dir,
+work_path_matches_ignore(char *relative_path, bool is_dir,
                          char **patterns, int32 count) {
     if (patterns == NULL) {
         return NULL;
     }
-    (void)d_name;
 
     for (int32 i = 0; i < count; i += 1) {
         char *pattern = patterns[i];
@@ -596,7 +595,7 @@ work_fix_fs_cb(const char *fpath,
         }
     }
 
-    data->matched_pattern_array[index] = work_path_matches_ignore(relative_path, d_name, is_dir,
+    data->matched_pattern_array[index] = work_path_matches_ignore(relative_path, is_dir,
                                                                   data->ignore_patterns,
                                                                   data->ignore_count);
     if (relative_len == 0) {
@@ -1562,37 +1561,37 @@ main(void) {
     char *patterns[3];
 
     patterns[0] = "*.c";
-    pattern = work_path_matches_ignore("main.c", "main.c", false, patterns, 1);
+    pattern = work_path_matches_ignore("main.c", false, patterns, 1);
     ASSERT_EQUAL(pattern, "*.c");
 
     patterns[0] = "build/";
-    pattern = work_path_matches_ignore("build", "build", true, patterns, 1);
+    pattern = work_path_matches_ignore("build", true, patterns, 1);
     ASSERT_EQUAL(pattern, "build/");
 
     patterns[0] = "build/";
-    pattern = work_path_matches_ignore("build", "build", false, patterns, 1);
+    pattern = work_path_matches_ignore("build", false, patterns, 1);
     ASSERT_NULL(pattern);
 
     patterns[0] = "obj";
-    pattern = work_path_matches_ignore("src/obj/main.o", "main.o", false, patterns, 1);
+    pattern = work_path_matches_ignore("src/obj/main.o", false, patterns, 1);
     ASSERT_EQUAL(pattern, "obj");
 
     patterns[0] = "/src";
-    pattern = work_path_matches_ignore("src/main.c", "main.c", false, patterns, 1);
+    pattern = work_path_matches_ignore("src/main.c", false, patterns, 1);
     ASSERT_EQUAL(pattern, "/src");
 
     patterns[0] = "/src";
-    pattern = work_path_matches_ignore("lib/src/main.c", "main.c", false, patterns, 1);
+    pattern = work_path_matches_ignore("lib/src/main.c", false, patterns, 1);
     ASSERT_NULL(pattern);
 
     patterns[0] = "foo/bar";
-    pattern = work_path_matches_ignore("foo/bar/baz.c", "baz.c", false, patterns, 1);
+    pattern = work_path_matches_ignore("foo/bar/baz.c", false, patterns, 1);
     ASSERT_EQUAL(pattern, "foo/bar");
 
     patterns[0] = "*.h";
     patterns[1] = "build/";
     patterns[2] = "*.o";
-    pattern = work_path_matches_ignore("src/main.o", "main.o", false, patterns, 3);
+    pattern = work_path_matches_ignore("src/main.o", false, patterns, 3);
     ASSERT_EQUAL(pattern, "*.o");
 
     exit(EXIT_SUCCESS);

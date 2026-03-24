@@ -426,7 +426,7 @@ _Generic((VAR1), \
 
 #define ASSERT_NULL(VAR1) do { \
     if ((void *)VAR1 != NULL) { \
-        error2("\n%s: Assertion failed at %s:%u\n", __func__, __FILE__, __LINE__); \
+        error2("\n%s: Assertion failed at %s:%d\n", __func__, __FILE__, __LINE__); \
         error2("%s = %p == NULL\n", #VAR1, (void *)VAR1); \
         TRAP(); \
     } \
