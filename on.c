@@ -1127,7 +1127,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
 
     while (child) {
         if ((row = g_object_get_data(G_OBJECT(child), "cecup-row"))) {
-            col_index = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(child), "cecup-col"));
+            void *col_data = g_object_get_data(G_OBJECT(child), "cecup-col");
+            col_index = GPOINTER_TO_INT(col_data);
             break;
         }
         child = gtk_widget_get_parent(child);
