@@ -643,6 +643,9 @@ work_rsync_parse_line(char *buf_output, int32 line_len, ThreadData *thread_data,
                               (double)*nfiles_processed / (double)nfiles_total);
         }
 
+        /* if reason is REASON_IGNORED, then the file will also be detected
+         * with the pattern RSYNC_IGNORE_PRE_FILE,
+         * so we skip it here to avoid duplicates */
         if (is_preview && (reason == REASON_MISSING)) {
             work_add_row(ACTION_DELETE, reason,
                          src_path, dst_path, NULL, NULL,
