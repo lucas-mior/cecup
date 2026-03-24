@@ -811,14 +811,16 @@ work_rsync(void *user_data) {
                 dst_path = src_path;
                 dst_size = stat_dst->st_size;
                 dst_mtime = stat_dst->st_mtime;
+                reason = 0;
 
                 if (ignored_src) {
                     action = ACTION_IGNORE;
-                    reason = REASON_IGNORED;
+                    reason |= REASON_IGNORED;
                 } else {
                     bool equal = false;
 
                     if (is_symlink) {
+                        reason |= REASON_SYMLINK;
                         if (S_ISLNK(stat_dst->st_mode)
                             && link_target_src
                             && link_target_dst
@@ -826,6 +828,7 @@ work_rsync(void *user_data) {
                             equal = true;
                         }
                     } else if (is_hardlink) {
+                        reason |= REASON_HARDLINK;
                         if (S_ISREG(stat_dst->st_mode)
                             && link_target_dst
                             && !strcmp(link_target_src, link_target_dst)
@@ -840,8 +843,9 @@ work_rsync(void *user_data) {
 
                     if (equal) {
                         action = ACTION_EQUAL;
-                        reason = REASON_EQUAL;
+                        reason |= REASON_EQUAL;
                     } else {
+                        reason |= REASON_UPDATE;
                         if (is_hardlink) {
                             action = ACTION_HARDLINK;
                         } else if (is_symlink) {
@@ -849,22 +853,24 @@ work_rsync(void *user_data) {
                         } else {
                             action = ACTION_UPDATE;
                         }
-                        reason = (enum CecupReason)action;
                     }
                 }
             } else {
+                reason = 0;
                 if (ignored_src) {
                     action = ACTION_IGNORE;
-                    reason = REASON_IGNORED;
+                    reason |= REASON_IGNORED;
                 } else {
+                    reason |= REASON_NEW;
                     if (is_hardlink) {
                         action = ACTION_HARDLINK;
+                        reason |= REASON_HARDLINK;
                     } else if (is_symlink) {
                         action = ACTION_SYMLINK;
+                        reason |= REASON_SYMLINK;
                     } else {
                         action = ACTION_NEW;
                     }
-                    reason = (enum CecupReason)action;
                 }
             }
 
@@ -907,6 +913,7 @@ work_rsync(void *user_data) {
             bool ignored_dst;
             char *link_target_dst;
             enum CecupAction action = ACTION_DELETE;
+            enum CecupReason reason = 0;
 
             if ((int64)bucket_dst->key <= 0) {
                 continue;
@@ -926,9 +933,12 @@ work_rsync(void *user_data) {
                     if (!thread_data->delete_excluded) {
                         action = ACTION_IGNORE;
                     }
+                    reason |= REASON_IGNORED;
                 }
 
-                work_add_row(action, REASON_MISSING,
+                reason |= REASON_MISSING;
+
+                work_add_row(action, reason,
                              NULL, bucket_dst->key,
                              link_target_dst, matched_pattern_dst,
                              strlen32(bucket_dst->key),
