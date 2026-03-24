@@ -104,14 +104,13 @@ bind_action_cb(GtkSignalListItemFactory *factory,
 static void
 setup_path_cb(GtkSignalListItemFactory *factory,
               GtkListItem *list_item, void *data) {
-    GtkWidget *editable;
+    GtkWidget *editable = gtk_editable_label_new("");
     GtkWidget *tree;
     GtkGesture *click;
 
     (void)factory;
     tree = data;
 
-    editable = gtk_editable_label_new("");
     gtk_widget_set_halign(editable, GTK_ALIGN_FILL);
     gtk_widget_set_valign(editable, GTK_ALIGN_FILL);
     gtk_editable_set_alignment(GTK_EDITABLE(editable), 0.0);
