@@ -452,7 +452,8 @@ update_ui_handler(void *data) {
             gtk_text_buffer_insert_with_tags_by_name(
                 cecup.log_buffer, &end, message->message, -1, "err_blue", NULL);
         } else {
-            gtk_text_buffer_insert(cecup.log_buffer, &end, message->message, -1);
+            gtk_text_buffer_insert(cecup.log_buffer,
+                                   &end, message->message, -1);
         }
 
         gtk_text_view_scroll_to_mark(
@@ -527,7 +528,8 @@ update_ui_handler(void *data) {
         cecup.rows_len = 0;
         cecup.rows_visible_len = 0;
 
-        cecup_list_model_update(CECUP_LIST_MODEL(cecup.store), current_store_count, 0);
+        cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
+                                current_store_count, 0);
 
         g_mutex_unlock(&cecup.arena_mutex);
 
@@ -551,8 +553,10 @@ update_ui_handler(void *data) {
                     slash = 1;
                 }
 
-                final_src_path = xarena_push(cecup.arena, message->path_len + slash + 1);
-                memcpy64(final_src_path, message->src_path, message->path_len + 1);
+                final_src_path = xarena_push(cecup.arena,
+                                             message->path_len + slash + 1);
+                memcpy64(final_src_path, message->src_path,
+                         message->path_len + 1);
 
                 if (message->is_dir) {
                     if (final_src_path[message->path_len - 1] != '/') {
@@ -570,8 +574,10 @@ update_ui_handler(void *data) {
                     slash = 1;
                 }
 
-                final_dst_path = xarena_push(cecup.arena, message->path_len + slash + 1);
-                memcpy64(final_dst_path, message->dst_path, message->path_len + 1);
+                final_dst_path = xarena_push(cecup.arena,
+                                             message->path_len + slash + 1);
+                memcpy64(final_dst_path, message->dst_path,
+                         message->path_len + 1);
 
                 if (message->is_dir) {
                     if (final_dst_path[message->path_len - 1] != '/') {
@@ -643,14 +649,18 @@ update_ui_handler(void *data) {
 
             if (message->link_target) {
                 row->link_target_len = message->link_target_len;
-                row->link_target = xarena_push(cecup.arena, row->link_target_len + 1);
-                memcpy64(row->link_target, message->link_target, row->link_target_len + 1);
+                row->link_target = xarena_push(cecup.arena,
+                                               row->link_target_len + 1);
+                memcpy64(row->link_target, message->link_target,
+                         row->link_target_len + 1);
             }
 
             if (message->ignore_pattern) {
                 row->ignore_pattern_len = message->ignore_pattern_len;
-                row->ignore_pattern = xarena_push(cecup.arena, row->ignore_pattern_len + 1);
-                memcpy64(row->ignore_pattern, message->ignore_pattern, row->ignore_pattern_len + 1);
+                row->ignore_pattern = xarena_push(cecup.arena,
+                                                  row->ignore_pattern_len + 1);
+                memcpy64(row->ignore_pattern, message->ignore_pattern,
+                         row->ignore_pattern_len + 1);
             }
 
             row->src_path = final_src_path;
@@ -659,8 +669,10 @@ update_ui_handler(void *data) {
 
             if (cecup.rows_len >= cecup.rows_capacity) {
                 cecup.rows_capacity *= 2;
-                cecup.rows = xrealloc(cecup.rows, cecup.rows_capacity * SIZEOF(CecupRow *));
-                cecup.rows_visible = xrealloc(cecup.rows_visible, cecup.rows_capacity * SIZEOF(CecupRow *));
+                cecup.rows = xrealloc(cecup.rows,
+                                      cecup.rows_capacity*SIZEOF(CecupRow *));
+                cecup.rows_visible = xrealloc(cecup.rows_visible,
+                                              cecup.rows_capacity*SIZEOF(CecupRow *));
             }
 
             cecup.rows[cecup.rows_len] = row;
