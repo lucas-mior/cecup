@@ -67,7 +67,6 @@ typedef struct FixFsThreadData {
 
     struct stat *stat_array;
     char **matched_pattern_array;
-    bool *ignored_array;
     char **link_target_array;
     char **relative_path_array;
 } FixFsThreadData;
@@ -557,8 +556,6 @@ work_fix_fs_cb(const char *fpath,
                                     data->array_capacity*SIZEOF(struct stat));
         data->matched_pattern_array = xrealloc(data->matched_pattern_array,
                                     data->array_capacity*SIZEOF(char *));
-        data->ignored_array = xrealloc(data->ignored_array,
-                                       data->array_capacity*SIZEOF(bool));
         data->link_target_array = xrealloc(data->link_target_array,
                                            data->array_capacity*SIZEOF(char *));
         data->relative_path_array = xrealloc(data->relative_path_array,
@@ -603,12 +600,6 @@ work_fix_fs_cb(const char *fpath,
     data->matched_pattern_array[index] = work_path_matches_ignore(relative_path, d_name, is_dir,
                                                                   data->ignore_patterns,
                                                                   data->ignore_count);
-    if (data->matched_pattern_array[index] != NULL) {
-        data->ignored_array[index] = true;
-    } else {
-        data->ignored_array[index] = false;
-    }
-
     if (relative_len == 0) {
         hash_insert2_fs_map(data->map, "./", index);
     } else {
@@ -807,7 +798,7 @@ work_rsync(void *user_data) {
             src_idx = bucket_src->value;
             stat_src = &src_fix.stat_array[src_idx];
             matched_pattern_src = src_fix.matched_pattern_array[src_idx];
-            ignored_src = src_fix.ignored_array[src_idx];
+            ignored_src = matched_pattern_src;
             link_target_src = src_fix.link_target_array[src_idx];
             src_path = bucket_src->key;
 
@@ -930,7 +921,7 @@ work_rsync(void *user_data) {
                 dst_idx = bucket_dst->value;
                 stat_dst = &dst_fix.stat_array[dst_idx];
                 matched_pattern_dst = dst_fix.matched_pattern_array[dst_idx];
-                ignored_dst = dst_fix.ignored_array[dst_idx];
+                ignored_dst = matched_pattern_dst;
                 link_target_dst = dst_fix.link_target_array[dst_idx];
 
                 if (ignored_dst) {
@@ -1203,9 +1194,6 @@ cleanup_maps:
     if (src_fix.matched_pattern_array) {
         XFREE(src_fix.matched_pattern_array);
     }
-    if (src_fix.ignored_array) {
-        XFREE(src_fix.ignored_array);
-    }
     if (src_fix.link_target_array) {
         for (int32 i = 0; i < src_fix.array_count; i += 1) {
             if (src_fix.link_target_array[i]) {
@@ -1224,9 +1212,6 @@ cleanup_maps:
     }
     if (dst_fix.matched_pattern_array) {
         XFREE(dst_fix.matched_pattern_array);
-    }
-    if (dst_fix.ignored_array) {
-        XFREE(dst_fix.ignored_array);
     }
     if (dst_fix.link_target_array) {
         for (int32 i = 0; i < dst_fix.array_count; i += 1) {
