@@ -85,7 +85,7 @@ work_flush_add_rows(void) {
         return;
     }
 
-    messages_size = add_row_batch_count * SIZEOF(Message *);
+    messages_size = add_row_batch_count*SIZEOF(Message *);
     batch = xmalloc(SIZEOF(*batch) + messages_size);
     batch->type = DATA_TYPE_ADD_ROW;
     batch->count = add_row_batch_count;
