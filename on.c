@@ -126,8 +126,6 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     (void)action;
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
 
-    HERE;
-
     if (strcmp(which, "all") == 0) {
         gtk_text_buffer_get_bounds(cecup.log_buffer, &start, &end);
     } else if (strcmp(which, "line") == 0) {
@@ -514,9 +512,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 
     (void)user_data;
 
-    HERE;
     if ((parent_row = g_object_get_data(G_OBJECT(renderer), "cecup-row")) == NULL) {
-        HERE;
         return;
     }
 
@@ -599,7 +595,6 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     }
 
     refresh_ui_list(REFRESH_FINAL, NULL);
-    HERE;
     g_list_model_items_changed(cecup.store, 0, (uint32)cecup.rows_visible_len, (uint32)cecup.rows_visible_len);
     update_visible_checkboxes(cecup.tree[L]);
     update_visible_checkboxes(cecup.tree[R]);
@@ -1356,8 +1351,6 @@ on_path_edited(GtkEditable *editable, void *data) {
     char relative_new[MAX_PATH_LENGTH];
     int32 new_length;
     char *new_text;
-
-    HERE;
 
     tree = data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));

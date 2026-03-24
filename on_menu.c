@@ -107,8 +107,6 @@ on_menu_rename(GtkWidget *tree, void *data) {
     uint32 pos;
     GtkWidget *current;
 
-    HERE;
-
     message = data;
     selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
     pos = gtk_single_selection_get_selected(GTK_SINGLE_SELECTION(selection));
