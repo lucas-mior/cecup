@@ -35,9 +35,6 @@
 
 #define UI_INTERVAL_MS 100
 
-static void on_sort_changed(GtkSorter *sorter,
-                            GtkSorterChange change, void *data);
-
 static void
 protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.preview_button, !state);
