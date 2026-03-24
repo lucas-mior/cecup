@@ -67,6 +67,10 @@
     X(MISSING)
 #include "xenums.c"
 
+#if !defined(error2)
+#define error2(...) fprintf(stderr, __VA_ARGS__)
+#endif
+
 static char *action_emojis[] = {
     [ACTION_NEW]      = EMOJI_NEW,
     [ACTION_HARDLINK] = EMOJI_LINK,
@@ -345,6 +349,17 @@ static void on_menu_diff(GtkWidget *m, void *data);
 static void on_menu_rename(GtkWidget *m, void *data);
 static void on_menu_delete(GtkWidget *m, void *data);
 static void on_menu_ignore(GtkWidget *m, void *data);
+
+static char *row_path_get(CecupRow *row) {
+    if (row->src_path) {
+        return row->src_path;
+    } else if (row->dst_path) {
+        return row->dst_path;
+    } else {
+        error2("Error: src_path and dst_path are NULL.\n");
+        exit(EXIT_FAILURE);
+    }
+}
 
 #define IPC_SEND_LOG(...)        \
     ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG, __VA_ARGS__)
