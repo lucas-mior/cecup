@@ -191,10 +191,9 @@ bind_text_cb(GtkSignalListItemFactory *factory,
     char class_name[32];
     char *classes[2];
     uint32 position;
-
     TextInfo *text_info = g_object_get_data(G_OBJECT(factory), "text_info");
 
-    (void)factory;
+    (void)data;
 
     label = gtk_list_item_get_child(list_item);
     proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
