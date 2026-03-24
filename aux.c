@@ -37,22 +37,6 @@
 #define UI_INTERVAL_MS 100
 
 static void
-protect_interface_from_user(bool state) {
-    gtk_widget_set_sensitive(cecup.preview_button, !state);
-    gtk_widget_set_sensitive(cecup.sync_button, !state);
-    gtk_widget_set_sensitive(cecup.fix_button, !state);
-    gtk_widget_set_sensitive(cecup.ignore_button, !state);
-
-    gtk_widget_set_sensitive(cecup.src_entry, !state);
-    gtk_widget_set_sensitive(cecup.dst_entry, !state);
-    gtk_widget_set_sensitive(cecup.invert_button, !state);
-
-    gtk_widget_set_sensitive(cecup.stop_button, state);
-    cecup.stop_working = false;
-    return;
-}
-
-static void
 free_task_list(TaskList *tasks) {
     if (tasks == NULL) {
         return;

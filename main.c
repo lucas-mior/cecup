@@ -191,6 +191,22 @@ main_setup_tree_columns(GtkWidget *tree,
 }
 
 static void
+protect_interface_from_user(bool state) {
+    gtk_widget_set_sensitive(cecup.preview_button, !state);
+    gtk_widget_set_sensitive(cecup.sync_button, !state);
+    gtk_widget_set_sensitive(cecup.fix_button, !state);
+    gtk_widget_set_sensitive(cecup.ignore_button, !state);
+
+    gtk_widget_set_sensitive(cecup.src_entry, !state);
+    gtk_widget_set_sensitive(cecup.dst_entry, !state);
+    gtk_widget_set_sensitive(cecup.invert_button, !state);
+
+    gtk_widget_set_sensitive(cecup.stop_button, state);
+    cecup.stop_working = false;
+    return;
+}
+
+static void
 main_application_run(GtkApplication *application, gpointer user_data) {
     GtkWidget *main_vbox;
     GtkWidget *header_vbox;
