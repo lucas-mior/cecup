@@ -282,11 +282,12 @@ work_path_matches_ignore(char *relative_path, char *d_name, bool is_dir,
 
     for (int32 i = 0; i < count; i += 1) {
         char *pattern = patterns[i];
+        char pattern_adapt_buffer[MAX_PATH_LENGTH];
+        char *pattern_final;
+
         int32 pattern_len;
         bool dir_only = false;
-        char clean_pattern[MAX_PATH_LENGTH];
         bool has_slash = false;
-        char *to_match;
         char path_copy[MAX_PATH_LENGTH];
         int32 path_len;
         bool matched = false;
@@ -303,11 +304,11 @@ work_path_matches_ignore(char *relative_path, char *d_name, bool is_dir,
             continue;
         }
 
-        memcpy64(clean_pattern, pattern, pattern_len + 1);
+        memcpy64(pattern_adapt_buffer, pattern, pattern_len + 1);
 
-        if (clean_pattern[pattern_len - 1] == '/') {
+        if (pattern_adapt_buffer[pattern_len - 1] == '/') {
             dir_only = true;
-            clean_pattern[pattern_len - 1] = '\0';
+            pattern_adapt_buffer[pattern_len - 1] = '\0';
             pattern_len -= 1;
         }
 
@@ -315,13 +316,13 @@ work_path_matches_ignore(char *relative_path, char *d_name, bool is_dir,
             continue;
         }
 
-        to_match = clean_pattern;
+        pattern_final = pattern_adapt_buffer;
 
-        if (clean_pattern[0] == '/') {
+        if (pattern_adapt_buffer[0] == '/') {
             has_slash = true;
-            to_match += 1;
+            pattern_final += 1;
         } else {
-            if (strchr(clean_pattern, '/') != NULL) {
+            if (strchr(pattern_adapt_buffer, '/') != NULL) {
                 has_slash = true;
             }
         }
@@ -330,7 +331,7 @@ work_path_matches_ignore(char *relative_path, char *d_name, bool is_dir,
             path_len = strlen32(relative_path);
             memcpy64(path_copy, relative_path, path_len + 1);
 
-            if (fnmatch(to_match, path_copy, FNM_PATHNAME) == 0) {
+            if (fnmatch(pattern_final, path_copy, FNM_PATHNAME) == 0) {
                 if (!dir_only) {
                     matched = true;
                 } else {
@@ -344,7 +345,7 @@ work_path_matches_ignore(char *relative_path, char *d_name, bool is_dir,
                 for (int32 j = 0; j < path_len; j += 1) {
                     if (path_copy[j] == '/') {
                         path_copy[j] = '\0';
-                        if (fnmatch(to_match, path_copy, FNM_PATHNAME) == 0) {
+                        if (fnmatch(pattern_final, path_copy, FNM_PATHNAME) == 0) {
                             matched = true;
                             break;
                         }
@@ -385,13 +386,13 @@ work_path_matches_ignore(char *relative_path, char *d_name, bool is_dir,
                     }
 
                     if (!dir_only) {
-                        if (fnmatch(to_match, comp, 0) == 0) {
+                        if (fnmatch(pattern_final, comp, 0) == 0) {
                             matched = true;
                             break;
                         }
                     } else {
                         if (comp_is_dir) {
-                            if (fnmatch(to_match, comp, 0) == 0) {
+                            if (fnmatch(pattern_final, comp, 0) == 0) {
                                 matched = true;
                                 break;
                             }
