@@ -806,7 +806,8 @@ free_message(void *data) {
 }
 
 static void
-on_path_click_pressed(GtkGestureClick *gesture, int32 n_press, double x, double y, void *data) {
+on_path_click_pressed(GtkGestureClick *gesture,
+                      int32 n_press, double x, double y, void *data) {
     GtkWidget *editable;
     GtkWidget *tree;
     uint32 button;
@@ -881,7 +882,8 @@ on_tree_button_press(GtkGestureClick *gesture,
 
             if (child) {
                 uint32 position = GPOINTER_TO_UINT(position_pointer);
-                gtk_selection_model_select_item(gtk_column_view_get_model(GTK_COLUMN_VIEW(widget)), position, TRUE);
+                GtkSelectionModel *model = gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
+                gtk_selection_model_select_item(model, position, TRUE);
             }
         }
     }
