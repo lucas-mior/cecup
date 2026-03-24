@@ -931,25 +931,26 @@ work_rsync(void *user_data) {
 
         IPC_SEND_LOG("Name correction finished.\n");
 
-        if (thread_data->is_preview && !thread_data->filtered) {
-            Message *message;
+        nfiles_total = src_fix.file_count;
+        IPC_SEND_LOG("Found %lld files to analyse...\n",
+                     (llong)nfiles_total);
 
-            message = xmalloc(SIZEOF(*message));
-            memset64(message, 0, SIZEOF(*message));
-
-            message->type = DATA_TYPE_CLEAR_TREES;
-            g_idle_add_full(G_PRIORITY_HIGH_IDLE,
-                            update_ui_handler, message, NULL);
-
-            arena_reset(cecup.arena);
-            cecup.rows_len = 0;
-            cecup.rows_visible_len = 0;
-
-            nfiles_total = src_fix.file_count;
-            IPC_SEND_LOG("Found %lld files to analyse...\n",
-                         (llong)nfiles_total);
-        }
         cecup.changed_dirs = false;
+    }
+
+    if (thread_data->is_preview && !thread_data->filtered) {
+        Message *message;
+
+        message = xmalloc(SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
+
+        message->type = DATA_TYPE_CLEAR_TREES;
+        g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                        update_ui_handler, message, NULL);
+
+        arena_reset(cecup.arena);
+        cecup.rows_len = 0;
+        cecup.rows_visible_len = 0;
     }
 
     xpipe(pipe_stdout);
