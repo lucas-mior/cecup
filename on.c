@@ -1259,13 +1259,14 @@ regenerate_preview_filtered(char *relative_old, char *relative_new,
     thread_data->len_new = len_new;
 
     {
-        Message *message;
-        message = xmalloc(SIZEOF(*message));
+        Message *message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
+
         message->path_len = len_old;
         message->src_path = xmalloc(len_old + 1);
         memcpy64(message->src_path, relative_old, len_old + 1);
         message->type = DATA_TYPE_REMOVE_ROW;
+
         g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
         g_thread_new("work_rsync", work_rsync, thread_data);
     }

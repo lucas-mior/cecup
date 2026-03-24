@@ -411,8 +411,6 @@ refresh_ui_timeout_callback(void *data) {
 
 static gboolean
 update_ui_handler(void *data) {
-    Message *message;
-    MessageBatch *batch;
     GtkTextIter end;
     GtkTextTagTable *table;
     char *pattern;
@@ -424,8 +422,8 @@ update_ui_handler(void *data) {
     int32 slash;
     time_t unix_timestamp;
     struct tm *time_information;
-
-    message = data;
+    MessageBatch *batch;
+    Message *message = data;
 
     switch (message->type) {
     case DATA_TYPE_LOG:

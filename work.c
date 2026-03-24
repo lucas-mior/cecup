@@ -192,16 +192,13 @@ work_check_itemize_line(char *buf_output, int64 *parsed_size) {
 
 static void
 work_finalize(ThreadData *thread_data) {
-    Message *message;
+    Message *message = xmalloc(SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
+    message->type = DATA_TYPE_ENABLE_BUTTONS;
 
     work_flush_add_rows();
 
     ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
-
-    message = xmalloc(SIZEOF(*message));
-    memset64(message, 0, SIZEOF(*message));
-
-    message->type = DATA_TYPE_ENABLE_BUTTONS;
 
     if (thread_data) {
         if (thread_data->filtered && thread_data->relative_new) {
@@ -246,9 +243,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
              bool delete_excluded, bool is_dir) {
     int32 target_len;
     int32 pattern_len;
-    Message *message;
-
-    message = xmalloc(SIZEOF(*message));
+    Message *message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
     message->type = DATA_TYPE_ADD_ROW;
@@ -485,7 +480,6 @@ work_fix_fs_thread_fn(void *user_data) {
 static void *
 work_fix_fs_worker(void *user_data) {
     ThreadData *thread_data = user_data;
-    Message *message;
     struct stat stat_src;
     struct stat stat_dst;
     FixFsThreadData src_fix = {cecup.src_base, 0};
@@ -512,11 +506,13 @@ work_fix_fs_worker(void *user_data) {
     }
     IPC_SEND_LOG("Name correction finished.\n");
 
-    message = xmalloc(SIZEOF(*message));
-    memset64(message, 0, SIZEOF(*message));
+    {
+        Message *message = xmalloc(SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
 
-    message->type = DATA_TYPE_ENABLE_BUTTONS;
-    g_idle_add(update_ui_handler, message);
+        message->type = DATA_TYPE_ENABLE_BUTTONS;
+        g_idle_add(update_ui_handler, message);
+    }
 
     XFREE(thread_data);
     return NULL;
@@ -885,18 +881,18 @@ work_rsync(void *user_data) {
     same_fs = (stat_src.st_dev == stat_dst.st_dev);
 
     if (thread_data->check_different_fs && same_fs) {
-        Message *message;
+        Message *message = xmalloc(SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
+
+        message->type = DATA_TYPE_CLEAR_TREES;
+        g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
+
         IPC_SEND_LOG_ERROR(
             _("Safety stop: Original and backup are on the same storage "
               "device.\n"
               "Check if the backup device is connected.\n"
               "To force backup on a folder in the same device, uncheck"
               " option \"Protect same drive sync\".\n"));
-
-        message = xmalloc(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
-        message->type = DATA_TYPE_CLEAR_TREES;
-        g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
 
         work_finalize(thread_data);
         return NULL;
@@ -930,10 +926,9 @@ work_rsync(void *user_data) {
     }
 
     if (thread_data->is_preview && !thread_data->filtered) {
-        Message *message;
-
-        message = xmalloc(SIZEOF(*message));
+        Message *message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
+
         message->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add_full(G_PRIORITY_HIGH_IDLE,
                         update_ui_handler, message, NULL);

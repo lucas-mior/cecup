@@ -79,11 +79,10 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
 
 static void
 on_menu_apply(GtkWidget *m, void *data) {
-    Message *message;
+    Message *message = data;
     TaskList *tasks;
 
     (void)m;
-    message = data;
 
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
@@ -100,12 +99,11 @@ on_menu_apply(GtkWidget *m, void *data) {
 
 static void
 on_menu_rename(GtkWidget *tree, void *data) {
-    Message *message;
+    Message *message = data;
     GtkSelectionModel *selection;
     uint32 pos;
     GtkWidget *current;
 
-    message = data;
     selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
     pos = gtk_single_selection_get_selected(GTK_SINGLE_SELECTION(selection));
 
@@ -160,11 +158,9 @@ on_menu_rename(GtkWidget *tree, void *data) {
 
 static void
 on_menu_open_item(GtkWidget *m, void *data) {
-    Message *message;
+    Message *message = data;
     TaskList *tasks;
     char *variant;
-
-    message = data;
 
     if (m) {
         variant = g_object_get_data(G_OBJECT(m), "variant");
@@ -222,7 +218,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
 
 static void
 on_menu_copy_path(GtkWidget *m, void *data) {
-    Message *message;
+    Message *message = data;
     TaskList *tasks;
     char *buffer;
     int64 buffer_size;
@@ -231,7 +227,6 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     char *base_path;
     GdkClipboard *clipboard;
 
-    message = data;
     buffer_size = SIZEMB(2);
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
     buffer = xmalloc(buffer_size);
@@ -317,13 +312,12 @@ on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
 
 static void
 on_menu_delete(GtkWidget *m, void *data) {
-    Message *message;
+    Message *message = data;
     TaskList *tasks;
     GtkWidget *dialog;
     int32 count;
 
     (void)m;
-    message = data;
 
     tasks = get_target_tasks(message->side, message->src_path, ACTION_DELETE);
 
@@ -350,13 +344,12 @@ on_menu_delete(GtkWidget *m, void *data) {
 
 static void
 on_menu_diff(GtkWidget *m, void *data) {
-    Message *message;
+    Message *message = data;
     TaskList *tasks;
     char *diff_tool;
     char *term_cmd;
 
     (void)m;
-    message = data;
     diff_tool = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry));
     term_cmd = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry));
 
@@ -413,11 +406,10 @@ on_menu_diff(GtkWidget *m, void *data) {
 
 static void
 on_menu_ignore(GtkWidget *m, void *data) {
-    Message *message;
+    Message *message = data;
     char *pattern;
     FILE *fp;
 
-    message = data;
     pattern = (char *)g_object_get_data(G_OBJECT(m), "ignore_pattern");
 
     if (pattern) {
