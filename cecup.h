@@ -328,6 +328,7 @@ static struct {
     bool changed_dirs;
 
     pid_t child_pid;
+    volatile bool stop_working;
 } cecup;
 
 typedef struct ThreadData {

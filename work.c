@@ -301,6 +301,10 @@ work_fix_fs_recursive(char *base_path, char *relative) {
     int64 total_files = 0;
     bool renaming_problematic = false;
 
+    if (cecup.stop_working) {
+        return 0;
+    }
+
     if (relative) {
         SNPRINTF(full_path, "%s/%s", base_path, relative);
     } else {
@@ -474,7 +478,7 @@ static void *
 work_fix_fs_thread_fn(void *user_data) {
     FixFsThreadData *data = user_data;
     data->file_count = work_fix_fs_recursive(data->base_path, NULL);
-    return NULL;
+    g_thread_exit(NULL);
 }
 
 static void *
@@ -515,7 +519,7 @@ work_fix_fs_worker(void *user_data) {
     }
 
     XFREE(thread_data);
-    return NULL;
+    g_thread_exit(NULL);
 }
 
 static void
@@ -870,12 +874,12 @@ work_rsync(void *user_data) {
     if (stat(cecup.src_base, &stat_src) < 0) {
         IPC_SEND_LOG_ERROR("Error getting directory info from %s: %s.\n",
                            cecup.src_base, strerror(errno));
-        return NULL;
+        g_thread_exit(NULL);
     }
     if (stat(cecup.dst_base, &stat_dst) < 0) {
         IPC_SEND_LOG_ERROR("Error getting directory info from %s: %s.\n",
                            cecup.dst_base, strerror(errno));
-        return NULL;
+        g_thread_exit(NULL);
     }
 
     same_fs = (stat_src.st_dev == stat_dst.st_dev);
@@ -895,7 +899,7 @@ work_rsync(void *user_data) {
               " option \"Protect same drive sync\".\n"));
 
         work_finalize(thread_data);
-        return NULL;
+        g_thread_exit(NULL);
     }
 
     if (cecup.changed_dirs) {
@@ -914,6 +918,11 @@ work_rsync(void *user_data) {
         } else {
             work_fix_fs_thread_fn(&src_fix);
             work_fix_fs_thread_fn(&dst_fix);
+        }
+
+        if (cecup.stop_working) {
+            IPC_SEND_LOG_ERROR("Stop requested.\n");
+            g_thread_exit(NULL);
         }
 
         IPC_SEND_LOG("Name correction finished.\n");
@@ -1152,7 +1161,7 @@ work_rsync(void *user_data) {
         }
         hash_destroy_map(show_patterns_map);
         work_finalize(thread_data);
-        return NULL;
+        g_thread_exit(NULL);
     }
 
     {
@@ -1333,7 +1342,7 @@ work_rsync(void *user_data) {
     }
     hash_destroy_map(show_patterns_map);
     work_finalize(thread_data);
-    return NULL;
+    g_thread_exit(NULL);
 }
 
 static void *
