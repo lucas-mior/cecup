@@ -1698,7 +1698,6 @@ work_rsync_bulk(void *user_data) {
 #include <string.h>
 #include <stdio.h>
 #include "aux.c"
-#include "on.c"
 
 int
 main(void) {
