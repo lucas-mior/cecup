@@ -195,7 +195,6 @@ static void
 protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.preview_button, !state);
     gtk_widget_set_sensitive(cecup.sync_button, !state);
-    gtk_widget_set_sensitive(cecup.fix_button, !state);
     gtk_widget_set_sensitive(cecup.ignore_button, !state);
 
     gtk_widget_set_sensitive(cecup.src_entry, !state);
@@ -300,31 +299,12 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     cecup.preview_button = gtk_button_new_with_label(_("🔎 Analyze"));
     cecup.ignore_button = gtk_button_new_with_label(_("Edit Ignore Rules"));
-    cecup.fix_button
-        = gtk_button_new_with_label(_("🛠️ Rename problematic files"));
 
     gtk_widget_set_tooltip_text(
         cecup.preview_button,
         _("Check which files need to be copied or updated"));
     gtk_widget_set_tooltip_text(
         cecup.ignore_button, _("Edit the list of filename patterns to ignore"));
-
-    {
-        char tooltip[1024];
-        int32 offset;
-
-        offset = SNPRINTF(
-            tooltip, "%s",
-            _("Rename problematic filenames, the ones containing:\n"));
-        for (int32 i = 0; i < LENGTH(replacements); i += 1) {
-            int32 n;
-
-            n = snprintf2(tooltip + offset, SIZEOF(tooltip) - offset,
-                          " \"%s\"\n", replacements[i].problem);
-            offset += n;
-        }
-        gtk_widget_set_tooltip_text(cecup.fix_button, tooltip);
-    }
 
     cecup.stop_button = gtk_button_new_with_label(_("⏹️ Stop"));
     gtk_widget_set_tooltip_text(cecup.stop_button,
@@ -337,10 +317,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(button_hbox), cecup.ignore_button);
     gtk_widget_set_margin_start(cecup.ignore_button, PADDING_BUTTON);
     gtk_widget_set_margin_end(cecup.ignore_button, PADDING_BUTTON);
-
-    gtk_box_append(GTK_BOX(button_hbox), cecup.fix_button);
-    gtk_widget_set_margin_start(cecup.fix_button, PADDING_BUTTON);
-    gtk_widget_set_margin_end(cecup.fix_button, PADDING_BUTTON);
 
     {
         GtkWidget *spacer = gtk_label_new("");
@@ -715,8 +691,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                      G_CALLBACK(on_sync_clicked), NULL);
     g_signal_connect(cecup.ignore_button, "clicked",
                      G_CALLBACK(on_ignore_clicked), NULL);
-    g_signal_connect(cecup.fix_button, "clicked",
-                     G_CALLBACK(on_fix_clicked), NULL);
     g_signal_connect(reset_button, "clicked",
                      G_CALLBACK(on_reset_clicked), NULL);
 
@@ -788,7 +762,6 @@ main(int32 argc, char **argv) {
 
     memset64(&cecup, 0, SIZEOF(cecup));
 
-    cecup.changed_dirs = true;
     cecup.arena = arena_create(SIZEMB(64));
     g_mutex_init(&cecup.arena_mutex);
 

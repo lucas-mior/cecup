@@ -294,7 +294,6 @@ static struct {
     GtkWidget *sync_button;
 
     GtkWidget *ignore_button;
-    GtkWidget *fix_button;
 
     GtkWidget *check_fs;
     GtkWidget *delete_excluded;
@@ -332,7 +331,6 @@ static struct {
 
     Arena *arena;
     GMutex arena_mutex;
-    bool changed_dirs;
 
     pid_t child_pid;
     volatile bool stop_working;

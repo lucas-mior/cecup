@@ -405,30 +405,6 @@ on_sync_clicked(GtkWidget *b, void *data) {
 }
 
 static void
-on_fix_clicked(GtkWidget *b, void *data) {
-    char *src_path;
-    char *dst_path;
-    ThreadData *thread_data;
-
-    (void)b;
-    (void)data;
-    src_path = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.src_entry));
-    dst_path = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dst_entry));
-
-    if ((strlen32(src_path) <= 0) || (strlen32(dst_path) <= 0)) {
-        return;
-    }
-
-    protect_interface_from_user(true);
-
-    thread_data = xmalloc(SIZEOF(*thread_data));
-    memset64(thread_data, 0, SIZEOF(*thread_data));
-
-    g_thread_new("work_fix_fs_worker", work_fix_fs_worker, thread_data);
-    return;
-}
-
-static void
 on_stop_clicked(GtkWidget *b, void *data) {
     (void)b;
     (void)data;

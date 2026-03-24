@@ -730,8 +730,6 @@ cecup_get_dirs(void) {
     char *tmp_src;
     char *tmp_dst;
 
-    cecup.changed_dirs = true;
-
     tmp_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.src_entry));
     tmp_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dst_entry));
 

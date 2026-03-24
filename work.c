@@ -879,7 +879,7 @@ work_rsync(void *user_data) {
         g_thread_exit(NULL);
     }
 
-    if (cecup.changed_dirs) {
+    {
         FixFsThreadData src_fix = {cecup.src_base, 0};
         FixFsThreadData dst_fix = {cecup.dst_base, 0};
 
@@ -908,8 +908,6 @@ work_rsync(void *user_data) {
         nfiles_total = MAX(src_fix.file_count, dst_fix.file_count);
         IPC_SEND_LOG(_("Found %lld files to analyse...\n"),
                      (llong)nfiles_total);
-
-        cecup.changed_dirs = false;
     }
 
     if (thread_data->is_preview && !thread_data->filtered) {
