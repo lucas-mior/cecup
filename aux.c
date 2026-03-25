@@ -842,6 +842,71 @@ save_config(void) {
     return;
 }
 
+static void
+ipc_send_log_internal(char *file, int line,
+                      enum DataType type, char *format, ...) {
+    Message *message;
+    char buffer[MAX_PATH_LENGTH*2];
+    int32 n;
+    int32 m;
+    va_list va_args;
+    char fileline[64];
+
+    va_start(va_args, format);
+    n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
+
+    if ((n < 0) || (n >= SIZEOF(buffer))) {
+        error("%s:%d: Error in vsnprintf(%s) (n = %lld)\n",
+              file, line, format, (llong)n);
+        fatal(EXIT_FAILURE);
+    }
+    va_end(va_args);
+
+    message = xmalloc(SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
+
+    if (!RELEASING) {
+        m = SNPRINTF(fileline, "%s:%d: ", file, line);
+    } else {
+        m = SNPRINTF(fileline, "%s", "");
+    }
+
+    message->message_len = n + m;
+    message->message = xmalloc(n + m + 1);
+
+    memcpy64(message->message, fileline, m);
+    memcpy64(message->message + m, buffer, n + 1);
+
+    message->type = type;
+    g_idle_add(update_ui_handler, message);
+    return;
+}
+
+static void
+ipc_send_progress(enum DataType type, double fraction) {
+    Message *message;
+    static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
+    int32 index = 0;
+
+    if (type == DATA_TYPE_PROGRESS_PREVIEW) {
+        index = 3;
+    }
+
+    if ((fraction < 1.0) && ((fraction - last_fractions[index]) < 0.001)
+        && ((fraction - last_fractions[index]) > -0.001)) {
+        return;
+    }
+    last_fractions[index] = fraction;
+
+    message = xmalloc(SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
+
+    message->type = type;
+    message->fraction = fraction;
+    g_idle_add(update_ui_handler, message);
+    return;
+}
+
 #if TESTING_aux
 #include <assert.h>
 #include <string.h>
