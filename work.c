@@ -443,11 +443,14 @@ work_traverse_fs(TraversalData *data) {
             int32 *first_idx_ptr;
 
             n = (uint32)itoa2(inode_str, (long)ent->fts_statp->st_ino);
-            first_idx_ptr = hash_lookup_fs_map(data->inode_map, inode_str, n);
+            first_idx_ptr = hash_lookup_fs_map(data->inode_map, xstrdup(inode_str), n);
             if (first_idx_ptr) {
+                error("Found hardlink\n");
                 data->link_targets[index] = data->paths[*first_idx_ptr];
                 data->link_targets_lens[index] = data->paths_lens[*first_idx_ptr];
+                PRINTLN(data->link_targets[index]);
             } else {
+                error("CANT Found hardlink\n");
                 hash_insert_fs_map(data->inode_map, inode_str, n, index);
             }
         }
@@ -745,29 +748,37 @@ work_preview(void *user_data) {
                         attributes_differ = true;
                     }
 
-                    if (is_hardlink) {
-                        if (S_ISREG(stat_dst->st_mode)
-                             && link_target_dst
-                             && !strcmp(link_target_src, link_target_dst)
-                             && !attributes_differ) {
-                            equal = true;
-                            if (action == ACTION_HARDLINK) {
-                                error("%s ==\n", bucket_src->key);
+                    HERE;
+                    do {
+                        if (is_hardlink) {
+                            if (!S_ISREG(stat_dst->st_mode)) {
+                                LOG("Other side is not a regular file.\n");
+                                equal = false;
+                                break;
                             }
+                            if (link_target_dst == NULL) {
+                                LOG("Other side does not have a link .\n");
+                                equal = false;
+                                break;
+                            }
+                            if (strcmp(link_target_src, link_target_dst)) {
+                                LOG("Other side target is not the same.\n");
+                                LOG("%s != %s", link_target_src, link_target_dst);
+                                equal = false;
+                                break;
+                            }
+                            equal = true;
+                            break;
                         } else {
-                            if (action == ACTION_HARDLINK) {
-                                error("%s is not equal\n", bucket_src->key);
+                            if (!attributes_differ) {
+                                if (action == ACTION_HARDLINK) {
+                                    error("attributes_differ for %s hardlink\n",
+                                          bucket_src->key);
+                                }
+                                equal = true;
                             }
                         }
-                    } else {
-                        if (!attributes_differ) {
-                            if (action == ACTION_HARDLINK) {
-                                error("attributes_differ for %s hardlink\n",
-                                      bucket_src->key);
-                            }
-                            equal = true;
-                        }
-                    }
+                    } while (0);
                 }
 
                 if (equal) {
@@ -821,7 +832,6 @@ work_preview(void *user_data) {
             dst_action = ACTION_DELETE;
         }
 
-        error("Action(%s)=%s\n", bucket_src->key, ACTION_str(action));
         if ((action != ACTION_EQUAL) && (action != ACTION_IGNORE)) {
             if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) {
                 if (cecup.transfers_capacity == 0) {
