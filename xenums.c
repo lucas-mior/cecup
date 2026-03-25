@@ -191,6 +191,14 @@ CAT(ENUM_PREFIX_, str)(enum ENUM_NAME val) {
 #endif
 }
 
+#if 0 == TESTING_xenums
+static inline void
+CAT(ENUM_PREFIX_, functions_sink)(void) {
+    (void)CAT(ENUM_PREFIX_, str);
+    return;
+}
+#endif
+
 #undef ENUM_NAME
 #undef ENUM_PREFIX_
 #undef ENUM_FIELDS

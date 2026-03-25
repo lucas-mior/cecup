@@ -1982,6 +1982,35 @@ static volatile ullong here_counter = 0; \
                     here_counter++, __FILE__, __LINE__, __func__); \
 } while (0)
 
+#if 0 == TESTING_util
+static inline void
+util_functions_sink(void) {
+    (void)util_segv_handler;
+    (void)util_nthreads;
+    (void)util_filename_from;
+    (void)util_command;
+    (void)util_string_int32;
+    (void)util_die_notify;
+    (void)util_copy_file_sync;
+    (void)util_copy_file_async;
+    (void)util_copy_file_async_thread;
+    (void)util_equal_files;
+
+    (void)send_signal;
+    (void)shell_escape;
+    (void)xcalloc;
+    (void)atoi2;
+
+    (void)xpthread_mutex_lock;
+    (void)xpthread_mutex_unlock;
+    (void)xpthread_cond_destroy;
+    (void)xpthread_mutex_destroy;
+    (void)xpthread_create;
+    (void)xpthread_join;
+    return;
+}
+#endif
+
 #if TESTING_util
 
 #define DAYS_ENUM_LIST                 \
