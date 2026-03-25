@@ -944,14 +944,7 @@ work_rsync(void *user_data) {
     bool second_run_with_checksum = false;
     int files_from_fd;
 
-    if (tasks == NULL) {
-        if (cecup.ntransfers <= 0) {
-            work_finalize();
-            XFREE(thread_data, SIZEOF(*thread_data));
-            return NULL;
-        }
-        has_transfers = true;
-    } else {
+    if (tasks) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             Task *task = tasks->items[i];
             char full_path[MAX_PATH_LENGTH];
@@ -1021,6 +1014,13 @@ work_rsync(void *user_data) {
             XFREE(thread_data, SIZEOF(*thread_data));
             return NULL;
         }
+    } else {
+        if (cecup.ntransfers <= 0) {
+            work_finalize();
+            XFREE(thread_data, SIZEOF(*thread_data));
+            return NULL;
+        }
+        has_transfers = true;
     }
 
     if ((files_from_fd = mkstemp(files_from_filename)) < 0) {
