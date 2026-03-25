@@ -814,7 +814,7 @@ on_path_click_pressed(GtkGestureClick *gesture,
             uint32 pos;
 
             model = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
-            pos = GPOINTER_TO_UINT(pos_ptr);
+            pos = GPOINTER_TO_UINT(pos_ptr) - 1;
             gtk_selection_model_select_item(model, pos, TRUE);
         }
 
@@ -853,12 +853,12 @@ on_tree_button_press(GtkGestureClick *gesture,
             while (child
                    && (position_pointer = g_object_get_data(G_OBJECT(child),
                                                             "cecup-pos"))
-                                          == NULL) {
+                       == NULL) {
                 child = gtk_widget_get_parent(child);
             }
 
             if (child) {
-                uint32 position = GPOINTER_TO_UINT(position_pointer);
+                uint32 position = GPOINTER_TO_UINT(position_pointer) - 1;
                 GtkSelectionModel *model = gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
                 gtk_selection_model_select_item(model, position, TRUE);
             }

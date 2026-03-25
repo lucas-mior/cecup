@@ -136,7 +136,7 @@ on_menu_rename(GtkWidget *tree, void *data) {
         pos_ptr = g_object_get_data(G_OBJECT(current), "cecup-pos");
 
         if (col_ptr && (GPOINTER_TO_INT(col_ptr) == COLUMN_PATH)) {
-            if (pos_ptr && (GPOINTER_TO_UINT(pos_ptr) == pos)) {
+            if (pos_ptr && ((GPOINTER_TO_UINT(pos_ptr) - 1) == pos)) {
                 gtk_editable_label_start_editing(GTK_EDITABLE_LABEL(current));
                 break;
             }
