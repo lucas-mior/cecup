@@ -641,10 +641,14 @@ work_preview(void *user_data) {
 
     LOG(_("Traversing file systems...\n"));
     if (!same_fs) {
-        GThread *t1 = g_thread_new("traversal_src",
-                                   work_traverse_fs_thread, &cecup.traversal_src);
-        GThread *t2 = g_thread_new("traversal_dst",
-                                   work_traverse_fs_thread, &cecup.traversal_dst);
+        GThread *t1;
+        GThread *t2;
+
+        t2 = g_thread_new("traversal_dst",
+                          work_traverse_fs_thread, &cecup.traversal_dst);
+        t1 = g_thread_new("traversal_src",
+                          work_traverse_fs_thread, &cecup.traversal_src);
+
         g_thread_join(t1);
         g_thread_join(t2);
     } else {
