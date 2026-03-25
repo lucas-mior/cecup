@@ -73,7 +73,7 @@ typedef struct FixFsThreadData {
     char **matched_patterns;
     char **link_targets;
     char **relative_paths;
-    int16 *relative_lens;
+    int16 *path_lens;
 } FixFsThreadData;
 
 static __thread FixFsThreadData *nftw_current_data = NULL;
@@ -649,8 +649,8 @@ work_fix_fs_cb(const char *fpath,
                                       data->array_capacity*SIZEOF(*(data->link_targets)));
         data->relative_paths = xrealloc(data->relative_paths,
                                         data->array_capacity*SIZEOF(*(data->relative_paths)));
-        data->relative_lens = xrealloc(data->relative_lens,
-                                       data->array_capacity*SIZEOF(*(data->relative_lens)));
+        data->path_lens = xrealloc(data->path_lens,
+                                       data->array_capacity*SIZEOF(*(data->path_lens)));
     }
 
     index = data->array_count;
@@ -659,7 +659,7 @@ work_fix_fs_cb(const char *fpath,
     memset64(&data->stats[index], 0, SIZEOF(struct stat));
     memcpy64(&data->stats[index], (void *)sb, SIZEOF(struct stat));
     data->relative_paths[index] = relative_path;
-    data->relative_lens[index] = (int16)relative_len;
+    data->path_lens[index] = (int16)relative_len;
     data->link_targets[index] = NULL;
 
     if (typeflag == FTW_SL) {
