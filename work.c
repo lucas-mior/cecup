@@ -501,7 +501,7 @@ static int
 work_fix_fs_cb(const char *fpath,
                const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
     char *d_name;
-    int64 name_len;
+    int32 name_len;
     int32 old_full_len;
     bool changed;
     bool renaming_problematic;
@@ -518,7 +518,7 @@ work_fix_fs_cb(const char *fpath,
     data = nftw_current_data;
     d_name = (char *)fpath + ftwbuf->base;
     name_len = strlen32(d_name);
-    old_full_len = ftwbuf->base + name_len;
+    old_full_len = (int32)ftwbuf->base + name_len;
 
     if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
         LOG_ERROR(_("Error: file path is too long:\n"));
