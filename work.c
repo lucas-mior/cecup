@@ -490,7 +490,6 @@ work_traverse_fs_thread(void *user_data) {
 
 static void
 work_cleanup(void) {
-    HERE;
     hash_destroy_fs_map(cecup.src_map);
     cecup.src_map = NULL;
     hash_destroy_fs_map(cecup.dst_map);
