@@ -33,12 +33,13 @@ ignore_patterns_load(void) {
     FILE *file;
     char line_buffer[MAX_PATH_LENGTH];
     int32 *capacity = &cecup.ignore_capacity;
-    int32 count = 0;
+    int32 count;
 
     if (cecup.ignore_patterns == NULL) {
         *capacity = 16;
         cecup.ignore_patterns
             = xmalloc(*capacity*SIZEOF(*cecup.ignore_patterns));
+        cecup.ignore_count = 0;
     }
     for (int32 i = 0; i < cecup.ignore_count; i += 1) {
         IgnorePattern *pattern = &cecup.ignore_patterns[i];

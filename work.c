@@ -1323,20 +1323,22 @@ work_rsync(void *user_data) {
 
     XCLOSE(&files_from_fd);
 
-    if (work_rsync_run(files_from_filename, false)) {
-        work_rsync_run(files_from_filename, true);
-    }
+    do {
+        if (work_rsync_run(files_from_filename, false)) {
+            if (cecup.stop_working) {
+                LOG_ERROR(_("Stop requested.\n"));
+                break;
+            }
+            work_rsync_run(files_from_filename, true);
+        }
+    } while (0);
     if (!DEBUGGING) {
         xunlink(files_from_filename);
     }
 
+    free_task_list(tasks);
     if (tasks->count == 0) {
         work_cleanup();
-    } else {
-        free_task_list(tasks);
-        if (cecup.stop_working) {
-            LOG_ERROR(_("Stop requested.\n"));
-        }
     }
     work_finalize();
     XFREE(thread_data, SIZEOF(*thread_data));
