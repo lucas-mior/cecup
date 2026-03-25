@@ -573,12 +573,12 @@ work_rsync(void *user_data) {
 
         if (stat(cecup.src_base, &stat_src) < 0) {
             LOG_ERROR("Error getting directory info from %s: %s.\n",
-                               cecup.src_base, strerror(errno));
+                      cecup.src_base, strerror(errno));
             goto cleanup_maps;
         }
         if (stat(cecup.dst_base, &stat_dst) < 0) {
             LOG_ERROR("Error getting directory info from %s: %s.\n",
-                               cecup.dst_base, strerror(errno));
+                      cecup.dst_base, strerror(errno));
             goto cleanup_maps;
         }
 
@@ -1055,8 +1055,7 @@ work_rsync(void *user_data) {
                     SIZEOF(buf_output) - buf_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
-                LOG_ERROR("Error reading stdout pipe: %s.\n",
-                                   strerror(errno));
+                LOG_ERROR("Error reading stdout pipe: %s.\n", strerror(errno));
                 pipes[0].fd = -1;
             }
             goto read_error_pipe;
@@ -1131,8 +1130,7 @@ work_rsync(void *user_data) {
         r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
         if (r <= 0) {
             if (r < 0) {
-                LOG_ERROR("Error reading stderr pipe: %s.\n",
-                                   strerror(errno));
+                LOG_ERROR("Error reading stderr pipe: %s.\n", strerror(errno));
                 pipes[1].fd = -1;
             }
             continue;
@@ -1268,8 +1266,7 @@ work_rsync_bulk(void *user_data) {
         default:
             cecup.child_pid = child_rm;
             if (waitpid(child_rm, &child_status, 0) < 0) {
-                LOG_ERROR("Error waiting for child: %s.\n",
-                                   strerror(errno));
+                LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
             } else if (WIFEXITED(child_status)) {
                 removed = !WEXITSTATUS(child_status);
             }
@@ -1425,8 +1422,7 @@ work_rsync_bulk(void *user_data) {
                    SIZEOF(buf_output_bulk) - 1 - buf_output_pos);
         if (r <= 0) {
             if (r < 0) {
-                LOG_ERROR("Error reading stdout pipe: %s.\n",
-                                   strerror(errno));
+                LOG_ERROR("Error reading stdout pipe: %s.\n", strerror(errno));
                 pipes[0].fd = -1;
             }
             goto read_error_pipe;
@@ -1507,8 +1503,7 @@ work_rsync_bulk(void *user_data) {
         r = read64(pipe_stderr[0], buf_error_bulk, SIZEOF(buf_error_bulk) - 1);
         if (r <= 0) {
             if (r < 0) {
-                LOG_ERROR("Error reading stderr pipe: %s.\n",
-                                   strerror(errno));
+                LOG_ERROR("Error reading stderr pipe: %s.\n", strerror(errno));
                 pipes[1].fd = -1;
             }
             continue;
