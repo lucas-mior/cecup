@@ -371,7 +371,7 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
             pattern_len -= 1;
         }
 
-        if (pattern_len == 0) {
+        if (pattern_len <= 0) {
             continue;
         }
 
