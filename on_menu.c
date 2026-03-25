@@ -80,7 +80,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
             fclose(fp);
         } else {
             LOG_ERROR(_("Error opening %s: %s.\n"),
-                               cecup.ignore_path, strerror(errno));
+                      cecup.ignore_path, strerror(errno));
         }
     } else {
         error("Ignore pattern is NULL.\n");
@@ -262,7 +262,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
             SNPRINTF(path_relative, "%s/%s", base_path, task->path);
             if (realpath(path_relative, path_full) == NULL) {
                 LOG_ERROR(_("Error resolving full path of %s: %s.\n"),
-                                   path_relative, strerror(errno));
+                          path_relative, strerror(errno));
                 continue;
             }
             path = path_full;
@@ -420,7 +420,7 @@ on_menu_ignore(GtkWidget *m, void *data) {
             fclose(fp);
         } else {
             LOG_ERROR(_("Error opening %s: %s.\n"),
-                               cecup.ignore_path, strerror(errno));
+                      cecup.ignore_path, strerror(errno));
         }
     } else {
         error("Ignore pattern not found in widget data.\n");

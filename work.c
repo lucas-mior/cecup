@@ -765,8 +765,7 @@ work_rsync(void *user_data) {
     LOG(_("File system traversal finished.\n"));
 
     nfiles_total = src_fix.file_count + dst_fix.file_count;
-    LOG(_("Found %lld files to analyse...\n"),
-                 (llong)nfiles_total);
+    LOG(_("Found %lld files to analyse...\n"), (llong)nfiles_total);
 
     if (thread_data->is_preview) {
         Message *message = xmalloc(SIZEOF(*message));
