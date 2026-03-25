@@ -6,7 +6,7 @@
 #include "cecup.h"
 
 static void
-work_load_ignore_patterns(void) {
+ignore_patterns_load(void) {
     FILE *file;
     char line_buffer[MAX_PATH_LENGTH];
     int32 *capacity = &cecup.ignore_capacity;
@@ -113,8 +113,8 @@ work_match_pattern(char *pattern, char *str, bool restrict_slash) {
 }
 
 static IgnorePattern *
-work_path_matches_ignore(char *path, int32 path_len,
-                         bool is_dir, IgnorePattern *patterns, int32 count) {
+ignore_patterns_match(char *path, int32 path_len,
+                      bool is_dir, IgnorePattern *patterns, int32 count) {
     if (patterns == NULL) {
         return NULL;
     }

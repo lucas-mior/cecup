@@ -502,10 +502,10 @@ work_fix_fs_recursive(TraversalData *data) {
         }
 
         {
-            IgnorePattern *pattern = work_path_matches_ignore(path, path_len,
-                                                              is_dir,
-                                                              cecup.ignore_patterns,
-                                                              cecup.ignore_count);
+            IgnorePattern *pattern = ignore_patterns_match(path, path_len,
+                                                           is_dir,
+                                                           cecup.ignore_patterns,
+                                                           cecup.ignore_count);
             if (pattern) {
                 data->matched_patterns[index] = pattern->str;
                 data->matched_patterns_lens[index] = (int16)pattern->len;
@@ -605,7 +605,7 @@ work_rsync(void *user_data) {
         goto cleanup_maps;
     }
 
-    work_load_ignore_patterns();
+    ignore_patterns_load();
 
     traversal_src.base_path = cecup.src_base;
     traversal_src.base_path_len = cecup.src_base_len;
