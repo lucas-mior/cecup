@@ -538,7 +538,6 @@ work_rsync(void *user_data) {
     pid_t child_pid;
 
     int64 buf_output_pos = 0;
-    char *eol;
     char buf_output[MAX_PATH_LENGTH*2];
     char buf_error[MAX_PATH_LENGTH*2];
 
@@ -1021,6 +1020,7 @@ work_rsync(void *user_data) {
 
     do {
         int64 r;
+        char *eol;
 
         pipes[0].revents = 0;
         pipes[1].revents = 0;
