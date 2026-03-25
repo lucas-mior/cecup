@@ -44,6 +44,9 @@
 
 #define OS_UNIX (OS_LINUX || OS_MAC || OS_BSD)
 
+#define BYTE_POPED 0xDC
+#define BYTE_PUSHED_UNINITIALIZED 0xCD
+
 #if OS_WINDOWS
 #include <windows.h>
 #endif
@@ -348,7 +351,7 @@ arena_push(Arena *arena, int64 size) {
 
     before = arena->pos;
     if (DEBUGGING) {
-        memset64(before, 0xCD, size);
+        memset64(before, BYTE_PUSHED_UNINITIALIZED, size);
     }
     arena->pos = (char *)arena->pos + size;
     arena->npushed += 1;
@@ -453,7 +456,7 @@ arena_pop(Arena *arena, void *p) {
     if (arena->npushed <= 0) {
         arena->pos = arena->begin;
         if (DEBUGGING) {
-            memset64(arena->pos, 0xDC, arena_data_size(arena));
+            memset64(arena->pos, BYTE_POPED, arena_data_size(arena));
         }
     }
     return true;

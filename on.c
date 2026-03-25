@@ -246,15 +246,18 @@ on_search_timeout(void *data) {
 static void
 on_search_changed(GtkEditable *editable, void *data) {
     char *text;
+    int32 len;
     (void)data;
 
     text = (char *)gtk_editable_get_text(editable);
+    len = strlen32(text);
 
     if (cecup.search_query) {
-        XFREE(cecup.search_query);
+        XFREE(cecup.search_query, cecup.search_query_len);
     }
 
-    cecup.search_query = xstrdup(text);
+    cecup.search_query = xmemdup(text, len + 1);
+    cecup.search_query_len = len;
 
     if (cecup.search_timeout_id != 0) {
         g_source_remove(cecup.search_timeout_id);
@@ -1218,7 +1221,7 @@ on_path_selection_idle(void *data) {
     gtk_editable_select_region(selection_data->editable,
                                selection_data->start_pos,
                                selection_data->end_pos);
-    XFREE(selection_data);
+    XFREE(selection_data, sizeof(*selection_data));
     return G_SOURCE_REMOVE;
 }
 

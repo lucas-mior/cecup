@@ -59,16 +59,12 @@ free_task_list(TaskList *tasks) {
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
 
-        if (task->link_target) {
-            XFREE(task->link_target);
-        }
-        if (task->message) {
-            XFREE(task->message);
-        }
-        XFREE(task);
+        XFREE(task->link_target, task->link_target_len + 1);
+        XFREE(task->message, task->message_len);
+        XFREE(task, sizeof(*task));
     }
 
-    XFREE(tasks);
+    XFREE(tasks, sizeof(*tasks));
     return;
 }
 
@@ -506,24 +502,18 @@ update_ui_handler(void *data) {
         break;
     }
 
-    if (message->text) {
-        XFREE(message->text);
-    }
-    if (message->path_to_focus) {
-        XFREE(message->path_to_focus);
-    }
+    XFREE(message->text, message->text_len + 1);
+    XFREE(message->path_to_focus, message->focus_len + 1);
+
     if (message->src_path) {
-        XFREE(message->src_path);
+        XFREE(message->src_path, message->path_len + 1);
     } else if (message->dst_path) {
-        XFREE(message->dst_path);
+        XFREE(message->dst_path, message->path_len + 1);
     }
-    if (message->link_target) {
-        XFREE(message->link_target);
-    }
-    if (message->ignore_pattern) {
-        XFREE(message->ignore_pattern);
-    }
-    XFREE(message);
+
+    XFREE(message->link_target, message->link_target_len);
+    XFREE(message->ignore_pattern, message->ignore_pattern_len);
+    XFREE(message, sizeof(*message));
 
     return G_SOURCE_REMOVE;
 }
@@ -574,8 +564,8 @@ cecup_get_dirs(void) {
         return;
     }
 
-    XFREE(cecup.src_base);
-    XFREE(cecup.dst_base);
+    XFREE(cecup.src_base, cecup.src_base_len + 1);
+    XFREE(cecup.dst_base, cecup.src_base_len + 1);
 
     cecup.src_base = full_src;
     cecup.dst_base = full_dst;

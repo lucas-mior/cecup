@@ -100,9 +100,9 @@ typedef uint64_t uint64;
 
 struct CommonBucket {
     char *key;
+    uint32 key_len;
     uint64 hash;
     int32 value;
-    uint32 padding;
 };
 
 struct CommonMap {
@@ -133,6 +133,7 @@ struct CommonMap {
 
 typedef struct Bucket {
     char *key;
+    int32 key_len;
     uint64 hash;
 #if defined(HASH_VALUE_TYPE)
     HASH_VALUE_TYPE value;
@@ -201,13 +202,13 @@ CAT(hash_destroy_, HASH_TYPE)(struct Map *map) {
         case SLOT_FREE:
             break;
         default:
-            XFREE(map->array[i].key);
+            XFREE(map->array[i].key, map->array[i].key_len);
             break;
         }
     }
 #endif
     xmunmap(map->array, map->size);
-    XFREE(map);
+    XFREE(map, sizeof(*map));
     return;
 }
 
@@ -691,7 +692,7 @@ main(void) {
     ASSERT_EQUAL(hash_length(map), 10);
 
     hash_destroy_map(map);
-    XFREE(strings);
+    XFREE(strings, 0);
 
     exit(EXIT_SUCCESS);
 }

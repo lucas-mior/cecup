@@ -94,6 +94,9 @@
 #define TESTING_util 0
 #endif
 
+#define MEM_FREED 0xDC
+#define MEM_MALLOCED_UNINITIALIZED 0xCD
+
 static void __attribute__((format(printf, 3, 4)))
     error_impl(char *file, int32 line, char *format, ...);
 #define error(...) error_impl(__FILE__, __LINE__, __VA_ARGS__)
@@ -567,7 +570,7 @@ xmalloc(int64 size) {
     }
 
     if (DEBUGGING && !RUNNING_ON_VALGRIND) {
-        memset64(p, 0xCD, size);
+        memset64(p, MEM_MALLOCED_UNINITIALIZED, size);
     }
     return p;
 }
@@ -625,15 +628,17 @@ xstrdup(char *string) {
 }
 
 static void
-xfree(char *file, int32 line, void *pointer) {
+xfree(char *file, int32 line, void *pointer, int64 size) {
     if (DEBUGGING) {
-        error_impl(file, line, "Freeing pointer %p\n", pointer);
+        error_impl(file, line,
+                   "Freeing pointer of size %lld [%p]\n", (llong)size, pointer);
+        memset64(pointer, MEM_FREED, size);
     }
     free(pointer);
     return;
 }
 
-#define XFREE(P) xfree(__FILE__, __LINE__, P)
+#define XFREE(POINTER, SIZE) xfree(__FILE__, __LINE__, POINTER, SIZE)
 
 #if OS_UNIX
 static void *
@@ -678,7 +683,7 @@ xmmap_commit(int64 *size) {
 static void
 xmunmap(void *p, int64 size) {
     if (RUNNING_ON_VALGRIND) {
-        XFREE(p);
+        XFREE(p, size);
         return;
     }
     if (munmap(p, (size_t)size) < 0) {
@@ -720,7 +725,7 @@ static void
 xmunmap(void *p, size_t size) {
     (void)size;
     if (RUNNING_ON_VALGRIND) {
-        XFREE(p);
+        XFREE(p, size);
         return;
     }
     if (!VirtualFree(p, 0, MEM_RELEASE)) {
@@ -1187,7 +1192,7 @@ error_impl(char *file, int32 line, char *format, ...) {
 #endif
 
     if (big_buffer) {
-        XFREE(big_buffer);
+        XFREE(big_buffer, m);
     }
     return;
 }
@@ -1415,7 +1420,7 @@ util_copy_file_async_thread(void *arg) {
             pipes[i].revents = 0;
         }
     }
-    XFREE(copy_files);
+    XFREE(copy_files, sizeof(*copy_files));
     pthread_exit(NULL);
     return NULL;
 }
@@ -2167,6 +2172,7 @@ main(int argc, char **argv) {
     p3 = xstrdup(p1);
 
     ASSERT_EQUAL(string, p3);
+    XFREE(p3, strlen32(p3) + 1);
 
     srand((uint)time(NULL));
     for (int i = 0; i < 10; i += 1) {
@@ -2200,7 +2206,7 @@ main(int argc, char **argv) {
         char *path = "path'with'quotes";
         char *escaped = shell_escape(path);
         ASSERT_EQUAL(escaped, "path'\\''with'\\''quotes");
-        XFREE(escaped);
+        XFREE(escaped, strlen32(escaped) + 1);
     }
 
     {
@@ -2227,7 +2233,7 @@ main(int argc, char **argv) {
         char *dup = xmemdup(src, 12);
         ASSERT_EQUAL(src, dup);
         ASSERT_NOT_EQUAL((void *)src, (void *)dup);
-        XFREE(dup);
+        XFREE(dup, 12);
     }
 
     {
@@ -2276,14 +2282,14 @@ main(int argc, char **argv) {
             char *base = bases[i];
             int32 path_len = strlen32(path);
             ASSERT_EQUAL(basename2(path, &path_len, NULL), base);
-            XFREE(path);
+            XFREE(path, path_len + 1);
         }
         for (int64 i = 0; i < LENGTH(paths); i += 1) {
             char *copy = xstrdup(paths[i]);
             int len = strlen32(copy);
             normalize(copy, &len);
             ASSERT_EQUAL(copy, normalized[i]);
-            XFREE(copy);
+            XFREE(copy, len + 1);
         }
 
         for (int64 i = 0; i < LENGTH(paths); i += 1) {
@@ -2368,9 +2374,8 @@ main(int argc, char **argv) {
         // clang-format on
     }
 
-    XFREE(p1);
-    XFREE(p2);
-    XFREE(p3);
+    XFREE(p1, SIZEMB(1));
+    XFREE(p2, 10*SIZEMB(1));
 
     ASSERT_EQUAL(deg2rad(180.0), 3.141592653589793);
     ASSERT_EQUAL(rad2deg(3.141592653589793), 180.0);

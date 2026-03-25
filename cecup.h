@@ -360,6 +360,7 @@ static struct {
     char ignore_path[MAX_PATH_LENGTH];
     char config_path[MAX_PATH_LENGTH];
     char *search_query;
+    int32 search_query_len;
     uint32 search_timeout_id;
     GtkWidget *tree[2];
     GtkWidget *stats_label;
@@ -421,9 +422,9 @@ free_message(void *data) {
     Message *message = data;
 
     if (message->src_path) {
-        XFREE(message->src_path);
+        XFREE(message->src_path, strlen32(message->src_path) + 1);
     }
-    XFREE(message);
+    XFREE(message, sizeof(*message));
     return;
 }
 

@@ -41,7 +41,8 @@ ignore_patterns_load(void) {
             = xmalloc(*capacity*SIZEOF(*cecup.ignore_patterns));
     }
     for (int32 i = 0; i < cecup.ignore_count; i += 1) {
-        XFREE(cecup.ignore_patterns[i].str);
+        IgnorePattern *pattern = &cecup.ignore_patterns[i];
+        XFREE(pattern->str, pattern->len + 1);
     }
 
     count = 0;

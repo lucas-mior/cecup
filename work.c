@@ -110,13 +110,9 @@ work_finalize(ThreadData *thread_data) {
                      focus_length + 1);
         }
 
-        if (thread_data->relative_new) {
-            XFREE(thread_data->relative_new);
-        }
-        if (thread_data->relative_old) {
-            XFREE(thread_data->relative_old);
-        }
-        XFREE(thread_data);
+        XFREE(thread_data->relative_new, thread_data->len_new + 1);
+        XFREE(thread_data->relative_old, thread_data->len_old + 1);
+        XFREE(thread_data, sizeof(*thread_data));
     }
 
     g_idle_add(update_ui_handler, message);
@@ -509,41 +505,66 @@ work_cleanup(void) {
     hash_destroy_fs_map(cecup.dst_inode_map);
     cecup.dst_inode_map = NULL;
 
-    for (int32 i = 0; i < cecup.traversal_src.array_count; i += 1) {
-        XFREE(cecup.traversal_src.paths[i]);
-        if (S_ISLNK(cecup.traversal_src.stats[i].st_mode)) {
-            XFREE(cecup.traversal_src.link_targets[i]);
+    {
+        int32 capacity_src = cecup.traversal_src.array_capacity;
+        int32 capacity_dst = cecup.traversal_src.array_capacity;
+
+        for (int32 i = 0; i < cecup.traversal_src.array_count; i += 1) {
+            XFREE(cecup.traversal_src.paths[i],
+                  cecup.traversal_src.paths_lens[i] + 1);
+            if (S_ISLNK(cecup.traversal_src.stats[i].st_mode)) {
+                XFREE(cecup.traversal_src.link_targets[i],
+                      cecup.traversal_src.link_targets_lens[i] + 1);
+            }
         }
-    }
 
-    XFREE(cecup.traversal_src.stats);
-    XFREE(cecup.traversal_src.matched_patterns);
-    XFREE(cecup.traversal_src.link_targets);
-    XFREE(cecup.traversal_src.paths);
-    XFREE(cecup.traversal_src.paths_lens);
-    XFREE(cecup.traversal_src.link_targets_lens);
-    XFREE(cecup.traversal_src.matched_patterns_lens);
-    memset64(&cecup.traversal_src, 0, SIZEOF(cecup.traversal_src));
+        XFREE(cecup.traversal_src.stats,
+              capacity_src*SIZEOF(*(cecup.traversal_src.stats)));
+        XFREE(cecup.traversal_src.matched_patterns,
+              capacity_src*SIZEOF(*(cecup.traversal_src.matched_patterns)));
+        XFREE(cecup.traversal_src.link_targets,
+              capacity_src*SIZEOF(*(cecup.traversal_src.link_targets)));
+        XFREE(cecup.traversal_src.paths,
+              capacity_src*SIZEOF(*(cecup.traversal_src.paths)));
+        XFREE(cecup.traversal_src.paths_lens,
+              capacity_src*SIZEOF(*(cecup.traversal_src.paths_lens)));
+        XFREE(cecup.traversal_src.link_targets_lens,
+              capacity_src*SIZEOF(*(cecup.traversal_src.link_targets_lens)));
+        XFREE(cecup.traversal_src.matched_patterns_lens,
+              capacity_src*SIZEOF(*(cecup.traversal_src.matched_patterns_lens)));
+        memset64(&cecup.traversal_src, 0, SIZEOF(cecup.traversal_src));
 
-    for (int32 i = 0; i < cecup.traversal_dst.array_count; i += 1) {
-        XFREE(cecup.traversal_dst.paths[i]);
-        if (S_ISLNK(cecup.traversal_dst.stats[i].st_mode)) {
-            XFREE(cecup.traversal_dst.link_targets[i]);
+        for (int32 i = 0; i < cecup.traversal_dst.array_count; i += 1) {
+            XFREE(cecup.traversal_dst.paths[i],
+                  cecup.traversal_dst.paths_lens[i] + 1);
+            if (S_ISLNK(cecup.traversal_dst.stats[i].st_mode)) {
+                XFREE(cecup.traversal_dst.link_targets[i],
+                      cecup.traversal_dst.link_targets_lens[i] + 1);
+            }
         }
+
+        XFREE(cecup.traversal_dst.stats,
+              capacity_dst*SIZEOF(*(cecup.traversal_dst.stats)));
+        XFREE(cecup.traversal_dst.matched_patterns,
+              capacity_dst*SIZEOF(*(cecup.traversal_dst.matched_patterns)));
+        XFREE(cecup.traversal_dst.link_targets,
+              capacity_dst*SIZEOF(*(cecup.traversal_dst.link_targets)));
+        XFREE(cecup.traversal_dst.paths,
+              capacity_dst*SIZEOF(*(cecup.traversal_dst.paths)));
+        XFREE(cecup.traversal_dst.paths_lens,
+              capacity_dst*SIZEOF(*(cecup.traversal_dst.paths_lens)));
+        XFREE(cecup.traversal_dst.link_targets_lens,
+              capacity_dst*SIZEOF(*(cecup.traversal_dst.link_targets_lens)));
+        XFREE(cecup.traversal_dst.matched_patterns_lens,
+              capacity_dst*SIZEOF(*(cecup.traversal_dst.matched_patterns_lens)));
+        memset64(&cecup.traversal_dst, 0, SIZEOF(cecup.traversal_dst));
+
+        XFREE(cecup.transfers,
+              cecup.transfers_capacity*SIZEOF(*cecup.transfers));
+        cecup.transfers = NULL;
+        cecup.ntransfers = 0;
+        cecup.transfers_capacity = 0;
     }
-
-    XFREE(cecup.traversal_dst.stats);
-    XFREE(cecup.traversal_dst.matched_patterns);
-    XFREE(cecup.traversal_dst.link_targets);
-    XFREE(cecup.traversal_dst.paths);
-    XFREE(cecup.traversal_dst.paths_lens);
-    XFREE(cecup.traversal_dst.link_targets_lens);
-    XFREE(cecup.traversal_dst.matched_patterns_lens);
-    memset64(&cecup.traversal_dst, 0, SIZEOF(cecup.traversal_dst));
-
-    XFREE(cecup.transfers);
-    cecup.ntransfers = 0;
-    cecup.transfers_capacity = 0;
     return;
 }
 
