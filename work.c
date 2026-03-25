@@ -680,7 +680,7 @@ work_fix_fs_cb(const char *fpath,
         if (first_idx_ptr) {
             data->link_targets[index] = data->relative_paths[*first_idx_ptr];
         } else {
-            hash_insert2_fs_map(data->inode_map, inode_str, index);
+            hash_insert_fs_map(data->inode_map, inode_str, n, index);
         }
     }
 
@@ -882,7 +882,7 @@ work_rsync(void *user_data) {
             is_hardlink = (S_ISREG(stat_src->st_mode) && link_target_src != NULL);
             is_dir = S_ISDIR(stat_src->st_mode);
 
-            if ((dst_idx_ptr = hash_lookup2_fs_map(dst_map, bucket_src->key))) {
+            if ((dst_idx_ptr = hash_lookup_fs_map(dst_map, bucket_src->key, path_len))) {
                 int32 dst_idx = *dst_idx_ptr;
                 struct stat *stat_dst = &dst_fix.stats[dst_idx];
                 char *link_target_dst = dst_fix.link_targets[dst_idx];
