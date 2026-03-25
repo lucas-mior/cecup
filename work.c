@@ -568,7 +568,6 @@ work_fix_fs_cb(const char *fpath,
     int32 name_len;
     int32 old_full_len;
     bool changed;
-    bool renaming_problematic;
     char *path;
     int32 path_len;
     bool is_dir;
@@ -611,9 +610,8 @@ work_fix_fs_cb(const char *fpath,
     }
 
     changed = false;
-    renaming_problematic = false;
 
-    if (renaming_problematic) {
+    if (false) {
         char new_name[MAX_PATH_LENGTH];
         char new_full[MAX_PATH_LENGTH];
         int32 j = 0;
