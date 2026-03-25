@@ -50,7 +50,7 @@ static __thread int64 nftw_file_count = 0;
 #define HASH_TYPE fs_map
 #include "hash.c"
 
-typedef struct FixFsThreadData {
+typedef struct TraversalData {
     char *base_path;
     int32 base_path_len;
     int64 file_count;
@@ -69,9 +69,9 @@ typedef struct FixFsThreadData {
     int16 *paths_lens;
     int16 *link_targets_lens;
     int16 *matched_patterns_lens;
-} FixFsThreadData;
+} TraversalData;
 
-static __thread FixFsThreadData *nftw_current_data = NULL;
+static __thread TraversalData *nftw_current_data = NULL;
 
 static void
 work_flush_add_rows(void) {
@@ -582,7 +582,7 @@ work_fix_fs_cb(const char *fpath,
     int32 path_len;
     bool is_dir;
     int32 index;
-    FixFsThreadData *data;
+    TraversalData *data;
 
     if (cecup.stop_working) {
         return 1;
@@ -793,7 +793,7 @@ work_fix_fs_cb(const char *fpath,
 }
 
 static int64
-work_fix_fs_recursive(FixFsThreadData *data) {
+work_fix_fs_recursive(TraversalData *data) {
     if (cecup.stop_working) {
         return 0;
     }
@@ -813,7 +813,7 @@ work_fix_fs_recursive(FixFsThreadData *data) {
 
 static void *
 work_fix_fs_thread_fn(void *user_data) {
-    FixFsThreadData *data = user_data;
+    TraversalData *data = user_data;
     data->file_count = work_fix_fs_recursive(data);
     return NULL;
 }
@@ -854,13 +854,13 @@ work_rsync(void *user_data) {
     struct Hash_fs_map *src_inode_map = hash_create_fs_map(1024);
     struct Hash_fs_map *dst_inode_map = hash_create_fs_map(1024);
 
-    FixFsThreadData src_fix;
-    FixFsThreadData dst_fix;
+    TraversalData traversal_src;
+    TraversalData traversal_dst;
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_work);
 
-    memset64(&src_fix, 0, SIZEOF(src_fix));
-    memset64(&dst_fix, 0, SIZEOF(dst_fix));
+    memset64(&traversal_src, 0, SIZEOF(traversal_src));
+    memset64(&traversal_dst, 0, SIZEOF(traversal_dst));
 
     {
         struct stat stat_src;
@@ -900,27 +900,27 @@ work_rsync(void *user_data) {
 
     work_load_ignore_patterns();
 
-    src_fix.base_path = cecup.src_base;
-    src_fix.base_path_len = cecup.src_base_len;
-    src_fix.map = src_map;
-    src_fix.inode_map = src_inode_map;
+    traversal_src.base_path = cecup.src_base;
+    traversal_src.base_path_len = cecup.src_base_len;
+    traversal_src.map = src_map;
+    traversal_src.inode_map = src_inode_map;
 
-    dst_fix.base_path = cecup.dst_base;
-    dst_fix.base_path_len = cecup.dst_base_len;
-    dst_fix.map = dst_map;
-    dst_fix.inode_map = dst_inode_map;
+    traversal_dst.base_path = cecup.dst_base;
+    traversal_dst.base_path_len = cecup.dst_base_len;
+    traversal_dst.map = dst_map;
+    traversal_dst.inode_map = dst_inode_map;
 
     LOG(_("Traversing file systems...\n"));
     if (!same_fs) {
         GThread *t1 = g_thread_new("fix_src",
-                                    work_fix_fs_thread_fn, &src_fix);
+                                    work_fix_fs_thread_fn, &traversal_src);
         GThread *t2 = g_thread_new("fix_dst",
-                                    work_fix_fs_thread_fn, &dst_fix);
+                                    work_fix_fs_thread_fn, &traversal_dst);
         g_thread_join(t1);
         g_thread_join(t2);
     } else {
-        work_fix_fs_thread_fn(&src_fix);
-        work_fix_fs_thread_fn(&dst_fix);
+        work_fix_fs_thread_fn(&traversal_src);
+        work_fix_fs_thread_fn(&traversal_dst);
     }
 
     if (cecup.stop_working) {
@@ -931,7 +931,7 @@ work_rsync(void *user_data) {
 
     LOG(_("File system traversal finished.\n"));
 
-    nfiles_total = src_fix.file_count + dst_fix.file_count;
+    nfiles_total = traversal_src.file_count + traversal_dst.file_count;
     LOG(_("Found %lld files to analyse...\n"), (llong)nfiles_total);
 
     if (thread_data->is_preview) {
@@ -969,13 +969,13 @@ work_rsync(void *user_data) {
             }
 
             src_idx = bucket_src->value;
-            stat_src = &src_fix.stats[src_idx];
-            matched_pattern_src = src_fix.matched_patterns[src_idx];
-            link_target_src = src_fix.link_targets[src_idx];
-            link_target_len = src_fix.link_targets_lens[src_idx];
-            matched_pattern_len = src_fix.matched_patterns_lens[src_idx];
+            stat_src = &traversal_src.stats[src_idx];
+            matched_pattern_src = traversal_src.matched_patterns[src_idx];
+            link_target_src = traversal_src.link_targets[src_idx];
+            link_target_len = traversal_src.link_targets_lens[src_idx];
+            matched_pattern_len = traversal_src.matched_patterns_lens[src_idx];
             src_path = bucket_src->key;
-            path_len = src_fix.paths_lens[src_idx];
+            path_len = traversal_src.paths_lens[src_idx];
 
             is_symlink = S_ISLNK(stat_src->st_mode);
             is_hardlink = S_ISREG(stat_src->st_mode) && link_target_src;
@@ -984,8 +984,8 @@ work_rsync(void *user_data) {
             if ((dst_idx_ptr
                  = hash_lookup_fs_map(dst_map, bucket_src->key, (uint32)path_len))) {
                 int32 dst_idx = *dst_idx_ptr;
-                struct stat *stat_dst = &dst_fix.stats[dst_idx];
-                char *link_target_dst = dst_fix.link_targets[dst_idx];
+                struct stat *stat_dst = &traversal_dst.stats[dst_idx];
+                char *link_target_dst = traversal_dst.link_targets[dst_idx];
 
                 dst_path = src_path;
                 dst_size = stat_dst->st_size;
@@ -1162,15 +1162,15 @@ work_rsync(void *user_data) {
             }
 
             dst_idx = bucket_dst->value;
-            path_len = dst_fix.paths_lens[dst_idx];
+            path_len = traversal_dst.paths_lens[dst_idx];
 
             if (hash_lookup_fs_map(src_map,
                                    bucket_dst->key, (uint32)path_len) == NULL) {
-                stat_dst = &dst_fix.stats[dst_idx];
-                matched_pattern_dst = dst_fix.matched_patterns[dst_idx];
-                link_target_dst = dst_fix.link_targets[dst_idx];
-                link_target_len = dst_fix.link_targets_lens[dst_idx];
-                matched_pattern_len = dst_fix.matched_patterns_lens[dst_idx];
+                stat_dst = &traversal_dst.stats[dst_idx];
+                matched_pattern_dst = traversal_dst.matched_patterns[dst_idx];
+                link_target_dst = traversal_dst.link_targets[dst_idx];
+                link_target_len = traversal_dst.link_targets_lens[dst_idx];
+                matched_pattern_len = traversal_dst.matched_patterns_lens[dst_idx];
 
                 if (matched_pattern_dst) {
                     if (!thread_data->delete_excluded) {
@@ -1452,33 +1452,33 @@ cleanup_maps:
     hash_destroy_fs_map(src_inode_map);
     hash_destroy_fs_map(dst_inode_map);
 
-    for (int32 i = 0; i < src_fix.array_count; i += 1) {
-        XFREE(src_fix.paths[i]);
-        if (S_ISLNK(src_fix.stats[i].st_mode)) {
-            XFREE(src_fix.link_targets[i]);
+    for (int32 i = 0; i < traversal_src.array_count; i += 1) {
+        XFREE(traversal_src.paths[i]);
+        if (S_ISLNK(traversal_src.stats[i].st_mode)) {
+            XFREE(traversal_src.link_targets[i]);
         }
     }
-    XFREE(src_fix.stats);
-    XFREE(src_fix.matched_patterns);
-    XFREE(src_fix.link_targets);
-    XFREE(src_fix.paths);
-    XFREE(src_fix.paths_lens);
-    XFREE(src_fix.link_targets_lens);
-    XFREE(src_fix.matched_patterns_lens);
+    XFREE(traversal_src.stats);
+    XFREE(traversal_src.matched_patterns);
+    XFREE(traversal_src.link_targets);
+    XFREE(traversal_src.paths);
+    XFREE(traversal_src.paths_lens);
+    XFREE(traversal_src.link_targets_lens);
+    XFREE(traversal_src.matched_patterns_lens);
 
-    for (int32 i = 0; i < dst_fix.array_count; i += 1) {
-        XFREE(dst_fix.paths[i]);
-        if (S_ISLNK(dst_fix.stats[i].st_mode)) {
-            XFREE(dst_fix.link_targets[i]);
+    for (int32 i = 0; i < traversal_dst.array_count; i += 1) {
+        XFREE(traversal_dst.paths[i]);
+        if (S_ISLNK(traversal_dst.stats[i].st_mode)) {
+            XFREE(traversal_dst.link_targets[i]);
         }
     }
-    XFREE(dst_fix.stats);
-    XFREE(dst_fix.matched_patterns);
-    XFREE(dst_fix.link_targets);
-    XFREE(dst_fix.paths);
-    XFREE(dst_fix.paths_lens);
-    XFREE(dst_fix.link_targets_lens);
-    XFREE(dst_fix.matched_patterns_lens);
+    XFREE(traversal_dst.stats);
+    XFREE(traversal_dst.matched_patterns);
+    XFREE(traversal_dst.link_targets);
+    XFREE(traversal_dst.paths);
+    XFREE(traversal_dst.paths_lens);
+    XFREE(traversal_dst.link_targets_lens);
+    XFREE(traversal_dst.matched_patterns_lens);
 
     g_thread_exit(NULL);
 }
