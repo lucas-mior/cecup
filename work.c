@@ -848,7 +848,6 @@ work_rsync(void *user_data) {
     struct timespec t1_work;
 
     bool same_fs = true;
-    int32 ignore_count = 0;
 
     struct Hash_fs_map *src_map = hash_create_fs_map(1024);
     struct Hash_fs_map *dst_map = hash_create_fs_map(1024);
