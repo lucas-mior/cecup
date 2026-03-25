@@ -251,48 +251,46 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
-    if (tasks) {
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task = tasks->items[i];
-            int32 path_len;
-            char path_full[MAX_PATH_LENGTH];
-            char *path;
-            char *variant = g_object_get_data(G_OBJECT(m), "variant");
+    for (int32 i = 0; i < tasks->count; i += 1) {
+        Task *task = tasks->items[i];
+        int32 path_len;
+        char path_full[PATH_MAX];
+        char *path;
+        char *variant = g_object_get_data(G_OBJECT(m), "variant");
 
-            if (variant && !strcmp(variant, "absolute")) {
-                char path_relative[MAX_PATH_LENGTH];
+        if (variant && !strcmp(variant, "absolute")) {
+            char path_relative[MAX_PATH_LENGTH];
 
-                SNPRINTF(path_relative, "%s/%s", base_path, task->path);
-                if (realpath(path_relative, path_full) == NULL) {
-                    IPC_SEND_LOG_ERROR(_("Error resolving full path of %s: %s.\n"),
-                                       path_relative, strerror(errno));
-                    continue;
-                }
-                path = path_full;
-                path_len = strlen32(path_full);
-            } else {
-                path = task->path;
-                path_len = task->path_len;
+            SNPRINTF(path_relative, "%s/%s", base_path, task->path);
+            if (realpath(path_relative, path_full) == NULL) {
+                IPC_SEND_LOG_ERROR(_("Error resolving full path of %s: %s.\n"),
+                                   path_relative, strerror(errno));
+                continue;
             }
+            path = path_full;
+            path_len = strlen32(path_full);
+        } else {
+            path = task->path;
+            path_len = task->path_len;
+        }
 
-            if (i > 0) {
-                if (remaining_capacity > 0) {
-                    *write_pointer = '\n';
-                    write_pointer += 1;
-                    remaining_capacity -= 1;
-                }
-            }
-
-            if (remaining_capacity >= path_len) {
-                memcpy64(write_pointer, path, path_len);
-                write_pointer += path_len;
-                remaining_capacity -= path_len;
+        if (i > 0) {
+            if (remaining_capacity > 0) {
+                *write_pointer = '\n';
+                write_pointer += 1;
+                remaining_capacity -= 1;
             }
         }
-        *write_pointer = '\0';
-        gdk_clipboard_set_text(clipboard, buffer);
-        free_task_list(tasks);
+
+        if (remaining_capacity >= path_len) {
+            memcpy64(write_pointer, path, path_len);
+            write_pointer += path_len;
+            remaining_capacity -= path_len;
+        }
     }
+    *write_pointer = '\0';
+    gdk_clipboard_set_text(clipboard, buffer);
+    free_task_list(tasks);
 
     XFREE(buffer);
     XFREE(message->src_path);

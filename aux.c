@@ -146,11 +146,6 @@ get_target_tasks(int32 side, char *clicked_path,
         tasks->count = 1;
     }
 
-    if (tasks->count == 0) {
-        XFREE(tasks);
-        return NULL;
-    }
-
     return tasks;
 }
 
