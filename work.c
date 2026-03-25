@@ -1292,7 +1292,9 @@ work_rsync(void *user_data) {
     if (work_rsync_run(files_from_filename, false)) {
         work_rsync_run(files_from_filename, true);
     }
-    xunlink(files_from_filename);
+    if (!DEBUGGING) {
+        xunlink(files_from_filename);
+    }
 
     if (tasks->count == 0) {
         work_cleanup();
