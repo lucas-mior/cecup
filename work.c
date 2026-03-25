@@ -193,8 +193,6 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
              int64 src_size_raw, int64 src_mtime_raw,
              int64 dst_size_raw, int64 dst_mtime_raw,
              bool delete_excluded, bool is_dir) {
-    static bool timezone_initialized = false;
-    static time_t timezone_offset = 0;
     int32 slash;
     char *final_src_path;
     char *final_dst_path;
@@ -203,28 +201,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     CecupRow *row;
 
     if (!timezone_initialized) {
-        time_t current_time;
-        struct tm local_tm;
-        struct tm gm_tm;
-
-        current_time = time(NULL);
-        localtime_r(&current_time, &local_tm);
-        gmtime_r(&current_time, &gm_tm);
-
-        timezone_offset = (local_tm.tm_hour - gm_tm.tm_hour)*3600;
-        timezone_offset += (local_tm.tm_min - gm_tm.tm_min)*60;
-
-        if (local_tm.tm_year < gm_tm.tm_year) {
-            timezone_offset -= 24*3600;
-        } else if (local_tm.tm_year > gm_tm.tm_year) {
-            timezone_offset += 24*3600;
-        } else if (local_tm.tm_yday < gm_tm.tm_yday) {
-            timezone_offset -= 24*3600;
-        } else if (local_tm.tm_yday > gm_tm.tm_yday) {
-            timezone_offset += 24*3600;
-        }
-
-        timezone_initialized = true;
+        timezone_init();
     }
 
     g_mutex_lock(&cecup.arena_mutex);

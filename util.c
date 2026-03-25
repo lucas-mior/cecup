@@ -105,6 +105,9 @@ static char *program = __FILE__;
 #endif
 static int32 program_len __attribute__((unused));
 
+static bool timezone_initialized = false;
+static time_t timezone_offset = 0;
+
 #define SIZEOF(X) ((int64)sizeof(X))
 
 #if !defined(SIZEKB)
@@ -1944,6 +1947,33 @@ xkill(pid_t pid, int signum) {
     return;
 }
 #endif
+
+static void
+timezone_init() {
+    time_t current_time;
+    struct tm local_tm;
+    struct tm gm_tm;
+
+    current_time = time(NULL);
+    localtime_r(&current_time, &local_tm);
+    gmtime_r(&current_time, &gm_tm);
+
+    timezone_offset = (local_tm.tm_hour - gm_tm.tm_hour)*3600;
+    timezone_offset += (local_tm.tm_min - gm_tm.tm_min)*60;
+
+    if (local_tm.tm_year < gm_tm.tm_year) {
+        timezone_offset -= 24*3600;
+    } else if (local_tm.tm_year > gm_tm.tm_year) {
+        timezone_offset += 24*3600;
+    } else if (local_tm.tm_yday < gm_tm.tm_yday) {
+        timezone_offset -= 24*3600;
+    } else if (local_tm.tm_yday > gm_tm.tm_yday) {
+        timezone_offset += 24*3600;
+    }
+
+    timezone_initialized = true;
+    return;
+}
 
 static volatile ullong here_counter = 0; \
 
