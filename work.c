@@ -70,11 +70,13 @@ typedef struct FixFsThreadData {
     int32 array_count;
 
     struct stat *stats;
-    char **matched_patterns;
-    char **link_targets;
     char **relative_paths;
+    char **link_targets;
+    char **matched_patterns;
+
     int16 *path_lens;
     int16 *link_targets_lens;
+    int16 *matched_patterns_lens;
 } FixFsThreadData;
 
 static __thread FixFsThreadData *nftw_current_data = NULL;
@@ -324,7 +326,7 @@ work_match_pattern(char *pattern, char *str, bool restrict_slash) {
     return false;
 }
 
-static char *
+static IgnorePattern *
 work_path_matches_ignore(char *relative_path, int32 relative_len,
                          bool is_dir, IgnorePattern *patterns, int32 count) {
     if (patterns == NULL) {
@@ -405,7 +407,7 @@ work_path_matches_ignore(char *relative_path, int32 relative_len,
             }
 
             if (matched) {
-                return pattern;
+                return &patterns[i];
             }
         } else {
             char *comp;
@@ -480,7 +482,7 @@ work_path_matches_ignore(char *relative_path, int32 relative_len,
             }
 
             if (matched) {
-                return pattern;
+                return &patterns[i];
             }
         }
     }
@@ -633,16 +635,24 @@ work_fix_fs_cb(const char *fpath,
         }
         data->stats = xrealloc(data->stats,
                                data->array_capacity*SIZEOF(*(data->stats)));
-        data->matched_patterns = xrealloc(data->matched_patterns,
-                                          data->array_capacity*SIZEOF(*(data->matched_patterns)));
-        data->link_targets = xrealloc(data->link_targets,
-                                      data->array_capacity*SIZEOF(*(data->link_targets)));
-        data->relative_paths = xrealloc(data->relative_paths,
-                                        data->array_capacity*SIZEOF(*(data->relative_paths)));
-        data->path_lens = xrealloc(data->path_lens,
-                                   data->array_capacity*SIZEOF(*(data->path_lens)));
-        data->link_targets_lens = xrealloc(data->link_targets_lens,
-                                     data->array_capacity*SIZEOF(*(data->link_targets_lens)));
+        data->matched_patterns
+            = xrealloc(data->matched_patterns,
+                       data->array_capacity*SIZEOF(*(data->matched_patterns)));
+        data->link_targets
+            = xrealloc(data->link_targets,
+                       data->array_capacity*SIZEOF(*(data->link_targets)));
+        data->relative_paths
+            = xrealloc(data->relative_paths,
+                       data->array_capacity*SIZEOF(*(data->relative_paths)));
+        data->path_lens
+            = xrealloc(data->path_lens,
+                       data->array_capacity*SIZEOF(*(data->path_lens)));
+        data->link_targets_lens
+            = xrealloc(data->link_targets_lens,
+                       data->array_capacity*SIZEOF(*(data->link_targets_lens)));
+        data->matched_patterns_lens
+            = xrealloc(data->matched_patterns_lens,
+                       data->array_capacity*SIZEOF(*(data->matched_patterns_lens)));
     }
 
     index = data->array_count;
@@ -650,10 +660,14 @@ work_fix_fs_cb(const char *fpath,
 
     memset64(&data->stats[index], 0, SIZEOF(struct stat));
     memcpy64(&data->stats[index], (void *)sb, SIZEOF(struct stat));
+
     data->relative_paths[index] = relative_path;
-    data->path_lens[index] = (int16)relative_len;
-    data->link_targets_lens[index] = (int16)0;
     data->link_targets[index] = NULL;
+    data->matched_patterns[index] = NULL;
+
+    data->link_targets_lens[index] = 0;
+    data->path_lens[index] = 0;
+    data->matched_patterns_lens[index] = 0;
 
     if (typeflag == FTW_SL) {
         char target[MAX_PATH_LENGTH];
@@ -681,11 +695,17 @@ work_fix_fs_cb(const char *fpath,
         }
     }
 
-    data->matched_patterns[index] = work_path_matches_ignore(relative_path,
-                                                             relative_len,
-                                                             is_dir,
-                                                             data->ignore_patterns,
-                                                             data->ignore_count);
+    {
+        IgnorePattern *ignore_pattern
+            = work_path_matches_ignore(relative_path, relative_len,
+                                       is_dir,
+                                       data->ignore_patterns,
+                                       data->ignore_count);
+        if (ignore_pattern) {
+            data->matched_patterns[index] = ignore_pattern->str;
+            data->matched_patterns_lens[index] = (int16)ignore_pattern->len;
+        }
+    }
     hash_insert_fs_map(data->map, relative_path, (uint32)relative_len, index);
     return 0;
 }
