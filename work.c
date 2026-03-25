@@ -688,7 +688,7 @@ work_fix_fs_cb(const char *fpath,
                                                              is_dir,
                                                              data->ignore_patterns,
                                                              data->ignore_count);
-    hash_insert2_fs_map(data->map, relative_path, index);
+    hash_insert_fs_map(data->map, relative_path, (uint32)relative_len, index);
     return 0;
 }
 
