@@ -50,6 +50,11 @@ static __thread int64 nftw_file_count = 0;
 #define HASH_TYPE fs_map
 #include "hash.c"
 
+typedef struct IgnorePattern {
+    char *str;
+    int32 len;
+} IgnorePattern;
+
 typedef struct FixFsThreadData {
     char *base_path;
     int32 base_path_len;
@@ -58,7 +63,7 @@ typedef struct FixFsThreadData {
     struct Hash_fs_map *map;
     struct Hash_fs_map *inode_map;
 
-    char **ignore_patterns;
+    IgnorePattern *ignore_patterns;
     int32 ignore_count;
 
     int32 array_capacity;
@@ -234,7 +239,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
 }
 
 static void
-work_load_ignore_patterns(char ***patterns, int32 *count) {
+work_load_ignore_patterns(IgnorePattern **patterns, int32 *count) {
     FILE *file;
     char line_buffer[MAX_PATH_LENGTH];
     int32 capacity = 16;
@@ -266,9 +271,10 @@ work_load_ignore_patterns(char ***patterns, int32 *count) {
 
         if (*count >= capacity) {
             capacity *= 2;
-            *patterns = xrealloc(*patterns, capacity*SIZEOF(char *));
+            *patterns = xrealloc(*patterns, capacity*SIZEOF(IgnorePattern));
         }
-        (*patterns)[*count] = xstrdup(line_buffer);
+        (*patterns)[*count].str = xstrdup(line_buffer);
+        (*patterns)[*count].len = length;
         *count += 1;
     }
 
@@ -328,17 +334,17 @@ work_match_pattern(char *pattern, char *str, bool restrict_slash) {
 
 static char *
 work_path_matches_ignore(char *relative_path, bool is_dir,
-                         char **patterns, int32 count) {
+                         IgnorePattern *patterns, int32 count) {
     if (patterns == NULL) {
         return NULL;
     }
 
     for (int32 i = 0; i < count; i += 1) {
-        char *pattern = patterns[i];
+        char *pattern = patterns[i].str;
         char pattern_adapt_buffer[MAX_PATH_LENGTH];
         char *pattern_final;
 
-        int32 pattern_len;
+        int32 pattern_len = patterns[i].len;
         bool dir_only = false;
         bool has_slash = false;
         char path_copy[MAX_PATH_LENGTH];
@@ -349,7 +355,7 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
             continue;
         }
 
-        if ((pattern_len  = strlen32(pattern)) <= 0) {
+        if (pattern_len <= 0) {
             continue;
         }
 
@@ -721,7 +727,7 @@ work_rsync(void *user_data) {
     struct timespec t1_work;
 
     bool same_fs = true;
-    char **ignore_patterns = NULL;
+    IgnorePattern *ignore_patterns = NULL;
     int32 ignore_count = 0;
 
     struct Hash_fs_map *src_map = hash_create_fs_map(1024);
@@ -1278,7 +1284,7 @@ work_rsync(void *user_data) {
 
 cleanup_maps:
     for (int32 i = 0; i < ignore_count; i += 1) {
-        XFREE(ignore_patterns[i]);
+        XFREE(ignore_patterns[i].str);
     }
     if (ignore_patterns) {
         XFREE(ignore_patterns);
@@ -1672,39 +1678,49 @@ work_rsync_bulk(void *user_data) {
 int
 main(void) {
     char *pattern;
-    char *patterns[3];
+    IgnorePattern patterns[3];
 
-    patterns[0] = "*.c";
+    patterns[0].str = "*.c";
+    patterns[0].len = strlen32("*.c");
     pattern = work_path_matches_ignore("main.c", false, patterns, 1);
     ASSERT_EQUAL(pattern, "*.c");
 
-    patterns[0] = "build/";
+    patterns[0].str = "build/";
+    patterns[0].len = strlen32("build/");
     pattern = work_path_matches_ignore("build", true, patterns, 1);
     ASSERT_EQUAL(pattern, "build/");
 
-    patterns[0] = "build/";
+    patterns[0].str = "build/";
+    patterns[0].len = strlen32("build/");
     pattern = work_path_matches_ignore("build", false, patterns, 1);
     ASSERT_NULL(pattern);
 
-    patterns[0] = "obj";
+    patterns[0].str = "obj";
+    patterns[0].len = strlen32("obj");
     pattern = work_path_matches_ignore("src/obj/main.o", false, patterns, 1);
     ASSERT_EQUAL(pattern, "obj");
 
-    patterns[0] = "/src";
+    patterns[0].str = "/src";
+    patterns[0].len = strlen32("/src");
     pattern = work_path_matches_ignore("src/main.c", false, patterns, 1);
     ASSERT_EQUAL(pattern, "/src");
 
-    patterns[0] = "/src";
+    patterns[0].str = "/src";
+    patterns[0].len = strlen32("/src");
     pattern = work_path_matches_ignore("lib/src/main.c", false, patterns, 1);
     ASSERT_NULL(pattern);
 
-    patterns[0] = "foo/bar";
+    patterns[0].str = "foo/bar";
+    patterns[0].len = strlen32("foo/bar");
     pattern = work_path_matches_ignore("foo/bar/baz.c", false, patterns, 1);
     ASSERT_EQUAL(pattern, "foo/bar");
 
-    patterns[0] = "*.h";
-    patterns[1] = "build/";
-    patterns[2] = "*.o";
+    patterns[0].str = "*.h";
+    patterns[0].len = strlen32("*.h");
+    patterns[1].str = "build/";
+    patterns[1].len = strlen32("build/");
+    patterns[2].str = "*.o";
+    patterns[2].len = strlen32("*.o");
     pattern = work_path_matches_ignore("src/main.o", false, patterns, 3);
     ASSERT_EQUAL(pattern, "*.o");
 
