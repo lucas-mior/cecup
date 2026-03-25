@@ -412,7 +412,7 @@ update_ui_handler(void *data) {
     char *final_dst_path;
     int32 slash;
     time_t unix_timestamp;
-    struct tm *time_information;
+    struct tm time_information;
     MessageBatch *batch;
     Message *message = data;
 
@@ -618,17 +618,17 @@ update_ui_handler(void *data) {
 
             if (message->src_mtime > 0) {
                 unix_timestamp = (time_t)message->src_mtime;
-                time_information = localtime(&unix_timestamp);
+                localtime_r(&unix_timestamp, &time_information);
                 STRFTIME(row->src_mtime_text,
-                         "%Y-%m-%d %H:%M:%S", time_information);
+                         "%Y-%m-%d %H:%M:%S", &time_information);
                 row->src_mtime_raw = message->src_mtime;
             }
 
             if (message->dst_mtime > 0) {
                 unix_timestamp = (time_t)message->dst_mtime;
-                time_information = localtime(&unix_timestamp);
+                localtime_r(&unix_timestamp, &time_information);
                 STRFTIME(row->dst_mtime_text,
-                         "%Y-%m-%d %H:%M:%S", time_information);
+                         "%Y-%m-%d %H:%M:%S", &time_information);
                 row->dst_mtime_raw = message->dst_mtime;
             }
 

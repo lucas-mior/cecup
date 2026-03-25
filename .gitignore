@@ -14,7 +14,8 @@ tags
 *.mo
 *.pot
 valgrind_output*
-callgrind.out.*
+callgrind*
+vgcore.*
 gdb_output*
 /a/
 /b/
