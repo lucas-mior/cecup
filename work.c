@@ -121,14 +121,12 @@ work_finalize(ThreadData *thread_data) {
 
 static void
 work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
-             enum CecupReason reason,
-             char *src_path, char *dst_path,
+             enum CecupReason reason, bool is_dir,
+             char *src_path, char *dst_path, int32 path_len,
              char *link_target, int32 link_target_len,
              char *ignore_pattern, int32 ignore_pattern_len,
-             int32 path_len,
              int64 src_size_raw, int64 src_mtime_raw,
-             int64 dst_size_raw, int64 dst_mtime_raw,
-             bool is_dir) {
+             int64 dst_size_raw, int64 dst_mtime_raw) {
     int32 slash;
     char *final_src_path;
     char *final_dst_path;
@@ -850,14 +848,12 @@ work_preview(void *user_data) {
             src_size = stat_src->st_size;
         }
 
-        work_add_row(src_action, dst_action, reason,
-                     bucket_src->key, dst_path,
+        work_add_row(src_action, dst_action, reason, S_ISDIR(stat_src->st_mode),
+                     bucket_src->key, dst_path, path_len,
                      link_target_src, link_target_len,
                      matched_pattern_src, matched_pattern_len,
-                     path_len,
                      src_size, stat_src->st_mtime,
-                     dst_size, dst_mtime,
-                     S_ISDIR(stat_src->st_mode));
+                     dst_size, dst_mtime);
 
         nfiles_processed += 1;
         if ((nfiles_processed % 1000) == 0) {
@@ -920,14 +916,12 @@ work_preview(void *user_data) {
                 dst_action = ACTION_DELETE;
             }
 
-            work_add_row(src_action, dst_action, reason,
-                         NULL, bucket_dst->key,
+            work_add_row(src_action, dst_action, reason, S_ISDIR(stat_dst->st_mode),
+                         NULL, bucket_dst->key, path_len,
                          link_target_dst, link_target_len,
                          matched_pattern_dst, matched_pattern_len,
-                         path_len,
                          0, 0,
-                         stat_dst->st_size, stat_dst->st_mtime,
-                         S_ISDIR(stat_dst->st_mode));
+                         stat_dst->st_size, stat_dst->st_mtime);
         }
 
         nfiles_processed += 1;
