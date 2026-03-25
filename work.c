@@ -243,6 +243,8 @@ work_load_ignore_patterns(char ***patterns, int32 *count) {
     *count = 0;
 
     if ((file = fopen(cecup.ignore_path, "r")) == NULL) {
+        IPC_SEND_LOG_ERROR("Error opening %s: %s.\n",
+                           cecup.ignore_path, strerror(errno));
         return;
     }
 
@@ -267,7 +269,10 @@ work_load_ignore_patterns(char ***patterns, int32 *count) {
         *count += 1;
     }
 
-    fclose(file);
+    if (fclose(file)) {
+        IPC_SEND_LOG_ERROR("Error closing %s: %s.\n",
+                           cecup.ignore_path, strerror(errno));
+    }
     return;
 }
 
