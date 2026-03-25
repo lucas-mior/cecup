@@ -19,6 +19,7 @@
 #define CECUP_H
 
 #include <gtk/gtk.h>
+#include <sys/stat.h>
 #include "generic.c"
 #include "arena.c"
 #include "i18n.h"
@@ -89,6 +90,7 @@
     X(LOG)                \
     X(LOG_ERROR)          \
     X(LOG_CMD)            \
+    \
     X(TREE_UPDATE)        \
     X(REMOVE_ROW)         \
     X(ENABLE_BUTTONS)     \
@@ -100,6 +102,36 @@
 #if !defined(error2)
 #define error2(...) fprintf(stderr, __VA_ARGS__)
 #endif
+
+// Hash definitions for file system mapping
+#define HASH_VALUE_TYPE int32
+#define HASH_VALUE_FORMATTER "%d"
+#define HASH_PADDING_TYPE uint32
+#define HASH_DUPLICATE_KEYS 0
+#define HASH_AUTO_RESIZE 1
+#define HASH_TYPE fs_map
+#include "hash.c"
+
+typedef struct TraversalData {
+    char *base_path;
+    int32 base_path_len;
+    int64 file_count;
+
+    struct Hash_fs_map *map;
+    struct Hash_fs_map *inode_map;
+
+    int32 array_capacity;
+    int32 array_count;
+
+    struct stat *stats;
+    char **paths;
+    char **link_targets;
+    char **matched_patterns;
+
+    int16 *paths_lens;
+    int16 *link_targets_lens;
+    int16 *matched_patterns_lens;
+} TraversalData;
 
 typedef struct TextInfo {
     int32 side;
@@ -354,10 +386,20 @@ static struct {
     IgnorePattern *ignore_patterns;
     int32 ignore_count;
     int32 ignore_capacity;
+
+    // Persisted Traversal State
+    TraversalData traversal_src;
+    TraversalData traversal_dst;
+    struct Hash_fs_map *src_map;
+    struct Hash_fs_map *dst_map;
+    struct Hash_fs_map *src_inode_map;
+    struct Hash_fs_map *dst_inode_map;
+    char **transfers;
+    int32 ntransfers;
+    int32 transfers_capacity;
 } cecup;
 
 typedef struct ThreadData {
-    bool is_preview;
     bool check_different_fs;
     bool delete_excluded;
     bool delete_after;

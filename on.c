@@ -350,14 +350,13 @@ on_preview_clicked(GtkWidget *b, void *data) {
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
-    thread_data->is_preview = true;
     thread_data->check_different_fs
         = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
     thread_data->delete_excluded
         = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
     thread_data->delete_after
         = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
-    g_thread_new("work_rsync", work_rsync, thread_data);
+    g_thread_new("work_preview", work_preview, thread_data);
 
     return;
 }
@@ -373,7 +372,6 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
         thread_data = xmalloc(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
 
-        thread_data->is_preview = false;
         thread_data->check_different_fs
             = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
         thread_data->delete_after
@@ -1207,65 +1205,6 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
     return FALSE;
 }
 
-static void
-regenerate_preview_filtered(char *relative_old, char *relative_new,
-                            int32 len_old, int32 len_new) {
-    ThreadData *thread_data;
-
-    g_mutex_lock(&cecup.arena_mutex);
-    for (int32 i = 0; i < cecup.rows_len;) {
-        CecupRow *row;
-        row = cecup.rows[i];
-
-        if ((row->dst_action == ACTION_DELETE)
-            || (row->src_action == ACTION_IGNORE)) {
-            for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
-                cecup.rows[j] = cecup.rows[j + 1];
-            }
-            cecup.rows_len -= 1;
-        } else {
-            i += 1;
-        }
-    }
-    g_mutex_unlock(&cecup.arena_mutex);
-
-    thread_data = xmalloc(SIZEOF(*thread_data));
-    memset64(thread_data, 0, SIZEOF(*thread_data));
-
-    thread_data->relative_old = xmalloc(len_old + 1);
-    thread_data->relative_new = xmalloc(len_new + 1);
-
-    memcpy64(thread_data->relative_old, relative_old, len_old + 1);
-    memcpy64(thread_data->relative_new, relative_new, len_new + 1);
-
-    thread_data->is_preview = true;
-    thread_data->check_different_fs
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
-    thread_data->delete_excluded
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
-    thread_data->delete_after
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
-
-    thread_data->filtered = true;
-    thread_data->len_old = len_old;
-    thread_data->len_new = len_new;
-
-    {
-        Message *message = xmalloc(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
-
-        message->path_len = len_old;
-        message->src_path = xmalloc(len_old + 1);
-        memcpy64(message->src_path, relative_old, len_old + 1);
-        message->type = DATA_TYPE_REMOVE_ROW;
-
-        g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
-        g_thread_new("work_rsync", work_rsync, thread_data);
-    }
-
-    return;
-}
-
 typedef struct SelectionData {
     GtkEditable *editable;
     int32 start_pos;
@@ -1410,8 +1349,6 @@ on_path_edited(GtkEditable *editable, void *data) {
                 relative_new[new_length+1] = '\0';
                 new_length += 1;
             }
-            regenerate_preview_filtered(relative_old, relative_new,
-                                        old_length, new_length);
         }
     }
 
