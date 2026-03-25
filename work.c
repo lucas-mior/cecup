@@ -1226,8 +1226,6 @@ work_rsync(void *user_data) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
     PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
 
-    /* exit(0); */
-
     if (thread_data->is_preview || (ntransfers <= 0)) {
         work_finalize(thread_data);
         goto cleanup_maps;
@@ -1354,7 +1352,7 @@ work_rsync(void *user_data) {
         }
 
         r = read64(pipe_stdout[0], buf_output + buf_output_pos,
-                   SIZEOF(buf_output) - buf_output_pos - 1);
+                    SIZEOF(buf_output) - buf_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
                 LOG_ERROR("Error reading stdout pipe: %s.\n",
@@ -1388,8 +1386,8 @@ work_rsync(void *user_data) {
                     *sep = '\0';
                     path_len = (int32)(sep - filename);
                 } else if ((sep = memmem64(filename, path_len,
-                                           RSYNC_SYMLINK_NOTATION,
-                                           strlen32(RSYNC_SYMLINK_NOTATION)))) {
+                                            RSYNC_SYMLINK_NOTATION,
+                                            strlen32(RSYNC_SYMLINK_NOTATION)))) {
                     *sep = '\0';
                     path_len = (int32)(sep - filename);
                 }
@@ -1457,32 +1455,43 @@ work_rsync(void *user_data) {
     work_finalize(thread_data);
 
 cleanup_maps:
-    /* for (int32 i = 0; i < ignore_count; i += 1) { */
-    /*     XFREE(ignore_patterns[i].str); */
-    /* } */
-    /* if (ignore_patterns) { */
-    /*     XFREE(ignore_patterns); */
-    /* } */
+    for (int32 i = 0; i < ignore_count; i += 1) {
+        XFREE(ignore_patterns[i].str);
+    }
+    XFREE(ignore_patterns);
 
-    /* hash_destroy_fs_map(src_map); */
-    /* hash_destroy_fs_map(dst_map); */
+    hash_destroy_fs_map(src_map);
+    hash_destroy_fs_map(dst_map);
+    hash_destroy_fs_map(src_inode_map);
+    hash_destroy_fs_map(dst_inode_map);
 
-    /* if (src_inode_map) { */
-    /*     hash_destroy_fs_map(src_inode_map); */
-    /* } */
-    /* if (dst_inode_map) { */
-    /*     hash_destroy_fs_map(dst_inode_map); */
-    /* } */
+    for (int32 i = 0; i < src_fix.array_count; i += 1) {
+        XFREE(src_fix.relative_paths[i]);
+        if (S_ISLNK(src_fix.stats[i].st_mode)) {
+            XFREE(src_fix.link_targets[i]);
+        }
+    }
+    XFREE(src_fix.stats);
+    XFREE(src_fix.matched_patterns);
+    XFREE(src_fix.link_targets);
+    XFREE(src_fix.relative_paths);
+    XFREE(src_fix.path_lens);
+    XFREE(src_fix.link_targets_lens);
+    XFREE(src_fix.matched_patterns_lens);
 
-    /* XFREE(src_fix.stats); */
-    /* XFREE(src_fix.matched_patterns); */
-    /* XFREE(src_fix.link_targets); */
-    /* XFREE(src_fix.relative_paths); */
-
-    /* XFREE(dst_fix.stats); */
-    /* XFREE(dst_fix.matched_patterns); */
-    /* XFREE(dst_fix.link_targets); */
-    /* XFREE(dst_fix.relative_paths); */
+    for (int32 i = 0; i < dst_fix.array_count; i += 1) {
+        XFREE(dst_fix.relative_paths[i]);
+        if (S_ISLNK(dst_fix.stats[i].st_mode)) {
+            XFREE(dst_fix.link_targets[i]);
+        }
+    }
+    XFREE(dst_fix.stats);
+    XFREE(dst_fix.matched_patterns);
+    XFREE(dst_fix.link_targets);
+    XFREE(dst_fix.relative_paths);
+    XFREE(dst_fix.path_lens);
+    XFREE(dst_fix.link_targets_lens);
+    XFREE(dst_fix.matched_patterns_lens);
 
     g_thread_exit(NULL);
 }

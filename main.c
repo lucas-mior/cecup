@@ -446,8 +446,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_entry_set_placeholder_text(GTK_ENTRY(cecup.search_entry),
                                    _("Search files..."));
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
-                                      GTK_ENTRY_ICON_PRIMARY,
-                                      "system-search-symbolic");
+                                     GTK_ENTRY_ICON_PRIMARY,
+                                     "system-search-symbolic");
     {
         GtkWidget *search_label = gtk_label_new(_("🔍"));
         gtk_box_append(GTK_BOX(search_hbox), search_label);
@@ -591,7 +591,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
         if (!g_key_file_load_from_file(key, cecup.config_path,
                                        G_KEY_FILE_NONE, NULL)) {
-            g_free(key);
+            g_key_file_free(key);
             break;
         }
 
@@ -659,7 +659,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                 g_key_file_get_boolean(key, "Options", "delete_after", NULL));
         }
 
-        g_free(key);
+        g_key_file_free(key);
     } while (0);
 
     g_signal_connect(browse[L], "clicked",
@@ -710,6 +710,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     cecup_get_dirs();
 
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
+
+    XFREE(default_src);
+    XFREE(default_dst);
 
     return;
 }
@@ -801,6 +804,11 @@ main(int32 argc, char **argv) {
 
     XFREE(cecup.rows);
     XFREE(cecup.rows_visible);
+    XFREE(cecup.src_base);
+    XFREE(cecup.dst_base);
+
+    arena_destroy(cecup.arena);
+    g_mutex_clear(&cecup.arena_mutex);
 
     exit(status);
 }
