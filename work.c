@@ -18,7 +18,7 @@
 #if !defined(WORK_C)
 #define WORK_C
 
-#include <ftw.h>
+#include <fts.h>
 #include <gtk/gtk.h>
 #include <ctype.h>
 #include <sys/wait.h>
@@ -41,7 +41,6 @@
 
 static Message *add_row_batch_messages[BATCH_SIZE];
 static int32 add_row_batch_count = 0;
-static _Thread_local int64 nftw_file_count = 0;
 
 #define HASH_VALUE_TYPE int32
 #define HASH_VALUE_FORMATTER "%d"
@@ -70,8 +69,6 @@ typedef struct TraversalData {
     int16 *link_targets_lens;
     int16 *matched_patterns_lens;
 } TraversalData;
-
-static _Thread_local TraversalData *nftw_current_data = NULL;
 
 static void
 work_flush_add_rows(void) {
@@ -561,244 +558,257 @@ work_path_matches_ignore(char *path, int32 path_len,
     return NULL;
 }
 
-static int
-work_fix_fs_cb(const char *full_path,
-               const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
-    char *d_name;
-    int32 name_len;
-    int32 old_full_len;
-    bool changed;
-    char *path;
-    int32 path_len;
-    bool is_dir;
-    int32 index;
-    TraversalData *data;
-
-    if (cecup.stop_working) {
-        return 1;
-    }
-
-    data = nftw_current_data;
-    d_name = (char *)full_path + ftwbuf->base;
-    name_len = strlen32(d_name);
-    old_full_len = (int32)ftwbuf->base + name_len;
-
-    if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
-        LOG_ERROR(_("Error: file path is too long:\n"));
-        LOG_ERROR("%s\n", full_path);
-        LOG_ERROR(_("Please fix your file system.\n"));
-        cecup.stop_working = true;
-        return 1;
-    }
-
-    if (name_len > 0) {
-        if (isspace(d_name[0])) {
-            LOG_ERROR(_("Error: there is a space in the start of the fileneme:\n"));
-            LOG_ERROR("'%s'\n", full_path);
-            LOG_ERROR(_("Please fix your file system.\n"));
-            cecup.stop_working = true;
-            return 1;
-        }
-
-        if (isspace(d_name[name_len - 1])) {
-            LOG_ERROR(_("Error: there is space in the end of the fileneme:\n"));
-            LOG_ERROR("'%s'\n", full_path);
-            LOG_ERROR(_("Please fix your file system.\n"));
-            cecup.stop_working = true;
-            return 1;
-        }
-    }
-
-    changed = false;
-
-    if (true) {
-        char new_name[MAX_PATH_LENGTH];
-        char new_full[MAX_PATH_LENGTH];
-        int32 j = 0;
-        int32 k = 0;
-
-        while (k < name_len) {
-            char *earliest_match = NULL;
-            int32 replacement_index = -1;
-
-            for (int32 ri = 0; ri < (int32)LENGTH(replacements); ri += 1) {
-                char *search = replacements[ri].problem;
-                int64 search_len = strlen32(search);
-                char *match;
-
-                if ((match = memmem64(&d_name[k], name_len - k,
-                                      search, search_len))) {
-                    if (earliest_match == NULL || match < earliest_match) {
-                        earliest_match = match;
-                        replacement_index = ri;
-                    }
-                }
-            }
-
-            if (earliest_match) {
-                int64 prefix_len = earliest_match - &d_name[k];
-                char *replace_str = replacements[replacement_index].rename;
-                int64 replace_len = strlen32(replace_str);
-
-                if (prefix_len > 0) {
-                    memcpy64(&new_name[j], &d_name[k], prefix_len);
-                    j += (int32)prefix_len;
-                    k += (int32)prefix_len;
-                }
-
-                memcpy64(&new_name[j], replace_str, replace_len);
-                j += (int32)replace_len;
-                k += (int32)strlen32(replacements[replacement_index].problem);
-                changed = true;
-            } else {
-                int64 remaining = name_len - k;
-                memcpy64(&new_name[j], &d_name[k], remaining);
-                j += (int32)remaining;
-                k += (int32)remaining;
-            }
-        }
-        new_name[j] = '\0';
-
-        if (changed) {
-            int32 base_len = ftwbuf->base;
-
-            memcpy64(new_full, (char *)full_path, base_len);
-            memcpy64(new_full + base_len, new_name, j + 1);
-
-            if (renameat2(AT_FDCWD, full_path,
-                          AT_FDCWD, new_full,
-                          RENAME_NOREPLACE) < 0) {
-                LOG_ERROR(_("Error renaming %s to %s: %s\n"),
-                                   full_path, new_full, strerror(errno));
-            } else {
-                LOG(_("Fixed: %s -> %s\n"), d_name, new_name);
-            }
-        }
-    }
-
-    if (typeflag != FTW_D && typeflag != FTW_DP) {
-        nftw_file_count += 1;
-    }
-
-    path = (char *)full_path + data->base_path_len;
-    path_len = old_full_len - data->base_path_len;
-
-    if (path[0] == '/') {
-        path += 1;
-        path_len -= 1;
-    }
-
-    if (path_len == 0) {
-        path = "./";
-        path_len = 2;
-    }
-
-    path = xmemdup(path, path_len + 1);
-    is_dir = (typeflag == FTW_D || typeflag == FTW_DP);
-
-    if (data->array_count >= data->array_capacity) {
-        if (data->array_capacity == 0) {
-            data->array_capacity = 1024;
-        } else {
-            data->array_capacity *= 2;
-        }
-
-        data->stats = xrealloc(data->stats,
-                               data->array_capacity*SIZEOF(*(data->stats)));
-
-        data->paths
-            = xrealloc(data->paths,
-                       data->array_capacity*SIZEOF(*(data->paths)));
-        data->link_targets
-            = xrealloc(data->link_targets,
-                       data->array_capacity*SIZEOF(*(data->link_targets)));
-        data->matched_patterns
-            = xrealloc(data->matched_patterns,
-                       data->array_capacity*SIZEOF(*(data->matched_patterns)));
-
-        data->paths_lens
-            = xrealloc(data->paths_lens,
-                       data->array_capacity*SIZEOF(*(data->paths_lens)));
-        data->link_targets_lens
-            = xrealloc(data->link_targets_lens,
-                       data->array_capacity*SIZEOF(*(data->link_targets_lens)));
-        data->matched_patterns_lens
-            = xrealloc(data->matched_patterns_lens,
-                       data->array_capacity*SIZEOF(*(data->matched_patterns_lens)));
-    }
-
-    index = data->array_count;
-    data->array_count += 1;
-
-    memset64(&data->stats[index], 0, SIZEOF(struct stat));
-    memcpy64(&data->stats[index], (void *)sb, SIZEOF(struct stat));
-
-    data->paths[index] = path;
-    data->link_targets[index] = NULL;
-    data->matched_patterns[index] = NULL;
-
-    data->paths_lens[index] = (int16)path_len;
-    data->link_targets_lens[index] = 0;
-    data->matched_patterns_lens[index] = 0;
-
-    if (typeflag == FTW_SL) {
-        char target[MAX_PATH_LENGTH];
-        int64 target_len;
-
-        if ((target_len = readlink(full_path, target, SIZEOF(target))) < 0) {
-            LOG_ERROR("Error in readlink(%s): %s.\n",
-                      full_path, strerror(errno));
-        } else {
-            target[target_len] = '\0';
-            data->link_targets[index] = xmemdup(target, target_len + 1);
-            data->link_targets_lens[index] = (int16)target_len;
-        }
-    } else if (typeflag == FTW_F && (sb->st_nlink > 1)) {
-        char inode_str[64];
-        uint32 n;
-        int32 *first_idx_ptr;
-
-        n = (uint32)itoa2(inode_str, (long)sb->st_ino);
-        first_idx_ptr = hash_lookup_fs_map(data->inode_map, inode_str, n);
-        if (first_idx_ptr) {
-            data->link_targets[index] = data->paths[*first_idx_ptr];
-            data->link_targets_lens[index] = data->paths_lens[*first_idx_ptr];
-        } else {
-            hash_insert_fs_map(data->inode_map, inode_str, n, index);
-        }
-    }
-
-    {
-        IgnorePattern *pattern = work_path_matches_ignore(path, path_len,
-                                                          is_dir,
-                                                          cecup.ignore_patterns,
-                                                          cecup.ignore_count);
-        if (pattern) {
-            data->matched_patterns[index] = pattern->str;
-            data->matched_patterns_lens[index] = (int16)pattern->len;
-        }
-    }
-    hash_insert_fs_map(data->map, path, (uint32)path_len, index);
-    return 0;
-}
-
 static int64
 work_fix_fs_recursive(TraversalData *data) {
+    int64 file_count;
+    char *paths[2];
+    FTS *fts_handle;
+    FTSENT *ent;
+
     if (cecup.stop_working) {
         return 0;
     }
 
-    nftw_file_count = 0;
-    nftw_current_data = data;
+    file_count = 0;
+    paths[0] = data->base_path;
+    paths[1] = NULL;
 
-    if (nftw(data->base_path, work_fix_fs_cb, 64, FTW_PHYS | FTW_DEPTH) != 0) {
+    if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
         if (cecup.stop_working == false) {
             error(_("Error walking directory %s: %s.\n"), data->base_path,
                   strerror(errno));
         }
+        return 0;
     }
 
-    return nftw_file_count;
+    while ((ent = fts_read(fts_handle))) {
+        char *d_name;
+        int32 name_len;
+        int32 old_full_len;
+        bool changed;
+        char *path;
+        int32 path_len;
+        bool is_dir;
+        int32 index;
+
+        if (cecup.stop_working) {
+            break;
+        }
+
+        if (ent->fts_info == FTS_D || ent->fts_info == FTS_DOT) {
+            continue;
+        }
+
+        if (ent->fts_info == FTS_ERR
+                || ent->fts_info == FTS_NS
+                || ent->fts_info == FTS_DNR) {
+            continue;
+        }
+
+        d_name = ent->fts_name;
+        name_len = (int32)ent->fts_namelen;
+        old_full_len = (int32)ent->fts_pathlen;
+
+        if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
+            LOG_ERROR(_("Error: file path is too long:\n"));
+            LOG_ERROR("%s\n", ent->fts_path);
+            LOG_ERROR(_("Please fix your file system.\n"));
+            cecup.stop_working = true;
+            break;
+        }
+
+        if (name_len > 0) {
+            if (isspace(d_name[0])) {
+                LOG_ERROR(_("Error: there is a space in the start of the fileneme:\n"));
+                LOG_ERROR("'%s'\n", ent->fts_path);
+                LOG_ERROR(_("Please fix your file system.\n"));
+                cecup.stop_working = true;
+                break;
+            }
+
+            if (isspace(d_name[name_len - 1])) {
+                LOG_ERROR(_("Error: there is space in the end of the fileneme:\n"));
+                LOG_ERROR("'%s'\n", ent->fts_path);
+                LOG_ERROR(_("Please fix your file system.\n"));
+                cecup.stop_working = true;
+                break;
+            }
+        }
+
+        changed = false;
+
+        if (true) {
+            char new_name[MAX_PATH_LENGTH];
+            char new_full[MAX_PATH_LENGTH];
+            int32 j = 0;
+            int32 k = 0;
+
+            while (k < name_len) {
+                char *earliest_match = NULL;
+                int32 replacement_index = -1;
+
+                for (int32 ri = 0; ri < (int32)LENGTH(replacements); ri += 1) {
+                    char *search = replacements[ri].problem;
+                    int64 search_len = strlen32(search);
+                    char *match;
+
+                    if ((match = memmem64(&d_name[k], name_len - k,
+                                          search, search_len))) {
+                        if (earliest_match == NULL || match < earliest_match) {
+                            earliest_match = match;
+                            replacement_index = ri;
+                        }
+                    }
+                }
+
+                if (earliest_match) {
+                    int64 prefix_len = earliest_match - &d_name[k];
+                    char *replace_str = replacements[replacement_index].rename;
+                    int64 replace_len = strlen32(replace_str);
+
+                    if (prefix_len > 0) {
+                        memcpy64(&new_name[j], &d_name[k], prefix_len);
+                        j += (int32)prefix_len;
+                        k += (int32)prefix_len;
+                    }
+
+                    memcpy64(&new_name[j], replace_str, replace_len);
+                    j += (int32)replace_len;
+                    k += (int32)strlen32(replacements[replacement_index].problem);
+                    changed = true;
+                } else {
+                    int64 remaining = name_len - k;
+                    memcpy64(&new_name[j], &d_name[k], remaining);
+                    j += (int32)remaining;
+                    k += (int32)remaining;
+                }
+            }
+            new_name[j] = '\0';
+
+            if (changed) {
+                int32 base_len = (int32)(ent->fts_pathlen - ent->fts_namelen);
+
+                memcpy64(new_full, ent->fts_path, base_len);
+                memcpy64(new_full + base_len, new_name, j + 1);
+
+                if (renameat2(AT_FDCWD, ent->fts_path,
+                              AT_FDCWD, new_full,
+                              RENAME_NOREPLACE) < 0) {
+                    LOG_ERROR(_("Error renaming %s to %s: %s\n"),
+                              ent->fts_path, new_full, strerror(errno));
+                } else {
+                    LOG(_("Fixed: %s -> %s\n"), d_name, new_name);
+                }
+            }
+        }
+
+        if (ent->fts_info != FTS_DP) {
+            file_count += 1;
+        }
+
+        path = ent->fts_path + data->base_path_len;
+        path_len = old_full_len - data->base_path_len;
+
+        if (path[0] == '/') {
+            path += 1;
+            path_len -= 1;
+        }
+
+        if (path_len == 0) {
+            path = "./";
+            path_len = 2;
+        }
+
+        path = xmemdup(path, path_len + 1);
+        is_dir = (ent->fts_info == FTS_DP);
+
+        if (data->array_count >= data->array_capacity) {
+            if (data->array_capacity == 0) {
+                data->array_capacity = 1024;
+            } else {
+                data->array_capacity *= 2;
+            }
+
+            data->stats = xrealloc(data->stats,
+                                   data->array_capacity*SIZEOF(*(data->stats)));
+
+            data->paths
+                = xrealloc(data->paths,
+                           data->array_capacity*SIZEOF(*(data->paths)));
+            data->link_targets
+                = xrealloc(data->link_targets,
+                           data->array_capacity*SIZEOF(*(data->link_targets)));
+            data->matched_patterns
+                = xrealloc(data->matched_patterns,
+                           data->array_capacity*SIZEOF(*(data->matched_patterns)));
+
+            data->paths_lens
+                = xrealloc(data->paths_lens,
+                           data->array_capacity*SIZEOF(*(data->paths_lens)));
+            data->link_targets_lens
+                = xrealloc(data->link_targets_lens,
+                           data->array_capacity*SIZEOF(*(data->link_targets_lens)));
+            data->matched_patterns_lens
+                = xrealloc(data->matched_patterns_lens,
+                           data->array_capacity*SIZEOF(*(data->matched_patterns_lens)));
+        }
+
+        index = data->array_count;
+        data->array_count += 1;
+
+        memset64(&data->stats[index], 0, SIZEOF(struct stat));
+        memcpy64(&data->stats[index], (void *)ent->fts_statp, SIZEOF(struct stat));
+
+        data->paths[index] = path;
+        data->link_targets[index] = NULL;
+        data->matched_patterns[index] = NULL;
+
+        data->paths_lens[index] = (int16)path_len;
+        data->link_targets_lens[index] = 0;
+        data->matched_patterns_lens[index] = 0;
+
+        if (ent->fts_info == FTS_SL || ent->fts_info == FTS_SLNONE) {
+            char target[MAX_PATH_LENGTH];
+            int64 target_len;
+
+            if ((target_len = readlink(ent->fts_path, target, SIZEOF(target))) < 0) {
+                LOG_ERROR("Error in readlink(%s): %s.\n",
+                          ent->fts_path, strerror(errno));
+            } else {
+                target[target_len] = '\0';
+                data->link_targets[index] = xmemdup(target, target_len + 1);
+                data->link_targets_lens[index] = (int16)target_len;
+            }
+        } else if (ent->fts_info == FTS_F && (ent->fts_statp->st_nlink > 1)) {
+            char inode_str[64];
+            uint32 n;
+            int32 *first_idx_ptr;
+
+            n = (uint32)itoa2(inode_str, (long)ent->fts_statp->st_ino);
+            first_idx_ptr = hash_lookup_fs_map(data->inode_map, inode_str, n);
+            if (first_idx_ptr) {
+                data->link_targets[index] = data->paths[*first_idx_ptr];
+                data->link_targets_lens[index] = data->paths_lens[*first_idx_ptr];
+            } else {
+                hash_insert_fs_map(data->inode_map, inode_str, n, index);
+            }
+        }
+
+        {
+            IgnorePattern *pattern = work_path_matches_ignore(path, path_len,
+                                                              is_dir,
+                                                              cecup.ignore_patterns,
+                                                              cecup.ignore_count);
+            if (pattern) {
+                data->matched_patterns[index] = pattern->str;
+                data->matched_patterns_lens[index] = (int16)pattern->len;
+            }
+        }
+        hash_insert_fs_map(data->map, path, (uint32)path_len, index);
+    }
+
+    fts_close(fts_handle);
+    return file_count;
 }
 
 static void *
