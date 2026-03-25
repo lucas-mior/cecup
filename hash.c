@@ -129,7 +129,7 @@ struct CommonMap {
 #endif
 
 #define Bucket CAT(Bucket_, HASH_TYPE)
-#define Map CAT(Hash_, HASH_TYPE) 
+#define Map CAT(Hash_, HASH_TYPE)
 
 typedef struct Bucket {
     char *key;
@@ -591,7 +591,7 @@ hash_expected_collisions(void *map) {
 #include <assert.h>
 #include "arena.c"
 
-#define NSTRINGS 100
+#define NSTRINGS 500
 #define NBYTES ALIGNMENT
 
 typedef struct String {
@@ -631,12 +631,15 @@ main(void) {
     Arena *arena;
     String str1 = {.s = "aaaaaaaaaaaaaaaa", .value = 0};
     String str2 = {.s = "bbbbbbbbbbbbbbb", .value = 1};
-    String *strings = xmalloc(NSTRINGS*sizeof(*strings));
+    String *strings;
+    uint32 initial_capacity;
 
-    map = hash_create_map(NSTRINGS);
+    map = hash_create_map(100);
     arena = arena_create(NBYTES*NSTRINGS);
+    strings = xmalloc(NSTRINGS*sizeof(*strings));
 
     ASSERT(map);
+    initial_capacity = map->capacity;
 
     str1.len = (uint32)strlen32(str1.s);
     str2.len = (uint32)strlen32(str2.s);
@@ -646,10 +649,10 @@ main(void) {
     ASSERT(hash_insert_map(map, str2.s, str2.len, str2.value));
 
     ASSERT_EQUAL(hash_length(map), 2u);
-    hash_print_map(map, false);
+
+    ASSERT_NULL(hash_lookup_map(map, "does_not_exist", 14));
 
     srand(42);
-
     for (uint32 i = 0; i < NSTRINGS; i += 1) {
         strings[i] = random_string(arena, NBYTES);
     }
@@ -660,36 +663,29 @@ main(void) {
                                strings[i].value));
     }
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
-    PRINT_TIMINGS(NSTRINGS, t0, t1, "insertion");
+    PRINT_TIMINGS(NSTRINGS, t0, t1, "insertion with resizes");
+
+    ASSERT(map->capacity > initial_capacity);
 
     for (uint32 i = 0; i < NSTRINGS; i += 1) {
-        uint32 *stored;
+        int32 *stored;
         stored = hash_lookup_map(map, strings[i].s, strings[i].len);
+        ASSERT(stored);
         ASSERT_EQUAL(*stored, strings[i].value);
     }
+
     ASSERT(hash_remove_map(map, strings[0].s, strings[0].len));
     ASSERT_EQUAL(hash_ndeleted_map(map), 1);
 
-    if (NSTRINGS <= 10) {
-        hash_print_map(map, true);
-    } else {
-        HASH_PRINT_SUMMARY_map(map);
-    }
-
-    ASSERT(hash_insert_map(map, strings[0].s, strings[0].len,
-                           strings[0].value));
+    hash_zero_map(map);
+    ASSERT_EQUAL(hash_length(map), 0);
     ASSERT_EQUAL(hash_ndeleted_map(map), 0);
+    ASSERT_EQUAL(map->occupied, 0);
 
-    for (uint i = 0; i < NSTRINGS; i += 1) {
-        ASSERT(hash_remove_map(map, strings[i].s, strings[i].len));
+    for (uint32 i = 0; i < 10; i += 1) {
+        ASSERT(hash_insert_map(map, strings[i].s, strings[i].len, strings[i].value));
     }
-    ASSERT_EQUAL(hash_ndeleted_map(map), NSTRINGS);
-
-    if (NSTRINGS <= 10) {
-        hash_print_map(map, true);
-    } else {
-        HASH_PRINT_SUMMARY_map(map);
-    }
+    ASSERT_EQUAL(hash_length(map), 10);
 
     hash_destroy_map(map);
     XFREE(strings);
