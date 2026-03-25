@@ -640,7 +640,7 @@ work_fix_fs_cb(const char *fpath,
             target[len] = '\0';
             data->link_targets[index] = xstrdup(target);
         }
-    } else if (typeflag == FTW_F && sb->st_nlink > 1) {
+    } else if (typeflag == FTW_F && (sb->st_nlink > 1)) {
         char inode_str[64];
         int32 *first_idx_ptr;
 
