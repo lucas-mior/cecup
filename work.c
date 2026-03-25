@@ -665,7 +665,7 @@ work_fix_fs_cb(const char *fpath,
         char target[MAX_PATH_LENGTH];
         int64 target_len;
 
-        if ((target_len = readlink(fpath, target, SIZEOF(target) - 1)) < 0) {
+        if ((target_len = readlink(fpath, target, SIZEOF(target))) < 0) {
             LOG_ERROR("Error in readlink(%s): %s.\n", fpath, strerror(errno));
         } else {
             target[target_len] = '\0';
