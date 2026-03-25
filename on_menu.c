@@ -98,7 +98,7 @@ on_menu_apply(GtkWidget *m, void *data) {
 
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
-    if (tasks) {
+    if (tasks->count > 0) {
         protect_interface_from_user(true);
         g_thread_new("bulk_sync", work_rsync_bulk, tasks);
     }
@@ -182,43 +182,41 @@ on_menu_open_item(GtkWidget *m, void *data) {
 
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
-    if (tasks) {
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task = tasks->items[i];
-            char full_path[MAX_PATH_LENGTH];
-            char *base_path;
-            int32 n;
+    for (int32 i = 0; i < tasks->count; i += 1) {
+        Task *task = tasks->items[i];
+        char full_path[MAX_PATH_LENGTH];
+        char *base_path;
+        int32 n;
 
-            if (message->side == L) {
-                base_path = cecup.src_base;
-            } else {
-                base_path = cecup.dst_base;
-            }
+        if (message->side == L) {
+            base_path = cecup.src_base;
+        } else {
+            base_path = cecup.dst_base;
+        }
 
-            n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
+        n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
 
-            if (variant) {
-                if (strcmp(variant, "folder") == 0) {
-                    int32 path_len;
-                    path_len = n;
-                    dirname2(full_path, full_path, &path_len);
-                }
-            }
-
-            {
-                char cmd[MAX_PATH_LENGTH];
-                char *command[] = {
-                    "xdg-open",
-                    full_path,
-                    NULL,
-                };
-                STRING_FROM_ARRAY(cmd, " ", command, LENGTH(command));
-                IPC_SEND_LOG(_("Launching %s...\n"), cmd);
-                util_command_launch(LENGTH(command), command);
+        if (variant) {
+            if (strcmp(variant, "folder") == 0) {
+                int32 path_len;
+                path_len = n;
+                dirname2(full_path, full_path, &path_len);
             }
         }
-        free_task_list(tasks);
+
+        {
+            char cmd[MAX_PATH_LENGTH];
+            char *command[] = {
+                "xdg-open",
+                full_path,
+                NULL,
+            };
+            STRING_FROM_ARRAY(cmd, " ", command, LENGTH(command));
+            IPC_SEND_LOG(_("Launching %s...\n"), cmd);
+            util_command_launch(LENGTH(command), command);
+        }
     }
+    free_task_list(tasks);
 
     XFREE(message->src_path);
     XFREE(message);
@@ -326,7 +324,7 @@ on_menu_delete(GtkWidget *m, void *data) {
 
     tasks = get_target_tasks(message->side, message->src_path, ACTION_DELETE);
 
-    if (tasks) {
+    if (tasks->count > 0) {
         for (int32 i = 0; i < tasks->count; i += 1) {
             tasks->items[i]->action = ACTION_DELETE;
         }
@@ -360,49 +358,47 @@ on_menu_diff(GtkWidget *m, void *data) {
 
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
-    if (tasks) {
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task = tasks->items[i];
-            char *path_src;
-            char *path_dst;
-            int64 size_dst;
-            int64 size_src;
+    for (int32 i = 0; i < tasks->count; i += 1) {
+        Task *task = tasks->items[i];
+        char *path_src;
+        char *path_dst;
+        int64 size_dst;
+        int64 size_src;
 
-            size_src = strlen32(cecup.src_base) + strlen32(task->path) + 2;
-            size_dst = strlen32(cecup.dst_base) + strlen32(task->path) + 2;
+        size_src = strlen32(cecup.src_base) + strlen32(task->path) + 2;
+        size_dst = strlen32(cecup.dst_base) + strlen32(task->path) + 2;
 
-            switch (fork()) {
-            case -1:
-                error("Error forking: %s.\n", strerror(errno));
-                fatal(EXIT_FAILURE);
-            case 0:
-                path_src = xmalloc(size_src);
-                path_dst = xmalloc(size_dst);
+        switch (fork()) {
+        case -1:
+            error("Error forking: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
+        case 0:
+            path_src = xmalloc(size_src);
+            path_dst = xmalloc(size_dst);
 
-                snprintf2(path_src, size_src,
-                          "%s/%s", cecup.src_base, task->path);
-                snprintf2(path_dst, size_dst,
-                          "%s/%s", cecup.dst_base, task->path);
+            snprintf2(path_src, size_src,
+                      "%s/%s", cecup.src_base, task->path);
+            snprintf2(path_dst, size_dst,
+                      "%s/%s", cecup.dst_base, task->path);
 
-                {
-                    char cmd[MAX_PATH_LENGTH*2];
-                    char *diff_command[] = {
-                        term_cmd, "-e", diff_tool, path_dst, path_src, NULL,
-                    };
+            {
+                char cmd[MAX_PATH_LENGTH*2];
+                char *diff_command[] = {
+                    term_cmd, "-e", diff_tool, path_dst, path_src, NULL,
+                };
 
-                    execvp(diff_command[0], diff_command);
-                    STRING_FROM_ARRAY(cmd, " ", diff_command,
-                                      LENGTH(diff_command));
-                    error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
-                    _exit(1);
-                }
-            default:
-                break;
+                execvp(diff_command[0], diff_command);
+                STRING_FROM_ARRAY(cmd, " ", diff_command,
+                                  LENGTH(diff_command));
+                error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
+                _exit(1);
             }
+        default:
+            break;
         }
-
-        free_task_list(tasks);
     }
+
+    free_task_list(tasks);
 
     XFREE(message->src_path);
     XFREE(message);
