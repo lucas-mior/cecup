@@ -1109,7 +1109,7 @@ work_rsync(void *user_data) {
                         transfers_capacity *= 2;
                     }
                     transfers = xrealloc(transfers,
-                                          transfers_capacity*SIZEOF(*transfers));
+                                         transfers_capacity*SIZEOF(*transfers));
                 }
                 transfers[ntransfers] = bucket_src->key;
                 ntransfers += 1;
