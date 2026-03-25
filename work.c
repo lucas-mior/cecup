@@ -447,8 +447,15 @@ work_traverse_fs(TraversalData *data) {
             n = (uint32)itoa2(inode_str, (long)ent->fts_statp->st_ino);
             first_idx_ptr = hash_lookup_fs_map(data->inode_map, xstrdup(inode_str), n);
             if (first_idx_ptr) {
-                data->link_targets[index] = data->paths[*first_idx_ptr];
-                data->link_targets_lens[index] = data->paths_lens[*first_idx_ptr];
+                int32 first_idx = *first_idx_ptr;
+                data->link_targets[index] = data->paths[first_idx];
+                data->link_targets_lens[index] = data->paths_lens[first_idx];
+
+                if (data->link_targets[first_idx] == NULL) {
+                    data->link_targets[first_idx] = data->paths[index];
+                    data->link_targets_lens[first_idx] = data->paths_lens[index];
+                }
+
                 error("Found hardlink, insert at index=%d -> %s\n",
                       index, data->link_targets[index]);
             } else {
