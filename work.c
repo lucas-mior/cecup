@@ -74,6 +74,7 @@ typedef struct FixFsThreadData {
     char **link_targets;
     char **relative_paths;
     int16 *path_lens;
+    int16 *target_lens;
 } FixFsThreadData;
 
 static __thread FixFsThreadData *nftw_current_data = NULL;
@@ -651,6 +652,7 @@ work_fix_fs_cb(const char *fpath,
     memcpy64(&data->stats[index], (void *)sb, SIZEOF(struct stat));
     data->relative_paths[index] = relative_path;
     data->path_lens[index] = (int16)relative_len;
+    data->target_lens[index] = (int16)0;
     data->link_targets[index] = NULL;
 
     if (typeflag == FTW_SL) {
@@ -662,6 +664,7 @@ work_fix_fs_cb(const char *fpath,
         } else {
             target[target_len] = '\0';
             data->link_targets[index] = xmemdup(target, target_len + 1);
+            data->target_lens[index] = target_len;
         }
     } else if (typeflag == FTW_F && (sb->st_nlink > 1)) {
         char inode_str[64];
@@ -1689,37 +1692,37 @@ main(void) {
 
     patterns[0].str = "*.c";
     patterns[0].len = strlen32("*.c");
-    pattern = work_path_matches_ignore("main.c", false, patterns, 1);
+    pattern = work_path_matches_ignore("main.c", 6, false, patterns, 1);
     ASSERT_EQUAL(pattern, "*.c");
 
     patterns[0].str = "build/";
     patterns[0].len = strlen32("build/");
-    pattern = work_path_matches_ignore("build", true, patterns, 1);
+    pattern = work_path_matches_ignore("build", 5, true, patterns, 1);
     ASSERT_EQUAL(pattern, "build/");
 
     patterns[0].str = "build/";
     patterns[0].len = strlen32("build/");
-    pattern = work_path_matches_ignore("build", false, patterns, 1);
+    pattern = work_path_matches_ignore("build", 5, false, patterns, 1);
     ASSERT_NULL(pattern);
 
     patterns[0].str = "obj";
     patterns[0].len = strlen32("obj");
-    pattern = work_path_matches_ignore("src/obj/main.o", false, patterns, 1);
+    pattern = work_path_matches_ignore("src/obj/main.o", 14, false, patterns, 1);
     ASSERT_EQUAL(pattern, "obj");
 
     patterns[0].str = "/src";
     patterns[0].len = strlen32("/src");
-    pattern = work_path_matches_ignore("src/main.c", false, patterns, 1);
+    pattern = work_path_matches_ignore("src/main.c", 10, false, patterns, 1);
     ASSERT_EQUAL(pattern, "/src");
 
     patterns[0].str = "/src";
     patterns[0].len = strlen32("/src");
-    pattern = work_path_matches_ignore("lib/src/main.c", false, patterns, 1);
+    pattern = work_path_matches_ignore("lib/src/main.c", 14, false, patterns, 1);
     ASSERT_NULL(pattern);
 
     patterns[0].str = "foo/bar";
     patterns[0].len = strlen32("foo/bar");
-    pattern = work_path_matches_ignore("foo/bar/baz.c", false, patterns, 1);
+    pattern = work_path_matches_ignore("foo/bar/baz.c", 13, false, patterns, 1);
     ASSERT_EQUAL(pattern, "foo/bar");
 
     patterns[0].str = "*.h";
@@ -1728,7 +1731,7 @@ main(void) {
     patterns[1].len = strlen32("build/");
     patterns[2].str = "*.o";
     patterns[2].len = strlen32("*.o");
-    pattern = work_path_matches_ignore("src/main.o", false, patterns, 3);
+    pattern = work_path_matches_ignore("src/main.o", 10, false, patterns, 3);
     ASSERT_EQUAL(pattern, "*.o");
 
     exit(EXIT_SUCCESS);
