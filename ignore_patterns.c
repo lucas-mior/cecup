@@ -184,6 +184,7 @@ ignore_patterns_match(char *path, int32 path_len,
             has_slash = true;
             pattern_final += 1;
             pattern_len -= 1;
+            (void)pattern_len;  // so that the static analyzer does not complain
         } else {
             if (memchr64(pattern_final, '/', pattern_len) != NULL) {
                 has_slash = true;
