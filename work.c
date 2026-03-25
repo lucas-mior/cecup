@@ -264,7 +264,7 @@ work_load_ignore_patterns(char ***patterns, int32 *count) {
             continue;
         }
 
-        *patterns = xrealloc(*patterns, (*count + 1) * SIZEOF(char *));
+        *patterns = xrealloc(*patterns, (*count + 1)*SIZEOF(char *));
         (*patterns)[*count] = xstrdup(line_buffer);
         *count += 1;
     }
