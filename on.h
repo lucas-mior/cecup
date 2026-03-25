@@ -1,10 +1,10 @@
 #if !defined(ON_H)
 #define ON_H
 
+#if !defined(__INCLUDE_LEVEL__) || (__INCLUDE_LEVEL__ >= 1)
+
 #include <gtk/gtk.h>
 #include "cecup.h"
-
-#if !defined(__INCLUDE_LEVEL__) || (__INCLUDE_LEVEL__ >= 0)
 
 static void on_menu_open_item(GtkWidget *m, void *data);
 static void on_menu_copy_path(GtkWidget *m, void *data);
@@ -26,5 +26,6 @@ static CecupMenuItem tree_menu_items[] = {
 {N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
 };
 
-#endif
-#endif
+#endif /* !defined(__INCLUDE_LEVEL__) || (__INCLUDE_LEVEL__ >= 1) */
+
+#endif /* ON_H */
