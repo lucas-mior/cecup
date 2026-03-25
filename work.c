@@ -1200,6 +1200,7 @@ work_rsync(void *user_data) {
                              stat_dst->st_size, stat_dst->st_mtime,
                              S_ISDIR(stat_dst->st_mode));
             }
+
             nfiles_processed += 1;
             if ((nfiles_processed % 1000) == 0) {
                 ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
