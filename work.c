@@ -436,6 +436,8 @@ work_traverse_fs(TraversalData *data) {
                 target[target_len] = '\0';
                 data->link_targets[index] = xmemdup(target, target_len + 1);
                 data->link_targets_lens[index] = (int16)target_len;
+                error("Found symlink, insert at index=%d -> %s\n",
+                      index, data->link_targets[index]);
             }
         } else if (ent->fts_info == FTS_F && (ent->fts_statp->st_nlink > 1)) {
             char inode_str[64];
@@ -445,10 +447,10 @@ work_traverse_fs(TraversalData *data) {
             n = (uint32)itoa2(inode_str, (long)ent->fts_statp->st_ino);
             first_idx_ptr = hash_lookup_fs_map(data->inode_map, xstrdup(inode_str), n);
             if (first_idx_ptr) {
-                error("Found hardlink\n");
                 data->link_targets[index] = data->paths[*first_idx_ptr];
                 data->link_targets_lens[index] = data->paths_lens[*first_idx_ptr];
-                PRINTLN(data->link_targets[index]);
+                error("Found hardlink, insert at index=%d -> %s\n",
+                      index, data->link_targets[index]);
             } else {
                 error("CANT Found hardlink\n");
                 hash_insert_fs_map(data->inode_map, inode_str, n, index);
@@ -481,6 +483,7 @@ work_traverse_fs_thread(void *user_data) {
 
 static void
 work_cleanup(void) {
+    HERE;
     hash_destroy_fs_map(cecup.src_map);
     cecup.src_map = NULL;
     hash_destroy_fs_map(cecup.dst_map);
@@ -748,9 +751,10 @@ work_preview(void *user_data) {
                         attributes_differ = true;
                     }
 
-                    HERE;
                     do {
                         if (is_hardlink) {
+                            PRINTLN(bucket_src->key);
+                            PRINTLN(dst_idx);
                             if (!S_ISREG(stat_dst->st_mode)) {
                                 LOG("Other side is not a regular file.\n");
                                 equal = false;
@@ -843,7 +847,6 @@ work_preview(void *user_data) {
                                            cecup.transfers_capacity*SIZEOF(*cecup.transfers));
             }
             if (action == ACTION_HARDLINK) {
-                HERE;
                 cecup.transfers[cecup.ntransfers] = link_target_src;
                 cecup.ntransfers += 1;
             }
@@ -1274,7 +1277,6 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
-    HERE;
     for (int32 i = 0; i < cecup.ntransfers; i += 1) {
         char *file;
         int64 w;
