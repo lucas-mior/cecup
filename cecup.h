@@ -404,7 +404,6 @@ typedef struct ThreadData {
     bool check_different_fs;
     bool delete_excluded;
     bool delete_after;
-    bool filtered;
     char *relative_old;
     char *relative_new;
     int32 len_old;

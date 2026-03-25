@@ -92,28 +92,12 @@ work_check_itemize_line(char *buf_output) {
 }
 
 static void
-work_finalize(ThreadData *thread_data) {
-    int32 focus_length;
+work_finalize(void) {
     Message *message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
     message->type = DATA_TYPE_ENABLE_BUTTONS;
 
     ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
-
-    if (thread_data) {
-        if (thread_data->filtered && thread_data->relative_new) {
-            focus_length = strlen32(thread_data->relative_new);
-
-            message->focus_len = focus_length;
-            message->path_to_focus = xmalloc(focus_length + 1);
-            memcpy64(message->path_to_focus, thread_data->relative_new,
-                     focus_length + 1);
-        }
-
-        XFREE(thread_data->relative_new, thread_data->len_new + 1);
-        XFREE(thread_data->relative_old, thread_data->len_old + 1);
-        XFREE(thread_data, sizeof(*thread_data));
-    }
 
     g_idle_add(update_ui_handler, message);
     return;
@@ -937,13 +921,12 @@ work_preview(void *user_data) {
 
 cleanup_preview:
     work_cleanup();
-    work_finalize(thread_data);
+    work_finalize();
     g_thread_exit(NULL);
 }
 
 static void *
 work_rsync(void *user_data) {
-    ThreadData *thread_data = user_data;
     int32 pipe_stdout[2];
     int32 pipe_stderr[2];
     struct pollfd pipes[2];
@@ -957,8 +940,10 @@ work_rsync(void *user_data) {
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
     bool second_run_with_checksum = false;
 
+    (void)user_data;
+
     if (cecup.ntransfers <= 0) {
-        work_finalize(thread_data);
+        work_finalize();
         return NULL;
     }
 
@@ -1193,7 +1178,7 @@ run_rsync:
     XCLOSE(&pipe_stdout[0]);
 
     work_cleanup();
-    work_finalize(thread_data);
+    work_finalize();
     return NULL;
 }
 
@@ -1241,7 +1226,7 @@ work_rsync_bulk(void *user_data) {
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
             free_task_list(tasks);
-            work_finalize(NULL);
+            work_finalize();
             g_thread_exit(NULL);
         }
 
@@ -1294,7 +1279,7 @@ work_rsync_bulk(void *user_data) {
     }
 
     if (!has_transfers) {
-        work_finalize(NULL);
+        work_finalize();
         free_task_list(tasks);
         g_thread_exit(NULL);
     }
@@ -1526,7 +1511,7 @@ work_rsync_bulk(void *user_data) {
     XCLOSE(&pipe_stdout[0]);
     XCLOSE(&pipe_stderr[0]);
 
-    work_finalize(NULL);
+    work_finalize();
     free_task_list(tasks);
     if (cecup.stop_working) {
         LOG_ERROR(_("Stop requested.\n"));
