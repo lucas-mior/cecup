@@ -558,7 +558,7 @@ work_cleanup(void) {
     return;
 }
 
-void
+static void
 work_preview_cancel_and_reset(void) {
     work_cleanup();
     work_finalize();
