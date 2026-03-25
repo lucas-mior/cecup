@@ -276,11 +276,8 @@ work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
         memcpy64(row->link_target, link_target, link_target_len + 1);
     }
 
-    if (ignore_pattern) {
-        row->ignore_pattern_len = ignore_pattern_len;
-        row->ignore_pattern = xarena_push(cecup.arena, ignore_pattern_len + 1);
-        memcpy64(row->ignore_pattern, ignore_pattern, ignore_pattern_len + 1);
-    }
+    row->ignore_pattern_len = ignore_pattern_len;
+    row->ignore_pattern = ignore_pattern;
 
     row->src_path = final_src_path;
     row->dst_path = final_dst_path;
