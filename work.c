@@ -663,12 +663,13 @@ work_fix_fs_cb(const char *fpath,
 
     if (typeflag == FTW_SL) {
         char target[MAX_PATH_LENGTH];
-        int64 len;
+        int64 target_len;
 
-        len = (int64)readlink(fpath, target, SIZEOF(target) - 1);
-        if (len != -1) {
-            target[len] = '\0';
-            data->link_targets[index] = target;
+        if ((target_len = readlink(fpath, target, SIZEOF(target) - 1)) < 0) {
+            LOG_ERROR("Error in readlink(%s): %s.\n", fpath, strerror(errno));
+        } else {
+            target[target_len] = '\0';
+            data->link_targets[index] = xmemdup(target, target_len + 1);
         }
     } else if (typeflag == FTW_F && (sb->st_nlink > 1)) {
         char inode_str[64];
@@ -882,7 +883,8 @@ work_rsync(void *user_data) {
             is_hardlink = (S_ISREG(stat_src->st_mode) && link_target_src != NULL);
             is_dir = S_ISDIR(stat_src->st_mode);
 
-            if ((dst_idx_ptr = hash_lookup_fs_map(dst_map, bucket_src->key, path_len))) {
+            if ((dst_idx_ptr
+                 = hash_lookup_fs_map(dst_map, bucket_src->key, (uint32)path_len))) {
                 int32 dst_idx = *dst_idx_ptr;
                 struct stat *stat_dst = &dst_fix.stats[dst_idx];
                 char *link_target_dst = dst_fix.link_targets[dst_idx];
