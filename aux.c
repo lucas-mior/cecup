@@ -402,46 +402,12 @@ refresh_ui_timeout_callback(void *data) {
 
 static gboolean
 update_ui_handler(void *data) {
-    static bool timezone_initialized = false;
-    static time_t timezone_offset = 0;
     GtkTextIter end;
     GtkTextTagTable *table;
     char *pattern;
     int32 pattern_len;
     int32 current_store_count;
-    CecupRow *row;
-    char *final_src_path;
-    char *final_dst_path;
-    int32 slash;
-    time_t unix_timestamp;
-    struct tm time_information;
-    MessageBatch *batch;
     Message *message = data;
-
-    if (!timezone_initialized) {
-        time_t current_time;
-        struct tm local_tm;
-        struct tm gm_tm;
-
-        current_time = time(NULL);
-        localtime_r(&current_time, &local_tm);
-        gmtime_r(&current_time, &gm_tm);
-
-        timezone_offset = (local_tm.tm_hour - gm_tm.tm_hour) * 3600;
-        timezone_offset += (local_tm.tm_min - gm_tm.tm_min) * 60;
-
-        if (local_tm.tm_year < gm_tm.tm_year) {
-            timezone_offset -= 24 * 3600;
-        } else if (local_tm.tm_year > gm_tm.tm_year) {
-            timezone_offset += 24 * 3600;
-        } else if (local_tm.tm_yday < gm_tm.tm_yday) {
-            timezone_offset -= 24 * 3600;
-        } else if (local_tm.tm_yday > gm_tm.tm_yday) {
-            timezone_offset += 24 * 3600;
-        }
-
-        timezone_initialized = true;
-    }
 
     switch (message->type) {
     case DATA_TYPE_LOG:
@@ -477,12 +443,6 @@ update_ui_handler(void *data) {
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       message->fraction);
         break;
-    case DATA_TYPE_TREE_UPDATE:
-        if (cecup.refresh_id == 0) {
-            cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
-                                             refresh_ui_timeout_callback, NULL);
-        }
-        break;
     case DATA_TYPE_REMOVE_ROW:
         pattern = message->src_path;
         pattern_len = message->path_len;
@@ -515,10 +475,7 @@ update_ui_handler(void *data) {
             }
         }
 
-        if (cecup.refresh_id == 0) {
-            cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
-                                             refresh_ui_timeout_callback, NULL);
-        }
+        refresh_ui_list(REFRESH_PARTIAL, NULL);
         break;
     case DATA_TYPE_ENABLE_BUTTONS:
         if (cecup.refresh_id != 0) {
@@ -549,159 +506,6 @@ update_ui_handler(void *data) {
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       0.0);
         break;
-    case DATA_TYPE_ADD_ROW:
-        batch = (MessageBatch *)data;
-
-        for (int32 i = 0; i < batch->count; i += 1) {
-            message = batch->messages[i];
-            final_src_path = NULL;
-            final_dst_path = NULL;
-            slash = 0;
-
-            if (message->src_path) {
-                if (message->is_dir) {
-                    slash = 1;
-                }
-
-                final_src_path = xarena_push(cecup.arena,
-                                             message->path_len + slash + 1);
-                memcpy64(final_src_path, message->src_path,
-                         message->path_len + 1);
-
-                if (message->is_dir) {
-                    if (final_src_path[message->path_len - 1] != '/') {
-                        final_src_path[message->path_len] = '/';
-                        final_src_path[message->path_len + 1] = '\0';
-                        message->path_len += 1;
-                    }
-                }
-
-                if (message->dst_path) {
-                    final_dst_path = final_src_path;
-                }
-            } else if (message->dst_path) {
-                if (message->is_dir) {
-                    slash = 1;
-                }
-
-                final_dst_path = xarena_push(cecup.arena,
-                                             message->path_len + slash + 1);
-                memcpy64(final_dst_path, message->dst_path,
-                         message->path_len + 1);
-
-                if (message->is_dir) {
-                    if (final_dst_path[message->path_len - 1] != '/') {
-                        final_dst_path[message->path_len] = '/';
-                        final_dst_path[message->path_len + 1] = '\0';
-                        message->path_len += 1;
-                    }
-                }
-            } else {
-                error("Error: both src_path and dst_path are NULL. "
-                      "(action=%s) (reason=%s)\n",
-                      ACTION_str(message->action), REASON_str(message->reason));
-                fatal(EXIT_FAILURE);
-            }
-
-            row = xarena_push(cecup.arena, SIZEOF(*row));
-            memset64(row, 0, SIZEOF(*row));
-
-            row->src_action = message->action;
-            row->dst_action = message->action;
-            row->reason = message->reason;
-
-            switch (message->action) {
-            case ACTION_IGNORE:
-                row->src_action = ACTION_IGNORE;
-                if (final_dst_path) {
-                    if (message->delete_excluded) {
-                        row->dst_action = ACTION_DELETE;
-                    } else {
-                        row->dst_action = ACTION_IGNORE;
-                    }
-                } else {
-                    row->dst_action = ACTION_IGNORE;
-                }
-                break;
-            case ACTION_DELETE:
-                row->dst_action = ACTION_DELETE;
-                row->src_action = ACTION_IGNORE;
-                break;
-            case ACTION_DELETED:
-            case ACTION_EQUAL:
-            case ACTION_HARDLINK:
-            case ACTION_SYMLINK:
-            case ACTION_NEW:
-            case ACTION_UPDATE:
-            case ACTION_LAST:
-            default:
-                break;
-            }
-
-            bytes_pretty(row->src_size_text, message->src_size);
-            bytes_pretty(row->dst_size_text, message->dst_size);
-            row->src_size_raw = message->src_size;
-            row->dst_size_raw = message->dst_size;
-
-            if (message->src_mtime > 0) {
-                unix_timestamp = (time_t)message->src_mtime;
-                unix_timestamp += timezone_offset;
-                gmtime_r(&unix_timestamp, &time_information);
-                STRFTIME(row->src_mtime_text,
-                         "%Y-%m-%d %H:%M:%S", &time_information);
-                row->src_mtime_raw = message->src_mtime;
-            }
-
-            if (message->dst_mtime > 0) {
-                unix_timestamp = (time_t)message->dst_mtime;
-                unix_timestamp += timezone_offset;
-                gmtime_r(&unix_timestamp, &time_information);
-                STRFTIME(row->dst_mtime_text,
-                         "%Y-%m-%d %H:%M:%S", &time_information);
-                row->dst_mtime_raw = message->dst_mtime;
-            }
-
-            if (message->link_target) {
-                row->link_target_len = message->link_target_len;
-                row->link_target = xarena_push(cecup.arena,
-                                               row->link_target_len + 1);
-                memcpy64(row->link_target, message->link_target,
-                         row->link_target_len + 1);
-            }
-
-            if (message->ignore_pattern) {
-                row->ignore_pattern_len = message->ignore_pattern_len;
-                row->ignore_pattern = xarena_push(cecup.arena,
-                                                  row->ignore_pattern_len + 1);
-                memcpy64(row->ignore_pattern, message->ignore_pattern,
-                         row->ignore_pattern_len + 1);
-            }
-
-            row->src_path = final_src_path;
-            row->dst_path = final_dst_path;
-            row->path_len = message->path_len;
-
-            if (cecup.rows_len >= cecup.rows_capacity) {
-                cecup.rows_capacity *= 2;
-                cecup.rows = xrealloc(cecup.rows,
-                                      cecup.rows_capacity*SIZEOF(CecupRow *));
-                cecup.rows_visible = xrealloc(cecup.rows_visible,
-                                              cecup.rows_capacity*SIZEOF(CecupRow *));
-            }
-
-            cecup.rows[cecup.rows_len] = row;
-            cecup.rows_len += 1;
-
-            if ((cecup.rows_len % 100000) == 0) {
-                if (cecup.refresh_id == 0) {
-                    cecup.refresh_id = g_timeout_add(UI_INTERVAL_MS,
-                                                     refresh_ui_timeout_callback, NULL);
-                }
-            }
-        }
-
-        XFREE(batch);
-        return G_SOURCE_REMOVE;
     default:
         break;
     }

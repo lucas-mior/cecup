@@ -154,17 +154,16 @@ work_check_itemize_line(char *buf_output) {
 
 static void
 work_finalize(ThreadData *thread_data) {
+    int32 focus_length;
     Message *message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
     message->type = DATA_TYPE_ENABLE_BUTTONS;
-
-    work_flush_add_rows();
 
     ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
     if (thread_data) {
         if (thread_data->filtered && thread_data->relative_new) {
-            int32 focus_length = strlen32(thread_data->relative_new);
+            focus_length = strlen32(thread_data->relative_new);
 
             message->focus_len = focus_length;
             message->path_to_focus = xmalloc(focus_length + 1);
@@ -194,40 +193,160 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
              int64 src_size_raw, int64 src_mtime_raw,
              int64 dst_size_raw, int64 dst_mtime_raw,
              bool delete_excluded, bool is_dir) {
-    Message *message = xmalloc(SIZEOF(*message));
-    memset64(message, 0, SIZEOF(*message));
+    static bool timezone_initialized = false;
+    static time_t timezone_offset = 0;
+    int32 slash;
+    char *final_src_path;
+    char *final_dst_path;
+    time_t unix_timestamp;
+    struct tm time_information;
+    CecupRow *row;
 
-    message->type = DATA_TYPE_ADD_ROW;
-    message->action = action;
-    message->reason = reason;
-    message->path_len = path_len;
-    message->src_size = src_size_raw;
-    message->src_mtime = src_mtime_raw;
-    message->dst_size = dst_size_raw;
-    message->dst_mtime = dst_mtime_raw;
-    message->delete_excluded = delete_excluded;
-    message->is_dir = is_dir;
-    message->src_path = src_path;
-    message->dst_path = dst_path;
+    if (!timezone_initialized) {
+        time_t current_time;
+        struct tm local_tm;
+        struct tm gm_tm;
+
+        current_time = time(NULL);
+        localtime_r(&current_time, &local_tm);
+        gmtime_r(&current_time, &gm_tm);
+
+        timezone_offset = (local_tm.tm_hour - gm_tm.tm_hour) * 3600;
+        timezone_offset += (local_tm.tm_min - gm_tm.tm_min) * 60;
+
+        if (local_tm.tm_year < gm_tm.tm_year) {
+            timezone_offset -= 24 * 3600;
+        } else if (local_tm.tm_year > gm_tm.tm_year) {
+            timezone_offset += 24 * 3600;
+        } else if (local_tm.tm_yday < gm_tm.tm_yday) {
+            timezone_offset -= 24 * 3600;
+        } else if (local_tm.tm_yday > gm_tm.tm_yday) {
+            timezone_offset += 24 * 3600;
+        }
+
+        timezone_initialized = true;
+    }
+
+    g_mutex_lock(&cecup.arena_mutex);
+
+    final_src_path = NULL;
+    final_dst_path = NULL;
+    slash = 0;
+
+    if (src_path) {
+        if (is_dir) {
+            slash = 1;
+        }
+
+        final_src_path = xarena_push(cecup.arena, path_len + slash + 1);
+        memcpy64(final_src_path, src_path, path_len + 1);
+
+        if (is_dir) {
+            if (final_src_path[path_len - 1] != '/') {
+                final_src_path[path_len] = '/';
+                final_src_path[path_len + 1] = '\0';
+                path_len += 1;
+            }
+        }
+
+        if (dst_path) {
+            final_dst_path = final_src_path;
+        }
+    } else if (dst_path) {
+        if (is_dir) {
+            slash = 1;
+        }
+
+        final_dst_path = xarena_push(cecup.arena, path_len + slash + 1);
+        memcpy64(final_dst_path, dst_path, path_len + 1);
+
+        if (is_dir) {
+            if (final_dst_path[path_len - 1] != '/') {
+                final_dst_path[path_len] = '/';
+                final_dst_path[path_len + 1] = '\0';
+                path_len += 1;
+            }
+        }
+    }
+
+    row = xarena_push(cecup.arena, SIZEOF(*row));
+    memset64(row, 0, SIZEOF(*row));
+
+    row->src_action = action;
+    row->dst_action = action;
+    row->reason = reason;
+
+    if (action == ACTION_IGNORE) {
+        row->src_action = ACTION_IGNORE;
+        if (final_dst_path) {
+            if (delete_excluded) {
+                row->dst_action = ACTION_DELETE;
+            } else {
+                row->dst_action = ACTION_IGNORE;
+            }
+        } else {
+            row->dst_action = ACTION_IGNORE;
+        }
+    } else if (action == ACTION_DELETE) {
+        row->dst_action = ACTION_DELETE;
+        row->src_action = ACTION_IGNORE;
+    }
+
+    bytes_pretty(row->src_size_text, src_size_raw);
+    bytes_pretty(row->dst_size_text, dst_size_raw);
+    row->src_size_raw = src_size_raw;
+    row->dst_size_raw = dst_size_raw;
+
+    if (src_mtime_raw > 0) {
+        unix_timestamp = (time_t)src_mtime_raw;
+        unix_timestamp += timezone_offset;
+        gmtime_r(&unix_timestamp, &time_information);
+        STRFTIME(row->src_mtime_text,
+                 "%Y-%m-%d %H:%M:%S", &time_information);
+        row->src_mtime_raw = src_mtime_raw;
+    }
+
+    if (dst_mtime_raw > 0) {
+        unix_timestamp = (time_t)dst_mtime_raw;
+        unix_timestamp += timezone_offset;
+        gmtime_r(&unix_timestamp, &time_information);
+        STRFTIME(row->dst_mtime_text,
+                 "%Y-%m-%d %H:%M:%S", &time_information);
+        row->dst_mtime_raw = dst_mtime_raw;
+    }
 
     if (link_target) {
-        message->link_target_len = link_target_len;
-        message->link_target = xmalloc(link_target_len + 1);
-        memcpy64(message->link_target, link_target, link_target_len + 1);
+        row->link_target_len = link_target_len;
+        row->link_target = xarena_push(cecup.arena, link_target_len + 1);
+        memcpy64(row->link_target, link_target, link_target_len + 1);
     }
 
     if (ignore_pattern) {
-        message->ignore_pattern_len = ignore_pattern_len;
-        message->ignore_pattern = xmalloc(ignore_pattern_len + 1);
-        memcpy64(message->ignore_pattern, ignore_pattern, ignore_pattern_len + 1);
+        row->ignore_pattern_len = ignore_pattern_len;
+        row->ignore_pattern = xarena_push(cecup.arena, ignore_pattern_len + 1);
+        memcpy64(row->ignore_pattern, ignore_pattern, ignore_pattern_len + 1);
     }
 
-    add_row_batch_messages[add_row_batch_count] = message;
-    add_row_batch_count += 1;
+    row->src_path = final_src_path;
+    row->dst_path = final_dst_path;
+    row->path_len = path_len;
 
-    if (add_row_batch_count >= BATCH_SIZE) {
-        work_flush_add_rows();
+    if (cecup.rows_len >= cecup.rows_capacity) {
+        if (cecup.rows_capacity == 0) {
+            cecup.rows_capacity = 1024;
+        } else {
+            cecup.rows_capacity *= 2;
+        }
+        cecup.rows = xrealloc(cecup.rows,
+                              cecup.rows_capacity * SIZEOF(CecupRow *));
+        cecup.rows_visible = xrealloc(cecup.rows_visible,
+                                      cecup.rows_capacity * SIZEOF(CecupRow *));
     }
+
+    cecup.rows[cecup.rows_len] = row;
+    cecup.rows_len += 1;
+
+    g_mutex_unlock(&cecup.arena_mutex);
     return;
 }
 
