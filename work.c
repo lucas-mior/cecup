@@ -558,7 +558,7 @@ work_cleanup(void) {
     return;
 }
 
-static void
+static void __attribute__((noreturn)) 
 work_preview_cancel_and_reset(void) {
     work_cleanup();
     work_finalize();
