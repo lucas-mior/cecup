@@ -415,10 +415,10 @@ work_path_matches_ignore(char *path, int32 path_len,
 
     for (int32 i = 0; i < count; i += 1) {
         char *pattern = patterns[i].str;
+        int32 pattern_len = patterns[i].len;
         char pattern_adapt_buffer[MAX_PATH_LENGTH];
         char *pattern_final;
 
-        int32 pattern_len = patterns[i].len;
         bool dir_only = false;
         bool has_slash = false;
         char path_copy[MAX_PATH_LENGTH];
