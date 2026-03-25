@@ -1354,6 +1354,16 @@ cleanup_maps:
         hash_destroy_fs_map(dst_inode_map);
     }
 
+    XFREE(src_fix.stats);
+    XFREE(src_fix.matched_patterns);
+    XFREE(src_fix.link_targets);
+    XFREE(src_fix.relative_paths);
+
+    XFREE(dst_fix.stats);
+    XFREE(dst_fix.matched_patterns);
+    XFREE(dst_fix.link_targets);
+    XFREE(dst_fix.relative_paths);
+
     g_thread_exit(NULL);
 }
 
