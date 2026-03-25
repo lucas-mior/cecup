@@ -17,7 +17,10 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+
 #include "generic.c"
+#include "util.c"
 
 #if !defined(CAT) || !defined(CAT3)
   #define CAT_(a, b)     a##b
