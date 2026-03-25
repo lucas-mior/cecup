@@ -541,8 +541,6 @@ work_rsync(void *user_data) {
     char buf_output[MAX_PATH_LENGTH*2];
     char buf_error[MAX_PATH_LENGTH*2];
 
-    char src_base_with_slash[MAX_PATH_LENGTH];
-    char dst_base_with_slash[MAX_PATH_LENGTH];
     char *rsync_args[64];
     int32 a = 0;
     char cmd[MAX_PATH_LENGTH*2];
@@ -958,27 +956,31 @@ work_rsync(void *user_data) {
         XCLOSE(&files_from_fd);
     }
 
-    SNPRINTF(src_base_with_slash, "%s/", cecup.src_base);
-    SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
+    {
+        char src_base_with_slash[MAX_PATH_LENGTH];
+        char dst_base_with_slash[MAX_PATH_LENGTH];
+        SNPRINTF(src_base_with_slash, "%s/", cecup.src_base);
+        SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
 
-    a = 0;
-    rsync_args[a++] = "rsync";
-    rsync_args[a++] = "--verbose";
-    rsync_args[a++] = "--dirs";
-    rsync_args[a++] = "--partial";
-    rsync_args[a++] = "--progress";
-    rsync_args[a++] = "--info=progress2";
-    rsync_args[a++] = "--checksum";
-    rsync_args[a++] = "--perms";
-    rsync_args[a++] = "--times";
-    rsync_args[a++] = "--owner";
-    rsync_args[a++] = "--group";
-    rsync_args[a++] = "--files-from";
-    rsync_args[a++] = files_from_filename;
-    rsync_args[a++] = "--iconv=.,.";
-    rsync_args[a++] = src_base_with_slash;
-    rsync_args[a++] = dst_base_with_slash;
-    rsync_args[a++] = NULL;
+        a = 0;
+        rsync_args[a++] = "rsync";
+        rsync_args[a++] = "--verbose";
+        rsync_args[a++] = "--dirs";
+        rsync_args[a++] = "--partial";
+        rsync_args[a++] = "--progress";
+        rsync_args[a++] = "--info=progress2";
+        rsync_args[a++] = "--checksum";
+        rsync_args[a++] = "--perms";
+        rsync_args[a++] = "--times";
+        rsync_args[a++] = "--owner";
+        rsync_args[a++] = "--group";
+        rsync_args[a++] = "--files-from";
+        rsync_args[a++] = files_from_filename;
+        rsync_args[a++] = "--iconv=.,.";
+        rsync_args[a++] = src_base_with_slash;
+        rsync_args[a++] = dst_base_with_slash;
+        rsync_args[a++] = NULL;
+    }
 
     LOG(_("Verifying and syncing with checksum...\n"));
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
