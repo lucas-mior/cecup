@@ -478,7 +478,7 @@ update_ui_handler(void *data) {
             }
 
             if (match) {
-                IPC_SEND_LOG(_("Removing %s from list...\n"), path_test);
+                LOG(_("Removing %s from list...\n"), path_test);
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }
@@ -743,24 +743,24 @@ cecup_get_dirs(void) {
     save_config();
 
     if (strlen32(tmp_src) <= 0) {
-        IPC_SEND_LOG_ERROR("Error: Invalid source directory.\n");
+        LOG_ERROR("Error: Invalid source directory.\n");
         cecup_reset_dir(L);
         return;
     }
     if (strlen32(tmp_dst) <= 0) {
-        IPC_SEND_LOG_ERROR("Error: Invalid source directory.\n");
+        LOG_ERROR("Error: Invalid source directory.\n");
         cecup_reset_dir(R);
         return;
     }
 
     if ((full_src = realpath(tmp_src, NULL)) == NULL) {
-        IPC_SEND_LOG_ERROR("Error getting full path of %s: %s.\n", tmp_src,
+        LOG_ERROR("Error getting full path of %s: %s.\n", tmp_src,
                            strerror(errno));
         cecup_reset_dir(L);
         return;
     }
     if ((full_dst = realpath(tmp_dst, NULL)) == NULL) {
-        IPC_SEND_LOG_ERROR("Error getting full path of %s: %s.\n", tmp_dst,
+        LOG_ERROR("Error getting full path of %s: %s.\n", tmp_dst,
                            strerror(errno));
         cecup_reset_dir(R);
         return;

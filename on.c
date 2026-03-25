@@ -67,7 +67,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
         if ((menu_item->callback == on_menu_rename)
             || (menu_item->callback == on_menu_delete)
             || (menu_item->callback == on_menu_apply)) {
-            IPC_SEND_LOG_ERROR(_("Action blocked: Background task is running.\n"));
+            LOG_ERROR(_("Action blocked: Background task is running.\n"));
             return;
         }
     }
@@ -1410,10 +1410,10 @@ on_path_edited(GtkEditable *editable, void *data) {
 
         if (renameat2(AT_FDCWD, old_full,
                       AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
-            IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"),
+            LOG_ERROR(_("Error renaming %s to %s: %s\n"),
                                old_full, new_full, strerror(errno));
         } else {
-            IPC_SEND_LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
+            LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
 
             if ((relative_old[old_length - 1] == '/')
                 && (relative_new[new_length - 1] != '/')) {

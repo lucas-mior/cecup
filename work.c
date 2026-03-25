@@ -244,7 +244,7 @@ work_load_ignore_patterns(char ***patterns, int32 *count) {
     *count = 0;
 
     if ((file = fopen(cecup.ignore_path, "r")) == NULL) {
-        IPC_SEND_LOG_ERROR("Error opening %s: %s.\n",
+        LOG_ERROR("Error opening %s: %s.\n",
                            cecup.ignore_path, strerror(errno));
         return;
     }
@@ -274,7 +274,7 @@ work_load_ignore_patterns(char ***patterns, int32 *count) {
     }
 
     if (fclose(file)) {
-        IPC_SEND_LOG_ERROR("Error closing %s: %s.\n",
+        LOG_ERROR("Error closing %s: %s.\n",
                            cecup.ignore_path, strerror(errno));
     }
     return;
@@ -446,26 +446,26 @@ work_fix_fs_cb(const char *fpath,
     old_full_len = strlen32((char *)fpath);
 
     if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
-        IPC_SEND_LOG_ERROR(_("Error: file path is too long:\n"));
-        IPC_SEND_LOG_ERROR("%s\n", fpath);
-        IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
+        LOG_ERROR(_("Error: file path is too long:\n"));
+        LOG_ERROR("%s\n", fpath);
+        LOG_ERROR(_("Please fix your file system.\n"));
         cecup.stop_working = true;
         return 1;
     }
 
     if (name_len > 0) {
         if (isspace(d_name[0])) {
-            IPC_SEND_LOG_ERROR(_("Error: there is a space in the start of the fileneme:\n"));
-            IPC_SEND_LOG_ERROR("'%s'\n", fpath);
-            IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
+            LOG_ERROR(_("Error: there is a space in the start of the fileneme:\n"));
+            LOG_ERROR("'%s'\n", fpath);
+            LOG_ERROR(_("Please fix your file system.\n"));
             cecup.stop_working = true;
             return 1;
         }
 
         if (isspace(d_name[name_len - 1])) {
-            IPC_SEND_LOG_ERROR(_("Error: there is space in the end of the fileneme:\n"));
-            IPC_SEND_LOG_ERROR("'%s'\n", fpath);
-            IPC_SEND_LOG_ERROR(_("Please fix your file system.\n"));
+            LOG_ERROR(_("Error: there is space in the end of the fileneme:\n"));
+            LOG_ERROR("'%s'\n", fpath);
+            LOG_ERROR(_("Please fix your file system.\n"));
             cecup.stop_working = true;
             return 1;
         }
@@ -531,10 +531,10 @@ work_fix_fs_cb(const char *fpath,
             if (renameat2(AT_FDCWD, fpath,
                           AT_FDCWD, new_full,
                           RENAME_NOREPLACE) < 0) {
-                IPC_SEND_LOG_ERROR(_("Error renaming %s to %s: %s\n"),
+                LOG_ERROR(_("Error renaming %s to %s: %s\n"),
                                    fpath, new_full, strerror(errno));
             } else {
-                IPC_SEND_LOG(_("Fixed: %s -> %s\n"), d_name, new_name);
+                LOG(_("Fixed: %s -> %s\n"), d_name, new_name);
             }
         }
     }
@@ -696,12 +696,12 @@ work_rsync(void *user_data) {
         struct stat stat_dst;
 
         if (stat(cecup.src_base, &stat_src) < 0) {
-            IPC_SEND_LOG_ERROR("Error getting directory info from %s: %s.\n",
+            LOG_ERROR("Error getting directory info from %s: %s.\n",
                                cecup.src_base, strerror(errno));
             goto cleanup_maps;
         }
         if (stat(cecup.dst_base, &stat_dst) < 0) {
-            IPC_SEND_LOG_ERROR("Error getting directory info from %s: %s.\n",
+            LOG_ERROR("Error getting directory info from %s: %s.\n",
                                cecup.dst_base, strerror(errno));
             goto cleanup_maps;
         }
@@ -716,7 +716,7 @@ work_rsync(void *user_data) {
         message->type = DATA_TYPE_CLEAR_TREES;
         g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
 
-        IPC_SEND_LOG_ERROR(
+        LOG_ERROR(
             _("Safety stop: Original and backup are on the same storage "
               "device.\n"
               "Check if the backup device is connected.\n"
@@ -743,7 +743,7 @@ work_rsync(void *user_data) {
     dst_fix.ignore_patterns = ignore_patterns;
     dst_fix.ignore_count = ignore_count;
 
-    IPC_SEND_LOG(_("Traversing file systems...\n"));
+    LOG(_("Traversing file systems...\n"));
     if (!same_fs) {
         GThread *t1 = g_thread_new("fix_src",
                                    work_fix_fs_thread_fn, &src_fix);
@@ -757,15 +757,15 @@ work_rsync(void *user_data) {
     }
 
     if (cecup.stop_working) {
-        IPC_SEND_LOG_ERROR(_("Stop requested.\n"));
+        LOG_ERROR(_("Stop requested.\n"));
         work_finalize(thread_data);
         goto cleanup_maps;
     }
 
-    IPC_SEND_LOG(_("File system traversal finished.\n"));
+    LOG(_("File system traversal finished.\n"));
 
     nfiles_total = src_fix.file_count + dst_fix.file_count;
-    IPC_SEND_LOG(_("Found %lld files to analyse...\n"),
+    LOG(_("Found %lld files to analyse...\n"),
                  (llong)nfiles_total);
 
     if (thread_data->is_preview) {
@@ -1059,9 +1059,9 @@ work_rsync(void *user_data) {
     rsync_args[a++] = dst_base_with_slash;
     rsync_args[a++] = NULL;
 
-    IPC_SEND_LOG(_("Verifying and syncing with checksum...\n"));
+    LOG(_("Verifying and syncing with checksum...\n"));
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-    IPC_SEND_LOG_CMD("%s\n", cmd);
+    LOG_CMD("%s\n", cmd);
 
     xpipe(pipe_stdout);
     xpipe(pipe_stderr);
@@ -1131,7 +1131,7 @@ work_rsync(void *user_data) {
                    SIZEOF(buf_output) - buf_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
-                IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
+                LOG_ERROR("Error reading stdout pipe: %s.\n",
                                    strerror(errno));
                 pipes[0].fd = -1;
             }
@@ -1207,19 +1207,19 @@ work_rsync(void *user_data) {
         r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
         if (r <= 0) {
             if (r < 0) {
-                IPC_SEND_LOG_ERROR("Error reading stderr pipe: %s.\n",
+                LOG_ERROR("Error reading stderr pipe: %s.\n",
                                    strerror(errno));
                 pipes[1].fd = -1;
             }
             continue;
         }
         buf_error[r] = '\0';
-        IPC_SEND_LOG_ERROR("%s", buf_error);
+        LOG_ERROR("%s", buf_error);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     if (waitpid(child_pid, NULL, 0) < 0) {
-        IPC_SEND_LOG_ERROR("Error waiting for rsync: %s.\n", strerror(errno));
+        LOG_ERROR("Error waiting for rsync: %s.\n", strerror(errno));
     }
     xunlink(files_from_filename);
     cecup.child_pid = 0;
@@ -1320,7 +1320,7 @@ work_rsync_bulk(void *user_data) {
         }
 
         if (cecup.stop_working) {
-            IPC_SEND_LOG_ERROR(_("Stop requested.\n"));
+            LOG_ERROR(_("Stop requested.\n"));
             free_task_list(tasks);
             work_finalize(NULL);
             g_thread_exit(NULL);
@@ -1353,7 +1353,7 @@ work_rsync_bulk(void *user_data) {
         default:
             cecup.child_pid = child_rm;
             if (waitpid(child_rm, &child_status, 0) < 0) {
-                IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n",
+                LOG_ERROR("Error waiting for child: %s.\n",
                                    strerror(errno));
             } else if (WIFEXITED(child_status)) {
                 removed = !WEXITSTATUS(child_status);
@@ -1436,7 +1436,7 @@ work_rsync_bulk(void *user_data) {
     rsync_args[a++] = NULL;
 
     STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
-    IPC_SEND_LOG_CMD("%s\n", cmd);
+    LOG_CMD("%s\n", cmd);
 
     switch (child_pid = fork()) {
     case -1:
@@ -1510,7 +1510,7 @@ work_rsync_bulk(void *user_data) {
                    SIZEOF(buf_output_bulk) - 1 - buf_output_pos);
         if (r <= 0) {
             if (r < 0) {
-                IPC_SEND_LOG_ERROR("Error reading stdout pipe: %s.\n",
+                LOG_ERROR("Error reading stdout pipe: %s.\n",
                                    strerror(errno));
                 pipes[0].fd = -1;
             }
@@ -1526,7 +1526,7 @@ work_rsync_bulk(void *user_data) {
 
             *eol = '\0';
 
-            IPC_SEND_LOG("%s\n", buf_output_bulk);
+            LOG("%s\n", buf_output_bulk);
 
             if ((filename = work_check_itemize_line(buf_output_bulk))) {
                 int32 path_len;
@@ -1592,19 +1592,19 @@ work_rsync_bulk(void *user_data) {
         r = read64(pipe_stderr[0], buf_error_bulk, SIZEOF(buf_error_bulk) - 1);
         if (r <= 0) {
             if (r < 0) {
-                IPC_SEND_LOG_ERROR("Error reading stderr pipe: %s.\n",
+                LOG_ERROR("Error reading stderr pipe: %s.\n",
                                    strerror(errno));
                 pipes[1].fd = -1;
             }
             continue;
         }
         buf_error_bulk[r] = '\0';
-        IPC_SEND_LOG_ERROR("%s", buf_error_bulk);
+        LOG_ERROR("%s", buf_error_bulk);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     if (waitpid(child_pid, NULL, 0) < 0) {
-        IPC_SEND_LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
+        LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
     }
     xunlink(files_from_filename);
     cecup.child_pid = 0;
@@ -1615,7 +1615,7 @@ work_rsync_bulk(void *user_data) {
     work_finalize(NULL);
     free_task_list(tasks);
     if (cecup.stop_working) {
-        IPC_SEND_LOG_ERROR(_("Stop requested.\n"));
+        LOG_ERROR(_("Stop requested.\n"));
     }
     g_thread_exit(NULL);
 }

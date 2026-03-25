@@ -79,7 +79,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
             fprintf(fp, "\n%s", pattern);
             fclose(fp);
         } else {
-            IPC_SEND_LOG_ERROR(_("Error opening %s: %s.\n"),
+            LOG_ERROR(_("Error opening %s: %s.\n"),
                                cecup.ignore_path, strerror(errno));
         }
     } else {
@@ -212,7 +212,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
                 NULL,
             };
             STRING_FROM_ARRAY(cmd, " ", command, LENGTH(command));
-            IPC_SEND_LOG(_("Launching %s...\n"), cmd);
+            LOG(_("Launching %s...\n"), cmd);
             util_command_launch(LENGTH(command), command);
         }
     }
@@ -261,7 +261,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 
             SNPRINTF(path_relative, "%s/%s", base_path, task->path);
             if (realpath(path_relative, path_full) == NULL) {
-                IPC_SEND_LOG_ERROR(_("Error resolving full path of %s: %s.\n"),
+                LOG_ERROR(_("Error resolving full path of %s: %s.\n"),
                                    path_relative, strerror(errno));
                 continue;
             }
@@ -419,7 +419,7 @@ on_menu_ignore(GtkWidget *m, void *data) {
             fprintf(fp, "\n%s", pattern);
             fclose(fp);
         } else {
-            IPC_SEND_LOG_ERROR(_("Error opening %s: %s.\n"),
+            LOG_ERROR(_("Error opening %s: %s.\n"),
                                cecup.ignore_path, strerror(errno));
         }
     } else {
