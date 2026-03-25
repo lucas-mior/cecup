@@ -219,14 +219,14 @@ typedef struct Message {
     enum CecupAction action;
     enum CecupReason reason;
 
-    char *message;
+    char *text;
     char *src_path;
     char *dst_path;
     char *link_target;
     char *ignore_pattern;
     char *path_to_focus;
 
-    int32 message_len;
+    int32 text_len;
     int32 path_len;
     int32 link_target_len;
     int32 ignore_pattern_len;
