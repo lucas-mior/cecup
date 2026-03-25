@@ -944,71 +944,80 @@ work_rsync(void *user_data) {
     bool second_run_with_checksum = false;
     int files_from_fd;
 
-    if (tasks) {
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task = tasks->items[i];
-            char full_path[MAX_PATH_LENGTH];
-            pid_t child_rm;
-            int child_status;
-            bool removed;
-
-            removed = false;
-
-            if (task->action != ACTION_DELETE) {
-                has_transfers = true;
-                continue;
-            }
-
-            if (cecup.stop_working) {
-                LOG_ERROR(_("Stop requested.\n"));
-                free_task_list(tasks);
-                work_finalize();
-                XFREE(thread_data, SIZEOF(*thread_data));
-                return NULL;
-            }
-
-            if (task->side == L) {
-                SNPRINTF(full_path, "%s/%s", cecup.src_base, task->path);
-            } else {
-                SNPRINTF(full_path, "%s/%s", cecup.dst_base, task->path);
-            }
-
-            switch (child_rm = fork()) {
-            case -1:
-                error("Error forking: %s.\n", strerror(errno));
-                fatal(EXIT_FAILURE);
-            case 0: {
-                char cmd_rm[MAX_PATH_LENGTH];
-                char *args_rm[] = {
-                    "rm",
-                    "-rvf",
-                    full_path,
-                    NULL,
-                };
-
-                STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
-
-                execvp(args_rm[0], args_rm);
-                error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
-                _exit(EXIT_FAILURE);
-            }
-            default:
-                cecup.child_pid = child_rm;
-                if (waitpid(child_rm, &child_status, 0) < 0) {
-                    LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
-                } else if (WIFEXITED(child_status)) {
-                    removed = !WEXITSTATUS(child_status);
-                }
-                cecup.child_pid = 0;
-                break;
-            }
-
-            if (removed) {
-                LOG("Removed %s...\n", full_path);
-            }
-        }
-    } else {
+    if (tasks == NULL) {
+        tasks = xmalloc(sizeof(*tasks));
+        memset64(tasks, 0, sizeof(*tasks));
         has_transfers = cecup.ntransfers > 0;
+    }
+
+    if (!has_transfers) {
+        work_finalize();
+        free_task_list(tasks);
+        XFREE(thread_data, SIZEOF(*thread_data));
+        return NULL;
+    }
+
+    for (int32 i = 0; i < tasks->count; i += 1) {
+        Task *task = tasks->items[i];
+        char full_path[MAX_PATH_LENGTH];
+        pid_t child_rm;
+        int child_status;
+        bool removed;
+
+        removed = false;
+
+        if (task->action != ACTION_DELETE) {
+            has_transfers = true;
+            continue;
+        }
+
+        if (cecup.stop_working) {
+            LOG_ERROR(_("Stop requested.\n"));
+            free_task_list(tasks);
+            work_finalize();
+            XFREE(thread_data, SIZEOF(*thread_data));
+            return NULL;
+        }
+
+        if (task->side == L) {
+            SNPRINTF(full_path, "%s/%s", cecup.src_base, task->path);
+        } else {
+            SNPRINTF(full_path, "%s/%s", cecup.dst_base, task->path);
+        }
+
+        switch (child_rm = fork()) {
+        case -1:
+            error("Error forking: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
+        case 0: {
+            char cmd_rm[MAX_PATH_LENGTH];
+            char *args_rm[] = {
+                "rm",
+                "-rvf",
+                full_path,
+                NULL,
+            };
+
+            STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
+
+            execvp(args_rm[0], args_rm);
+            error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        default:
+            cecup.child_pid = child_rm;
+            if (waitpid(child_rm, &child_status, 0) < 0) {
+                LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
+            } else if (WIFEXITED(child_status)) {
+                removed = !WEXITSTATUS(child_status);
+            }
+            cecup.child_pid = 0;
+            break;
+        }
+
+        if (removed) {
+            LOG("Removed %s...\n", full_path);
+        }
     }
 
     if (!has_transfers) {
