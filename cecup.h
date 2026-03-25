@@ -279,6 +279,11 @@ G_DECLARE_FINAL_TYPE(CecupRowProxy, cecup_row_proxy, CECUP, ROW_PROXY, GObject)
 #define CECUP_TYPE_LIST_MODEL (cecup_list_model_get_type())
 G_DECLARE_FINAL_TYPE(CecupListModel, cecup_list_model, CECUP, LIST_MODEL, GObject)
 
+typedef struct IgnorePattern {
+    char *str;
+    int32 len;
+} IgnorePattern;
+
 static struct {
     GtkApplication *application;
     GtkWidget *gtk_window;
@@ -342,6 +347,10 @@ static struct {
 
     pid_t child_pid;
     volatile bool stop_working;
+
+    IgnorePattern *ignore_patterns;
+    int32 ignore_count;
+    int32 ignore_capacity;
 } cecup;
 
 typedef struct ThreadData {

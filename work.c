@@ -50,11 +50,6 @@ static __thread int64 nftw_file_count = 0;
 #define HASH_TYPE fs_map
 #include "hash.c"
 
-typedef struct IgnorePattern {
-    char *str;
-    int32 len;
-} IgnorePattern;
-
 typedef struct FixFsThreadData {
     char *base_path;
     int32 base_path_len;
@@ -311,13 +306,22 @@ work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
 }
 
 static void
-work_load_ignore_patterns(IgnorePattern **patterns, int32 *count) {
+work_load_ignore_patterns(void) {
     FILE *file;
     char line_buffer[MAX_PATH_LENGTH];
-    int32 capacity = 16;
+    int32 *capacity = &cecup.ignore_capacity;
+    int32 count = 0;
 
-    *patterns = xmalloc(capacity*SIZEOF(**patterns));
-    *count = 0;
+    if (cecup.ignore_patterns == NULL) {
+        *capacity = 16;
+        cecup.ignore_patterns
+            = xmalloc(*capacity*SIZEOF(*cecup.ignore_patterns));
+    }
+    for (int32 i = 0; i < cecup.ignore_count; i += 1) {
+        XFREE(cecup.ignore_patterns[i].str);
+    }
+
+    count = 0;
 
     if ((file = fopen(cecup.ignore_path, "r")) == NULL) {
         LOG_ERROR("Error opening %s: %s.\n",
@@ -341,14 +345,18 @@ work_load_ignore_patterns(IgnorePattern **patterns, int32 *count) {
             continue;
         }
 
-        if (*count >= capacity) {
-            capacity *= 2;
-            *patterns = xrealloc(*patterns, capacity*SIZEOF(IgnorePattern));
+        if (count >= *capacity) {
+            *capacity *= 2;
+            cecup.ignore_patterns
+                = xrealloc(cecup.ignore_patterns,
+                           *capacity*SIZEOF(IgnorePattern));
         }
-        (*patterns)[*count].str = xstrdup(line_buffer);
-        (*patterns)[*count].len = length;
-        *count += 1;
+        cecup.ignore_patterns[count].str = xstrdup(line_buffer);
+        cecup.ignore_patterns[count].len = length;
+        count += 1;
     }
+
+    cecup.ignore_count = count;
 
     if (fclose(file)) {
         LOG_ERROR("Error closing %s: %s.\n",
@@ -846,7 +854,6 @@ work_rsync(void *user_data) {
     struct timespec t1_work;
 
     bool same_fs = true;
-    IgnorePattern *ignore_patterns = NULL;
     int32 ignore_count = 0;
 
     struct Hash_fs_map *src_map = hash_create_fs_map(1024);
@@ -898,20 +905,18 @@ work_rsync(void *user_data) {
         goto cleanup_maps;
     }
 
-    work_load_ignore_patterns(&ignore_patterns, &ignore_count);
+    work_load_ignore_patterns();
 
     src_fix.base_path = cecup.src_base;
     src_fix.base_path_len = cecup.src_base_len;
     src_fix.map = src_map;
     src_fix.inode_map = src_inode_map;
-    src_fix.ignore_patterns = ignore_patterns;
     src_fix.ignore_count = ignore_count;
 
     dst_fix.base_path = cecup.dst_base;
     dst_fix.base_path_len = cecup.dst_base_len;
     dst_fix.map = dst_map;
     dst_fix.inode_map = dst_inode_map;
-    dst_fix.ignore_patterns = ignore_patterns;
     dst_fix.ignore_count = ignore_count;
 
     LOG(_("Traversing file systems...\n"));
@@ -1450,10 +1455,6 @@ work_rsync(void *user_data) {
     work_finalize(thread_data);
 
 cleanup_maps:
-    for (int32 i = 0; i < ignore_count; i += 1) {
-        XFREE(ignore_patterns[i].str);
-    }
-    XFREE(ignore_patterns);
 
     hash_destroy_fs_map(src_map);
     hash_destroy_fs_map(dst_map);

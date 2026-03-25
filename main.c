@@ -758,6 +758,10 @@ main(int32 argc, char **argv) {
     cecup.rows = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
     cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
 
+    cecup.ignore_patterns = NULL;
+    cecup.ignore_capacity = 0;
+    cecup.ignore_count = 0;
+
     cecup.sort_col = COL_SRC_PATH;
     cecup.sort_order = GTK_SORT_ASCENDING;
     cecup.refresh_id = 0;
