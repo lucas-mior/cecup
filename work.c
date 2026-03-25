@@ -65,10 +65,10 @@ typedef struct FixFsThreadData {
     int32 array_capacity;
     int32 array_count;
 
-    struct stat *stat_array;
-    char **matched_pattern_array;
-    char **link_target_array;
-    char **relative_path_array;
+    struct stat *stats;
+    char **matched_patterns;
+    char **link_targets;
+    char **relative_paths;
 } FixFsThreadData;
 
 static __thread FixFsThreadData *nftw_current_data = NULL;
@@ -548,28 +548,28 @@ work_fix_fs_cb(const char *fpath,
         } else {
             data->array_capacity *= 2;
         }
-        data->stat_array = xrealloc(data->stat_array,
-                                    data->array_capacity*SIZEOF(struct stat));
-        data->matched_pattern_array = xrealloc(data->matched_pattern_array,
-                                    data->array_capacity*SIZEOF(char *));
-        data->link_target_array = xrealloc(data->link_target_array,
-                                           data->array_capacity*SIZEOF(char *));
-        data->relative_path_array = xrealloc(data->relative_path_array,
-                                             data->array_capacity*SIZEOF(char *));
+        data->stats = xrealloc(data->stats,
+                               data->array_capacity*SIZEOF(*(data->stats)));
+        data->matched_patterns = xrealloc(data->matched_patterns,
+                                          data->array_capacity*SIZEOF(*(data->matched_patterns)));
+        data->link_targets = xrealloc(data->link_targets,
+                                      data->array_capacity*SIZEOF(*(data->link_targets)));
+        data->relative_paths = xrealloc(data->relative_paths,
+                                        data->array_capacity*SIZEOF(*(data->relative_paths)));
     }
 
     index = data->array_count;
     data->array_count += 1;
 
-    memset64(&data->stat_array[index], 0, SIZEOF(struct stat));
-    memcpy64(&data->stat_array[index], (void *)sb, SIZEOF(struct stat));
+    memset64(&data->stats[index], 0, SIZEOF(struct stat));
+    memcpy64(&data->stats[index], (void *)sb, SIZEOF(struct stat));
 
     if (relative_len == 0) {
-        data->relative_path_array[index] = xstrdup("./");
+        data->relative_paths[index] = xstrdup("./");
     } else {
-        data->relative_path_array[index] = xstrdup(relative_path);
+        data->relative_paths[index] = xstrdup(relative_path);
     }
-    data->link_target_array[index] = NULL;
+    data->link_targets[index] = NULL;
 
     if (typeflag == FTW_SL) {
         char target[MAX_PATH_LENGTH];
@@ -578,7 +578,7 @@ work_fix_fs_cb(const char *fpath,
         len = (int64)readlink(fpath, target, SIZEOF(target) - 1);
         if (len != -1) {
             target[len] = '\0';
-            data->link_target_array[index] = xstrdup(target);
+            data->link_targets[index] = xstrdup(target);
         }
     } else if (typeflag == FTW_F && sb->st_nlink > 1) {
         char inode_str[64];
@@ -587,15 +587,15 @@ work_fix_fs_cb(const char *fpath,
         SNPRINTF(inode_str, "%llu", (unsigned long long)sb->st_ino);
         first_idx_ptr = hash_lookup2_fs_map(data->inode_map, inode_str);
         if (first_idx_ptr) {
-            data->link_target_array[index] = xstrdup(data->relative_path_array[*first_idx_ptr]);
+            data->link_targets[index] = xstrdup(data->relative_paths[*first_idx_ptr]);
         } else {
             hash_insert2_fs_map(data->inode_map, inode_str, index);
         }
     }
 
-    data->matched_pattern_array[index] = work_path_matches_ignore(relative_path, is_dir,
-                                                                  data->ignore_patterns,
-                                                                  data->ignore_count);
+    data->matched_patterns[index] = work_path_matches_ignore(relative_path, is_dir,
+                                                             data->ignore_patterns,
+                                                             data->ignore_count);
     if (relative_len == 0) {
         hash_insert2_fs_map(data->map, "./", index);
     } else {
@@ -791,10 +791,10 @@ work_rsync(void *user_data) {
             }
 
             src_idx = bucket_src->value;
-            stat_src = &src_fix.stat_array[src_idx];
-            matched_pattern_src = src_fix.matched_pattern_array[src_idx];
+            stat_src = &src_fix.stats[src_idx];
+            matched_pattern_src = src_fix.matched_patterns[src_idx];
             ignored_src = matched_pattern_src;
-            link_target_src = src_fix.link_target_array[src_idx];
+            link_target_src = src_fix.link_targets[src_idx];
             src_path = bucket_src->key;
 
             is_symlink = S_ISLNK(stat_src->st_mode);
@@ -803,8 +803,8 @@ work_rsync(void *user_data) {
 
             if ((dst_idx_ptr = hash_lookup2_fs_map(dst_map, bucket_src->key))) {
                 int32 dst_idx = *dst_idx_ptr;
-                struct stat *stat_dst = &dst_fix.stat_array[dst_idx];
-                char *link_target_dst = dst_fix.link_target_array[dst_idx];
+                struct stat *stat_dst = &dst_fix.stats[dst_idx];
+                char *link_target_dst = dst_fix.link_targets[dst_idx];
 
                 dst_path = src_path;
                 dst_size = stat_dst->st_size;
@@ -959,10 +959,10 @@ work_rsync(void *user_data) {
 
             if (hash_lookup2_fs_map(src_map, bucket_dst->key) == NULL) {
                 dst_idx = bucket_dst->value;
-                stat_dst = &dst_fix.stat_array[dst_idx];
-                matched_pattern_dst = dst_fix.matched_pattern_array[dst_idx];
+                stat_dst = &dst_fix.stats[dst_idx];
+                matched_pattern_dst = dst_fix.matched_patterns[dst_idx];
                 ignored_dst = matched_pattern_dst;
-                link_target_dst = dst_fix.link_target_array[dst_idx];
+                link_target_dst = dst_fix.link_targets[dst_idx];
 
                 if (ignored_dst) {
                     if (!thread_data->delete_excluded) {
@@ -1243,42 +1243,28 @@ cleanup_maps:
         hash_destroy_fs_map(dst_inode_map);
     }
 
-    if (src_fix.stat_array) {
-        XFREE(src_fix.stat_array);
-    }
-    if (src_fix.matched_pattern_array) {
-        XFREE(src_fix.matched_pattern_array);
-    }
-    if (src_fix.link_target_array) {
+    XFREE(src_fix.stats);
+    XFREE(src_fix.matched_patterns);
+
+    if (src_fix.link_targets) {
         for (int32 i = 0; i < src_fix.array_count; i += 1) {
-            if (src_fix.link_target_array[i]) {
-                XFREE(src_fix.link_target_array[i]);
-            }
-            if (src_fix.relative_path_array[i]) {
-                XFREE(src_fix.relative_path_array[i]);
-            }
+            XFREE(src_fix.link_targets[i]);
+            XFREE(src_fix.relative_paths[i]);
         }
-        XFREE(src_fix.link_target_array);
-        XFREE(src_fix.relative_path_array);
+        XFREE(src_fix.link_targets);
+        XFREE(src_fix.relative_paths);
     }
 
-    if (dst_fix.stat_array) {
-        XFREE(dst_fix.stat_array);
-    }
-    if (dst_fix.matched_pattern_array) {
-        XFREE(dst_fix.matched_pattern_array);
-    }
-    if (dst_fix.link_target_array) {
+    XFREE(dst_fix.stats);
+    XFREE(dst_fix.matched_patterns);
+
+    if (dst_fix.link_targets) {
         for (int32 i = 0; i < dst_fix.array_count; i += 1) {
-            if (dst_fix.link_target_array[i]) {
-                XFREE(dst_fix.link_target_array[i]);
-            }
-            if (dst_fix.relative_path_array[i]) {
-                XFREE(dst_fix.relative_path_array[i]);
-            }
+            XFREE(dst_fix.link_targets[i]);
+            XFREE(dst_fix.relative_paths[i]);
         }
-        XFREE(dst_fix.link_target_array);
-        XFREE(dst_fix.relative_path_array);
+        XFREE(dst_fix.link_targets);
+        XFREE(dst_fix.relative_paths);
     }
 
     g_thread_exit(NULL);
