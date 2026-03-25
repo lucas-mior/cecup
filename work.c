@@ -189,6 +189,7 @@ work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
     int32 slash;
     char *final_src_path;
     char *final_dst_path;
+    char *path;
     time_t unix_timestamp;
     CecupRow *row;
 
@@ -200,41 +201,35 @@ work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
 
     final_src_path = NULL;
     final_dst_path = NULL;
+
     slash = 0;
     if (is_dir) {
         slash = 1;
     }
 
+    path = xarena_push(cecup.arena, path_len + slash + 1);
+
     if (src_path) {
-        final_src_path = xarena_push(cecup.arena, path_len + slash + 1);
-        memcpy64(final_src_path, src_path, path_len + 1);
-
-        if (is_dir) {
-            if (final_src_path[path_len - 1] != '/') {
-                final_src_path[path_len] = '/';
-                final_src_path[path_len + 1] = '\0';
-                path_len += 1;
-            }
-        }
-
+        memcpy64(path, src_path, path_len + 1);
+        final_src_path = path;
         if (dst_path) {
-            final_dst_path = final_src_path;
+            final_dst_path = path;
         }
     } else if (dst_path) {
-        final_dst_path = xarena_push(cecup.arena, path_len + slash + 1);
-        memcpy64(final_dst_path, dst_path, path_len + 1);
-
-        if (is_dir) {
-            if (final_dst_path[path_len - 1] != '/') {
-                final_dst_path[path_len] = '/';
-                final_dst_path[path_len + 1] = '\0';
-                path_len += 1;
-            }
-        }
+        memcpy64(path, dst_path, path_len + 1);
+        final_dst_path = path;
     } else {
         LOG_ERROR("Both source and destination paths are NULL.\n");
         g_mutex_unlock(&cecup.arena_mutex);
         return;
+    }
+
+    if (is_dir) {
+        if (path[path_len - 1] != '/') {
+            path[path_len] = '/';
+            path[path_len + 1] = '\0';
+            path_len += 1;
+        }
     }
 
     row = xarena_push(cecup.arena, SIZEOF(*row));
