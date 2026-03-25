@@ -660,7 +660,7 @@ work_preview(void *user_data) {
         bool is_symlink;
         bool is_hardlink;
         bool is_dir;
-        enum CecupAction action;
+        enum CecupAction action = 0;
         enum CecupAction src_action;
         enum CecupAction dst_action;
         enum CecupReason reason;
