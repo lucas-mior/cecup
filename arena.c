@@ -159,12 +159,14 @@ arena_print(Arena *arena) {
         }
         arena = arena->next;
     }
+    return;
 }
 
 enum ArenaErrors {
     EARENA_INVALID = 2000000,
     EARENA_INVALID_OBJECT,
     EARENA_OBJECT_SIZE,
+    EARENA_MORE_THAN_4GB,
     EARENA_SIZE,
 };
 
@@ -179,6 +181,8 @@ arena_strerror(int arena_errno) {
         return "Object is too big for arena";
     case EARENA_SIZE:
         return "Invalid size";
+    case EARENA_MORE_THAN_4GB:
+        return "Tryed to get 32 bit index on arena larger than 4GB of space";
     default:
         return strerror(arena_errno);
     }
@@ -231,7 +235,7 @@ arena_allocate(int64 *size) {
             error2("Error getting page size: %s.\n", strerror(errno));
             return NULL;
         }
-        arena_page_size = aux;
+        arena_page_size = (int64)aux;
     }
 
     do {
@@ -395,6 +399,7 @@ arena_push_index32(Arena *arena, uint32 size) {
     before = arena->pos;
     arena->pos = (char *)arena->pos + size;
     if (arena->size >= UINT32_MAX) {
+        errno = EARENA_MORE_THAN_4GB;
         return UINT32_MAX;
     }
     arena->npushed += 1;
@@ -507,6 +512,7 @@ arena_functions_sink(void) {
     (void)arena_narenas;
     (void)arenas_reset;
     (void)arenas_destroy;
+    return;
 }
 /* #endif */
 
