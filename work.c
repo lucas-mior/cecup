@@ -642,7 +642,9 @@ work_fix_fs_cb(const char *fpath,
         data->relative_paths = xrealloc(data->relative_paths,
                                         data->array_capacity*SIZEOF(*(data->relative_paths)));
         data->path_lens = xrealloc(data->path_lens,
-                                       data->array_capacity*SIZEOF(*(data->path_lens)));
+                                   data->array_capacity*SIZEOF(*(data->path_lens)));
+        data->target_lens = xrealloc(data->path_lens,
+                                     data->array_capacity*SIZEOF(*(data->target_lens)));
     }
 
     index = data->array_count;
@@ -664,7 +666,7 @@ work_fix_fs_cb(const char *fpath,
         } else {
             target[target_len] = '\0';
             data->link_targets[index] = xmemdup(target, target_len + 1);
-            data->target_lens[index] = target_len;
+            data->target_lens[index] = (int16)target_len;
         }
     } else if (typeflag == FTW_F && (sb->st_nlink > 1)) {
         char inode_str[64];
@@ -675,6 +677,7 @@ work_fix_fs_cb(const char *fpath,
         first_idx_ptr = hash_lookup_fs_map(data->inode_map, inode_str, n);
         if (first_idx_ptr) {
             data->link_targets[index] = data->relative_paths[*first_idx_ptr];
+            data->target_lens[index] = data->path_lens[*first_idx_ptr];
         } else {
             hash_insert_fs_map(data->inode_map, inode_str, n, index);
         }
