@@ -1842,18 +1842,18 @@ work_rsync_bulk(void *user_data) {
 
 int
 main(void) {
-    char *pattern;
+    IgnorePattern *pattern;
     IgnorePattern patterns[3];
 
     patterns[0].str = "*.c";
     patterns[0].len = strlen32("*.c");
     pattern = work_path_matches_ignore("main.c", 6, false, patterns, 1);
-    ASSERT_EQUAL(pattern, "*.c");
+    ASSERT_EQUAL(pattern->str, "*.c");
 
     patterns[0].str = "build/";
     patterns[0].len = strlen32("build/");
     pattern = work_path_matches_ignore("build", 5, true, patterns, 1);
-    ASSERT_EQUAL(pattern, "build/");
+    ASSERT_EQUAL(pattern->str, "build/");
 
     patterns[0].str = "build/";
     patterns[0].len = strlen32("build/");
@@ -1863,12 +1863,12 @@ main(void) {
     patterns[0].str = "obj";
     patterns[0].len = strlen32("obj");
     pattern = work_path_matches_ignore("src/obj/main.o", 14, false, patterns, 1);
-    ASSERT_EQUAL(pattern, "obj");
+    ASSERT_EQUAL(pattern->str, "obj");
 
     patterns[0].str = "/src";
     patterns[0].len = strlen32("/src");
     pattern = work_path_matches_ignore("src/main.c", 10, false, patterns, 1);
-    ASSERT_EQUAL(pattern, "/src");
+    ASSERT_EQUAL(pattern->str, "/src");
 
     patterns[0].str = "/src";
     patterns[0].len = strlen32("/src");
@@ -1878,7 +1878,7 @@ main(void) {
     patterns[0].str = "foo/bar";
     patterns[0].len = strlen32("foo/bar");
     pattern = work_path_matches_ignore("foo/bar/baz.c", 13, false, patterns, 1);
-    ASSERT_EQUAL(pattern, "foo/bar");
+    ASSERT_EQUAL(pattern->str, "foo/bar");
 
     patterns[0].str = "*.h";
     patterns[0].len = strlen32("*.h");
@@ -1887,7 +1887,7 @@ main(void) {
     patterns[2].str = "*.o";
     patterns[2].len = strlen32("*.o");
     pattern = work_path_matches_ignore("src/main.o", 10, false, patterns, 3);
-    ASSERT_EQUAL(pattern, "*.o");
+    ASSERT_EQUAL(pattern->str, "*.o");
 
     exit(EXIT_SUCCESS);
 }
