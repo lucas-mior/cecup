@@ -518,7 +518,7 @@ work_fix_fs_cb(const char *fpath,
     data = nftw_current_data;
     d_name = (char *)fpath + ftwbuf->base;
     name_len = strlen32(d_name);
-    old_full_len = strlen32((char *)fpath);
+    old_full_len = ftwbuf->base + name_len;
 
     if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
         LOG_ERROR(_("Error: file path is too long:\n"));
