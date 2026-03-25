@@ -524,8 +524,8 @@ cecup_reset_dir(int32 side) {
 
 static void
 cecup_get_dirs(void) {
-    char *full_src;
-    char *full_dst;
+    char full_src[MAX_PATH_LENGTH];
+    char full_dst[MAX_PATH_LENGTH];
     char *tmp_src;
     char *tmp_dst;
 
@@ -545,24 +545,39 @@ cecup_get_dirs(void) {
         return;
     }
 
-    if ((full_src = realpath(tmp_src, NULL)) == NULL) {
+    if (realpath(tmp_src, full_src) == NULL) {
         LOG_ERROR("Error getting full path of %s: %s.\n", tmp_src,
                            strerror(errno));
         cecup_reset_dir(L);
         return;
     }
-    if ((full_dst = realpath(tmp_dst, NULL)) == NULL) {
+    if (realpath(tmp_dst, full_dst) == NULL) {
         LOG_ERROR("Error getting full path of %s: %s.\n", tmp_dst,
                            strerror(errno));
         cecup_reset_dir(R);
         return;
     }
 
-    XFREE(cecup.src_base, cecup.src_base_len + 1);
-    XFREE(cecup.dst_base, cecup.src_base_len + 1);
+    if (cecup.src_base) {
+        XFREE(cecup.src_base, cecup.src_base_len + 1);
+    }
+    if (cecup.dst_base) {
+        XFREE(cecup.dst_base, cecup.dst_base_len + 1);
+    }
 
-    cecup.src_base = full_src;
-    cecup.dst_base = full_dst;
+    {
+        int32 len;
+
+        len = strlen32(full_src);
+        cecup.src_base = xmalloc(len + 1);
+        memcpy64(cecup.src_base, full_src, len + 1);
+        cecup.src_base_len = len;
+
+        len = strlen32(full_dst);
+        cecup.dst_base = xmalloc(len + 1);
+        memcpy64(cecup.dst_base, full_dst, len + 1);
+        cecup.dst_base_len = len;
+    }
 
     g_signal_handler_block(cecup.src_entry, cecup.src_entry_id);
     g_signal_handler_block(cecup.dst_entry, cecup.dst_entry_id);
@@ -573,8 +588,6 @@ cecup_get_dirs(void) {
     g_signal_handler_unblock(cecup.src_entry, cecup.src_entry_id);
     g_signal_handler_unblock(cecup.dst_entry, cecup.dst_entry_id);
 
-    cecup.src_base_len = strlen32(cecup.src_base);
-    cecup.dst_base_len = strlen32(cecup.dst_base);
     return;
 }
 
