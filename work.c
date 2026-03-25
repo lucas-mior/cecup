@@ -950,7 +950,6 @@ work_rsync(void *user_data) {
             enum CecupAction src_action;
             enum CecupAction dst_action;
             enum CecupReason reason;
-            char *src_path = NULL;
             char *dst_path = NULL;
             int64 dst_size = 0;
             int64 dst_mtime = 0;
@@ -969,7 +968,6 @@ work_rsync(void *user_data) {
             link_target_src = traversal_src.link_targets[src_idx];
             link_target_len = traversal_src.link_targets_lens[src_idx];
             matched_pattern_len = traversal_src.matched_patterns_lens[src_idx];
-            src_path = bucket_src->key;
             path_len = traversal_src.paths_lens[src_idx];
 
             is_symlink = S_ISLNK(stat_src->st_mode);
@@ -982,7 +980,7 @@ work_rsync(void *user_data) {
                 struct stat *stat_dst = &traversal_dst.stats[dst_idx];
                 char *link_target_dst = traversal_dst.link_targets[dst_idx];
 
-                dst_path = src_path;
+                dst_path = bucket_src->key;
                 dst_size = stat_dst->st_size;
                 dst_mtime = stat_dst->st_mtime;
                 reason = 0;
