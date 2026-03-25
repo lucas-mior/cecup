@@ -1293,24 +1293,12 @@ work_rsync_bulk(void *user_data) {
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
-        switch (task->action) {
-        case ACTION_DELETE:
-        case ACTION_DELETED:
-        case ACTION_IGNORE:
-        case ACTION_EQUAL:
-            continue;
-        case ACTION_HARDLINK:
+        if (task->action == ACTION_HARDLINK) {
             write64(files_from_fd, task->link_target, task->link_target_len);
             write64(files_from_fd, "\n", 1);
-            __attribute__((fallthrough));
-        case ACTION_NEW:
-        case ACTION_UPDATE:
-        case ACTION_SYMLINK:
-        case ACTION_LAST:
-        default:
-            write64(files_from_fd, task->path, task->path_len);
-            write64(files_from_fd, "\n", 1);
         }
+        write64(files_from_fd, task->path, task->path_len);
+        write64(files_from_fd, "\n", 1);
     }
     XCLOSE(&files_from_fd);
 
