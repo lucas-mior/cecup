@@ -185,7 +185,8 @@ work_finalize(ThreadData *thread_data) {
 }
 
 static void
-work_add_row(enum CecupAction action, enum CecupReason reason,
+work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
+             enum CecupReason reason,
              char *src_path, char *dst_path,
              char *link_target, int32 link_target_len,
              char *ignore_pattern, int32 ignore_pattern_len,
@@ -247,24 +248,26 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     row = xarena_push(cecup.arena, SIZEOF(*row));
     memset64(row, 0, SIZEOF(*row));
 
-    row->src_action = action;
-    row->dst_action = action;
+    row->src_action = src_action;
+    row->dst_action = dst_action;
     row->reason = reason;
 
-    if (action == ACTION_IGNORE) {
-        row->src_action = ACTION_IGNORE;
-        if (final_dst_path) {
+    if (reason & REASON_IGNORED) {
+        ASSERT_EQUAL((int)row->src_action, ACTION_IGNORE);
+        if (final_dst_path != NULL) {
             if (delete_excluded) {
-                row->dst_action = ACTION_DELETE;
+                ASSERT_EQUAL((int)row->dst_action, ACTION_DELETE);
             } else {
-                row->dst_action = ACTION_IGNORE;
+                ASSERT_EQUAL((int)row->dst_action, ACTION_IGNORE);
             }
         } else {
-            row->dst_action = ACTION_IGNORE;
+            ASSERT_EQUAL((int)row->dst_action, ACTION_IGNORE);
         }
-    } else if (action == ACTION_DELETE) {
-        row->dst_action = ACTION_DELETE;
-        row->src_action = ACTION_IGNORE;
+    } else if (reason & REASON_MISSING) {
+        ASSERT_EQUAL((int)row->dst_action, ACTION_DELETE);
+        ASSERT_EQUAL((int)row->src_action, ACTION_IGNORE);
+    } else {
+        ASSERT_EQUAL((int)row->src_action, (int)row->dst_action);
     }
 
     bytes_pretty(row->src_size_text, src_size_raw);
@@ -933,9 +936,9 @@ work_rsync(void *user_data) {
     LOG(_("Traversing file systems...\n"));
     if (!same_fs) {
         GThread *t1 = g_thread_new("fix_src",
-                                   work_fix_fs_thread_fn, &src_fix);
+                                    work_fix_fs_thread_fn, &src_fix);
         GThread *t2 = g_thread_new("fix_dst",
-                                   work_fix_fs_thread_fn, &dst_fix);
+                                    work_fix_fs_thread_fn, &dst_fix);
         g_thread_join(t1);
         g_thread_join(t2);
     } else {
@@ -972,6 +975,8 @@ work_rsync(void *user_data) {
             bool is_hardlink;
             bool is_dir;
             enum CecupAction action;
+            enum CecupAction src_action;
+            enum CecupAction dst_action;
             enum CecupReason reason;
             char *src_path = NULL;
             char *dst_path = NULL;
@@ -1061,9 +1066,9 @@ work_rsync(void *user_data) {
 
                         if (is_hardlink) {
                             if (S_ISREG(stat_dst->st_mode)
-                                && link_target_dst
-                                && !strcmp(link_target_src, link_target_dst)
-                                && !attributes_differ) {
+                                 && link_target_dst
+                                 && !strcmp(link_target_src, link_target_dst)
+                                 && !attributes_differ) {
                                 equal = true;
                             }
                         } else {
@@ -1105,6 +1110,25 @@ work_rsync(void *user_data) {
                 }
             }
 
+            src_action = action;
+            dst_action = action;
+
+            if (action == ACTION_IGNORE) {
+                src_action = ACTION_IGNORE;
+                if (dst_path != NULL) {
+                    if (thread_data->delete_excluded) {
+                        dst_action = ACTION_DELETE;
+                    } else {
+                        dst_action = ACTION_IGNORE;
+                    }
+                } else {
+                    dst_action = ACTION_IGNORE;
+                }
+            } else if (action == ACTION_DELETE) {
+                src_action = ACTION_IGNORE;
+                dst_action = ACTION_DELETE;
+            }
+
             if ((action != ACTION_EQUAL) && (action != ACTION_IGNORE)) {
                 if (ntransfers >= transfers_capacity) {
                     if (transfers_capacity == 0) {
@@ -1113,7 +1137,7 @@ work_rsync(void *user_data) {
                         transfers_capacity *= 2;
                     }
                     transfers = xrealloc(transfers,
-                                         transfers_capacity*SIZEOF(*transfers));
+                                          transfers_capacity*SIZEOF(*transfers));
                 }
                 transfers[ntransfers] = bucket_src->key;
                 ntransfers += 1;
@@ -1125,7 +1149,7 @@ work_rsync(void *user_data) {
                 src_size = stat_src->st_size;
             }
 
-            work_add_row(action, reason,
+            work_add_row(src_action, dst_action, reason,
                          bucket_src->key, dst_path,
                          link_target_src, link_target_len,
                          matched_pattern_src, matched_pattern_len,
@@ -1153,6 +1177,8 @@ work_rsync(void *user_data) {
             int32 matched_pattern_len;
             enum CecupAction action = ACTION_DELETE;
             enum CecupReason reason = 0;
+            enum CecupAction src_action;
+            enum CecupAction dst_action;
             int32 path_len;
 
             if ((int64)bucket_dst->key <= 0) {
@@ -1179,7 +1205,22 @@ work_rsync(void *user_data) {
 
                 reason |= REASON_MISSING;
 
-                work_add_row(action, reason,
+                src_action = action;
+                dst_action = action;
+
+                if (action == ACTION_IGNORE) {
+                    src_action = ACTION_IGNORE;
+                    if (thread_data->delete_excluded) {
+                        dst_action = ACTION_DELETE;
+                    } else {
+                        dst_action = ACTION_IGNORE;
+                    }
+                } else if (action == ACTION_DELETE) {
+                    src_action = ACTION_IGNORE;
+                    dst_action = ACTION_DELETE;
+                }
+
+                work_add_row(src_action, dst_action, reason,
                              NULL, bucket_dst->key,
                              link_target_dst, link_target_len,
                              matched_pattern_dst, matched_pattern_len,
@@ -1470,6 +1511,7 @@ cleanup_maps:
 
     g_thread_exit(NULL);
 }
+
 
 static void *
 work_rsync_bulk(void *user_data) {
