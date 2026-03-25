@@ -1006,7 +1006,7 @@ work_rsync(void *user_data) {
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
 
-        execvp("rsync", rsync_args);
+        execvp(rsync_args[0], rsync_args);
         _exit(EXIT_FAILURE);
     default:
         cecup.child_pid = child_pid;
