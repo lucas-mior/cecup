@@ -292,7 +292,7 @@ case "$target" in
     exit
     ;;
 "callgrind")
-    out="callgrind_$(date +%s).txt"
+    out="callgrind_$(date +%s).callgrind"
     trace_on
     valgrind --tool=callgrind --callgrind-out-file="$out" bin/$program
     kcachegrind "$out"
