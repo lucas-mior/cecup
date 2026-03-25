@@ -487,7 +487,7 @@ work_traverse_fs(TraversalData *data) {
 }
 
 static void *
-work_fix_fs_thread_fn(void *user_data) {
+work_traverse_fs_thread(void *user_data) {
     TraversalData *data = user_data;
     data->file_count = work_traverse_fs(data);
     return NULL;
@@ -642,14 +642,14 @@ work_preview(void *user_data) {
     LOG(_("Traversing file systems...\n"));
     if (!same_fs) {
         GThread *t1 = g_thread_new("traversal_src",
-                                   work_fix_fs_thread_fn, &cecup.traversal_src);
+                                   work_traverse_fs_thread, &cecup.traversal_src);
         GThread *t2 = g_thread_new("traversal_dst",
-                                   work_fix_fs_thread_fn, &cecup.traversal_dst);
+                                   work_traverse_fs_thread, &cecup.traversal_dst);
         g_thread_join(t1);
         g_thread_join(t2);
     } else {
-        work_fix_fs_thread_fn(&cecup.traversal_src);
-        work_fix_fs_thread_fn(&cecup.traversal_dst);
+        work_traverse_fs_thread(&cecup.traversal_src);
+        work_traverse_fs_thread(&cecup.traversal_dst);
     }
 
     if (cecup.stop_working) {
