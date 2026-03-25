@@ -1188,14 +1188,14 @@ work_rsync(void *user_data) {
     int files_from_fd;
 
     if (tasks == NULL) {
-        tasks = xmalloc(sizeof(*tasks));
-        memset64(tasks, 0, sizeof(*tasks));
         if (cecup.ntransfers <= 0) {
+            LOG_ERROR("There are no operations to make.\n");
             work_finalize();
-            free_task_list(tasks);
             XFREE(thread_data, SIZEOF(*thread_data));
             return NULL;
         }
+        tasks = xmalloc(sizeof(*tasks));
+        memset64(tasks, 0, sizeof(*tasks));
     }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
