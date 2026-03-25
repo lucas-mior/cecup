@@ -416,47 +416,75 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
                 return pattern;
             }
         } else {
-            char *saveptr;
             char *comp;
+            char *next;
+            int32 remaining_len;
 
             memcpy64(path_copy, relative_path, path_len + 1);
+            comp = path_copy;
+            remaining_len = path_len;
 
-            if ((comp = strtok_r(path_copy, "/", &saveptr))) {
-                while (comp) {
-                    char *next;
-                    bool is_leaf;
-                    bool comp_is_dir;
+            while (remaining_len > 0) {
+                bool is_leaf;
+                bool comp_is_dir;
 
-                    next = strtok_r(NULL, "/", &saveptr);
+                while (remaining_len > 0 && *comp == '/') {
+                    comp += 1;
+                    remaining_len -= 1;
+                }
 
-                    if (next == NULL) {
-                        is_leaf = true;
-                    } else {
-                        is_leaf = false;
+                if (remaining_len == 0) {
+                    break;
+                }
+
+                if ((next = memchr64(comp, '/', remaining_len))) {
+                    int32 comp_len;
+
+                    *next = '\0';
+                    comp_len = (int32)(next - comp);
+                    remaining_len -= (comp_len + 1);
+                    next += 1;
+
+                    while (remaining_len > 0 && *next == '/') {
+                        next += 1;
+                        remaining_len -= 1;
                     }
 
-                    if (is_leaf) {
-                        comp_is_dir = is_dir;
-                    } else {
-                        comp_is_dir = true;
+                    if (remaining_len == 0) {
+                        next = NULL;
                     }
+                } else {
+                    next = NULL;
+                    remaining_len = 0;
+                }
 
-                    if (!dir_only) {
+                if (next == NULL) {
+                    is_leaf = true;
+                } else {
+                    is_leaf = false;
+                }
+
+                if (is_leaf) {
+                    comp_is_dir = is_dir;
+                } else {
+                    comp_is_dir = true;
+                }
+
+                if (!dir_only) {
+                    if (work_match_pattern(pattern_final, comp, false)) {
+                        matched = true;
+                        break;
+                    }
+                } else {
+                    if (comp_is_dir) {
                         if (work_match_pattern(pattern_final, comp, false)) {
                             matched = true;
                             break;
                         }
-                    } else {
-                        if (comp_is_dir) {
-                            if (work_match_pattern(pattern_final, comp, false)) {
-                                matched = true;
-                                break;
-                            }
-                        }
                     }
-
-                    comp = next;
                 }
+
+                comp = next;
             }
 
             if (matched) {
