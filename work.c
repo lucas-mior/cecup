@@ -46,7 +46,7 @@ static __thread int64 nftw_file_count = 0;
 #define HASH_VALUE_TYPE int32
 #define HASH_VALUE_FORMATTER "%d"
 #define HASH_PADDING_TYPE uint32
-#define HASH_DUPLICATE_KEYS 1
+#define HASH_DUPLICATE_KEYS 0
 #define HASH_TYPE fs_map
 #include "hash.c"
 
@@ -619,10 +619,12 @@ work_fix_fs_cb(const char *fpath,
     }
 
     relative_path = (char *)fpath + data->base_path_len;
+    relative_len = old_full_len - data->base_path_len;
     if (relative_path[0] == '/') {
         relative_path += 1;
+        relative_len -= 1;
     }
-    relative_len = strlen32(relative_path);
+    relative_path = xmemdup(relative_path, relative_len + 1);
     is_dir = (typeflag == FTW_D || typeflag == FTW_DP);
 
     if (data->array_count >= data->array_capacity) {
@@ -712,12 +714,6 @@ work_fix_fs_thread_fn(void *user_data) {
     FixFsThreadData *data = user_data;
     data->file_count = work_fix_fs_recursive(data);
     return NULL;
-}
-
-static void
-work_destroy_fs_map(struct Hash_fs_map *map) {
-    hash_destroy_fs_map(map);
-    return;
 }
 
 static void *
@@ -1310,8 +1306,8 @@ cleanup_maps:
         XFREE(ignore_patterns);
     }
 
-    work_destroy_fs_map(src_map);
-    work_destroy_fs_map(dst_map);
+    hash_destroy_fs_map(src_map);
+    hash_destroy_fs_map(dst_map);
 
     if (src_inode_map) {
         hash_destroy_fs_map(src_inode_map);
