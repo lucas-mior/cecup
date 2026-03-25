@@ -1190,14 +1190,12 @@ work_rsync(void *user_data) {
     if (tasks == NULL) {
         tasks = xmalloc(sizeof(*tasks));
         memset64(tasks, 0, sizeof(*tasks));
-        has_transfers = cecup.ntransfers > 0;
-    }
-
-    if (!has_transfers) {
-        work_finalize();
-        free_task_list(tasks);
-        XFREE(thread_data, SIZEOF(*thread_data));
-        return NULL;
+        if (cecup.ntransfers <= 0) {
+            work_finalize();
+            free_task_list(tasks);
+            XFREE(thread_data, SIZEOF(*thread_data));
+            return NULL;
+        }
     }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
@@ -1242,6 +1240,7 @@ work_rsync(void *user_data) {
             };
 
             STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
+            error("%s\n", cmd_rm);
 
             execvp(args_rm[0], args_rm);
             error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));

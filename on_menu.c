@@ -336,9 +336,11 @@ on_menu_delete(GtkWidget *m, void *data) {
     (void)m;
 
     tasks = get_target_tasks(message->side, message->src_path, ACTION_DELETE);
+    HERE;
 
     if (tasks->count > 0) {
         for (int32 i = 0; i < tasks->count; i += 1) {
+            HERE;
             tasks->items[i]->action = ACTION_DELETE;
         }
 
