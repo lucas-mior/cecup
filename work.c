@@ -41,7 +41,7 @@
 
 static Message *add_row_batch_messages[BATCH_SIZE];
 static int32 add_row_batch_count = 0;
-static __thread int64 nftw_file_count = 0;
+static _Thread_local int64 nftw_file_count = 0;
 
 #define HASH_VALUE_TYPE int32
 #define HASH_VALUE_FORMATTER "%d"
@@ -71,7 +71,7 @@ typedef struct TraversalData {
     int16 *matched_patterns_lens;
 } TraversalData;
 
-static __thread TraversalData *nftw_current_data = NULL;
+static _Thread_local TraversalData *nftw_current_data = NULL;
 
 static void
 work_flush_add_rows(void) {
