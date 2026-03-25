@@ -217,12 +217,6 @@ cecup_row_compare(const void *a, const void *b) {
 
 static void
 refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
-    refresh_ui_list_locked(refresh_type, path_to_focus);
-    return;
-}
-
-static void
-refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
     int32 count_new = 0;
     int32 count_hard = 0;
     int32 count_update = 0;
