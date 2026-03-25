@@ -799,7 +799,7 @@ main(int32 argc, char **argv) {
     cecup.stop_working = false;
 
     cecup.application = gtk_application_new("com.cecup.app",
-                                            G_APPLICATION_DEFAULT_FLAGS);
+                                            G_APPLICATION_NON_UNIQUE);
     g_signal_connect(cecup.application, "activate",
                      G_CALLBACK(main_application_run), NULL);
     status = g_application_run(G_APPLICATION(cecup.application), argc, argv);
