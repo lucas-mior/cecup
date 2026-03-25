@@ -344,7 +344,7 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
                 for (int32 j = 0; j < path_len; j += 1) {
                     if (path_copy[j] == '/') {
                         path_copy[j] = '\0';
-                        if (fnmatch(pattern_final, path_copy, FNM_PATHNAME) == 0) {
+                        if (!fnmatch(pattern_final, path_copy, FNM_PATHNAME)) {
                             matched = true;
                             break;
                         }
@@ -854,7 +854,8 @@ work_rsync(void *user_data) {
                             reason |= REASON_GROUP;
                             attributes_differ = true;
                         }
-                        if ((stat_src->st_mode & 07777) != (stat_dst->st_mode & 07777)) {
+                        if ((stat_src->st_mode & 07777)
+                             != (stat_dst->st_mode & 07777)) {
                             reason |= REASON_PERM;
                             attributes_differ = true;
                         }
@@ -1147,10 +1148,14 @@ work_rsync(void *user_data) {
                     filename += 1;
                 }
                 path_len = (int32)(eol - filename);
-                if ((sep = memmem64(filename, path_len, RSYNC_HARDLINK_NOTATION, strlen32(RSYNC_HARDLINK_NOTATION)))) {
+                if ((sep = memmem64(filename, path_len,
+                                    RSYNC_HARDLINK_NOTATION,
+                                    strlen32(RSYNC_HARDLINK_NOTATION)))) {
                     *sep = '\0';
                     path_len = (int32)(sep - filename);
-                } else if ((sep = memmem64(filename, path_len, RSYNC_SYMLINK_NOTATION, strlen32(RSYNC_SYMLINK_NOTATION)))) {
+                } else if ((sep = memmem64(filename, path_len,
+                                           RSYNC_SYMLINK_NOTATION,
+                                           strlen32(RSYNC_SYMLINK_NOTATION)))) {
                     *sep = '\0';
                     path_len = (int32)(sep - filename);
                 }
