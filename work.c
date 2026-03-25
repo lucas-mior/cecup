@@ -865,6 +865,7 @@ work_rsync(void *user_data) {
             int64 dst_size = 0;
             int64 dst_mtime = 0;
             int64 src_size = 0;
+            int32 path_len;
 
             if ((int64)bucket_src->key <= 0) {
                 continue;
@@ -875,6 +876,7 @@ work_rsync(void *user_data) {
             matched_pattern_src = src_fix.matched_patterns[src_idx];
             link_target_src = src_fix.link_targets[src_idx];
             src_path = bucket_src->key;
+            path_len = src_fix.path_lens[src_idx];
 
             is_symlink = S_ISLNK(stat_src->st_mode);
             is_hardlink = (S_ISREG(stat_src->st_mode) && link_target_src != NULL);
@@ -1008,7 +1010,7 @@ work_rsync(void *user_data) {
             work_add_row(action, reason,
                          bucket_src->key, dst_path,
                          link_target_src, matched_pattern_src,
-                         strlen32(bucket_src->key),
+                         path_len,
                          src_size, stat_src->st_mtime,
                          dst_size, dst_mtime,
                          thread_data->delete_excluded,
@@ -1031,6 +1033,7 @@ work_rsync(void *user_data) {
             char *link_target_dst;
             enum CecupAction action = ACTION_DELETE;
             enum CecupReason reason = 0;
+            int32 path_len;
 
             if ((int64)bucket_dst->key <= 0) {
                 continue;
@@ -1042,6 +1045,7 @@ work_rsync(void *user_data) {
                 matched_pattern_dst = dst_fix.matched_patterns[dst_idx];
                 ignored_dst = matched_pattern_dst;
                 link_target_dst = dst_fix.link_targets[dst_idx];
+                path_len = dst_fix.path_lens[dst_idx];
 
                 if (ignored_dst) {
                     if (!thread_data->delete_excluded) {
@@ -1055,7 +1059,7 @@ work_rsync(void *user_data) {
                 work_add_row(action, reason,
                              NULL, bucket_dst->key,
                              link_target_dst, matched_pattern_dst,
-                             strlen32(bucket_dst->key),
+                             path_len,
                              0, 0,
                              stat_dst->st_size, stat_dst->st_mtime,
                              thread_data->delete_excluded,
