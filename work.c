@@ -186,13 +186,12 @@ work_finalize(ThreadData *thread_data) {
 static void
 work_add_row(enum CecupAction action, enum CecupReason reason,
              char *src_path, char *dst_path,
-             char *link_target, char *ignore_pattern,
+             char *link_target, int32 link_target_len,
+             char *ignore_pattern,
              int32 path_len,
              int64 src_size_raw, int64 src_mtime_raw,
              int64 dst_size_raw, int64 dst_mtime_raw,
              bool delete_excluded, bool is_dir) {
-    int32 target_len;
-    int32 pattern_len;
     Message *message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
@@ -210,14 +209,13 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     message->dst_path = dst_path;
 
     if (link_target) {
-        target_len = strlen32(link_target);
-        message->link_target_len = target_len;
-        message->link_target = xmalloc(target_len + 1);
-        memcpy64(message->link_target, link_target, target_len + 1);
+        message->link_target_len = link_target_len;
+        message->link_target = xmalloc(link_target_len + 1);
+        memcpy64(message->link_target, link_target, link_target_len + 1);
     }
 
     if (ignore_pattern) {
-        pattern_len = strlen32(ignore_pattern);
+        int32 pattern_len = strlen32(ignore_pattern);
         message->ignore_pattern_len = pattern_len;
         message->ignore_pattern = xmalloc(pattern_len + 1);
         memcpy64(message->ignore_pattern, ignore_pattern, pattern_len + 1);
@@ -643,7 +641,7 @@ work_fix_fs_cb(const char *fpath,
                                         data->array_capacity*SIZEOF(*(data->relative_paths)));
         data->path_lens = xrealloc(data->path_lens,
                                    data->array_capacity*SIZEOF(*(data->path_lens)));
-        data->target_lens = xrealloc(data->path_lens,
+        data->target_lens = xrealloc(data->target_lens,
                                      data->array_capacity*SIZEOF(*(data->target_lens)));
     }
 
@@ -865,6 +863,7 @@ work_rsync(void *user_data) {
             int64 dst_mtime = 0;
             int64 src_size = 0;
             int32 path_len;
+            int32 link_target_len;
 
             if ((int64)bucket_src->key <= 0) {
                 continue;
@@ -874,6 +873,7 @@ work_rsync(void *user_data) {
             stat_src = &src_fix.stats[src_idx];
             matched_pattern_src = src_fix.matched_patterns[src_idx];
             link_target_src = src_fix.link_targets[src_idx];
+            link_target_len = src_fix.target_lens[src_idx];
             src_path = bucket_src->key;
             path_len = src_fix.path_lens[src_idx];
 
@@ -1009,7 +1009,8 @@ work_rsync(void *user_data) {
 
             work_add_row(action, reason,
                          bucket_src->key, dst_path,
-                         link_target_src, matched_pattern_src,
+                         link_target_src, link_target_len,
+                         matched_pattern_src,
                          path_len,
                          src_size, stat_src->st_mtime,
                          dst_size, dst_mtime,
@@ -1031,6 +1032,7 @@ work_rsync(void *user_data) {
             char *matched_pattern_dst;
             bool ignored_dst;
             char *link_target_dst;
+            int32 link_target_len;
             enum CecupAction action = ACTION_DELETE;
             enum CecupReason reason = 0;
             int32 path_len;
@@ -1048,6 +1050,7 @@ work_rsync(void *user_data) {
                 matched_pattern_dst = dst_fix.matched_patterns[dst_idx];
                 ignored_dst = matched_pattern_dst;
                 link_target_dst = dst_fix.link_targets[dst_idx];
+                link_target_len = dst_fix.target_lens[dst_idx];
 
                 if (ignored_dst) {
                     if (!thread_data->delete_excluded) {
@@ -1060,7 +1063,8 @@ work_rsync(void *user_data) {
 
                 work_add_row(action, reason,
                              NULL, bucket_dst->key,
-                             link_target_dst, matched_pattern_dst,
+                             link_target_dst, link_target_len,
+                             matched_pattern_dst,
                              path_len,
                              0, 0,
                              stat_dst->st_size, stat_dst->st_mtime,
@@ -1079,7 +1083,7 @@ work_rsync(void *user_data) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
     PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
 
-    exit(0);
+    /* exit(0); */
 
     if (thread_data->is_preview || (ntransfers <= 0)) {
         work_finalize(thread_data);
