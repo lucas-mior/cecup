@@ -777,14 +777,13 @@ work_fix_fs_cb(const char *fpath,
     }
 
     {
-        IgnorePattern *ignore_pattern
-            = work_path_matches_ignore(path, relative_len,
-                                       is_dir,
-                                       data->ignore_patterns,
-                                       data->ignore_count);
-        if (ignore_pattern) {
-            data->matched_patterns[index] = ignore_pattern->str;
-            data->matched_patterns_lens[index] = (int16)ignore_pattern->len;
+        IgnorePattern *pattern = work_path_matches_ignore(path, relative_len,
+                                                          is_dir,
+                                                          data->ignore_patterns,
+                                                          data->ignore_count);
+        if (pattern) {
+            data->matched_patterns[index] = pattern->str;
+            data->matched_patterns_lens[index] = (int16)pattern->len;
         }
     }
     hash_insert_fs_map(data->map, path, (uint32)relative_len, index);
