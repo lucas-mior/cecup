@@ -687,12 +687,7 @@ work_fix_fs_cb(const char *fpath,
     data->matched_patterns[index] = work_path_matches_ignore(relative_path, is_dir,
                                                              data->ignore_patterns,
                                                              data->ignore_count);
-    if (relative_len == 0) {
-        hash_insert2_fs_map(data->map, "./", index);
-    } else {
-        hash_insert2_fs_map(data->map, relative_path, index);
-    }
-
+    hash_insert2_fs_map(data->map, relative_path, index);
     return 0;
 }
 
