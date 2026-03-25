@@ -70,7 +70,7 @@ typedef struct FixFsThreadData {
     int32 array_count;
 
     struct stat *stats;
-    char **relative_paths;
+    char **paths;
     char **link_targets;
     char **matched_patterns;
 
@@ -421,7 +421,7 @@ work_match_pattern(char *pattern, char *str, bool restrict_slash) {
 }
 
 static IgnorePattern *
-work_path_matches_ignore(char *relative_path, int32 relative_len,
+work_path_matches_ignore(char *path, int32 relative_len,
                          bool is_dir, IgnorePattern *patterns, int32 count) {
     if (patterns == NULL) {
         return NULL;
@@ -475,7 +475,7 @@ work_path_matches_ignore(char *relative_path, int32 relative_len,
         }
 
         if (has_slash) {
-            memcpy64(path_copy, relative_path, relative_len + 1);
+            memcpy64(path_copy, path, relative_len + 1);
 
             if (work_match_pattern(pattern_final, path_copy, true)) {
                 if (!dir_only) {
@@ -508,7 +508,7 @@ work_path_matches_ignore(char *relative_path, int32 relative_len,
             char *next;
             int32 remaining_len;
 
-            memcpy64(path_copy, relative_path, relative_len + 1);
+            memcpy64(path_copy, path, relative_len + 1);
             comp = path_copy;
             remaining_len = relative_len;
 
@@ -592,7 +592,7 @@ work_fix_fs_cb(const char *fpath,
     int32 old_full_len;
     bool changed;
     bool renaming_problematic;
-    char *relative_path;
+    char *path;
     int32 relative_len;
     bool is_dir;
     int32 index;
@@ -705,20 +705,20 @@ work_fix_fs_cb(const char *fpath,
         nftw_file_count += 1;
     }
 
-    relative_path = (char *)fpath + data->base_path_len;
+    path = (char *)fpath + data->base_path_len;
     relative_len = old_full_len - data->base_path_len;
 
-    if (relative_path[0] == '/') {
-        relative_path += 1;
+    if (path[0] == '/') {
+        path += 1;
         relative_len -= 1;
     }
 
     if (relative_len == 0) {
-        relative_path = "./";
+        path = "./";
         relative_len = 2;
     }
 
-    relative_path = xmemdup(relative_path, relative_len + 1);
+    path = xmemdup(path, relative_len + 1);
     is_dir = (typeflag == FTW_D || typeflag == FTW_DP);
 
     if (data->array_count >= data->array_capacity) {
@@ -731,9 +731,9 @@ work_fix_fs_cb(const char *fpath,
         data->stats = xrealloc(data->stats,
                                data->array_capacity*SIZEOF(*(data->stats)));
 
-        data->relative_paths
-            = xrealloc(data->relative_paths,
-                       data->array_capacity*SIZEOF(*(data->relative_paths)));
+        data->paths
+            = xrealloc(data->paths,
+                       data->array_capacity*SIZEOF(*(data->paths)));
         data->link_targets
             = xrealloc(data->link_targets,
                        data->array_capacity*SIZEOF(*(data->link_targets)));
@@ -758,7 +758,7 @@ work_fix_fs_cb(const char *fpath,
     memset64(&data->stats[index], 0, SIZEOF(struct stat));
     memcpy64(&data->stats[index], (void *)sb, SIZEOF(struct stat));
 
-    data->relative_paths[index] = relative_path;
+    data->paths[index] = path;
     data->link_targets[index] = NULL;
     data->matched_patterns[index] = NULL;
 
@@ -785,7 +785,7 @@ work_fix_fs_cb(const char *fpath,
         n = (uint32)itoa2(inode_str, (long)sb->st_ino);
         first_idx_ptr = hash_lookup_fs_map(data->inode_map, inode_str, n);
         if (first_idx_ptr) {
-            data->link_targets[index] = data->relative_paths[*first_idx_ptr];
+            data->link_targets[index] = data->paths[*first_idx_ptr];
             data->link_targets_lens[index] = data->path_lens[*first_idx_ptr];
         } else {
             hash_insert_fs_map(data->inode_map, inode_str, n, index);
@@ -794,7 +794,7 @@ work_fix_fs_cb(const char *fpath,
 
     {
         IgnorePattern *ignore_pattern
-            = work_path_matches_ignore(relative_path, relative_len,
+            = work_path_matches_ignore(path, relative_len,
                                        is_dir,
                                        data->ignore_patterns,
                                        data->ignore_count);
@@ -803,7 +803,7 @@ work_fix_fs_cb(const char *fpath,
             data->matched_patterns_lens[index] = (int16)ignore_pattern->len;
         }
     }
-    hash_insert_fs_map(data->map, relative_path, (uint32)relative_len, index);
+    hash_insert_fs_map(data->map, path, (uint32)relative_len, index);
     return 0;
 }
 
@@ -1442,7 +1442,7 @@ cleanup_maps:
     hash_destroy_fs_map(dst_inode_map);
 
     for (int32 i = 0; i < src_fix.array_count; i += 1) {
-        XFREE(src_fix.relative_paths[i]);
+        XFREE(src_fix.paths[i]);
         if (S_ISLNK(src_fix.stats[i].st_mode)) {
             XFREE(src_fix.link_targets[i]);
         }
@@ -1450,13 +1450,13 @@ cleanup_maps:
     XFREE(src_fix.stats);
     XFREE(src_fix.matched_patterns);
     XFREE(src_fix.link_targets);
-    XFREE(src_fix.relative_paths);
+    XFREE(src_fix.paths);
     XFREE(src_fix.path_lens);
     XFREE(src_fix.link_targets_lens);
     XFREE(src_fix.matched_patterns_lens);
 
     for (int32 i = 0; i < dst_fix.array_count; i += 1) {
-        XFREE(dst_fix.relative_paths[i]);
+        XFREE(dst_fix.paths[i]);
         if (S_ISLNK(dst_fix.stats[i].st_mode)) {
             XFREE(dst_fix.link_targets[i]);
         }
@@ -1464,7 +1464,7 @@ cleanup_maps:
     XFREE(dst_fix.stats);
     XFREE(dst_fix.matched_patterns);
     XFREE(dst_fix.link_targets);
-    XFREE(dst_fix.relative_paths);
+    XFREE(dst_fix.paths);
     XFREE(dst_fix.path_lens);
     XFREE(dst_fix.link_targets_lens);
     XFREE(dst_fix.matched_patterns_lens);
