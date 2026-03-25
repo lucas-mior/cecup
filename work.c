@@ -248,10 +248,11 @@ work_traverse_fs(TraversalData *data) {
     paths[0] = data->base_path;
     paths[1] = NULL;
 
-    if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
+    if ((fts_handle 
+         = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
         if (cecup.stop_working == false) {
-            error(_("Error walking directory %s: %s.\n"), data->base_path,
-                  strerror(errno));
+            error(_("Error walking directory %s: %s.\n"),
+                    data->base_path, strerror(errno));
         }
         return 0;
     }
@@ -397,39 +398,39 @@ work_traverse_fs(TraversalData *data) {
         path = xmemdup(path, path_len + 1);
         is_dir = (ent->fts_info == FTS_DP);
 
-        if (data->array_count >= data->array_capacity) {
-            if (data->array_capacity == 0) {
-                data->array_capacity = 1024;
+        if (data->nfiles >= data->ncapacity) {
+            if (data->ncapacity == 0) {
+                data->ncapacity = 1024;
             } else {
-                data->array_capacity *= 2;
+                data->ncapacity *= 2;
             }
 
             data->stats = xrealloc(data->stats,
-                                   data->array_capacity*SIZEOF(*(data->stats)));
+                                   data->ncapacity*SIZEOF(*(data->stats)));
 
             data->paths
                 = xrealloc(data->paths,
-                           data->array_capacity*SIZEOF(*(data->paths)));
+                           data->ncapacity*SIZEOF(*(data->paths)));
             data->link_targets
                 = xrealloc(data->link_targets,
-                           data->array_capacity*SIZEOF(*(data->link_targets)));
+                           data->ncapacity*SIZEOF(*(data->link_targets)));
             data->matched_patterns
                 = xrealloc(data->matched_patterns,
-                           data->array_capacity*SIZEOF(*(data->matched_patterns)));
+                           data->ncapacity*SIZEOF(*(data->matched_patterns)));
 
             data->paths_lens
                 = xrealloc(data->paths_lens,
-                           data->array_capacity*SIZEOF(*(data->paths_lens)));
+                           data->ncapacity*SIZEOF(*(data->paths_lens)));
             data->link_targets_lens
                 = xrealloc(data->link_targets_lens,
-                           data->array_capacity*SIZEOF(*(data->link_targets_lens)));
+                           data->ncapacity*SIZEOF(*(data->link_targets_lens)));
             data->matched_patterns_lens
                 = xrealloc(data->matched_patterns_lens,
-                           data->array_capacity*SIZEOF(*(data->matched_patterns_lens)));
+                           data->ncapacity*SIZEOF(*(data->matched_patterns_lens)));
         }
 
-        index = data->array_count;
-        data->array_count += 1;
+        index = data->nfiles;
+        data->nfiles += 1;
 
         memset64(&data->stats[index], 0, SIZEOF(struct stat));
         memcpy64(&data->stats[index], (void *)ent->fts_statp, SIZEOF(struct stat));
@@ -509,10 +510,10 @@ work_cleanup(void) {
         int32 capacity_src;
         int32 capacity_dst;
 
-        capacity_src = cecup.traversal_src.array_capacity;
-        capacity_dst = cecup.traversal_dst.array_capacity;
+        capacity_src = cecup.traversal_src.ncapacity;
+        capacity_dst = cecup.traversal_dst.ncapacity;
 
-        for (int32 i = 0; i < cecup.traversal_src.array_count; i += 1) {
+        for (int32 i = 0; i < cecup.traversal_src.nfiles; i += 1) {
             XFREE(cecup.traversal_src.paths[i],
                   cecup.traversal_src.paths_lens[i] + 1);
             if (S_ISLNK(cecup.traversal_src.stats[i].st_mode)) {
@@ -539,7 +540,7 @@ work_cleanup(void) {
               capacity_src*SIZEOF(*(cecup.traversal_src.matched_patterns_lens)));
         memset64(&cecup.traversal_src, 0, SIZEOF(cecup.traversal_src));
 
-        for (int32 i = 0; i < cecup.traversal_dst.array_count; i += 1) {
+        for (int32 i = 0; i < cecup.traversal_dst.nfiles; i += 1) {
             XFREE(cecup.traversal_dst.paths[i],
                   cecup.traversal_dst.paths_lens[i] + 1);
             if (S_ISLNK(cecup.traversal_dst.stats[i].st_mode)) {
@@ -1125,8 +1126,8 @@ work_rsync(void *user_data) {
                     *sep = '\0';
                     path_len = (int32)(sep - filename);
                 } else if ((sep = memmem64(filename, path_len,
-                                            RSYNC_SYMLINK_NOTATION,
-                                            strlen32(RSYNC_SYMLINK_NOTATION)))) {
+                                           RSYNC_SYMLINK_NOTATION,
+                                           strlen32(RSYNC_SYMLINK_NOTATION)))) {
                     *sep = '\0';
                     path_len = (int32)(sep - filename);
                 }

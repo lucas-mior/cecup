@@ -120,8 +120,8 @@ typedef struct TraversalData {
     struct Hash_fs_map *map;
     struct Hash_fs_map *inode_map;
 
-    int32 array_capacity;
-    int32 array_count;
+    int32 ncapacity;
+    int32 nfiles;
 
     struct stat *stats;
     char **paths;
