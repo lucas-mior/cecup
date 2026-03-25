@@ -253,7 +253,7 @@ on_search_changed(GtkEditable *editable, void *data) {
     len = strlen32(text);
 
     if (cecup.search_query) {
-        XFREE(cecup.search_query, cecup.search_query_len);
+        XFREE(cecup.search_query, cecup.search_query_len + 1);
     }
 
     cecup.search_query = xmemdup(text, len + 1);
