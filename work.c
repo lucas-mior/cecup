@@ -944,6 +944,9 @@ work_rsync(void *user_data) {
         has_transfers = cecup.ntransfers > 0;
     }
 
+    PRINTLN(cecup.ntransfers);
+    HERE;
+
     if (!has_transfers) {
         work_finalize();
         free_task_list(tasks);
@@ -1026,6 +1029,8 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
+    HERE;
+    PRINTLN(cecup.ntransfers);
     for (int32 i = 0; i < cecup.ntransfers; i += 1) {
         char *file;
         int64 w;
