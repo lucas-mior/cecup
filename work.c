@@ -1039,13 +1039,15 @@ work_rsync(void *user_data) {
                 continue;
             }
 
-            if (hash_lookup2_fs_map(src_map, bucket_dst->key) == NULL) {
-                dst_idx = bucket_dst->value;
+            dst_idx = bucket_dst->value;
+            path_len = dst_fix.path_lens[dst_idx];
+
+            if (hash_lookup_fs_map(src_map,
+                                   bucket_dst->key, (uint32)path_len) == NULL) {
                 stat_dst = &dst_fix.stats[dst_idx];
                 matched_pattern_dst = dst_fix.matched_patterns[dst_idx];
                 ignored_dst = matched_pattern_dst;
                 link_target_dst = dst_fix.link_targets[dst_idx];
-                path_len = dst_fix.path_lens[dst_idx];
 
                 if (ignored_dst) {
                     if (!thread_data->delete_excluded) {
