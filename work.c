@@ -334,9 +334,8 @@ work_match_pattern(char *pattern, char *str, bool restrict_slash) {
 }
 
 static char *
-work_path_matches_ignore(char *relative_path, bool is_dir,
-                         IgnorePattern *patterns, int32 count) {
-    int32 path_len = strlen32(relative_path);
+work_path_matches_ignore(char *relative_path, int32 relative_len,
+                         bool is_dir, IgnorePattern *patterns, int32 count) {
     if (patterns == NULL) {
         return NULL;
     }
@@ -389,7 +388,7 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
         }
 
         if (has_slash) {
-            memcpy64(path_copy, relative_path, path_len + 1);
+            memcpy64(path_copy, relative_path, relative_len + 1);
 
             if (work_match_pattern(pattern_final, path_copy, true)) {
                 if (!dir_only) {
@@ -402,7 +401,7 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
             }
 
             if (!matched) {
-                for (int32 j = 0; j < path_len; j += 1) {
+                for (int32 j = 0; j < relative_len; j += 1) {
                     if (path_copy[j] == '/') {
                         path_copy[j] = '\0';
                         if (work_match_pattern(pattern_final, path_copy, true)) {
@@ -422,9 +421,9 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
             char *next;
             int32 remaining_len;
 
-            memcpy64(path_copy, relative_path, path_len + 1);
+            memcpy64(path_copy, relative_path, relative_len + 1);
             comp = path_copy;
-            remaining_len = path_len;
+            remaining_len = relative_len;
 
             while (remaining_len > 0) {
                 bool is_leaf;
@@ -684,7 +683,9 @@ work_fix_fs_cb(const char *fpath,
         }
     }
 
-    data->matched_patterns[index] = work_path_matches_ignore(relative_path, is_dir,
+    data->matched_patterns[index] = work_path_matches_ignore(relative_path,
+                                                             relative_len,
+                                                             is_dir,
                                                              data->ignore_patterns,
                                                              data->ignore_count);
     hash_insert2_fs_map(data->map, relative_path, index);
