@@ -423,9 +423,7 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
             memcpy64(path_copy, relative_path, strlen32(relative_path) + 1);
 
             if ((comp = strtok_r(path_copy, "/", &saveptr))) {
-                bool keep_running = true;
-
-                while (keep_running) {
+                while (comp) {
                     char *next;
                     bool is_leaf;
                     bool comp_is_dir;
@@ -459,9 +457,6 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
                     }
 
                     comp = next;
-                    if (comp == NULL) {
-                        keep_running = false;
-                    }
                 }
             }
 
