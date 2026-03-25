@@ -1108,11 +1108,6 @@ work_rsync_run(char *files_from_filename, bool checksum) {
             if ((path = work_check_itemize_line(buf_output))) {
                 int32 path_len;
                 char *sep;
-                Message *msg;
-
-                msg = xmalloc(SIZEOF(*msg));
-
-                memset64(msg, 0, SIZEOF(*msg));
                 while (*path == ' ') {
                     path += 1;
                 }
