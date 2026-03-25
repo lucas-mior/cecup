@@ -659,7 +659,7 @@ work_fix_fs_cb(const char *fpath,
     memset64(&data->stats[index], 0, SIZEOF(struct stat));
     memcpy64(&data->stats[index], (void *)sb, SIZEOF(struct stat));
     data->relative_paths[index] = relative_path;
-    data->relative_lens[index] = relative_len;
+    data->relative_lens[index] = (int16)relative_len;
     data->link_targets[index] = NULL;
 
     if (typeflag == FTW_SL) {
@@ -1326,19 +1326,13 @@ cleanup_maps:
 
     XFREE(src_fix.stats);
     XFREE(src_fix.matched_patterns);
-
-    if (src_fix.link_targets) {
-        XFREE(src_fix.link_targets);
-        XFREE(src_fix.relative_paths);
-    }
+    XFREE(src_fix.link_targets);
+    XFREE(src_fix.relative_paths);
 
     XFREE(dst_fix.stats);
     XFREE(dst_fix.matched_patterns);
-
-    if (dst_fix.link_targets) {
-        XFREE(dst_fix.link_targets);
-        XFREE(dst_fix.relative_paths);
-    }
+    XFREE(dst_fix.link_targets);
+    XFREE(dst_fix.relative_paths);
 
     g_thread_exit(NULL);
 }
