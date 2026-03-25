@@ -1337,32 +1337,32 @@ work_rsync(void *user_data) {
     work_finalize(thread_data);
 
 cleanup_maps:
-    for (int32 i = 0; i < ignore_count; i += 1) {
-        XFREE(ignore_patterns[i].str);
-    }
-    if (ignore_patterns) {
-        XFREE(ignore_patterns);
-    }
+    /* for (int32 i = 0; i < ignore_count; i += 1) { */
+    /*     XFREE(ignore_patterns[i].str); */
+    /* } */
+    /* if (ignore_patterns) { */
+    /*     XFREE(ignore_patterns); */
+    /* } */
 
-    hash_destroy_fs_map(src_map);
-    hash_destroy_fs_map(dst_map);
+    /* hash_destroy_fs_map(src_map); */
+    /* hash_destroy_fs_map(dst_map); */
 
-    if (src_inode_map) {
-        hash_destroy_fs_map(src_inode_map);
-    }
-    if (dst_inode_map) {
-        hash_destroy_fs_map(dst_inode_map);
-    }
+    /* if (src_inode_map) { */
+    /*     hash_destroy_fs_map(src_inode_map); */
+    /* } */
+    /* if (dst_inode_map) { */
+    /*     hash_destroy_fs_map(dst_inode_map); */
+    /* } */
 
-    XFREE(src_fix.stats);
-    XFREE(src_fix.matched_patterns);
-    XFREE(src_fix.link_targets);
-    XFREE(src_fix.relative_paths);
+    /* XFREE(src_fix.stats); */
+    /* XFREE(src_fix.matched_patterns); */
+    /* XFREE(src_fix.link_targets); */
+    /* XFREE(src_fix.relative_paths); */
 
-    XFREE(dst_fix.stats);
-    XFREE(dst_fix.matched_patterns);
-    XFREE(dst_fix.link_targets);
-    XFREE(dst_fix.relative_paths);
+    /* XFREE(dst_fix.stats); */
+    /* XFREE(dst_fix.matched_patterns); */
+    /* XFREE(dst_fix.link_targets); */
+    /* XFREE(dst_fix.relative_paths); */
 
     g_thread_exit(NULL);
 }
