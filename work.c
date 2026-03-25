@@ -238,8 +238,9 @@ static void
 work_load_ignore_patterns(char ***patterns, int32 *count) {
     FILE *file;
     char line_buffer[MAX_PATH_LENGTH];
+    int32 capacity = 16;
 
-    *patterns = NULL;
+    *patterns = xmalloc(capacity*SIZEOF(**patterns));
     *count = 0;
 
     if ((file = fopen(cecup.ignore_path, "r")) == NULL) {
@@ -264,7 +265,10 @@ work_load_ignore_patterns(char ***patterns, int32 *count) {
             continue;
         }
 
-        *patterns = xrealloc(*patterns, (*count + 1)*SIZEOF(char *));
+        if (*count >= capacity) {
+            capacity *= 2;
+            *patterns = xrealloc(*patterns, capacity*SIZEOF(char *));
+        }
         (*patterns)[*count] = xstrdup(line_buffer);
         *count += 1;
     }
