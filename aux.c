@@ -698,25 +698,6 @@ update_ui_handler(void *data) {
                                                      refresh_ui_timeout_callback, NULL);
                 }
             }
-
-            if (message->text) {
-                XFREE(message->text);
-            }
-            if (message->path_to_focus) {
-                XFREE(message->path_to_focus);
-            }
-            if (message->src_path) {
-                XFREE(message->src_path);
-            } else if (message->dst_path) {
-                XFREE(message->dst_path);
-            }
-            if (message->link_target) {
-                XFREE(message->link_target);
-            }
-            if (message->ignore_pattern) {
-                XFREE(message->ignore_pattern);
-            }
-            XFREE(message);
         }
 
         XFREE(batch);
