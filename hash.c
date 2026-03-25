@@ -110,7 +110,7 @@ struct CommonMap {
     uint32 capacity;
     uint32 bitmask;
     uint32 length;
-    uint32 padding;
+    uint32 occupied;
     struct CommonBucket *array;
 };
 
@@ -147,13 +147,14 @@ struct Map {
     uint32 capacity;
     uint32 bitmask;
     uint32 length;
-    uint32 padding;
+    uint32 occupied;
     Bucket *array;
 };
 
 static void
 CAT(hash_zero_, HASH_TYPE)(struct Map *map) {
     map->length = 0;
+    map->occupied = 0;
     memset64(map->array, 0, map->capacity*sizeof(Bucket));
     return;
 }
@@ -184,6 +185,7 @@ CAT(hash_create_, HASH_TYPE)(uint32 length) {
     map->bitmask = (1 << power) - 1;
     map->size = array_size;
     map->length = 0;
+    map->occupied = 0;
     return map;
 }
 
@@ -218,7 +220,7 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
     uint32 probe;
     int32 first_tombstone;
 
-    if (HASH_AUTO_RESIZE && (map->length*100 >= map->capacity*75)) {
+    if (HASH_AUTO_RESIZE && (map->occupied*100 >= map->capacity*75)) {
         uint32 new_capacity = map->capacity*2;
         uint32 new_bitmask = (new_capacity - 1);
         int64 new_size = new_capacity*sizeof(Bucket);
@@ -253,9 +255,9 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
                 }
 
                 rehash_step += 1;
-                rehash_probe = (rehash_base
-                                + (rehash_step
-                                   + rehash_step*rehash_step) / 2) & new_bitmask;
+                rehash_probe = (uint32)(rehash_base
+                                + ((uint64)rehash_step
+                                   + (uint64)rehash_step*rehash_step) / 2) & new_bitmask;
             }
         }
 
@@ -264,6 +266,7 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
         map->capacity = new_capacity;
         map->bitmask = new_bitmask;
         map->size = new_size;
+        map->occupied = map->length;
 
         base_index = hash & map->bitmask;
     }
@@ -283,6 +286,7 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
                 target = &map->array[first_tombstone];
             } else {
                 target = iterator;
+                map->occupied += 1;
             }
 
 #if HASH_DUPLICATE_KEYS
@@ -310,7 +314,7 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
         }
 
         i += 1;
-        probe = (base_index + (i + i*i) / 2) & map->bitmask;
+        probe = (uint32)(base_index + ((uint64)i + (uint64)i*i) / 2) & map->bitmask;
     }
 
     if (first_tombstone >= 0) {
@@ -385,13 +389,13 @@ CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
 #if defined(HASH_VALUE_TYPE)
                 return &(iterator->value);
 #else
-                return key;
+                return iterator->key;
 #endif
             }
         }
 
         i += 1;
-        probe = (base_index + (i + i*i) / 2) & map->bitmask;
+        probe = (uint32)(base_index + ((uint64)i + (uint64)i*i) / 2) & map->bitmask;
     }
 
     return NULL;
@@ -438,7 +442,7 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
         }
 
         i += 1;
-        probe = (base_index + (i + i*i) / 2) & map->bitmask;
+        probe = (uint32)(base_index + ((uint64)i + (uint64)i*i) / 2) & map->bitmask;
     }
 
     return false;
@@ -598,7 +602,7 @@ typedef struct String {
 
 static String
 random_string(Arena *arena, uint32 nbytes) {
-    const char characters[] = "abcdefghijklmnopqrstuvwxyz1234567890";
+    char characters[] = "abcdefghijklmnopqrstuvwxyz1234567890";
     String string;
     uint32 size;
     uint32 len;
