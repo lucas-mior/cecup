@@ -208,12 +208,11 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     final_src_path = NULL;
     final_dst_path = NULL;
     slash = 0;
+    if (is_dir) {
+        slash = 1;
+    }
 
     if (src_path) {
-        if (is_dir) {
-            slash = 1;
-        }
-
         final_src_path = xarena_push(cecup.arena, path_len + slash + 1);
         memcpy64(final_src_path, src_path, path_len + 1);
 
@@ -229,10 +228,6 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
             final_dst_path = final_src_path;
         }
     } else if (dst_path) {
-        if (is_dir) {
-            slash = 1;
-        }
-
         final_dst_path = xarena_push(cecup.arena, path_len + slash + 1);
         memcpy64(final_dst_path, dst_path, path_len + 1);
 
