@@ -328,7 +328,7 @@ work_load_ignore_patterns(IgnorePattern **patterns, int32 *count) {
     while (fgets(line_buffer, SIZEOF(line_buffer), file)) {
         int32 length = strlen32(line_buffer);
 
-        if (length > 0 && line_buffer[length - 1] == '\n') {
+        if ((length > 0) && (line_buffer[length - 1] == '\n')) {
             line_buffer[length - 1] = '\0';
             length -= 1;
         }
