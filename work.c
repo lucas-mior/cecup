@@ -780,7 +780,6 @@ work_rsync(void *user_data) {
             int32 *dst_idx_ptr;
             struct stat *stat_src;
             char *matched_pattern_src;
-            bool ignored_src;
             char *link_target_src;
             bool is_symlink;
             bool is_hardlink;
@@ -800,7 +799,6 @@ work_rsync(void *user_data) {
             src_idx = bucket_src->value;
             stat_src = &src_fix.stats[src_idx];
             matched_pattern_src = src_fix.matched_patterns[src_idx];
-            ignored_src = matched_pattern_src;
             link_target_src = src_fix.link_targets[src_idx];
             src_path = bucket_src->key;
 
@@ -818,7 +816,7 @@ work_rsync(void *user_data) {
                 dst_mtime = stat_dst->st_mtime;
                 reason = 0;
 
-                if (ignored_src) {
+                if (matched_pattern_src) {
                     action = ACTION_IGNORE;
                     reason |= REASON_IGNORED;
                 } else {
@@ -896,7 +894,7 @@ work_rsync(void *user_data) {
                 }
             } else {
                 reason = 0;
-                if (ignored_src) {
+                if (matched_pattern_src) {
                     action = ACTION_IGNORE;
                     reason |= REASON_IGNORED;
                 } else {
