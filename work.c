@@ -927,29 +927,22 @@ cleanup_preview:
 
 static void *
 work_rsync(void *user_data) {
-    ThreadData *thread_data;
-    TaskList *tasks;
-    bool has_transfers;
+    ThreadData *thread_data = user_data;
+    TaskList *tasks = thread_data->tasks;
+    bool has_transfers = false;
     int32 pipe_stdout[2];
     int32 pipe_stderr[2];
     struct pollfd pipes[2];
     pid_t child_pid;
-    int64 buf_output_pos;
+    int64 buf_output_pos = 0;
     char buf_output[MAX_PATH_LENGTH*2];
     char buf_error[MAX_PATH_LENGTH*2];
     char *rsync_args[64];
-    int32 rsync_args_len;
+    int32 rsync_args_len = 0;
     char cmd[MAX_PATH_LENGTH*2];
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
-    bool second_run_with_checksum;
+    bool second_run_with_checksum = false;
     int files_from_fd;
-
-    thread_data = user_data;
-    tasks = thread_data->tasks;
-    has_transfers = false;
-    buf_output_pos = 0;
-    rsync_args_len = 0;
-    second_run_with_checksum = false;
 
     if (tasks == NULL) {
         if (cecup.ntransfers <= 0) {
@@ -960,13 +953,12 @@ work_rsync(void *user_data) {
         has_transfers = true;
     } else {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task;
+            Task *task = tasks->items[i];
             char full_path[MAX_PATH_LENGTH];
             pid_t child_rm;
             int child_status;
             bool removed;
 
-            task = tasks->items[i];
             removed = false;
 
             if (task->action != ACTION_DELETE) {
@@ -1064,9 +1056,7 @@ work_rsync(void *user_data) {
         }
     } else {
         for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task;
-
-            task = tasks->items[i];
+            Task *task = tasks->items[i];
 
             if (task->action == ACTION_HARDLINK) {
                 write64(files_from_fd, task->link_target, task->link_target_len);
