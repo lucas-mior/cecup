@@ -73,6 +73,7 @@ typedef struct FixFsThreadData {
     char **matched_patterns;
     char **link_targets;
     char **relative_paths;
+    int16 *relative_lens;
 } FixFsThreadData;
 
 static __thread FixFsThreadData *nftw_current_data = NULL;
@@ -620,10 +621,17 @@ work_fix_fs_cb(const char *fpath,
 
     relative_path = (char *)fpath + data->base_path_len;
     relative_len = old_full_len - data->base_path_len;
+
     if (relative_path[0] == '/') {
         relative_path += 1;
         relative_len -= 1;
     }
+
+    if (relative_len == 0) {
+        relative_path = "./";
+        relative_len = 2;
+    }
+
     relative_path = xmemdup(relative_path, relative_len + 1);
     is_dir = (typeflag == FTW_D || typeflag == FTW_DP);
 
@@ -641,6 +649,8 @@ work_fix_fs_cb(const char *fpath,
                                       data->array_capacity*SIZEOF(*(data->link_targets)));
         data->relative_paths = xrealloc(data->relative_paths,
                                         data->array_capacity*SIZEOF(*(data->relative_paths)));
+        data->relative_lens = xrealloc(data->relative_lens,
+                                       data->array_capacity*SIZEOF(*(data->relative_lens)));
     }
 
     index = data->array_count;
@@ -648,12 +658,8 @@ work_fix_fs_cb(const char *fpath,
 
     memset64(&data->stats[index], 0, SIZEOF(struct stat));
     memcpy64(&data->stats[index], (void *)sb, SIZEOF(struct stat));
-
-    if (relative_len == 0) {
-        data->relative_paths[index] = "./";
-    } else {
-        data->relative_paths[index] = relative_path;
-    }
+    data->relative_paths[index] = relative_path;
+    data->relative_lens[index] = relative_len;
     data->link_targets[index] = NULL;
 
     if (typeflag == FTW_SL) {
