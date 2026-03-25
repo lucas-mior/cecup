@@ -630,14 +630,14 @@ xstrdup(char *string) {
 static void
 xfree(char *file, int32 line, void *pointer, int64 size) {
     if (DEBUGGING) {
-        error_impl(file, line,
-                   "Freeing pointer of size %lld [%p]\n", (llong)size, pointer);
         if (size < 0) {
             error_impl(file, line,
                        "Error: freeing allocation of negative size = %lld.\n",
                        (llong)size);
             fatal(EXIT_FAILURE);
         }
+        error_impl(file, line,
+                   "Freeing pointer of size %lld [%p]\n", (llong)size, pointer);
         if (pointer) {
             memset64(pointer, MEM_FREED, size);
         }
