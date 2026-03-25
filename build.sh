@@ -32,7 +32,6 @@ mkdir -p "$(dirname "$exe")"
 CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
 CPPFLAGS="$CPPFLAGS -DGETTEXT_PACKAGE=\"$program\""
 CPPFLAGS="$CPPFLAGS -DLOCALEDIR=\"$PREFIX/share/locale\""
-CPPFLAGS="$CPPFLAGS -Wl,--gc-sections"
 
 CFLAGS="$CFLAGS -std=c11"
 CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
