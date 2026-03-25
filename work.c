@@ -955,6 +955,7 @@ work_rsync(void *user_data) {
     int32 rsync_args_len = 0;
     char cmd[MAX_PATH_LENGTH*2];
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
+    bool second_run_with_checksum = false;
 
     if (cecup.ntransfers <= 0) {
         work_finalize(thread_data);
@@ -991,6 +992,7 @@ work_rsync(void *user_data) {
         XCLOSE(&files_from_fd);
     }
 
+run_rsync:
     {
         char src_base_with_slash[MAX_PATH_LENGTH];
         char dst_base_with_slash[MAX_PATH_LENGTH];
@@ -1004,7 +1006,9 @@ work_rsync(void *user_data) {
         rsync_args[rsync_args_len++] = "--partial";
         rsync_args[rsync_args_len++] = "--progress";
         rsync_args[rsync_args_len++] = "--info=progress2";
-        rsync_args[rsync_args_len++] = "--checksum";
+        if (second_run_with_checksum) {
+            rsync_args[rsync_args_len++] = "--checksum";
+        }
         rsync_args[rsync_args_len++] = "--perms";
         rsync_args[rsync_args_len++] = "--times";
         rsync_args[rsync_args_len++] = "--owner";
@@ -1177,6 +1181,11 @@ work_rsync(void *user_data) {
 
     if (waitpid(child_pid, NULL, 0) < 0) {
         LOG_ERROR("Error waiting for rsync: %s.\n", strerror(errno));
+    } else {
+        // memory errors are much more common than
+        // storage errors, so checksum the files we just copied
+        second_run_with_checksum = true;
+        goto run_rsync;
     }
     xunlink(files_from_filename);
     cecup.child_pid = 0;
