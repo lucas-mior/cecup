@@ -562,7 +562,7 @@ work_path_matches_ignore(char *path, int32 path_len,
 }
 
 static int
-work_fix_fs_cb(const char *fpath,
+work_fix_fs_cb(const char *full_path,
                const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
     char *d_name;
     int32 name_len;
@@ -579,13 +579,13 @@ work_fix_fs_cb(const char *fpath,
     }
 
     data = nftw_current_data;
-    d_name = (char *)fpath + ftwbuf->base;
+    d_name = (char *)full_path + ftwbuf->base;
     name_len = strlen32(d_name);
     old_full_len = (int32)ftwbuf->base + name_len;
 
     if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
         LOG_ERROR(_("Error: file path is too long:\n"));
-        LOG_ERROR("%s\n", fpath);
+        LOG_ERROR("%s\n", full_path);
         LOG_ERROR(_("Please fix your file system.\n"));
         cecup.stop_working = true;
         return 1;
@@ -594,7 +594,7 @@ work_fix_fs_cb(const char *fpath,
     if (name_len > 0) {
         if (isspace(d_name[0])) {
             LOG_ERROR(_("Error: there is a space in the start of the fileneme:\n"));
-            LOG_ERROR("'%s'\n", fpath);
+            LOG_ERROR("'%s'\n", full_path);
             LOG_ERROR(_("Please fix your file system.\n"));
             cecup.stop_working = true;
             return 1;
@@ -602,7 +602,7 @@ work_fix_fs_cb(const char *fpath,
 
         if (isspace(d_name[name_len - 1])) {
             LOG_ERROR(_("Error: there is space in the end of the fileneme:\n"));
-            LOG_ERROR("'%s'\n", fpath);
+            LOG_ERROR("'%s'\n", full_path);
             LOG_ERROR(_("Please fix your file system.\n"));
             cecup.stop_working = true;
             return 1;
@@ -662,14 +662,14 @@ work_fix_fs_cb(const char *fpath,
         if (changed) {
             int32 base_len = ftwbuf->base;
 
-            memcpy64(new_full, (char *)fpath, base_len);
+            memcpy64(new_full, (char *)full_path, base_len);
             memcpy64(new_full + base_len, new_name, j + 1);
 
-            if (renameat2(AT_FDCWD, fpath,
+            if (renameat2(AT_FDCWD, full_path,
                           AT_FDCWD, new_full,
                           RENAME_NOREPLACE) < 0) {
                 LOG_ERROR(_("Error renaming %s to %s: %s\n"),
-                                   fpath, new_full, strerror(errno));
+                                   full_path, new_full, strerror(errno));
             } else {
                 LOG(_("Fixed: %s -> %s\n"), d_name, new_name);
             }
@@ -680,7 +680,7 @@ work_fix_fs_cb(const char *fpath,
         nftw_file_count += 1;
     }
 
-    path = (char *)fpath + data->base_path_len;
+    path = (char *)full_path + data->base_path_len;
     path_len = old_full_len - data->base_path_len;
 
     if (path[0] == '/') {
@@ -745,8 +745,9 @@ work_fix_fs_cb(const char *fpath,
         char target[MAX_PATH_LENGTH];
         int64 target_len;
 
-        if ((target_len = readlink(fpath, target, SIZEOF(target))) < 0) {
-            LOG_ERROR("Error in readlink(%s): %s.\n", fpath, strerror(errno));
+        if ((target_len = readlink(full_path, target, SIZEOF(target))) < 0) {
+            LOG_ERROR("Error in readlink(%s): %s.\n",
+                      full_path, strerror(errno));
         } else {
             target[target_len] = '\0';
             data->link_targets[index] = xmemdup(target, target_len + 1);
