@@ -664,7 +664,7 @@ work_fix_fs_cb(const char *fpath,
     data->link_targets[index] = NULL;
     data->matched_patterns[index] = NULL;
 
-    data->path_lens[index] = relative_len;
+    data->path_lens[index] = (int16)relative_len;
     data->link_targets_lens[index] = 0;
     data->matched_patterns_lens[index] = 0;
 
