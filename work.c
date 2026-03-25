@@ -567,12 +567,6 @@ work_preview(void *user_data) {
     struct timespec t0_work;
     struct timespec t1_work;
 
-    Message *message = xmalloc(SIZEOF(*message));
-    memset64(message, 0, SIZEOF(*message));
-
-    message->type = DATA_TYPE_CLEAR_TREES;
-    g_idle_add(update_ui_handler, message);
-
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_work);
     work_cleanup();
 

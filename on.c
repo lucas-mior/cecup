@@ -342,6 +342,7 @@ on_reset_clicked(GtkWidget *b, void *data) {
 static void
 on_preview_clicked(GtkWidget *b, void *data) {
     ThreadData *thread_data;
+    Message *message;
 
     (void)data;
     (void)b;
@@ -349,6 +350,11 @@ on_preview_clicked(GtkWidget *b, void *data) {
     cecup_get_dirs();
 
     protect_interface_from_user(true);
+
+    message = xmalloc(SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
+    message->type = DATA_TYPE_CLEAR_TREES;
+    update_ui_handler(message);
 
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));

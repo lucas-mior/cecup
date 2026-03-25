@@ -412,7 +412,6 @@ typedef struct ThreadData {
 } ThreadData;
 
 static gboolean update_ui_handler(void * user_data);
-static void refresh_ui_list_locked(enum RefreshType, char *path_to_focus);
 static void free_task_list(TaskList *tasks);
 static void save_config(void);
 static void protect_interface_from_user(bool state);
