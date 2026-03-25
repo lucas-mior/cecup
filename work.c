@@ -974,21 +974,6 @@ work_rsync(void *user_data) {
                 continue;
             }
 
-            if (strcmp(task->path, "./") == 0) {
-                Message *message;
-
-                message = xmalloc(SIZEOF(*message));
-                memset64(message, 0, SIZEOF(*message));
-
-                message->path_len = task->path_len;
-                message->src_path = xmalloc(task->path_len + 1);
-                memcpy64(message->src_path, task->path, task->path_len + 1);
-
-                message->type = DATA_TYPE_REMOVE_ROW;
-                g_idle_add(update_ui_handler, message);
-                continue;
-            }
-
             if (cecup.stop_working) {
                 LOG_ERROR(_("Stop requested.\n"));
                 free_task_list(tasks);
@@ -1011,7 +996,7 @@ work_rsync(void *user_data) {
                 char cmd_rm[MAX_PATH_LENGTH];
                 char *args_rm[] = {
                     "rm",
-                    "-rf",
+                    "-rvf",
                     full_path,
                     NULL,
                 };
@@ -1034,17 +1019,7 @@ work_rsync(void *user_data) {
             }
 
             if (removed) {
-                Message *message;
-
-                message = xmalloc(SIZEOF(*message));
-                memset64(message, 0, SIZEOF(*message));
-
-                message->path_len = task->path_len;
-                message->src_path = xmalloc(task->path_len + 1);
-                memcpy64(message->src_path, task->path, task->path_len + 1);
-
-                message->type = DATA_TYPE_REMOVE_ROW;
-                g_idle_add(update_ui_handler, message);
+                LOG("Removed %s...\n", full_path);
             }
         }
 
@@ -1355,11 +1330,9 @@ run_rsync:
             LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
         }
     } else {
-        if (tasks == NULL) {
-            if (!second_run_with_checksum) {
-                second_run_with_checksum = true;
-                goto run_rsync;
-            }
+        if (!second_run_with_checksum) {
+            second_run_with_checksum = true;
+            goto run_rsync;
         }
     }
 
