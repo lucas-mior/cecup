@@ -506,15 +506,20 @@ work_cleanup(void) {
     cecup.dst_inode_map = NULL;
 
     {
-        int32 capacity_src = cecup.traversal_src.array_capacity;
-        int32 capacity_dst = cecup.traversal_src.array_capacity;
+        int32 capacity_src;
+        int32 capacity_dst;
+
+        capacity_src = cecup.traversal_src.array_capacity;
+        capacity_dst = cecup.traversal_dst.array_capacity;
 
         for (int32 i = 0; i < cecup.traversal_src.array_count; i += 1) {
             XFREE(cecup.traversal_src.paths[i],
                   cecup.traversal_src.paths_lens[i] + 1);
             if (S_ISLNK(cecup.traversal_src.stats[i].st_mode)) {
-                XFREE(cecup.traversal_src.link_targets[i],
-                      cecup.traversal_src.link_targets_lens[i] + 1);
+                if ((cecup.traversal_src.link_targets[i])) {
+                    XFREE(cecup.traversal_src.link_targets[i],
+                          cecup.traversal_src.link_targets_lens[i] + 1);
+                }
             }
         }
 
@@ -538,8 +543,10 @@ work_cleanup(void) {
             XFREE(cecup.traversal_dst.paths[i],
                   cecup.traversal_dst.paths_lens[i] + 1);
             if (S_ISLNK(cecup.traversal_dst.stats[i].st_mode)) {
-                XFREE(cecup.traversal_dst.link_targets[i],
-                      cecup.traversal_dst.link_targets_lens[i] + 1);
+                if ((cecup.traversal_dst.link_targets[i])) {
+                    XFREE(cecup.traversal_dst.link_targets[i],
+                          cecup.traversal_dst.link_targets_lens[i] + 1);
+                }
             }
         }
 
@@ -612,7 +619,6 @@ work_preview(void *user_data) {
               "To force backup on a folder in the same device, uncheck"
               " option \"Protect same drive sync\".\n"));
 
-        work_finalize(thread_data);
         goto cleanup_preview;
     }
 
@@ -648,7 +654,6 @@ work_preview(void *user_data) {
 
     if (cecup.stop_working) {
         LOG_ERROR(_("Stop requested.\n"));
-        work_finalize(thread_data);
         goto cleanup_preview;
     }
 
@@ -938,9 +943,6 @@ work_preview(void *user_data) {
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
     PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
-
-    work_finalize(thread_data);
-    g_thread_exit(NULL);
 
 cleanup_preview:
     work_cleanup();
