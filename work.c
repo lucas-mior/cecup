@@ -751,9 +751,20 @@ work_preview(void *user_data) {
                              && !strcmp(link_target_src, link_target_dst)
                              && !attributes_differ) {
                             equal = true;
+                            if (action == ACTION_HARDLINK) {
+                                error("%s ==\n", bucket_src->key);
+                            }
+                        } else {
+                            if (action == ACTION_HARDLINK) {
+                                error("%s is not equal\n", bucket_src->key);
+                            }
                         }
                     } else {
                         if (!attributes_differ) {
+                            if (action == ACTION_HARDLINK) {
+                                error("attributes_differ for %s hardlink\n",
+                                      bucket_src->key);
+                            }
                             equal = true;
                         }
                     }
