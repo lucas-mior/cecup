@@ -238,6 +238,10 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
                 path_len += 1;
             }
         }
+    } else {
+        LOG_ERROR("Both source and destination paths are NULL.\n");
+        g_mutex_unlock(&cecup.arena_mutex);
+        return;
     }
 
     row = xarena_push(cecup.arena, SIZEOF(*row));
