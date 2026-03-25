@@ -707,8 +707,7 @@ update_ui_handler(void *data) {
             }
             if (message->src_path) {
                 XFREE(message->src_path);
-            }
-            if (message->dst_path) {
+            } else if (message->dst_path) {
                 XFREE(message->dst_path);
             }
             if (message->link_target) {
@@ -734,8 +733,7 @@ update_ui_handler(void *data) {
     }
     if (message->src_path) {
         XFREE(message->src_path);
-    }
-    if (message->dst_path) {
+    } else if (message->dst_path) {
         XFREE(message->dst_path);
     }
     if (message->link_target) {

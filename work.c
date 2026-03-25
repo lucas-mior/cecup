@@ -205,16 +205,8 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     message->dst_mtime = dst_mtime_raw;
     message->delete_excluded = delete_excluded;
     message->is_dir = is_dir;
-
-    if (src_path) {
-        message->src_path = xmalloc(path_len + 1);
-        memcpy64(message->src_path, src_path, path_len + 1);
-    }
-
-    if (dst_path) {
-        message->dst_path = xmalloc(path_len + 1);
-        memcpy64(message->dst_path, dst_path, path_len + 1);
-    }
+    message->src_path = src_path;
+    message->dst_path = dst_path;
 
     if (link_target) {
         target_len = strlen32(link_target);
