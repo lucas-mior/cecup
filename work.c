@@ -703,11 +703,8 @@ work_preview(void *user_data) {
                 action = ACTION_IGNORE;
                 reason |= REASON_IGNORED;
             } else {
-                bool equal;
-                bool attributes_differ;
-
-                equal = false;
-                attributes_differ = false;
+                bool equal = false;
+                bool attributes_differ = false;
 
                 if (is_symlink) {
                     reason |= REASON_SYMLINK;
@@ -813,8 +810,9 @@ work_preview(void *user_data) {
             dst_action = ACTION_DELETE;
         }
 
+        error("Action(%s)=%s\n", bucket_src->key, ACTION_str(action));
         if ((action != ACTION_EQUAL) && (action != ACTION_IGNORE)) {
-            if (cecup.ntransfers >= cecup.transfers_capacity) {
+            if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) {
                 if (cecup.transfers_capacity == 0) {
                     cecup.transfers_capacity = 256;
                 } else {
@@ -822,6 +820,11 @@ work_preview(void *user_data) {
                 }
                 cecup.transfers = xrealloc(cecup.transfers,
                                            cecup.transfers_capacity*SIZEOF(*cecup.transfers));
+            }
+            if (action == ACTION_HARDLINK) {
+                HERE;
+                cecup.transfers[cecup.ntransfers] = link_target_src;
+                cecup.ntransfers += 1;
             }
             cecup.transfers[cecup.ntransfers] = bucket_src->key;
             cecup.ntransfers += 1;
@@ -1250,6 +1253,7 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
+    HERE;
     for (int32 i = 0; i < cecup.ntransfers; i += 1) {
         char *file;
         int64 w;
@@ -1259,6 +1263,7 @@ work_rsync(void *user_data) {
         file = cecup.transfers[i];
         written = 0;
         left = strlen32(file);
+        PRINTLN(file);
 
         while ((w = write64(files_from_fd, &file[written], left)) > 0) {
             written += w;
