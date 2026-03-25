@@ -872,7 +872,7 @@ work_rsync(void *user_data) {
             path_len = src_fix.path_lens[src_idx];
 
             is_symlink = S_ISLNK(stat_src->st_mode);
-            is_hardlink = (S_ISREG(stat_src->st_mode) && link_target_src != NULL);
+            is_hardlink = S_ISREG(stat_src->st_mode) && link_target_src;
             is_dir = S_ISDIR(stat_src->st_mode);
 
             if ((dst_idx_ptr
