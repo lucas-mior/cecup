@@ -1007,20 +1007,15 @@ work_rsync(void *user_data) {
                 LOG("Removed %s...\n", full_path);
             }
         }
-
-        if (!has_transfers) {
-            work_finalize();
-            free_task_list(tasks);
-            XFREE(thread_data, SIZEOF(*thread_data));
-            return NULL;
-        }
     } else {
-        if (cecup.ntransfers <= 0) {
-            work_finalize();
-            XFREE(thread_data, SIZEOF(*thread_data));
-            return NULL;
-        }
-        has_transfers = true;
+        has_transfers = cecup.ntransfers > 0;
+    }
+
+    if (!has_transfers) {
+        work_finalize();
+        free_task_list(tasks);
+        XFREE(thread_data, SIZEOF(*thread_data));
+        return NULL;
     }
 
     if ((files_from_fd = mkstemp(files_from_filename)) < 0) {
