@@ -784,6 +784,7 @@ work_rsync(void *user_data) {
             char *dst_path = NULL;
             int64 dst_size = 0;
             int64 dst_mtime = 0;
+            int64 src_size = 0;
 
             if ((int64)bucket_src->key <= 0) {
                 continue;
@@ -918,11 +919,17 @@ work_rsync(void *user_data) {
                 ntransfers += 1;
             }
 
+            if (is_dir) {
+                src_size = -1;
+            } else {
+                src_size = stat_src->st_size;
+            }
+
             work_add_row(action, reason,
                          bucket_src->key, dst_path,
                          link_target_src, matched_pattern_src,
                          strlen32(bucket_src->key),
-                         stat_src->st_size, stat_src->st_mtime,
+                         src_size, stat_src->st_mtime,
                          dst_size, dst_mtime,
                          thread_data->delete_excluded,
                          S_ISDIR(stat_src->st_mode));
