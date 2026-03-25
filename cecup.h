@@ -376,7 +376,7 @@ static char *row_path_get(CecupRow *row) {
 }
 
 static void log_internal(char *file, int line,
-                                  enum DataType type, char *format, ...);
+                         enum DataType type, char *format, ...);
 
 #define LOG(...)        \
     log_internal(__FILE__, __LINE__, DATA_TYPE_LOG, __VA_ARGS__)
