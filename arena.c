@@ -664,6 +664,40 @@ main(void) {
         ASSERT(arena->begin + index == arena->begin + 32);
     }
 
+    {
+        Arena *arenas[2];
+        void *first_pointer;
+        void *second_pointer;
+        void *third_pointer;
+        int64 arena_count;
+        int64 first_arena_capacity;
+        char *error_message;
+
+        arena_count = (int64)LENGTH(arenas);
+        ASSERT((arenas[0] = arena_create(SIZEMB(1))));
+        ASSERT((arenas[1] = arena_create(SIZEMB(1))));
+
+        first_arena_capacity = arena_data_size(arenas[0]);
+
+        ASSERT((first_pointer = xarena_push(arenas[0], first_arena_capacity)));
+        ASSERT((second_pointer = arenas_push(arenas, arena_count, 100)));
+
+        ASSERT((third_pointer = xarenas_push(arenas, (int32)arena_count, 100)));
+
+        ASSERT(arenas_pop(arenas, (int32)arena_count, first_pointer));
+        ASSERT(arenas_pop(arenas, (int32)arena_count, second_pointer));
+        ASSERT(arenas_pop(arenas, (int32)arena_count, third_pointer));
+
+        arenas_reset(arenas, arena_count);
+        ASSERT_EQUAL(arenas[0]->npushed, 0);
+        ASSERT_EQUAL(arenas[1]->npushed, 0);
+
+        error_message = arena_strerror(EARENA_INVALID);
+        ASSERT_EQUAL(error_message, "Invalid arena pointer");
+
+        arenas_destroy(arenas, arena_count);
+    }
+
     arena_print(arena);
 
     arena_destroy(arena);
