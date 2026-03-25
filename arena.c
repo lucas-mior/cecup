@@ -460,7 +460,7 @@ arena_pop(Arena *arena, void *p) {
 }
 
 static int64
-arena_narenas(Arena *arena) {
+arena_nlinked(Arena *arena) {
     int64 n = 0;
     while (arena) {
         n += 1;
@@ -509,7 +509,7 @@ arena_functions_sink(void) {
     (void)xarena_push;
     (void)arena_push_index32;
     (void)arenas_pop;
-    (void)arena_narenas;
+    (void)arena_nlinked;
     (void)arenas_reset;
     (void)arenas_destroy;
     return;
@@ -554,7 +554,7 @@ main(void) {
 
     srand((uint32)time(NULL));
 
-    ASSERT_EQUAL(arena_narenas(arena), 1);
+    ASSERT_EQUAL(arena_nlinked(arena), 1);
 
     {
         int64 total_size = 0;
@@ -568,7 +568,7 @@ main(void) {
             memset64(objs[i], 0xCD, size);
 
             if (total_size < arena_data_size(arena)) {
-                ASSERT_EQUAL(arena_narenas(arena), 1);
+                ASSERT_EQUAL(arena_nlinked(arena), 1);
                 ASSERT_MORE_EQUAL((void *)objs[i], (void *)arena->begin);
                 ASSERT_MORE_EQUAL((void *)arena->pos, (void *)objs[i]);
             }
@@ -614,7 +614,7 @@ main(void) {
         ASSERT_EQUAL(arena->npushed, 1);
         ASSERT((p2 = arena_push(arena, arena_size)));
         ASSERT_EQUAL(arena->npushed, 1);
-        ASSERT_EQUAL(arena_narenas(arena), 2);
+        ASSERT_EQUAL(arena_nlinked(arena), 2);
         ASSERT(arena->next);
         ASSERT(arena_of(arena, p1) != arena_of(arena, p2));
 
