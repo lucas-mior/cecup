@@ -82,6 +82,21 @@
     X(MTIME)
 #include "xenums.c"
 
+#define ENUM_BITFLAGS 0
+#define ENUM_NAME DataType
+#define ENUM_PREFIX_ DATA_TYPE_
+#define ENUM_FIELDS \
+    X(LOG)                \
+    X(LOG_ERROR)          \
+    X(LOG_CMD)            \
+    X(TREE_UPDATE)        \
+    X(REMOVE_ROW)         \
+    X(ENABLE_BUTTONS)     \
+    X(CLEAR_TREES)        \
+    X(PROGRESS_PREVIEW)   \
+    X(ADD_ROW)
+#include "xenums.c"
+
 #if !defined(error2)
 #define error2(...) fprintf(stderr, __VA_ARGS__)
 #endif
@@ -201,18 +216,6 @@ typedef struct CecupRow {
 
     bool selected;
 } CecupRow;
-
-enum DataType {
-    DATA_TYPE_LOG,
-    DATA_TYPE_LOG_ERROR,
-    DATA_TYPE_LOG_CMD,
-    DATA_TYPE_TREE_UPDATE,
-    DATA_TYPE_REMOVE_ROW,
-    DATA_TYPE_ENABLE_BUTTONS,
-    DATA_TYPE_CLEAR_TREES,
-    DATA_TYPE_PROGRESS_PREVIEW,
-    DATA_TYPE_ADD_ROW,
-};
 
 typedef struct Message {
     enum DataType type;

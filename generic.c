@@ -391,6 +391,35 @@ _Generic((VAR), \
     fprintf(stderr, "\n"); \
 } while (0)
 
+#if 0 == TESTING_generic
+static inline void
+generic_functions_sink(void) {
+    (void)ldouble_from_voidp;
+    (void)ldouble_from_charp;
+    (void)ldouble_from_bool;
+    (void)ldouble_from_char;
+    (void)ldouble_from_schar;
+    (void)ldouble_from_short;
+    (void)ldouble_from_int;   
+    (void)ldouble_from_long;  
+    (void)ldouble_from_llong; 
+    (void)ldouble_from_uchar; 
+    (void)ldouble_from_ushort;
+    (void)ldouble_from_uint;  
+    (void)ldouble_from_ulong; 
+    (void)ldouble_from_ullong;
+    (void)ldouble_from_float; 
+    (void)ldouble_from_double;
+    (void)ldouble_from_ldouble;
+
+    (void)typebits;
+    (void)typename;
+    (void)ldouble_get;
+    (void)generic_functions_sink;
+    return;
+}
+#endif
+
 #if TESTING_generic
 
 #include <assert.h>

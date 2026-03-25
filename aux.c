@@ -506,7 +506,11 @@ update_ui_handler(void *data) {
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
                                       0.0);
         break;
+    case DATA_TYPE_ADD_ROW:
+    case DATA_TYPE_TREE_UPDATE:
+    case DATA_TYPE_LAST:
     default:
+        LOG("Ignoring %s.\n", DATA_TYPE_str(message->type));
         break;
     }
 
