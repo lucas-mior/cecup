@@ -632,17 +632,20 @@ work_fix_fs_cb(const char *fpath,
         } else {
             data->array_capacity *= 2;
         }
+
         data->stats = xrealloc(data->stats,
                                data->array_capacity*SIZEOF(*(data->stats)));
-        data->matched_patterns
-            = xrealloc(data->matched_patterns,
-                       data->array_capacity*SIZEOF(*(data->matched_patterns)));
-        data->link_targets
-            = xrealloc(data->link_targets,
-                       data->array_capacity*SIZEOF(*(data->link_targets)));
+
         data->relative_paths
             = xrealloc(data->relative_paths,
                        data->array_capacity*SIZEOF(*(data->relative_paths)));
+        data->link_targets
+            = xrealloc(data->link_targets,
+                       data->array_capacity*SIZEOF(*(data->link_targets)));
+        data->matched_patterns
+            = xrealloc(data->matched_patterns,
+                       data->array_capacity*SIZEOF(*(data->matched_patterns)));
+
         data->path_lens
             = xrealloc(data->path_lens,
                        data->array_capacity*SIZEOF(*(data->path_lens)));
@@ -1051,7 +1054,6 @@ work_rsync(void *user_data) {
             int32 dst_idx;
             struct stat *stat_dst;
             char *matched_pattern_dst;
-            bool ignored_dst;
             char *link_target_dst;
             int32 link_target_len;
             int32 matched_pattern_len;
@@ -1070,12 +1072,11 @@ work_rsync(void *user_data) {
                                    bucket_dst->key, (uint32)path_len) == NULL) {
                 stat_dst = &dst_fix.stats[dst_idx];
                 matched_pattern_dst = dst_fix.matched_patterns[dst_idx];
-                ignored_dst = matched_pattern_dst;
                 link_target_dst = dst_fix.link_targets[dst_idx];
                 link_target_len = dst_fix.link_targets_lens[dst_idx];
                 matched_pattern_len = dst_fix.matched_patterns_lens[dst_idx];
 
-                if (ignored_dst) {
+                if (matched_pattern_dst) {
                     if (!thread_data->delete_excluded) {
                         action = ACTION_IGNORE;
                     }
