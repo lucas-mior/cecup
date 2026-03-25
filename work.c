@@ -1032,44 +1032,43 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
-    if (tasks == NULL) {
-        for (int32 i = 0; i < cecup.ntransfers; i += 1) {
-            char *file;
-            int64 w;
-            int64 written;
-            int64 left;
+    for (int32 i = 0; i < cecup.ntransfers; i += 1) {
+        char *file;
+        int64 w;
+        int64 written;
+        int64 left;
 
-            file = cecup.transfers[i];
-            written = 0;
-            left = strlen32(file);
+        file = cecup.transfers[i];
+        written = 0;
+        left = strlen32(file);
 
-            while ((w = write64(files_from_fd, &file[written], left)) > 0) {
-                written += w;
-                left -= w;
-                if (left <= 0) {
-                    break;
-                }
+        while ((w = write64(files_from_fd, &file[written], left)) > 0) {
+            written += w;
+            left -= w;
+            if (left <= 0) {
+                break;
             }
-            if (w < 0) {
-                error("Error writing to %s: %s.\n",
-                      files_from_filename, strerror(errno));
-                fatal(EXIT_FAILURE);
-            }
-
-            write64(files_from_fd, "\n", 1);
         }
-    } else {
-        for (int32 i = 0; i < tasks->count; i += 1) {
-            Task *task = tasks->items[i];
-
-            if (task->action == ACTION_HARDLINK) {
-                write64(files_from_fd, task->link_target, task->link_target_len);
-                write64(files_from_fd, "\n", 1);
-            }
-            write64(files_from_fd, task->path, task->path_len);
-            write64(files_from_fd, "\n", 1);
+        if (w < 0) {
+            error("Error writing to %s: %s.\n",
+                  files_from_filename, strerror(errno));
+            fatal(EXIT_FAILURE);
         }
+
+        write64(files_from_fd, "\n", 1);
     }
+
+    for (int32 i = 0; i < tasks->count; i += 1) {
+        Task *task = tasks->items[i];
+
+        if (task->action == ACTION_HARDLINK) {
+            write64(files_from_fd, task->link_target, task->link_target_len);
+            write64(files_from_fd, "\n", 1);
+        }
+        write64(files_from_fd, task->path, task->path_len);
+        write64(files_from_fd, "\n", 1);
+    }
+
     XCLOSE(&files_from_fd);
 
 run_rsync:
