@@ -995,7 +995,7 @@ work_rsync(void *user_data) {
                     transfers = xrealloc(transfers,
                                          transfers_capacity*SIZEOF(*transfers));
                 }
-                transfers[ntransfers] = xstrdup(bucket_src->key);
+                transfers[ntransfers] = bucket_src->key;
                 ntransfers += 1;
             }
 
@@ -1297,9 +1297,6 @@ work_rsync(void *user_data) {
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
 
-    for (int32 i = 0; i < ntransfers; i += 1) {
-        XFREE(transfers[i]);
-    }
     XFREE(transfers);
 
     work_finalize(thread_data);
