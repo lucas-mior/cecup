@@ -1673,6 +1673,11 @@ bytes_pretty(char *buffer, int64 raw) {
     int64 i;
     int32 n;
 
+    if (raw < 0) {
+        *buffer = '\0';
+        return 0;
+    }
+
     if (raw <= 1023) {
         n = snprintf2(buffer, 32, "%lldB", (llong)raw);
         return n;
