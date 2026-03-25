@@ -238,7 +238,6 @@ static void
 work_load_ignore_patterns(char ***patterns, int32 *count) {
     FILE *file;
     char line_buffer[MAX_PATH_LENGTH];
-    int32 length;
 
     *patterns = NULL;
     *count = 0;
@@ -248,7 +247,7 @@ work_load_ignore_patterns(char ***patterns, int32 *count) {
     }
 
     while (fgets(line_buffer, SIZEOF(line_buffer), file)) {
-        length = strlen32(line_buffer);
+        int32 length = strlen32(line_buffer);
 
         if (length > 0 && line_buffer[length - 1] == '\n') {
             line_buffer[length - 1] = '\0';
