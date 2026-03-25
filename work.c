@@ -58,9 +58,6 @@ typedef struct FixFsThreadData {
     struct Hash_fs_map *map;
     struct Hash_fs_map *inode_map;
 
-    IgnorePattern *ignore_patterns;
-    int32 ignore_count;
-
     int32 array_capacity;
     int32 array_count;
 
@@ -784,8 +781,8 @@ work_fix_fs_cb(const char *fpath,
     {
         IgnorePattern *pattern = work_path_matches_ignore(path, path_len,
                                                           is_dir,
-                                                          data->ignore_patterns,
-                                                          data->ignore_count);
+                                                          cecup.ignore_patterns,
+                                                          cecup.ignore_count);
         if (pattern) {
             data->matched_patterns[index] = pattern->str;
             data->matched_patterns_lens[index] = (int16)pattern->len;
@@ -908,13 +905,11 @@ work_rsync(void *user_data) {
     src_fix.base_path_len = cecup.src_base_len;
     src_fix.map = src_map;
     src_fix.inode_map = src_inode_map;
-    src_fix.ignore_count = ignore_count;
 
     dst_fix.base_path = cecup.dst_base;
     dst_fix.base_path_len = cecup.dst_base_len;
     dst_fix.map = dst_map;
     dst_fix.inode_map = dst_inode_map;
-    dst_fix.ignore_count = ignore_count;
 
     LOG(_("Traversing file systems...\n"));
     if (!same_fs) {
