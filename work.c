@@ -611,7 +611,7 @@ work_fix_fs_cb(const char *fpath,
 
     changed = false;
 
-    if (false) {
+    if (true) {
         char new_name[MAX_PATH_LENGTH];
         char new_full[MAX_PATH_LENGTH];
         int32 j = 0;
