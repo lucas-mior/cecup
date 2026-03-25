@@ -429,7 +429,8 @@ work_traverse_fs(TraversalData *data) {
             char target[MAX_PATH_LENGTH];
             int64 target_len;
 
-            if ((target_len = readlink(ent->fts_path, target, SIZEOF(target))) < 0) {
+            if ((target_len
+                 = readlink(ent->fts_path, target, SIZEOF(target))) < 0) {
                 LOG_ERROR("Error in readlink(%s): %s.\n",
                           ent->fts_path, strerror(errno));
             } else {
