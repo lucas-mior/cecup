@@ -292,6 +292,18 @@ setup_text_cb(GtkSignalListItemFactory *factory,
 }
 
 #if TESTING_columns
+static inline void
+columns_functions_sink(void) {
+    (void)setup_text_cb;
+    (void)bind_text_cb;
+    (void)bind_column_path;
+    (void)setup_column_path;
+    (void)setup_column_action;
+    (void)bind_column_action;
+    (void)setup_column_checkbox;
+    (void)bind_column_checkbox;
+    return;
+}
 
 int
 main(void) {

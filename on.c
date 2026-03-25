@@ -772,17 +772,6 @@ on_tree_key_press(GtkEventControllerKey *controller,
 }
 
 static void
-free_message(void *data) {
-    Message *message = data;
-
-    if (message->src_path) {
-        XFREE(message->src_path);
-    }
-    XFREE(message);
-    return;
-}
-
-static void
 on_path_click_pressed(GtkGestureClick *gesture,
                       int32 n_press, double x, double y, void *data) {
     GtkWidget *editable;
@@ -1466,6 +1455,35 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
 
     return;
 }
+
+/* #if 0 == TESTING_on */
+static inline void
+on_functions_sink(void) {
+    (void)on_window_destroy;
+    (void)on_tree_tooltip;
+    (void)on_tree_button_press;
+    (void)on_tree_key_press;
+    (void)on_scroll_sync;
+    (void)on_browse_dst;
+    (void)on_browse_src;
+    (void)on_invert_clicked;
+    (void)on_ignore_clicked;
+    (void)on_sort_changed;
+    (void)on_filter_toggled;
+    (void)on_stop_clicked;
+    (void)on_sync_clicked;
+    (void)on_preview_clicked;
+    (void)on_reset_clicked;
+    (void)on_delete_excluded_toggled;
+    (void)on_preview_setting_toggled;
+    (void)on_search_changed;
+    (void)on_config_changed;
+    (void)on_log_button_press;
+    (void)on_log_copy;
+    (void)on_path_editing_notify;
+    (void)on_path_click_pressed;
+}
+/* #endif */
 
 #if TESTING_on
 int

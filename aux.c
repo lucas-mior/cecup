@@ -710,12 +710,28 @@ ipc_send_progress(enum DataType type, double fraction) {
     return;
 }
 
+#if 0 == TESTING_aux
+static inline void
+aux_functions_sink(void) {
+    (void)ipc_send_progress;
+    (void)cecup_get_dirs;
+    (void)get_target_tasks;
+    (void)free_task_list;
+    (void)free_message;
+}
+#endif
+
 #if TESTING_aux
 #include <assert.h>
 #include <string.h>
 
 int
 main(void) {
+    (void)ipc_send_progress;
+    (void)cecup_get_dirs;
+    (void)get_target_tasks;
+    (void)free_task_list;
+    (void)free_message;
     ASSERT(true);
     exit(EXIT_SUCCESS);
 }

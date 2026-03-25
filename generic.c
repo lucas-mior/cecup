@@ -529,6 +529,7 @@ main(void) {
         float var_float = FLT_MAX;
         double var_double = DBL_MAX;
         long double var_longdouble = (ldouble)DBL_MAX;
+        long double var_longdouble2 = LDOUBLE_GET(var_longdouble);
 
         PRINTLN(var_voidptr);
         PRINTLN(var_string);
@@ -548,6 +549,7 @@ main(void) {
         PRINTLN(var_float);
         PRINTLN(var_double);
         PRINTLN(var_longdouble);
+        PRINTLN(var_longdouble2);
 
         PRINTLN(*var_string);
         PRINTLN(var_uint - (uint)var_int);

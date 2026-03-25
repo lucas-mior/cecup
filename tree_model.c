@@ -23,6 +23,12 @@
 #include "cecup.h"
 #include "util.c"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_tree_model 1
+#elif !defined(TESTING_tree_model)
+#define TESTING_tree_model 0
+#endif
+
 struct _CecupRowProxy {
     GObject parent_instance;
     CecupRow *row;
@@ -187,5 +193,19 @@ cecup_list_model_update(CecupListModel *self,
                                0, (guint)old_count, (guint)new_count);
     return;
 }
+
+static inline void
+tree_model_functions_sink(void) {
+    (void)cecup_list_model_new;
+    (void)cecup_row_proxy_get_row;
+}
+
+#if TESTING_tree_model
+#include "aux.c"
+int
+main(void) {
+    exit(EXIT_SUCCESS);
+}
+#endif
 
 #endif /* TREE_MODEL_C */

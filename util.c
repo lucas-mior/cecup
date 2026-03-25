@@ -1995,11 +1995,28 @@ util_functions_sink(void) {
     (void)util_copy_file_async;
     (void)util_copy_file_async_thread;
     (void)util_equal_files;
+    (void)util_command_launch;
 
     (void)send_signal;
     (void)shell_escape;
-    (void)xcalloc;
     (void)atoi2;
+    (void)timezone_init;
+    (void)dirname2;
+    (void)basename2;
+    (void)string_from_doubles;
+    (void)string_from_strings;
+    (void)strftime2;
+    (void)bytes_pretty;
+    (void)qsort64;
+
+    (void)xmmap_commit;
+    (void)xcalloc;
+    (void)xstrdup;
+    (void)xkill;
+    (void)xdup2;
+    (void)xpipe;
+    (void)xmemdup;
+    (void)xunlink;
 
     (void)xpthread_mutex_lock;
     (void)xpthread_mutex_unlock;
@@ -2013,50 +2030,33 @@ util_functions_sink(void) {
 
 #if TESTING_util
 
-#define DAYS_ENUM_LIST                 \
-  BEGIN_ENUM(WeekDay)                  \
-    XENUM(SUNDAY, 0)                   \
-    XENUM(MONDAY)                      \
-    XENUM(TUESDAY, 10)                 \
-    XENUM(WEDNESDAY)                   \
-    XENUM(THURSDAY)                    \
-    XENUM(FRIDAY, 5)                   \
-    XENUM(SATURDAY, 20)                \
-  END_ENUM(WeekDay)
-
+#define ENUM_NAME WeekDay
+#define ENUM_BITFLAGS 0
 #define ENUM_PREFIX_ WEEK_DAY_
-#include "enums.h"
-DAYS_ENUM_LIST
-#undef ENUM_PREFIX_
+#define ENUM_FIELDS \
+    X(SUNDAY, 0)                   \
+    X(MONDAY)                      \
+    X(TUESDAY, 10)                 \
+    X(WEDNESDAY)                   \
+    X(THURSDAY)                    \
+    X(FRIDAY, 5)                   \
+    X(SATURDAY, 20)
+#include "xenums.c"
 
-#define ENUM_PREFIX_ WEEK_DAY_
-#include "enums.h"
-DAYS_ENUM_LIST
-#undef DAYS_ENUM_LIST
-#undef ENUM_PREFIX_
 
-#define POWERS_OF_TWO_LIST             \
-  BEGIN_ENUM(PowerOfTwo)               \
-    XENUM(ONE,     1 << 0)             \
-    XENUM(TWO,     1 << 1)             \
-    XENUM(FOUR,    1 << 2)             \
-    XENUM(EIGHT,   1 << 3)             \
-    XENUM(SIXTEEN, 1 << 4)             \
-    XENUM(THIRTY2, 1 << 5)             \
-    XENUM(SIXTY4,  1 << 6)             \
-  END_ENUM(PowerOfTwo)
-
+#define ENUM_NAME PowerOfTwo
+#define ENUM_BITFLAGS 1
 #define ENUM_PREFIX_ POWER_OF2_
-#include "enums.h"
-POWERS_OF_TWO_LIST
-#undef ENUM_PREFIX_
+#define ENUM_FIELDS \
+    X(ONE,     1 << 0)             \
+    X(TWO,     1 << 1)             \
+    X(FOUR,    1 << 2)             \
+    X(EIGHT,   1 << 3)             \
+    X(SIXTEEN, 1 << 4)             \
+    X(THIRTY2, 1 << 5)             \
+    X(SIXTY4,  1 << 6)
+#include "xenums.c"
 
-#define ENUM_PREFIX_ POWER_OF2_
-#define ENUM_IS_FLAGS
-#include "enums.h"
-POWERS_OF_TWO_LIST
-#undef ENUM_PREFIX_
-#undef POWERS_OF_TWO_LIST
 
 static void
 write_file(char *path, void *data, int64 len) {
@@ -2090,9 +2090,14 @@ main(int argc, char **argv) {
     void *p2 = xcalloc(10, SIZEMB(1));
     char *p3;
     char *string = __FILE__;
+    struct timespec t0;
+    struct timespec t1;
 
     (void)argc;
     (void)argv;
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
+    timezone_init();
 
     for (enum WeekDay day = WEEK_DAY_MONDAY; day <= WEEK_DAY_LAST; day += 1) {
         printf("enum[%d] = %s\n", day, WEEK_DAY_str(day));
@@ -2271,6 +2276,41 @@ main(int argc, char **argv) {
     ASSERT_EQUAL(deg2rad(180.0), 3.141592653589793);
     ASSERT_EQUAL(rad2deg(3.141592653589793), 180.0);
 
+    (void)util_segv_handler;
+    (void)util_nthreads;
+    (void)util_command;
+    (void)util_string_int32;
+    (void)util_die_notify;
+    (void)util_copy_file_sync;
+    (void)util_copy_file_async;
+    (void)util_copy_file_async_thread;
+    (void)util_command_launch;
+
+    (void)send_signal;
+    (void)shell_escape;
+    (void)timezone_init;
+    (void)string_from_doubles;
+    (void)string_from_strings;
+    (void)strftime2;
+    (void)bytes_pretty;
+    (void)qsort64;
+
+    (void)xmmap_commit;
+    (void)xkill;
+    (void)xdup2;
+    (void)xpipe;
+    (void)xmemdup;
+    (void)xunlink;
+
+    (void)xpthread_mutex_lock;
+    (void)xpthread_mutex_unlock;
+    (void)xpthread_cond_destroy;
+    (void)xpthread_mutex_destroy;
+    (void)xpthread_create;
+    (void)xpthread_join;
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
+    PRINT_TIMINGS(1, t0, t1);
     exit(EXIT_SUCCESS);
 }
 

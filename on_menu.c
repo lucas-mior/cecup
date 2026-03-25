@@ -406,6 +406,14 @@ on_menu_diff(GtkWidget *m, void *data) {
     return;
 }
 
+/* #if 0 == TESTING_on_menu */
+static inline void
+on_menu_functions_sink(void) {
+    (void)on_menu_ignore_action;
+    (void)on_menu_dispatch;
+}
+/* #endif */
+
 #if TESTING_on_menu
 
 #include "on.c"

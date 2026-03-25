@@ -372,8 +372,18 @@ static gboolean update_ui_handler(void * user_data);
 static void refresh_ui_list_locked(enum RefreshType, char *path_to_focus);
 static void free_task_list(TaskList *tasks);
 static void save_config(void);
-static void free_message(void *data);
 static void protect_interface_from_user(bool state);
+
+static void
+free_message(void *data) {
+    Message *message = data;
+
+    if (message->src_path) {
+        XFREE(message->src_path);
+    }
+    XFREE(message);
+    return;
+}
 
 static char *row_path_get(CecupRow *row) {
     if (row->src_path) {

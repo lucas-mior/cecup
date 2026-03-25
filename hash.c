@@ -507,7 +507,6 @@ CAT(hash_ndeleted_, HASH_TYPE)(struct Map *map) {
     return ndeleted;
 }
 
-#if 0 == TESTING_hash
 static inline void
 hash_functions_sink(void) {
     (void)CAT(hash_zero_, HASH_TYPE);
@@ -525,7 +524,6 @@ hash_functions_sink(void) {
     (void)CAT(hash_print_, HASH_TYPE);
     (void)CAT(hash_ndeleted_, HASH_TYPE);
 }
-#endif
 
 #undef HASH_VALUE_TYPE
 #undef HASH_PADDING_TYPE
