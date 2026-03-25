@@ -748,6 +748,7 @@ main(int32 argc, char **argv) {
         textdomain(GETTEXT_PACKAGE);
     }
 
+    timezone_init();
     memset64(&cecup, 0, SIZEOF(cecup));
 
     cecup.arena = arena_create(SIZEMB(64));

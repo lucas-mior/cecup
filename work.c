@@ -193,10 +193,6 @@ work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
     time_t unix_timestamp;
     CecupRow *row;
 
-    if (!timezone_initialized) {
-        timezone_init();
-    }
-
     g_mutex_lock(&cecup.arena_mutex);
 
     final_src_path = NULL;
