@@ -1240,7 +1240,6 @@ work_rsync(void *user_data) {
             };
 
             STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
-            error("%s\n", cmd_rm);
 
             execvp(args_rm[0], args_rm);
             error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
