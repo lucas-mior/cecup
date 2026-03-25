@@ -211,17 +211,17 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
         localtime_r(&current_time, &local_tm);
         gmtime_r(&current_time, &gm_tm);
 
-        timezone_offset = (local_tm.tm_hour - gm_tm.tm_hour) * 3600;
-        timezone_offset += (local_tm.tm_min - gm_tm.tm_min) * 60;
+        timezone_offset = (local_tm.tm_hour - gm_tm.tm_hour)*3600;
+        timezone_offset += (local_tm.tm_min - gm_tm.tm_min)*60;
 
         if (local_tm.tm_year < gm_tm.tm_year) {
-            timezone_offset -= 24 * 3600;
+            timezone_offset -= 24*3600;
         } else if (local_tm.tm_year > gm_tm.tm_year) {
-            timezone_offset += 24 * 3600;
+            timezone_offset += 24*3600;
         } else if (local_tm.tm_yday < gm_tm.tm_yday) {
-            timezone_offset -= 24 * 3600;
+            timezone_offset -= 24*3600;
         } else if (local_tm.tm_yday > gm_tm.tm_yday) {
-            timezone_offset += 24 * 3600;
+            timezone_offset += 24*3600;
         }
 
         timezone_initialized = true;
@@ -338,9 +338,9 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
             cecup.rows_capacity *= 2;
         }
         cecup.rows = xrealloc(cecup.rows,
-                              cecup.rows_capacity * SIZEOF(CecupRow *));
+                              cecup.rows_capacity*SIZEOF(CecupRow *));
         cecup.rows_visible = xrealloc(cecup.rows_visible,
-                                      cecup.rows_capacity * SIZEOF(CecupRow *));
+                                      cecup.rows_capacity*SIZEOF(CecupRow *));
     }
 
     cecup.rows[cecup.rows_len] = row;
