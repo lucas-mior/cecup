@@ -666,163 +666,251 @@ work_preview(void *user_data) {
     nfiles_total = cecup.traversal_src.file_count + cecup.traversal_dst.file_count;
     LOG(_("Found %lld files to analyse...\n"), (llong)nfiles_total);
 
-    {
+    for (uint32 i = 0; i < cecup.src_map->capacity; i += 1) {
+        Bucket_fs_map *bucket_src = &cecup.src_map->array[i];
+        int32 src_idx;
+        int32 *dst_idx_ptr;
+        struct stat *stat_src;
+        char *matched_pattern_src;
+        char *link_target_src;
+        bool is_symlink;
+        bool is_hardlink;
+        bool is_dir;
+        enum CecupAction action;
+        enum CecupAction src_action;
+        enum CecupAction dst_action;
+        enum CecupReason reason;
+        char *dst_path = NULL;
+        int64 dst_size = 0;
+        int64 dst_mtime = 0;
+        int64 src_size = 0;
+        int32 path_len;
+        int32 link_target_len;
+        int32 matched_pattern_len;
 
-        for (uint32 i = 0; i < cecup.src_map->capacity; i += 1) {
-            Bucket_fs_map *bucket_src = &cecup.src_map->array[i];
-            int32 src_idx;
-            int32 *dst_idx_ptr;
-            struct stat *stat_src;
-            char *matched_pattern_src;
-            char *link_target_src;
-            bool is_symlink;
-            bool is_hardlink;
-            bool is_dir;
-            enum CecupAction action;
-            enum CecupAction src_action;
-            enum CecupAction dst_action;
-            enum CecupReason reason;
-            char *dst_path = NULL;
-            int64 dst_size = 0;
-            int64 dst_mtime = 0;
-            int64 src_size = 0;
-            int32 path_len;
-            int32 link_target_len;
-            int32 matched_pattern_len;
+        if ((int64)bucket_src->key <= 0) {
+            continue;
+        }
 
-            if ((int64)bucket_src->key <= 0) {
-                continue;
-            }
+        src_idx = bucket_src->value;
+        stat_src = &cecup.traversal_src.stats[src_idx];
+        matched_pattern_src = cecup.traversal_src.matched_patterns[src_idx];
+        link_target_src = cecup.traversal_src.link_targets[src_idx];
+        link_target_len = cecup.traversal_src.link_targets_lens[src_idx];
+        matched_pattern_len = cecup.traversal_src.matched_patterns_lens[src_idx];
+        path_len = cecup.traversal_src.paths_lens[src_idx];
 
-            src_idx = bucket_src->value;
-            stat_src = &cecup.traversal_src.stats[src_idx];
-            matched_pattern_src = cecup.traversal_src.matched_patterns[src_idx];
-            link_target_src = cecup.traversal_src.link_targets[src_idx];
-            link_target_len = cecup.traversal_src.link_targets_lens[src_idx];
-            matched_pattern_len = cecup.traversal_src.matched_patterns_lens[src_idx];
-            path_len = cecup.traversal_src.paths_lens[src_idx];
+        is_symlink = S_ISLNK(stat_src->st_mode);
+        is_hardlink = S_ISREG(stat_src->st_mode) && link_target_src;
+        is_dir = S_ISDIR(stat_src->st_mode);
 
-            is_symlink = S_ISLNK(stat_src->st_mode);
-            is_hardlink = S_ISREG(stat_src->st_mode) && link_target_src;
-            is_dir = S_ISDIR(stat_src->st_mode);
+        if ((dst_idx_ptr
+             = hash_lookup_fs_map(cecup.dst_map, bucket_src->key, (uint32)path_len))) {
+            int32 dst_idx = *dst_idx_ptr;
+            struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
+            char *link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
 
-            if ((dst_idx_ptr
-                 = hash_lookup_fs_map(cecup.dst_map, bucket_src->key, (uint32)path_len))) {
-                int32 dst_idx = *dst_idx_ptr;
-                struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
-                char *link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
+            dst_path = bucket_src->key;
+            dst_size = stat_dst->st_size;
+            dst_mtime = stat_dst->st_mtime;
+            reason = 0;
 
-                dst_path = bucket_src->key;
-                dst_size = stat_dst->st_size;
-                dst_mtime = stat_dst->st_mtime;
-                reason = 0;
+            if (matched_pattern_src) {
+                action = ACTION_IGNORE;
+                reason |= REASON_IGNORED;
+            } else {
+                bool equal;
+                bool attributes_differ;
 
-                if (matched_pattern_src) {
-                    action = ACTION_IGNORE;
-                    reason |= REASON_IGNORED;
+                equal = false;
+                attributes_differ = false;
+
+                if (is_symlink) {
+                    reason |= REASON_SYMLINK;
+                    if (S_ISLNK(stat_dst->st_mode)
+                        && link_target_src
+                        && link_target_dst
+                        && !strcmp(link_target_src, link_target_dst)) {
+                        equal = true;
+                    }
                 } else {
-                    bool equal;
-                    bool attributes_differ;
+                    if (is_hardlink) {
+                        reason |= REASON_HARDLINK;
+                    }
 
-                    equal = false;
-                    attributes_differ = false;
+                    if (!is_dir && (stat_src->st_size != stat_dst->st_size)) {
+                        reason |= REASON_SIZE;
+                        attributes_differ = true;
+                    }
+                    if (stat_src->st_mtime != stat_dst->st_mtime) {
+                        reason |= REASON_MTIME;
+                        attributes_differ = true;
+                    }
+                    if (is_dir && (stat_src->st_ctime != stat_dst->st_ctime)) {
+                        reason |= REASON_CTIME;
+                        attributes_differ = true;
+                    }
+                    if (stat_src->st_uid != stat_dst->st_uid) {
+                        reason |= REASON_OWNER;
+                        attributes_differ = true;
+                    }
+                    if (stat_src->st_gid != stat_dst->st_gid) {
+                        reason |= REASON_GROUP;
+                        attributes_differ = true;
+                    }
+                    if ((stat_src->st_mode & 07777)
+                         != (stat_dst->st_mode & 07777)) {
+                        reason |= REASON_PERM;
+                        attributes_differ = true;
+                    }
 
-                    if (is_symlink) {
-                        reason |= REASON_SYMLINK;
-                        if (S_ISLNK(stat_dst->st_mode)
-                            && link_target_src
-                            && link_target_dst
-                            && !strcmp(link_target_src, link_target_dst)) {
+                    if (is_hardlink) {
+                        if (S_ISREG(stat_dst->st_mode)
+                             && link_target_dst
+                             && !strcmp(link_target_src, link_target_dst)
+                             && !attributes_differ) {
                             equal = true;
                         }
                     } else {
-                        if (is_hardlink) {
-                            reason |= REASON_HARDLINK;
-                        }
-
-                        if (!is_dir && (stat_src->st_size != stat_dst->st_size)) {
-                            reason |= REASON_SIZE;
-                            attributes_differ = true;
-                        }
-                        if (stat_src->st_mtime != stat_dst->st_mtime) {
-                            reason |= REASON_MTIME;
-                            attributes_differ = true;
-                        }
-                        if (is_dir && (stat_src->st_ctime != stat_dst->st_ctime)) {
-                            reason |= REASON_CTIME;
-                            attributes_differ = true;
-                        }
-                        if (stat_src->st_uid != stat_dst->st_uid) {
-                            reason |= REASON_OWNER;
-                            attributes_differ = true;
-                        }
-                        if (stat_src->st_gid != stat_dst->st_gid) {
-                            reason |= REASON_GROUP;
-                            attributes_differ = true;
-                        }
-                        if ((stat_src->st_mode & 07777)
-                             != (stat_dst->st_mode & 07777)) {
-                            reason |= REASON_PERM;
-                            attributes_differ = true;
-                        }
-
-                        if (is_hardlink) {
-                            if (S_ISREG(stat_dst->st_mode)
-                                 && link_target_dst
-                                 && !strcmp(link_target_src, link_target_dst)
-                                 && !attributes_differ) {
-                                equal = true;
-                            }
-                        } else {
-                            if (!attributes_differ) {
-                                equal = true;
-                            }
-                        }
-                    }
-
-                    if (equal) {
-                        action = ACTION_EQUAL;
-                        reason |= REASON_EQUAL;
-                    } else {
-                        if (is_hardlink) {
-                            action = ACTION_HARDLINK;
-                        } else if (is_symlink) {
-                            action = ACTION_SYMLINK;
-                        } else {
-                            action = ACTION_UPDATE;
+                        if (!attributes_differ) {
+                            equal = true;
                         }
                     }
                 }
-            } else {
-                reason = 0;
-                if (matched_pattern_src) {
-                    action = ACTION_IGNORE;
-                    reason |= REASON_IGNORED;
+
+                if (equal) {
+                    action = ACTION_EQUAL;
+                    reason |= REASON_EQUAL;
                 } else {
-                    reason |= REASON_NEW;
                     if (is_hardlink) {
                         action = ACTION_HARDLINK;
-                        reason |= REASON_HARDLINK;
                     } else if (is_symlink) {
                         action = ACTION_SYMLINK;
-                        reason |= REASON_SYMLINK;
                     } else {
-                        action = ACTION_NEW;
+                        action = ACTION_UPDATE;
                     }
                 }
             }
+        } else {
+            reason = 0;
+            if (matched_pattern_src) {
+                action = ACTION_IGNORE;
+                reason |= REASON_IGNORED;
+            } else {
+                reason |= REASON_NEW;
+                if (is_hardlink) {
+                    action = ACTION_HARDLINK;
+                    reason |= REASON_HARDLINK;
+                } else if (is_symlink) {
+                    action = ACTION_SYMLINK;
+                    reason |= REASON_SYMLINK;
+                } else {
+                    action = ACTION_NEW;
+                }
+            }
+        }
+
+        src_action = action;
+        dst_action = action;
+
+        if (action == ACTION_IGNORE) {
+            src_action = ACTION_IGNORE;
+            if (dst_path != NULL) {
+                if (thread_data->delete_excluded) {
+                    dst_action = ACTION_DELETE;
+                } else {
+                    dst_action = ACTION_IGNORE;
+                }
+            } else {
+                dst_action = ACTION_IGNORE;
+            }
+        } else if (action == ACTION_DELETE) {
+            src_action = ACTION_IGNORE;
+            dst_action = ACTION_DELETE;
+        }
+
+        if ((action != ACTION_EQUAL) && (action != ACTION_IGNORE)) {
+            if (cecup.ntransfers >= cecup.transfers_capacity) {
+                if (cecup.transfers_capacity == 0) {
+                    cecup.transfers_capacity = 256;
+                } else {
+                    cecup.transfers_capacity *= 2;
+                }
+                cecup.transfers = xrealloc(cecup.transfers,
+                                           cecup.transfers_capacity*SIZEOF(*cecup.transfers));
+            }
+            cecup.transfers[cecup.ntransfers] = bucket_src->key;
+            cecup.ntransfers += 1;
+        }
+
+        if (is_dir) {
+            src_size = -1;
+        } else {
+            src_size = stat_src->st_size;
+        }
+
+        work_add_row(src_action, dst_action, reason,
+                     bucket_src->key, dst_path,
+                     link_target_src, link_target_len,
+                     matched_pattern_src, matched_pattern_len,
+                     path_len,
+                     src_size, stat_src->st_mtime,
+                     dst_size, dst_mtime,
+                     S_ISDIR(stat_src->st_mode));
+
+        nfiles_processed += 1;
+        if ((nfiles_processed % 1000) == 0) {
+            ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                              (double)nfiles_processed
+                              / (double)nfiles_total);
+        }
+    }
+
+    for (uint32 i = 0; i < cecup.dst_map->capacity; i += 1) {
+        Bucket_fs_map *bucket_dst = &cecup.dst_map->array[i];
+        int32 dst_idx;
+        struct stat *stat_dst;
+        char *matched_pattern_dst;
+        char *link_target_dst;
+        int32 link_target_len;
+        int32 matched_pattern_len;
+        enum CecupAction action = ACTION_DELETE;
+        enum CecupReason reason = 0;
+        enum CecupAction src_action;
+        enum CecupAction dst_action;
+        int32 path_len;
+
+        if ((int64)bucket_dst->key <= 0) {
+            continue;
+        }
+
+        dst_idx = bucket_dst->value;
+        path_len = cecup.traversal_dst.paths_lens[dst_idx];
+
+        if (hash_lookup_fs_map(cecup.src_map,
+                               bucket_dst->key, (uint32)path_len) == NULL) {
+            stat_dst = &cecup.traversal_dst.stats[dst_idx];
+            matched_pattern_dst = cecup.traversal_dst.matched_patterns[dst_idx];
+            link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
+            link_target_len = cecup.traversal_dst.link_targets_lens[dst_idx];
+            matched_pattern_len = cecup.traversal_dst.matched_patterns_lens[dst_idx];
+
+            if (matched_pattern_dst) {
+                if (!thread_data->delete_excluded) {
+                    action = ACTION_IGNORE;
+                }
+                reason |= REASON_IGNORED;
+            }
+
+            reason |= REASON_MISSING;
 
             src_action = action;
             dst_action = action;
 
             if (action == ACTION_IGNORE) {
                 src_action = ACTION_IGNORE;
-                if (dst_path != NULL) {
-                    if (thread_data->delete_excluded) {
-                        dst_action = ACTION_DELETE;
-                    } else {
-                        dst_action = ACTION_IGNORE;
-                    }
+                if (thread_data->delete_excluded) {
+                    dst_action = ACTION_DELETE;
                 } else {
                     dst_action = ACTION_IGNORE;
                 }
@@ -831,112 +919,21 @@ work_preview(void *user_data) {
                 dst_action = ACTION_DELETE;
             }
 
-            if ((action != ACTION_EQUAL) && (action != ACTION_IGNORE)) {
-                if (cecup.ntransfers >= cecup.transfers_capacity) {
-                    if (cecup.transfers_capacity == 0) {
-                        cecup.transfers_capacity = 256;
-                    } else {
-                        cecup.transfers_capacity *= 2;
-                    }
-                    cecup.transfers = xrealloc(cecup.transfers,
-                                               cecup.transfers_capacity*SIZEOF(*cecup.transfers));
-                }
-                cecup.transfers[cecup.ntransfers] = bucket_src->key;
-                cecup.ntransfers += 1;
-            }
-
-            if (is_dir) {
-                src_size = -1;
-            } else {
-                src_size = stat_src->st_size;
-            }
-
             work_add_row(src_action, dst_action, reason,
-                         bucket_src->key, dst_path,
-                         link_target_src, link_target_len,
-                         matched_pattern_src, matched_pattern_len,
+                         NULL, bucket_dst->key,
+                         link_target_dst, link_target_len,
+                         matched_pattern_dst, matched_pattern_len,
                          path_len,
-                         src_size, stat_src->st_mtime,
-                         dst_size, dst_mtime,
-                         S_ISDIR(stat_src->st_mode));
-
-            nfiles_processed += 1;
-            if ((nfiles_processed % 1000) == 0) {
-                ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                  (double)nfiles_processed
-                                  / (double)nfiles_total);
-            }
+                         0, 0,
+                         stat_dst->st_size, stat_dst->st_mtime,
+                         S_ISDIR(stat_dst->st_mode));
         }
 
-        for (uint32 i = 0; i < cecup.dst_map->capacity; i += 1) {
-            Bucket_fs_map *bucket_dst = &cecup.dst_map->array[i];
-            int32 dst_idx;
-            struct stat *stat_dst;
-            char *matched_pattern_dst;
-            char *link_target_dst;
-            int32 link_target_len;
-            int32 matched_pattern_len;
-            enum CecupAction action = ACTION_DELETE;
-            enum CecupReason reason = 0;
-            enum CecupAction src_action;
-            enum CecupAction dst_action;
-            int32 path_len;
-
-            if ((int64)bucket_dst->key <= 0) {
-                continue;
-            }
-
-            dst_idx = bucket_dst->value;
-            path_len = cecup.traversal_dst.paths_lens[dst_idx];
-
-            if (hash_lookup_fs_map(cecup.src_map,
-                                   bucket_dst->key, (uint32)path_len) == NULL) {
-                stat_dst = &cecup.traversal_dst.stats[dst_idx];
-                matched_pattern_dst = cecup.traversal_dst.matched_patterns[dst_idx];
-                link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
-                link_target_len = cecup.traversal_dst.link_targets_lens[dst_idx];
-                matched_pattern_len = cecup.traversal_dst.matched_patterns_lens[dst_idx];
-
-                if (matched_pattern_dst) {
-                    if (!thread_data->delete_excluded) {
-                        action = ACTION_IGNORE;
-                    }
-                    reason |= REASON_IGNORED;
-                }
-
-                reason |= REASON_MISSING;
-
-                src_action = action;
-                dst_action = action;
-
-                if (action == ACTION_IGNORE) {
-                    src_action = ACTION_IGNORE;
-                    if (thread_data->delete_excluded) {
-                        dst_action = ACTION_DELETE;
-                    } else {
-                        dst_action = ACTION_IGNORE;
-                    }
-                } else if (action == ACTION_DELETE) {
-                    src_action = ACTION_IGNORE;
-                    dst_action = ACTION_DELETE;
-                }
-
-                work_add_row(src_action, dst_action, reason,
-                             NULL, bucket_dst->key,
-                             link_target_dst, link_target_len,
-                             matched_pattern_dst, matched_pattern_len,
-                             path_len,
-                             0, 0,
-                             stat_dst->st_size, stat_dst->st_mtime,
-                             S_ISDIR(stat_dst->st_mode));
-            }
-
-            nfiles_processed += 1;
-            if ((nfiles_processed % 1000) == 0) {
-                ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
-                                  (double)nfiles_processed
-                                  / (double)nfiles_total);
-            }
+        nfiles_processed += 1;
+        if ((nfiles_processed % 1000) == 0) {
+            ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW,
+                              (double)nfiles_processed
+                              / (double)nfiles_total);
         }
     }
 
