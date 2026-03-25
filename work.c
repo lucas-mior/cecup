@@ -1070,6 +1070,8 @@ work_rsync(void *user_data) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
     PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
 
+    exit(0);
+
     if (thread_data->is_preview || (ntransfers <= 0)) {
         work_finalize(thread_data);
         goto cleanup_maps;
