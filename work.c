@@ -234,7 +234,7 @@ work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
 }
 
 static int64
-work_fix_fs_recursive(TraversalData *data) {
+work_traverse_fs(TraversalData *data) {
     int64 file_count;
     char *paths[2];
     FTS *fts_handle;
@@ -489,7 +489,7 @@ work_fix_fs_recursive(TraversalData *data) {
 static void *
 work_fix_fs_thread_fn(void *user_data) {
     TraversalData *data = user_data;
-    data->file_count = work_fix_fs_recursive(data);
+    data->file_count = work_traverse_fs(data);
     return NULL;
 }
 
