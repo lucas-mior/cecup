@@ -335,6 +335,7 @@ work_match_pattern(char *pattern, char *str, bool restrict_slash) {
 static char *
 work_path_matches_ignore(char *relative_path, bool is_dir,
                          IgnorePattern *patterns, int32 count) {
+    int32 path_len = strlen32(relative_path);
     if (patterns == NULL) {
         return NULL;
     }
@@ -348,7 +349,6 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
         bool dir_only = false;
         bool has_slash = false;
         char path_copy[MAX_PATH_LENGTH];
-        int32 path_len;
         bool matched = false;
 
         if (pattern == NULL) {
@@ -387,7 +387,6 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
         }
 
         if (has_slash) {
-            path_len = strlen32(relative_path);
             memcpy64(path_copy, relative_path, path_len + 1);
 
             if (work_match_pattern(pattern_final, path_copy, true)) {
@@ -420,7 +419,7 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
             char *saveptr;
             char *comp;
 
-            memcpy64(path_copy, relative_path, strlen32(relative_path) + 1);
+            memcpy64(path_copy, relative_path, path_len + 1);
 
             if ((comp = strtok_r(path_copy, "/", &saveptr))) {
                 while (comp) {
