@@ -189,7 +189,7 @@ static void
 work_add_row(enum CecupAction action, enum CecupReason reason,
              char *src_path, char *dst_path,
              char *link_target, int32 link_target_len,
-             char *ignore_pattern,
+             char *ignore_pattern, int32 ignore_pattern_len,
              int32 path_len,
              int64 src_size_raw, int64 src_mtime_raw,
              int64 dst_size_raw, int64 dst_mtime_raw,
@@ -217,10 +217,9 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     }
 
     if (ignore_pattern) {
-        int32 pattern_len = strlen32(ignore_pattern);
-        message->ignore_pattern_len = pattern_len;
-        message->ignore_pattern = xmalloc(pattern_len + 1);
-        memcpy64(message->ignore_pattern, ignore_pattern, pattern_len + 1);
+        message->ignore_pattern_len = ignore_pattern_len;
+        message->ignore_pattern = xmalloc(ignore_pattern_len + 1);
+        memcpy64(message->ignore_pattern, ignore_pattern, ignore_pattern_len + 1);
     }
 
     add_row_batch_messages[add_row_batch_count] = message;
@@ -665,8 +664,8 @@ work_fix_fs_cb(const char *fpath,
     data->link_targets[index] = NULL;
     data->matched_patterns[index] = NULL;
 
+    data->path_lens[index] = relative_len;
     data->link_targets_lens[index] = 0;
-    data->path_lens[index] = 0;
     data->matched_patterns_lens[index] = 0;
 
     if (typeflag == FTW_SL) {
@@ -884,6 +883,7 @@ work_rsync(void *user_data) {
             int64 src_size = 0;
             int32 path_len;
             int32 link_target_len;
+            int32 matched_pattern_len;
 
             if ((int64)bucket_src->key <= 0) {
                 continue;
@@ -894,6 +894,7 @@ work_rsync(void *user_data) {
             matched_pattern_src = src_fix.matched_patterns[src_idx];
             link_target_src = src_fix.link_targets[src_idx];
             link_target_len = src_fix.link_targets_lens[src_idx];
+            matched_pattern_len = src_fix.matched_patterns_lens[src_idx];
             src_path = bucket_src->key;
             path_len = src_fix.path_lens[src_idx];
 
@@ -1030,7 +1031,7 @@ work_rsync(void *user_data) {
             work_add_row(action, reason,
                          bucket_src->key, dst_path,
                          link_target_src, link_target_len,
-                         matched_pattern_src,
+                         matched_pattern_src, matched_pattern_len,
                          path_len,
                          src_size, stat_src->st_mtime,
                          dst_size, dst_mtime,
@@ -1053,6 +1054,7 @@ work_rsync(void *user_data) {
             bool ignored_dst;
             char *link_target_dst;
             int32 link_target_len;
+            int32 matched_pattern_len;
             enum CecupAction action = ACTION_DELETE;
             enum CecupReason reason = 0;
             int32 path_len;
@@ -1071,6 +1073,7 @@ work_rsync(void *user_data) {
                 ignored_dst = matched_pattern_dst;
                 link_target_dst = dst_fix.link_targets[dst_idx];
                 link_target_len = dst_fix.link_targets_lens[dst_idx];
+                matched_pattern_len = dst_fix.matched_patterns_lens[dst_idx];
 
                 if (ignored_dst) {
                     if (!thread_data->delete_excluded) {
@@ -1084,7 +1087,7 @@ work_rsync(void *user_data) {
                 work_add_row(action, reason,
                              NULL, bucket_dst->key,
                              link_target_dst, link_target_len,
-                             matched_pattern_dst,
+                             matched_pattern_dst, matched_pattern_len,
                              path_len,
                              0, 0,
                              stat_dst->st_size, stat_dst->st_mtime,
