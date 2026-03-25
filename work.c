@@ -728,7 +728,7 @@ work_preview(void *user_data) {
                             reason |= REASON_MTIME;
                             attributes_differ = true;
                         }
-                        if (stat_src->st_ctime != stat_dst->st_ctime) {
+                        if (is_dir && (stat_src->st_ctime != stat_dst->st_ctime)) {
                             reason |= REASON_CTIME;
                             attributes_differ = true;
                         }
