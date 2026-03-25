@@ -74,7 +74,7 @@ typedef struct FixFsThreadData {
     char **link_targets;
     char **relative_paths;
     int16 *path_lens;
-    int16 *target_lens;
+    int16 *link_targets_lens;
 } FixFsThreadData;
 
 static __thread FixFsThreadData *nftw_current_data = NULL;
@@ -641,8 +641,8 @@ work_fix_fs_cb(const char *fpath,
                                         data->array_capacity*SIZEOF(*(data->relative_paths)));
         data->path_lens = xrealloc(data->path_lens,
                                    data->array_capacity*SIZEOF(*(data->path_lens)));
-        data->target_lens = xrealloc(data->target_lens,
-                                     data->array_capacity*SIZEOF(*(data->target_lens)));
+        data->link_targets_lens = xrealloc(data->link_targets_lens,
+                                     data->array_capacity*SIZEOF(*(data->link_targets_lens)));
     }
 
     index = data->array_count;
@@ -652,7 +652,7 @@ work_fix_fs_cb(const char *fpath,
     memcpy64(&data->stats[index], (void *)sb, SIZEOF(struct stat));
     data->relative_paths[index] = relative_path;
     data->path_lens[index] = (int16)relative_len;
-    data->target_lens[index] = (int16)0;
+    data->link_targets_lens[index] = (int16)0;
     data->link_targets[index] = NULL;
 
     if (typeflag == FTW_SL) {
@@ -664,7 +664,7 @@ work_fix_fs_cb(const char *fpath,
         } else {
             target[target_len] = '\0';
             data->link_targets[index] = xmemdup(target, target_len + 1);
-            data->target_lens[index] = (int16)target_len;
+            data->link_targets_lens[index] = (int16)target_len;
         }
     } else if (typeflag == FTW_F && (sb->st_nlink > 1)) {
         char inode_str[64];
@@ -675,7 +675,7 @@ work_fix_fs_cb(const char *fpath,
         first_idx_ptr = hash_lookup_fs_map(data->inode_map, inode_str, n);
         if (first_idx_ptr) {
             data->link_targets[index] = data->relative_paths[*first_idx_ptr];
-            data->target_lens[index] = data->path_lens[*first_idx_ptr];
+            data->link_targets_lens[index] = data->path_lens[*first_idx_ptr];
         } else {
             hash_insert_fs_map(data->inode_map, inode_str, n, index);
         }
@@ -873,7 +873,7 @@ work_rsync(void *user_data) {
             stat_src = &src_fix.stats[src_idx];
             matched_pattern_src = src_fix.matched_patterns[src_idx];
             link_target_src = src_fix.link_targets[src_idx];
-            link_target_len = src_fix.target_lens[src_idx];
+            link_target_len = src_fix.link_targets_lens[src_idx];
             src_path = bucket_src->key;
             path_len = src_fix.path_lens[src_idx];
 
@@ -1050,7 +1050,7 @@ work_rsync(void *user_data) {
                 matched_pattern_dst = dst_fix.matched_patterns[dst_idx];
                 ignored_dst = matched_pattern_dst;
                 link_target_dst = dst_fix.link_targets[dst_idx];
-                link_target_len = dst_fix.target_lens[dst_idx];
+                link_target_len = dst_fix.link_targets_lens[dst_idx];
 
                 if (ignored_dst) {
                     if (!thread_data->delete_excluded) {
