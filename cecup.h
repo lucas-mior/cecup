@@ -375,15 +375,15 @@ static char *row_path_get(CecupRow *row) {
     }
 }
 
-static void ipc_send_log_internal(char *file, int line,
+static void log_internal(char *file, int line,
                                   enum DataType type, char *format, ...);
 
 #define IPC_SEND_LOG(...)        \
-    ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG, __VA_ARGS__)
+    log_internal(__FILE__, __LINE__, DATA_TYPE_LOG, __VA_ARGS__)
 #define IPC_SEND_LOG_ERROR(...)  \
-    ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_ERROR, __VA_ARGS__)
+    log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_ERROR, __VA_ARGS__)
 #define IPC_SEND_LOG_CMD(...)    \
-    ipc_send_log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_CMD, __VA_ARGS__)
+    log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_CMD, __VA_ARGS__)
 
 enum RsyncCharAction {
     RSYNC_CHAR0_ACTION_SEND = '<',
