@@ -542,7 +542,7 @@ work_rsync(void *user_data) {
     char buf_error[MAX_PATH_LENGTH*2];
 
     char *rsync_args[64];
-    int32 a = 0;
+    int32 rsync_args_len = 0;
     char cmd[MAX_PATH_LENGTH*2];
 
     char **transfers = NULL;
@@ -962,28 +962,28 @@ work_rsync(void *user_data) {
         SNPRINTF(src_base_with_slash, "%s/", cecup.src_base);
         SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
 
-        a = 0;
-        rsync_args[a++] = "rsync";
-        rsync_args[a++] = "--verbose";
-        rsync_args[a++] = "--dirs";
-        rsync_args[a++] = "--partial";
-        rsync_args[a++] = "--progress";
-        rsync_args[a++] = "--info=progress2";
-        rsync_args[a++] = "--checksum";
-        rsync_args[a++] = "--perms";
-        rsync_args[a++] = "--times";
-        rsync_args[a++] = "--owner";
-        rsync_args[a++] = "--group";
-        rsync_args[a++] = "--files-from";
-        rsync_args[a++] = files_from_filename;
-        rsync_args[a++] = "--iconv=.,.";
-        rsync_args[a++] = src_base_with_slash;
-        rsync_args[a++] = dst_base_with_slash;
-        rsync_args[a++] = NULL;
+        rsync_args_len = 0;
+        rsync_args[rsync_args_len++] = "rsync";
+        rsync_args[rsync_args_len++] = "--verbose";
+        rsync_args[rsync_args_len++] = "--dirs";
+        rsync_args[rsync_args_len++] = "--partial";
+        rsync_args[rsync_args_len++] = "--progress";
+        rsync_args[rsync_args_len++] = "--info=progress2";
+        rsync_args[rsync_args_len++] = "--checksum";
+        rsync_args[rsync_args_len++] = "--perms";
+        rsync_args[rsync_args_len++] = "--times";
+        rsync_args[rsync_args_len++] = "--owner";
+        rsync_args[rsync_args_len++] = "--group";
+        rsync_args[rsync_args_len++] = "--files-from";
+        rsync_args[rsync_args_len++] = files_from_filename;
+        rsync_args[rsync_args_len++] = "--iconv=.,.";
+        rsync_args[rsync_args_len++] = src_base_with_slash;
+        rsync_args[rsync_args_len++] = dst_base_with_slash;
+        rsync_args[rsync_args_len++] = NULL;
     }
 
     LOG(_("Verifying and syncing with checksum...\n"));
-    STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
+    STRING_FROM_ARRAY(cmd, " ", rsync_args, rsync_args_len);
     LOG_CMD("%s\n", cmd);
 
     xpipe(pipe_stdout);
@@ -1203,7 +1203,7 @@ work_rsync_bulk(void *user_data) {
     pid_t child_pid;
     char dst_base_with_slash[MAX_PATH_LENGTH];
     char *rsync_args[32];
-    int32 a = 0;
+    int32 rsync_args_len = 0;
     int32 buf_output_pos = 0;
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
     int files_from_fd;
@@ -1329,28 +1329,28 @@ work_rsync_bulk(void *user_data) {
     }
     XCLOSE(&files_from_fd);
 
-    rsync_args[a++] = "rsync";
-    rsync_args[a++] = "--verbose";
-    rsync_args[a++] = "--update";
-    rsync_args[a++] = "--checksum";
-    rsync_args[a++] = "--dirs";
-    rsync_args[a++] = "--partial";
-    rsync_args[a++] = "--progress";
-    rsync_args[a++] = "--info=progress2";
-    rsync_args[a++] = "--links";
-    rsync_args[a++] = "--hard-links";
-    rsync_args[a++] = "--perms";
-    rsync_args[a++] = "--times";
-    rsync_args[a++] = "--owner";
-    rsync_args[a++] = "--group";
-    rsync_args[a++] = "--files-from";
-    rsync_args[a++] = files_from_filename;
-    rsync_args[a++] = "--iconv=.,.";
-    rsync_args[a++] = cecup.src_base;
-    rsync_args[a++] = dst_base_with_slash;
-    rsync_args[a++] = NULL;
+    rsync_args[rsync_args_len++] = "rsync";
+    rsync_args[rsync_args_len++] = "--verbose";
+    rsync_args[rsync_args_len++] = "--update";
+    rsync_args[rsync_args_len++] = "--checksum";
+    rsync_args[rsync_args_len++] = "--dirs";
+    rsync_args[rsync_args_len++] = "--partial";
+    rsync_args[rsync_args_len++] = "--progress";
+    rsync_args[rsync_args_len++] = "--info=progress2";
+    rsync_args[rsync_args_len++] = "--links";
+    rsync_args[rsync_args_len++] = "--hard-links";
+    rsync_args[rsync_args_len++] = "--perms";
+    rsync_args[rsync_args_len++] = "--times";
+    rsync_args[rsync_args_len++] = "--owner";
+    rsync_args[rsync_args_len++] = "--group";
+    rsync_args[rsync_args_len++] = "--files-from";
+    rsync_args[rsync_args_len++] = files_from_filename;
+    rsync_args[rsync_args_len++] = "--iconv=.,.";
+    rsync_args[rsync_args_len++] = cecup.src_base;
+    rsync_args[rsync_args_len++] = dst_base_with_slash;
+    rsync_args[rsync_args_len++] = NULL;
 
-    STRING_FROM_ARRAY(cmd, " ", rsync_args, a);
+    STRING_FROM_ARRAY(cmd, " ", rsync_args, rsync_args_len);
     LOG_CMD("%s\n", cmd);
 
     switch (child_pid = fork()) {
