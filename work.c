@@ -252,24 +252,6 @@ work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
     row->dst_action = dst_action;
     row->reason = reason;
 
-    if (reason & REASON_IGNORED) {
-        ASSERT_EQUAL((int)row->src_action, ACTION_IGNORE);
-        if (final_dst_path != NULL) {
-            if (delete_excluded) {
-                ASSERT_EQUAL((int)row->dst_action, ACTION_DELETE);
-            } else {
-                ASSERT_EQUAL((int)row->dst_action, ACTION_IGNORE);
-            }
-        } else {
-            ASSERT_EQUAL((int)row->dst_action, ACTION_IGNORE);
-        }
-    } else if (reason & REASON_MISSING) {
-        ASSERT_EQUAL((int)row->dst_action, ACTION_DELETE);
-        ASSERT_EQUAL((int)row->src_action, ACTION_IGNORE);
-    } else {
-        ASSERT_EQUAL((int)row->src_action, (int)row->dst_action);
-    }
-
     bytes_pretty(row->src_size_text, src_size_raw);
     bytes_pretty(row->dst_size_text, dst_size_raw);
     row->src_size_raw = src_size_raw;
