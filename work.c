@@ -28,7 +28,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
-#include <fnmatch.h>
 
 #include "cecup.h"
 #include "util.c"
@@ -245,7 +244,7 @@ work_load_ignore_patterns(char ***patterns, int32 *count) {
 
     if ((file = fopen(cecup.ignore_path, "r")) == NULL) {
         LOG_ERROR("Error opening %s: %s.\n",
-                           cecup.ignore_path, strerror(errno));
+                  cecup.ignore_path, strerror(errno));
         return;
     }
 
@@ -275,9 +274,56 @@ work_load_ignore_patterns(char ***patterns, int32 *count) {
 
     if (fclose(file)) {
         LOG_ERROR("Error closing %s: %s.\n",
-                           cecup.ignore_path, strerror(errno));
+                  cecup.ignore_path, strerror(errno));
     }
     return;
+}
+
+static bool
+work_match_pattern(char *pattern, char *str, bool restrict_slash) {
+    char *p;
+    char *s;
+    char *star_p;
+    char *star_s;
+
+    p = pattern;
+    s = str;
+    star_p = NULL;
+    star_s = NULL;
+
+    while (*s != '\0') {
+        if (*p == '*') {
+            star_p = p;
+            star_s = s;
+            p += 1;
+        } else if (*p == *s) {
+            p += 1;
+            s += 1;
+        } else {
+            if (star_p != NULL) {
+                if (restrict_slash) {
+                    if (*star_s == '/') {
+                        return false;
+                    }
+                }
+                p = star_p + 1;
+                star_s += 1;
+                s = star_s;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    while (*p == '*') {
+        p += 1;
+    }
+
+    if (*p == '\0') {
+        return true;
+    }
+
+    return false;
 }
 
 static char *
@@ -338,7 +384,7 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
             path_len = strlen32(relative_path);
             memcpy64(path_copy, relative_path, path_len + 1);
 
-            if (fnmatch(pattern_final, path_copy, FNM_PATHNAME) == 0) {
+            if (work_match_pattern(pattern_final, path_copy, true)) {
                 if (!dir_only) {
                     matched = true;
                 } else {
@@ -352,7 +398,7 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
                 for (int32 j = 0; j < path_len; j += 1) {
                     if (path_copy[j] == '/') {
                         path_copy[j] = '\0';
-                        if (!fnmatch(pattern_final, path_copy, FNM_PATHNAME)) {
+                        if (work_match_pattern(pattern_final, path_copy, true)) {
                             matched = true;
                             break;
                         }
@@ -393,13 +439,13 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
                     }
 
                     if (!dir_only) {
-                        if (fnmatch(pattern_final, comp, 0) == 0) {
+                        if (work_match_pattern(pattern_final, comp, false)) {
                             matched = true;
                             break;
                         }
                     } else {
                         if (comp_is_dir) {
-                            if (fnmatch(pattern_final, comp, 0) == 0) {
+                            if (work_match_pattern(pattern_final, comp, false)) {
                                 matched = true;
                                 break;
                             }
