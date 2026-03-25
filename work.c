@@ -405,7 +405,7 @@ work_match_pattern(char *pattern, char *str, bool restrict_slash) {
 }
 
 static IgnorePattern *
-work_path_matches_ignore(char *path, int32 relative_len,
+work_path_matches_ignore(char *path, int32 path_len,
                          bool is_dir, IgnorePattern *patterns, int32 count) {
     if (patterns == NULL) {
         return NULL;
@@ -459,7 +459,7 @@ work_path_matches_ignore(char *path, int32 relative_len,
         }
 
         if (has_slash) {
-            memcpy64(path_copy, path, relative_len + 1);
+            memcpy64(path_copy, path, path_len + 1);
 
             if (work_match_pattern(pattern_final, path_copy, true)) {
                 if (!dir_only) {
@@ -472,7 +472,7 @@ work_path_matches_ignore(char *path, int32 relative_len,
             }
 
             if (!matched) {
-                for (int32 j = 0; j < relative_len; j += 1) {
+                for (int32 j = 0; j < path_len; j += 1) {
                     if (path_copy[j] == '/') {
                         path_copy[j] = '\0';
                         if (work_match_pattern(pattern_final, path_copy, true)) {
@@ -492,9 +492,9 @@ work_path_matches_ignore(char *path, int32 relative_len,
             char *next;
             int32 remaining_len;
 
-            memcpy64(path_copy, path, relative_len + 1);
+            memcpy64(path_copy, path, path_len + 1);
             comp = path_copy;
-            remaining_len = relative_len;
+            remaining_len = path_len;
 
             while (remaining_len > 0) {
                 bool is_leaf;
@@ -577,7 +577,7 @@ work_fix_fs_cb(const char *fpath,
     bool changed;
     bool renaming_problematic;
     char *path;
-    int32 relative_len;
+    int32 path_len;
     bool is_dir;
     int32 index;
     FixFsThreadData *data;
@@ -690,19 +690,19 @@ work_fix_fs_cb(const char *fpath,
     }
 
     path = (char *)fpath + data->base_path_len;
-    relative_len = old_full_len - data->base_path_len;
+    path_len = old_full_len - data->base_path_len;
 
     if (path[0] == '/') {
         path += 1;
-        relative_len -= 1;
+        path_len -= 1;
     }
 
-    if (relative_len == 0) {
+    if (path_len == 0) {
         path = "./";
-        relative_len = 2;
+        path_len = 2;
     }
 
-    path = xmemdup(path, relative_len + 1);
+    path = xmemdup(path, path_len + 1);
     is_dir = (typeflag == FTW_D || typeflag == FTW_DP);
 
     if (data->array_count >= data->array_capacity) {
@@ -746,7 +746,7 @@ work_fix_fs_cb(const char *fpath,
     data->link_targets[index] = NULL;
     data->matched_patterns[index] = NULL;
 
-    data->paths_lens[index] = (int16)relative_len;
+    data->paths_lens[index] = (int16)path_len;
     data->link_targets_lens[index] = 0;
     data->matched_patterns_lens[index] = 0;
 
@@ -777,7 +777,7 @@ work_fix_fs_cb(const char *fpath,
     }
 
     {
-        IgnorePattern *pattern = work_path_matches_ignore(path, relative_len,
+        IgnorePattern *pattern = work_path_matches_ignore(path, path_len,
                                                           is_dir,
                                                           data->ignore_patterns,
                                                           data->ignore_count);
@@ -786,7 +786,7 @@ work_fix_fs_cb(const char *fpath,
             data->matched_patterns_lens[index] = (int16)pattern->len;
         }
     }
-    hash_insert_fs_map(data->map, path, (uint32)relative_len, index);
+    hash_insert_fs_map(data->map, path, (uint32)path_len, index);
     return 0;
 }
 
