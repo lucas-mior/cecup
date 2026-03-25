@@ -913,9 +913,9 @@ work_rsync(void *user_data) {
     LOG(_("Traversing file systems...\n"));
     if (!same_fs) {
         GThread *t1 = g_thread_new("traversal_src",
-                                    work_fix_fs_thread_fn, &traversal_src);
+                                   work_fix_fs_thread_fn, &traversal_src);
         GThread *t2 = g_thread_new("traversal_dst",
-                                    work_fix_fs_thread_fn, &traversal_dst);
+                                   work_fix_fs_thread_fn, &traversal_dst);
         g_thread_join(t1);
         g_thread_join(t2);
     } else {
