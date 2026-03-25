@@ -558,6 +558,13 @@ work_cleanup(void) {
     return;
 }
 
+void
+work_preview_cancel_and_reset(void) {
+    work_cleanup();
+    work_finalize();
+    g_thread_exit(NULL);
+}
+
 static void *
 work_preview(void *user_data) {
     ThreadData *thread_data = user_data;
@@ -577,12 +584,12 @@ work_preview(void *user_data) {
         if (stat(cecup.src_base, &stat_src) < 0) {
             LOG_ERROR("Error getting directory info from %s: %s.\n",
                       cecup.src_base, strerror(errno));
-            goto cleanup_preview;
+            work_preview_cancel_and_reset();
         }
         if (stat(cecup.dst_base, &stat_dst) < 0) {
             LOG_ERROR("Error getting directory info from %s: %s.\n",
                       cecup.dst_base, strerror(errno));
-            goto cleanup_preview;
+            work_preview_cancel_and_reset();
         }
 
         same_fs = (stat_src.st_dev == stat_dst.st_dev);
@@ -596,7 +603,7 @@ work_preview(void *user_data) {
               "To force backup on a folder in the same device, uncheck"
               " option \"Protect same drive sync\".\n"));
 
-        goto cleanup_preview;
+        work_preview_cancel_and_reset();
     }
 
     ignore_patterns_load();
@@ -635,7 +642,7 @@ work_preview(void *user_data) {
 
     if (cecup.stop_working) {
         LOG_ERROR(_("Stop requested.\n"));
-        goto cleanup_preview;
+        work_preview_cancel_and_reset();
     }
 
     LOG(_("File system traversal finished.\n"));
@@ -912,9 +919,6 @@ work_preview(void *user_data) {
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
     PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
-
-cleanup_preview:
-    work_cleanup();
     work_finalize();
     g_thread_exit(NULL);
 }
