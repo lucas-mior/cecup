@@ -499,22 +499,15 @@ work_fix_fs_thread_fn(void *user_data) {
 
 static void
 work_cleanup(void) {
-    if (cecup.src_map) {
-        hash_destroy_fs_map(cecup.src_map);
-        cecup.src_map = NULL;
-    }
-    if (cecup.dst_map) {
-        hash_destroy_fs_map(cecup.dst_map);
-        cecup.dst_map = NULL;
-    }
-    if (cecup.src_inode_map) {
-        hash_destroy_fs_map(cecup.src_inode_map);
-        cecup.src_inode_map = NULL;
-    }
-    if (cecup.dst_inode_map) {
-        hash_destroy_fs_map(cecup.dst_inode_map);
-        cecup.dst_inode_map = NULL;
-    }
+    hash_destroy_fs_map(cecup.src_map);
+    cecup.src_map = NULL;
+    hash_destroy_fs_map(cecup.dst_map);
+    cecup.dst_map = NULL;
+
+    hash_destroy_fs_map(cecup.src_inode_map);
+    cecup.src_inode_map = NULL;
+    hash_destroy_fs_map(cecup.dst_inode_map);
+    cecup.dst_inode_map = NULL;
 
     for (int32 i = 0; i < cecup.traversal_src.array_count; i += 1) {
         XFREE(cecup.traversal_src.paths[i]);
@@ -522,6 +515,7 @@ work_cleanup(void) {
             XFREE(cecup.traversal_src.link_targets[i]);
         }
     }
+
     XFREE(cecup.traversal_src.stats);
     XFREE(cecup.traversal_src.matched_patterns);
     XFREE(cecup.traversal_src.link_targets);
@@ -537,6 +531,7 @@ work_cleanup(void) {
             XFREE(cecup.traversal_dst.link_targets[i]);
         }
     }
+
     XFREE(cecup.traversal_dst.stats);
     XFREE(cecup.traversal_dst.matched_patterns);
     XFREE(cecup.traversal_dst.link_targets);

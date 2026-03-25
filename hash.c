@@ -191,6 +191,9 @@ CAT(hash_create_, HASH_TYPE)(uint32 length) {
 
 static void
 CAT(hash_destroy_, HASH_TYPE)(struct Map *map) {
+    if (map == NULL) {
+        return;
+    }
 #if HASH_DUPLICATE_KEYS
     for (uint32 i = 0; i < map->capacity; i += 1) {
         switch ((int64)map->array[i].key) {
