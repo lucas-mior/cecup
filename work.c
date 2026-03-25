@@ -756,7 +756,7 @@ work_rsync(void *user_data) {
 
     IPC_SEND_LOG(_("File system traversal finished.\n"));
 
-    nfiles_total = MAX(src_fix.file_count, dst_fix.file_count);
+    nfiles_total = src_fix.file_count + dst_fix.file_count;
     IPC_SEND_LOG(_("Found %lld files to analyse...\n"),
                  (llong)nfiles_total);
 
