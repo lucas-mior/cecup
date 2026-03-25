@@ -512,10 +512,8 @@ work_cleanup(void) {
             XFREE(cecup.traversal_src.paths[i],
                   cecup.traversal_src.paths_lens[i] + 1);
             if (S_ISLNK(cecup.traversal_src.stats[i].st_mode)) {
-                if ((cecup.traversal_src.link_targets[i])) {
-                    XFREE(cecup.traversal_src.link_targets[i],
-                          cecup.traversal_src.link_targets_lens[i] + 1);
-                }
+                XFREE(cecup.traversal_src.link_targets[i],
+                      cecup.traversal_src.link_targets_lens[i] + 1);
             }
         }
 
@@ -539,10 +537,8 @@ work_cleanup(void) {
             XFREE(cecup.traversal_dst.paths[i],
                   cecup.traversal_dst.paths_lens[i] + 1);
             if (S_ISLNK(cecup.traversal_dst.stats[i].st_mode)) {
-                if ((cecup.traversal_dst.link_targets[i])) {
-                    XFREE(cecup.traversal_dst.link_targets[i],
-                          cecup.traversal_dst.link_targets_lens[i] + 1);
-                }
+                XFREE(cecup.traversal_dst.link_targets[i],
+                      cecup.traversal_dst.link_targets_lens[i] + 1);
             }
         }
 
