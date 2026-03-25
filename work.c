@@ -380,8 +380,9 @@ work_path_matches_ignore(char *relative_path, bool is_dir,
         if (pattern_adapt_buffer[0] == '/') {
             has_slash = true;
             pattern_final += 1;
+            pattern_len -= 1;
         } else {
-            if (strchr(pattern_adapt_buffer, '/') != NULL) {
+            if (memchr64(pattern_final, '/', pattern_len) != NULL) {
                 has_slash = true;
             }
         }
