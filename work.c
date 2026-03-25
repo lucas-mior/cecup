@@ -927,37 +927,150 @@ cleanup_preview:
 
 static void *
 work_rsync(void *user_data) {
+    ThreadData *thread_data;
+    TaskList *tasks;
+    bool has_transfers;
     int32 pipe_stdout[2];
     int32 pipe_stderr[2];
     struct pollfd pipes[2];
     pid_t child_pid;
-    int64 buf_output_pos = 0;
+    int64 buf_output_pos;
     char buf_output[MAX_PATH_LENGTH*2];
     char buf_error[MAX_PATH_LENGTH*2];
     char *rsync_args[64];
-    int32 rsync_args_len = 0;
+    int32 rsync_args_len;
     char cmd[MAX_PATH_LENGTH*2];
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
-    bool second_run_with_checksum = false;
+    bool second_run_with_checksum;
+    int files_from_fd;
 
-    (void)user_data;
+    thread_data = user_data;
+    tasks = thread_data->tasks;
+    has_transfers = false;
+    buf_output_pos = 0;
+    rsync_args_len = 0;
+    second_run_with_checksum = false;
 
-    if (cecup.ntransfers <= 0) {
-        work_finalize();
-        return NULL;
+    if (tasks == NULL) {
+        if (cecup.ntransfers <= 0) {
+            work_finalize();
+            XFREE(thread_data, SIZEOF(*thread_data));
+            return NULL;
+        }
+        has_transfers = true;
+    } else {
+        for (int32 i = 0; i < tasks->count; i += 1) {
+            Task *task;
+            char full_path[MAX_PATH_LENGTH];
+            pid_t child_rm;
+            int child_status;
+            bool removed;
+
+            task = tasks->items[i];
+            removed = false;
+
+            if (task->action != ACTION_DELETE) {
+                has_transfers = true;
+                continue;
+            }
+
+            if (strcmp(task->path, "./") == 0) {
+                Message *message;
+
+                message = xmalloc(SIZEOF(*message));
+                memset64(message, 0, SIZEOF(*message));
+
+                message->path_len = task->path_len;
+                message->src_path = xmalloc(task->path_len + 1);
+                memcpy64(message->src_path, task->path, task->path_len + 1);
+
+                message->type = DATA_TYPE_REMOVE_ROW;
+                g_idle_add(update_ui_handler, message);
+                continue;
+            }
+
+            if (cecup.stop_working) {
+                LOG_ERROR(_("Stop requested.\n"));
+                free_task_list(tasks);
+                work_finalize();
+                XFREE(thread_data, SIZEOF(*thread_data));
+                return NULL;
+            }
+
+            if (task->side == L) {
+                SNPRINTF(full_path, "%s/%s", cecup.src_base, task->path);
+            } else {
+                SNPRINTF(full_path, "%s/%s", cecup.dst_base, task->path);
+            }
+
+            switch (child_rm = fork()) {
+            case -1:
+                error("Error forking: %s.\n", strerror(errno));
+                fatal(EXIT_FAILURE);
+            case 0: {
+                char cmd_rm[MAX_PATH_LENGTH];
+                char *args_rm[] = {
+                    "rm",
+                    "-rf",
+                    full_path,
+                    NULL,
+                };
+
+                STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
+
+                execvp(args_rm[0], args_rm);
+                error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
+                _exit(EXIT_FAILURE);
+            }
+            default:
+                cecup.child_pid = child_rm;
+                if (waitpid(child_rm, &child_status, 0) < 0) {
+                    LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
+                } else if (WIFEXITED(child_status)) {
+                    removed = !WEXITSTATUS(child_status);
+                }
+                cecup.child_pid = 0;
+                break;
+            }
+
+            if (removed) {
+                Message *message;
+
+                message = xmalloc(SIZEOF(*message));
+                memset64(message, 0, SIZEOF(*message));
+
+                message->path_len = task->path_len;
+                message->src_path = xmalloc(task->path_len + 1);
+                memcpy64(message->src_path, task->path, task->path_len + 1);
+
+                message->type = DATA_TYPE_REMOVE_ROW;
+                g_idle_add(update_ui_handler, message);
+            }
+        }
+
+        if (!has_transfers) {
+            work_finalize();
+            free_task_list(tasks);
+            XFREE(thread_data, SIZEOF(*thread_data));
+            return NULL;
+        }
     }
 
-    {
-        int files_from_fd;
-        if ((files_from_fd = mkstemp(files_from_filename)) < 0) {
-            error("Error in mkstemp: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
+    if ((files_from_fd = mkstemp(files_from_filename)) < 0) {
+        error("Error in mkstemp: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    }
+
+    if (tasks == NULL) {
         for (int32 i = 0; i < cecup.ntransfers; i += 1) {
-            char *file = cecup.transfers[i];
+            char *file;
             int64 w;
-            int64 written = 0;
-            int64 left = strlen32(file);
+            int64 written;
+            int64 left;
+
+            file = cecup.transfers[i];
+            written = 0;
+            left = strlen32(file);
 
             while ((w = write64(files_from_fd, &file[written], left)) > 0) {
                 written += w;
@@ -974,26 +1087,53 @@ work_rsync(void *user_data) {
 
             write64(files_from_fd, "\n", 1);
         }
-        XCLOSE(&files_from_fd);
+    } else {
+        for (int32 i = 0; i < tasks->count; i += 1) {
+            Task *task;
+
+            task = tasks->items[i];
+
+            if (task->action == ACTION_HARDLINK) {
+                write64(files_from_fd, task->link_target, task->link_target_len);
+                write64(files_from_fd, "\n", 1);
+            }
+            write64(files_from_fd, task->path, task->path_len);
+            write64(files_from_fd, "\n", 1);
+        }
     }
+    XCLOSE(&files_from_fd);
 
 run_rsync:
     {
         char src_base_with_slash[MAX_PATH_LENGTH];
         char dst_base_with_slash[MAX_PATH_LENGTH];
+
         SNPRINTF(src_base_with_slash, "%s/", cecup.src_base);
         SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
 
         rsync_args_len = 0;
         rsync_args[rsync_args_len++] = "rsync";
         rsync_args[rsync_args_len++] = "--verbose";
+
+        if (tasks != NULL) {
+            rsync_args[rsync_args_len++] = "--update";
+            rsync_args[rsync_args_len++] = "--checksum";
+        }
+
         rsync_args[rsync_args_len++] = "--dirs";
         rsync_args[rsync_args_len++] = "--partial";
         rsync_args[rsync_args_len++] = "--progress";
         rsync_args[rsync_args_len++] = "--info=progress2";
-        if (second_run_with_checksum) {
-            rsync_args[rsync_args_len++] = "--checksum";
+
+        if (tasks != NULL) {
+            rsync_args[rsync_args_len++] = "--links";
+            rsync_args[rsync_args_len++] = "--hard-links";
+        } else {
+            if (second_run_with_checksum) {
+                rsync_args[rsync_args_len++] = "--checksum";
+            }
         }
+
         rsync_args[rsync_args_len++] = "--perms";
         rsync_args[rsync_args_len++] = "--times";
         rsync_args[rsync_args_len++] = "--owner";
@@ -1001,12 +1141,20 @@ run_rsync:
         rsync_args[rsync_args_len++] = "--files-from";
         rsync_args[rsync_args_len++] = files_from_filename;
         rsync_args[rsync_args_len++] = "--iconv=.,.";
-        rsync_args[rsync_args_len++] = src_base_with_slash;
+
+        if (tasks != NULL) {
+            rsync_args[rsync_args_len++] = cecup.src_base;
+        } else {
+            rsync_args[rsync_args_len++] = src_base_with_slash;
+        }
+
         rsync_args[rsync_args_len++] = dst_base_with_slash;
         rsync_args[rsync_args_len++] = NULL;
     }
 
-    LOG(_("Verifying and syncing with checksum...\n"));
+    if (tasks == NULL) {
+        LOG(_("Verifying and syncing with checksum...\n"));
+    }
     STRING_FROM_ARRAY(cmd, " ", rsync_args, rsync_args_len);
     LOG_CMD("%s\n", cmd);
 
@@ -1018,7 +1166,14 @@ run_rsync:
         error("Error forking: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
     case 0:
-        setpgid(0, 0);
+        if (tasks != NULL) {
+            if (setpgid(0, 0) < 0) {
+                error("Error setpgid: %s.\n", strerror(errno));
+                fatal(EXIT_FAILURE);
+            }
+        } else {
+            setpgid(0, 0);
+        }
         putenv("LC_ALL=C.UTF-8");
 
         XCLOSE(&pipe_stderr[0]);
@@ -1031,6 +1186,9 @@ run_rsync:
         XCLOSE(&pipe_stdout[1]);
 
         execvp(rsync_args[0], rsync_args);
+        if (tasks != NULL) {
+            error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
+        }
         _exit(EXIT_FAILURE);
     default:
         cecup.child_pid = child_pid;
@@ -1076,7 +1234,7 @@ run_rsync:
         }
 
         r = read64(pipe_stdout[0], buf_output + buf_output_pos,
-                    SIZEOF(buf_output) - buf_output_pos - 1);
+                   SIZEOF(buf_output) - buf_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
                 LOG_ERROR("Error reading stdout pipe: %s.\n", strerror(errno));
@@ -1084,19 +1242,45 @@ run_rsync:
             }
             goto read_error_pipe;
         }
-        buf_output_pos += (int64)r;
+        buf_output_pos += r;
 
         while ((eol = memchr64(buf_output, '\n', buf_output_pos))
-                || (eol = memchr64(buf_output, '\r', buf_output_pos))) {
-            int64 line_len = (int64)(eol - buf_output);
+               || (eol = memchr64(buf_output, '\r', buf_output_pos))) {
+            int64 line_len;
             int64 remaining;
             char *filename;
 
-            *eol = '\0';
+            line_len = (int64)(eol - buf_output);
+
+            if (tasks != NULL) {
+                bool only_space;
+                char *p;
+
+                only_space = true;
+                p = buf_output;
+
+                *eol = '\0';
+
+                while (*p) {
+                    if (!isspace(*p)) {
+                        only_space = false;
+                        break;
+                    }
+                    p += 1;
+                }
+                if (!only_space) {
+                    LOG("%s\n", buf_output);
+                }
+            } else {
+                *eol = '\0';
+            }
+
             if ((filename = work_check_itemize_line(buf_output))) {
                 int32 path_len;
                 char *sep;
-                Message *msg = xmalloc(SIZEOF(*msg));
+                Message *msg;
+
+                msg = xmalloc(SIZEOF(*msg));
 
                 memset64(msg, 0, SIZEOF(*msg));
                 while (*filename == ' ') {
@@ -1165,358 +1349,36 @@ run_rsync:
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     if (waitpid(child_pid, NULL, 0) < 0) {
-        LOG_ERROR("Error waiting for rsync: %s.\n", strerror(errno));
+        if (tasks == NULL) {
+            LOG_ERROR("Error waiting for rsync: %s.\n", strerror(errno));
+        } else {
+            LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
+        }
     } else {
-        // memory errors are much more common than
-        // storage errors, so checksum the files we just copied
-        second_run_with_checksum = true;
-        goto run_rsync;
+        if (tasks == NULL) {
+            if (!second_run_with_checksum) {
+                second_run_with_checksum = true;
+                goto run_rsync;
+            }
+        }
     }
+
     xunlink(files_from_filename);
     cecup.child_pid = 0;
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
 
-    work_cleanup();
-    work_finalize();
-    return NULL;
-}
-
-static void *
-work_rsync_bulk(void *user_data) {
-    TaskList *tasks = user_data;
-    bool has_transfers = false;
-    int32 pipe_stdout[2];
-    int32 pipe_stderr[2];
-    struct pollfd pipes[2];
-    pid_t child_pid;
-    char dst_base_with_slash[MAX_PATH_LENGTH];
-    char *rsync_args[32];
-    int32 rsync_args_len = 0;
-    int32 buf_output_pos = 0;
-    char files_from_filename[] = "/tmp/cecup_XXXXXX";
-    int files_from_fd;
-    char cmd[MAX_PATH_LENGTH*2];
-
-    for (int32 i = 0; i < tasks->count; i += 1) {
-        Task *task = tasks->items[i];
-        char full_path[MAX_PATH_LENGTH];
-        pid_t child_rm;
-        int child_status;
-        bool removed = false;
-
-        if (task->action != ACTION_DELETE) {
-            has_transfers = true;
-            continue;
-        }
-
-        if (strcmp(task->path, "./") == 0) {
-            Message *message = xmalloc(SIZEOF(*message));
-            memset64(message, 0, SIZEOF(*message));
-
-            message->path_len = task->path_len;
-            message->src_path = xmalloc(task->path_len + 1);
-            memcpy64(message->src_path, task->path, task->path_len + 1);
-
-            message->type = DATA_TYPE_REMOVE_ROW;
-            g_idle_add(update_ui_handler, message);
-            continue;
-        }
-
+    if (tasks == NULL) {
+        work_cleanup();
+    } else {
+        free_task_list(tasks);
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
-            free_task_list(tasks);
-            work_finalize();
-            g_thread_exit(NULL);
-        }
-
-        if (task->side == L) {
-            SNPRINTF(full_path, "%s/%s", cecup.src_base, task->path);
-        } else {
-            SNPRINTF(full_path, "%s/%s", cecup.dst_base, task->path);
-        }
-        switch (child_rm = fork()) {
-        case -1:
-            error("Error forking: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        case 0: {
-            char cmd_rm[MAX_PATH_LENGTH];
-            char *args_rm[] = {
-                "rm",
-                "-rf",
-                full_path,
-                NULL,
-            };
-
-            STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
-
-            execvp(args_rm[0], args_rm);
-            error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
-            _exit(EXIT_FAILURE);
-        }
-        default:
-            cecup.child_pid = child_rm;
-            if (waitpid(child_rm, &child_status, 0) < 0) {
-                LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
-            } else if (WIFEXITED(child_status)) {
-                removed = !WEXITSTATUS(child_status);
-            }
-            cecup.child_pid = 0;
-            break;
-        }
-
-        if (removed) {
-            Message *message = xmalloc(SIZEOF(*message));
-            memset64(message, 0, SIZEOF(*message));
-
-            message->path_len = task->path_len;
-            message->src_path = xmalloc(task->path_len + 1);
-            memcpy64(message->src_path, task->path, task->path_len + 1);
-
-            message->type = DATA_TYPE_REMOVE_ROW;
-            g_idle_add(update_ui_handler, message);
         }
     }
-
-    if (!has_transfers) {
-        work_finalize();
-        free_task_list(tasks);
-        g_thread_exit(NULL);
-    }
-
-    xpipe(pipe_stdout);
-    xpipe(pipe_stderr);
-
-    SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
-
-    if ((files_from_fd = mkstemp(files_from_filename)) < 0) {
-        error("Error in mkstemp: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
-
-    for (int32 i = 0; i < tasks->count; i += 1) {
-        Task *task = tasks->items[i];
-        if (task->action == ACTION_HARDLINK) {
-            write64(files_from_fd, task->link_target, task->link_target_len);
-            write64(files_from_fd, "\n", 1);
-        }
-        write64(files_from_fd, task->path, task->path_len);
-        write64(files_from_fd, "\n", 1);
-    }
-    XCLOSE(&files_from_fd);
-
-    rsync_args[rsync_args_len++] = "rsync";
-    rsync_args[rsync_args_len++] = "--verbose";
-    rsync_args[rsync_args_len++] = "--update";
-    rsync_args[rsync_args_len++] = "--checksum";
-    rsync_args[rsync_args_len++] = "--dirs";
-    rsync_args[rsync_args_len++] = "--partial";
-    rsync_args[rsync_args_len++] = "--progress";
-    rsync_args[rsync_args_len++] = "--info=progress2";
-    rsync_args[rsync_args_len++] = "--links";
-    rsync_args[rsync_args_len++] = "--hard-links";
-    rsync_args[rsync_args_len++] = "--perms";
-    rsync_args[rsync_args_len++] = "--times";
-    rsync_args[rsync_args_len++] = "--owner";
-    rsync_args[rsync_args_len++] = "--group";
-    rsync_args[rsync_args_len++] = "--files-from";
-    rsync_args[rsync_args_len++] = files_from_filename;
-    rsync_args[rsync_args_len++] = "--iconv=.,.";
-    rsync_args[rsync_args_len++] = cecup.src_base;
-    rsync_args[rsync_args_len++] = dst_base_with_slash;
-    rsync_args[rsync_args_len++] = NULL;
-
-    STRING_FROM_ARRAY(cmd, " ", rsync_args, rsync_args_len);
-    LOG_CMD("%s\n", cmd);
-
-    switch (child_pid = fork()) {
-    case -1:
-        error("Error forking: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    case 0:
-        if (setpgid(0, 0) < 0) {
-            error("Error setpgid: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
-        putenv("LC_ALL=C.UTF-8");
-
-        XCLOSE(&pipe_stderr[0]);
-        XCLOSE(&pipe_stdout[0]);
-
-        xdup2(pipe_stdout[1], STDOUT_FILENO);
-        xdup2(pipe_stderr[1], STDERR_FILENO);
-
-        XCLOSE(&pipe_stderr[1]);
-        XCLOSE(&pipe_stdout[1]);
-
-        execvp(rsync_args[0], rsync_args);
-        error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
-        _exit(EXIT_FAILURE);
-    default:
-        cecup.child_pid = child_pid;
-        XCLOSE(&pipe_stderr[1]);
-        XCLOSE(&pipe_stdout[1]);
-        break;
-    }
-
-    pipes[0].fd = pipe_stdout[0];
-    pipes[1].fd = pipe_stderr[0];
-    pipes[0].events = POLLIN;
-    pipes[1].events = POLLIN;
-
-    do {
-        int64 r;
-        char *eol;
-        char buf_output_bulk[MAX_PATH_LENGTH*2];
-        char buf_error_bulk[MAX_PATH_LENGTH*2];
-
-        pipes[0].revents = 0;
-        pipes[1].revents = 0;
-
-        switch (poll(pipes, 2, -1)) {
-        case -1:
-            if (errno != EINTR) {
-                error("Error in poll: %s.\n", strerror(errno));
-                fatal(EXIT_FAILURE);
-            }
-            continue;
-        case 0:
-            continue;
-        default:
-            break;
-        }
-
-        if (pipes[0].revents & POLLERR) {
-            pipes[0].fd = -1;
-            goto read_error_pipe;
-        }
-        if (pipes[0].revents & POLLHUP) {
-            pipes[0].fd = -1;
-        }
-        if (!(pipes[0].revents & POLLIN)) {
-            goto read_error_pipe;
-        }
-
-        r = read64(pipe_stdout[0], buf_output_bulk + buf_output_pos,
-                   SIZEOF(buf_output_bulk) - 1 - buf_output_pos);
-        if (r <= 0) {
-            if (r < 0) {
-                LOG_ERROR("Error reading stdout pipe: %s.\n", strerror(errno));
-                pipes[0].fd = -1;
-            }
-            goto read_error_pipe;
-        }
-        buf_output_pos += (int32)r;
-
-        while ((eol = memchr64(buf_output_bulk, '\n', buf_output_pos))
-               || (eol = memchr64(buf_output_bulk, '\r', buf_output_pos))) {
-            int32 line_len = (int32)(eol - buf_output_bulk);
-            int32 remaining;
-            char *filename;
-            bool only_space = true;
-            char *p = buf_output_bulk;
-
-            *eol = '\0';
-
-            while (*p) {
-                if (!isspace(*p)) {
-                    only_space = false;
-                    break;
-                }
-            }
-            if (!only_space) {
-                LOG("%s\n", buf_output_bulk);
-            }
-
-            if ((filename = work_check_itemize_line(buf_output_bulk))) {
-                int32 path_len;
-                char *sep;
-                Message *message = xmalloc(SIZEOF(*message));
-                memset64(message, 0, SIZEOF(*message));
-
-                while (*filename == ' ') {
-                    filename += 1;
-                }
-
-                path_len = (int32)(eol - filename);
-
-                if ((sep = memmem64(filename, path_len,
-                                    RSYNC_HARDLINK_NOTATION,
-                                    strlen32(RSYNC_HARDLINK_NOTATION)))) {
-                    *sep = '\0';
-                    path_len = (int32)(sep - filename);
-                } else if ((sep = memmem64(filename, path_len,
-                                           RSYNC_SYMLINK_NOTATION,
-                                           strlen32(RSYNC_SYMLINK_NOTATION)))) {
-                    *sep = '\0';
-                    path_len = (int32)(sep - filename);
-                }
-
-                if (path_len == 1) {
-                    if (filename[0] == '.') {
-                        filename = "./";
-                        path_len = 2;
-                    }
-                }
-
-                message->path_len = path_len;
-                message->src_path = xmalloc(path_len + 1);
-                memcpy64(message->src_path, filename, path_len + 1);
-
-                message->type = DATA_TYPE_REMOVE_ROW;
-                g_idle_add(update_ui_handler, message);
-            }
-
-            remaining = buf_output_pos - (line_len + 1);
-            if (remaining > 0) {
-                memmove64(buf_output_bulk, eol + 1, remaining);
-            }
-            buf_output_pos = remaining;
-            if (buf_output_pos <= 0) {
-                break;
-            }
-        }
-
-    read_error_pipe:
-        if (pipes[1].revents & POLLERR) {
-            pipes[1].fd = -1;
-            continue;
-        }
-        if (pipes[1].revents & POLLHUP) {
-            pipes[1].fd = -1;
-        }
-        if (!(pipes[1].revents & POLLIN)) {
-            continue;
-        }
-
-        r = read64(pipe_stderr[0], buf_error_bulk, SIZEOF(buf_error_bulk) - 1);
-        if (r <= 0) {
-            if (r < 0) {
-                LOG_ERROR("Error reading stderr pipe: %s.\n", strerror(errno));
-                pipes[1].fd = -1;
-            }
-            continue;
-        }
-        buf_error_bulk[r] = '\0';
-        LOG_ERROR("%s", buf_error_bulk);
-
-    } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
-
-    if (waitpid(child_pid, NULL, 0) < 0) {
-        LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
-    }
-    xunlink(files_from_filename);
-    cecup.child_pid = 0;
-
-    XCLOSE(&pipe_stdout[0]);
-    XCLOSE(&pipe_stderr[0]);
-
     work_finalize();
-    free_task_list(tasks);
-    if (cecup.stop_working) {
-        LOG_ERROR(_("Stop requested.\n"));
-    }
-    g_thread_exit(NULL);
+    XFREE(thread_data, SIZEOF(*thread_data));
+    return NULL;
 }
 
 #if TESTING_work
@@ -1527,7 +1389,6 @@ work_rsync_bulk(void *user_data) {
 
 int
 main(void) {
-    (void)work_rsync_bulk;
     (void)work_rsync;
     (void)work_preview;
     exit(EXIT_SUCCESS);

@@ -99,8 +99,15 @@ on_menu_apply(GtkWidget *m, void *data) {
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
     if (tasks->count > 0) {
+        ThreadData *thread_data;
+
         protect_interface_from_user(true);
-        g_thread_new("bulk_sync", work_rsync_bulk, tasks);
+        thread_data = xmalloc(SIZEOF(*thread_data));
+        memset64(thread_data, 0, SIZEOF(*thread_data));
+        thread_data->tasks = tasks;
+        g_thread_new("bulk_sync", work_rsync, thread_data);
+    } else {
+        free_task_list(tasks);
     }
 
     XFREE(message->src_path, message->path_len + 1);
@@ -300,11 +307,17 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 static void
 on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
     TaskList *tasks;
+
     tasks = data;
 
     if (response_id == GTK_RESPONSE_YES) {
+        ThreadData *thread_data;
+
         protect_interface_from_user(true);
-        g_thread_new("work_bulk_sync", work_rsync_bulk, tasks);
+        thread_data = xmalloc(SIZEOF(*thread_data));
+        memset64(thread_data, 0, SIZEOF(*thread_data));
+        thread_data->tasks = tasks;
+        g_thread_new("work_bulk_sync", work_rsync, thread_data);
     } else {
         free_task_list(tasks);
     }

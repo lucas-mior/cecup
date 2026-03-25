@@ -408,6 +408,7 @@ typedef struct ThreadData {
     char *relative_new;
     int32 len_old;
     int32 len_new;
+    TaskList *tasks;
 } ThreadData;
 
 static gboolean update_ui_handler(void * user_data);
