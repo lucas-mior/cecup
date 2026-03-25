@@ -197,7 +197,6 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     char *final_src_path;
     char *final_dst_path;
     time_t unix_timestamp;
-    struct tm time_information;
     CecupRow *row;
 
     if (!timezone_initialized) {
@@ -275,6 +274,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     row->dst_size_raw = dst_size_raw;
 
     if (src_mtime_raw > 0) {
+        struct tm time_information;
         unix_timestamp = (time_t)src_mtime_raw;
         unix_timestamp += timezone_offset;
         gmtime_r(&unix_timestamp, &time_information);
@@ -283,6 +283,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
     }
 
     if (dst_mtime_raw > 0) {
+        struct tm time_information;
         unix_timestamp = (time_t)dst_mtime_raw;
         unix_timestamp += timezone_offset;
         gmtime_r(&unix_timestamp, &time_information);
