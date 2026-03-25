@@ -1071,6 +1071,8 @@ work_rsync(void *user_data) {
 
     XCLOSE(&files_from_fd);
 
+    xpipe(pipe_stdout);
+    xpipe(pipe_stderr);
 run_rsync:
     {
         char src_base_with_slash[MAX_PATH_LENGTH];
@@ -1082,12 +1084,7 @@ run_rsync:
         rsync_args_len = 0;
         rsync_args[rsync_args_len++] = "rsync";
         rsync_args[rsync_args_len++] = "--verbose";
-
-        if (tasks != NULL) {
-            rsync_args[rsync_args_len++] = "--update";
-            rsync_args[rsync_args_len++] = "--checksum";
-        }
-
+        rsync_args[rsync_args_len++] = "--update";
         rsync_args[rsync_args_len++] = "--dirs";
         rsync_args[rsync_args_len++] = "--partial";
         rsync_args[rsync_args_len++] = "--progress";
@@ -1120,14 +1117,9 @@ run_rsync:
         rsync_args[rsync_args_len++] = NULL;
     }
 
-    if (tasks == NULL) {
-        LOG(_("Verifying and syncing with checksum...\n"));
-    }
+    LOG(_("Running sync...\n"));
     STRING_FROM_ARRAY(cmd, " ", rsync_args, rsync_args_len);
     LOG_CMD("%s\n", cmd);
-
-    xpipe(pipe_stdout);
-    xpipe(pipe_stderr);
 
     switch (child_pid = fork()) {
     case -1:
@@ -1154,9 +1146,7 @@ run_rsync:
         XCLOSE(&pipe_stdout[1]);
 
         execvp(rsync_args[0], rsync_args);
-        if (tasks != NULL) {
-            error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
-        }
+        error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
         _exit(EXIT_FAILURE);
     default:
         cecup.child_pid = child_pid;
@@ -1216,7 +1206,7 @@ run_rsync:
                || (eol = memchr64(buf_output, '\r', buf_output_pos))) {
             int64 line_len;
             int64 remaining;
-            char *filename;
+            char *path;
 
             line_len = (int64)(eol - buf_output);
 
@@ -1243,7 +1233,7 @@ run_rsync:
                 *eol = '\0';
             }
 
-            if ((filename = work_check_itemize_line(buf_output))) {
+            if ((path = work_check_itemize_line(buf_output))) {
                 int32 path_len;
                 char *sep;
                 Message *msg;
@@ -1251,34 +1241,30 @@ run_rsync:
                 msg = xmalloc(SIZEOF(*msg));
 
                 memset64(msg, 0, SIZEOF(*msg));
-                while (*filename == ' ') {
-                    filename += 1;
+                while (*path == ' ') {
+                    path += 1;
                 }
-                path_len = (int32)(eol - filename);
-                if ((sep = memmem64(filename, path_len,
+                path_len = (int32)(eol - path);
+                if ((sep = memmem64(path, path_len,
                                     RSYNC_HARDLINK_NOTATION,
                                     strlen32(RSYNC_HARDLINK_NOTATION)))) {
                     *sep = '\0';
-                    path_len = (int32)(sep - filename);
-                } else if ((sep = memmem64(filename, path_len,
+                    path_len = (int32)(sep - path);
+                } else if ((sep = memmem64(path, path_len,
                                            RSYNC_SYMLINK_NOTATION,
                                            strlen32(RSYNC_SYMLINK_NOTATION)))) {
                     *sep = '\0';
-                    path_len = (int32)(sep - filename);
+                    path_len = (int32)(sep - path);
                 }
 
                 if (path_len == 1) {
-                    if (filename[0] == '.') {
-                        filename = "./";
+                    if (path[0] == '.') {
+                        path = "./";
                         path_len = 2;
                     }
                 }
 
-                msg->path_len = path_len;
-                msg->src_path = xmalloc(path_len + 1);
-                memcpy64(msg->src_path, filename, path_len + 1);
-                msg->type = DATA_TYPE_REMOVE_ROW;
-                g_idle_add(update_ui_handler, msg);
+                PRINT(path); PRINTLN(path_len);
             }
 
             remaining = buf_output_pos - (line_len + 1);
@@ -1317,11 +1303,9 @@ run_rsync:
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     if (waitpid(child_pid, NULL, 0) < 0) {
-        if (tasks == NULL) {
-            LOG_ERROR("Error waiting for rsync: %s.\n", strerror(errno));
-        } else {
-            LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
-        }
+        LOG_ERROR(_("Error waiting for child: %s.\n"), strerror(errno));
+        LOG_ERROR(_("Killing the child with SIGKILL..."));
+        xkill(child_pid, SIGKILL);
     } else {
         if (!second_run_with_checksum) {
             second_run_with_checksum = true;
@@ -1329,10 +1313,10 @@ run_rsync:
         }
     }
 
-    xunlink(files_from_filename);
     cecup.child_pid = 0;
     XCLOSE(&pipe_stderr[0]);
     XCLOSE(&pipe_stdout[0]);
+    xunlink(files_from_filename);
 
     if (tasks == NULL) {
         work_cleanup();
