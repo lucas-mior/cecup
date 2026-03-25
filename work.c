@@ -584,6 +584,12 @@ work_preview(void *user_data) {
     struct timespec t0_work;
     struct timespec t1_work;
 
+    Message *message = xmalloc(SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
+
+    message->type = DATA_TYPE_CLEAR_TREES;
+    g_idle_add(update_ui_handler, message);
+
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_work);
     work_cleanup();
 
@@ -606,12 +612,6 @@ work_preview(void *user_data) {
     }
 
     if (thread_data->check_different_fs && same_fs) {
-        Message *message = xmalloc(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
-
-        message->type = DATA_TYPE_CLEAR_TREES;
-        g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
-
         LOG_ERROR(
             _("Safety stop: Original and backup are on the same storage "
               "device.\n"
@@ -663,11 +663,6 @@ work_preview(void *user_data) {
     LOG(_("Found %lld files to analyse...\n"), (llong)nfiles_total);
 
     {
-        Message *message = xmalloc(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
-
-        message->type = DATA_TYPE_CLEAR_TREES;
-        g_idle_add_full(G_PRIORITY_HIGH_IDLE, update_ui_handler, message, NULL);
 
         for (uint32 i = 0; i < cecup.src_map->capacity; i += 1) {
             Bucket_fs_map *bucket_src = &cecup.src_map->array[i];
