@@ -71,9 +71,8 @@ ignore_patterns_load(void) {
 
         if (count >= *capacity) {
             *capacity *= 2;
-            cecup.ignore_patterns
-                = xrealloc(cecup.ignore_patterns,
-                           *capacity*SIZEOF(IgnorePattern));
+            cecup.ignore_patterns = xrealloc(cecup.ignore_patterns,
+                                             *capacity*SIZEOF(IgnorePattern));
         }
         cecup.ignore_patterns[count].str = xstrdup(line_buffer);
         cecup.ignore_patterns[count].len = length;
