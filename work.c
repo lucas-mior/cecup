@@ -301,8 +301,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
         unix_timestamp = (time_t)src_mtime_raw;
         unix_timestamp += timezone_offset;
         gmtime_r(&unix_timestamp, &time_information);
-        STRFTIME(row->src_mtime_text,
-                 "%Y-%m-%d %H:%M:%S", &time_information);
+        STRFTIME(row->src_mtime_text, "%Y-%m-%d %H:%M:%S", &time_information);
         row->src_mtime_raw = src_mtime_raw;
     }
 
@@ -310,8 +309,7 @@ work_add_row(enum CecupAction action, enum CecupReason reason,
         unix_timestamp = (time_t)dst_mtime_raw;
         unix_timestamp += timezone_offset;
         gmtime_r(&unix_timestamp, &time_information);
-        STRFTIME(row->dst_mtime_text,
-                 "%Y-%m-%d %H:%M:%S", &time_information);
+        STRFTIME(row->dst_mtime_text, "%Y-%m-%d %H:%M:%S", &time_information);
         row->dst_mtime_raw = dst_mtime_raw;
     }
 
