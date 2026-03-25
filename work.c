@@ -193,7 +193,7 @@ work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
              int32 path_len,
              int64 src_size_raw, int64 src_mtime_raw,
              int64 dst_size_raw, int64 dst_mtime_raw,
-             bool delete_excluded, bool is_dir) {
+             bool is_dir) {
     int32 slash;
     char *final_src_path;
     char *final_dst_path;
@@ -1138,7 +1138,6 @@ work_rsync(void *user_data) {
                          path_len,
                          src_size, stat_src->st_mtime,
                          dst_size, dst_mtime,
-                         thread_data->delete_excluded,
                          S_ISDIR(stat_src->st_mode));
 
             nfiles_processed += 1;
@@ -1209,7 +1208,6 @@ work_rsync(void *user_data) {
                              path_len,
                              0, 0,
                              stat_dst->st_size, stat_dst->st_mtime,
-                             thread_data->delete_excluded,
                              S_ISDIR(stat_dst->st_mode));
             }
             nfiles_processed += 1;
