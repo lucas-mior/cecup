@@ -647,9 +647,9 @@ work_fix_fs_cb(const char *fpath,
     memcpy64(&data->stats[index], (void *)sb, SIZEOF(struct stat));
 
     if (relative_len == 0) {
-        data->relative_paths[index] = xstrdup("./");
+        data->relative_paths[index] = "./";
     } else {
-        data->relative_paths[index] = xstrdup(relative_path);
+        data->relative_paths[index] = relative_path;
     }
     data->link_targets[index] = NULL;
 
@@ -660,7 +660,7 @@ work_fix_fs_cb(const char *fpath,
         len = (int64)readlink(fpath, target, SIZEOF(target) - 1);
         if (len != -1) {
             target[len] = '\0';
-            data->link_targets[index] = xstrdup(target);
+            data->link_targets[index] = target;
         }
     } else if (typeflag == FTW_F && (sb->st_nlink > 1)) {
         char inode_str[64];
@@ -669,7 +669,7 @@ work_fix_fs_cb(const char *fpath,
         SNPRINTF(inode_str, "%llu", (unsigned long long)sb->st_ino);
         first_idx_ptr = hash_lookup2_fs_map(data->inode_map, inode_str);
         if (first_idx_ptr) {
-            data->link_targets[index] = xstrdup(data->relative_paths[*first_idx_ptr]);
+            data->link_targets[index] = data->relative_paths[*first_idx_ptr];
         } else {
             hash_insert2_fs_map(data->inode_map, inode_str, index);
         }
@@ -1326,10 +1326,6 @@ cleanup_maps:
     XFREE(src_fix.matched_patterns);
 
     if (src_fix.link_targets) {
-        for (int32 i = 0; i < src_fix.array_count; i += 1) {
-            XFREE(src_fix.link_targets[i]);
-            XFREE(src_fix.relative_paths[i]);
-        }
         XFREE(src_fix.link_targets);
         XFREE(src_fix.relative_paths);
     }
@@ -1338,10 +1334,6 @@ cleanup_maps:
     XFREE(dst_fix.matched_patterns);
 
     if (dst_fix.link_targets) {
-        for (int32 i = 0; i < dst_fix.array_count; i += 1) {
-            XFREE(dst_fix.link_targets[i]);
-            XFREE(dst_fix.relative_paths[i]);
-        }
         XFREE(dst_fix.link_targets);
         XFREE(dst_fix.relative_paths);
     }

@@ -72,12 +72,12 @@ case "$target" in
     exe="bin/${program}_debug"
     ;;
 "perf")
-    CFLAGS="$CFLAGS -g3 -Og -flto"
+    CFLAGS="$CFLAGS -g -O2 -flto"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     exe="bin/${program}_perf"
     ;;
 "profile")
-    CFLAGS="$CFLAGS -g3 -Og -flto"
+    CFLAGS="$CFLAGS -g -Og -flto"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DPROFILE=1 -Wno-declaration-after-statement"
     exe="bin/${program}_profile"
     ;;
@@ -86,7 +86,7 @@ case "$target" in
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     ;;
 "callgrind") 
-    CFLAGS="$CFLAGS -g -O0 -ftree-vectorize"
+    CFLAGS="$CFLAGS -g -O2 -ftree-vectorize"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     ;;
 "test")
@@ -306,9 +306,8 @@ case "$target" in
     ;;
 "perf")
     trace_on
-    perf record --call-graph dwarf -o bin/perf.data $exe
-    # perf annotate bin/$exe
-    perf report -n --input bin/perf.data
+    perf record -F 999 -g --call-graph dwarf -o bin/perf.data "$exe"
+    perf report -n -g --input bin/perf.data
     trace_off
     exit
     ;;
