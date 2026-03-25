@@ -406,33 +406,6 @@ on_menu_diff(GtkWidget *m, void *data) {
     return;
 }
 
-static void
-on_menu_ignore(GtkWidget *m, void *data) {
-    Message *message = data;
-    char *pattern;
-    FILE *fp;
-
-    pattern = (char *)g_object_get_data(G_OBJECT(m), "ignore_pattern");
-
-    if (pattern) {
-        if ((fp = fopen(cecup.ignore_path, "a"))) {
-            fprintf(fp, "\n%s", pattern);
-            fclose(fp);
-        } else {
-            LOG_ERROR(_("Error opening %s: %s.\n"),
-                      cecup.ignore_path, strerror(errno));
-        }
-    } else {
-        error("Ignore pattern not found in widget data.\n");
-        fatal(EXIT_FAILURE);
-    }
-
-    XFREE(message->src_path);
-    XFREE(message);
-
-    return;
-}
-
 #if TESTING_on_menu
 
 #include "on.c"

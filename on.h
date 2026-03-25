@@ -12,7 +12,6 @@ static void on_menu_apply(GtkWidget *m, void *data);
 static void on_menu_diff(GtkWidget *m, void *data);
 static void on_menu_rename(GtkWidget *m, void *data);
 static void on_menu_delete(GtkWidget *m, void *data);
-static void on_menu_ignore(GtkWidget *m, void *data);
 
 static CecupMenuItem tree_menu_items[] = {
 {N_("📄 Open File"),          0,          0,                                 on_menu_open_item, "file"},

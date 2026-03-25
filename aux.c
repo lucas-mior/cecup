@@ -393,14 +393,6 @@ refresh_ui_list_locked(enum RefreshType refresh_type, char *path_to_focus) {
 }
 
 static gboolean
-refresh_ui_timeout_callback(void *data) {
-    (void)data;
-    refresh_ui_list(REFRESH_PARTIAL, NULL);
-    cecup.refresh_id = 0;
-    return G_SOURCE_REMOVE;
-}
-
-static gboolean
 update_ui_handler(void *data) {
     GtkTextIter end;
     GtkTextTagTable *table;

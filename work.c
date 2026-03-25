@@ -39,9 +39,6 @@
 #define TESTING_work 0
 #endif
 
-static Message *add_row_batch_messages[BATCH_SIZE];
-static int32 add_row_batch_count = 0;
-
 #define HASH_VALUE_TYPE int32
 #define HASH_VALUE_FORMATTER "%d"
 #define HASH_PADDING_TYPE uint32
@@ -69,26 +66,6 @@ typedef struct TraversalData {
     int16 *link_targets_lens;
     int16 *matched_patterns_lens;
 } TraversalData;
-
-static void
-work_flush_add_rows(void) {
-    MessageBatch *batch;
-    int64 messages_size;
-
-    if (add_row_batch_count == 0) {
-        return;
-    }
-
-    messages_size = add_row_batch_count*SIZEOF(Message *);
-    batch = xmalloc(SIZEOF(*batch) + messages_size);
-    batch->type = DATA_TYPE_ADD_ROW;
-    batch->count = add_row_batch_count;
-    memcpy64(batch->messages, add_row_batch_messages, messages_size);
-
-    g_idle_add(update_ui_handler, batch);
-    add_row_batch_count = 0;
-    return;
-}
 
 static char *
 work_check_itemize_line(char *buf_output) {

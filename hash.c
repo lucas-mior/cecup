@@ -507,6 +507,26 @@ CAT(hash_ndeleted_, HASH_TYPE)(struct Map *map) {
     return ndeleted;
 }
 
+#if 0 == TESTING_hash
+static inline void
+hash_functions_sink(void) {
+    (void)CAT(hash_zero_, HASH_TYPE);
+    (void)CAT(hash_create_, HASH_TYPE);
+    (void)CAT(hash_destroy_, HASH_TYPE);
+    (void)CAT(hash_insert_pre_calc_, HASH_TYPE);
+    (void)CAT(hash_insert_, HASH_TYPE);
+    (void)CAT(hash_insert2_, HASH_TYPE);
+    (void)CAT(hash_lookup_pre_calc_, HASH_TYPE);
+    (void)CAT(hash_lookup_, HASH_TYPE);
+    (void)CAT(hash_lookup2_, HASH_TYPE);
+    (void)CAT(hash_remove_pre_calc_, HASH_TYPE);
+    (void)CAT(hash_remove_, HASH_TYPE);
+    (void)CAT(hash_print_summary_, HASH_TYPE);
+    (void)CAT(hash_print_, HASH_TYPE);
+    (void)CAT(hash_ndeleted_, HASH_TYPE);
+}
+#endif
+
 #undef HASH_VALUE_TYPE
 #undef HASH_PADDING_TYPE
 #undef HASH_TYPE
