@@ -74,7 +74,7 @@ typedef struct FixFsThreadData {
     char **link_targets;
     char **matched_patterns;
 
-    int16 *path_lens;
+    int16 *paths_lens;
     int16 *link_targets_lens;
     int16 *matched_patterns_lens;
 } FixFsThreadData;
@@ -741,9 +741,9 @@ work_fix_fs_cb(const char *fpath,
             = xrealloc(data->matched_patterns,
                        data->array_capacity*SIZEOF(*(data->matched_patterns)));
 
-        data->path_lens
-            = xrealloc(data->path_lens,
-                       data->array_capacity*SIZEOF(*(data->path_lens)));
+        data->paths_lens
+            = xrealloc(data->paths_lens,
+                       data->array_capacity*SIZEOF(*(data->paths_lens)));
         data->link_targets_lens
             = xrealloc(data->link_targets_lens,
                        data->array_capacity*SIZEOF(*(data->link_targets_lens)));
@@ -762,7 +762,7 @@ work_fix_fs_cb(const char *fpath,
     data->link_targets[index] = NULL;
     data->matched_patterns[index] = NULL;
 
-    data->path_lens[index] = (int16)relative_len;
+    data->paths_lens[index] = (int16)relative_len;
     data->link_targets_lens[index] = 0;
     data->matched_patterns_lens[index] = 0;
 
@@ -786,7 +786,7 @@ work_fix_fs_cb(const char *fpath,
         first_idx_ptr = hash_lookup_fs_map(data->inode_map, inode_str, n);
         if (first_idx_ptr) {
             data->link_targets[index] = data->paths[*first_idx_ptr];
-            data->link_targets_lens[index] = data->path_lens[*first_idx_ptr];
+            data->link_targets_lens[index] = data->paths_lens[*first_idx_ptr];
         } else {
             hash_insert_fs_map(data->inode_map, inode_str, n, index);
         }
@@ -994,7 +994,7 @@ work_rsync(void *user_data) {
             link_target_len = src_fix.link_targets_lens[src_idx];
             matched_pattern_len = src_fix.matched_patterns_lens[src_idx];
             src_path = bucket_src->key;
-            path_len = src_fix.path_lens[src_idx];
+            path_len = src_fix.paths_lens[src_idx];
 
             is_symlink = S_ISLNK(stat_src->st_mode);
             is_hardlink = S_ISREG(stat_src->st_mode) && link_target_src;
@@ -1161,7 +1161,7 @@ work_rsync(void *user_data) {
             }
 
             dst_idx = bucket_dst->value;
-            path_len = dst_fix.path_lens[dst_idx];
+            path_len = dst_fix.paths_lens[dst_idx];
 
             if (hash_lookup_fs_map(src_map,
                                    bucket_dst->key, (uint32)path_len) == NULL) {
@@ -1451,7 +1451,7 @@ cleanup_maps:
     XFREE(src_fix.matched_patterns);
     XFREE(src_fix.link_targets);
     XFREE(src_fix.paths);
-    XFREE(src_fix.path_lens);
+    XFREE(src_fix.paths_lens);
     XFREE(src_fix.link_targets_lens);
     XFREE(src_fix.matched_patterns_lens);
 
@@ -1465,7 +1465,7 @@ cleanup_maps:
     XFREE(dst_fix.matched_patterns);
     XFREE(dst_fix.link_targets);
     XFREE(dst_fix.paths);
-    XFREE(dst_fix.path_lens);
+    XFREE(dst_fix.paths_lens);
     XFREE(dst_fix.link_targets_lens);
     XFREE(dst_fix.matched_patterns_lens);
 
