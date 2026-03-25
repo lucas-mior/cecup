@@ -1545,37 +1545,37 @@ main(void) {
 
     patterns[0].str = "*.c";
     patterns[0].len = strlen32("*.c");
-    pattern = work_path_matches_ignore("main.c", 6, false, patterns, 1);
+    pattern = ignore_patterns_match("main.c", 6, false, patterns, 1);
     ASSERT_EQUAL(pattern->str, "*.c");
 
     patterns[0].str = "build/";
     patterns[0].len = strlen32("build/");
-    pattern = work_path_matches_ignore("build", 5, true, patterns, 1);
+    pattern = ignore_patterns_match("build", 5, true, patterns, 1);
     ASSERT_EQUAL(pattern->str, "build/");
 
     patterns[0].str = "build/";
     patterns[0].len = strlen32("build/");
-    pattern = work_path_matches_ignore("build", 5, false, patterns, 1);
+    pattern = ignore_patterns_match("build", 5, false, patterns, 1);
     ASSERT_NULL(pattern);
 
     patterns[0].str = "obj";
     patterns[0].len = strlen32("obj");
-    pattern = work_path_matches_ignore("src/obj/main.o", 14, false, patterns, 1);
+    pattern = ignore_patterns_match("src/obj/main.o", 14, false, patterns, 1);
     ASSERT_EQUAL(pattern->str, "obj");
 
     patterns[0].str = "/src";
     patterns[0].len = strlen32("/src");
-    pattern = work_path_matches_ignore("src/main.c", 10, false, patterns, 1);
+    pattern = ignore_patterns_match("src/main.c", 10, false, patterns, 1);
     ASSERT_EQUAL(pattern->str, "/src");
 
     patterns[0].str = "/src";
     patterns[0].len = strlen32("/src");
-    pattern = work_path_matches_ignore("lib/src/main.c", 14, false, patterns, 1);
+    pattern = ignore_patterns_match("lib/src/main.c", 14, false, patterns, 1);
     ASSERT_NULL(pattern);
 
     patterns[0].str = "foo/bar";
     patterns[0].len = strlen32("foo/bar");
-    pattern = work_path_matches_ignore("foo/bar/baz.c", 13, false, patterns, 1);
+    pattern = ignore_patterns_match("foo/bar/baz.c", 13, false, patterns, 1);
     ASSERT_EQUAL(pattern->str, "foo/bar");
 
     patterns[0].str = "*.h";
@@ -1584,7 +1584,7 @@ main(void) {
     patterns[1].len = strlen32("build/");
     patterns[2].str = "*.o";
     patterns[2].len = strlen32("*.o");
-    pattern = work_path_matches_ignore("src/main.o", 10, false, patterns, 3);
+    pattern = ignore_patterns_match("src/main.o", 10, false, patterns, 3);
     ASSERT_EQUAL(pattern->str, "*.o");
 
     exit(EXIT_SUCCESS);
