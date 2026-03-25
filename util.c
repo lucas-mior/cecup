@@ -209,7 +209,7 @@ static int64 util_page_size = 0;
 static void error_async_safe(char *message);
 static void fatal(int) __attribute__((noreturn));
 static void util_segv_handler(int32) __attribute__((noreturn));
-static char *itoa2(long, char *);
+static long itoa2(char *, long);
 static long atoi2(char *);
 INLINE void *memchr64(void *pointer, int32 value, int64 size);
 static int xclose(char *file, int line,
@@ -899,12 +899,13 @@ xclose(char *file, int line, int *fd, char *fd_var_name, char *filename) {
     if (close(*fd) < 0) {
         char error_buffer[4096];
         char itoa_buffer[32];
+        itoa2(itoa_buffer, line);
 
         strerror_r(errno, error_buffer, sizeof(error_buffer));
 
         error_async_safe(file);
         error_async_safe(":");
-        error_async_safe(itoa2(line, itoa_buffer));
+        error_async_safe(itoa_buffer);
         error_async_safe(" Error closing ");
         error_async_safe(filename);
         error_async_safe(": ");
@@ -1510,8 +1511,8 @@ send_signal(char *executable, int32 signal_number) {
 }
 #endif
 
-char *
-itoa2(long num, char *str) {
+long
+itoa2(char *str, long num) {
     int i = 0;
     bool negative = false;
 
@@ -1533,12 +1534,12 @@ itoa2(long num, char *str) {
 
     str[i] = '\0';
 
-    for (int j = 0; j < i / 2; j += 1) {
+    for (long j = 0; j < i / 2; j += 1) {
         char temp = str[j];
         str[j] = str[i - j - 1];
         str[i - j - 1] = temp;
     }
-    return str;
+    return i;
 }
 
 long
@@ -2068,7 +2069,9 @@ main(int argc, char **argv) {
     srand((uint)time(NULL));
     for (int i = 0; i < 10; i += 1) {
         int n = rand() - RAND_MAX / 2;
-        ASSERT_EQUAL(atoi2(itoa2(n, buffer)), n);
+        char itoa_buffer[32];
+        itoa2(itoa_buffer, n);
+        ASSERT_EQUAL(atoi2(itoa_buffer), n);
     }
 
     {

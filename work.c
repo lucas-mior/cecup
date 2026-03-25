@@ -684,7 +684,7 @@ work_fix_fs_cb(const char *fpath,
         uint32 n;
         int32 *first_idx_ptr;
 
-        n = (uint32)SNPRINTF(inode_str, "%llu", (ullong)sb->st_ino);
+        n = (uint32)itoa2(inode_str, (long)sb->st_ino);
         first_idx_ptr = hash_lookup_fs_map(data->inode_map, inode_str, n);
         if (first_idx_ptr) {
             data->link_targets[index] = data->relative_paths[*first_idx_ptr];
