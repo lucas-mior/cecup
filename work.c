@@ -1540,6 +1540,8 @@ work_rsync_bulk(void *user_data) {
 
 int
 main(void) {
+    (void)work_rsync_bulk;
+    (void)work_rsync;
     exit(EXIT_SUCCESS);
 }
 
