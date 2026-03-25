@@ -1901,7 +1901,9 @@ static char *signal_names[] = {
     XSIGNAL(SIGINT),
     XSIGNAL(SIGKILL),
     XSIGNAL(SIGPIPE),
+#if defined(SIGPOLL)
     XSIGNAL(SIGPOLL),
+#endif
     XSIGNAL(SIGQUIT),
     XSIGNAL(SIGSEGV),
     XSIGNAL(SIGSTOP),
@@ -1948,8 +1950,9 @@ xkill(pid_t pid, int signum) {
 }
 #endif
 
+#if OS_UNIX
 static void
-timezone_init() {
+timezone_init(void) {
     time_t current_time;
     struct tm local_tm;
     struct tm gm_tm;
@@ -1974,6 +1977,7 @@ timezone_init() {
     timezone_initialized = true;
     return;
 }
+#endif
 
 static volatile ullong here_counter = 0; \
 
@@ -1991,16 +1995,20 @@ util_functions_sink(void) {
     (void)util_command;
     (void)util_string_int32;
     (void)util_die_notify;
+#if OS_UNIX
     (void)util_copy_file_sync;
     (void)util_copy_file_async;
     (void)util_copy_file_async_thread;
-    (void)util_equal_files;
     (void)util_command_launch;
+#endif
+    (void)util_equal_files;
 
     (void)send_signal;
     (void)shell_escape;
     (void)atoi2;
+#if OS_UNIX
     (void)timezone_init;
+#endif
     (void)dirname2;
     (void)basename2;
     (void)string_from_doubles;
@@ -2012,9 +2020,11 @@ util_functions_sink(void) {
     (void)xmmap_commit;
     (void)xcalloc;
     (void)xstrdup;
+#if OS_UNIX
     (void)xkill;
     (void)xdup2;
     (void)xpipe;
+#endif
     (void)xmemdup;
     (void)xunlink;
 
@@ -2097,7 +2107,9 @@ main(int argc, char **argv) {
     (void)argv;
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
+#if OS_UNIX
     timezone_init();
+#endif
 
     for (enum WeekDay day = WEEK_DAY_MONDAY; day <= WEEK_DAY_LAST; day += 1) {
         printf("enum[%d] = %s\n", day, WEEK_DAY_str(day));
@@ -2281,9 +2293,11 @@ main(int argc, char **argv) {
     (void)util_command;
     (void)util_string_int32;
     (void)util_die_notify;
+#if OS_UNIX
     (void)util_copy_file_sync;
     (void)util_copy_file_async;
     (void)util_copy_file_async_thread;
+#endif
     (void)util_command_launch;
 
     (void)send_signal;
