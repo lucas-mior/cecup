@@ -44,6 +44,7 @@
 #define HASH_VALUE_FORMATTER "%d"
 #define HASH_PADDING_TYPE uint32
 #define HASH_DUPLICATE_KEYS 0
+#define HASH_AUTO_RESIZE 1
 #define HASH_TYPE fs_map
 #include "hash.c"
 
