@@ -756,8 +756,6 @@ work_preview(void *user_data) {
 
                     do {
                         if (is_hardlink) {
-                            PRINTLN(bucket_src->key);
-                            PRINTLN(dst_idx);
                             if (!S_ISREG(stat_dst->st_mode)) {
                                 LOG("Other side is not a regular file.\n");
                                 equal = false;

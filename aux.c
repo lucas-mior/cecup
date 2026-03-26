@@ -514,6 +514,71 @@ refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
 static void cecup_list_model_row_removed(CecupListModel *self, int32 index);
 static void cecup_list_model_row_changed(CecupListModel *self, int32 index);
 
+static void
+update_tree_row(Message *message) {
+    char *pattern = message->src_path;
+    int32 pattern_len = message->path_len;
+
+    for (int32 i = 0; i < cecup.rows_len; i += 1) {
+        CecupRow *row_test = cecup.rows[i];
+        char *path_test = row_path_get(row_test);
+        bool show_equal;
+
+        if (row_test->path_len != pattern_len) {
+            continue;
+        }
+        if (memcmp64(path_test, pattern, pattern_len)) {
+            continue;
+        }
+
+        row_test->src_action = ACTION_EQUAL;
+        row_test->dst_action = ACTION_EQUAL;
+        row_test->reason = REASON_EQUAL;
+
+        if (row_test->dst_path == NULL) {
+            row_test->dst_path = row_test->src_path;
+        } else if (row_test->src_path == NULL) {
+            row_test->src_path = row_test->dst_path;
+        }
+
+        row_test->dst_size_raw = row_test->src_size_raw;
+        memcpy64(row_test->dst_size_text, row_test->src_size_text,
+                 SIZEOF(row_test->dst_size_text));
+
+        row_test->dst_mtime_raw = row_test->src_mtime_raw;
+        memcpy64(row_test->dst_mtime_text, row_test->src_mtime_text,
+                 SIZEOF(row_test->dst_mtime_text));
+
+        show_equal = gtk_toggle_button_get_active(
+            GTK_TOGGLE_BUTTON(cecup.filter_equal));
+
+        if (show_equal) {
+            for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
+                if (cecup.rows_visible[k] == row_test) {
+                    cecup_list_model_row_changed(
+                        CECUP_LIST_MODEL(cecup.store), k);
+                    break;
+                }
+            }
+        } else {
+            for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
+                if (cecup.rows_visible[k] == row_test) {
+                    for (int32 j = k; j < (cecup.rows_visible_len - 1); j += 1) {
+                        cecup.rows_visible[j] = cecup.rows_visible[j + 1];
+                    }
+                    cecup.rows_visible_len -= 1;
+
+                    cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store),
+                                                 k);
+                    break;
+                }
+            }
+        }
+        break;
+    }
+    return;
+}
+
 static gboolean
 update_ui_handler(void *data) {
     GtkTextIter end;
@@ -559,26 +624,7 @@ update_ui_handler(void *data) {
         update_remove_row(message);
         break;
     case DATA_TYPE_TREE_UPDATE:
-        for (int32 i = 0; i < cecup.rows_len; i += 1) {
-            CecupRow *row_test = cecup.rows[i];
-            char *path_test = row_path_get(row_test);
-            
-            if (row_test->path_len == message->path_len) {
-                if (!memcmp64(path_test, message->src_path, message->path_len)) {
-                    row_test->src_action = ACTION_EQUAL;
-                    row_test->dst_action = ACTION_EQUAL;
-                    row_test->reason = REASON_EQUAL;
-                    
-                    for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-                        if (cecup.rows_visible[k] == row_test) {
-                            cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), k);
-                            break;
-                        }
-                    }
-                    break;
-                }
-            }
-        }
+        update_tree_row(message);
         break;
     case DATA_TYPE_ENABLE_BUTTONS:
         if (cecup.refresh_id != 0) {
