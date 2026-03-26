@@ -387,7 +387,7 @@ work_traverse_fs(Traversal *data) {
         link_target = NULL;
         link_target_len = 0;
 
-        if (ent->fts_info == FTS_SL || ent->fts_info == FTS_SLNONE) {
+        if ((ent->fts_info == FTS_SL) || (ent->fts_info == FTS_SLNONE)) {
             char target[MAX_PATH_LENGTH];
             int64 target_len;
 
