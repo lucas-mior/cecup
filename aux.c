@@ -275,7 +275,10 @@ update_row_transfer(Message *message) {
             idx = *idx_ptr;
             st_ptr = &cecup.traversal_dst.stats[idx];
 
-            if (lstat(full_path, st_ptr) == 0) {
+            if (lstat(full_path, st_ptr) < 0) {
+                LOG_ERROR("Error in lstat(%s): %s.\n",
+                          full_path, strerror(errno));
+            } else {
                 if (S_ISLNK(st_ptr->st_mode)) {
                     char target[MAX_PATH_LENGTH];
                     int64 target_len;
