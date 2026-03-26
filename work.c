@@ -402,10 +402,10 @@ work_traverse_fs(TraversalData *data) {
             }
         } else if (ent->fts_info == FTS_F && (ent->fts_statp->st_nlink > 1)) {
             char inode_str[64];
-            uint32 n;
+            int32 n;
             int32 *first_idx_ptr;
 
-            n = (uint32)itoa2(inode_str, (long)ent->fts_statp->st_ino);
+            n = itoa2(inode_str, (long)ent->fts_statp->st_ino);
             first_idx_ptr = hash_lookup_inode_map(data->inode_map, inode_str, n);
             if (first_idx_ptr) {
                 int32 first_idx;
@@ -640,7 +640,8 @@ work_preview(void *user_data) {
         is_dir = S_ISDIR(stat_src->st_mode);
 
         if ((dst_idx_ptr
-             = hash_lookup_fs_map(cecup.traversal_dst.map, bucket_src->key, (uint32)path_len))) {
+             = hash_lookup_fs_map(cecup.traversal_dst.map,
+                                  bucket_src->key, path_len))) {
             int32 dst_idx = *dst_idx_ptr;
             struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
             char *link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
@@ -839,7 +840,7 @@ work_preview(void *user_data) {
         path_len = cecup.traversal_dst.paths_lens[dst_idx];
 
         if (hash_lookup_fs_map(cecup.traversal_src.map,
-                               bucket_dst->key, (uint32)path_len) == NULL) {
+                               bucket_dst->key, path_len) == NULL) {
             stat_dst = &cecup.traversal_dst.stats[dst_idx];
             matched_pattern_dst = cecup.traversal_dst.matched_patterns[dst_idx];
             link_target_dst = cecup.traversal_dst.link_targets[dst_idx];

@@ -418,7 +418,7 @@ CAT(hash_lookup_, HASH_TYPE)(struct Map *map, char *key, int32 key_length) {
 
 static void *
 CAT(hash_lookup2_, HASH_TYPE)(struct Map *map, char *key) {
-    int32 key_length = (uint32)strlen32(key);
+    int32 key_length = strlen32(key);
     return CAT(hash_lookup_, HASH_TYPE)(map, key, key_length);
 }
 
@@ -554,7 +554,7 @@ CAT(hash_functions_sink_, HASH_TYPE)(void) {
 uint64
 hash_function(char *key, int32 key_length) {
     uint64 hash;
-    hash = rapidhash(key, key_length);
+    hash = rapidhash(key, (size_t)key_length);
     return hash;
 }
 
