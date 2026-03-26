@@ -1016,15 +1016,34 @@ static void cecup_list_model_row_changed(CecupListModel *self, int32 index);
 static gboolean
 update_ui_handler(void *data) {
     GtkTextIter end;
+    GtkTextIter start_line;
     GtkTextTagTable *table;
     int32 current_store_count;
+    bool is_cr;
     Message *message = data;
 
     switch (message->type) {
     case DATA_TYPE_LOG:
     case DATA_TYPE_LOG_CMD:
     case DATA_TYPE_LOG_ERROR:
+        is_cr = false;
+
+        if (message->text_len > 0) {
+            if (message->text[message->text_len - 1] == '\r') {
+                is_cr = true;
+                message->text[message->text_len - 1] = '\0';
+            }
+        }
+
         gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
+
+        if (is_cr) {
+            start_line = end;
+            gtk_text_iter_set_line_offset(&start_line, 0);
+            gtk_text_buffer_delete(cecup.log_buffer, &start_line, &end);
+            gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
+        }
+
         table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
 
         if (message->type == DATA_TYPE_LOG_ERROR) {
@@ -1063,7 +1082,7 @@ update_ui_handler(void *data) {
     case DATA_TYPE_ROW_TRANSFER:
         update_row_transfer(message);
         break;
-case DATA_TYPE_ENABLE_BUTTONS:
+    case DATA_TYPE_ENABLE_BUTTONS:
         if (cecup.refresh_id != 0) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
