@@ -1047,7 +1047,6 @@ work_rsync_run(char *files_from_filename, bool checksum) {
             if ((path = work_check_itemize_line(buf_output))) {
                 int32 path_len;
                 char *sep;
-                Message *msg_update;
 
                 while (*path == ' ') {
                     path += 1;
@@ -1065,16 +1064,18 @@ work_rsync_run(char *files_from_filename, bool checksum) {
                     path_len = (int32)(sep - path);
                 }
 
-                if ((path_len != 2) || memcmp64(path, "./", 2)) {
-                    PRINTLN(path);
-                    usleep(500000);
+                PRINTLN(path);
+                usleep(500000);
 
-                    msg_update = xmalloc(SIZEOF(*msg_update));
+                if ((path_len != 2) || memcmp64(path, "./", 2)) {
+                    Message *msg_update = xmalloc(SIZEOF(*msg_update));
                     memset64(msg_update, 0, SIZEOF(*msg_update));
+
                     msg_update->type = DATA_TYPE_ROW_TRANSFER;
                     msg_update->path_len = path_len;
                     msg_update->src_path = xmalloc(path_len + 1);
                     memcpy64(msg_update->src_path, path, path_len + 1);
+
                     g_idle_add(update_ui_handler, msg_update);
                 }
             }
