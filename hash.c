@@ -690,7 +690,7 @@ main(void) {
     ASSERT_EQUAL(hash_length(map), 10);
 
     hash_destroy_map(map);
-    XFREE(strings, 0);
+    XFREE(strings, NSTRINGS*sizeof(*strings));
 
     exit(EXIT_SUCCESS);
 }
