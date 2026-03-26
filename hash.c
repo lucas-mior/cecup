@@ -46,8 +46,8 @@
 #define HASH_AUTO_RESIZE 1
 #endif
 
-#define SLOT_FREE   0
-#define SLOT_DELETED -1
+#define HASH_SLOT_FREE   0
+#define HASH_SLOT_DELETED -1
 
 #if !defined(GREEN)
 #define GREEN "\x1b[32m"
@@ -198,8 +198,8 @@ CAT(hash_destroy_, HASH_TYPE)(struct Map *map) {
 #if HASH_DUPLICATE_KEYS
     for (uint32 i = 0; i < map->capacity; i += 1) {
         switch ((int64)map->array[i].key) {
-        case SLOT_DELETED:
-        case SLOT_FREE:
+        case HASH_SLOT_DELETED:
+        case HASH_SLOT_FREE:
             break;
         default:
             XFREE(map->array[i].key, map->array[i].key_len);
@@ -239,18 +239,18 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
             uint32 rehash_probe = rehash_base;
             uint32 rehash_step = 0;
 
-            if ((int64)iterator->key == SLOT_FREE) {
+            if ((int64)iterator->key == HASH_SLOT_FREE) {
                 continue;
             }
 
-            if ((int64)iterator->key == SLOT_DELETED) {
+            if ((int64)iterator->key == HASH_SLOT_DELETED) {
                 continue;
             }
 
             while (rehash_step < new_capacity) {
                 Bucket *target = &new_array[rehash_probe];
 
-                if (target->key == (char *)SLOT_FREE) {
+                if (target->key == (char *)HASH_SLOT_FREE) {
                     target->key = iterator->key;
                     target->hash = iterator->hash;
 #if defined(HASH_VALUE_TYPE)
@@ -285,7 +285,7 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
         Bucket *iterator = &map->array[probe];
 
         switch ((int64)iterator->key) {
-        case SLOT_FREE: {
+        case HASH_SLOT_FREE: {
             Bucket *target;
             if (first_tombstone >= 0) {
                 target = &map->array[first_tombstone];
@@ -307,7 +307,7 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
             map->length += 1;
             return true;
         }
-        case SLOT_DELETED:
+        case HASH_SLOT_DELETED:
             if (first_tombstone < 0) {
                 first_tombstone = (int32)probe;
             }
@@ -388,9 +388,9 @@ CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
         Bucket *iterator = &map->array[probe];
 
         switch ((int64)iterator->key) {
-        case SLOT_FREE:
+        case HASH_SLOT_FREE:
             return NULL;
-        case SLOT_DELETED:
+        case HASH_SLOT_DELETED:
             break;
         default:
             if ((iterator->hash == hash) && (strcmp(iterator->key, key) == 0)) {
@@ -433,16 +433,16 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
         Bucket *iterator = &map->array[probe];
 
         switch ((int64)iterator->key) {
-        case SLOT_FREE:
+        case HASH_SLOT_FREE:
             return false;
-        case SLOT_DELETED:
+        case HASH_SLOT_DELETED:
             break;
         default:
             if ((iterator->hash == hash) && (strcmp(iterator->key, key) == 0)) {
 #if HASH_DUPLICATE_KEYS
                 XFREE(iterator->key, iterator->key_len);
 #endif
-                iterator->key = (char *)SLOT_DELETED;
+                iterator->key = (char *)HASH_SLOT_DELETED;
                 map->length -= 1;
                 return true;
             }
@@ -483,10 +483,10 @@ CAT(hash_print_, HASH_TYPE)(struct Map *map, bool verbose) {
         Bucket *iterator = &map->array[i];
 
         if (!verbose) {
-            if (iterator->key == (char *)SLOT_FREE) {
+            if (iterator->key == (char *)HASH_SLOT_FREE) {
                 continue;
             }
-            if (iterator->key == (char *)SLOT_DELETED) {
+            if (iterator->key == (char *)HASH_SLOT_DELETED) {
                 continue;
             }
         }
@@ -494,10 +494,10 @@ CAT(hash_print_, HASH_TYPE)(struct Map *map, bool verbose) {
         printf("\n%03u: ", i);
 
         switch ((int64)iterator->key) {
-        case SLOT_FREE:
+        case HASH_SLOT_FREE:
             printf("[empty]");
             break;
-        case SLOT_DELETED:
+        case HASH_SLOT_DELETED:
             printf("[deleted]");
             break;
         default:
@@ -517,7 +517,7 @@ CAT(hash_ndeleted_, HASH_TYPE)(struct Map *map) {
     uint32 ndeleted = 0;
     for (uint32 i = 0; i < map->capacity; i += 1) {
         Bucket *iterator = &map->array[i];
-        if (iterator->key == (char *)SLOT_DELETED) {
+        if (iterator->key == (char *)HASH_SLOT_DELETED) {
             ndeleted += 1;
         }
     }
