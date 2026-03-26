@@ -472,12 +472,14 @@ work_traverse_clean(TraversalData *traversal_data) {
 
     XFREE(traversal_data->stats,
           capacity*SIZEOF(*(traversal_data->stats)));
+
     XFREE(traversal_data->matched_patterns,
           capacity*SIZEOF(*(traversal_data->matched_patterns)));
     XFREE(traversal_data->link_targets,
           capacity*SIZEOF(*(traversal_data->link_targets)));
     XFREE(traversal_data->paths,
           capacity*SIZEOF(*(traversal_data->paths)));
+
     XFREE(traversal_data->paths_lens,
           capacity*SIZEOF(*(traversal_data->paths_lens)));
     XFREE(traversal_data->link_targets_lens,
