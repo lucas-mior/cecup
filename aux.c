@@ -320,7 +320,10 @@ update_row_transfer(Message *message) {
         } else {
             struct stat stat;
 
-            if (lstat(full_path, &stat) == 0) {
+            if (lstat(full_path, &stat) < 0) {
+                LOG_ERROR("Error in lstat(%s): %s.\n",
+                          full_path, strerror(errno));
+            } else {
                 char *link_target;
                 int32 link_target_len;
 
