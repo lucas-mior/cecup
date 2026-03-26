@@ -1188,7 +1188,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         {
             rb_pos = 0;
             reason_buf[0] = '\0';
-            for (int32 i = 0; i < REASON_BIT_COUNT; i += 1) {
+            for (uint32 i = 0; i < REASON_BIT_COUNT; i += 1) {
                 char *base_msg;
                 if (!(row->reason & (1 << i))) {
                     continue;
