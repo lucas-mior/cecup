@@ -701,7 +701,7 @@ work_preview(void *user_data) {
                                 break;
                             }
                             if (link_target_dst == NULL) {
-                                LOG("Other side does not have a link .\n");
+                                LOG("Other side does not have a link.\n");
                                 equal = false;
                                 break;
                             }
