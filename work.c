@@ -1072,6 +1072,9 @@ work_rsync_run(char *files_from_filename, bool checksum) {
                     }
                 }
 
+                PRINTLN(path);
+                usleep(500000);
+
                 msg_update = xmalloc(SIZEOF(*msg_update));
                 memset64(msg_update, 0, SIZEOF(*msg_update));
                 msg_update->type = DATA_TYPE_ROW_TRANSFER;
@@ -1153,9 +1156,7 @@ work_rsync(void *user_data) {
         char full_path[MAX_PATH_LENGTH];
         pid_t child_rm;
         int child_status;
-        bool removed;
-
-        removed = false;
+        bool removed = false;
 
         if (task->action != ACTION_DELETE) {
             has_transfers = true;
