@@ -123,6 +123,20 @@ update_remove_row(Message *message) {
             if (td->map) {
                 if ((idx_ptr = hash_lookup_fs_map(td->map, path_test, row_test->path_len))) {
                     int32 idx = *idx_ptr;
+
+                    if (td->inode_map) {
+                        if (S_ISREG(td->stats[idx].st_mode)) {
+                            if (td->stats[idx].st_nlink > 1) {
+                                char inode_str[64];
+                                uint32 n;
+
+                                n = (uint32)itoa2(inode_str, (long)td->stats[idx].st_ino);
+                                hash_remove_fs_map(td->inode_map, inode_str, n);
+                            }
+                        }
+                    }
+
+                    hash_remove_fs_map(td->map, path_test, row_test->path_len);
                     memset64(&td->stats[idx], 0, SIZEOF(struct stat));
                 }
             } else {
@@ -162,6 +176,7 @@ update_remove_row(Message *message) {
             i += 1;
         }
     }
+    return;
 }
 
 static void
