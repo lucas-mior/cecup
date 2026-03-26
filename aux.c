@@ -269,47 +269,42 @@ update_row_transfer(Message *message) {
         SNPRINTF(full_path, "%s/%s", cecup.dst_base, path_test);
 
         if ((idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.map, path_test, (uint32)pattern_len))) {
-            int32 idx;
-            struct stat *st_ptr;
+            int32 idx = *idx_ptr;
+            struct stat *stat = &cecup.traversal_dst.stats[idx];
 
-            idx = *idx_ptr;
-            st_ptr = &cecup.traversal_dst.stats[idx];
-
-            if (lstat(full_path, st_ptr) < 0) {
+            if (lstat(full_path, stat) < 0) {
                 LOG_ERROR("Error in lstat(%s): %s.\n",
                           full_path, strerror(errno));
-            } else {
-                if (S_ISLNK(st_ptr->st_mode)) {
-                    char target[MAX_PATH_LENGTH];
-                    int64 target_len;
+            } else if (S_ISLNK(stat->st_mode)) {
+                char target[MAX_PATH_LENGTH];
+                int64 target_len;
 
-                    if ((target_len = readlink(full_path, target, SIZEOF(target))) > 0) {
-                        target[target_len] = '\0';
-                        if (cecup.traversal_dst.link_targets[idx]) {
-                            XFREE(cecup.traversal_dst.link_targets[idx],
-                                  cecup.traversal_dst.link_targets_lens[idx] + 1);
-                        }
-                        cecup.traversal_dst.link_targets[idx] = xmemdup(target, target_len + 1);
-                        cecup.traversal_dst.link_targets_lens[idx] = (int16)target_len;
+                if ((target_len = readlink(full_path, target, SIZEOF(target))) > 0) {
+                    target[target_len] = '\0';
+                    if (cecup.traversal_dst.link_targets[idx]) {
+                        XFREE(cecup.traversal_dst.link_targets[idx],
+                              cecup.traversal_dst.link_targets_lens[idx] + 1);
                     }
-                } else if (S_ISREG(st_ptr->st_mode) && (st_ptr->st_nlink > 1)) {
-                    char inode_str[64];
-                    uint32 n;
-                    int32 *first_idx_ptr;
+                    cecup.traversal_dst.link_targets[idx] = xmemdup(target, target_len + 1);
+                    cecup.traversal_dst.link_targets_lens[idx] = (int16)target_len;
+                }
+            } else if (S_ISREG(stat->st_mode) && (stat->st_nlink > 1)) {
+                char inode_str[64];
+                uint32 n;
+                int32 *first_idx_ptr;
 
-                    n = (uint32)itoa2(inode_str, (long)st_ptr->st_ino);
-                    first_idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.inode_map, inode_str, n);
-                    if (first_idx_ptr) {
-                        int32 first_idx;
+                n = (uint32)itoa2(inode_str, (long)stat->st_ino);
+                first_idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.inode_map, inode_str, n);
+                if (first_idx_ptr) {
+                    int32 first_idx;
 
-                        first_idx = *first_idx_ptr;
-                        if (first_idx != idx) {
-                            cecup.traversal_dst.link_targets[idx] = cecup.traversal_dst.paths[first_idx];
-                            cecup.traversal_dst.link_targets_lens[idx] = cecup.traversal_dst.paths_lens[first_idx];
-                        }
-                    } else {
-                        hash_insert_fs_map(cecup.traversal_dst.inode_map, xmemdup(inode_str, n + 1), n, idx);
+                    first_idx = *first_idx_ptr;
+                    if (first_idx != idx) {
+                        cecup.traversal_dst.link_targets[idx] = cecup.traversal_dst.paths[first_idx];
+                        cecup.traversal_dst.link_targets_lens[idx] = cecup.traversal_dst.paths_lens[first_idx];
                     }
+                } else {
+                    hash_insert_fs_map(cecup.traversal_dst.inode_map, xmemdup(inode_str, n + 1), n, idx);
                 }
             }
         } else {
