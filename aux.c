@@ -185,7 +185,8 @@ update_row_remove(Message *message) {
                         }
                     }
 
-                    hash_remove_fs_map(traversal_data->map, path_test, row->path_len);
+                    hash_remove_fs_map(traversal_data->map,
+                                       path_test, (uint32)row->path_len);
                     memset64(&traversal_data->stats[idx], 0, SIZEOF(struct stat));
                 }
             }
