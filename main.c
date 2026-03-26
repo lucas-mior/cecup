@@ -294,6 +294,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     cecup.stop_button = gtk_button_new_with_label(_("⏹️ Stop"));
     gtk_widget_set_tooltip_text(cecup.stop_button,
                                 _("Cancel the current task"));
+    cecup.preview_dirty = true;
     cecup.sync_button = gtk_button_new_with_label(_("⏩ Apply Changes"));
     gtk_widget_set_tooltip_text(cecup.sync_button,
                                 _("Start copying and updating all files"));

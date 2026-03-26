@@ -92,10 +92,11 @@ work_check_itemize_line(char *buf_output) {
 }
 
 static void
-work_finalize(void) {
+work_finalize(bool preview_clean) {
     Message *message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
     message->type = DATA_TYPE_ENABLE_BUTTONS;
+    message->preview_clean = preview_clean;
 
     ipc_send_progress(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
 
@@ -515,7 +516,7 @@ work_cleanup(void) {
 static void __attribute__((noreturn))
 work_preview_cancel_and_reset(void) {
     work_cleanup();
-    work_finalize();
+    work_finalize(false);
     g_thread_exit(NULL);
 }
 
@@ -886,7 +887,7 @@ work_preview(void *user_data) {
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
     PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
-    work_finalize();
+    work_finalize(true);
     g_thread_exit(NULL);
 }
 
@@ -1135,7 +1136,7 @@ work_rsync(void *user_data) {
     if (tasks == NULL) {
         if (cecup.ntransfers <= 0) {
             LOG_ERROR("There are no operations to make.\n");
-            work_finalize();
+            work_finalize(false);
             XFREE(thread_data, SIZEOF(*thread_data));
             return NULL;
         }
@@ -1158,7 +1159,7 @@ work_rsync(void *user_data) {
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
             free_task_list(tasks);
-            work_finalize();
+            work_finalize(false);
             XFREE(thread_data, SIZEOF(*thread_data));
             return NULL;
         }
@@ -1215,7 +1216,7 @@ work_rsync(void *user_data) {
     }
 
     if (!has_transfers) {
-        work_finalize();
+        work_finalize(false);
         free_task_list(tasks);
         XFREE(thread_data, SIZEOF(*thread_data));
         return NULL;
@@ -1282,7 +1283,7 @@ work_rsync(void *user_data) {
     if (tasks->count == 0) {
         work_cleanup();
     }
-    work_finalize();
+    work_finalize(false);
     XFREE(thread_data, SIZEOF(*thread_data));
     return NULL;
 }

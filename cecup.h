@@ -325,6 +325,7 @@ typedef struct Message {
 
     bool delete_excluded;
     bool is_dir;
+    bool preview_clean;
 } Message;
 
 typedef struct MessageBatch {
@@ -441,6 +442,7 @@ static struct {
     char **transfers;
     int32 ntransfers;
     int32 transfers_capacity;
+    bool preview_dirty;
 } cecup;
 
 typedef struct ThreadData {

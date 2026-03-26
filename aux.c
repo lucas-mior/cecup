@@ -38,16 +38,38 @@
 static void refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus);
 
 static void
+invalidate_preview(void) {
+    cecup.preview_dirty = true;
+    /* Only update visibility if a task isn't currently running,
+     * otherwise protect_interface_from_user will handle it when the task ends. */
+    if (!gtk_widget_get_sensitive(cecup.stop_button)) {
+        gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+        gtk_widget_set_tooltip_text(cecup.sync_button, _("Click Analysis first"));
+    }
+    return;
+}
+
+static void
 protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.preview_button, !state);
-    gtk_widget_set_sensitive(cecup.sync_button, !state);
     gtk_widget_set_sensitive(cecup.ignore_button, !state);
-
     gtk_widget_set_sensitive(cecup.src_entry, !state);
     gtk_widget_set_sensitive(cecup.dst_entry, !state);
     gtk_widget_set_sensitive(cecup.invert_button, !state);
-
     gtk_widget_set_sensitive(cecup.stop_button, state);
+
+    if (state) {
+        gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+    } else {
+        if (cecup.preview_dirty) {
+            gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+            gtk_widget_set_tooltip_text(cecup.sync_button, _("Click Analysis first"));
+        } else {
+            gtk_widget_set_sensitive(cecup.sync_button, TRUE);
+            gtk_widget_set_tooltip_text(cecup.sync_button,
+                                        _("Start copying and updating all files"));
+        }
+    }
     cecup.stop_working = false;
     return;
 }
@@ -205,14 +227,14 @@ update_row_remove(Message *message) {
 
             if (remove_entirely) {
                 LOG(_("Removing %s entirely from list...\n"), path_test);
-                
+
                 for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
                     if (cecup.rows_visible[k] == row) {
                         for (int32 j = k; j < (cecup.rows_visible_len - 1); j += 1) {
                             cecup.rows_visible[j] = cecup.rows_visible[j + 1];
                         }
                         cecup.rows_visible_len -= 1;
-                        
+
                         cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), k);
                         break;
                     }
@@ -1040,12 +1062,19 @@ update_ui_handler(void *data) {
     case DATA_TYPE_ROW_TRANSFER:
         update_row_transfer(message);
         break;
-    case DATA_TYPE_ENABLE_BUTTONS:
+case DATA_TYPE_ENABLE_BUTTONS:
         if (cecup.refresh_id != 0) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
         }
         refresh_ui_list(REFRESH_FINAL, message->path_to_focus);
+
+        if (message->preview_clean) {
+            cecup.preview_dirty = false;
+        } else {
+            cecup.preview_dirty = true;
+        }
+
         protect_interface_from_user(false);
         break;
     case DATA_TYPE_CLEAR_TREES:

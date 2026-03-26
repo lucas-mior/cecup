@@ -60,7 +60,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
 
     selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
-    
+
     single_sel = GTK_SINGLE_SELECTION(selection);
 
     if ((gtk_widget_get_sensitive(cecup.stop_button))) {
@@ -228,6 +228,7 @@ static void
 on_config_changed(GtkWidget *widget, void *data) {
     (void)widget;
     (void)data;
+    invalidate_preview();
     cecup_get_dirs();
     save_config();
     return;
@@ -276,6 +277,7 @@ on_preview_setting_toggled(GtkCheckButton *b, void *data) {
     (void)b;
     (void)data;
     save_config();
+    invalidate_preview();
     return;
 }
 
@@ -296,6 +298,7 @@ on_delete_after_toggled(GtkCheckButton *b, void *data) {
         g_signal_connect(dialog, "response",
                          G_CALLBACK(gtk_window_destroy), NULL);
         gtk_widget_show(dialog);
+        invalidate_preview();
     }
 
     save_config();
@@ -312,6 +315,7 @@ on_delete_excluded_toggled(GtkCheckButton *b, void *data) {
                                     TRUE);
         g_signal_handlers_unblock_by_func(cecup.delete_after,
                                           on_delete_after_toggled, NULL);
+        invalidate_preview();
     }
     save_config();
     return;
@@ -336,6 +340,7 @@ on_reset_clicked(GtkWidget *b, void *data) {
     gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "unidiff.bash");
     gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "xterm");
     save_config();
+    invalidate_preview();
     return;
 }
 
@@ -594,6 +599,7 @@ on_ignore_response(GtkDialog *dialog, int32 response_id, void *data) {
         content = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
         g_file_set_contents(cecup.ignore_path, content, -1, NULL);
         g_free(content);
+        invalidate_preview();
     }
     gtk_window_destroy(GTK_WINDOW(dialog));
     return;
@@ -651,6 +657,7 @@ on_invert_clicked(GtkWidget *b, void *data) {
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), path_dst);
     gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), path_src);
+    invalidate_preview();
     return;
 }
 
@@ -666,6 +673,7 @@ on_browse_response_src(GtkDialog *dialog, int32 response_id, void *data) {
         gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), path);
         g_free(path);
         g_object_unref(file);
+        invalidate_preview();
     }
     gtk_window_destroy(GTK_WINDOW(dialog));
     return;
@@ -700,6 +708,7 @@ on_browse_response_dst(GtkDialog *dialog, int32 response_id, void *data) {
         gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), path);
         g_free(path);
         g_object_unref(file);
+        invalidate_preview();
     }
     gtk_window_destroy(GTK_WINDOW(dialog));
     return;
@@ -1409,7 +1418,7 @@ on_path_edited(GtkEditable *editable, void *data) {
             message->new_path_len = new_length;
             message->new_path = xmalloc(new_length + 1);
             memcpy64(message->new_path, relative_new, new_length + 1);
-
+            invalidate_preview();
             g_idle_add(update_ui_handler, message);
         }
     }
