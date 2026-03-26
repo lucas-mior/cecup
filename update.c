@@ -36,7 +36,8 @@
 
 #define UI_INTERVAL_MS 100
 
-static void update_list_from_rows(enum RefreshType refresh_type, char *path_to_focus);
+static void update_list_from_rows(enum RefreshType refresh_type,
+                                  char *path_to_focus);
 
 static void
 invalidate_preview(void) {
@@ -250,7 +251,8 @@ update_row_remove(Message *message) {
                 }
                 cecup.rows_len -= 1;
             } else {
-                LOG(_("Updated %s state (missing on side %d)\n"), path_test, deleted_side);
+                LOG(_("Updated %s state (missing on side %d)\n"),
+                    path_test, deleted_side);
                 for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
                     if (cecup.rows_visible[k] == row) {
                         cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), k);
@@ -485,8 +487,10 @@ update_row_rename(Message *message) {
             memcpy64(updated_path + new_path_len, suffix, suffix_len + 1);
 
             if (traversal->map) {
-                hash_remove_fs_map(traversal->map, path, path_len);
-                hash_insert_fs_map(traversal->map, updated_path, updated_path_len, i);
+                hash_remove_fs_map(traversal->map,
+                                   path, path_len);
+                hash_insert_fs_map(traversal->map,
+                                   updated_path, updated_path_len, i);
             }
 
             XFREE(traversal->paths[i], path_len + 1);
@@ -547,7 +551,8 @@ update_row_rename(Message *message) {
                 }
 
                 r_path = row_path_get(r);
-                if ((r->path_len == updated_path_len) && (!memcmp64(r_path, updated_path, updated_path_len))) {
+                if ((r->path_len == updated_path_len)
+                     && !memcmp64(r_path, updated_path, updated_path_len)) {
                     target_row = r;
                     break;
                 }
@@ -565,8 +570,10 @@ update_row_rename(Message *message) {
                     } else {
                         cecup.rows_capacity *= 2;
                     }
-                    cecup.rows = xrealloc(cecup.rows, cecup.rows_capacity * SIZEOF(CecupRow *));
-                    cecup.rows_visible = xrealloc(cecup.rows_visible, cecup.rows_capacity * SIZEOF(CecupRow *));
+                    cecup.rows = xrealloc(cecup.rows,
+                                          cecup.rows_capacity*SIZEOF(CecupRow *));
+                    cecup.rows_visible = xrealloc(cecup.rows_visible,
+                                                  cecup.rows_capacity*SIZEOF(CecupRow *));
                 }
                 cecup.rows[cecup.rows_len] = target_row;
                 cecup.rows_len += 1;
@@ -623,7 +630,12 @@ update_row_rename(Message *message) {
                         row->src_action = ACTION_NEW;
                         row->dst_action = ACTION_NEW;
                     }
-                    row->reason &= ~(REASON_EQUAL | REASON_SIZE | REASON_MTIME | REASON_CTIME | REASON_OWNER | REASON_GROUP | REASON_PERM);
+
+                    row->reason
+                        &= ~(REASON_EQUAL
+                                | REASON_SIZE | REASON_MTIME | REASON_CTIME
+                                | REASON_OWNER | REASON_GROUP | REASON_PERM);
+
                     row->reason |= REASON_NEW;
                 }
 
@@ -636,7 +648,7 @@ update_row_rename(Message *message) {
             }
 
             target_row->reason = 0;
-            if ((target_row->src_path != NULL) && (target_row->dst_path != NULL)) {
+            if (target_row->src_path && target_row->dst_path) {
                 bool attr_diff = false;
 
                 if (target_row->src_size_raw != target_row->dst_size_raw) {
@@ -1307,12 +1319,28 @@ cecup_get_dirs(void) {
 }
 
 static void
+config_bool_set(GKeyFile *key, char *section, char *name, GtkWidget *button) {
+    gboolean state;
+
+    state = false;
+    if (GTK_IS_CHECK_BUTTON(button)) {
+        state = gtk_check_button_get_active(GTK_CHECK_BUTTON(button));
+    } else if (GTK_IS_TOGGLE_BUTTON(button)) {
+        state = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+    }
+
+    g_key_file_set_boolean(key, section, name, state);
+    return;
+}
+
+static void
 save_config(void) {
     GKeyFile *key;
     char *out;
     gsize len;
 
     key = g_key_file_new();
+
     g_key_file_set_string(key, "Paths", "src",
                           gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L])));
     g_key_file_set_string(key, "Paths", "dst",
@@ -1321,33 +1349,17 @@ save_config(void) {
                           gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry)));
     g_key_file_set_string(key, "Tools", "term",
                           gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry)));
-    g_key_file_set_boolean(
-        key, "Filters", "new",
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new)));
-    g_key_file_set_boolean(
-        key, "Filters", "hard",
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard)));
-    g_key_file_set_boolean(
-        key, "Filters", "update",
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update)));
-    g_key_file_set_boolean(
-        key, "Filters", "equal",
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_equal)));
-    g_key_file_set_boolean(
-        key, "Filters", "delete",
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete)));
-    g_key_file_set_boolean(
-        key, "Filters", "ignore",
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore)));
-    g_key_file_set_boolean(
-        key, "Options", "check_fs",
-        gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs)));
-    g_key_file_set_boolean(
-        key, "Options", "delete_after",
-        gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after)));
-    g_key_file_set_boolean(
-        key, "Options", "delete_excluded",
-        gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded)));
+
+    config_bool_set(key, "Filters", "new",    cecup.filter_new);
+    config_bool_set(key, "Filters", "hard",   cecup.filter_hard);
+    config_bool_set(key, "Filters", "update", cecup.filter_update);
+    config_bool_set(key, "Filters", "equal",  cecup.filter_equal);
+    config_bool_set(key, "Filters", "delete", cecup.filter_delete);
+    config_bool_set(key, "Filters", "ignore", cecup.filter_ignore);
+
+    config_bool_set(key, "Options", "check_fs",        cecup.check_fs);
+    config_bool_set(key, "Options", "delete_after",    cecup.delete_after);
+    config_bool_set(key, "Options", "delete_excluded", cecup.delete_excluded);
 
     out = g_key_file_to_data(key, &len, NULL);
     g_file_set_contents(cecup.config_path, out, (gssize)len, NULL);
