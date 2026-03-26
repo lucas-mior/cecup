@@ -284,7 +284,9 @@ case "$target" in
     vg_flags="$vg_flags --show-leak-kinds=definite"
     vg_flags="$vg_flags --errors-for-leak-kinds=definite"
     vg_flags="$vg_flags --track-origins=yes"
-    vg_flags="$vg_flags --suppressions=valgrind.supress"
+    # vg_flags="$vg_flags --suppressions=valgrind.supress"
+    vg_flags="$vg_flags --gen-suppressions=yes"
+    vg_flags="$vg_flags --main-stacksize=18388608"
 
     trace_on
     G_DEBUG=gc-friendly G_SLICE=always-malloc \
