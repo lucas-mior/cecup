@@ -1131,7 +1131,7 @@ work_rsync_run(char *files_from_filename, bool checksum) {
 
                 msg_update = xmalloc(SIZEOF(*msg_update));
                 memset64(msg_update, 0, SIZEOF(*msg_update));
-                msg_update->type = DATA_TYPE_TREE_UPDATE;
+                msg_update->type = DATA_TYPE_ROW_TRANSFER;
                 msg_update->path_len = path_len;
                 msg_update->src_path = xmalloc(path_len + 1);
                 memcpy64(msg_update->src_path, path, path_len + 1);
@@ -1270,7 +1270,7 @@ work_rsync(void *user_data) {
 
             msg_rm = xmalloc(SIZEOF(*msg_rm));
             memset64(msg_rm, 0, SIZEOF(*msg_rm));
-            msg_rm->type = DATA_TYPE_REMOVE_ROW;
+            msg_rm->type = DATA_TYPE_ROW_REMOVE;
             msg_rm->side = task->side;
             msg_rm->path_len = task->path_len;
             msg_rm->src_path = xmalloc(msg_rm->path_len + 1);

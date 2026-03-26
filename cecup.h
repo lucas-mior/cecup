@@ -91,8 +91,8 @@
     X(LOG_ERROR)          \
     X(LOG_CMD)            \
     \
-    X(TREE_UPDATE)        \
-    X(REMOVE_ROW)         \
+    X(ROW_TRANSFER)       \
+    X(ROW_REMOVE)         \
     X(ENABLE_BUTTONS)     \
     X(CLEAR_TREES)        \
     X(PROGRESS_PREVIEW)   \
