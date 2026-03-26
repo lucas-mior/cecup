@@ -65,12 +65,14 @@ traversal_data_push(TraversalData *data, char *path, int32 path_len,
 
         data->stats = xrealloc(data->stats,
                                data->ncapacity*SIZEOF(*(data->stats)));
+
         data->paths = xrealloc(data->paths,
-                               data->ncapacity*SIZEOF(*(data->paths)));
+                               data->ncapacity*SIZEOF(char *));
         data->link_targets = xrealloc(data->link_targets,
-                                      data->ncapacity*SIZEOF(*(data->link_targets)));
+                                      data->ncapacity*SIZEOF(char *));
         data->matched_patterns = xrealloc(data->matched_patterns,
-                                          data->ncapacity*SIZEOF(*(data->matched_patterns)));
+                                          data->ncapacity*SIZEOF(char *));
+
         data->paths_lens = xrealloc(data->paths_lens,
                                     data->ncapacity*SIZEOF(*(data->paths_lens)));
         data->link_targets_lens = xrealloc(data->link_targets_lens,
