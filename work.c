@@ -262,8 +262,8 @@ work_traverse_fs(Traversal *data) {
         }
 
         if (ent->fts_info == FTS_ERR
-                || ent->fts_info == FTS_NS
-                || ent->fts_info == FTS_DNR) {
+            || ent->fts_info == FTS_NS
+            || ent->fts_info == FTS_DNR) {
             continue;
         }
 
@@ -459,7 +459,7 @@ work_traverse_fs(Traversal *data) {
         }
 
         traversal_push(data, path, path_len,
-                       (struct stat *)ent->fts_statp,
+                       ent->fts_statp,
                        link_target, link_target_len,
                        matched_pattern, matched_pattern_len);
     }
