@@ -30,6 +30,7 @@
 #include <errno.h>
 
 #include "cecup.h"
+#include "aux.c"
 #include "util.c"
 #include "update.c"
 #include "ignore_patterns.c"
