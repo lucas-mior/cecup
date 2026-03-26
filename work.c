@@ -1130,8 +1130,6 @@ work_rsync_run(char *files_from_filename, bool checksum) {
                     }
                 }
 
-                PRINT(path); PRINTLN(path_len);
-
                 msg_update = xmalloc(SIZEOF(*msg_update));
                 memset64(msg_update, 0, SIZEOF(*msg_update));
                 msg_update->type = DATA_TYPE_TREE_UPDATE;
@@ -1274,6 +1272,7 @@ work_rsync(void *user_data) {
             msg_rm = xmalloc(SIZEOF(*msg_rm));
             memset64(msg_rm, 0, SIZEOF(*msg_rm));
             msg_rm->type = DATA_TYPE_REMOVE_ROW;
+            msg_rm->side = task->side;
             msg_rm->path_len = task->path_len;
             msg_rm->src_path = xmalloc(msg_rm->path_len + 1);
             memcpy64(msg_rm->src_path, task->path, msg_rm->path_len + 1);
@@ -1302,7 +1301,6 @@ work_rsync(void *user_data) {
         file = cecup.transfers[i];
         written = 0;
         left = strlen32(file);
-        PRINTLN(file);
 
         while ((w = write64(files_from_fd, &file[written], left)) > 0) {
             written += w;

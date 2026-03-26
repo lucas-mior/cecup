@@ -51,6 +51,122 @@ protect_interface_from_user(bool state) {
 }
 
 static void
+update_remove_row(Message *message) {
+    char *pattern = message->src_path;
+    int32 pattern_len = message->path_len;
+    int32 deleted_side = message->side;
+
+    for (int32 i = 0; i < cecup.rows_len;) {
+        CecupRow *row_test;
+        char *path_test;
+        bool match;
+
+        row_test = cecup.rows[i];
+        path_test = row_path_get(row_test);
+        match = false;
+
+        if (pattern[pattern_len - 1] == '/') {
+            if (BEGINS_WITH(path_test, pattern, pattern_len)) {
+                match = true;
+            }
+        } else {
+            if (row_test->path_len == pattern_len) {
+                if (!memcmp64(path_test, pattern, pattern_len)) {
+                    match = true;
+                }
+            }
+        }
+
+        if (match) {
+            bool remove_entirely;
+            TraversalData *td;
+            int32 *idx_ptr;
+
+            remove_entirely = false;
+
+            if (deleted_side == L) {
+                row_test->src_path = NULL;
+                td = &cecup.traversal_src;
+            } else {
+                row_test->dst_path = NULL;
+                td = &cecup.traversal_dst;
+            }
+
+            if (row_test->src_path == NULL) {
+                if (row_test->dst_path == NULL) {
+                    remove_entirely = true;
+                }
+            }
+
+            if (!remove_entirely) {
+                if (deleted_side == L) {
+                    row_test->src_action = ACTION_IGNORE;
+                    row_test->dst_action = ACTION_DELETE;
+                    row_test->reason = REASON_MISSING;
+                } else {
+                    if (row_test->reason & REASON_HARDLINK) {
+                        row_test->src_action = ACTION_HARDLINK;
+                        row_test->dst_action = ACTION_HARDLINK;
+                    } else if (row_test->reason & REASON_SYMLINK) {
+                        row_test->src_action = ACTION_SYMLINK;
+                        row_test->dst_action = ACTION_SYMLINK;
+                    } else {
+                        row_test->src_action = ACTION_NEW;
+                        row_test->dst_action = ACTION_NEW;
+                    }
+                    row_test->reason
+                        &= ~(REASON_EQUAL
+                                | REASON_SIZE | REASON_MTIME | REASON_CTIME
+                                | REASON_OWNER | REASON_GROUP | REASON_PERM);
+                    row_test->reason |= REASON_NEW;
+                }
+            }
+
+            if (td->map) {
+                if ((idx_ptr = hash_lookup_fs_map(td->map, path_test, row_test->path_len))) {
+                    int32 idx; idx = *idx_ptr;
+                    memset64(&td->stats[idx], 0, SIZEOF(struct stat));
+                }
+            } else {
+                error("NO MAP!\n");
+            }
+
+            if (remove_entirely) {
+                LOG(_("Removing %s entirely from list...\n"), path_test);
+                
+                for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
+                    if (cecup.rows_visible[k] == row_test) {
+                        for (int32 j = k; j < (cecup.rows_visible_len - 1); j += 1) {
+                            cecup.rows_visible[j] = cecup.rows_visible[j + 1];
+                        }
+                        cecup.rows_visible_len -= 1;
+                        
+                        cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), k);
+                        break;
+                    }
+                }
+
+                for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
+                    cecup.rows[j] = cecup.rows[j + 1];
+                }
+                cecup.rows_len -= 1;
+            } else {
+                LOG(_("Updated %s state (missing on side %d)\n"), path_test, deleted_side);
+                for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
+                    if (cecup.rows_visible[k] == row_test) {
+                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), k);
+                        break;
+                    }
+                }
+                i += 1;
+            }
+        } else {
+            i += 1;
+        }
+    }
+}
+
+static void
 free_task_list(TaskList *tasks) {
     if (tasks == NULL) {
         return;
@@ -389,8 +505,6 @@ static gboolean
 update_ui_handler(void *data) {
     GtkTextIter end;
     GtkTextTagTable *table;
-    char *pattern;
-    int32 pattern_len;
     int32 current_store_count;
     Message *message = data;
 
@@ -429,60 +543,15 @@ update_ui_handler(void *data) {
                                       message->fraction);
         break;
     case DATA_TYPE_REMOVE_ROW:
-        pattern = message->src_path;
-        pattern_len = message->path_len;
-
-        for (int32 i = 0; i < cecup.rows_len;) {
-            CecupRow *row_test = cecup.rows[i];
-            char *path_test = row_path_get(row_test);
-            bool match = false;
-
-            if (pattern[pattern_len - 1] == '/') {
-                if (BEGINS_WITH(path_test, pattern, pattern_len)) {
-                    match = true;
-                }
-            } else {
-                if (row_test->path_len == pattern_len) {
-                    if (!memcmp64(path_test, pattern, pattern_len)) {
-                        match = true;
-                    }
-                }
-            }
-
-            if (match) {
-                LOG(_("Removing %s from list...\n"), path_test);
-                
-                for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-                    if (cecup.rows_visible[k] == row_test) {
-                        for (int32 j = k; j < (cecup.rows_visible_len - 1); j += 1) {
-                            cecup.rows_visible[j] = cecup.rows_visible[j + 1];
-                        }
-                        cecup.rows_visible_len -= 1;
-                        
-                        cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), k);
-                        break;
-                    }
-                }
-
-                for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
-                    cecup.rows[j] = cecup.rows[j + 1];
-                }
-                cecup.rows_len -= 1;
-            } else {
-                i += 1;
-            }
-        }
+        update_remove_row(message);
         break;
     case DATA_TYPE_TREE_UPDATE:
-        pattern = message->src_path;
-        pattern_len = message->path_len;
-
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
             CecupRow *row_test = cecup.rows[i];
             char *path_test = row_path_get(row_test);
             
-            if (row_test->path_len == pattern_len) {
-                if (!memcmp64(path_test, pattern, pattern_len)) {
+            if (row_test->path_len == message->path_len) {
+                if (!memcmp64(path_test, message->src_path, message->path_len)) {
                     row_test->src_action = ACTION_EQUAL;
                     row_test->dst_action = ACTION_EQUAL;
                     row_test->reason = REASON_EQUAL;
