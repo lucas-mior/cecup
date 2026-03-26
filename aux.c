@@ -466,7 +466,6 @@ update_row_rename(Message *message) {
 
     for (int32 i = 0; i < cecup.rows_len;) {
         CecupRow *row = cecup.rows[i];
-        char *path_test = row_path_get(row);
         bool match = false;
         char *my_path;
 
