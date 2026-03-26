@@ -79,15 +79,15 @@ update_row_remove(Message *message) {
 
         if (match) {
             bool remove_entirely = false;
-            TraversalData *td;
+            TraversalData *traversal_data;
             int32 *idx_ptr;
 
             if (deleted_side == L) {
                 row_test->src_path = NULL;
-                td = &cecup.traversal_src;
+                traversal_data = &cecup.traversal_src;
             } else {
                 row_test->dst_path = NULL;
-                td = &cecup.traversal_dst;
+                traversal_data = &cecup.traversal_dst;
             }
 
             if (row_test->src_path == NULL) {
@@ -120,24 +120,26 @@ update_row_remove(Message *message) {
                 }
             }
 
-            if (td->map) {
-                if ((idx_ptr = hash_lookup_fs_map(td->map, path_test, row_test->path_len))) {
+            if (traversal_data->map) {
+                if ((idx_ptr = hash_lookup_fs_map(traversal_data->map,
+                                                  path_test,
+                                                  (uint32)row_test->path_len))) {
                     int32 idx = *idx_ptr;
 
-                    if (td->inode_map) {
-                        if (S_ISREG(td->stats[idx].st_mode)) {
-                            if (td->stats[idx].st_nlink > 1) {
+                    if (traversal_data->inode_map) {
+                        if (S_ISREG(traversal_data->stats[idx].st_mode)) {
+                            if (traversal_data->stats[idx].st_nlink > 1) {
                                 char inode_str[64];
                                 uint32 n;
 
-                                n = (uint32)itoa2(inode_str, (long)td->stats[idx].st_ino);
-                                hash_remove_fs_map(td->inode_map, inode_str, n);
+                                n = (uint32)itoa2(inode_str, (long)traversal_data->stats[idx].st_ino);
+                                hash_remove_fs_map(traversal_data->inode_map, inode_str, n);
                             }
                         }
                     }
 
-                    hash_remove_fs_map(td->map, path_test, row_test->path_len);
-                    memset64(&td->stats[idx], 0, SIZEOF(struct stat));
+                    hash_remove_fs_map(traversal_data->map, path_test, row_test->path_len);
+                    memset64(&traversal_data->stats[idx], 0, SIZEOF(struct stat));
                 }
             } else {
                 error("NO MAP!\n");
