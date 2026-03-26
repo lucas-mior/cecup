@@ -1020,23 +1020,12 @@ work_rsync_run(char *files_from_filename, bool checksum) {
             int64 line_len;
             int64 remaining;
             char *path;
-            bool only_space = true;
-            char *p = buf_output;
             char end = *eol;
 
             line_len = (int64)(eol - buf_output);
             *eol = '\0';
 
-            while (*p) {
-                if (!isspace(*p)) {
-                    only_space = false;
-                    break;
-                }
-                p += 1;
-            }
-            if (!only_space) {
-                LOG("%s%c", buf_output, end);
-            }
+            LOG("%s%c", buf_output, end);
 
             if ((path = work_check_itemize_line(buf_output))) {
                 int32 path_len;
