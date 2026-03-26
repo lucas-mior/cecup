@@ -280,12 +280,15 @@ esac
 case "$target" in
 "valgrind")
     vg_flags="$vg_flags --error-exitcode=1"
-    # vg_flags="$vg_flags --errors-for-leak-kinds=all"
-    # vg_flags="$vg_flags --leak-check=full "
-    # vg_flags="$vg_flags --show-leak-kinds=all"
-    # vg_flags="$vg_flags --track-origins=yes"
+    vg_flags="$vg_flags --leak-check=full"
+    vg_flags="$vg_flags --show-leak-kinds=definite"
+    vg_flags="$vg_flags --errors-for-leak-kinds=definite"
+    vg_flags="$vg_flags --track-origins=yes"
+    vg_flags="$vg_flags --suppressions=valgrind.supress"
+
     trace_on
-    valgrind $vg_flags -s --tool=memcheck bin/$program 2>&1 \
+    G_DEBUG=gc-friendly G_SLICE=always-malloc \
+        valgrind $vg_flags -s --tool=memcheck bin/$program 2>&1 \
         | tee "valgrind_output_$(date +%s).txt"
     trace_off
     exit

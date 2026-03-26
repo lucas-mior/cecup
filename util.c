@@ -636,10 +636,12 @@ xfree(char *file, int32 line, void *pointer, int64 size) {
                        (llong)size);
             fatal(EXIT_FAILURE);
         }
-        error_impl(file, line,
-                   "Freeing pointer of size %lld [%p]\n", (llong)size, pointer);
         if (pointer) {
-            memset64(pointer, MEM_FREED, size);
+            error_impl(file, line,
+                       "Freeing pointer of size %lld [%p]\n", (llong)size, pointer);
+            if (pointer && !RUNNING_ON_VALGRIND) {
+                memset64(pointer, MEM_FREED, size);
+            }
         }
     }
     free(pointer);

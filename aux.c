@@ -1117,8 +1117,8 @@ case DATA_TYPE_ENABLE_BUTTONS:
     XFREE(message->old_path, message->old_path_len + 1);
     XFREE(message->new_path, message->new_path_len + 1);
 
-    XFREE(message->link_target, message->link_target_len);
-    XFREE(message->ignore_pattern, message->ignore_pattern_len);
+    XFREE(message->link_target, message->link_target_len + 1);
+    XFREE(message->ignore_pattern, message->ignore_pattern_len + 1);
     XFREE(message, sizeof(*message));
 
     return G_SOURCE_REMOVE;
