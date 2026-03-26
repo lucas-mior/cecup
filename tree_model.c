@@ -194,6 +194,36 @@ cecup_list_model_update(CecupListModel *self,
     return;
 }
 
+static void
+cecup_list_model_row_removed(CecupListModel *self, int32 index) {
+    if (index < 0) {
+        return;
+    }
+
+    if ((index < self->proxies_capacity) && self->proxies[index]) {
+        g_object_unref(self->proxies[index]);
+        self->proxies[index] = NULL;
+    }
+
+    for (int32 i = index; i < (self->proxies_capacity - 1); i += 1) {
+        self->proxies[i] = self->proxies[i + 1];
+    }
+    self->proxies[self->proxies_capacity - 1] = NULL;
+
+    g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 0);
+    return;
+}
+
+static void
+cecup_list_model_row_changed(CecupListModel *self, int32 index) {
+    if (index < 0) {
+        return;
+    }
+
+    g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 1);
+    return;
+}
+
 static inline void
 tree_model_functions_sink(void) {
     (void)cecup_list_model_new;

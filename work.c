@@ -230,7 +230,7 @@ work_traverse_fs(TraversalData *data) {
     paths[0] = data->base_path;
     paths[1] = NULL;
 
-    if ((fts_handle 
+    if ((fts_handle
          = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
         if (cecup.stop_working == false) {
             error(_("Error walking directory %s: %s.\n"),
@@ -567,7 +567,7 @@ work_cleanup(void) {
     return;
 }
 
-static void __attribute__((noreturn)) 
+static void __attribute__((noreturn))
 work_preview_cancel_and_reset(void) {
     work_cleanup();
     work_finalize();
@@ -1105,6 +1105,8 @@ work_rsync_run(char *files_from_filename, bool checksum) {
             if ((path = work_check_itemize_line(buf_output))) {
                 int32 path_len;
                 char *sep;
+                Message *msg_update;
+
                 while (*path == ' ') {
                     path += 1;
                 }
@@ -1129,6 +1131,14 @@ work_rsync_run(char *files_from_filename, bool checksum) {
                 }
 
                 PRINT(path); PRINTLN(path_len);
+
+                msg_update = xmalloc(SIZEOF(*msg_update));
+                memset64(msg_update, 0, SIZEOF(*msg_update));
+                msg_update->type = DATA_TYPE_TREE_UPDATE;
+                msg_update->path_len = path_len;
+                msg_update->src_path = xmalloc(path_len + 1);
+                memcpy64(msg_update->src_path, path, path_len + 1);
+                g_idle_add(update_ui_handler, msg_update);
             }
 
             remaining = buf_output_pos - (line_len + 1);
@@ -1257,7 +1267,17 @@ work_rsync(void *user_data) {
         }
 
         if (removed) {
+            Message *msg_rm;
+
             LOG("Removed %s...\n", full_path);
+
+            msg_rm = xmalloc(SIZEOF(*msg_rm));
+            memset64(msg_rm, 0, SIZEOF(*msg_rm));
+            msg_rm->type = DATA_TYPE_REMOVE_ROW;
+            msg_rm->path_len = task->path_len;
+            msg_rm->src_path = xmalloc(msg_rm->path_len + 1);
+            memcpy64(msg_rm->src_path, task->path, msg_rm->path_len + 1);
+            g_idle_add(update_ui_handler, msg_rm);
         }
     }
 

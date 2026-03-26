@@ -382,6 +382,9 @@ refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
     return;
 }
 
+static void cecup_list_model_row_removed(CecupListModel *self, int32 index);
+static void cecup_list_model_row_changed(CecupListModel *self, int32 index);
+
 static gboolean
 update_ui_handler(void *data) {
     GtkTextIter end;
@@ -448,6 +451,19 @@ update_ui_handler(void *data) {
 
             if (match) {
                 LOG(_("Removing %s from list...\n"), path_test);
+                
+                for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
+                    if (cecup.rows_visible[k] == row_test) {
+                        for (int32 j = k; j < (cecup.rows_visible_len - 1); j += 1) {
+                            cecup.rows_visible[j] = cecup.rows_visible[j + 1];
+                        }
+                        cecup.rows_visible_len -= 1;
+                        
+                        cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), k);
+                        break;
+                    }
+                }
+
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                     cecup.rows[j] = cecup.rows[j + 1];
                 }
@@ -456,8 +472,31 @@ update_ui_handler(void *data) {
                 i += 1;
             }
         }
+        break;
+    case DATA_TYPE_TREE_UPDATE:
+        pattern = message->src_path;
+        pattern_len = message->path_len;
 
-        refresh_ui_list(REFRESH_PARTIAL, NULL);
+        for (int32 i = 0; i < cecup.rows_len; i += 1) {
+            CecupRow *row_test = cecup.rows[i];
+            char *path_test = row_path_get(row_test);
+            
+            if (row_test->path_len == pattern_len) {
+                if (!memcmp64(path_test, pattern, pattern_len)) {
+                    row_test->src_action = ACTION_EQUAL;
+                    row_test->dst_action = ACTION_EQUAL;
+                    row_test->reason = REASON_EQUAL;
+                    
+                    for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
+                        if (cecup.rows_visible[k] == row_test) {
+                            cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), k);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
         break;
     case DATA_TYPE_ENABLE_BUTTONS:
         if (cecup.refresh_id != 0) {
@@ -489,7 +528,6 @@ update_ui_handler(void *data) {
                                       0.0);
         break;
     case DATA_TYPE_ADD_ROW:
-    case DATA_TYPE_TREE_UPDATE:
     case DATA_TYPE_LAST:
     default:
         LOG("Ignoring %s.\n", DATA_TYPE_str(message->type));
