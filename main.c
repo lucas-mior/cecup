@@ -412,14 +412,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(main_vbox), paths_hbox);
 
     entry_hbox[L] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    cecup.src_entry = gtk_entry_new();
-    gtk_widget_set_tooltip_text(cecup.src_entry,
+    cecup.dir_entry[L] = gtk_entry_new();
+    gtk_widget_set_tooltip_text(cecup.dir_entry[L],
                                 _("Folder containing your original files"));
-    gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), default_src);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), default_src);
     browse[L] = gtk_button_new_with_label(_("Select Folder"));
 
-    gtk_widget_set_hexpand(cecup.src_entry, TRUE);
-    gtk_box_append(GTK_BOX(entry_hbox[L]), cecup.src_entry);
+    gtk_widget_set_hexpand(cecup.dir_entry[L], TRUE);
+    gtk_box_append(GTK_BOX(entry_hbox[L]), cecup.dir_entry[L]);
     gtk_box_append(GTK_BOX(entry_hbox[L]), browse[L]);
     gtk_widget_set_hexpand(entry_hbox[L], TRUE);
     gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[L]);
@@ -430,14 +430,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(paths_hbox), cecup.invert_button);
 
     entry_hbox[R] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    cecup.dst_entry = gtk_entry_new();
-    gtk_widget_set_tooltip_text(cecup.dst_entry,
+    cecup.dir_entry[R] = gtk_entry_new();
+    gtk_widget_set_tooltip_text(cecup.dir_entry[R],
                                 _("Folder where the backup will be stored"));
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), default_dst);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), default_dst);
     browse[R] = gtk_button_new_with_label(_("Select Folder"));
 
-    gtk_widget_set_hexpand(cecup.dst_entry, TRUE);
-    gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.dst_entry);
+    gtk_widget_set_hexpand(cecup.dir_entry[R], TRUE);
+    gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.dir_entry[R]);
     gtk_box_append(GTK_BOX(entry_hbox[R]), browse[R]);
     gtk_widget_set_hexpand(entry_hbox[R], TRUE);
     gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[R]);
@@ -585,9 +585,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_top(cecup.stats_label, 5);
     gtk_widget_set_margin_bottom(cecup.stats_label, 5);
 
-    cecup.src_entry_id = g_signal_connect(cecup.src_entry, "activate",
+    cecup.src_entry_id = g_signal_connect(cecup.dir_entry[L], "activate",
                                           G_CALLBACK(on_config_changed), NULL);
-    cecup.dst_entry_id = g_signal_connect(cecup.dst_entry, "activate",
+    cecup.dst_entry_id = g_signal_connect(cecup.dir_entry[R], "activate",
                                           G_CALLBACK(on_config_changed), NULL);
 
     do {
@@ -601,11 +601,11 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         }
 
         if ((value = g_key_file_get_string(key, "Paths", "src", NULL))) {
-            gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), value);
+            gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), value);
             g_free(value);
         }
         if ((value = g_key_file_get_string(key, "Paths", "dst", NULL))) {
-            gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), value);
+            gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), value);
             g_free(value);
         }
         if ((value = g_key_file_get_string(key, "Tools", "diff", NULL))) {

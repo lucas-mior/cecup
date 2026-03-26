@@ -406,8 +406,8 @@ on_sync_clicked(GtkWidget *b, void *data) {
 
     (void)data;
     (void)b;
-    path_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.src_entry));
-    path_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dst_entry));
+    path_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
+    path_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R]));
 
     dialog = gtk_message_dialog_new(
         GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
@@ -649,14 +649,14 @@ on_invert_clicked(GtkWidget *b, void *data) {
     (void)b;
     (void)data;
 
-    entry_text = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.src_entry));
+    entry_text = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
     SNPRINTF(path_src, "%s", entry_text);
 
-    entry_text = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dst_entry));
+    entry_text = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R]));
     SNPRINTF(path_dst, "%s", entry_text);
 
-    gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), path_dst);
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), path_src);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), path_dst);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), path_src);
     invalidate_preview();
     return;
 }
@@ -670,7 +670,7 @@ on_browse_response_src(GtkDialog *dialog, int32 response_id, void *data) {
 
         file = gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog));
         path = g_file_get_path(file);
-        gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), path);
+        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), path);
         g_free(path);
         g_object_unref(file);
         invalidate_preview();
@@ -705,7 +705,7 @@ on_browse_response_dst(GtkDialog *dialog, int32 response_id, void *data) {
 
         file = gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog));
         path = g_file_get_path(file);
-        gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), path);
+        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), path);
         g_free(path);
         g_object_unref(file);
         invalidate_preview();

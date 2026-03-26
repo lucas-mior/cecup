@@ -54,8 +54,8 @@ static void
 protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.preview_button, !state);
     gtk_widget_set_sensitive(cecup.ignore_button, !state);
-    gtk_widget_set_sensitive(cecup.src_entry, !state);
-    gtk_widget_set_sensitive(cecup.dst_entry, !state);
+    gtk_widget_set_sensitive(cecup.dir_entry[L], !state);
+    gtk_widget_set_sensitive(cecup.dir_entry[R], !state);
     gtk_widget_set_sensitive(cecup.invert_button, !state);
     gtk_widget_set_sensitive(cecup.stop_button, state);
 
@@ -1221,9 +1221,9 @@ update_ui_handler(void *data) {
 static void
 cecup_reset_dir(int32 side) {
     if (side == L) {
-        gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), "./");
+        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), "./");
     } else {
-        gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), "./");
+        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), "./");
     }
     return;
 }
@@ -1235,8 +1235,8 @@ cecup_get_dirs(void) {
     char *tmp_src;
     char *tmp_dst;
 
-    tmp_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.src_entry));
-    tmp_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dst_entry));
+    tmp_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
+    tmp_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R]));
 
     save_config();
 
@@ -1285,14 +1285,14 @@ cecup_get_dirs(void) {
         cecup.dst_base_len = len;
     }
 
-    g_signal_handler_block(cecup.src_entry, cecup.src_entry_id);
-    g_signal_handler_block(cecup.dst_entry, cecup.dst_entry_id);
+    g_signal_handler_block(cecup.dir_entry[L], cecup.src_entry_id);
+    g_signal_handler_block(cecup.dir_entry[R], cecup.dst_entry_id);
 
-    gtk_editable_set_text(GTK_EDITABLE(cecup.src_entry), cecup.src_base);
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dst_entry), cecup.dst_base);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), cecup.src_base);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), cecup.dst_base);
 
-    g_signal_handler_unblock(cecup.src_entry, cecup.src_entry_id);
-    g_signal_handler_unblock(cecup.dst_entry, cecup.dst_entry_id);
+    g_signal_handler_unblock(cecup.dir_entry[L], cecup.src_entry_id);
+    g_signal_handler_unblock(cecup.dir_entry[R], cecup.dst_entry_id);
 
     return;
 }
@@ -1305,9 +1305,9 @@ save_config(void) {
 
     key = g_key_file_new();
     g_key_file_set_string(key, "Paths", "src",
-                          gtk_editable_get_text(GTK_EDITABLE(cecup.src_entry)));
+                          gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L])));
     g_key_file_set_string(key, "Paths", "dst",
-                          gtk_editable_get_text(GTK_EDITABLE(cecup.dst_entry)));
+                          gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R])));
     g_key_file_set_string(key, "Tools", "diff",
                           gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry)));
     g_key_file_set_string(key, "Tools", "term",
