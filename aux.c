@@ -141,8 +141,6 @@ update_row_remove(Message *message) {
                     hash_remove_fs_map(traversal_data->map, path_test, row_test->path_len);
                     memset64(&traversal_data->stats[idx], 0, SIZEOF(struct stat));
                 }
-            } else {
-                error("NO MAP!\n");
             }
 
             if (remove_entirely) {
