@@ -1209,18 +1209,17 @@ work_rsync(void *user_data) {
         }
 
         if (removed) {
-            Message *message;
-
-            LOG("Removed %s...\n", full_path);
-
-            message = xmalloc(SIZEOF(*message));
+            Message *message = xmalloc(SIZEOF(*message));
             memset64(message, 0, SIZEOF(*message));
+
             message->type = DATA_TYPE_ROW_REMOVE;
             message->side = task->side;
             message->path_len = task->path_len;
             message->src_path = xmalloc(message->path_len + 1);
             memcpy64(message->src_path, task->path, message->path_len + 1);
             g_idle_add(update_ui_handler, message);
+
+            LOG("Removed %s...\n", full_path);
         }
     }
 
