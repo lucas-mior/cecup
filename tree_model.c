@@ -244,7 +244,7 @@ tree_model_functions_sink(void) {
 }
 
 #if TESTING_tree_model
-#include "aux.c"
+#include "update.c"
 int
 main(void) {
     exit(EXIT_SUCCESS);

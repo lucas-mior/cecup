@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined(AUX_C)
-#define AUX_C
+#if !defined(UPDATE_C)
+#define UPDATE_C
 
 #include <gtk/gtk.h>
 #include <glib/gmain.h>
@@ -29,9 +29,9 @@
 #include "ignore_patterns.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
-#define TESTING_aux 1
-#elif !defined(TESTING_aux)
-#define TESTING_aux 0
+#define TESTING_update 1
+#elif !defined(TESTING_update)
+#define TESTING_update 0
 #endif
 
 #define UI_INTERVAL_MS 100
@@ -1413,7 +1413,7 @@ ipc_send_progress(enum DataType type, double fraction) {
     return;
 }
 
-#if 0 == TESTING_aux
+#if 0 == TESTING_update
 static inline void
 aux_functions_sink(void) {
     (void)ipc_send_progress;
@@ -1424,7 +1424,7 @@ aux_functions_sink(void) {
 }
 #endif
 
-#if TESTING_aux
+#if TESTING_update
 #include <assert.h>
 #include <string.h>
 
@@ -1441,4 +1441,4 @@ main(void) {
 
 #endif
 
-#endif /* AUX_C */
+#endif /* UPDATE_C */

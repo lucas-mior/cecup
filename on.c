@@ -20,7 +20,7 @@
 
 #include "cecup.h"
 #include "work.c"
-#include "aux.c"
+#include "update.c"
 #include "on.h"
 #include "on_menu.c"
 

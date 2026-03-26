@@ -31,7 +31,7 @@
 
 #include "cecup.h"
 #include "util.c"
-#include "aux.c"
+#include "update.c"
 #include "ignore_patterns.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)

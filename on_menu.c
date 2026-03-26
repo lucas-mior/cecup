@@ -22,7 +22,7 @@
 
 #include "cecup.h"
 #include "util.c"
-#include "aux.c"
+#include "update.c"
 #include "work.c"
 #include "on.h"
 
