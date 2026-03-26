@@ -138,7 +138,7 @@ typedef struct Traversal {
     int16 *paths_lens;
     int16 *link_targets_lens;
     int16 *matched_patterns_lens;
-    int32 *nlinks;
+    int16 *nlinks;
 } Traversal;
 
 typedef struct TextInfo {
