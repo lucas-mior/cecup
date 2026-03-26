@@ -108,12 +108,12 @@ update_row_remove(Message *message) {
     int32 deleted_side = message->side;
 
     for (int32 i = 0; i < cecup.rows_len;) {
-        CecupRow *row_test;
+        CecupRow *row;
         char *path_test;
         bool match;
 
-        row_test = cecup.rows[i];
-        path_test = row_path_get(row_test);
+        row = cecup.rows[i];
+        path_test = row_path_get(row);
         match = false;
 
         if (pattern[pattern_len - 1] == '/') {
@@ -121,7 +121,7 @@ update_row_remove(Message *message) {
                 match = true;
             }
         } else {
-            if (row_test->path_len == pattern_len) {
+            if (row->path_len == pattern_len) {
                 if (!memcmp64(path_test, pattern, pattern_len)) {
                     match = true;
                 }
@@ -134,47 +134,47 @@ update_row_remove(Message *message) {
             int32 *idx_ptr;
 
             if (deleted_side == L) {
-                row_test->src_path = NULL;
+                row->src_path = NULL;
                 traversal_data = &cecup.traversal_src;
             } else {
-                row_test->dst_path = NULL;
+                row->dst_path = NULL;
                 traversal_data = &cecup.traversal_dst;
             }
 
-            if (row_test->src_path == NULL) {
-                if (row_test->dst_path == NULL) {
+            if (row->src_path == NULL) {
+                if (row->dst_path == NULL) {
                     remove_entirely = true;
                 }
             }
 
             if (!remove_entirely) {
                 if (deleted_side == L) {
-                    row_test->src_action = ACTION_IGNORE;
-                    row_test->dst_action = ACTION_DELETE;
-                    row_test->reason = REASON_MISSING;
+                    row->src_action = ACTION_IGNORE;
+                    row->dst_action = ACTION_DELETE;
+                    row->reason = REASON_MISSING;
                 } else {
-                    if (row_test->reason & REASON_HARDLINK) {
-                        row_test->src_action = ACTION_HARDLINK;
-                        row_test->dst_action = ACTION_HARDLINK;
-                    } else if (row_test->reason & REASON_SYMLINK) {
-                        row_test->src_action = ACTION_SYMLINK;
-                        row_test->dst_action = ACTION_SYMLINK;
+                    if (row->reason & REASON_HARDLINK) {
+                        row->src_action = ACTION_HARDLINK;
+                        row->dst_action = ACTION_HARDLINK;
+                    } else if (row->reason & REASON_SYMLINK) {
+                        row->src_action = ACTION_SYMLINK;
+                        row->dst_action = ACTION_SYMLINK;
                     } else {
-                        row_test->src_action = ACTION_NEW;
-                        row_test->dst_action = ACTION_NEW;
+                        row->src_action = ACTION_NEW;
+                        row->dst_action = ACTION_NEW;
                     }
-                    row_test->reason
+                    row->reason
                         &= ~(REASON_EQUAL
                                 | REASON_SIZE | REASON_MTIME | REASON_CTIME
                                 | REASON_OWNER | REASON_GROUP | REASON_PERM);
-                    row_test->reason |= REASON_NEW;
+                    row->reason |= REASON_NEW;
                 }
             }
 
             if (traversal_data->map) {
                 if ((idx_ptr = hash_lookup_fs_map(traversal_data->map,
                                                   path_test,
-                                                  (uint32)row_test->path_len))) {
+                                                  (uint32)row->path_len))) {
                     int32 idx = *idx_ptr;
 
                     if (traversal_data->inode_map) {
@@ -189,7 +189,7 @@ update_row_remove(Message *message) {
                         }
                     }
 
-                    hash_remove_fs_map(traversal_data->map, path_test, row_test->path_len);
+                    hash_remove_fs_map(traversal_data->map, path_test, row->path_len);
                     memset64(&traversal_data->stats[idx], 0, SIZEOF(struct stat));
                 }
             }
@@ -198,7 +198,7 @@ update_row_remove(Message *message) {
                 LOG(_("Removing %s entirely from list...\n"), path_test);
                 
                 for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-                    if (cecup.rows_visible[k] == row_test) {
+                    if (cecup.rows_visible[k] == row) {
                         for (int32 j = k; j < (cecup.rows_visible_len - 1); j += 1) {
                             cecup.rows_visible[j] = cecup.rows_visible[j + 1];
                         }
@@ -216,7 +216,7 @@ update_row_remove(Message *message) {
             } else {
                 LOG(_("Updated %s state (missing on side %d)\n"), path_test, deleted_side);
                 for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-                    if (cecup.rows_visible[k] == row_test) {
+                    if (cecup.rows_visible[k] == row) {
                         cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), k);
                         break;
                     }
