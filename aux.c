@@ -238,6 +238,8 @@ update_row_transfer(Message *message) {
         CecupRow *row = cecup.rows[i];
         char *path_test = row_path_get(row);
         bool show_equal;
+        char full_path[MAX_PATH_LENGTH];
+        int32 *idx_ptr;
 
         if (row->path_len != pattern_len) {
             continue;
@@ -264,99 +266,94 @@ update_row_transfer(Message *message) {
         memcpy64(row->dst_mtime_text, row->src_mtime_text,
                  SIZEOF(row->dst_mtime_text));
 
-        {
-            char full_path[MAX_PATH_LENGTH];
-            int32 *idx_ptr;
+        SNPRINTF(full_path, "%s/%s", cecup.dst_base, path_test);
 
-            SNPRINTF(full_path, "%s/%s", cecup.dst_base, path_test);
+        if ((idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.map, path_test, (uint32)pattern_len))) {
+            int32 idx;
+            struct stat *st_ptr;
 
-            if ((idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.map, path_test, (uint32)pattern_len))) {
-                int32 idx;
-                struct stat *st_ptr;
+            idx = *idx_ptr;
+            st_ptr = &cecup.traversal_dst.stats[idx];
 
-                idx = *idx_ptr;
-                st_ptr = &cecup.traversal_dst.stats[idx];
+            if (lstat(full_path, st_ptr) == 0) {
+                if (S_ISLNK(st_ptr->st_mode)) {
+                    char target[MAX_PATH_LENGTH];
+                    int64 target_len;
 
-                if (lstat(full_path, st_ptr) == 0) {
-                    if (S_ISLNK(st_ptr->st_mode)) {
-                        char target[MAX_PATH_LENGTH];
-                        int64 target_len;
-
-                        if ((target_len = readlink(full_path, target, SIZEOF(target))) > 0) {
-                            target[target_len] = '\0';
-                            if (cecup.traversal_dst.link_targets[idx]) {
-                                XFREE(cecup.traversal_dst.link_targets[idx],
-                                      cecup.traversal_dst.link_targets_lens[idx] + 1);
-                            }
-                            cecup.traversal_dst.link_targets[idx] = xmemdup(target, target_len + 1);
-                            cecup.traversal_dst.link_targets_lens[idx] = (int16)target_len;
+                    if ((target_len = readlink(full_path, target, SIZEOF(target))) > 0) {
+                        target[target_len] = '\0';
+                        if (cecup.traversal_dst.link_targets[idx]) {
+                            XFREE(cecup.traversal_dst.link_targets[idx],
+                                  cecup.traversal_dst.link_targets_lens[idx] + 1);
                         }
-                    } else if (S_ISREG(st_ptr->st_mode) && (st_ptr->st_nlink > 1)) {
-                        char inode_str[64];
-                        uint32 n;
-                        int32 *first_idx_ptr;
+                        cecup.traversal_dst.link_targets[idx] = xmemdup(target, target_len + 1);
+                        cecup.traversal_dst.link_targets_lens[idx] = (int16)target_len;
+                    }
+                } else if (S_ISREG(st_ptr->st_mode) && (st_ptr->st_nlink > 1)) {
+                    char inode_str[64];
+                    uint32 n;
+                    int32 *first_idx_ptr;
 
-                        n = (uint32)itoa2(inode_str, (long)st_ptr->st_ino);
-                        first_idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.inode_map, inode_str, n);
-                        if (first_idx_ptr) {
-                            int32 first_idx;
+                    n = (uint32)itoa2(inode_str, (long)st_ptr->st_ino);
+                    first_idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.inode_map, inode_str, n);
+                    if (first_idx_ptr) {
+                        int32 first_idx;
 
-                            first_idx = *first_idx_ptr;
-                            if (first_idx != idx) {
-                                cecup.traversal_dst.link_targets[idx] = cecup.traversal_dst.paths[first_idx];
-                                cecup.traversal_dst.link_targets_lens[idx] = cecup.traversal_dst.paths_lens[first_idx];
-                            }
-                        } else {
-                            hash_insert_fs_map(cecup.traversal_dst.inode_map, xmemdup(inode_str, n + 1), n, idx);
+                        first_idx = *first_idx_ptr;
+                        if (first_idx != idx) {
+                            cecup.traversal_dst.link_targets[idx] = cecup.traversal_dst.paths[first_idx];
+                            cecup.traversal_dst.link_targets_lens[idx] = cecup.traversal_dst.paths_lens[first_idx];
                         }
+                    } else {
+                        hash_insert_fs_map(cecup.traversal_dst.inode_map, xmemdup(inode_str, n + 1), n, idx);
                     }
                 }
-            } else {
-                struct stat st;
+            }
+        } else {
+            struct stat st;
 
-                if (lstat(full_path, &st) == 0) {
-                    char *link_target;
-                    int32 link_target_len;
+            if (lstat(full_path, &st) == 0) {
+                char *link_target;
+                int32 link_target_len;
 
-                    link_target = NULL;
-                    link_target_len = 0;
+                link_target = NULL;
+                link_target_len = 0;
 
-                    if (S_ISLNK(st.st_mode)) {
-                        char target[MAX_PATH_LENGTH];
-                        int64 target_len;
+                if (S_ISLNK(st.st_mode)) {
+                    char target[MAX_PATH_LENGTH];
+                    int64 target_len;
 
-                        if ((target_len = readlink(full_path, target, SIZEOF(target))) > 0) {
-                            target[target_len] = '\0';
-                            link_target = xmemdup(target, target_len + 1);
-                            link_target_len = (int32)target_len;
-                        }
-                    } else if (S_ISREG(st.st_mode) && (st.st_nlink > 1)) {
-                        char inode_str[64];
-                        uint32 n;
-                        int32 *first_idx_ptr;
-
-                        n = (uint32)itoa2(inode_str, (long)st.st_ino);
-                        first_idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.inode_map, inode_str, n);
-                        if (first_idx_ptr) {
-                            int32 first_idx;
-
-                            first_idx = *first_idx_ptr;
-                            link_target = cecup.traversal_dst.paths[first_idx];
-                            link_target_len = cecup.traversal_dst.paths_lens[first_idx];
-                        } else {
-                            hash_insert_fs_map(cecup.traversal_dst.inode_map, xmemdup(inode_str, n + 1), n, cecup.traversal_dst.nfiles);
-                        }
+                    if ((target_len = readlink(full_path, target, SIZEOF(target))) > 0) {
+                        target[target_len] = '\0';
+                        link_target = xmemdup(target, target_len + 1);
+                        link_target_len = (int32)target_len;
                     }
+                } else if (S_ISREG(st.st_mode) && (st.st_nlink > 1)) {
+                    char inode_str[64];
+                    uint32 n;
+                    int32 *first_idx_ptr;
 
-                    traversal_data_push(&cecup.traversal_dst,
-                                        xmemdup(path_test, pattern_len + 1),
-                                        pattern_len,
-                                        &st,
-                                        link_target,
-                                        link_target_len,
-                                        NULL,
-                                        0);
+                    n = (uint32)itoa2(inode_str, (long)st.st_ino);
+                    first_idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.inode_map, inode_str, n);
+                    if (first_idx_ptr) {
+                        int32 first_idx;
+
+                        first_idx = *first_idx_ptr;
+                        link_target = cecup.traversal_dst.paths[first_idx];
+                        link_target_len = cecup.traversal_dst.paths_lens[first_idx];
+                    } else {
+                        hash_insert_fs_map(cecup.traversal_dst.inode_map, xmemdup(inode_str, n + 1), n, cecup.traversal_dst.nfiles);
+                    }
                 }
+
+                traversal_data_push(&cecup.traversal_dst,
+                                    xmemdup(path_test, pattern_len + 1),
+                                    pattern_len,
+                                    &st,
+                                    link_target,
+                                    link_target_len,
+                                    NULL,
+                                    0);
             }
         }
 
