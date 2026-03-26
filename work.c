@@ -615,7 +615,6 @@ work_preview(void *user_data) {
         int32 path_len;
         int32 link_target_len;
         int32 matched_pattern_len;
-        int32 nlinks_src;
 
         if ((int64)bucket_src->key <= 0) {
             continue;
@@ -628,7 +627,6 @@ work_preview(void *user_data) {
         link_target_len = cecup.traversal_src.link_targets_lens[src_idx];
         matched_pattern_len = cecup.traversal_src.matched_patterns_lens[src_idx];
         path_len = cecup.traversal_src.paths_lens[src_idx];
-        nlinks_src = (int32)stat_src->st_nlink;
 
         is_symlink = S_ISLNK(stat_src->st_mode);
         is_hardlink = S_ISREG(stat_src->st_mode) && link_target_src;
@@ -640,7 +638,6 @@ work_preview(void *user_data) {
             int32 dst_idx = *dst_idx_ptr;
             struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
             char *link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
-            int32 nlinks_dst = (int32)stat_dst->st_nlink;
 
             dst_path = bucket_src->key;
             dst_size = stat_dst->st_size;
@@ -695,29 +692,49 @@ work_preview(void *user_data) {
 
                     do {
                         if (is_hardlink) {
+                            char inode_str[64];
+                            int32 n;
+                            int32 *master_src_ptr;
+                            int32 *master_dst_ptr;
+
                             if (!S_ISREG(stat_dst->st_mode)) {
-                                LOG("Other side is not a regular file.\n");
                                 equal = false;
                                 break;
                             }
                             if (link_target_dst == NULL) {
-                                LOG("Other side does not have a link.\n");
                                 equal = false;
                                 break;
                             }
-                            if (nlinks_dst != nlinks_src) {
-                                LOG("Other side target is not the same.\n");
+                            if (strcmp(link_target_src, link_target_dst) != 0) {
                                 equal = false;
                                 break;
                             }
-                            equal = true;
+
+                            n = itoa2(inode_str, (long)stat_src->st_ino);
+                            master_src_ptr = hash_lookup_inode_map(cecup.traversal_src.inode_map,
+                                                                   inode_str, n);
+                            n = itoa2(inode_str, (long)stat_dst->st_ino);
+                            master_dst_ptr = hash_lookup_inode_map(cecup.traversal_dst.inode_map,
+                                                                   inode_str, n);
+
+                            if (master_src_ptr && master_dst_ptr) {
+                                int32 count_src = cecup.traversal_src.nlinks_in_tree[*master_src_ptr];
+                                int32 count_dst = cecup.traversal_dst.nlinks_in_tree[*master_dst_ptr];
+                                if (count_src != count_dst) {
+                                    equal = false;
+                                    break;
+                                }
+                            } else {
+                                equal = false;
+                                break;
+                            }
+
+                            if (!attributes_differ) {
+                                equal = true;
+                            }
                             break;
                         } else {
                             if (!attributes_differ) {
-                                if (action == ACTION_HARDLINK) {
-                                    error("attributes_differ for %s hardlink\n",
-                                          bucket_src->key);
-                                }
                                 equal = true;
                             }
                         }
@@ -885,6 +902,7 @@ work_preview(void *user_data) {
     PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
     work_finalize(true);
     g_thread_exit(NULL);
+    return NULL;
 }
 
 static bool
