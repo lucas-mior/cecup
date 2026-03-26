@@ -1056,7 +1056,6 @@ work_rsync_run(char *files_from_filename, bool checksum) {
                 }
 
                 PRINTLN(path);
-                usleep(200000);
 
                 if ((path_len != 2) || memcmp64(path, "./", 2)) {
                     Message *msg_update = xmalloc(SIZEOF(*msg_update));
@@ -1133,6 +1132,8 @@ work_rsync(void *user_data) {
             work_finalize(false);
             XFREE(thread_data, SIZEOF(*thread_data));
             return NULL;
+        } else {
+            has_transfers = true;
         }
         tasks = xmalloc(sizeof(*tasks));
         memset64(tasks, 0, sizeof(*tasks));
@@ -1210,6 +1211,7 @@ work_rsync(void *user_data) {
     }
 
     if (!has_transfers) {
+        LOG_ERROR("No transfers to make.\n");
         work_finalize(false);
         free_task_list(tasks);
         XFREE(thread_data, SIZEOF(*thread_data));
