@@ -690,8 +690,8 @@ work_preview(void *user_data) {
                         attributes_differ = true;
                     }
 
-                    do {
-                        if (is_hardlink) {
+                    if (is_hardlink) {
+                        do {
                             char inode_str[64];
                             int32 n;
                             int32 *master_src_ptr;
@@ -705,7 +705,9 @@ work_preview(void *user_data) {
                                 equal = false;
                                 break;
                             }
-                            if (strcmp(link_target_src, link_target_dst) != 0) {
+                            if (strcmp(link_target_src, link_target_dst)
+                                && strcmp(link_target_src, dst_path)
+                                && strcmp(bucket_src->key, dst_path)) {
                                 equal = false;
                                 break;
                             }
@@ -732,13 +734,12 @@ work_preview(void *user_data) {
                             if (!attributes_differ) {
                                 equal = true;
                             }
-                            break;
-                        } else {
-                            if (!attributes_differ) {
-                                equal = true;
-                            }
+                        }  while (0);
+                    } else {
+                        if (!attributes_differ) {
+                            equal = true;
                         }
-                    } while (0);
+                    }
                 }
 
                 if (equal) {
