@@ -235,37 +235,37 @@ update_row_transfer(Message *message) {
     pattern_len = message->path_len;
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupRow *row_test;
+        CecupRow *row;
         char *path_test;
         bool show_equal;
 
-        row_test = cecup.rows[i];
-        path_test = row_path_get(row_test);
+        row = cecup.rows[i];
+        path_test = row_path_get(row);
 
-        if (row_test->path_len != pattern_len) {
+        if (row->path_len != pattern_len) {
             continue;
         }
         if (memcmp64(path_test, pattern, pattern_len)) {
             continue;
         }
 
-        row_test->src_action = ACTION_EQUAL;
-        row_test->dst_action = ACTION_EQUAL;
-        row_test->reason = REASON_EQUAL;
+        row->src_action = ACTION_EQUAL;
+        row->dst_action = ACTION_EQUAL;
+        row->reason = REASON_EQUAL;
 
-        if (row_test->dst_path == NULL) {
-            row_test->dst_path = row_test->src_path;
-        } else if (row_test->src_path == NULL) {
-            row_test->src_path = row_test->dst_path;
+        if (row->dst_path == NULL) {
+            row->dst_path = row->src_path;
+        } else if (row->src_path == NULL) {
+            row->src_path = row->dst_path;
         }
 
-        row_test->dst_size_raw = row_test->src_size_raw;
-        memcpy64(row_test->dst_size_text, row_test->src_size_text,
-                 SIZEOF(row_test->dst_size_text));
+        row->dst_size_raw = row->src_size_raw;
+        memcpy64(row->dst_size_text, row->src_size_text,
+                 SIZEOF(row->dst_size_text));
 
-        row_test->dst_mtime_raw = row_test->src_mtime_raw;
-        memcpy64(row_test->dst_mtime_text, row_test->src_mtime_text,
-                 SIZEOF(row_test->dst_mtime_text));
+        row->dst_mtime_raw = row->src_mtime_raw;
+        memcpy64(row->dst_mtime_text, row->src_mtime_text,
+                 SIZEOF(row->dst_mtime_text));
 
         {
             char full_path[MAX_PATH_LENGTH];
@@ -368,7 +368,7 @@ update_row_transfer(Message *message) {
 
         if (show_equal) {
             for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-                if (cecup.rows_visible[k] == row_test) {
+                if (cecup.rows_visible[k] == row) {
                     cecup_list_model_row_changed(
                         CECUP_LIST_MODEL(cecup.store), k);
                     break;
@@ -376,7 +376,7 @@ update_row_transfer(Message *message) {
             }
         } else {
             for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-                if (cecup.rows_visible[k] == row_test) {
+                if (cecup.rows_visible[k] == row) {
                     for (int32 j = k; j < (cecup.rows_visible_len - 1); j += 1) {
                         cecup.rows_visible[j] = cecup.rows_visible[j + 1];
                     }
