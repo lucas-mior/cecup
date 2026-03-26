@@ -986,6 +986,7 @@ work_rsync_run(char *files_from_filename, bool checksum) {
     rsync_args[rsync_args_len++] = "--times";
     rsync_args[rsync_args_len++] = "--owner";
     rsync_args[rsync_args_len++] = "--group";
+    rsync_args[rsync_args_len++] = "--itemize-changes";
     rsync_args[rsync_args_len++] = "--files-from";
     rsync_args[rsync_args_len++] = files_from_filename;
     rsync_args[rsync_args_len++] = "--iconv=.,.";
