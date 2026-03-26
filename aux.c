@@ -1020,6 +1020,7 @@ update_ui_handler(void *data) {
     GtkTextTagTable *table;
     int32 current_store_count;
     bool is_cr;
+    bool buffer_ends_in_lf;
     Message *message = data;
 
     switch (message->type) {
@@ -1037,7 +1038,18 @@ update_ui_handler(void *data) {
 
         gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
 
-        if (is_cr) {
+        buffer_ends_in_lf = true;
+        if (gtk_text_iter_get_offset(&end) > 0) {
+            GtkTextIter last_char = end;
+            gtk_text_iter_backward_char(&last_char);
+            if (gtk_text_iter_get_char(&last_char) != '\n') {
+                buffer_ends_in_lf = false;
+            }
+        }
+
+        /* If this message ends in CR,
+         * or the buffer is currently on an unfinished line, overwrite it. */
+        if (is_cr || !buffer_ends_in_lf) {
             start_line = end;
             gtk_text_iter_set_line_offset(&start_line, 0);
             gtk_text_buffer_delete(cecup.log_buffer, &start_line, &end);

@@ -975,7 +975,6 @@ work_rsync_run(char *files_from_filename, bool checksum) {
 
     do {
         int64 r;
-        char *eol;
 
         pipes[0].revents = 0;
         pipes[1].revents = 0;
@@ -1015,13 +1014,26 @@ work_rsync_run(char *files_from_filename, bool checksum) {
         }
         buf_output_pos += r;
 
-        while ((eol = memchr64(buf_output, '\n', buf_output_pos))
-               || (eol = memchr64(buf_output, '\r', buf_output_pos))) {
+        while (buf_output_pos > 0) {
+            char *eol_lf = memchr64(buf_output, '\n', buf_output_pos);
+            char *eol_cr = memchr64(buf_output, '\r', buf_output_pos);
+            char *eol;
+            char end;
             int64 line_len;
-            int64 remaining;
             char *path;
-            char end = *eol;
+            int64 remaining;
 
+            if (eol_lf && eol_cr) {
+                eol = (eol_lf < eol_cr) ? eol_lf : eol_cr;
+            } else {
+                eol = eol_lf ? eol_lf : eol_cr;
+            }
+
+            if (eol == NULL) {
+                break;
+            }
+
+            end = *eol;
             line_len = (int64)(eol - buf_output);
             *eol = '\0';
 
@@ -1067,9 +1079,6 @@ work_rsync_run(char *files_from_filename, bool checksum) {
                 memmove64(buf_output, eol + 1, remaining);
             }
             buf_output_pos = remaining;
-            if (buf_output_pos <= 0) {
-                break;
-            }
         }
 
     read_error_pipe:
