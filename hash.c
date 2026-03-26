@@ -99,9 +99,9 @@ typedef uint64_t uint64;
 #endif
 
 struct CommonBucket {
+    uint64 hash;
     char *key;
     int32 key_len;
-    uint64 hash;
     int32 value;
 };
 
@@ -132,9 +132,9 @@ struct CommonMap {
 #define Map CAT(Hash_, HASH_TYPE)
 
 typedef struct Bucket {
+    uint64 hash;
     char *key;
     int32 key_len;
-    uint64 hash;
 #if defined(HASH_VALUE_TYPE)
     HASH_VALUE_TYPE value;
 #endif
@@ -602,7 +602,7 @@ hash_expected_collisions(void *map) {
 
 typedef struct String {
     char *s;
-    uint32 len;
+    int32 len;
     int32 value;
 } String;
 
@@ -610,20 +610,20 @@ static String
 random_string(Arena *arena, uint32 nbytes) {
     char characters[] = "abcdefghijklmnopqrstuvwxyz1234567890";
     String string;
-    uint32 size;
-    uint32 len;
+    int32 size;
+    int32 len;
 
-    len = nbytes + (uint32)rand() % 16u;
+    len = nbytes + rand() % 16u;
     size = len + 1;
     string.s = arena_push(arena, size);
 
-    for (uint32 i = 0; i < len; i += 1) {
-        uint32 c = (uint32)rand() % (sizeof(characters) - 1);
+    for (int32 i = 0; i < len; i += 1) {
+        int32 c = rand() % (sizeof(characters) - 1);
         string.s[i] = characters[c];
     }
     string.s[len] = '\0';
     string.len = len;
-    string.value = (int32)rand();
+    string.value = rand();
 
     return string;
 }
@@ -647,8 +647,8 @@ main(void) {
     ASSERT(map);
     initial_capacity = map->capacity;
 
-    str1.len = (uint32)strlen32(str1.s);
-    str2.len = (uint32)strlen32(str2.s);
+    str1.len = strlen32(str1.s);
+    str2.len = strlen32(str2.s);
 
     ASSERT(hash_insert_map(map, str1.s, str1.len, str1.value));
     ASSERT(!hash_insert_map(map, str1.s, str1.len, 1));
