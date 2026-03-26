@@ -615,6 +615,7 @@ work_preview(void *user_data) {
         int32 path_len;
         int32 link_target_len;
         int32 matched_pattern_len;
+        int32 nlinks_src;
 
         if ((int64)bucket_src->key <= 0) {
             continue;
@@ -627,6 +628,7 @@ work_preview(void *user_data) {
         link_target_len = cecup.traversal_src.link_targets_lens[src_idx];
         matched_pattern_len = cecup.traversal_src.matched_patterns_lens[src_idx];
         path_len = cecup.traversal_src.paths_lens[src_idx];
+        nlinks_src = stat_src->st_nlink;
 
         is_symlink = S_ISLNK(stat_src->st_mode);
         is_hardlink = S_ISREG(stat_src->st_mode) && link_target_src;
@@ -638,6 +640,7 @@ work_preview(void *user_data) {
             int32 dst_idx = *dst_idx_ptr;
             struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
             char *link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
+            int32 nlinks_dst = stat_dst->st_nlink;
 
             dst_path = bucket_src->key;
             dst_size = stat_dst->st_size;
@@ -702,7 +705,7 @@ work_preview(void *user_data) {
                                 equal = false;
                                 break;
                             }
-                            if (strcmp(link_target_src, link_target_dst)) {
+                            if (nlinks_dst != nlinks_src) {
                                 LOG("Other side target is not the same.\n");
                                 LOG("%s != %s", link_target_src, link_target_dst);
                                 equal = false;
