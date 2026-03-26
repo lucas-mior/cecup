@@ -1221,7 +1221,6 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             break;
         }
         case COLUMN_SIZE:
-
             if (side == L) {
                 size_raw = row->src_size_raw;
             } else {
@@ -1231,7 +1230,6 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             tip_text = tip_buffer;
             break;
         case COLUMN_MTIME:
-
             if (side == L) {
                 mtime_text = row->src_mtime_text;
             } else {
