@@ -1018,12 +1018,9 @@ refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
 
 static void
 update_row_ignore(Message *message) {
-    char *pattern_str;
-    int32 pattern_len;
     bool delete_excluded;
 
-    pattern_str = message->ignore_pattern;
-    pattern_len = message->ignore_pattern_len;
+    (void)message;
     delete_excluded = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
 
     invalidate_preview();
