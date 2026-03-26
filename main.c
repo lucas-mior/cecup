@@ -810,8 +810,8 @@ main(int32 argc, char **argv) {
 
     XFREE(cecup.rows, cecup.rows_capacity*SIZEOF(CecupRow *));
     XFREE(cecup.rows_visible, cecup.rows_capacity*SIZEOF(CecupRow *));
-    XFREE(cecup.src_base, cecup.src_base_len);
-    XFREE(cecup.dst_base, cecup.dst_base_len);
+    XFREE(cecup.src_base, cecup.src_base_len + 1);
+    XFREE(cecup.dst_base, cecup.dst_base_len + 1);
 
     arena_destroy(cecup.arena);
     g_mutex_clear(&cecup.arena_mutex);
