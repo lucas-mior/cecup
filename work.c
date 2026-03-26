@@ -497,6 +497,7 @@ work_cleanup(void) {
               capacity_src*SIZEOF(*(cecup.traversal_src.link_targets_lens)));
         XFREE(cecup.traversal_src.matched_patterns_lens,
               capacity_src*SIZEOF(*(cecup.traversal_src.matched_patterns_lens)));
+
         memset64(&cecup.traversal_src, 0, SIZEOF(cecup.traversal_src));
 
         for (int32 i = 0; i < cecup.traversal_dst.nfiles; i += 1) {
