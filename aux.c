@@ -57,6 +57,13 @@ traversal_data_push(TraversalData *data, char *path, int32 path_len,
     int32 idx;
 
     if (data->nfiles >= data->ncapacity) {
+        int64 lens_type_size = SIZEOF(*(data->paths_lens));
+
+        ASSERT_EQUAL(SIZEOF(*(data->paths_lens)),
+                     SIZEOF(*(data->link_targets_lens)));
+        ASSERT_EQUAL(SIZEOF(*(data->paths_lens)),
+                     SIZEOF(*(data->matched_patterns_lens)));
+
         if (data->ncapacity == 0) {
             data->ncapacity = 1024;
         } else {
@@ -74,11 +81,11 @@ traversal_data_push(TraversalData *data, char *path, int32 path_len,
                                           data->ncapacity*SIZEOF(char *));
 
         data->paths_lens = xrealloc(data->paths_lens,
-                                    data->ncapacity*SIZEOF(*(data->paths_lens)));
+                                    data->ncapacity*lens_type_size);
         data->link_targets_lens = xrealloc(data->link_targets_lens,
-                                           data->ncapacity*SIZEOF(*(data->link_targets_lens)));
+                                           data->ncapacity*lens_type_size);
         data->matched_patterns_lens = xrealloc(data->matched_patterns_lens,
-                                               data->ncapacity*SIZEOF(*(data->matched_patterns_lens)));
+                                               data->ncapacity*lens_type_size);
     }
 
     idx = data->nfiles;
