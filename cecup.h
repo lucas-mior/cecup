@@ -103,7 +103,6 @@
 #define error2(...) fprintf(stderr, __VA_ARGS__)
 #endif
 
-// Hash definitions for file system mapping
 #define HASH_VALUE_TYPE int32
 #define HASH_VALUE_FORMATTER "%d"
 #define HASH_PADDING_TYPE uint32
@@ -112,13 +111,21 @@
 #define HASH_TYPE fs_map
 #include "hash.c"
 
+#define HASH_VALUE_TYPE int32
+#define HASH_VALUE_FORMATTER "%d"
+#define HASH_PADDING_TYPE uint32
+#define HASH_DUPLICATE_KEYS 1
+#define HASH_AUTO_RESIZE 1
+#define HASH_TYPE inode_map
+#include "hash.c"
+
 typedef struct TraversalData {
     char *base_path;
     int32 base_path_len;
     int64 file_count;
 
     struct Hash_fs_map *map;
-    struct Hash_fs_map *inode_map;
+    struct Hash_inode_map *inode_map;
 
     int32 ncapacity;
     int32 nfiles;
@@ -429,13 +436,8 @@ static struct {
     int32 ignore_count;
     int32 ignore_capacity;
 
-    // Persisted Traversal State
     TraversalData traversal_src;
     TraversalData traversal_dst;
-    struct Hash_fs_map *src_map;
-    struct Hash_fs_map *dst_map;
-    struct Hash_fs_map *src_inode_map;
-    struct Hash_fs_map *dst_inode_map;
     char **transfers;
     int32 ntransfers;
     int32 transfers_capacity;

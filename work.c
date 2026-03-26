@@ -405,7 +405,7 @@ work_traverse_fs(TraversalData *data) {
             int32 *first_idx_ptr;
 
             n = (uint32)itoa2(inode_str, (long)ent->fts_statp->st_ino);
-            first_idx_ptr = hash_lookup_fs_map(data->inode_map, inode_str, n);
+            first_idx_ptr = hash_lookup_inode_map(data->inode_map, inode_str, n);
             if (first_idx_ptr) {
                 int32 first_idx;
 
@@ -418,9 +418,9 @@ work_traverse_fs(TraversalData *data) {
                     data->link_targets_lens[first_idx] = (int16)path_len;
                 }
             } else {
-                hash_insert_fs_map(data->inode_map,
-                                   xmemdup(inode_str, n + 1), n,
-                                   data->nfiles);
+                hash_insert_inode_map(data->inode_map,
+                                      inode_str, n,
+                                      data->nfiles);
             }
         }
 
@@ -491,15 +491,15 @@ work_traverse_clean(TraversalData *traversal_data) {
 
 static void
 work_cleanup(void) {
-    hash_destroy_fs_map(cecup.src_map);
-    cecup.src_map = NULL;
-    hash_destroy_fs_map(cecup.dst_map);
-    cecup.dst_map = NULL;
+    hash_destroy_fs_map(cecup.traversal_src.map);
+    cecup.traversal_src.map = NULL;
+    hash_destroy_fs_map(cecup.traversal_dst.map);
+    cecup.traversal_dst.map = NULL;
 
-    hash_destroy_fs_map(cecup.src_inode_map);
-    cecup.src_inode_map = NULL;
-    hash_destroy_fs_map(cecup.dst_inode_map);
-    cecup.dst_inode_map = NULL;
+    hash_destroy_inode_map(cecup.traversal_src.inode_map);
+    cecup.traversal_src.map = NULL;
+    hash_destroy_inode_map(cecup.traversal_dst.inode_map);
+    cecup.traversal_dst.map = NULL;
 
     work_traverse_clean(&cecup.traversal_src);
     work_traverse_clean(&cecup.traversal_dst);
@@ -562,20 +562,16 @@ work_preview(void *user_data) {
 
     ignore_patterns_load();
 
-    cecup.src_map = hash_create_fs_map(1024);
-    cecup.dst_map = hash_create_fs_map(1024);
-    cecup.src_inode_map = hash_create_fs_map(1024);
-    cecup.dst_inode_map = hash_create_fs_map(1024);
+    cecup.traversal_src.map = hash_create_fs_map(1024);
+    cecup.traversal_dst.map = hash_create_fs_map(1024);
+    cecup.traversal_src.inode_map = hash_create_inode_map(1024);
+    cecup.traversal_dst.inode_map = hash_create_inode_map(1024);
 
     cecup.traversal_src.base_path = cecup.src_base;
     cecup.traversal_src.base_path_len = cecup.src_base_len;
-    cecup.traversal_src.map = cecup.src_map;
-    cecup.traversal_src.inode_map = cecup.src_inode_map;
 
     cecup.traversal_dst.base_path = cecup.dst_base;
     cecup.traversal_dst.base_path_len = cecup.dst_base_len;
-    cecup.traversal_dst.map = cecup.dst_map;
-    cecup.traversal_dst.inode_map = cecup.dst_inode_map;
 
     LOG(_("Traversing file systems...\n"));
     if (!same_fs) {
@@ -604,8 +600,8 @@ work_preview(void *user_data) {
     nfiles_total = cecup.traversal_src.file_count + cecup.traversal_dst.file_count;
     LOG(_("Found %lld files to analyse...\n"), (llong)nfiles_total);
 
-    for (uint32 i = 0; i < cecup.src_map->capacity; i += 1) {
-        Bucket_fs_map *bucket_src = &cecup.src_map->array[i];
+    for (uint32 i = 0; i < cecup.traversal_src.map->capacity; i += 1) {
+        Bucket_fs_map *bucket_src = &(cecup.traversal_src.map->array[i]);
         int32 src_idx;
         int32 *dst_idx_ptr;
         struct stat *stat_src;
@@ -643,7 +639,7 @@ work_preview(void *user_data) {
         is_dir = S_ISDIR(stat_src->st_mode);
 
         if ((dst_idx_ptr
-             = hash_lookup_fs_map(cecup.dst_map, bucket_src->key, (uint32)path_len))) {
+             = hash_lookup_fs_map(cecup.traversal_dst.map, bucket_src->key, (uint32)path_len))) {
             int32 dst_idx = *dst_idx_ptr;
             struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
             char *link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
@@ -820,8 +816,8 @@ work_preview(void *user_data) {
         }
     }
 
-    for (uint32 i = 0; i < cecup.dst_map->capacity; i += 1) {
-        Bucket_fs_map *bucket_dst = &cecup.dst_map->array[i];
+    for (uint32 i = 0; i < cecup.traversal_dst.map->capacity; i += 1) {
+        Bucket_fs_map *bucket_dst = &(cecup.traversal_dst.map->array[i]);
         int32 dst_idx;
         struct stat *stat_dst;
         char *matched_pattern_dst;
@@ -841,7 +837,7 @@ work_preview(void *user_data) {
         dst_idx = bucket_dst->value;
         path_len = cecup.traversal_dst.paths_lens[dst_idx];
 
-        if (hash_lookup_fs_map(cecup.src_map,
+        if (hash_lookup_fs_map(cecup.traversal_src.map,
                                bucket_dst->key, (uint32)path_len) == NULL) {
             stat_dst = &cecup.traversal_dst.stats[dst_idx];
             matched_pattern_dst = cecup.traversal_dst.matched_patterns[dst_idx];

@@ -436,7 +436,7 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
         default:
             if ((iterator->hash == hash) && (strcmp(iterator->key, key) == 0)) {
 #if HASH_DUPLICATE_KEYS
-                XFREE(iterator->key);
+                XFREE(iterator->key, iterator->key_len);
 #endif
                 iterator->key = (char *)SLOT_DELETED;
                 map->length -= 1;
