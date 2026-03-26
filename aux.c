@@ -341,8 +341,10 @@ update_row_transfer(Message *message) {
 
                     first_idx = *first_idx_ptr;
                     if (first_idx != idx) {
-                        cecup.traversal_dst.link_targets[idx] = cecup.traversal_dst.paths[first_idx];
-                        cecup.traversal_dst.link_targets_lens[idx] = cecup.traversal_dst.paths_lens[first_idx];
+                        cecup.traversal_dst.link_targets[idx]
+                            = cecup.traversal_dst.paths[first_idx];
+                        cecup.traversal_dst.link_targets_lens[idx]
+                            = cecup.traversal_dst.paths_lens[first_idx];
                     }
                 } else {
                     hash_insert_inode_map(cecup.traversal_dst.inode_map,
