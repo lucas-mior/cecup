@@ -1273,10 +1273,10 @@ work_rsync(void *user_data) {
         xunlink(files_from_filename);
     }
 
-    free_task_list(tasks);
     if (tasks->count == 0) {
         work_cleanup();
     }
+    free_task_list(tasks);
     work_finalize(false);
     XFREE(thread_data, SIZEOF(*thread_data));
     return NULL;
