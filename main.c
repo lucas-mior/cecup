@@ -238,7 +238,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         n = snprintf2(css + offset, SIZEOF(css) - offset,
                       "columnview row { min-height: 0px; }\n"
                       "columnview cell { padding: 0px; }\n"
-                      "paned > separator { min-width: 10px; min-height: 10px; }\n");
+                      "paned > separator { min-width: 10px; min-height: 10px; }\n"
+                      "scrollbar.vertical slider { min-width: 12px; }\n"
+                      "scrollbar.horizontal slider { min-height: 12px; }\n");
         offset += n;
 
         for (int32 i = 0; i < LENGTH(colors); i += 1) {
@@ -469,6 +471,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     scroll[L] = gtk_scrolled_window_new();
     selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(cecup.store));
     tree[L] = gtk_column_view_new(selection_model);
+    g_object_unref(selection_model);
     cecup.tree[L] = tree[L];
     g_object_set_data(G_OBJECT(tree[L]), "side", GINT_TO_POINTER(L));
     main_setup_tree_columns(tree[L], COL_SRC_ACTION, COL_SRC_PATH);
@@ -481,6 +484,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     scroll[R] = gtk_scrolled_window_new();
     selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(cecup.store));
     tree[R] = gtk_column_view_new(selection_model);
+    g_object_unref(selection_model);
     cecup.tree[R] = tree[R];
     g_object_set_data(G_OBJECT(tree[R]), "side", GINT_TO_POINTER(R));
     main_setup_tree_columns(tree[R], COL_DST_ACTION, COL_DST_PATH);
@@ -805,8 +809,8 @@ main(int32 argc, char **argv) {
                      G_CALLBACK(main_application_run), NULL);
     status = g_application_run(G_APPLICATION(cecup.application), argc, argv);
 
-    g_object_unref(cecup.store);
     g_object_unref(cecup.application);
+    g_object_unref(cecup.store);
 
     XFREE(cecup.rows, cecup.rows_capacity*SIZEOF(CecupRow *));
     XFREE(cecup.rows_visible, cecup.rows_capacity*SIZEOF(CecupRow *));
