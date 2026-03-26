@@ -1209,18 +1209,18 @@ work_rsync(void *user_data) {
         }
 
         if (removed) {
-            Message *msg_rm;
+            Message *message;
 
             LOG("Removed %s...\n", full_path);
 
-            msg_rm = xmalloc(SIZEOF(*msg_rm));
-            memset64(msg_rm, 0, SIZEOF(*msg_rm));
-            msg_rm->type = DATA_TYPE_ROW_REMOVE;
-            msg_rm->side = task->side;
-            msg_rm->path_len = task->path_len;
-            msg_rm->src_path = xmalloc(msg_rm->path_len + 1);
-            memcpy64(msg_rm->src_path, task->path, msg_rm->path_len + 1);
-            g_idle_add(update_ui_handler, msg_rm);
+            message = xmalloc(SIZEOF(*message));
+            memset64(message, 0, SIZEOF(*message));
+            message->type = DATA_TYPE_ROW_REMOVE;
+            message->side = task->side;
+            message->path_len = task->path_len;
+            message->src_path = xmalloc(message->path_len + 1);
+            memcpy64(message->src_path, task->path, message->path_len + 1);
+            g_idle_add(update_ui_handler, message);
         }
     }
 
