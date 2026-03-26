@@ -122,7 +122,7 @@ update_remove_row(Message *message) {
 
             if (td->map) {
                 if ((idx_ptr = hash_lookup_fs_map(td->map, path_test, row_test->path_len))) {
-                    int32 idx; idx = *idx_ptr;
+                    int32 idx = *idx_ptr;
                     memset64(&td->stats[idx], 0, SIZEOF(struct stat));
                 }
             } else {
