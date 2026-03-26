@@ -398,7 +398,6 @@ work_traverse_fs(TraversalData *data) {
                 target[target_len] = '\0';
                 link_target = xmemdup(target, target_len + 1);
                 link_target_len = (int32)target_len;
-                error("Found symlink, insert at -> %s\n", link_target);
             }
         } else if (ent->fts_info == FTS_F && (ent->fts_statp->st_nlink > 1)) {
             char inode_str[64];
@@ -418,11 +417,10 @@ work_traverse_fs(TraversalData *data) {
                     data->link_targets[first_idx] = path;
                     data->link_targets_lens[first_idx] = (int16)path_len;
                 }
-
-                error("Found hardlink, insert at -> %s\n", link_target);
             } else {
-                error("CANT Found hardlink\n");
-                hash_insert_fs_map(data->inode_map, xmemdup(inode_str, n + 1), n, data->nfiles);
+                hash_insert_fs_map(data->inode_map,
+                                   xmemdup(inode_str, n + 1), n,
+                                   data->nfiles);
             }
         }
 
