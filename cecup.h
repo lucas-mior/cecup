@@ -475,7 +475,8 @@ free_message(void *data) {
     return;
 }
 
-static char *row_path_get(CecupRow *row) {
+static char *
+row_path_get(CecupRow *row) {
     if (row->src_path) {
         return row->src_path;
     } else if (row->dst_path) {
