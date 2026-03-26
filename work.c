@@ -1230,7 +1230,7 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
-    for (int32 i = 0; i < cecup.ntransfers; i += 1) {
+    for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
         char *file;
         int64 w;
         int64 written;
