@@ -247,7 +247,10 @@ work_traverse_fs(TraversalData *data) {
         char *path;
         int32 path_len;
         bool is_dir;
-        int32 index;
+        char *link_target;
+        int32 link_target_len;
+        char *matched_pattern;
+        int32 matched_pattern_len;
 
         if (cecup.stop_working) {
             break;
@@ -380,50 +383,8 @@ work_traverse_fs(TraversalData *data) {
         path = xmemdup(path, path_len + 1);
         is_dir = (ent->fts_info == FTS_DP);
 
-        if (data->nfiles >= data->ncapacity) {
-            if (data->ncapacity == 0) {
-                data->ncapacity = 1024;
-            } else {
-                data->ncapacity *= 2;
-            }
-
-            data->stats = xrealloc(data->stats,
-                                   data->ncapacity*SIZEOF(*(data->stats)));
-
-            data->paths
-                = xrealloc(data->paths,
-                           data->ncapacity*SIZEOF(*(data->paths)));
-            data->link_targets
-                = xrealloc(data->link_targets,
-                           data->ncapacity*SIZEOF(*(data->link_targets)));
-            data->matched_patterns
-                = xrealloc(data->matched_patterns,
-                           data->ncapacity*SIZEOF(*(data->matched_patterns)));
-
-            data->paths_lens
-                = xrealloc(data->paths_lens,
-                           data->ncapacity*SIZEOF(*(data->paths_lens)));
-            data->link_targets_lens
-                = xrealloc(data->link_targets_lens,
-                           data->ncapacity*SIZEOF(*(data->link_targets_lens)));
-            data->matched_patterns_lens
-                = xrealloc(data->matched_patterns_lens,
-                           data->ncapacity*SIZEOF(*(data->matched_patterns_lens)));
-        }
-
-        index = data->nfiles;
-        data->nfiles += 1;
-
-        memset64(&data->stats[index], 0, SIZEOF(struct stat));
-        memcpy64(&data->stats[index], (void *)ent->fts_statp, SIZEOF(struct stat));
-
-        data->paths[index] = path;
-        data->link_targets[index] = NULL;
-        data->matched_patterns[index] = NULL;
-
-        data->paths_lens[index] = (int16)path_len;
-        data->link_targets_lens[index] = 0;
-        data->matched_patterns_lens[index] = 0;
+        link_target = NULL;
+        link_target_len = 0;
 
         if (ent->fts_info == FTS_SL || ent->fts_info == FTS_SLNONE) {
             char target[MAX_PATH_LENGTH];
@@ -435,10 +396,9 @@ work_traverse_fs(TraversalData *data) {
                           ent->fts_path, strerror(errno));
             } else {
                 target[target_len] = '\0';
-                data->link_targets[index] = xmemdup(target, target_len + 1);
-                data->link_targets_lens[index] = (int16)target_len;
-                error("Found symlink, insert at index=%d -> %s\n",
-                      index, data->link_targets[index]);
+                link_target = xmemdup(target, target_len + 1);
+                link_target_len = (int32)target_len;
+                error("Found symlink, insert at -> %s\n", link_target);
             }
         } else if (ent->fts_info == FTS_F && (ent->fts_statp->st_nlink > 1)) {
             char inode_str[64];
@@ -446,36 +406,44 @@ work_traverse_fs(TraversalData *data) {
             int32 *first_idx_ptr;
 
             n = (uint32)itoa2(inode_str, (long)ent->fts_statp->st_ino);
-            first_idx_ptr = hash_lookup_fs_map(data->inode_map, xstrdup(inode_str), n);
+            first_idx_ptr = hash_lookup_fs_map(data->inode_map, inode_str, n);
             if (first_idx_ptr) {
-                int32 first_idx = *first_idx_ptr;
-                data->link_targets[index] = data->paths[first_idx];
-                data->link_targets_lens[index] = data->paths_lens[first_idx];
+                int32 first_idx;
+
+                first_idx = *first_idx_ptr;
+                link_target = data->paths[first_idx];
+                link_target_len = data->paths_lens[first_idx];
 
                 if (data->link_targets[first_idx] == NULL) {
-                    data->link_targets[first_idx] = data->paths[index];
-                    data->link_targets_lens[first_idx] = data->paths_lens[index];
+                    data->link_targets[first_idx] = path;
+                    data->link_targets_lens[first_idx] = (int16)path_len;
                 }
 
-                error("Found hardlink, insert at index=%d -> %s\n",
-                      index, data->link_targets[index]);
+                error("Found hardlink, insert at -> %s\n", link_target);
             } else {
                 error("CANT Found hardlink\n");
-                hash_insert_fs_map(data->inode_map, inode_str, n, index);
+                hash_insert_fs_map(data->inode_map, xmemdup(inode_str, n + 1), n, data->nfiles);
             }
         }
 
+        matched_pattern = NULL;
+        matched_pattern_len = 0;
         {
-            IgnorePattern *pattern = ignore_patterns_match(path, path_len,
-                                                           is_dir,
-                                                           cecup.ignore_patterns,
-                                                           cecup.ignore_count);
+            IgnorePattern *pattern;
+
+            pattern = ignore_patterns_match(path, path_len,
+                                            is_dir,
+                                            cecup.ignore_patterns,
+                                            cecup.ignore_count);
             if (pattern) {
-                data->matched_patterns[index] = pattern->str;
-                data->matched_patterns_lens[index] = (int16)pattern->len;
+                matched_pattern = pattern->str;
+                matched_pattern_len = pattern->len;
             }
         }
-        hash_insert_fs_map(data->map, path, (uint32)path_len, index);
+
+        traversal_data_push(data, path, path_len, (struct stat *)ent->fts_statp,
+                            link_target, link_target_len,
+                            matched_pattern, matched_pattern_len);
     }
 
     fts_close(fts_handle);
