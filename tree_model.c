@@ -182,7 +182,15 @@ cecup_list_model_list_model_init(GListModelInterface *iface) {
 static void
 cecup_list_model_update(CecupListModel *self,
                         int32 old_count, int32 new_count) {
-    for (int32 i = new_count; i < old_count; i += 1) {
+    int32 max_count;
+
+    if (old_count > new_count) {
+        max_count = old_count;
+    } else {
+        max_count = new_count;
+    }
+
+    for (int32 i = 0; i < max_count; i += 1) {
         if ((i < self->proxies_capacity) && self->proxies[i]) {
             g_object_unref(self->proxies[i]);
             self->proxies[i] = NULL;
@@ -218,6 +226,11 @@ static void
 cecup_list_model_row_changed(CecupListModel *self, int32 index) {
     if (index < 0) {
         return;
+    }
+
+    if ((index < self->proxies_capacity) && self->proxies[index]) {
+        g_object_unref(self->proxies[index]);
+        self->proxies[index] = NULL;
     }
 
     g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 1);
