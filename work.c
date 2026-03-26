@@ -707,7 +707,6 @@ work_preview(void *user_data) {
                             }
                             if (nlinks_dst != nlinks_src) {
                                 LOG("Other side target is not the same.\n");
-                                LOG("%s != %s", link_target_src, link_target_dst);
                                 equal = false;
                                 break;
                             }
