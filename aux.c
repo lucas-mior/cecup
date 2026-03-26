@@ -221,14 +221,11 @@ update_row_transfer(Message *message) {
             SNPRINTF(full_path, "%s/%s", cecup.dst_base, path_test);
 
             if ((idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.map, path_test, (uint32)pattern_len))) {
-                int32 idx;
-
-                idx = *idx_ptr;
-                stat(full_path, &cecup.traversal_dst.stats[idx]);
+                lstat(full_path, &cecup.traversal_dst.stats[*idx_ptr]);
             } else {
                 struct stat st;
 
-                if (stat(full_path, &st) == 0) {
+                if (lstat(full_path, &st) == 0) {
                     int32 idx;
 
                     if (cecup.traversal_dst.nfiles >= cecup.traversal_dst.ncapacity) {
