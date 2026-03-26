@@ -386,6 +386,13 @@ work_traverse_fs(Traversal *data) {
 
         link_target = NULL;
         link_target_len = 0;
+        bool thisfile = false;
+        bool foundlink = false;
+        bool firstlink = false;
+
+        if (BEGINS_WITH(path, "1script_with_3links")) {
+            thisfile = true;
+        }
 
         if (ent->fts_info == FTS_SL || ent->fts_info == FTS_SLNONE) {
             char target[MAX_PATH_LENGTH];
@@ -412,6 +419,10 @@ work_traverse_fs(Traversal *data) {
 
                 first_idx = *first_idx_ptr;
                 link_target = data->paths[first_idx];
+                foundlink = true;
+                if (link_target == NULL) {
+                    error("Setting hardlink target to NULL (%s)\n", path);
+                }
                 link_target_len = data->paths_lens[first_idx];
 
                 if (data->link_targets[first_idx] == NULL) {
@@ -419,10 +430,17 @@ work_traverse_fs(Traversal *data) {
                     data->link_targets_lens[first_idx] = (int16)path_len;
                 }
             } else {
+                firstlink = true;
                 hash_insert_inode_map(data->inode_map,
                                       inode_str, n,
                                       data->nfiles);
             }
+        }
+
+        if (thisfile) {
+            PRINTLN(path);
+            PRINTLN(foundlink);
+            PRINTLN(firstlink);
         }
 
         matched_pattern = NULL;
@@ -445,7 +463,9 @@ work_traverse_fs(Traversal *data) {
                             matched_pattern, matched_pattern_len);
     }
 
-    fts_close(fts_handle);
+    if (fts_close(fts_handle) < 0) {
+        LOG_ERROR("Error in fts_close: %s.\n", strerror(errno));
+    }
     return file_count;
 }
 
