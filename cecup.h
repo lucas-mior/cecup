@@ -90,9 +90,9 @@
     X(LOG)                \
     X(LOG_ERROR)          \
     X(LOG_CMD)            \
-    \
     X(ROW_TRANSFER)       \
     X(ROW_REMOVE)         \
+    X(ROW_RENAME)         \
     X(ENABLE_BUTTONS)     \
     X(CLEAR_TREES)        \
     X(PROGRESS_PREVIEW)   \
