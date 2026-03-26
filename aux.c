@@ -318,16 +318,16 @@ update_row_transfer(Message *message) {
                 }
             }
         } else {
-            struct stat st;
+            struct stat stat;
 
-            if (lstat(full_path, &st) == 0) {
+            if (lstat(full_path, &stat) == 0) {
                 char *link_target;
                 int32 link_target_len;
 
                 link_target = NULL;
                 link_target_len = 0;
 
-                if (S_ISLNK(st.st_mode)) {
+                if (S_ISLNK(stat.st_mode)) {
                     char target[MAX_PATH_LENGTH];
                     int64 target_len;
 
@@ -336,12 +336,12 @@ update_row_transfer(Message *message) {
                         link_target = xmemdup(target, target_len + 1);
                         link_target_len = (int32)target_len;
                     }
-                } else if (S_ISREG(st.st_mode) && (st.st_nlink > 1)) {
+                } else if (S_ISREG(stat.st_mode) && (stat.st_nlink > 1)) {
                     char inode_str[64];
                     uint32 n;
                     int32 *first_idx_ptr;
 
-                    n = (uint32)itoa2(inode_str, (long)st.st_ino);
+                    n = (uint32)itoa2(inode_str, (long)stat.st_ino);
                     first_idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.inode_map, inode_str, n);
                     if (first_idx_ptr) {
                         int32 first_idx;
@@ -357,7 +357,7 @@ update_row_transfer(Message *message) {
                 traversal_data_push(&cecup.traversal_dst,
                                     xmemdup(path_test, pattern_len + 1),
                                     pattern_len,
-                                    &st,
+                                    &stat,
                                     link_target,
                                     link_target_len,
                                     NULL,
