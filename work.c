@@ -457,9 +457,7 @@ work_traverse_fs_thread(void *user_data) {
 
 static void
 work_traverse_clean(TraversalData *traversal_data) {
-    int32 capacity;
-
-    capacity = traversal_data->ncapacity;
+    int32 capacity = traversal_data->ncapacity;
 
     for (int32 i = 0; i < traversal_data->nfiles; i += 1) {
         XFREE(traversal_data->paths[i],
