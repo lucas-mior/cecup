@@ -486,22 +486,15 @@ work_traverse_clean(TraversalData *traversal_data) {
     XFREE(traversal_data->matched_patterns_lens,
           capacity*SIZEOF(*(traversal_data->matched_patterns_lens)));
 
+    hash_destroy_fs_map(traversal_data->map);
+    hash_destroy_inode_map(traversal_data->inode_map);
+
     memset64(traversal_data, 0, SIZEOF(*traversal_data));
     return;
 }
 
 static void
 work_cleanup(void) {
-    hash_destroy_fs_map(cecup.traversal_src.map);
-    cecup.traversal_src.map = NULL;
-    hash_destroy_fs_map(cecup.traversal_dst.map);
-    cecup.traversal_dst.map = NULL;
-
-    hash_destroy_inode_map(cecup.traversal_src.inode_map);
-    cecup.traversal_src.map = NULL;
-    hash_destroy_inode_map(cecup.traversal_dst.inode_map);
-    cecup.traversal_dst.map = NULL;
-
     work_traverse_clean(&cecup.traversal_src);
     work_traverse_clean(&cecup.traversal_dst);
 
