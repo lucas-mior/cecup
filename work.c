@@ -458,9 +458,10 @@ work_traverse_fs(Traversal *data) {
             }
         }
 
-        traversal_push(data, path, path_len, (struct stat *)ent->fts_statp,
-                            link_target, link_target_len,
-                            matched_pattern, matched_pattern_len);
+        traversal_push(data, path, path_len,
+                       (struct stat *)ent->fts_statp,
+                       link_target, link_target_len,
+                       matched_pattern, matched_pattern_len);
     }
 
     if (fts_close(fts_handle) < 0) {
