@@ -68,24 +68,36 @@ static void
 on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     char *pattern;
     FILE *fp;
+    Message *message;
 
     (void)action;
     (void)data;
 
     pattern = (char *)g_variant_get_string(parameter, NULL);
 
-    if (pattern) {
-        if ((fp = fopen(cecup.ignore_path, "a"))) {
-            fprintf(fp, "\n%s", pattern);
-            fclose(fp);
-        } else {
-            LOG_ERROR(_("Error opening %s: %s.\n"),
-                      cecup.ignore_path, strerror(errno));
-        }
-    } else {
+    if (pattern == NULL) {
         error("Ignore pattern is NULL.\n");
+        return;
     }
 
+    if ((fp = fopen(cecup.ignore_path, "a"))) {
+        fprintf(fp, "\n%s", pattern);
+        fclose(fp);
+    } else {
+        LOG_ERROR(_("Error opening %s: %s.\n"),
+                  cecup.ignore_path, strerror(errno));
+        return;
+    }
+
+    message = xmalloc(SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
+
+    message->type = DATA_TYPE_IGNORE_PATTERN;
+    message->ignore_pattern_len = strlen32(pattern);
+    message->ignore_pattern = xmalloc(message->ignore_pattern_len + 1);
+    memcpy64(message->ignore_pattern, pattern, message->ignore_pattern_len + 1);
+
+    g_idle_add(update_ui_handler, message);
     return;
 }
 

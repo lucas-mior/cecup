@@ -26,6 +26,7 @@
 #include "i18n.h"
 #include "cecup.h"
 #include "tree_model.c"
+#include "ignore_patterns.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_aux 1
@@ -1015,6 +1016,64 @@ refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
     return;
 }
 
+static void
+update_row_ignore(Message *message) {
+    char *pattern_str;
+    int32 pattern_len;
+    bool delete_excluded;
+
+    pattern_str = message->ignore_pattern;
+    pattern_len = message->ignore_pattern_len;
+    delete_excluded = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
+
+    invalidate_preview();
+    ignore_patterns_load();
+
+    for (int32 i = 0; i < cecup.rows_len; i += 1) {
+        CecupRow *row = cecup.rows[i];
+        char *path = row_path_get(row);
+        bool is_dir = false;
+        IgnorePattern *match;
+
+        if (row->path_len > 0 && path[row->path_len - 1] == '/') {
+            is_dir = true;
+        }
+
+        if ((match = ignore_patterns_match(path, row->path_len, is_dir,
+                                           cecup.ignore_patterns,
+                                           cecup.ignore_count))) {
+            row->src_action = ACTION_IGNORE;
+            row->reason |= REASON_IGNORED;
+
+            g_mutex_lock(&cecup.arena_mutex);
+            row->ignore_pattern_len = match->len;
+            row->ignore_pattern = xarena_push(cecup.arena, match->len + 1);
+            memcpy64(row->ignore_pattern, match->str, match->len + 1);
+            g_mutex_unlock(&cecup.arena_mutex);
+
+            if (row->dst_path != NULL) {
+                if (delete_excluded) {
+                    row->dst_action = ACTION_DELETE;
+                } else {
+                    row->dst_action = ACTION_IGNORE;
+                }
+            } else {
+                row->dst_action = ACTION_IGNORE;
+            }
+
+            for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
+                if (cecup.rows_visible[k] == row) {
+                    cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), k);
+                    break;
+                }
+            }
+        }
+    }
+
+    refresh_ui_list(REFRESH_FILTER_CHANGED, NULL);
+    return;
+}
+
 static void cecup_list_model_row_removed(CecupListModel *self, int32 index);
 static void cecup_list_model_row_changed(CecupListModel *self, int32 index);
 
@@ -1052,8 +1111,6 @@ update_ui_handler(void *data) {
             }
         }
 
-        /* If this message ends in CR,
-         * or the buffer is currently on an unfinished line, overwrite it. */
         if (is_cr || !buffer_ends_in_lf) {
             start_line = end;
             gtk_text_iter_set_line_offset(&start_line, 0);
@@ -1098,6 +1155,9 @@ update_ui_handler(void *data) {
         break;
     case DATA_TYPE_ROW_TRANSFER:
         update_row_transfer(message);
+        break;
+    case DATA_TYPE_IGNORE_PATTERN:
+        update_row_ignore(message);
         break;
     case DATA_TYPE_ENABLE_BUTTONS:
         if (cecup.refresh_id != 0) {
