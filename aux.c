@@ -22,6 +22,12 @@
 
 #include "cecup.h"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_aux 1
+#elif !defined(TESTING_aux)
+#define TESTING_aux 0
+#endif
+
 static void
 invalidate_preview(void) {
     cecup.preview_dirty = true;
@@ -459,4 +465,30 @@ log_internal(char *file, int line,
     return;
 }
 
+#if 0 == TESTING_aux
+static inline void
+aux_functions_sink(void) {
+    (void)cecup_get_dirs;
+    (void)get_target_tasks;
+    (void)free_task_list;
+    (void)free_message;
+}
 #endif
+
+#if TESTING_aux
+#include <assert.h>
+#include <string.h>
+
+int
+main(void) {
+    (void)cecup_get_dirs;
+    (void)get_target_tasks;
+    (void)free_task_list;
+    (void)free_message;
+    ASSERT(true);
+    exit(EXIT_SUCCESS);
+}
+
+#endif
+
+#endif /* AUX_C */
