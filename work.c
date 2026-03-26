@@ -501,16 +501,14 @@ work_cleanup(void) {
     hash_destroy_fs_map(cecup.dst_inode_map);
     cecup.dst_inode_map = NULL;
 
-    {
-        work_traverse_clean(&cecup.traversal_src);
-        work_traverse_clean(&cecup.traversal_dst);
+    work_traverse_clean(&cecup.traversal_src);
+    work_traverse_clean(&cecup.traversal_dst);
 
-        XFREE(cecup.transfers,
-              cecup.transfers_capacity*SIZEOF(*cecup.transfers));
-        cecup.transfers = NULL;
-        cecup.ntransfers = 0;
-        cecup.transfers_capacity = 0;
-    }
+    XFREE(cecup.transfers,
+          cecup.transfers_capacity*SIZEOF(*cecup.transfers));
+    cecup.transfers = NULL;
+    cecup.ntransfers = 0;
+    cecup.transfers_capacity = 0;
     return;
 }
 
