@@ -78,11 +78,9 @@ update_remove_row(Message *message) {
         }
 
         if (match) {
-            bool remove_entirely;
+            bool remove_entirely = false;
             TraversalData *td;
             int32 *idx_ptr;
-
-            remove_entirely = false;
 
             if (deleted_side == L) {
                 row_test->src_path = NULL;
