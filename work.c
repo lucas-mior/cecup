@@ -386,13 +386,6 @@ work_traverse_fs(Traversal *data) {
 
         link_target = NULL;
         link_target_len = 0;
-        bool thisfile = false;
-        bool foundlink = false;
-        bool firstlink = false;
-
-        if (BEGINS_WITH(path, "1script_with_3links")) {
-            thisfile = true;
-        }
 
         if (ent->fts_info == FTS_SL || ent->fts_info == FTS_SLNONE) {
             char target[MAX_PATH_LENGTH];
@@ -419,7 +412,6 @@ work_traverse_fs(Traversal *data) {
 
                 first_idx = *first_idx_ptr;
                 link_target = data->paths[first_idx];
-                foundlink = true;
                 if (link_target == NULL) {
                     error("Setting hardlink target to NULL (%s)\n", path);
                 }
@@ -430,17 +422,10 @@ work_traverse_fs(Traversal *data) {
                     data->link_targets_lens[first_idx] = (int16)path_len;
                 }
             } else {
-                firstlink = true;
                 hash_insert_inode_map(data->inode_map,
                                       inode_str, n,
                                       data->nfiles);
             }
-        }
-
-        if (thisfile) {
-            PRINTLN(path);
-            PRINTLN(foundlink);
-            PRINTLN(firstlink);
         }
 
         matched_pattern = NULL;
@@ -1111,8 +1096,6 @@ work_rsync_run(char *files_from_filename, bool checksum) {
                     *sep = '\0';
                     path_len = (int32)(sep - path);
                 }
-
-                PRINTLN(path);
 
                 if ((path_len != 2) || memcmp64(path, "./", 2)) {
                     Message *msg_update = xmalloc(SIZEOF(*msg_update));
