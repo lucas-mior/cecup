@@ -58,7 +58,7 @@
 #define ALIGNMENT 16
 #endif
 
-uint64 hash_function(char *key, uint32 key_length);
+uint64 hash_function(char *key, int32 key_length);
 uint32 hash_normal(void *map, uint64 hash);
 uint32 hash_capacity(void *map);
 uint32 hash_length(void *map);
@@ -100,7 +100,7 @@ typedef uint64_t uint64;
 
 struct CommonBucket {
     char *key;
-    uint32 key_len;
+    int32 key_len;
     uint64 hash;
     int32 value;
 };
@@ -214,7 +214,8 @@ CAT(hash_destroy_, HASH_TYPE)(struct Map *map) {
 
 static bool
 CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
-                                      char *key, uint64 hash, uint32 base_index
+                                      char *key, int32 key_length,
+                                      uint64 hash, uint32 base_index
 #if defined(HASH_VALUE_TYPE)
                                       , HASH_VALUE_TYPE value
 #endif
@@ -294,10 +295,11 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
             }
 
 #if HASH_DUPLICATE_KEYS
-            target->key = xstrdup(key);
+            target->key = xmemdup(key, key_length + 1);
 #else
             target->key = key;
 #endif
+            target->key_len = key_length;
             target->hash = hash;
 #if defined(HASH_VALUE_TYPE)
             target->value = value;
@@ -324,10 +326,11 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
     if (first_tombstone >= 0) {
         Bucket *target = &map->array[first_tombstone];
 #if HASH_DUPLICATE_KEYS
-        target->key = xstrdup(key);
+        target->key = xmemdup(key, key_length + 1);
 #else
         target->key = key;
 #endif
+        target->key_len = key_length;
         target->hash = hash;
 #if defined(HASH_VALUE_TYPE)
         target->value = value;
@@ -341,14 +344,15 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
 
 static bool
 CAT(hash_insert_, HASH_TYPE)(struct Map *map, char *key,
-                             uint32 key_length
+                             int32 key_length
 #if defined(HASH_VALUE_TYPE)
                              , HASH_VALUE_TYPE value
 #endif
 ) {
     uint64 hash = hash_function(key, key_length);
     uint32 index = hash_normal(map, hash);
-    return CAT(hash_insert_pre_calc_, HASH_TYPE)(map, key, hash, index
+    return CAT(hash_insert_pre_calc_, HASH_TYPE)(map, key, key_length,
+                                                 hash, index
 #if defined(HASH_VALUE_TYPE)
                                                  , value
 #endif
@@ -361,7 +365,7 @@ CAT(hash_insert2_, HASH_TYPE)(struct Map *map, char *key
                              , HASH_VALUE_TYPE value
 #endif
 ) {
-    uint32 key_length = (uint32)strlen32(key);
+    int32 key_length = strlen32(key);
     return CAT(hash_insert_, HASH_TYPE)(map, key, key_length
 #if defined(HASH_VALUE_TYPE)
                                         , value
@@ -406,7 +410,7 @@ CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
 }
 
 static void *
-CAT(hash_lookup_, HASH_TYPE)(struct Map *map, char *key, uint32 key_length) {
+CAT(hash_lookup_, HASH_TYPE)(struct Map *map, char *key, int32 key_length) {
     uint64 hash = hash_function(key, key_length);
     uint32 index = hash_normal(map, hash);
     return CAT(hash_lookup_pre_calc_, HASH_TYPE)(map, key, hash, index);
@@ -414,7 +418,7 @@ CAT(hash_lookup_, HASH_TYPE)(struct Map *map, char *key, uint32 key_length) {
 
 static void *
 CAT(hash_lookup2_, HASH_TYPE)(struct Map *map, char *key) {
-    uint32 key_length = (uint32)strlen32(key);
+    int32 key_length = (uint32)strlen32(key);
     return CAT(hash_lookup_, HASH_TYPE)(map, key, key_length);
 }
 
@@ -453,7 +457,7 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
 }
 
 static bool
-CAT(hash_remove_, HASH_TYPE)(struct Map *map, char *key, uint32 key_length) {
+CAT(hash_remove_, HASH_TYPE)(struct Map *map, char *key, int32 key_length) {
     uint64 hash = hash_function(key, key_length);
     uint32 index = hash_normal(map, hash);
     return CAT(hash_remove_pre_calc_, HASH_TYPE)(map, key, hash, index);
@@ -548,7 +552,7 @@ CAT(hash_functions_sink_, HASH_TYPE)(void) {
 #define HASH_H2
 
 uint64
-hash_function(char *key, uint32 key_length) {
+hash_function(char *key, int32 key_length) {
     uint64 hash;
     hash = rapidhash(key, key_length);
     return hash;
