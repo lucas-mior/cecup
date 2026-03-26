@@ -424,13 +424,9 @@ update_row_rename(Message *message) {
     }
 
     for (int32 i = 0; i < traversal_data->nfiles; i += 1) {
-        char *path;
-        int32 path_len;
-        bool match;
-
-        path = traversal_data->paths[i];
-        path_len = traversal_data->paths_lens[i];
-        match = false;
+        char *path = traversal_data->paths[i];
+        int32 path_len = traversal_data->paths_lens[i];
+        bool match = false;
 
         if (old_path[old_path_len - 1] == '/') {
             if (BEGINS_WITH(path, old_path, old_path_len)) {
@@ -511,50 +507,16 @@ update_row_rename(Message *message) {
             memcpy64(updated_path, new_path, new_path_len);
             memcpy64(updated_path + new_path_len, suffix, suffix_len + 1);
 
-            if (side == L) {
-                row->src_path = NULL;
-            } else {
-                row->dst_path = NULL;
-            }
-
-            remove_entirely = false;
-            if ((row->src_path == NULL) && (row->dst_path == NULL)) {
-                remove_entirely = true;
-            }
-
-            if (!remove_entirely) {
-                if (side == L) {
-                    row->src_action = ACTION_IGNORE;
-                    row->dst_action = ACTION_DELETE;
-                    row->reason = REASON_MISSING;
-                } else {
-                    if (row->reason & REASON_HARDLINK) {
-                        row->src_action = ACTION_HARDLINK;
-                        row->dst_action = ACTION_HARDLINK;
-                    } else if (row->reason & REASON_SYMLINK) {
-                        row->src_action = ACTION_SYMLINK;
-                        row->dst_action = ACTION_SYMLINK;
-                    } else {
-                        row->src_action = ACTION_NEW;
-                        row->dst_action = ACTION_NEW;
-                    }
-                    row->reason &= ~(REASON_EQUAL | REASON_SIZE | REASON_MTIME | REASON_CTIME | REASON_OWNER | REASON_GROUP | REASON_PERM);
-                    row->reason |= REASON_NEW;
-                }
-
-                for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-                    if (cecup.rows_visible[k] == row) {
-                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), k);
-                        break;
-                    }
-                }
-            }
-
             target_row = NULL;
             for (int32 j = 0; j < cecup.rows_len; j += 1) {
                 CecupRow *r = cecup.rows[j];
-                char *r_path = row_path_get(r);
+                char *r_path;
 
+                if ((r->src_path == NULL) && (r->dst_path == NULL)) {
+                    continue;
+                }
+
+                r_path = row_path_get(r);
                 if ((r->path_len == updated_path_len) && (!memcmp64(r_path, updated_path, updated_path_len))) {
                     target_row = r;
                     break;
@@ -592,19 +554,51 @@ update_row_rename(Message *message) {
                 target_row->src_mtime_raw = row->src_mtime_raw;
                 memcpy64(target_row->src_size_text, row->src_size_text, SIZEOF(target_row->src_size_text));
                 memcpy64(target_row->src_mtime_text, row->src_mtime_text, SIZEOF(target_row->src_mtime_text));
+                row->src_path = NULL;
             } else {
                 target_row->dst_path = arena_path;
                 target_row->dst_size_raw = row->dst_size_raw;
                 target_row->dst_mtime_raw = row->dst_mtime_raw;
                 memcpy64(target_row->dst_size_text, row->dst_size_text, SIZEOF(target_row->dst_size_text));
                 memcpy64(target_row->dst_mtime_text, row->dst_mtime_text, SIZEOF(target_row->dst_mtime_text));
+                row->dst_path = NULL;
             }
 
             XFREE(updated_path, updated_path_len + 1);
 
+            remove_entirely = false;
+            if ((row->src_path == NULL) && (row->dst_path == NULL)) {
+                remove_entirely = true;
+            } else {
+                if (side == L) {
+                    row->src_action = ACTION_IGNORE;
+                    row->dst_action = ACTION_DELETE;
+                    row->reason = REASON_MISSING;
+                } else {
+                    if (row->reason & REASON_HARDLINK) {
+                        row->src_action = ACTION_HARDLINK;
+                        row->dst_action = ACTION_HARDLINK;
+                    } else if (row->reason & REASON_SYMLINK) {
+                        row->src_action = ACTION_SYMLINK;
+                        row->dst_action = ACTION_SYMLINK;
+                    } else {
+                        row->src_action = ACTION_NEW;
+                        row->dst_action = ACTION_NEW;
+                    }
+                    row->reason &= ~(REASON_EQUAL | REASON_SIZE | REASON_MTIME | REASON_CTIME | REASON_OWNER | REASON_GROUP | REASON_PERM);
+                    row->reason |= REASON_NEW;
+                }
+
+                for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
+                    if (cecup.rows_visible[k] == row) {
+                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), k);
+                        break;
+                    }
+                }
+            }
+
             target_row->reason = 0;
             if ((target_row->src_path != NULL) && (target_row->dst_path != NULL)) {
-                bool equal = false;
                 bool attr_diff = false;
 
                 if (target_row->src_size_raw != target_row->dst_size_raw) {
@@ -617,10 +611,6 @@ update_row_rename(Message *message) {
                 }
 
                 if (!attr_diff) {
-                    equal = true;
-                }
-
-                if (equal) {
                     target_row->src_action = ACTION_EQUAL;
                     target_row->dst_action = ACTION_EQUAL;
                     target_row->reason |= REASON_EQUAL;

@@ -477,7 +477,7 @@ static char *row_path_get(CecupRow *row) {
         return row->dst_path;
     } else {
         error2("Error: src_path and dst_path are NULL.\n");
-        exit(EXIT_FAILURE);
+        fatal(EXIT_FAILURE);
     }
 }
 
