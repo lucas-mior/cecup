@@ -1436,7 +1436,7 @@ update_progress_bar(enum DataType type, double fraction) {
 
 #if 0 == TESTING_update
 static inline void
-aux_functions_sink(void) {
+update_functions_sink(void) {
     (void)update_progress_bar;
     (void)cecup_get_dirs;
     (void)get_target_tasks;
