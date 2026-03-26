@@ -108,13 +108,9 @@ update_row_remove(Message *message) {
     int32 deleted_side = message->side;
 
     for (int32 i = 0; i < cecup.rows_len;) {
-        CecupRow *row;
-        char *path_test;
-        bool match;
-
-        row = cecup.rows[i];
-        path_test = row_path_get(row);
-        match = false;
+        CecupRow *row = cecup.rows[i];
+        char *path_test = row_path_get(row);
+        bool match = false;
 
         if (pattern[pattern_len - 1] == '/') {
             if (BEGINS_WITH(path_test, pattern, pattern_len)) {
