@@ -424,9 +424,9 @@ static void
 free_message(void *data) {
     Message *message = data;
 
-    if (message->src_path) {
-        XFREE(message->src_path, strlen32(message->src_path) + 1);
-    }
+    XFREE(message->src_path, message->path_len + 1);
+    XFREE(message->old_path, message->old_path_len + 1);
+    XFREE(message->new_path, message->new_path_len + 1);
     XFREE(message, sizeof(*message));
     return;
 }

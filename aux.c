@@ -35,6 +35,8 @@
 
 #define UI_INTERVAL_MS 100
 
+static void refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus);
+
 static void
 protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.preview_button, !state);
@@ -392,6 +394,270 @@ update_row_transfer(Message *message) {
         }
         break;
     }
+    return;
+}
+
+static void
+update_row_rename(Message *message) {
+    char *old_path;
+    char *new_path;
+    int32 old_path_len;
+    int32 new_path_len;
+    int32 side;
+    TraversalData *traversal_data;
+
+    old_path = message->old_path;
+    new_path = message->new_path;
+    old_path_len = message->old_path_len;
+    new_path_len = message->new_path_len;
+    side = message->side;
+
+    if (side == L) {
+        traversal_data = &cecup.traversal_src;
+    } else {
+        traversal_data = &cecup.traversal_dst;
+    }
+
+    for (int32 i = 0; i < traversal_data->nfiles; i += 1) {
+        char *path;
+        int32 path_len;
+        bool match;
+
+        path = traversal_data->paths[i];
+        path_len = traversal_data->paths_lens[i];
+        match = false;
+
+        if (old_path[old_path_len - 1] == '/') {
+            if (BEGINS_WITH(path, old_path, old_path_len)) {
+                match = true;
+            }
+        } else {
+            if (path_len == old_path_len) {
+                if (!memcmp64(path, old_path, old_path_len)) {
+                    match = true;
+                }
+            }
+        }
+
+        if (match) {
+            char *suffix;
+            int32 suffix_len;
+            char *updated_path;
+            int32 updated_path_len;
+
+            suffix = path + old_path_len;
+            suffix_len = path_len - old_path_len;
+            updated_path_len = new_path_len + suffix_len;
+            updated_path = xmalloc(updated_path_len + 1);
+
+            memcpy64(updated_path, new_path, new_path_len);
+            memcpy64(updated_path + new_path_len, suffix, suffix_len + 1);
+
+            if (traversal_data->map) {
+                hash_remove_fs_map(traversal_data->map, path, (uint32)path_len);
+                hash_insert_fs_map(traversal_data->map, updated_path, (uint32)updated_path_len, i);
+            }
+
+            XFREE(traversal_data->paths[i], path_len + 1);
+            traversal_data->paths[i] = updated_path;
+            traversal_data->paths_lens[i] = (int16)updated_path_len;
+        }
+    }
+
+    for (int32 i = 0; i < cecup.rows_len;) {
+        CecupRow *row = cecup.rows[i];
+        char *path_test = row_path_get(row);
+        bool match = false;
+        char *my_path;
+
+        if (side == L) {
+            my_path = row->src_path;
+        } else {
+            my_path = row->dst_path;
+        }
+
+        if (my_path) {
+            if (old_path[old_path_len - 1] == '/') {
+                if (BEGINS_WITH(my_path, old_path, old_path_len)) {
+                    match = true;
+                }
+            } else {
+                if (row->path_len == old_path_len) {
+                    if (!memcmp64(my_path, old_path, old_path_len)) {
+                        match = true;
+                    }
+                }
+            }
+        }
+
+        if (match) {
+            char *suffix;
+            int32 suffix_len;
+            char *updated_path;
+            int32 updated_path_len;
+            bool remove_entirely;
+            CecupRow *target_row;
+            char *arena_path;
+
+            suffix = my_path + old_path_len;
+            suffix_len = row->path_len - old_path_len;
+            updated_path_len = new_path_len + suffix_len;
+            updated_path = xmalloc(updated_path_len + 1);
+
+            memcpy64(updated_path, new_path, new_path_len);
+            memcpy64(updated_path + new_path_len, suffix, suffix_len + 1);
+
+            if (side == L) {
+                row->src_path = NULL;
+            } else {
+                row->dst_path = NULL;
+            }
+
+            remove_entirely = false;
+            if ((row->src_path == NULL) && (row->dst_path == NULL)) {
+                remove_entirely = true;
+            }
+
+            if (!remove_entirely) {
+                if (side == L) {
+                    row->src_action = ACTION_IGNORE;
+                    row->dst_action = ACTION_DELETE;
+                    row->reason = REASON_MISSING;
+                } else {
+                    if (row->reason & REASON_HARDLINK) {
+                        row->src_action = ACTION_HARDLINK;
+                        row->dst_action = ACTION_HARDLINK;
+                    } else if (row->reason & REASON_SYMLINK) {
+                        row->src_action = ACTION_SYMLINK;
+                        row->dst_action = ACTION_SYMLINK;
+                    } else {
+                        row->src_action = ACTION_NEW;
+                        row->dst_action = ACTION_NEW;
+                    }
+                    row->reason &= ~(REASON_EQUAL | REASON_SIZE | REASON_MTIME | REASON_CTIME | REASON_OWNER | REASON_GROUP | REASON_PERM);
+                    row->reason |= REASON_NEW;
+                }
+
+                for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
+                    if (cecup.rows_visible[k] == row) {
+                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), k);
+                        break;
+                    }
+                }
+            }
+
+            target_row = NULL;
+            for (int32 j = 0; j < cecup.rows_len; j += 1) {
+                CecupRow *r = cecup.rows[j];
+                char *r_path = row_path_get(r);
+
+                if ((r->path_len == updated_path_len) && (!memcmp64(r_path, updated_path, updated_path_len))) {
+                    target_row = r;
+                    break;
+                }
+            }
+
+            if (target_row == NULL) {
+                g_mutex_lock(&cecup.arena_mutex);
+                target_row = xarena_push(cecup.arena, SIZEOF(*target_row));
+                memset64(target_row, 0, SIZEOF(*target_row));
+
+                target_row->path_len = updated_path_len;
+                if (cecup.rows_len >= cecup.rows_capacity) {
+                    if (cecup.rows_capacity == 0) {
+                        cecup.rows_capacity = 1024;
+                    } else {
+                        cecup.rows_capacity *= 2;
+                    }
+                    cecup.rows = xrealloc(cecup.rows, cecup.rows_capacity * SIZEOF(CecupRow *));
+                    cecup.rows_visible = xrealloc(cecup.rows_visible, cecup.rows_capacity * SIZEOF(CecupRow *));
+                }
+                cecup.rows[cecup.rows_len] = target_row;
+                cecup.rows_len += 1;
+                g_mutex_unlock(&cecup.arena_mutex);
+            }
+
+            g_mutex_lock(&cecup.arena_mutex);
+            arena_path = xarena_push(cecup.arena, updated_path_len + 1);
+            memcpy64(arena_path, updated_path, updated_path_len + 1);
+            g_mutex_unlock(&cecup.arena_mutex);
+
+            if (side == L) {
+                target_row->src_path = arena_path;
+                target_row->src_size_raw = row->src_size_raw;
+                target_row->src_mtime_raw = row->src_mtime_raw;
+                memcpy64(target_row->src_size_text, row->src_size_text, SIZEOF(target_row->src_size_text));
+                memcpy64(target_row->src_mtime_text, row->src_mtime_text, SIZEOF(target_row->src_mtime_text));
+            } else {
+                target_row->dst_path = arena_path;
+                target_row->dst_size_raw = row->dst_size_raw;
+                target_row->dst_mtime_raw = row->dst_mtime_raw;
+                memcpy64(target_row->dst_size_text, row->dst_size_text, SIZEOF(target_row->dst_size_text));
+                memcpy64(target_row->dst_mtime_text, row->dst_mtime_text, SIZEOF(target_row->dst_mtime_text));
+            }
+
+            XFREE(updated_path, updated_path_len + 1);
+
+            target_row->reason = 0;
+            if ((target_row->src_path != NULL) && (target_row->dst_path != NULL)) {
+                bool equal = false;
+                bool attr_diff = false;
+
+                if (target_row->src_size_raw != target_row->dst_size_raw) {
+                    target_row->reason |= REASON_SIZE;
+                    attr_diff = true;
+                }
+                if (target_row->src_mtime_raw != target_row->dst_mtime_raw) {
+                    target_row->reason |= REASON_MTIME;
+                    attr_diff = true;
+                }
+
+                if (!attr_diff) {
+                    equal = true;
+                }
+
+                if (equal) {
+                    target_row->src_action = ACTION_EQUAL;
+                    target_row->dst_action = ACTION_EQUAL;
+                    target_row->reason |= REASON_EQUAL;
+                } else {
+                    target_row->src_action = ACTION_UPDATE;
+                    target_row->dst_action = ACTION_UPDATE;
+                }
+            } else if (target_row->src_path != NULL) {
+                target_row->src_action = ACTION_NEW;
+                target_row->dst_action = ACTION_NEW;
+                target_row->reason |= REASON_NEW;
+            } else {
+                target_row->src_action = ACTION_IGNORE;
+                target_row->dst_action = ACTION_DELETE;
+                target_row->reason |= REASON_MISSING;
+            }
+
+            if (remove_entirely) {
+                for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
+                    if (cecup.rows_visible[k] == row) {
+                        for (int32 p = k; p < (cecup.rows_visible_len - 1); p += 1) {
+                            cecup.rows_visible[p] = cecup.rows_visible[p + 1];
+                        }
+                        cecup.rows_visible_len -= 1;
+                        cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), k);
+                        break;
+                    }
+                }
+                for (int32 p = i; p < (cecup.rows_len - 1); p += 1) {
+                    cecup.rows[p] = cecup.rows[p + 1];
+                }
+                cecup.rows_len -= 1;
+            } else {
+                i += 1;
+            }
+        } else {
+            i += 1;
+        }
+    }
+
+    refresh_ui_list(REFRESH_FINAL, NULL);
     return;
 }
 
@@ -774,6 +1040,9 @@ update_ui_handler(void *data) {
     case DATA_TYPE_ROW_REMOVE:
         update_row_remove(message);
         break;
+    case DATA_TYPE_ROW_RENAME:
+        update_row_rename(message);
+        break;
     case DATA_TYPE_ROW_TRANSFER:
         update_row_transfer(message);
         break;
@@ -821,6 +1090,9 @@ update_ui_handler(void *data) {
     } else if (message->dst_path) {
         XFREE(message->dst_path, message->path_len + 1);
     }
+
+    XFREE(message->old_path, message->old_path_len + 1);
+    XFREE(message->new_path, message->new_path_len + 1);
 
     XFREE(message->link_target, message->link_target_len);
     XFREE(message->ignore_pattern, message->ignore_pattern_len);
