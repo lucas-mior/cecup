@@ -235,12 +235,9 @@ update_row_transfer(Message *message) {
     pattern_len = message->path_len;
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupRow *row;
-        char *path_test;
+        CecupRow *row = cecup.rows[i];
+        char *path_test = row_path_get(row);
         bool show_equal;
-
-        row = cecup.rows[i];
-        path_test = row_path_get(row);
 
         if (row->path_len != pattern_len) {
             continue;
