@@ -475,6 +475,7 @@ aux_functions_sink(void) {
     (void)cecup_row_compare;
     (void)traversal_push;
     (void)protect_interface_from_user;
+    (void)invalidate_preview;
     return;
 }
 #endif
