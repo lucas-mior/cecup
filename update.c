@@ -36,7 +36,7 @@
 
 #define UI_INTERVAL_MS 100
 
-static void refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus);
+static void update_list_from_rows(enum RefreshType refresh_type, char *path_to_focus);
 
 static void
 invalidate_preview(void) {
@@ -680,7 +680,7 @@ update_row_rename(Message *message) {
         }
     }
 
-    refresh_ui_list(REFRESH_FINAL, NULL);
+    update_list_from_rows(REFRESH_FINAL, NULL);
     return;
 }
 
@@ -850,7 +850,7 @@ cecup_row_compare(const void *a, const void *b) {
 }
 
 static void
-refresh_ui_list(enum RefreshType refresh_type, char *path_to_focus) {
+update_list_from_rows(enum RefreshType refresh_type, char *path_to_focus) {
     int32 count_new = 0;
     int32 count_hard = 0;
     int32 count_update = 0;
@@ -1067,7 +1067,7 @@ update_row_ignore(Message *message) {
         }
     }
 
-    refresh_ui_list(REFRESH_FILTER_CHANGED, NULL);
+    update_list_from_rows(REFRESH_FILTER_CHANGED, NULL);
     return;
 }
 
@@ -1161,7 +1161,7 @@ update_ui_handler(void *data) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
         }
-        refresh_ui_list(REFRESH_FINAL, message->path_to_focus);
+        update_list_from_rows(REFRESH_FINAL, message->path_to_focus);
 
         if (message->preview_clean) {
             cecup.preview_dirty = false;
