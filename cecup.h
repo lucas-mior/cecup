@@ -269,7 +269,9 @@ typedef struct CecupRow {
 
     /* relative paths.
      * must NOT have a slash at the beginning.
-     * must have a slash at the end if a directory. */
+     * must have a slash at the end if a directory.
+     * one of them must NOT be NULL 
+     * if both are not NULL, then they must be the same */
     char *src_path;
     char *dst_path;
 
