@@ -149,7 +149,7 @@ static char *action_emojis[] = {
     [ACTION_IGNORE]   = EMOJI_IGNORE,
 };
 
-static char *src_action_strings[] = {
+static char *src_action_strings_file[] = {
     [ACTION_NEW]      = N_("Copy to backup"),
     [ACTION_HARDLINK] = N_("Create hardlink in backup"),
     [ACTION_SYMLINK]  = N_("Create symlink in backup"),
@@ -160,7 +160,18 @@ static char *src_action_strings[] = {
     [ACTION_IGNORE]   = N_("Skip"),
 };
 
-static char *dst_action_strings[] = {
+static char *src_action_strings_dir[] = {
+    [ACTION_NEW]      = N_("Copy to backup"),
+    [ACTION_HARDLINK] = N_("Create hardlink in backup"),
+    [ACTION_SYMLINK]  = N_("Create symlink in backup"),
+    [ACTION_UPDATE]   = N_("Update folder in backup"),
+    [ACTION_EQUAL]    = N_("Already identical"),
+    [ACTION_DELETED]  = N_("Not found in original"),
+    [ACTION_DELETE]   = "",
+    [ACTION_IGNORE]   = N_("Skip"),
+};
+
+static char *dst_action_strings_file[] = {
     [ACTION_NEW]      = N_("Copy from original"),
     [ACTION_HARDLINK] = N_("Create hardlink according to original"),
     [ACTION_SYMLINK]  = N_("Create symlink according to original"),
@@ -171,7 +182,18 @@ static char *dst_action_strings[] = {
     [ACTION_IGNORE]   = N_("Skip"),
 };
 
-static char *reason_strings[] = {
+static char *dst_action_strings_dir[] = {
+    [ACTION_NEW]      = N_("Copy from original"),
+    [ACTION_HARDLINK] = N_("Create hardlink according to original"),
+    [ACTION_SYMLINK]  = N_("Create symlink according to original"),
+    [ACTION_UPDATE]   = N_("Update from original"),
+    [ACTION_EQUAL]    = N_("Already identical"),
+    [ACTION_DELETED]  = "",
+    [ACTION_DELETE]   = N_("Remove from backup"),
+    [ACTION_IGNORE]   = N_("Skip"),
+};
+
+static char *reason_strings_file[] = {
     [REASON_EQUAL_BIT_IDX]    = N_("Files have the same size and modification time"),
     [REASON_IGNORED_BIT_IDX]  = N_("Matches an ignore pattern"),
     [REASON_MISSING_BIT_IDX]  = N_("File does not exist in the original folder"),
@@ -179,6 +201,21 @@ static char *reason_strings[] = {
     [REASON_HARDLINK_BIT_IDX] = N_("Hardlinked file in the original folder"),
     [REASON_SYMLINK_BIT_IDX]  = N_("Symlink in the original folder"),
     [REASON_SIZE_BIT_IDX]     = N_("File sizes differ"),
+    [REASON_MTIME_BIT_IDX]    = N_("Modification times differ"),
+    [REASON_CTIME_BIT_IDX]    = N_("Metadata change times differ"),
+    [REASON_OWNER_BIT_IDX]    = N_("Owners differ"),
+    [REASON_GROUP_BIT_IDX]    = N_("Groups differ"),
+    [REASON_PERM_BIT_IDX]     = N_("Permissions differ"),
+};
+
+static char *reason_strings_dir[] = {
+    [REASON_EQUAL_BIT_IDX]    = N_("Folders have the same size and modification time"),
+    [REASON_IGNORED_BIT_IDX]  = N_("Matches an ignore pattern"),
+    [REASON_MISSING_BIT_IDX]  = N_("Folder does not exist in the original folder"),
+    [REASON_NEW_BIT_IDX]      = N_("New folder found in the original folder"),
+    [REASON_HARDLINK_BIT_IDX] = N_("Hardlinked folder in the original folder"),
+    [REASON_SYMLINK_BIT_IDX]  = N_("Symlink in the original folder"),
+    [REASON_SIZE_BIT_IDX]     = N_("Folder sizes differ"),
     [REASON_MTIME_BIT_IDX]    = N_("Modification times differ"),
     [REASON_CTIME_BIT_IDX]    = N_("Metadata change times differ"),
     [REASON_OWNER_BIT_IDX]    = N_("Owners differ"),

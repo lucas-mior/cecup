@@ -957,9 +957,14 @@ on_tree_button_press(GtkGestureClick *gesture,
                     char directory[MAX_PATH_LENGTH];
                     char pattern[MAX_PATH_LENGTH];
                     char path_copy[MAX_PATH_LENGTH];
+                    bool is_dir = false;
 
                     path_len = row->path_len;
                     memcpy64(path_copy, filepath, path_len + 1);
+
+                    if (path_len > 0 && path_copy[path_len - 1] == '/') {
+                        is_dir = true;
+                    }
 
                     name = basename2(path_copy, &path_len, &length);
                     extension = memrchr64(name, '.', length);
@@ -973,7 +978,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                                                           "app.ignore", "s", pattern);
                         g_menu_append_item(submenu, item);
                         g_object_unref(item);
-                    }
+            }
 
                     if (strcmp(directory, ".")) {
                         SNPRINTF(label, _("📁 Dir (/%s/)"), directory);
@@ -985,7 +990,11 @@ on_tree_button_press(GtkGestureClick *gesture,
                         g_object_unref(item);
                     }
 
-                    SNPRINTF(label, _("This file only (/%s)"), filepath);
+                    if (is_dir) {
+                        SNPRINTF(label, _("This folder only (/%s)"), filepath);
+                    } else {
+                        SNPRINTF(label, _("This file only (/%s)"), filepath);
+                    }
                     SNPRINTF(pattern, "/%s", filepath);
                     item = g_menu_item_new(label, NULL);
                     g_menu_item_set_action_and_target(item,
@@ -1119,6 +1128,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
     if (row) {
         char *filepath;
         enum CecupAction action;
+        bool is_dir = false;
 
         if (side == L) {
             filepath = row->src_path;
@@ -1140,23 +1150,42 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             filepath = "";
         }
 
+        if (row->path_len > 0 && filepath[row->path_len - 1] == '/') {
+            is_dir = true;
+        }
+
         switch (column_type) {
         case COLUMN_ACTION:
+        {
+            char *msg;
             if (side == L) {
-                tip_text = _(src_action_strings[action]);
+                if (is_dir) {
+                    msg = _(src_action_strings_dir[action]);
+                } else {
+                    msg = _(src_action_strings_file[action]);
+                }
             } else {
-                tip_text = _(dst_action_strings[action]);
+                if (is_dir) {
+                    msg = _(dst_action_strings_dir[action]);
+                } else {
+                    msg = _(dst_action_strings_file[action]);
+                }
             }
+
+            tip_text = msg;
             break;
+        }
         case COLUMN_PATH:
+        {
             rb_pos = 0;
             reason_buf[0] = '\0';
             for (int32 i = 0; i < REASON_BIT_COUNT; i += 1) {
+                char *base_msg;
                 if (!(row->reason & (1 << i))) {
                     continue;
                 }
 
-                if (i >= (int32)LENGTH(reason_strings) || reason_strings[i] == NULL) {
+                if (i >= (int32)LENGTH(reason_strings_file) || reason_strings_file[i] == NULL) {
                     continue;
                 }
 
@@ -1164,9 +1193,18 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                     rb_pos += snprintf2(reason_buf + rb_pos,
                                         SIZEOF(reason_buf) - rb_pos, ", ");
                 }
-                rb_pos += snprintf2(reason_buf + rb_pos,
-                                    SIZEOF(reason_buf) - rb_pos,
-                                    "%s", _(reason_strings[i]));
+
+                if (is_dir) {
+                    base_msg = _(reason_strings_dir[i]);
+                } else {
+                    base_msg = _(reason_strings_file[i]);
+                }
+
+                if (base_msg) {
+                    rb_pos += snprintf2(reason_buf + rb_pos,
+                                        SIZEOF(reason_buf) - rb_pos,
+                                        "%s", base_msg);
+                }
             }
 
             if (row->link_target) {
@@ -1181,6 +1219,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             }
             tip_text = tip_buffer;
             break;
+        }
         case COLUMN_SIZE:
 
             if (side == L) {
