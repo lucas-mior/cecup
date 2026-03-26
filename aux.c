@@ -324,11 +324,8 @@ update_row_transfer(Message *message) {
                 LOG_ERROR("Error in lstat(%s): %s.\n",
                           full_path, strerror(errno));
             } else {
-                char *link_target;
-                int32 link_target_len;
-
-                link_target = NULL;
-                link_target_len = 0;
+                char *link_target = NULL;
+                int32 link_target_len = 0;
 
                 if (S_ISLNK(stat.st_mode)) {
                     char target[MAX_PATH_LENGTH];
