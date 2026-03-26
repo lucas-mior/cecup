@@ -76,8 +76,8 @@ protect_interface_from_user(bool state) {
 
 static int32
 traversal_push(Traversal *data, char *path, int32 path_len,
-                    struct stat *st, char *link_target, int32 link_target_len,
-                    char *matched_pattern, int32 matched_pattern_len) {
+               struct stat *st, char *link_target, int32 link_target_len,
+               char *matched_pattern, int32 matched_pattern_len) {
     int32 idx;
 
     if (data->nfiles >= data->ncapacity) {
@@ -353,6 +353,7 @@ update_row_transfer(Message *message) {
             }
         } else {
             struct stat stat;
+            char *path_copy;
 
             if (lstat(full_path, &stat) < 0) {
                 LOG_ERROR("Error in lstat(%s): %s.\n",
@@ -390,14 +391,12 @@ update_row_transfer(Message *message) {
                     }
                 }
 
+                path_copy = xmemdup(path_test, pattern_len + 1);
                 traversal_push(&cecup.traversal_dst,
-                                    xmemdup(path_test, pattern_len + 1),
-                                    pattern_len,
-                                    &stat,
-                                    link_target,
-                                    link_target_len,
-                                    NULL,
-                                    0);
+                               path_copy, pattern_len,
+                               &stat,
+                               link_target, link_target_len,
+                               NULL, 0);
             }
         }
 
