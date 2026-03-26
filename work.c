@@ -456,6 +456,40 @@ work_traverse_fs_thread(void *user_data) {
 }
 
 static void
+work_traverse_clean(TraversalData *traversal_data) {
+    int32 capacity;
+
+    capacity = traversal_data->ncapacity;
+
+    for (int32 i = 0; i < traversal_data->nfiles; i += 1) {
+        XFREE(traversal_data->paths[i],
+              traversal_data->paths_lens[i] + 1);
+        if (S_ISLNK(traversal_data->stats[i].st_mode)) {
+            XFREE(traversal_data->link_targets[i],
+                  traversal_data->link_targets_lens[i] + 1);
+        }
+    }
+
+    XFREE(traversal_data->stats,
+          capacity*SIZEOF(*(traversal_data->stats)));
+    XFREE(traversal_data->matched_patterns,
+          capacity*SIZEOF(*(traversal_data->matched_patterns)));
+    XFREE(traversal_data->link_targets,
+          capacity*SIZEOF(*(traversal_data->link_targets)));
+    XFREE(traversal_data->paths,
+          capacity*SIZEOF(*(traversal_data->paths)));
+    XFREE(traversal_data->paths_lens,
+          capacity*SIZEOF(*(traversal_data->paths_lens)));
+    XFREE(traversal_data->link_targets_lens,
+          capacity*SIZEOF(*(traversal_data->link_targets_lens)));
+    XFREE(traversal_data->matched_patterns_lens,
+          capacity*SIZEOF(*(traversal_data->matched_patterns_lens)));
+
+    memset64(traversal_data, 0, SIZEOF(*traversal_data));
+    return;
+}
+
+static void
 work_cleanup(void) {
     hash_destroy_fs_map(cecup.src_map);
     cecup.src_map = NULL;
@@ -468,62 +502,8 @@ work_cleanup(void) {
     cecup.dst_inode_map = NULL;
 
     {
-        int32 capacity_src;
-        int32 capacity_dst;
-
-        capacity_src = cecup.traversal_src.ncapacity;
-        capacity_dst = cecup.traversal_dst.ncapacity;
-
-        for (int32 i = 0; i < cecup.traversal_src.nfiles; i += 1) {
-            XFREE(cecup.traversal_src.paths[i],
-                  cecup.traversal_src.paths_lens[i] + 1);
-            if (S_ISLNK(cecup.traversal_src.stats[i].st_mode)) {
-                XFREE(cecup.traversal_src.link_targets[i],
-                      cecup.traversal_src.link_targets_lens[i] + 1);
-            }
-        }
-
-        XFREE(cecup.traversal_src.stats,
-              capacity_src*SIZEOF(*(cecup.traversal_src.stats)));
-        XFREE(cecup.traversal_src.matched_patterns,
-              capacity_src*SIZEOF(*(cecup.traversal_src.matched_patterns)));
-        XFREE(cecup.traversal_src.link_targets,
-              capacity_src*SIZEOF(*(cecup.traversal_src.link_targets)));
-        XFREE(cecup.traversal_src.paths,
-              capacity_src*SIZEOF(*(cecup.traversal_src.paths)));
-        XFREE(cecup.traversal_src.paths_lens,
-              capacity_src*SIZEOF(*(cecup.traversal_src.paths_lens)));
-        XFREE(cecup.traversal_src.link_targets_lens,
-              capacity_src*SIZEOF(*(cecup.traversal_src.link_targets_lens)));
-        XFREE(cecup.traversal_src.matched_patterns_lens,
-              capacity_src*SIZEOF(*(cecup.traversal_src.matched_patterns_lens)));
-
-        memset64(&cecup.traversal_src, 0, SIZEOF(cecup.traversal_src));
-
-        for (int32 i = 0; i < cecup.traversal_dst.nfiles; i += 1) {
-            XFREE(cecup.traversal_dst.paths[i],
-                  cecup.traversal_dst.paths_lens[i] + 1);
-            if (S_ISLNK(cecup.traversal_dst.stats[i].st_mode)) {
-                XFREE(cecup.traversal_dst.link_targets[i],
-                      cecup.traversal_dst.link_targets_lens[i] + 1);
-            }
-        }
-
-        XFREE(cecup.traversal_dst.stats,
-              capacity_dst*SIZEOF(*(cecup.traversal_dst.stats)));
-        XFREE(cecup.traversal_dst.matched_patterns,
-              capacity_dst*SIZEOF(*(cecup.traversal_dst.matched_patterns)));
-        XFREE(cecup.traversal_dst.link_targets,
-              capacity_dst*SIZEOF(*(cecup.traversal_dst.link_targets)));
-        XFREE(cecup.traversal_dst.paths,
-              capacity_dst*SIZEOF(*(cecup.traversal_dst.paths)));
-        XFREE(cecup.traversal_dst.paths_lens,
-              capacity_dst*SIZEOF(*(cecup.traversal_dst.paths_lens)));
-        XFREE(cecup.traversal_dst.link_targets_lens,
-              capacity_dst*SIZEOF(*(cecup.traversal_dst.link_targets_lens)));
-        XFREE(cecup.traversal_dst.matched_patterns_lens,
-              capacity_dst*SIZEOF(*(cecup.traversal_dst.matched_patterns_lens)));
-        memset64(&cecup.traversal_dst, 0, SIZEOF(cecup.traversal_dst));
+        work_traverse_clean(&cecup.traversal_src);
+        work_traverse_clean(&cecup.traversal_dst);
 
         XFREE(cecup.transfers,
               cecup.transfers_capacity*SIZEOF(*cecup.transfers));
