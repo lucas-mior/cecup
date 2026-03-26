@@ -111,8 +111,8 @@ traversal_data_push(TraversalData *data, char *path, int32 path_len,
         data->matched_patterns_lens = xrealloc(data->matched_patterns_lens,
                                                data->ncapacity*lens_type_size);
 
-        data->nlinks_in_tree = xrealloc(data->nlinks_in_tree,
-                                        data->ncapacity*SIZEOF(int32));
+        data->nlinks= xrealloc(data->nlinks,
+                               data->ncapacity*SIZEOF(int32));
     }
 
     idx = data->nfiles;
@@ -129,7 +129,7 @@ traversal_data_push(TraversalData *data, char *path, int32 path_len,
     data->link_targets_lens[idx] = (int16)link_target_len;
     data->matched_patterns[idx] = matched_pattern;
     data->matched_patterns_lens[idx] = (int16)matched_pattern_len;
-    data->nlinks_in_tree[idx] = 0;
+    data->nlinks[idx] = 0;
 
     if (data->map) {
         hash_insert_fs_map(data->map, path, path_len, idx);

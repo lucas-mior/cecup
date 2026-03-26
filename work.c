@@ -720,9 +720,8 @@ work_preview(void *user_data) {
                                                                    inode_str, n);
 
                             if (master_src_ptr && master_dst_ptr) {
-                                int32 count_src = cecup.traversal_src.nlinks_in_tree[*master_src_ptr];
-                                int32 count_dst = cecup.traversal_dst.nlinks_in_tree[*master_dst_ptr];
-                                if (count_src != count_dst) {
+                                if (cecup.traversal_src.nlinks[*master_src_ptr]
+                                    != cecup.traversal_dst.nlinks[*master_dst_ptr]) {
                                     equal = false;
                                     break;
                                 }
