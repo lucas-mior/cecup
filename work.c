@@ -698,16 +698,26 @@ work_preview(void *user_data) {
                             int32 *master_dst_ptr;
 
                             if (!S_ISREG(stat_dst->st_mode)) {
+                                LOG_ERROR(N_("Hardlink updated need for") "%s"
+                                          N_("Because correspondent file in the backup")
+                                          N_("Is not a regular file.\n"),
+                                          bucket_src->key);
                                 equal = false;
                                 break;
                             }
                             if (link_target_dst == NULL) {
+                                error("link_target_dst is NULL\n");
                                 equal = false;
                                 break;
                             }
                             if (strcmp(link_target_src, link_target_dst)
                                 && strcmp(link_target_src, dst_path)
                                 && strcmp(bucket_src->key, dst_path)) {
+                                error("Names differ:\n");
+                                PRINTLN(link_target_src);
+                                PRINTLN(link_target_dst);
+                                PRINTLN(dst_path);
+                                PRINTLN(bucket_src->key);
                                 equal = false;
                                 break;
                             }
@@ -722,10 +732,14 @@ work_preview(void *user_data) {
                             if (master_src_ptr && master_dst_ptr) {
                                 if (cecup.traversal_src.nlinks[*master_src_ptr]
                                     != cecup.traversal_dst.nlinks[*master_dst_ptr]) {
+                                    error("number of links differ:\n");
+                                    PRINTLN(cecup.traversal_src.nlinks[*master_src_ptr]);
+                                    PRINTLN(cecup.traversal_dst.nlinks[*master_dst_ptr]);
                                     equal = false;
                                     break;
                                 }
                             } else {
+                                error("no master pointers\n");
                                 equal = false;
                                 break;
                             }
