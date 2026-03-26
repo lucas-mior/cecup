@@ -1389,7 +1389,7 @@ log_internal(char *file, int line,
 }
 
 static void
-ipc_send_progress(enum DataType type, double fraction) {
+update_progress_bar(enum DataType type, double fraction) {
     Message *message;
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index = 0;
@@ -1416,7 +1416,7 @@ ipc_send_progress(enum DataType type, double fraction) {
 #if 0 == TESTING_update
 static inline void
 aux_functions_sink(void) {
-    (void)ipc_send_progress;
+    (void)update_progress_bar;
     (void)cecup_get_dirs;
     (void)get_target_tasks;
     (void)free_task_list;
@@ -1430,7 +1430,7 @@ aux_functions_sink(void) {
 
 int
 main(void) {
-    (void)ipc_send_progress;
+    (void)update_progress_bar;
     (void)cecup_get_dirs;
     (void)get_target_tasks;
     (void)free_task_list;
