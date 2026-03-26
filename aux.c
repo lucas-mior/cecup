@@ -465,6 +465,29 @@ log_internal(char *file, int line,
     return;
 }
 
+static void
+free_message(void *data) {
+    Message *message = data;
+
+    XFREE(message->src_path, message->path_len + 1);
+    XFREE(message->old_path, message->old_path_len + 1);
+    XFREE(message->new_path, message->new_path_len + 1);
+    XFREE(message, sizeof(*message));
+    return;
+}
+
+static char *
+row_path_get(CecupRow *row) {
+    if (row->src_path) {
+        return row->src_path;
+    } else if (row->dst_path) {
+        return row->dst_path;
+    } else {
+        error2("Error: src_path and dst_path are NULL.\n");
+        fatal(EXIT_FAILURE);
+    }
+}
+
 #if 0 == TESTING_aux
 static inline void
 aux_functions_sink(void) {

@@ -459,36 +459,17 @@ typedef struct ThreadData {
     TaskList *tasks;
 } ThreadData;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+
 static gboolean update_ui_handler(void * user_data);
 static void free_task_list(TaskList *tasks);
 static void save_config(void);
 static void protect_interface_from_user(bool state);
-
-static void
-free_message(void *data) {
-    Message *message = data;
-
-    XFREE(message->src_path, message->path_len + 1);
-    XFREE(message->old_path, message->old_path_len + 1);
-    XFREE(message->new_path, message->new_path_len + 1);
-    XFREE(message, sizeof(*message));
-    return;
-}
-
-static char *
-row_path_get(CecupRow *row) {
-    if (row->src_path) {
-        return row->src_path;
-    } else if (row->dst_path) {
-        return row->dst_path;
-    } else {
-        error2("Error: src_path and dst_path are NULL.\n");
-        fatal(EXIT_FAILURE);
-    }
-}
-
 static void log_internal(char *file, int line,
                          enum DataType type, char *format, ...);
+
+#pragma clang diagnostic pop
 
 #define LOG(...)        \
     log_internal(__FILE__, __LINE__, DATA_TYPE_LOG, __VA_ARGS__)
