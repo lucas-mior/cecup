@@ -217,7 +217,7 @@ work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
 }
 
 static int64
-work_traverse_fs(TraversalData *data) {
+work_traverse_fs(Traversal *data) {
     int64 file_count;
     char *paths[2];
     FTS *fts_handle;
@@ -440,7 +440,7 @@ work_traverse_fs(TraversalData *data) {
             }
         }
 
-        traversal_data_push(data, path, path_len, (struct stat *)ent->fts_statp,
+        traversal_push(data, path, path_len, (struct stat *)ent->fts_statp,
                             link_target, link_target_len,
                             matched_pattern, matched_pattern_len);
     }
@@ -451,45 +451,45 @@ work_traverse_fs(TraversalData *data) {
 
 static void *
 work_traverse_fs_thread(void *user_data) {
-    TraversalData *data = user_data;
+    Traversal *data = user_data;
     data->file_count = work_traverse_fs(data);
     return NULL;
 }
 
 static void
-work_traverse_clean(TraversalData *traversal_data) {
-    int32 capacity = traversal_data->ncapacity;
+work_traverse_clean(Traversal *traversal) {
+    int32 capacity = traversal->ncapacity;
 
-    for (int32 i = 0; i < traversal_data->nfiles; i += 1) {
-        XFREE(traversal_data->paths[i],
-              traversal_data->paths_lens[i] + 1);
-        if (S_ISLNK(traversal_data->stats[i].st_mode)) {
-            XFREE(traversal_data->link_targets[i],
-                  traversal_data->link_targets_lens[i] + 1);
+    for (int32 i = 0; i < traversal->nfiles; i += 1) {
+        XFREE(traversal->paths[i],
+              traversal->paths_lens[i] + 1);
+        if (S_ISLNK(traversal->stats[i].st_mode)) {
+            XFREE(traversal->link_targets[i],
+                  traversal->link_targets_lens[i] + 1);
         }
     }
 
-    XFREE(traversal_data->stats,
-          capacity*SIZEOF(*(traversal_data->stats)));
+    XFREE(traversal->stats,
+          capacity*SIZEOF(*(traversal->stats)));
 
-    XFREE(traversal_data->matched_patterns,
-          capacity*SIZEOF(*(traversal_data->matched_patterns)));
-    XFREE(traversal_data->link_targets,
-          capacity*SIZEOF(*(traversal_data->link_targets)));
-    XFREE(traversal_data->paths,
-          capacity*SIZEOF(*(traversal_data->paths)));
+    XFREE(traversal->matched_patterns,
+          capacity*SIZEOF(*(traversal->matched_patterns)));
+    XFREE(traversal->link_targets,
+          capacity*SIZEOF(*(traversal->link_targets)));
+    XFREE(traversal->paths,
+          capacity*SIZEOF(*(traversal->paths)));
 
-    XFREE(traversal_data->paths_lens,
-          capacity*SIZEOF(*(traversal_data->paths_lens)));
-    XFREE(traversal_data->link_targets_lens,
-          capacity*SIZEOF(*(traversal_data->link_targets_lens)));
-    XFREE(traversal_data->matched_patterns_lens,
-          capacity*SIZEOF(*(traversal_data->matched_patterns_lens)));
+    XFREE(traversal->paths_lens,
+          capacity*SIZEOF(*(traversal->paths_lens)));
+    XFREE(traversal->link_targets_lens,
+          capacity*SIZEOF(*(traversal->link_targets_lens)));
+    XFREE(traversal->matched_patterns_lens,
+          capacity*SIZEOF(*(traversal->matched_patterns_lens)));
 
-    hash_destroy_fs_map(traversal_data->map);
-    hash_destroy_inode_map(traversal_data->inode_map);
+    hash_destroy_fs_map(traversal->map);
+    hash_destroy_inode_map(traversal->inode_map);
 
-    memset64(traversal_data, 0, SIZEOF(*traversal_data));
+    memset64(traversal, 0, SIZEOF(*traversal));
     return;
 }
 

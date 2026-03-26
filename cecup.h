@@ -119,7 +119,7 @@
 #define HASH_TYPE inode_map
 #include "hash.c"
 
-typedef struct TraversalData {
+typedef struct Traversal {
     char *base_path;
     int32 base_path_len;
     int64 file_count;
@@ -139,7 +139,7 @@ typedef struct TraversalData {
     int16 *link_targets_lens;
     int16 *matched_patterns_lens;
     int32 *nlinks;
-} TraversalData;
+} Traversal;
 
 typedef struct TextInfo {
     int32 side;
@@ -438,8 +438,8 @@ static struct {
     int32 ignore_count;
     int32 ignore_capacity;
 
-    TraversalData traversal_src;
-    TraversalData traversal_dst;
+    Traversal traversal_src;
+    Traversal traversal_dst;
     char **transfers;
     int32 ntransfers;
     int32 transfers_capacity;

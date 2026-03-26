@@ -75,7 +75,7 @@ protect_interface_from_user(bool state) {
 }
 
 static int32
-traversal_data_push(TraversalData *data, char *path, int32 path_len,
+traversal_push(Traversal *data, char *path, int32 path_len,
                     struct stat *st, char *link_target, int32 link_target_len,
                     char *matched_pattern, int32 matched_pattern_len) {
     int32 idx;
@@ -163,15 +163,15 @@ update_row_remove(Message *message) {
 
         if (match) {
             bool remove_entirely = false;
-            TraversalData *traversal_data;
+            Traversal *traversal;
             int32 *idx_ptr;
 
             if (deleted_side == L) {
                 row->src_path = NULL;
-                traversal_data = &cecup.traversal_src;
+                traversal = &cecup.traversal_src;
             } else {
                 row->dst_path = NULL;
-                traversal_data = &cecup.traversal_dst;
+                traversal = &cecup.traversal_dst;
             }
 
             if (row->src_path == NULL) {
@@ -204,27 +204,27 @@ update_row_remove(Message *message) {
                 }
             }
 
-            if (traversal_data->map) {
-                if ((idx_ptr = hash_lookup_fs_map(traversal_data->map,
+            if (traversal->map) {
+                if ((idx_ptr = hash_lookup_fs_map(traversal->map,
                                                   path_test, row->path_len))) {
                     int32 idx = *idx_ptr;
 
-                    if (traversal_data->inode_map) {
-                        if (S_ISREG(traversal_data->stats[idx].st_mode)) {
-                            if (traversal_data->stats[idx].st_nlink > 1) {
+                    if (traversal->inode_map) {
+                        if (S_ISREG(traversal->stats[idx].st_mode)) {
+                            if (traversal->stats[idx].st_nlink > 1) {
                                 char inode_str[64];
                                 int32 n;
                                 n = itoa2(inode_str,
-                                          (long)traversal_data->stats[idx].st_ino);
-                                hash_remove_inode_map(traversal_data->inode_map,
+                                          (long)traversal->stats[idx].st_ino);
+                                hash_remove_inode_map(traversal->inode_map,
                                                       inode_str, n);
                             }
                         }
                     }
 
-                    hash_remove_fs_map(traversal_data->map,
+                    hash_remove_fs_map(traversal->map,
                                        path_test, row->path_len);
-                    memset64(&traversal_data->stats[idx], 0, SIZEOF(struct stat));
+                    memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
                 }
             }
 
@@ -388,7 +388,7 @@ update_row_transfer(Message *message) {
                     }
                 }
 
-                traversal_data_push(&cecup.traversal_dst,
+                traversal_push(&cecup.traversal_dst,
                                     xmemdup(path_test, pattern_len + 1),
                                     pattern_len,
                                     &stat,
@@ -436,7 +436,7 @@ update_row_rename(Message *message) {
     int32 old_path_len;
     int32 new_path_len;
     int32 side;
-    TraversalData *traversal_data;
+    Traversal *traversal;
 
     old_path = message->old_path;
     new_path = message->new_path;
@@ -445,14 +445,14 @@ update_row_rename(Message *message) {
     side = message->side;
 
     if (side == L) {
-        traversal_data = &cecup.traversal_src;
+        traversal = &cecup.traversal_src;
     } else {
-        traversal_data = &cecup.traversal_dst;
+        traversal = &cecup.traversal_dst;
     }
 
-    for (int32 i = 0; i < traversal_data->nfiles; i += 1) {
-        char *path = traversal_data->paths[i];
-        int32 path_len = traversal_data->paths_lens[i];
+    for (int32 i = 0; i < traversal->nfiles; i += 1) {
+        char *path = traversal->paths[i];
+        int32 path_len = traversal->paths_lens[i];
         bool match = false;
 
         if (old_path[old_path_len - 1] == '/') {
@@ -481,14 +481,14 @@ update_row_rename(Message *message) {
             memcpy64(updated_path, new_path, new_path_len);
             memcpy64(updated_path + new_path_len, suffix, suffix_len + 1);
 
-            if (traversal_data->map) {
-                hash_remove_fs_map(traversal_data->map, path, path_len);
-                hash_insert_fs_map(traversal_data->map, updated_path, updated_path_len, i);
+            if (traversal->map) {
+                hash_remove_fs_map(traversal->map, path, path_len);
+                hash_insert_fs_map(traversal->map, updated_path, updated_path_len, i);
             }
 
-            XFREE(traversal_data->paths[i], path_len + 1);
-            traversal_data->paths[i] = updated_path;
-            traversal_data->paths_lens[i] = (int16)updated_path_len;
+            XFREE(traversal->paths[i], path_len + 1);
+            traversal->paths[i] = updated_path;
+            traversal->paths_lens[i] = (int16)updated_path_len;
         }
     }
 
