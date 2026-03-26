@@ -582,15 +582,23 @@ update_row_rename(Message *message) {
                 target_row->src_path = arena_path;
                 target_row->src_size_raw = row->src_size_raw;
                 target_row->src_mtime_raw = row->src_mtime_raw;
-                memcpy64(target_row->src_size_text, row->src_size_text, SIZEOF(target_row->src_size_text));
-                memcpy64(target_row->src_mtime_text, row->src_mtime_text, SIZEOF(target_row->src_mtime_text));
+                memcpy64(target_row->src_size_text,
+                         row->src_size_text,
+                         SIZEOF(target_row->src_size_text));
+                memcpy64(target_row->src_mtime_text,
+                         row->src_mtime_text,
+                         SIZEOF(target_row->src_mtime_text));
                 row->src_path = NULL;
             } else {
                 target_row->dst_path = arena_path;
                 target_row->dst_size_raw = row->dst_size_raw;
                 target_row->dst_mtime_raw = row->dst_mtime_raw;
-                memcpy64(target_row->dst_size_text, row->dst_size_text, SIZEOF(target_row->dst_size_text));
-                memcpy64(target_row->dst_mtime_text, row->dst_mtime_text, SIZEOF(target_row->dst_mtime_text));
+                memcpy64(target_row->dst_size_text,
+                         row->dst_size_text,
+                         SIZEOF(target_row->dst_size_text));
+                memcpy64(target_row->dst_mtime_text,
+                         row->dst_mtime_text,
+                         SIZEOF(target_row->dst_mtime_text));
                 row->dst_path = NULL;
             }
 
