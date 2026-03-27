@@ -328,8 +328,11 @@ work_traverse_fs(Traversal *traversal) {
             file_count += 1;
         }
 
+        is_dir = (ent->fts_info == FTS_D);
+
         {
             char *path_tmp;
+            int32 slash = 0;
             path_tmp = ent->fts_path + traversal->base_path_len;
             path_len = old_full_len - traversal->base_path_len;
 
@@ -343,11 +346,24 @@ work_traverse_fs(Traversal *traversal) {
                 path_len = 1;
             }
 
-            path = xarena_push(traversal->arena, path_len + 1);
+            if (is_dir) {
+                slash = 1;
+            }
+
+            path = xarena_push(traversal->arena, path_len + slash + 1);
             memcpy64(path, path_tmp, path_len + 1);
+
+            if (is_dir && (path[path_len] != '/')) {
+                path_len += 1;
+                path[path_len - 1] = '/';
+                path[path_len] = '\0';
+            }
         }
 
-        is_dir = (ent->fts_info == FTS_D);
+        if (is_dir) {
+            PRINTLN(ent->fts_path + traversal->base_path_len);
+            PRINTLN(path);
+        }
 
         link_target = NULL;
         link_target_len = 0;
