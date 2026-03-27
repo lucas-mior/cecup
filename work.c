@@ -360,11 +360,6 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        if (is_dir) {
-            PRINTLN(ent->fts_path + traversal->base_path_len);
-            PRINTLN(path);
-        }
-
         link_target = NULL;
         link_target_len = 0;
 
