@@ -66,7 +66,7 @@ option_remove() {
 
 case "$target" in
 "debug")
-    CFLAGS="$CFLAGS -g -fsanitize=undefined"
+    CFLAGS="$CFLAGS -g3 -fsanitize=undefined"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     exe="bin/${program}_debug"
     ;;
