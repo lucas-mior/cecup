@@ -173,138 +173,17 @@ item_status_get(CecupItem *item, enum CecupAction *action_src,
 
     *reason = 0;
 
-    if ((src_idx >= 0) && (dst_idx >= 0)) {
-        struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
-        struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
-        char *matched_src = cecup.traversal_src.matched_patterns[src_idx];
-        char *target_src = cecup.traversal_src.link_targets[src_idx];
-        char *target_dst = cecup.traversal_dst.link_targets[dst_idx];
-        bool is_symlink = S_ISLNK(stat_src->st_mode);
-        bool is_hardlink = S_ISREG(stat_src->st_mode) && (target_src != NULL);
-        bool is_dir = S_ISDIR(stat_src->st_mode);
-        bool equal = false;
-        bool attributes_differ = false;
-        enum CecupAction action = ACTION_UPDATE;
+    if ((cecup.traversal_src.stats == NULL)
+         || (cecup.traversal_dst.stats == NULL)) {
+        error("Function %s called while the traversal stats array is null.",
+              __func__);
+        error("This probably means that there is some race condition.\n");
+        error("Or another bug.\n");
+        fatal(EXIT_FAILURE);
+        return;
+    }
 
-        if (matched_src) {
-            action = ACTION_IGNORE;
-            *reason |= REASON_IGNORED;
-        } else {
-            if (is_symlink) {
-                *reason |= REASON_SYMLINK;
-                if (S_ISLNK(stat_dst->st_mode)) {
-                    if (target_src) {
-                        if (target_dst) {
-                            if (strcmp(target_src, target_dst) == 0) {
-                                equal = true;
-                            }
-                        }
-                    }
-                }
-            } else {
-                if (is_hardlink) {
-                    *reason |= REASON_HARDLINK;
-                }
-                if (!is_dir) {
-                    if (stat_src->st_size != stat_dst->st_size) {
-                        *reason |= REASON_SIZE;
-                        attributes_differ = true;
-                    }
-                }
-                if (stat_src->st_mtime > stat_dst->st_mtime) {
-                    *reason |= REASON_MTIME_NEWER;
-                    attributes_differ = true;
-                }
-                if (stat_src->st_mtime < stat_dst->st_mtime) {
-                    *reason |= REASON_MTIME_OLDER;
-                    attributes_differ = true;
-                }
-                if (is_dir) {
-                    if (stat_src->st_ctime > stat_dst->st_ctime) {
-                        *reason |= REASON_CTIME;
-                        attributes_differ = true;
-                    }
-                }
-                if (stat_src->st_uid != stat_dst->st_uid) {
-                    *reason |= REASON_OWNER;
-                    attributes_differ = true;
-                }
-                if (stat_src->st_gid != stat_dst->st_gid) {
-                    *reason |= REASON_GROUP;
-                    attributes_differ = true;
-                }
-                if ((stat_src->st_mode & 07777) != (stat_dst->st_mode & 07777)) {
-                    *reason |= REASON_PERM;
-                    attributes_differ = true;
-                }
-
-                if (is_hardlink) {
-                    if (!S_ISREG(stat_dst->st_mode) || (target_dst == NULL) || strcmp(target_src, target_dst)) {
-                        equal = false;
-                        attributes_differ = true;
-                    }
-                }
-
-                if (!attributes_differ) {
-                    equal = true;
-                }
-            }
-
-            if (equal) {
-                action = ACTION_EQUAL;
-                *reason |= REASON_EQUAL;
-            } else {
-                if (is_hardlink) {
-                    action = ACTION_HARDLINK;
-                } else if (is_symlink) {
-                    action = ACTION_SYMLINK;
-                } else {
-                    action = ACTION_UPDATE;
-                }
-            }
-        }
-
-        *action_src = action;
-        *action_dst = action;
-
-        if (action == ACTION_IGNORE) {
-            *action_src = ACTION_IGNORE;
-            if (delete_excluded) {
-                *action_dst = ACTION_DELETE;
-            } else {
-                *action_dst = ACTION_IGNORE;
-            }
-        } else if (action == ACTION_DELETE) {
-            *action_src = ACTION_IGNORE;
-            *action_dst = ACTION_DELETE;
-        }
-    } else if (src_idx >= 0) {
-        char *matched_src = cecup.traversal_src.matched_patterns[src_idx];
-        struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
-        bool is_symlink = S_ISLNK(stat_src->st_mode);
-        bool is_hardlink = S_ISREG(stat_src->st_mode)
-                           && cecup.traversal_src.link_targets[src_idx];
-
-        if (matched_src) {
-            *action_src = ACTION_IGNORE;
-            *action_dst = ACTION_IGNORE;
-            *reason |= REASON_IGNORED;
-        } else {
-            *reason |= REASON_NEW;
-            if (is_hardlink) {
-                *action_src = ACTION_HARDLINK;
-                *action_dst = ACTION_HARDLINK;
-                *reason |= REASON_HARDLINK;
-            } else if (is_symlink) {
-                *action_src = ACTION_SYMLINK;
-                *action_dst = ACTION_SYMLINK;
-                *reason |= REASON_SYMLINK;
-            } else {
-                *action_src = ACTION_NEW;
-                *action_dst = ACTION_NEW;
-            }
-        }
-    } else if (dst_idx >= 0) {
+    if (src_idx < 0) {
         char *matched_dst;
 
         matched_dst = cecup.traversal_dst.matched_patterns[dst_idx];
@@ -312,18 +191,180 @@ item_status_get(CecupItem *item, enum CecupAction *action_src,
 
         if (matched_dst) {
             *reason |= REASON_IGNORED;
+        }
+
+        *action_src = ACTION_IGNORE;
+
+        if (delete_excluded) {
+            *action_dst = ACTION_DELETE;
+        } else {
+            *action_dst = ACTION_IGNORE;
+        }
+
+        return;
+    }
+
+    if (dst_idx < 0) {
+        char *matched_src;
+        struct stat *stat_src;
+        bool is_symlink;
+        bool is_hardlink;
+
+        matched_src = cecup.traversal_src.matched_patterns[src_idx];
+        stat_src = &cecup.traversal_src.stats[src_idx];
+        is_symlink = S_ISLNK(stat_src->st_mode);
+        is_hardlink = S_ISREG(stat_src->st_mode) && cecup.traversal_src.link_targets[src_idx];
+
+        if (matched_src) {
             *action_src = ACTION_IGNORE;
+            *action_dst = ACTION_IGNORE;
+            *reason |= REASON_IGNORED;
+            return;
+        }
+
+        *reason |= REASON_NEW;
+
+        if (is_hardlink) {
+            *action_src = ACTION_HARDLINK;
+            *action_dst = ACTION_HARDLINK;
+            *reason |= REASON_HARDLINK;
+        } else if (is_symlink) {
+            *action_src = ACTION_SYMLINK;
+            *action_dst = ACTION_SYMLINK;
+            *reason |= REASON_SYMLINK;
+        } else {
+            *action_src = ACTION_NEW;
+            *action_dst = ACTION_NEW;
+        }
+
+        return;
+    }
+
+    {
+        char *matched_src;
+        struct stat *stat_src;
+        struct stat *stat_dst;
+        char *target_src;
+        char *target_dst;
+        bool is_symlink;
+        bool is_hardlink;
+        bool is_dir;
+        bool equal;
+        bool attributes_differ;
+
+        matched_src = cecup.traversal_src.matched_patterns[src_idx];
+
+        if (matched_src) {
+            *action_src = ACTION_IGNORE;
+            *reason |= REASON_IGNORED;
+
             if (delete_excluded) {
                 *action_dst = ACTION_DELETE;
             } else {
                 *action_dst = ACTION_IGNORE;
             }
+
+            return;
+        }
+
+        stat_src = &cecup.traversal_src.stats[src_idx];
+        stat_dst = &cecup.traversal_dst.stats[dst_idx];
+        target_src = cecup.traversal_src.link_targets[src_idx];
+        target_dst = cecup.traversal_dst.link_targets[dst_idx];
+        is_symlink = S_ISLNK(stat_src->st_mode);
+        is_hardlink = S_ISREG(stat_src->st_mode) && (target_src != NULL);
+        is_dir = S_ISDIR(stat_src->st_mode);
+        equal = false;
+        attributes_differ = false;
+
+        if (is_symlink) {
+            *reason |= REASON_SYMLINK;
+
+            if (S_ISLNK(stat_dst->st_mode)) {
+                if (target_src) {
+                    if (target_dst) {
+                        if (strcmp(target_src, target_dst) == 0) {
+                            equal = true;
+                        }
+                    }
+                }
+            }
         } else {
-            *action_src = ACTION_IGNORE;
-            if (delete_excluded) {
-                *action_dst = ACTION_DELETE;
+            if (is_hardlink) {
+                *reason |= REASON_HARDLINK;
+            }
+
+            if (!is_dir) {
+                if (stat_src->st_size != stat_dst->st_size) {
+                    *reason |= REASON_SIZE;
+                    attributes_differ = true;
+                }
+            }
+
+            if (stat_src->st_mtime > stat_dst->st_mtime) {
+                *reason |= REASON_MTIME_NEWER;
+                attributes_differ = true;
+            }
+
+            if (stat_src->st_mtime < stat_dst->st_mtime) {
+                *reason |= REASON_MTIME_OLDER;
+                attributes_differ = true;
+            }
+
+            if (is_dir) {
+                if (stat_src->st_ctime > stat_dst->st_ctime) {
+                    *reason |= REASON_CTIME;
+                    attributes_differ = true;
+                }
+            }
+
+            if (stat_src->st_uid != stat_dst->st_uid) {
+                *reason |= REASON_OWNER;
+                attributes_differ = true;
+            }
+
+            if (stat_src->st_gid != stat_dst->st_gid) {
+                *reason |= REASON_GROUP;
+                attributes_differ = true;
+            }
+
+            if ((stat_src->st_mode & 07777) != (stat_dst->st_mode & 07777)) {
+                *reason |= REASON_PERM;
+                attributes_differ = true;
+            }
+
+            if (is_hardlink) {
+                if (!S_ISREG(stat_dst->st_mode)) {
+                    equal = false;
+                    attributes_differ = true;
+                } else if (target_dst == NULL) {
+                    equal = false;
+                    attributes_differ = true;
+                } else if (strcmp(target_src, target_dst) != 0) {
+                    equal = false;
+                    attributes_differ = true;
+                }
+            }
+
+            if (!attributes_differ) {
+                equal = true;
+            }
+        }
+
+        if (equal) {
+            *action_src = ACTION_EQUAL;
+            *action_dst = ACTION_EQUAL;
+            *reason |= REASON_EQUAL;
+        } else {
+            if (is_hardlink) {
+                *action_src = ACTION_HARDLINK;
+                *action_dst = ACTION_HARDLINK;
+            } else if (is_symlink) {
+                *action_src = ACTION_SYMLINK;
+                *action_dst = ACTION_SYMLINK;
             } else {
-                *action_dst = ACTION_IGNORE;
+                *action_src = ACTION_UPDATE;
+                *action_dst = ACTION_UPDATE;
             }
         }
     }
