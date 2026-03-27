@@ -341,6 +341,9 @@ G_DECLARE_FINAL_TYPE(CecupListModel, cecup_list_model, CECUP, LIST_MODEL, GObjec
 typedef struct IgnorePattern {
     char *str;
     int32 len;
+    char *match_str;
+    bool dir_only;
+    bool has_slash;
 } IgnorePattern;
 
 static struct {
