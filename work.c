@@ -544,8 +544,8 @@ work_preview(void *user_data) {
         char *link_target_src;
         int32 path_len;
         CecupItem item;
-        enum CecupAction src_act;
-        enum CecupAction dst_act;
+        enum Action src_act;
+        enum Action dst_act;
         enum CecupReason reason;
 
         if ((int64)bucket_src->key <= 0) {

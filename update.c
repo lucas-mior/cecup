@@ -592,8 +592,8 @@ update_list_from_rows(void) {
     cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupItem *item;
-        enum CecupAction src_act;
-        enum CecupAction dst_act;
+        enum Action src_act;
+        enum Action dst_act;
         enum CecupReason reason;
         bool visible;
         int64 sz;

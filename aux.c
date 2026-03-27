@@ -164,8 +164,8 @@ item_link_target_len_side(CecupItem *item, int32 side) {
 }
 
 static void
-item_get_actions_reasons(CecupItem *item, enum CecupAction *action_src,
-                enum CecupAction *action_dst, enum CecupReason *reason) {
+item_get_actions_reasons(CecupItem *item, enum Action *action_src,
+                         enum Action *action_dst, enum CecupReason *reason) {
     int32 src_idx = item->src_idx;
     int32 dst_idx = item->dst_idx;
     bool delete_excluded
@@ -494,7 +494,7 @@ free_task_list(TaskList *tasks) {
 
 static TaskList *
 get_target_tasks(int32 side, char *clicked_path,
-                 enum CecupAction clicked_action) {
+                 enum Action clicked_action) {
     TaskList *tasks;
     int64 tasks_size = STRUCT_ARRAY_SIZE(tasks, Task *, cecup.rows_len);
     int32 count = 0;
@@ -506,9 +506,9 @@ get_target_tasks(int32 side, char *clicked_path,
         CecupItem *item = cecup.rows[i];
         char *filepath;
         int32 path_len;
-        enum CecupAction action;
-        enum CecupAction action_src;
-        enum CecupAction action_dst;
+        enum Action action;
+        enum Action action_src;
+        enum Action action_dst;
         enum CecupReason reason;
         char *link_target;
         int32 link_target_len;
@@ -612,10 +612,10 @@ cecup_item_compare(const void *a, const void *b) {
     int64 size_b;
     int64 mtime_a;
     int64 mtime_b;
-    enum CecupAction src_act_a;
-    enum CecupAction dst_act_a;
-    enum CecupAction src_act_b;
-    enum CecupAction dst_act_b;
+    enum Action src_act_a;
+    enum Action dst_act_a;
+    enum Action src_act_b;
+    enum Action dst_act_b;
     enum CecupReason reason_a;
     enum CecupReason reason_b;
 

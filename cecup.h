@@ -42,7 +42,7 @@
 #define MESSAGES_BUF_SIZE 256
 
 #define ENUM_BITFLAGS 0
-#define ENUM_NAME CecupAction
+#define ENUM_NAME Action
 #define ENUM_PREFIX_ ACTION_
 #define ENUM_FIELDS     \
     X(NEW)              \
@@ -276,7 +276,7 @@ typedef struct CecupItem {
 
 typedef struct Message {
     enum DataType type;
-    enum CecupAction action;
+    enum Action action;
     enum CecupReason reason;
 
     char *text;
@@ -315,7 +315,7 @@ typedef struct MessageBatch {
 
 typedef struct Task {
     enum DataType type;
-    enum CecupAction action;
+    enum Action action;
     enum CecupReason reason;
     int32 side;
 

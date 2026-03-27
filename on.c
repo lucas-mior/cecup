@@ -53,8 +53,8 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     char *filepath;
     int32 side;
     int32 path_len;
-    enum CecupAction action_src;
-    enum CecupAction action_dst;
+    enum Action action_src;
+    enum Action action_dst;
     enum CecupReason reason;
 
     if (menu_item == NULL) {
@@ -567,8 +567,8 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
             }
 
             if (item->selected) {
-                enum CecupAction action_src;
-                enum CecupAction action_dst;
+                enum Action action_src;
+                enum Action action_dst;
                 enum CecupReason reason;
                 int64 size;
 
@@ -924,8 +924,8 @@ on_tree_button_press(GtkGestureClick *gesture,
         Message *message;
         GtkSelectionModel *selection;
         uint32 pos;
-        enum CecupAction action_src;
-        enum CecupAction action_dst;
+        enum Action action_src;
+        enum Action action_dst;
         enum CecupReason reason;
 
         if (n_press != 1) {
@@ -1163,9 +1163,9 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
 
     if (item) {
         char *filepath;
-        enum CecupAction action;
-        enum CecupAction action_src;
-        enum CecupAction action_dst;
+        enum Action action;
+        enum Action action_src;
+        enum Action action_dst;
         enum CecupReason reason;
         bool is_dir = false;
         char *link_target;
