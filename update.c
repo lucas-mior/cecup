@@ -38,8 +38,7 @@
 
 #define UI_INTERVAL_MS 100
 
-static void update_list_from_rows(enum RefreshType refresh_type,
-                                  char *path_to_focus);
+static void update_list_from_rows(void);
 
 static void
 update_row_remove(Message *message) {
@@ -601,12 +600,12 @@ update_row_rename(Message *message) {
         }
     }
 
-    update_list_from_rows(REFRESH_FINAL, NULL);
+    update_list_from_rows();
     return;
 }
 
 static void
-update_list_from_rows(enum RefreshType refresh_type, char *path_to_focus) {
+update_list_from_rows(void) {
     int32 count_new = 0;
     int32 count_hard = 0;
     int32 count_update = 0;
@@ -742,31 +741,6 @@ update_list_from_rows(enum RefreshType refresh_type, char *path_to_focus) {
                             (int32)current_store_count,
                             cecup.rows_visible_len);
 
-    if ((refresh_type & REFRESH_FINAL) && path_to_focus) {
-        for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
-            char *row_path = row_path_get(cecup.rows_visible[i]);
-            char row_full_rel[MAX_PATH_LENGTH];
-            int32 row_rel_len;
-
-            row_rel_len = SNPRINTF(row_full_rel, "/%s", row_path);
-            normalize(row_full_rel, &row_rel_len);
-
-            if (!strcmp(row_full_rel, path_to_focus)) {
-                GtkSelectionModel *sel_l;
-                GtkSelectionModel *sel_r;
-                GtkColumnView *view_left = GTK_COLUMN_VIEW(cecup.tree[L]);
-                GtkColumnView *view_right = GTK_COLUMN_VIEW(cecup.tree[R]);
-
-                sel_l = gtk_column_view_get_model(view_left);
-                sel_r = gtk_column_view_get_model(view_right);
-
-                gtk_selection_model_select_item(sel_l, (uint32)i, TRUE);
-                gtk_selection_model_select_item(sel_r, (uint32)i, TRUE);
-                break;
-            }
-        }
-    }
-
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
     PRINT_TIMINGS(cecup.rows_visible_len, t0, t1);
     return;
@@ -823,7 +797,7 @@ update_row_ignore(Message *message) {
         }
     }
 
-    update_list_from_rows(REFRESH_FILTER_CHANGED, NULL);
+    update_list_from_rows();
     return;
 }
 
@@ -917,7 +891,7 @@ update_ui_handler(void *data) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
         }
-        update_list_from_rows(REFRESH_FINAL, message->path_to_focus);
+        update_list_from_rows();
 
         if (message->preview_clean) {
             cecup.preview_dirty = false;
@@ -956,7 +930,6 @@ update_ui_handler(void *data) {
     }
 
     free(message->text, message->text_len + 1);
-    free(message->path_to_focus, message->focus_len + 1);
 
     if (message->src_path) {
         free(message->src_path, message->path_len + 1);

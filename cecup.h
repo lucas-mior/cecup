@@ -307,7 +307,6 @@ typedef struct Message {
     char *dst_path;
     char *link_target;
     char *ignore_pattern;
-    char *path_to_focus;
     char *old_path;
     char *new_path;
 
@@ -315,7 +314,6 @@ typedef struct Message {
     int32 path_len;
     int32 link_target_len;
     int32 ignore_pattern_len;
-    int32 focus_len;
     int32 old_path_len;
     int32 new_path_len;
 

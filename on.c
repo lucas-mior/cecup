@@ -237,7 +237,7 @@ on_config_changed(GtkWidget *widget, void *data) {
 static gboolean
 on_search_timeout(void *data) {
     (void)data;
-    update_list_from_rows(REFRESH_FILTER_CHANGED, NULL);
+    update_list_from_rows();
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
                                       GTK_ENTRY_ICON_SECONDARY, NULL);
     cecup.search_timeout_id = 0;
@@ -432,7 +432,7 @@ static void
 on_filter_toggled(GtkToggleButton *b, void *data) {
     (void)data;
     (void)b;
-    update_list_from_rows(REFRESH_FILTER_CHANGED, NULL);
+    update_list_from_rows();
     save_config();
     return;
 }
@@ -458,7 +458,7 @@ on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
             void *col_data = g_object_get_data(G_OBJECT(col), "col_id");
             cecup.sort_col = (enum CecupColumn)GPOINTER_TO_INT(col_data);
             cecup.sort_order = order;
-            update_list_from_rows(REFRESH_FILTER_CHANGED, NULL);
+            update_list_from_rows();
         }
     }
 
@@ -577,7 +577,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         }
     }
 
-    update_list_from_rows(REFRESH_FINAL, NULL);
+    update_list_from_rows();
     g_list_model_items_changed(cecup.store,
                                0,
                                (uint32)cecup.rows_visible_len,
