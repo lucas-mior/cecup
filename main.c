@@ -41,6 +41,12 @@ CecupListModel *cecup_list_model_new(void);
 CecupItem *cecup_item_proxy_get_item(CecupItemProxy *proxy);
 
 static void
+free_text_info(void *data) {
+    free(data, SIZEOF(TextInfo));
+    return;
+}
+
+static void
 main_setup_tree_columns(GtkWidget *tree,
                         enum CecupColumn col_act, enum CecupColumn col_path) {
     GActionMap *action_map;
@@ -73,6 +79,7 @@ main_setup_tree_columns(GtkWidget *tree,
         g_signal_connect(factory, "bind",
                          G_CALLBACK(bind_column_checkbox), GINT_TO_POINTER(side));
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+        g_object_unref(column);
     }
 
     {
@@ -90,6 +97,7 @@ main_setup_tree_columns(GtkWidget *tree,
 
         g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(col_act));
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+        g_object_unref(column);
     }
 
     {
@@ -109,6 +117,7 @@ main_setup_tree_columns(GtkWidget *tree,
         g_object_set_data(G_OBJECT(column),
                           "col_id", GINT_TO_POINTER(col_path));
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+        g_object_unref(column);
     }
 
     {
@@ -119,7 +128,8 @@ main_setup_tree_columns(GtkWidget *tree,
 
         text_info->side = side;
         text_info->type = COLUMN_SIZE;
-        g_object_set_data_full(G_OBJECT(factory), "text_info", text_info, free);
+        g_object_set_data_full(G_OBJECT(factory),
+                               "text_info", text_info, free_text_info);
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_text_cb), NULL);
@@ -132,6 +142,7 @@ main_setup_tree_columns(GtkWidget *tree,
         g_object_set_data(G_OBJECT(column),
                           "col_id", GINT_TO_POINTER(COL_SIZE_RAW));
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+        g_object_unref(column);
     }
 
     {
@@ -142,7 +153,8 @@ main_setup_tree_columns(GtkWidget *tree,
 
         text_info->side = side;
         text_info->type = COLUMN_MTIME;
-        g_object_set_data_full(G_OBJECT(factory), "text_info", text_info, free);
+        g_object_set_data_full(G_OBJECT(factory),
+                               "text_info", text_info, free_text_info);
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_text_cb), NULL);
@@ -156,6 +168,7 @@ main_setup_tree_columns(GtkWidget *tree,
         g_object_set_data(G_OBJECT(column),
                           "col_id", GINT_TO_POINTER(COL_MTIME_RAW));
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
+        g_object_unref(column);
     }
 
     gtk_widget_set_has_tooltip(tree, TRUE);
@@ -471,7 +484,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     scroll[L] = gtk_scrolled_window_new();
     selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(cecup.store));
     tree[L] = gtk_column_view_new(selection_model);
-    g_object_unref(selection_model);
     cecup.tree[L] = tree[L];
     g_object_set_data(G_OBJECT(tree[L]), "side", GINT_TO_POINTER(L));
     main_setup_tree_columns(tree[L], COL_SRC_ACTION, COL_SRC_PATH);
@@ -484,7 +496,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     scroll[R] = gtk_scrolled_window_new();
     selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(cecup.store));
     tree[R] = gtk_column_view_new(selection_model);
-    g_object_unref(selection_model);
     cecup.tree[R] = tree[R];
     g_object_set_data(G_OBJECT(tree[R]), "side", GINT_TO_POINTER(R));
     main_setup_tree_columns(tree[R], COL_DST_ACTION, COL_DST_PATH);
