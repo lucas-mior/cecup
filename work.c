@@ -218,7 +218,7 @@ work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
 }
 
 static int64
-work_traverse_fs(Traversal *data) {
+work_traverse_fs(Traversal *traversal) {
     int64 file_count;
     char *paths[2];
     FTS *fts_handle;
@@ -229,14 +229,14 @@ work_traverse_fs(Traversal *data) {
     }
 
     file_count = 0;
-    paths[0] = data->base_path;
+    paths[0] = traversal->base_path;
     paths[1] = NULL;
 
     if ((fts_handle
          = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
         if (cecup.stop_working == false) {
             error(_("Error walking directory %s: %s.\n"),
-                    data->base_path, strerror(errno));
+                    traversal->base_path, strerror(errno));
         }
         return 0;
     }
@@ -369,8 +369,8 @@ work_traverse_fs(Traversal *data) {
             file_count += 1;
         }
 
-        path = ent->fts_path + data->base_path_len;
-        path_len = old_full_len - data->base_path_len;
+        path = ent->fts_path + traversal->base_path_len;
+        path_len = old_full_len - traversal->base_path_len;
 
         if (path[0] == '/') {
             path += 1;
@@ -407,25 +407,25 @@ work_traverse_fs(Traversal *data) {
             int32 *first_idx_ptr;
 
             n = itoa2(inode_str, (long)ent->fts_statp->st_ino);
-            first_idx_ptr = hash_lookup_inode_map(data->inode_map, inode_str, n);
+            first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n);
             if (first_idx_ptr) {
                 int32 first_idx;
 
                 first_idx = *first_idx_ptr;
-                link_target = data->paths[first_idx];
+                link_target = traversal->paths[first_idx];
                 if (link_target == NULL) {
                     error("Setting hardlink target to NULL (%s)\n", path);
                 }
-                link_target_len = data->paths_lens[first_idx];
+                link_target_len = traversal->paths_lens[first_idx];
 
-                if (data->link_targets[first_idx] == NULL) {
-                    data->link_targets[first_idx] = path;
-                    data->link_targets_lens[first_idx] = (int16)path_len;
+                if (traversal->link_targets[first_idx] == NULL) {
+                    traversal->link_targets[first_idx] = path;
+                    traversal->link_targets_lens[first_idx] = (int16)path_len;
                 }
             } else {
-                hash_insert_inode_map(data->inode_map,
+                hash_insert_inode_map(traversal->inode_map,
                                       inode_str, n,
-                                      data->nfiles);
+                                      traversal->nfiles);
             }
         }
 
@@ -444,7 +444,7 @@ work_traverse_fs(Traversal *data) {
             }
         }
 
-        traversal_push(data, path, path_len,
+        traversal_push(traversal, path, path_len,
                        ent->fts_statp,
                        link_target, link_target_len,
                        matched_pattern, matched_pattern_len);
