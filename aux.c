@@ -31,7 +31,10 @@
 static bool
 aux_is_root(char *path) {
     if (path[0] == '.') {
-        if ((path[1] == '/') || (path[1] == '\0')) {
+        if (path[1] == '\0') {
+            return true;
+        }
+        if ((path[1] == '/') && (path[2] == '\0')) {
             return true;
         }
     }
@@ -906,10 +909,89 @@ main(void) {
     (void)get_target_tasks;
     (void)free_task_list;
     (void)free_message;
-    ASSERT(true);
+
+    {
+        char root1[] = ".";
+        char root2[] = "./";
+        char not_root1[] = "..";
+        char not_root2[] = "foo";
+        char not_root3[] = "./foo";
+
+        ASSERT(aux_is_root(root1));
+        ASSERT(aux_is_root(root2));
+        ASSERT(!aux_is_root(not_root1));
+        ASSERT(!aux_is_root(not_root2));
+        ASSERT(!aux_is_root(not_root3));
+    }
+
+    {
+        Traversal t;
+        int32 idx1;
+        int32 idx2;
+        char path1[] = "file1.txt";
+        char path2[] = "file2.txt";
+
+        memset64(&t, 0, SIZEOF(t));
+
+        idx1 = traversal_push(&t, path1, 9, NULL, NULL, 0, NULL, 0);
+        ASSERT(idx1 == 0);
+        ASSERT(t.nfiles == 1);
+        ASSERT(t.ncapacity == 1024);
+        ASSERT(strcmp(t.paths[0], path1) == 0);
+
+        idx2 = traversal_push(&t, path2, 9, NULL, NULL, 0, NULL, 0);
+        ASSERT(idx2 == 1);
+        ASSERT(t.nfiles == 2);
+        ASSERT(t.ncapacity == 1024);
+        ASSERT(strcmp(t.paths[1], path2) == 0);
+
+        for (int32 i = 2; i < 1025; i += 1) {
+            traversal_push(&t, path1, 9, NULL, NULL, 0, NULL, 0);
+        }
+
+        ASSERT(t.nfiles == 1025);
+        ASSERT(t.ncapacity == 2048);
+    }
+
+    {
+        CecupItem item;
+        char src_path[] = "src/file";
+        char dst_path[] = "dst/file";
+        char *paths_src[1];
+        char *paths_dst[1];
+        int16 paths_lens_src[1];
+        int16 paths_lens_dst[1];
+
+        paths_src[0] = src_path;
+        paths_dst[0] = dst_path;
+        paths_lens_src[0] = 8;
+        paths_lens_dst[0] = 8;
+
+        memset64(&cecup, 0, SIZEOF(cecup));
+        cecup.traversal_src.paths = paths_src;
+        cecup.traversal_dst.paths = paths_dst;
+        cecup.traversal_src.paths_lens = paths_lens_src;
+        cecup.traversal_dst.paths_lens = paths_lens_dst;
+
+        item.src_idx = 0;
+        item.dst_idx = -1;
+
+        ASSERT(strcmp(item_path_side(&item, L), src_path) == 0);
+        ASSERT(item_path_side(&item, R) == NULL);
+        ASSERT(item_path_len_side(&item, L) == 8);
+        ASSERT(item_path_len_side(&item, R) == 0);
+
+        item.src_idx = -1;
+        item.dst_idx = 0;
+
+        ASSERT(item_path_side(&item, L) == NULL);
+        ASSERT(strcmp(item_path_side(&item, R), dst_path) == 0);
+        ASSERT(item_path_len_side(&item, L) == 0);
+        ASSERT(item_path_len_side(&item, R) == 8);
+    }
+
     exit(EXIT_SUCCESS);
 }
-
 #endif
 
 #endif /* AUX_C */
