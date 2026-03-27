@@ -69,6 +69,9 @@
     X(PERM)             \
     X(HARDLINK)         \
     X(SYMLINK)          \
+    X(HARDLINK_NOT_REGULAR) \
+    X(HARDLINK_MISSING_LINK) \
+    X(HARDLINK_NOT_MATCH) \
     X(EQUAL)            \
     X(IGNORED)          \
     X(MISSING)

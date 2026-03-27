@@ -332,6 +332,7 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
                               " because the correspondent file on the backup"
                               " is not a regular file.\n");
                     equal = false;
+                    *reason |= REASON_HARDLINK_NOT_REGULAR;
                     attributes_differ = true;
                 } else if (target_dst == NULL) {
                     equal = false;
@@ -339,6 +340,7 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
                     LOG_ERROR("Updating hardlink"
                               " because the correspondent file on the backup"
                               " does not have a link target.\n");
+                    *reason |= REASON_HARDLINK_MISSING_LINK;
                 } else if (
                         strcmp(target_src, target_dst)
                         && strcmp(path_src, target_dst)
@@ -350,6 +352,7 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
                               " of correspondent file on the backup"
                               " does not match the link target on the source.\n",
                               path_src, target_src, path_dst, target_dst);
+                    *reason |= REASON_HARDLINK_NOT_MATCH;
                 }
             }
 
