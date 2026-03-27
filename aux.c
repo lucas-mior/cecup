@@ -174,29 +174,17 @@ item_status_get(CecupItem *item, enum CecupAction *src_act,
     *reason = 0;
 
     if ((src_idx >= 0) && (dst_idx >= 0)) {
-        struct stat *stat_src;
-        struct stat *stat_dst;
-        char *matched_src;
-        char *target_src;
-        char *target_dst;
-        bool is_symlink;
-        bool is_hardlink;
-        bool is_dir;
-        bool equal;
-        bool attributes_differ;
-        enum CecupAction action;
-
-        stat_src = &cecup.traversal_src.stats[src_idx];
-        stat_dst = &cecup.traversal_dst.stats[dst_idx];
-        matched_src = cecup.traversal_src.matched_patterns[src_idx];
-        target_src = cecup.traversal_src.link_targets[src_idx];
-        target_dst = cecup.traversal_dst.link_targets[dst_idx];
-        is_symlink = S_ISLNK(stat_src->st_mode);
-        is_hardlink = S_ISREG(stat_src->st_mode) && (target_src != NULL);
-        is_dir = S_ISDIR(stat_src->st_mode);
-        equal = false;
-        attributes_differ = false;
-        action = ACTION_UPDATE;
+        struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
+        struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
+        char *matched_src = cecup.traversal_src.matched_patterns[src_idx];
+        char *target_src = cecup.traversal_src.link_targets[src_idx];
+        char *target_dst = cecup.traversal_dst.link_targets[dst_idx];
+        bool is_symlink = S_ISLNK(stat_src->st_mode);
+        bool is_hardlink = S_ISREG(stat_src->st_mode) && (target_src != NULL);
+        bool is_dir = S_ISDIR(stat_src->st_mode);
+        bool equal = false;
+        bool attributes_differ = false;
+        enum CecupAction action = ACTION_UPDATE;
 
         if (matched_src) {
             action = ACTION_IGNORE;
@@ -287,15 +275,11 @@ item_status_get(CecupItem *item, enum CecupAction *src_act,
             *dst_act = ACTION_DELETE;
         }
     } else if (src_idx >= 0) {
-        char *matched_src;
-        struct stat *stat_src;
-        bool is_symlink;
-        bool is_hardlink;
-
-        matched_src = cecup.traversal_src.matched_patterns[src_idx];
-        stat_src = &cecup.traversal_src.stats[src_idx];
-        is_symlink = S_ISLNK(stat_src->st_mode);
-        is_hardlink = S_ISREG(stat_src->st_mode) && cecup.traversal_src.link_targets[src_idx];
+        char *matched_src = cecup.traversal_src.matched_patterns[src_idx];
+        struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
+        bool is_symlink = S_ISLNK(stat_src->st_mode);
+        bool is_hardlink = S_ISREG(stat_src->st_mode)
+                           && cecup.traversal_src.link_targets[src_idx];
 
         if (matched_src) {
             *src_act = ACTION_IGNORE;
