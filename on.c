@@ -609,7 +609,9 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     }
 
     /* Update the Model and UI */
-    g_list_model_items_changed(cecup.store, 0, (uint32)cecup.rows_visible_len, (uint32)cecup.rows_visible_len);
+    g_list_model_items_changed(cecup.store, 0,
+                               (uint32)cecup.rows_visible_len,
+                               (uint32)cecup.rows_visible_len);
     update_visible_checkboxes(cecup.tree[side], side);
 
     in_update = false;
