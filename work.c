@@ -343,15 +343,13 @@ work_traverse_fs(Traversal *traversal) {
 
                 first_idx = *first_idx_ptr;
                 link_target = traversal->paths[first_idx];
-                if (link_target == NULL) {
-                    error("Setting hardlink target to NULL (%s)\n", path);
-                }
                 link_target_len = traversal->paths_lens[first_idx];
 
                 if (traversal->link_targets[first_idx] == NULL) {
                     traversal->link_targets[first_idx] = path;
                     traversal->link_targets_lens[first_idx] = (int16)path_len;
                 }
+                traversal->nlinks[first_idx] += 1;
             } else {
                 hash_insert_inode_map(traversal->inode_map,
                                       inode_str, n,
@@ -381,9 +379,9 @@ work_traverse_fs(Traversal *traversal) {
         }
 
         traversal_push(traversal, path, path_len,
-                        ent->fts_statp,
-                        link_target, link_target_len,
-                        matched_pattern, matched_pattern_len);
+                       ent->fts_statp,
+                       link_target, link_target_len,
+                       matched_pattern, matched_pattern_len);
     }
 
     if (fts_close(fts_handle) < 0) {
