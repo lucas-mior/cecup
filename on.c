@@ -1144,8 +1144,6 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
     char tip_buffer[MAX_PATH_LENGTH*2];
     char reason_buf[1024];
     int32 rb_pos;
-    int64 size_raw;
-    int64 mtime_raw;
     char text_buf[64] = "";
 
     (void)k;
@@ -1281,6 +1279,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             break;
         }
         case COLUMN_SIZE:
+        {
+            int64 size_raw;
             size_raw = item_size_side(item, side);
             if (size_raw < 0) {
                 size_raw = 0;
@@ -1288,7 +1288,10 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             SNPRINTF(tip_buffer, "%s: %lld bytes", filepath, (llong)size_raw);
             tip_text = tip_buffer;
             break;
+        }
         case COLUMN_MTIME:
+        {
+            int64 mtime_raw;
             mtime_raw = item_mtime_side(item, side);
             if (mtime_raw > 0) {
                 struct tm time_information;
@@ -1301,6 +1304,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             SNPRINTF(tip_buffer, "%s: %s", filepath, text_buf);
             tip_text = tip_buffer;
             break;
+        }
         case COLUMN_LAST:
         default:
             break;
