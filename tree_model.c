@@ -182,23 +182,11 @@ cecup_list_model_list_model_init(GListModelInterface *iface) {
 static void
 cecup_list_model_update(CecupListModel *self,
                         int32 old_count, int32 new_count) {
-    int32 max_count;
-
-    if (old_count > new_count) {
-        max_count = old_count;
-    } else {
-        max_count = new_count;
-    }
-
-    for (int32 i = 0; i < max_count; i += 1) {
-        if ((i < self->proxies_capacity) && self->proxies[i]) {
-            g_object_unref(self->proxies[i]);
-            self->proxies[i] = NULL;
-        }
-    }
-
-    g_list_model_items_changed(G_LIST_MODEL(self),
-                               0, (guint)old_count, (guint)new_count);
+    /* * REMOVED: The O(N) loop that unrefs all proxies. 
+     * Destroying proxies while GTK is binding them causes 
+     * the use-after-free segfault.
+     */
+    g_list_model_items_changed(G_LIST_MODEL(self), 0, (guint)old_count, (guint)new_count);
     return;
 }
 
@@ -224,18 +212,17 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
 
 static void
 cecup_list_model_row_changed(CecupListModel *self, int32 index) {
-    if (index < 0) {
+    if (index < 0 || index >= cecup.rows_visible_len) {
         return;
     }
-
-    if ((index < self->proxies_capacity) && self->proxies[index]) {
-        g_object_unref(self->proxies[index]);
-        self->proxies[index] = NULL;
-    }
-
+    /* * DO NOT unref/NULL the proxy here. 
+     * Just signal the change. GTK will call get_item(), 
+     * and your existing logic will verify if the item matches.
+     */
     g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 1);
     return;
 }
+
 
 static inline void
 tree_model_functions_sink(void) {

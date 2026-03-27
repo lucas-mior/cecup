@@ -54,16 +54,15 @@ bind_column_checkbox(GtkSignalListItemFactory *factory,
     uint32 position;
 
     (void)factory;
-    (void)data;
 
     check = gtk_list_item_get_child(list_item);
     proxy = CECUP_ITEM_PROXY(gtk_list_item_get_item(list_item));
     item = cecup_item_proxy_get_item(proxy);
     position = gtk_list_item_get_position(list_item);
 
-    g_signal_handlers_block_by_func(check, on_cell_toggled, NULL);
+    g_signal_handlers_block_by_func(check, on_cell_toggled, data);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(check), item->selected);
-    g_signal_handlers_unblock_by_func(check, on_cell_toggled, NULL);
+    g_signal_handlers_unblock_by_func(check, on_cell_toggled, data);
 
     g_object_set_data(G_OBJECT(check), "cecup-item", item);
     g_object_set_data(G_OBJECT(check), "cecup-pos", GUINT_TO_POINTER(position + 1));

@@ -467,7 +467,7 @@ on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
 static void on_cell_toggled(GtkCheckButton *renderer, void *user_data);
 
 static void
-update_visible_checkboxes(GtkWidget *widget) {
+update_visible_checkboxes(GtkWidget *widget, int32 side) {
     GtkWidget *child;
     CecupItem *item;
 
@@ -477,19 +477,18 @@ update_visible_checkboxes(GtkWidget *widget) {
 
     if (GTK_IS_CHECK_BUTTON(widget)) {
         if ((item = g_object_get_data(G_OBJECT(widget), "cecup-item"))) {
-            g_signal_handlers_block_by_func(widget, on_cell_toggled, NULL);
+            /* FIX: Pass GINT_TO_POINTER(side) to match the connection */
+            g_signal_handlers_block_by_func(widget, on_cell_toggled, GINT_TO_POINTER(side));
             gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), item->selected);
-            g_signal_handlers_unblock_by_func(widget, on_cell_toggled, NULL);
+            g_signal_handlers_unblock_by_func(widget, on_cell_toggled, GINT_TO_POINTER(side));
         }
     }
 
     child = gtk_widget_get_first_child(widget);
-
     while (child != NULL) {
-        update_visible_checkboxes(child);
+        update_visible_checkboxes(child, side);
         child = gtk_widget_get_next_sibling(child);
     }
-
     return;
 }
 
@@ -501,111 +500,112 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     bool is_root;
     bool is_active;
     int32 side;
+    static bool in_update = false;
+
+    if (in_update) {
+        return;
+    }
 
     side = GPOINTER_TO_INT(user_data);
 
-    if ((item_toggled
-         = g_object_get_data(G_OBJECT(renderer), "cecup-item")) == NULL) {
+    if ((item_toggled = g_object_get_data(G_OBJECT(renderer), "cecup-item")) == NULL) {
         return;
     }
 
     is_active = gtk_check_button_get_active(renderer);
-
     if (item_toggled->selected == is_active) {
         return;
     }
 
+    in_update = true;
     item_toggled->selected = is_active;
 
     parent_path = item_path_side(item_toggled, side);
     if (parent_path == NULL) {
-        if (side == L) {
-            parent_path = item_path_side(item_toggled, R);
-        } else {
-            parent_path = item_path_side(item_toggled, L);
-        }
+        parent_path = item_path_side(item_toggled, (side == L) ? R : L);
     }
 
-    if (parent_path == NULL) {
-        return;
-    }
+    if (parent_path != NULL) {
+        parent_path_len = strlen32(parent_path);
+        is_root = aux_is_root(parent_path);
 
-    parent_path_len = strlen32(parent_path);
-    if (aux_is_root(parent_path)) {
-        is_root = true;
-    } else {
-        is_root = false;
-    }
+        /* Single O(N) pass for propagation and stats */
+        int64 count_selected = 0;
+        int64 total_size_bytes = 0;
+        bool filter_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
+        bool filter_hard = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
+        bool filter_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
 
-    for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupItem *item;
-        char *path;
-        int32 path_len;
-
-        item = cecup.rows[i];
-        path = item_path_side(item, side);
-        if (path == NULL) {
-            if (side == L) {
-                path = item_path_side(item, R);
-            } else {
-                path = item_path_side(item, L);
+        for (int32 i = 0; i < cecup.rows_len; i += 1) {
+            CecupItem *item = cecup.rows[i];
+            char *path = item_path_side(item, side);
+            if (path == NULL) {
+                path = item_path_side(item, (side == L) ? R : L);
             }
-        }
 
-        if (path == NULL) {
-            continue;
-        }
+            if (path != NULL) {
+                int32 path_len = strlen32(path);
 
-        path_len = strlen32(path);
-
-        if (item_toggled->selected) {
-            if (is_root) {
-                item->selected = true;
-            } else if (parent_path_len > 0) {
-                if (parent_path[parent_path_len - 1] == '/') {
-                    if (path_len >= parent_path_len) {
-                        if (!strncmp32(path, parent_path, parent_path_len)) {
+                if (item_toggled->selected) {
+                    if (is_root) {
+                        item->selected = true;
+                    } else if (parent_path_len > 0 && parent_path[parent_path_len - 1] == '/') {
+                        if (path_len >= parent_path_len && !strncmp32(path, parent_path, parent_path_len)) {
                             item->selected = true;
                         }
                     }
-                }
-            }
-        } else {
-            if (is_root) {
-                item->selected = false;
-            } else {
-                if (parent_path_len > 0) {
-                    if (parent_path[parent_path_len - 1] == '/') {
-                        if (path_len >= parent_path_len) {
-                            if (!strncmp32(path, parent_path, parent_path_len)) {
+                } else {
+                    if (is_root) {
+                        item->selected = false;
+                    } else {
+                        if (parent_path_len > 0 && parent_path[parent_path_len - 1] == '/') {
+                            if (path_len >= parent_path_len && !strncmp32(path, parent_path, parent_path_len)) {
+                                item->selected = false;
+                            }
+                        }
+                        if (aux_is_root(path)) {
+                            item->selected = false;
+                        } else if (path_len < parent_path_len && path[path_len - 1] == '/') {
+                            if (strncmp32(parent_path, path, path_len) == 0) {
                                 item->selected = false;
                             }
                         }
                     }
                 }
+            }
 
-                if (aux_is_root(path)) {
-                    item->selected = false;
-                } else if (path_len < parent_path_len) {
-                    if (path[path_len - 1] == '/') {
-                        if (strncmp32(parent_path, path, path_len) == 0) {
-                            item->selected = false;
-                        }
-                    }
+            if (item->selected) {
+                count_selected += 1;
+                enum CecupAction src_act;
+                enum CecupAction dst_act;
+                enum CecupReason reason;
+                item_status_get(item, &src_act, &dst_act, &reason);
+
+                int64 sz = item_size_side(item, L);
+                if (sz < 0) sz = 0;
+
+                if ((src_act == ACTION_NEW && filter_new) ||
+                    ((src_act == ACTION_HARDLINK || src_act == ACTION_SYMLINK) && filter_hard) ||
+                    (src_act == ACTION_UPDATE && filter_update)) {
+                    total_size_bytes += sz;
                 }
             }
         }
+
+        /* Update Stats Label */
+        char pretty_size[16];
+        char stats_text[256];
+        bytes_pretty(pretty_size, total_size_bytes);
+        SNPRINTF(stats_text, _("Selected files: %lld\nTotal Transfer Size: 📦 %s"),
+                 (llong)count_selected, pretty_size);
+        gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
     }
 
-    {
-        // something in this block is triggering segfault
-        update_list_from_rows();
-        g_list_model_items_changed(cecup.store,
-                                   0,
-                                   (uint32)cecup.rows_visible_len,
-                                   (uint32)cecup.rows_visible_len);
-        update_visible_checkboxes(cecup.tree[side]);
-    }
+    /* Update the Model and UI */
+    g_list_model_items_changed(cecup.store, 0, (uint32)cecup.rows_visible_len, (uint32)cecup.rows_visible_len);
+    update_visible_checkboxes(cecup.tree[side], side);
+
+    in_update = false;
     return;
 }
 
