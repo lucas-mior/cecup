@@ -417,7 +417,6 @@ update_row_rename(Message *message) {
                 }
             }
 
-            free(traversal->paths[i], path_len + 1);
             traversal->paths[i] = updated_path;
             traversal->paths_lens[i] = (int16)updated_path_len;
         }
