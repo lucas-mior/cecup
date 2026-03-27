@@ -1389,6 +1389,7 @@ on_path_edited(GtkEditable *editable, void *data) {
         char new_full[MAX_PATH_LENGTH];
         int32 old_length;
         int32 new_full_length;
+        Message *message;
 
         old_length = strlen32(relative_old);
 
@@ -1401,32 +1402,31 @@ on_path_edited(GtkEditable *editable, void *data) {
                       AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
             LOG_ERROR(_("Error renaming %s to %s: %s\n"),
                                old_full, new_full, strerror(errno));
-        } else {
-            Message *message;
-
-            LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
-
-            if ((relative_old[old_length - 1] == '/')
-                && (relative_new[new_length - 1] != '/')) {
-                relative_new[new_length] = '/';
-                relative_new[new_length+1] = '\0';
-                new_length += 1;
-            }
-
-            message = xmalloc(SIZEOF(*message));
-            memset64(message, 0, SIZEOF(*message));
-
-            message->type = DATA_TYPE_ROW_RENAME;
-            message->side = side;
-            message->old_path_len = old_length;
-            message->old_path = xmalloc(old_length + 1);
-            memcpy64(message->old_path, relative_old, old_length + 1);
-            message->new_path_len = new_length;
-            message->new_path = xmalloc(new_length + 1);
-            memcpy64(message->new_path, relative_new, new_length + 1);
-            invalidate_preview();
-            g_idle_add(update_ui_handler, message);
+            return;
         }
+
+        LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
+
+        if ((relative_old[old_length - 1] == '/')
+            && (relative_new[new_length - 1] != '/')) {
+            relative_new[new_length] = '/';
+            relative_new[new_length+1] = '\0';
+            new_length += 1;
+        }
+
+        message = xmalloc(SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
+
+        message->type = DATA_TYPE_ROW_RENAME;
+        message->side = side;
+        message->old_path_len = old_length;
+        message->old_path = xmalloc(old_length + 1);
+        memcpy64(message->old_path, relative_old, old_length + 1);
+        message->new_path_len = new_length;
+        message->new_path = xmalloc(new_length + 1);
+        memcpy64(message->new_path, relative_new, new_length + 1);
+        invalidate_preview();
+        g_idle_add(update_ui_handler, message);
     }
 
     return;
