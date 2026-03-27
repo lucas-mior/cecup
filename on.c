@@ -531,7 +531,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     }
 
     parent_path_len = strlen32(parent_path);
-    if (strcmp(parent_path, "./") == 0) {
+    if (!strcmp(parent_path, ".") || !strcmp(parent_path, "./")) {
         is_root = true;
     } else {
         is_root = false;
@@ -584,7 +584,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                     }
                 }
 
-                if (strcmp(path, "./") == 0) {
+                if (!strcmp(path, ".") || !strcmp(path, "./")) {
                     item->selected = false;
                 } else if (path_len < parent_path_len) {
                     if (path[path_len - 1] == '/') {
@@ -1015,7 +1015,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                         g_object_unref(m_item);
             }
 
-                    if (strcmp(directory, ".")) {
+                    if (strcmp(directory, ".") || strcmp(directory, "./")) {
                         SNPRINTF(label, _("📁 Dir (/%s/)"), directory);
                         SNPRINTF(pattern, "/%s/", directory);
                         m_item = g_menu_item_new(label, NULL);

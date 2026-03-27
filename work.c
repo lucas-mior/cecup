@@ -604,7 +604,7 @@ work_preview(void *user_data) {
 
         item_status_get(&item, &src_act, &dst_act, &reason);
 
-        if (strcmp(bucket_src->key, ".")
+        if ((strcmp(bucket_src->key, ".") || strcmp(bucket_src->key, "./"))
                 && (src_act != ACTION_EQUAL) && (src_act != ACTION_IGNORE)) {
             if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) {
                 if (cecup.transfers_capacity == 0) {
