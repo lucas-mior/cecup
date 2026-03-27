@@ -576,14 +576,18 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
             }
 
             if (item->selected) {
-                count_selected += 1;
                 enum CecupAction src_act;
                 enum CecupAction dst_act;
                 enum CecupReason reason;
+                int64 sz;
+
+                count_selected += 1;
                 item_status_get(item, &src_act, &dst_act, &reason);
 
-                int64 sz = item_size_side(item, L);
-                if (sz < 0) sz = 0;
+                sz = item_size_side(item, L);
+                if (sz < 0) {
+                    sz = 0;
+                }
 
                 if ((src_act == ACTION_NEW && filter_new) ||
                     ((src_act == ACTION_HARDLINK || src_act == ACTION_SYMLINK) && filter_hard) ||
