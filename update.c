@@ -196,14 +196,22 @@ update_row_transfer(Message *message) {
         if ((idx_ptr
              = hash_lookup_fs_map(cecup.traversal_dst.map,
                                   path_test, pattern_len))) {
-            int32 idx;
-            struct stat *stat;
+            int32 idx = *idx_ptr;
+            struct stat *stat = &cecup.traversal_dst.stats[idx];
+            int32 retry_count = 0;
+            bool success = false;
 
-            idx = *idx_ptr;
-            stat = &cecup.traversal_dst.stats[idx];
+            while (retry_count < 10) {
+                if (lstat(full_path, stat) == 0) {
+                    success = true;
+                    break;
+                }
+                usleep(50000);
+                retry_count += 1;
+            }
 
-            if (lstat(full_path, stat) < 0) {
-                LOG_ERROR("Error in lstat(%s): %s.\n",
+            if (!success) {
+                LOG_ERROR("Error in lstat(%s) after retries: %s.\n",
                           full_path, strerror(errno));
             } else if (S_ISLNK(stat->st_mode)) {
                 char target[MAX_PATH_LENGTH];
@@ -244,9 +252,23 @@ update_row_transfer(Message *message) {
         } else {
             struct stat stat;
             char *path_copy;
+            int32 retry_count;
+            bool success;
 
-            if (lstat(full_path, &stat) < 0) {
-                LOG_ERROR("Error in lstat(%s): %s.\n",
+            retry_count = 0;
+            success = false;
+
+            while (retry_count < 10) {
+                if (lstat(full_path, &stat) == 0) {
+                    success = true;
+                    break;
+                }
+                usleep(50000);
+                retry_count += 1;
+            }
+
+            if (!success) {
+                LOG_ERROR("Error in lstat(%s) after retries: %s.\n",
                           full_path, strerror(errno));
             } else {
                 char *link_target;
