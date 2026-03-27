@@ -1070,25 +1070,49 @@ work_rsync(void *user_data) {
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <fcntl.h>
 #include <unistd.h>
 
 #include "assert.c"
 #include "arena.c"
 
-enum FileType {
-    FILE_TYPE_REGULAR,
-    FILE_TYPE_DIR,
-    FILE_TYPE_SYMLINK,
-    FILE_TYPE_HARDLINK,
-};
-
 typedef struct TestEntry {
     char *name;
-    char *expected_path;
-    enum FileType type;
     char *target;
+
+    bool src_missing;
+    bool src_dir;
+    bool src_symlink;
+    bool src_hardlink;
+
+    bool dst_missing;
+    bool dst_dir;
+    bool dst_symlink;
+    bool dst_hardlink;
+
+    bool diff_size;
+    bool diff_mtime_newer;
+    bool diff_mtime_older;
+    bool diff_perm;
+
+    enum Action expected_src_action;
+    enum Reason expected_reason_mask;
 } TestEntry;
+
+static void
+create_test_file(char *path, char *content) {
+    int32 fd;
+    int32 len;
+
+    if ((fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0644)) < 0) {
+        error("Error creating test file: %s\n", path);
+    }
+    len = strlen32(content);
+    write64(fd, content, len);
+    close(fd);
+    return;
+}
 
 int
 main(void) {
@@ -1099,24 +1123,134 @@ main(void) {
     char temp_dir[] = "/tmp/cecup_work_test_XXXXXX";
     char src_dir[MAX_PATH_LENGTH];
     char dst_dir[MAX_PATH_LENGTH];
-    Traversal tr;
-    int64 count;
-    int32 expected_files_count;
-    TestEntry test_entries[] = {
-        {"regular.txt", "regular.txt", FILE_TYPE_REGULAR,  "regular"},
-        {"dir1",        "dir1/",       FILE_TYPE_DIR,      NULL},
-        {"sym1",        "sym1",        FILE_TYPE_SYMLINK,  "regular.txt"},
-        {"hard1.txt",   "hard1.txt",   FILE_TYPE_HARDLINK, "regular.txt"},
+    char *parsed;
+    IgnorePattern pattern;
+    static TestEntry test_entries[] = {
+        {
+            .name = "equal_file.txt",
+            .expected_src_action = ACTION_EQUAL,
+            .expected_reason_mask = REASON_EQUAL,
+        },
+        {
+            .name = "new_file.txt",
+            .dst_missing = true,
+            .expected_src_action = ACTION_NEW,
+            .expected_reason_mask = REASON_NEW,
+        },
+        {
+            .name = "missing_file.txt",
+            .src_missing = true,
+            .expected_src_action = ACTION_IGNORE,
+            .expected_reason_mask = REASON_MISSING,
+        },
+        {
+            .name = "update_size.txt",
+            .diff_size = true,
+            .expected_src_action = ACTION_UPDATE,
+            .expected_reason_mask = REASON_SIZE,
+        },
+        {
+            .name = "update_mtime_newer.txt",
+            .diff_mtime_newer = true,
+            .expected_src_action = ACTION_UPDATE,
+            .expected_reason_mask = REASON_MTIME_NEWER,
+        },
+        {
+            .name = "update_mtime_older.txt",
+            .diff_mtime_older = true,
+            .expected_src_action = ACTION_IGNORE,
+            .expected_reason_mask = REASON_MTIME_OLDER,
+        },
+        {
+            .name = "update_perm.txt",
+            .diff_perm = true,
+            .expected_src_action = ACTION_UPDATE,
+            .expected_reason_mask = REASON_PERM,
+        },
+        {
+            .name = "equal_dir",
+            .src_dir = true,
+            .dst_dir = true,
+            .expected_src_action = ACTION_EQUAL,
+            .expected_reason_mask = REASON_EQUAL,
+        },
+        {
+            .name = "new_dir",
+            .src_dir = true,
+            .dst_missing = true,
+            .expected_src_action = ACTION_NEW,
+            .expected_reason_mask = REASON_NEW,
+        },
+        {
+            .name = "symlink_new",
+            .target = "equal_file.txt",
+            .src_symlink = true,
+            .dst_missing = true,
+            .expected_src_action = ACTION_SYMLINK,
+            .expected_reason_mask = REASON_SYMLINK | REASON_NEW,
+        },
+        {
+            .name = "symlink_equal",
+            .target = "equal_file.txt",
+            .src_symlink = true,
+            .dst_symlink = true,
+            .expected_src_action = ACTION_EQUAL,
+            .expected_reason_mask = REASON_EQUAL,
+        },
+        {
+            .name = "symlink_diff",
+            .target = "equal_file.txt",
+            .src_symlink = true,
+            .dst_symlink = true,
+            .diff_size = true,
+            .expected_src_action = ACTION_SYMLINK,
+            .expected_reason_mask = REASON_SYMLINK,
+        },
+        {
+            .name = "hardlink_base.txt",
+            .expected_src_action = ACTION_EQUAL,
+            .expected_reason_mask = REASON_EQUAL,
+        },
+        {
+            .name = "hardlink_new.txt",
+            .target = "hardlink_base.txt",
+            .src_hardlink = true,
+            .dst_missing = true,
+            .expected_src_action = ACTION_HARDLINK,
+            .expected_reason_mask = REASON_HARDLINK | REASON_NEW,
+        },
+        {
+            .name = "hardlink_equal.txt",
+            .target = "hardlink_base.txt",
+            .src_hardlink = true,
+            .dst_hardlink = true,
+            .expected_src_action = ACTION_EQUAL,
+            .expected_reason_mask = REASON_EQUAL,
+        },
+        {
+            .name = "ignored_file.txt",
+            .expected_src_action = ACTION_IGNORE,
+            .expected_reason_mask = REASON_IGNORED,
+        },
     };
-    bool found_entries[LENGTH(test_entries)];
 
     (void)work_rsync;
     (void)work_preview;
 
-    ASSERT_EQUAL(work_check_itemize_line(buf1), "some/file.txt");
-    ASSERT_EQUAL(work_check_itemize_line(buf2), "some/dir/");
-    ASSERT_EQUAL(work_check_itemize_line(buf3), "some/file.txt");
-    ASSERT_NULL(work_check_itemize_line(buf4));
+    parsed = work_check_itemize_line(buf1);
+    ASSERT(parsed);
+    ASSERT_EQUAL(parsed, "some/file.txt");
+
+    parsed = work_check_itemize_line(buf2);
+    ASSERT(parsed);
+    ASSERT_EQUAL(parsed, "some/dir/");
+
+    parsed = work_check_itemize_line(buf3);
+    ASSERT(parsed);
+    ASSERT_EQUAL(parsed, "some/file.txt");
+
+    parsed = work_check_itemize_line(buf4);
+    ASSERT_NULL(parsed);
 
     ASSERT(mkdtemp(temp_dir));
 
@@ -1126,87 +1260,207 @@ main(void) {
     mkdir(src_dir, 0755);
     mkdir(dst_dir, 0755);
 
-    expected_files_count = 0;
-
     for (int32 i = 0; i < LENGTH(test_entries); i += 1) {
         TestEntry *entry;
-        char path_buf1[MAX_PATH_LENGTH];
+        char path_src[MAX_PATH_LENGTH];
+        char path_dst[MAX_PATH_LENGTH];
 
         entry = &test_entries[i];
-        SNPRINTF(path_buf1, "%s/%s", src_dir, entry->name);
+        SNPRINTF(path_src, "%s/%s", src_dir, entry->name);
+        SNPRINTF(path_dst, "%s/%s", dst_dir, entry->name);
 
-        if (entry->type == FILE_TYPE_REGULAR) {
-            int32 fd;
-            int32 len;
+        if (!entry->src_missing) {
+            if (entry->src_dir) {
+                mkdir(path_src, 0755);
+            } else if (entry->src_symlink) {
+                symlink(entry->target, path_src);
+            } else if (entry->src_hardlink) {
+                char target_path[MAX_PATH_LENGTH];
 
-            fd = open(path_buf1, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-            ASSERT_MORE_EQUAL(fd, 0);
-            len = strlen32(entry->target);
-            write64(fd, entry->target, len);
-            XCLOSE(&fd);
-            expected_files_count += 1;
-        } else if (entry->type == FILE_TYPE_DIR) {
-            mkdir(path_buf1, 0755);
-        } else if (entry->type == FILE_TYPE_SYMLINK) {
-            if (symlink(entry->target, path_buf1) < 0) {
-                error("Error linking %s to %s: %s.\n",
-                      entry->target, path_buf1, strerror(errno));
+                SNPRINTF(target_path, "%s/%s", src_dir, entry->target);
+                if (link(target_path, path_src) < 0) {
+                    error("Error linking %s to %s: %s.\n",
+                          target_path, path_src, strerror(errno));
+                }
+            } else {
+                create_test_file(path_src, "content");
+            }
+        }
+
+        if (!entry->dst_missing) {
+            if (entry->dst_dir) {
+                mkdir(path_dst, 0755);
+            } else if (entry->dst_symlink) {
+                char *target;
+
+                if (entry->diff_size) {
+                    target = "wrong_target";
+                } else {
+                    target = entry->target;
+                }
+
+                symlink(target, path_dst);
+            } else if (entry->dst_hardlink) {
+                char target_path[MAX_PATH_LENGTH];
+                char *target;
+
+                if (entry->diff_size) {
+                    target = "wrong_target";
+                } else {
+                    target = entry->target;
+                }
+
+                SNPRINTF(target_path, "%s/%s", dst_dir, target);
+                if (link(target_path, path_dst) < 0) {
+                    error("Error linking %s to %s: %s.\n",
+                          target_path, path_dst, strerror(errno));
+                }
+            } else {
+                if (entry->diff_size) {
+                    create_test_file(path_dst, "content_different_size");
+                } else {
+                    create_test_file(path_dst, "content");
+                }
+            }
+        }
+
+        if (!entry->src_missing && !entry->src_symlink) {
+            struct timeval tv[2];
+
+            tv[0].tv_sec = 1600000000;
+            tv[0].tv_usec = 0;
+            tv[1].tv_sec = 1600000000;
+            tv[1].tv_usec = 0;
+            utimes(path_src, tv);
+
+            if (entry->diff_perm) {
+                chmod(path_src, 0777);
+            }
+        }
+
+        if (!entry->dst_missing && !entry->dst_symlink) {
+            struct timeval tv[2];
+
+            tv[0].tv_sec = 1600000000;
+            tv[0].tv_usec = 0;
+
+            if (entry->diff_mtime_newer) {
+                tv[1].tv_sec = 1500000000;
+            } else if (entry->diff_mtime_older) {
+                tv[1].tv_sec = 1700000000;
+            } else {
+                tv[1].tv_sec = 1600000000;
             }
 
-            expected_files_count += 1;
-        } else if (entry->type == FILE_TYPE_HARDLINK) {
-            char path_buf2[MAX_PATH_LENGTH];
-
-            SNPRINTF(path_buf2, "%s/%s", src_dir, entry->target);
-            if (link(path_buf2, path_buf1) < 0) {
-                error("Error linking %s to %s: %s.\n",
-                      path_buf2, path_buf1, strerror(errno));
+            tv[1].tv_usec = 0;
+            utimes(path_dst, tv);
+            
+            if (entry->diff_perm) {
+                chmod(path_dst, 0644);
             }
-            expected_files_count += 1;
         }
     }
 
     memset64(&cecup, 0, SIZEOF(cecup));
-    memset64(&tr, 0, SIZEOF(tr));
-    tr.arena = arena_create(1024 * 1024);
-    tr.map = hash_create_fs_map(1024);
-    tr.inode_map = hash_create_inode_map(1024);
-    tr.base_path = src_dir;
-    tr.base_path_len = strlen32(src_dir);
 
-    count = work_traverse_fs(&tr);
+    pattern.str = "ignored_file.txt";
+    pattern.len = strlen32(pattern.str);
+    pattern.match_str = pattern.str;
+    pattern.dir_only = false;
+    pattern.has_slash = false;
 
-    ASSERT_EQUAL(count, expected_files_count);
+    cecup.ignore_patterns = &pattern;
+    cecup.ignore_count = 1;
 
-    memset64(found_entries, 0, SIZEOF(found_entries));
+    cecup.src_base = src_dir;
+    cecup.src_base_len = strlen32(src_dir);
+    cecup.dst_base = dst_dir;
+    cecup.dst_base_len = strlen32(dst_dir);
 
-    for (int32 i = 0; i < tr.nfiles; i += 1) {
-        for (int32 j = 0; j < LENGTH(test_entries); j += 1) {
-            TestEntry *entry;
+    cecup.traversal_src.arena = arena_create(1024 * 1024);
+    cecup.traversal_src.map = hash_create_fs_map(1024);
+    cecup.traversal_src.inode_map = hash_create_inode_map(1024);
+    cecup.traversal_src.base_path = src_dir;
+    cecup.traversal_src.base_path_len = strlen32(src_dir);
 
-            entry = &test_entries[j];
+    cecup.traversal_dst.arena = arena_create(1024 * 1024);
+    cecup.traversal_dst.map = hash_create_fs_map(1024);
+    cecup.traversal_dst.inode_map = hash_create_inode_map(1024);
+    cecup.traversal_dst.base_path = dst_dir;
+    cecup.traversal_dst.base_path_len = strlen32(dst_dir);
 
-            if (strcmp(tr.paths[i], entry->expected_path) == 0) {
-                found_entries[j] = true;
-
-                if (entry->type == FILE_TYPE_SYMLINK) {
-                    ASSERT_EQUAL(tr.link_targets[i], entry->target);
-                } else if (entry->type == FILE_TYPE_HARDLINK) {
-                    ASSERT(tr.link_targets[i] != NULL);
-                }
-            }
-        }
-    }
+    work_traverse_fs(&cecup.traversal_src);
+    work_traverse_fs(&cecup.traversal_dst);
 
     for (int32 i = 0; i < LENGTH(test_entries); i += 1) {
-        ASSERT(found_entries[i]);
+        TestEntry *entry;
+        int32 src_idx;
+        int32 dst_idx;
+        char expected_path[MAX_PATH_LENGTH];
+        int32 name_len;
+        CecupItem item;
+        enum Action act_src;
+        enum Action act_dst;
+        enum Reason reason;
+
+        entry = &test_entries[i];
+        src_idx = -1;
+        dst_idx = -1;
+
+        name_len = strlen32(entry->name);
+        memcpy64(expected_path, entry->name, name_len);
+        if (entry->src_dir || entry->dst_dir) {
+            expected_path[name_len] = '/';
+            expected_path[name_len + 1] = '\0';
+        } else {
+            expected_path[name_len] = '\0';
+        }
+
+        for (int32 j = 0; j < cecup.traversal_src.nfiles; j += 1) {
+            if (strcmp(cecup.traversal_src.paths[j], expected_path) == 0) {
+                src_idx = j;
+                break;
+            }
+        }
+
+        for (int32 j = 0; j < cecup.traversal_dst.nfiles; j += 1) {
+            if (strcmp(cecup.traversal_dst.paths[j], expected_path) == 0) {
+                dst_idx = j;
+                break;
+            }
+        }
+
+        if (entry->src_missing) {
+            ASSERT_EQUAL(src_idx, -1);
+        } else {
+            ASSERT_MORE_EQUAL(src_idx, 0);
+        }
+
+        if (entry->dst_missing) {
+            ASSERT_EQUAL(dst_idx, -1);
+        } else {
+            ASSERT_MORE_EQUAL(dst_idx, 0);
+        }
+
+        memset64(&item, 0, SIZEOF(item));
+        item.src_idx = src_idx;
+        item.dst_idx = dst_idx;
+
+        item_get_actions_reasons(&item, &act_src, &act_dst, &reason);
+
+        ASSERT_EQUAL(act_src, entry->expected_src_action);
+        ASSERT_EQUAL((reason & entry->expected_reason_mask), entry->expected_reason_mask);
     }
 
-    work_traverse_clean(&tr);
-    arena_destroy(tr.arena);
+    work_traverse_clean(&cecup.traversal_src);
+    arena_destroy(cecup.traversal_src.arena);
+
+    work_traverse_clean(&cecup.traversal_dst);
+    arena_destroy(cecup.traversal_dst.arena);
 
     {
         char cmd[MAX_PATH_LENGTH];
+
         SNPRINTF(cmd, "rm -rf %s", temp_dir);
         system(cmd);
     }
