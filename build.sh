@@ -196,7 +196,7 @@ case "$target" in
             gdb $exe -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
     fi
     if [ $target = "run" ]; then
-        $exe
+        LC_ALL=C $exe
     fi
 
     trace_off
