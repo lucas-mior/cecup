@@ -29,8 +29,7 @@
 #endif
 
 static bool
-aux_is_root(char *path, int32 path_len) {
-    (void)path_len;
+aux_is_root(char *path) {
     if (path[0] == '.') {
         if ((path[1] == '/') || (path[1] == '\0')) {
             return true;
