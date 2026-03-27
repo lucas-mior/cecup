@@ -155,7 +155,7 @@ item_link_target_len_side(CecupItem *item, int32 side) {
 
 static void
 item_status_get(CecupItem *item, enum CecupAction *src_act,
-                    enum CecupAction *dst_act, enum CecupReason *reason) {
+                enum CecupAction *dst_act, enum CecupReason *reason) {
     int32 src_idx;
     int32 dst_idx;
     bool delete_excluded;
