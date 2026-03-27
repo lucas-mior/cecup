@@ -1377,9 +1377,15 @@ on_path_edited(GtkEditable *editable, void *data) {
         return;
     }
 
+    new_length = strlen32(new_text);
+    if (new_length >= (MAX_PATH_LENGTH / 2)) {
+        LOG_ERROR("Error renaming: new path is too long.\n");
+        return;
+    }
+
     SNPRINTF(old_full, "%s/%s", base_path, relative_old);
 
-    if ((new_length = strlen32(new_text)) > 0) {
+    if (new_length > 0) {
         char new_full[MAX_PATH_LENGTH];
         int32 old_length;
         int32 new_full_length;
