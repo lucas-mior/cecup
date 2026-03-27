@@ -332,7 +332,11 @@ item_status_get(CecupItem *item, enum CecupAction *src_act,
             }
         } else {
             *src_act = ACTION_IGNORE;
-            *dst_act = ACTION_DELETE;
+            if (delete_excluded) {
+                *dst_act = ACTION_DELETE;
+            } else {
+                *dst_act = ACTION_IGNORE;
+            }
         }
     }
 
