@@ -56,7 +56,7 @@
 #include "xenums.c"
 
 #define ENUM_BITFLAGS 1
-#define ENUM_NAME CecupReason
+#define ENUM_NAME Reason
 #define ENUM_PREFIX_ REASON_
 #define ENUM_FIELDS     \
     X(NEW)              \
@@ -277,7 +277,7 @@ typedef struct CecupItem {
 typedef struct Message {
     enum DataType type;
     enum Action action;
-    enum CecupReason reason;
+    enum Reason reason;
 
     char *text;
     char *src_path;
@@ -316,7 +316,7 @@ typedef struct MessageBatch {
 typedef struct Task {
     enum DataType type;
     enum Action action;
-    enum CecupReason reason;
+    enum Reason reason;
     int32 side;
 
     char *message;

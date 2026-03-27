@@ -546,7 +546,7 @@ work_preview(void *user_data) {
         CecupItem item;
         enum Action src_act;
         enum Action dst_act;
-        enum CecupReason reason;
+        enum Reason reason;
 
         if ((int64)bucket_src->key <= 0) {
             continue;

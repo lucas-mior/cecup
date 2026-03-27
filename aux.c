@@ -165,7 +165,7 @@ item_link_target_len_side(CecupItem *item, int32 side) {
 
 static void
 item_get_actions_reasons(CecupItem *item, enum Action *action_src,
-                         enum Action *action_dst, enum CecupReason *reason) {
+                         enum Action *action_dst, enum Reason *reason) {
     int32 src_idx = item->src_idx;
     int32 dst_idx = item->dst_idx;
     bool delete_excluded
@@ -509,7 +509,7 @@ get_target_tasks(int32 side, char *clicked_path,
         enum Action action;
         enum Action action_src;
         enum Action action_dst;
-        enum CecupReason reason;
+        enum Reason reason;
         char *link_target;
         int32 link_target_len;
         Task *task;
@@ -616,8 +616,8 @@ cecup_item_compare(const void *a, const void *b) {
     enum Action dst_act_a;
     enum Action src_act_b;
     enum Action dst_act_b;
-    enum CecupReason reason_a;
-    enum CecupReason reason_b;
+    enum Reason reason_a;
+    enum Reason reason_b;
 
     item_a = *(CecupItem **)a;
     item_b = *(CecupItem **)b;

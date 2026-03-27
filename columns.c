@@ -95,7 +95,7 @@ bind_column_action(GtkSignalListItemFactory *factory,
     int32 side;
     enum Action src_act;
     enum Action dst_act;
-    enum CecupReason reason;
+    enum Reason reason;
     enum Action action;
     char class_name[32];
     char *classes[2];
@@ -171,7 +171,7 @@ bind_column_path(GtkSignalListItemFactory *factory,
     char *path;
     enum Action src_act;
     enum Action dst_act;
-    enum CecupReason reason;
+    enum Reason reason;
     enum Action action;
     char class_name[32];
     char *classes[2];
@@ -223,7 +223,7 @@ bind_text_cb(GtkSignalListItemFactory *factory,
     CecupItem *item;
     enum Action src_act;
     enum Action dst_act;
-    enum CecupReason reason;
+    enum Reason reason;
     enum Action action;
     int64 size;
     int64 mtime;

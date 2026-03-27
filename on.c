@@ -55,7 +55,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     int32 path_len;
     enum Action action_src;
     enum Action action_dst;
-    enum CecupReason reason;
+    enum Reason reason;
 
     if (menu_item == NULL) {
         return;
@@ -569,7 +569,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
             if (item->selected) {
                 enum Action action_src;
                 enum Action action_dst;
-                enum CecupReason reason;
+                enum Reason reason;
                 int64 size;
 
                 count_selected += 1;
@@ -926,7 +926,7 @@ on_tree_button_press(GtkGestureClick *gesture,
         uint32 pos;
         enum Action action_src;
         enum Action action_dst;
-        enum CecupReason reason;
+        enum Reason reason;
 
         if (n_press != 1) {
             break;
@@ -1166,7 +1166,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         enum Action action;
         enum Action action_src;
         enum Action action_dst;
-        enum CecupReason reason;
+        enum Reason reason;
         bool is_dir = false;
         char *link_target;
         char *ignore_pattern;

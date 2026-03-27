@@ -594,7 +594,7 @@ update_list_from_rows(void) {
         CecupItem *item;
         enum Action src_act;
         enum Action dst_act;
-        enum CecupReason reason;
+        enum Reason reason;
         bool visible;
         int64 sz;
 
