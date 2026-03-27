@@ -122,9 +122,7 @@ on_menu_apply(GtkWidget *m, void *data) {
         free_task_list(tasks);
     }
 
-    free(message->src_path, message->path_len + 1);
-    free(message, SIZEOF(*message));
-
+    free_message(message);
     return;
 }
 
@@ -139,8 +137,7 @@ on_menu_rename(GtkWidget *tree, void *data) {
     pos = gtk_single_selection_get_selected(GTK_SINGLE_SELECTION(selection));
 
     if (pos == GTK_INVALID_LIST_POSITION) {
-        free(message->src_path, message->path_len + 1);
-        free(message, SIZEOF(*message));
+        free_message(message);
         return;
     }
 
@@ -181,9 +178,7 @@ on_menu_rename(GtkWidget *tree, void *data) {
         }
     }
 
-    free(message->src_path, message->path_len + 1);
-    free(message, SIZEOF(*message));
-
+    free_message(message);
     return;
 }
 
@@ -235,11 +230,9 @@ on_menu_open_item(GtkWidget *m, void *data) {
             util_command_launch(LENGTH(command), command);
         }
     }
+
     free_task_list(tasks);
-
-    free(message->src_path, message->path_len + 1);
-    free(message, SIZEOF(*message));
-
+    free_message(message);
     return;
 }
 
@@ -310,9 +303,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     free_task_list(tasks);
 
     free(buffer, buffer_size);
-    free(message->src_path, message->path_len + 1);
-    free(message, SIZEOF(*message));
-
+    free_message(message);
     return;
 }
 
@@ -364,9 +355,7 @@ on_menu_delete(GtkWidget *m, void *data) {
         gtk_widget_show(dialog);
     }
 
-    free(message->src_path, message->path_len + 1);
-    free(message, SIZEOF(*message));
-
+    free_message(message);
     return;
 }
 
@@ -424,10 +413,7 @@ on_menu_diff(GtkWidget *m, void *data) {
     }
 
     free_task_list(tasks);
-
-    free(message->src_path, message->path_len + 1);
-    free(message, SIZEOF(*message));
-
+    free_message(message);
     return;
 }
 

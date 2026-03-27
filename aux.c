@@ -882,8 +882,11 @@ free_message(void *data) {
     Message *message = data;
 
     free(message->text, message->text_len + 1);
-    free(message->src_path, message->path_len + 1);
-    free(message->dst_path, message->path_len + 1);
+    if (message->src_path) {
+        free(message->src_path, message->path_len + 1);
+    } else if (message->dst_path) {
+        free(message->dst_path, message->path_len + 1);
+    }
     free(message->link_target, message->link_target_len + 1);
     free(message->ignore_pattern, message->ignore_pattern_len + 1);
     free(message->old_path, message->old_path_len + 1);
