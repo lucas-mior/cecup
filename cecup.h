@@ -222,6 +222,9 @@ static char *reason_strings_file[] = {
     [REASON_OWNER_BIT_IDX]    = N_("Owners differ"),
     [REASON_GROUP_BIT_IDX]    = N_("Groups differ"),
     [REASON_PERM_BIT_IDX]     = N_("Permissions differ"),
+    [REASON_HARDLINK_NOT_REGULAR_BIT_IDX] = N_("Backup item is not a regular file"),
+    [REASON_HARDLINK_MISSING_LINK_BIT_IDX] = N_("Backup item is missing link target"),
+    [REASON_HARDLINK_NOT_MATCH_BIT_IDX] = N_("Link targets do not match"),
 };
 
 static char *reason_strings_dir[] = {
@@ -238,6 +241,9 @@ static char *reason_strings_dir[] = {
     [REASON_OWNER_BIT_IDX]    = N_("Owners differ"),
     [REASON_GROUP_BIT_IDX]    = N_("Groups differ"),
     [REASON_PERM_BIT_IDX]     = N_("Permissions differ"),
+    [REASON_HARDLINK_NOT_REGULAR_BIT_IDX] = N_("Backup item is not a regular file"),
+    [REASON_HARDLINK_MISSING_LINK_BIT_IDX] = N_("Backup item is missing link target"),
+    [REASON_HARDLINK_NOT_MATCH_BIT_IDX] = N_("Link targets do not match"),
 };
 
 static char *colors[] = {

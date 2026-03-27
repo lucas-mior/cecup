@@ -1259,8 +1259,14 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             ignore_pattern = item_ignore_pattern_side(item, side);
 
             if (link_target) {
+                char *notation;
+                if (reason & REASON_HARDLINK) {
+                    notation = RSYNC_HARDLINK_NOTATION;
+                } else {
+                    notation = RSYNC_SYMLINK_NOTATION;
+                }
                 SNPRINTF(tip_buffer,
-                         "%s -> %s: %s", filepath, link_target, reason_buf);
+                         "%s%s%s: %s", filepath, notation, link_target, reason_buf);
             } else if (ignore_pattern) {
                 SNPRINTF(tip_buffer,
                          "%s: %s (" N_("pattern") ": %s)",
