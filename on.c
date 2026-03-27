@@ -1280,8 +1280,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         }
         case COLUMN_SIZE:
         {
-            int64 size_raw;
-            size_raw = item_size_side(item, side);
+            int64 size_raw = item_size_side(item, side);
             if (size_raw < 0) {
                 size_raw = 0;
             }
@@ -1291,8 +1290,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         }
         case COLUMN_MTIME:
         {
-            int64 mtime_raw;
-            mtime_raw = item_mtime_side(item, side);
+            int64 mtime_raw = item_mtime_side(item, side);
             if (mtime_raw > 0) {
                 struct tm time_information;
                 time_t unix_timestamp;
