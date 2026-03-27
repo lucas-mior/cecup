@@ -211,8 +211,12 @@ item_status_get(CecupItem *item, enum CecupAction *action_src,
                         attributes_differ = true;
                     }
                 }
-                if (stat_src->st_mtime != stat_dst->st_mtime) {
-                    *reason |= REASON_MTIME;
+                if (stat_src->st_mtime > stat_dst->st_mtime) {
+                    *reason |= REASON_MTIME_NEWER;
+                    attributes_differ = true;
+                }
+                if (stat_src->st_mtime < stat_dst->st_mtime) {
+                    *reason |= REASON_MTIME_OLDER;
                     attributes_differ = true;
                 }
                 if (is_dir) {

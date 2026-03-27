@@ -61,7 +61,8 @@
 #define ENUM_FIELDS     \
     X(NEW)              \
     X(SIZE)             \
-    X(MTIME)            \
+    X(MTIME_NEWER)      \
+    X(MTIME_OLDER)      \
     X(CTIME)            \
     X(OWNER)            \
     X(GROUP)            \
@@ -212,7 +213,8 @@ static char *reason_strings_file[] = {
     [REASON_HARDLINK_BIT_IDX] = N_("Hardlinked file in the original folder"),
     [REASON_SYMLINK_BIT_IDX]  = N_("Symlink in the original folder"),
     [REASON_SIZE_BIT_IDX]     = N_("File sizes differ"),
-    [REASON_MTIME_BIT_IDX]    = N_("Modification times differ"),
+    [REASON_MTIME_NEWER_BIT_IDX] = N_("File in the source is newer than backup"),
+    [REASON_MTIME_OLDER_BIT_IDX] = N_("File in the source is older than backup"),
     [REASON_CTIME_BIT_IDX]    = N_("Metadata change times differ"),
     [REASON_OWNER_BIT_IDX]    = N_("Owners differ"),
     [REASON_GROUP_BIT_IDX]    = N_("Groups differ"),
@@ -227,7 +229,8 @@ static char *reason_strings_dir[] = {
     [REASON_HARDLINK_BIT_IDX] = N_("Hardlinked folder in the original folder"),
     [REASON_SYMLINK_BIT_IDX]  = N_("Symlink in the original folder"),
     [REASON_SIZE_BIT_IDX]     = N_("Folder sizes differ"),
-    [REASON_MTIME_BIT_IDX]    = N_("Modification times differ"),
+    [REASON_MTIME_NEWER_BIT_IDX] = N_("Folder in the source is newer than backup"),
+    [REASON_MTIME_OLDER_BIT_IDX] = N_("Folder in the source is older than backup"),
     [REASON_CTIME_BIT_IDX]    = N_("Metadata change times differ"),
     [REASON_OWNER_BIT_IDX]    = N_("Owners differ"),
     [REASON_GROUP_BIT_IDX]    = N_("Groups differ"),
