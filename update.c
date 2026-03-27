@@ -341,6 +341,7 @@ update_row_rename(Message *message) {
     int32 new_path_len;
     int32 side;
     Traversal *traversal;
+    int32 original_len;
 
     old_path = message->old_path;
     new_path = message->new_path;
@@ -398,7 +399,9 @@ update_row_rename(Message *message) {
         }
     }
 
-    for (int32 i = 0; i < cecup.rows_len;) {
+    original_len = cecup.rows_len;
+
+    for (int32 i = 0; i < original_len;) {
         CecupRow *row = cecup.rows[i];
         bool match = false;
         char *my_path;
@@ -537,13 +540,6 @@ update_row_rename(Message *message) {
 
                     row->reason |= REASON_NEW;
                 }
-
-                for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-                    if (cecup.rows_visible[k] == row) {
-                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), k);
-                        break;
-                    }
-                }
             }
 
             target_row->reason = 0;
@@ -578,20 +574,11 @@ update_row_rename(Message *message) {
             }
 
             if (remove_entirely) {
-                for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-                    if (cecup.rows_visible[k] == row) {
-                        for (int32 p = k; p < (cecup.rows_visible_len - 1); p += 1) {
-                            cecup.rows_visible[p] = cecup.rows_visible[p + 1];
-                        }
-                        cecup.rows_visible_len -= 1;
-                        cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), k);
-                        break;
-                    }
-                }
                 for (int32 p = i; p < (cecup.rows_len - 1); p += 1) {
                     cecup.rows[p] = cecup.rows[p + 1];
                 }
                 cecup.rows_len -= 1;
+                original_len -= 1;
             } else {
                 i += 1;
             }
@@ -786,13 +773,6 @@ update_row_ignore(Message *message) {
                 }
             } else {
                 row->dst_action = ACTION_IGNORE;
-            }
-
-            for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-                if (cecup.rows_visible[k] == row) {
-                    cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), k);
-                    break;
-                }
             }
         }
     }
