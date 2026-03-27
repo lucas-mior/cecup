@@ -1401,7 +1401,7 @@ on_path_edited(GtkEditable *editable, void *data) {
         if (renameat2(AT_FDCWD, old_full,
                       AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
             LOG_ERROR(_("Error renaming %s to %s: %s\n"),
-                               old_full, new_full, strerror(errno));
+                      old_full, new_full, strerror(errno));
             return;
         }
 
