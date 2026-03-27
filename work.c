@@ -1294,6 +1294,10 @@ work_rsync(void *user_data) {
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
 
+        if ((task->action == ACTION_EQUAL) || (task->action == ACTION_IGNORE)) {
+            continue;
+        }
+
         if (task->action == ACTION_HARDLINK) {
             write64(files_from_fd, task->link_target, task->link_target_len);
             write64(files_from_fd, "\n", 1);
