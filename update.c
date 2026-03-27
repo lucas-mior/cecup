@@ -252,11 +252,8 @@ update_row_transfer(Message *message) {
         } else {
             struct stat stat;
             char *path_copy;
-            int32 retry_count;
-            bool success;
-
-            retry_count = 0;
-            success = false;
+            int32 retry_count = 0;
+            bool success = false;
 
             while (retry_count < 10) {
                 if (lstat(full_path, &stat) == 0) {
