@@ -376,24 +376,28 @@ on_preview_clicked(GtkWidget *b, void *data) {
 
 static void
 on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
+    ThreadData *thread_data;
+
     (void)data;
-    if (response_id == GTK_RESPONSE_YES) {
-        ThreadData *thread_data;
-
-        protect_interface_from_user(true);
-
-        thread_data = xmalloc(SIZEOF(*thread_data));
-        memset64(thread_data, 0, SIZEOF(*thread_data));
-
-        thread_data->check_different_fs
-            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
-        thread_data->delete_after
-            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
-        thread_data->delete_excluded
-            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
-        g_thread_new("work_rsync", work_rsync, thread_data);
-    }
     gtk_window_destroy(GTK_WINDOW(dialog));
+
+    if (response_id != GTK_RESPONSE_YES) {
+        return;
+    }
+
+    protect_interface_from_user(true);
+
+    thread_data = xmalloc(SIZEOF(*thread_data));
+    memset64(thread_data, 0, SIZEOF(*thread_data));
+
+    thread_data->check_different_fs
+        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
+    thread_data->delete_after
+        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
+    thread_data->delete_excluded
+        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
+
+    g_thread_new("work_rsync", work_rsync, thread_data);
     return;
 }
 
