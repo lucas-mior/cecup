@@ -121,6 +121,7 @@
 #include "hash.c"
 
 typedef struct Traversal {
+    Arena *arena;
     char *base_path;
     int32 base_path_len;
     int64 file_count;

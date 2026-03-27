@@ -757,6 +757,8 @@ main(int32 argc, char **argv) {
     memset64(&cecup, 0, SIZEOF(cecup));
 
     cecup.arena = arena_create(SIZEMB(64));
+    cecup.traversal_src.arena = arena_create(SIZEMB(64));
+    cecup.traversal_dst.arena = arena_create(SIZEMB(64));
     g_mutex_init(&cecup.arena_mutex);
 
     cecup.rows_len = 0;
@@ -817,6 +819,8 @@ main(int32 argc, char **argv) {
     free(cecup.src_base, cecup.src_base_len + 1);
     free(cecup.dst_base, cecup.dst_base_len + 1);
 
+    arena_destroy(cecup.traversal_src.arena);
+    arena_destroy(cecup.traversal_dst.arena);
     arena_destroy(cecup.arena);
     g_mutex_clear(&cecup.arena_mutex);
 

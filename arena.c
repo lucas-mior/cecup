@@ -373,7 +373,7 @@ static void *
 xarena_push(Arena *arena, int64 size) {
     void *p;
     if ((p = arena_push(arena, size)) == NULL) {
-        error2("Error allocating %lld bytes.\n", (llong)size);
+        error2("Error allocating %lld bytes: %s.\n", (llong)size, arena_strerror(errno));
         exit(EXIT_FAILURE);
     }
     return p;

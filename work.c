@@ -288,20 +288,25 @@ work_traverse_fs(Traversal *traversal) {
             file_count += 1;
         }
 
-        path = ent->fts_path + traversal->base_path_len;
-        path_len = old_full_len - traversal->base_path_len;
+        {
+            char *path_tmp;
+            path_tmp = ent->fts_path + traversal->base_path_len;
+            path_len = old_full_len - traversal->base_path_len;
 
-        if (path[0] == '/') {
-            path += 1;
-            path_len -= 1;
+            if (path_tmp[0] == '/') {
+                path_tmp += 1;
+                path_len -= 1;
+            }
+
+            if (path_len == 0) {
+                path_tmp = ".";
+                path_len = 1;
+            }
+
+            path = xarena_push(traversal->arena, path_len + 1);
+            memcpy64(path, path_tmp, path_len + 1);
         }
 
-        if (path_len == 0) {
-            path = ".";
-            path_len = 1;
-        }
-
-        path = xmemdup(path, path_len + 1);
         is_dir = (ent->fts_info == FTS_D);
 
         link_target = NULL;
@@ -317,7 +322,8 @@ work_traverse_fs(Traversal *traversal) {
                           ent->fts_path, strerror(errno));
             } else {
                 target[target_len] = '\0';
-                link_target = xmemdup(target, target_len + 1);
+                link_target = xarena_push(traversal->arena, target_len + 1);
+                memcpy64(link_target, target, target_len + 1);
                 link_target_len = (int32)target_len;
             }
         }
@@ -394,14 +400,7 @@ static void
 work_traverse_clean(Traversal *traversal) {
     int32 capacity = traversal->ncapacity;
 
-    for (int32 i = 0; i < traversal->nfiles; i += 1) {
-        free(traversal->paths[i],
-              traversal->paths_lens[i] + 1);
-        if (S_ISLNK(traversal->stats[i].st_mode)) {
-            free(traversal->link_targets[i],
-                  traversal->link_targets_lens[i] + 1);
-        }
-    }
+    arena_reset(traversal->arena);
 
     free(traversal->stats,
          capacity*SIZEOF(*(traversal->stats)));
@@ -423,7 +422,11 @@ work_traverse_clean(Traversal *traversal) {
     hash_destroy_fs_map(traversal->map);
     hash_destroy_inode_map(traversal->inode_map);
 
-    memset64(traversal, 0, SIZEOF(*traversal));
+    {
+        Arena *arena_save = traversal->arena;
+        memset64(traversal, 0, SIZEOF(*traversal));
+        traversal->arena = arena_save;
+    }
     return;
 }
 
