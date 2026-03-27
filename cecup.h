@@ -93,6 +93,7 @@
     X(ROW_TRANSFER)       \
     X(ROW_REMOVE)         \
     X(ROW_RENAME)         \
+    X(BATCH)              \
     X(IGNORE_PATTERN)     \
     X(ENABLE_BUTTONS)     \
     X(CLEAR_TREES)        \

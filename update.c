@@ -221,7 +221,7 @@ update_row_transfer(Message *message) {
                     target[target_len] = '\0';
                     if (cecup.traversal_dst.link_targets[idx]) {
                         free(cecup.traversal_dst.link_targets[idx],
-                              cecup.traversal_dst.link_targets_lens[idx] + 1);
+                             cecup.traversal_dst.link_targets_lens[idx] + 1);
                     }
                     cecup.traversal_dst.link_targets[idx] = xmemdup(target, target_len + 1);
                     cecup.traversal_dst.link_targets_lens[idx] = (int16)target_len;
@@ -765,17 +765,14 @@ update_row_ignore(Message *message) {
 static void cecup_list_model_row_removed(CecupListModel *self, int32 index);
 static void cecup_list_model_row_changed(CecupListModel *self, int32 index);
 
-static gboolean
-update_ui_handler(void *data) {
+static void
+update_ui_process_message(Message *message) {
     GtkTextIter end;
     GtkTextIter start_line;
     GtkTextTagTable *table;
     int32 current_store_count;
     bool is_cr;
     bool buffer_ends_in_lf;
-    Message *message;
-
-    message = data;
 
     switch (message->type) {
     case DATA_TYPE_LOG:
@@ -888,6 +885,7 @@ update_ui_handler(void *data) {
                                       0.0);
         break;
     case DATA_TYPE_ADD_ROW:
+    case DATA_TYPE_BATCH:
     case DATA_TYPE_LAST:
     default:
         LOG("Ignoring %s.\n", DATA_TYPE_str(message->type));
@@ -908,6 +906,25 @@ update_ui_handler(void *data) {
     free(message->link_target, message->link_target_len + 1);
     free(message->ignore_pattern, message->ignore_pattern_len + 1);
     free(message, sizeof(*message));
+    return;
+}
+
+static gboolean
+update_ui_handler(void *data) {
+    MessageBatch *batch;
+    Message *message;
+
+    message = data;
+
+    if (message->type == DATA_TYPE_BATCH) {
+        batch = data;
+        for (int32 i = 0; i < batch->count; i += 1) {
+            update_ui_process_message(batch->messages[i]);
+        }
+        free(batch, sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));
+    } else {
+        update_ui_process_message(message);
+    }
 
     return G_SOURCE_REMOVE;
 }

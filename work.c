@@ -41,6 +41,46 @@
 #define TESTING_work 0
 #endif
 
+static void
+work_batch_flush(MessageBatch **batch_ptr) {
+    MessageBatch *batch = *batch_ptr;
+
+    if (batch == NULL) {
+        return;
+    }
+
+    if (batch->count > 0) {
+        g_idle_add(update_ui_handler, batch);
+    } else {
+        free(batch, sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));
+    }
+
+    *batch_ptr = NULL;
+    return;
+}
+
+static void
+work_batch_push(MessageBatch **batch_ptr, Message *message) {
+    MessageBatch *batch = *batch_ptr;
+
+    if (batch == NULL) {
+        batch = xmalloc(sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));
+        memset64(batch, 0, sizeof(MessageBatch));
+        batch->type = DATA_TYPE_BATCH;
+        batch->count = 0;
+        *batch_ptr = batch;
+    }
+
+    batch->messages[batch->count] = message;
+    batch->count += 1;
+
+    if (batch->count >= BATCH_SIZE) {
+        work_batch_flush(batch_ptr);
+    }
+
+    return;
+}
+
 static char *
 work_check_itemize_line(char *buf_output) {
     switch (buf_output[0]) {
@@ -94,7 +134,7 @@ work_check_itemize_line(char *buf_output) {
 
 static void
 work_finalize(bool preview_clean) {
-    Message *message = malloc(SIZEOF(*message));
+    Message *message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
     message->type = DATA_TYPE_ENABLE_BUTTONS;
     message->preview_clean = preview_clean;
@@ -624,7 +664,8 @@ work_preview(void *user_data) {
 }
 
 static bool
-work_rsync_run(char *files_from_filename, bool checksum) {
+work_rsync_run(char *files_from_filename, bool checksum,
+               MessageBatch **batch_ptr) {
     char *rsync_args[64];
     char buf_error[MAX_PATH_LENGTH*2];
     char buf_output[MAX_PATH_LENGTH*2];
@@ -802,15 +843,15 @@ work_rsync_run(char *files_from_filename, bool checksum) {
                 PRINTLN(path);
 
                 if ((path_len != 2) || memcmp64(path, "./", 2)) {
-                    Message *msg_update = malloc(SIZEOF(*msg_update));
+                    Message *msg_update = xmalloc(SIZEOF(*msg_update));
                     memset64(msg_update, 0, SIZEOF(*msg_update));
 
                     msg_update->type = DATA_TYPE_ROW_TRANSFER;
                     msg_update->path_len = path_len;
-                    msg_update->src_path = malloc(path_len + 1);
+                    msg_update->src_path = xmalloc(path_len + 1);
                     memcpy64(msg_update->src_path, path, path_len + 1);
 
-                    g_idle_add(update_ui_handler, msg_update);
+                    work_batch_push(batch_ptr, msg_update);
                 }
             }
 
@@ -866,6 +907,7 @@ work_rsync(void *user_data) {
     bool has_transfers = false;
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
     int files_from_fd;
+    MessageBatch *batch = NULL;
 
     if (tasks == NULL) {
         if (cecup.ntransfers <= 0) {
@@ -876,7 +918,7 @@ work_rsync(void *user_data) {
         } else {
             has_transfers = true;
         }
-        tasks = malloc(sizeof(*tasks));
+        tasks = xmalloc(sizeof(*tasks));
         memset64(tasks, 0, sizeof(*tasks));
     }
 
@@ -895,6 +937,7 @@ work_rsync(void *user_data) {
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
             free_task_list(tasks);
+            work_batch_flush(&batch);
             work_finalize(false);
             free(thread_data, SIZEOF(*thread_data));
             return NULL;
@@ -937,16 +980,16 @@ work_rsync(void *user_data) {
         }
 
         if (removed) {
-            Message *message = malloc(SIZEOF(*message));
+            Message *message = xmalloc(SIZEOF(*message));
             memset64(message, 0, SIZEOF(*message));
 
             message->type = DATA_TYPE_ROW_REMOVE;
             message->side = task->side;
             message->path_len = task->path_len;
-            message->src_path = malloc(message->path_len + 1);
+            message->src_path = xmalloc(message->path_len + 1);
             memcpy64(message->src_path, task->path, message->path_len + 1);
 
-            g_idle_add(update_ui_handler, message);
+            work_batch_push(&batch, message);
 
             LOG("Removed %s...\n", full_path);
         }
@@ -954,6 +997,7 @@ work_rsync(void *user_data) {
 
     if (!has_transfers) {
         LOG_ERROR("No transfers to make.\n");
+        work_batch_flush(&batch);
         work_finalize(false);
         free_task_list(tasks);
         free(thread_data, SIZEOF(*thread_data));
@@ -1029,12 +1073,12 @@ work_rsync(void *user_data) {
     XCLOSE(&files_from_fd);
 
     do {
-        if (work_rsync_run(files_from_filename, false)) {
+        if (work_rsync_run(files_from_filename, false, &batch)) {
             if (cecup.stop_working) {
                 LOG_ERROR(_("Stop requested.\n"));
                 break;
             }
-            work_rsync_run(files_from_filename, true);
+            work_rsync_run(files_from_filename, true, &batch);
         }
     } while (0);
     /* if (!DEBUGGING) { */
@@ -1044,6 +1088,8 @@ work_rsync(void *user_data) {
     if (tasks->count == 0) {
         work_cleanup();
     }
+
+    work_batch_flush(&batch);
     free_task_list(tasks);
     work_finalize(false);
     free(thread_data, SIZEOF(*thread_data));
