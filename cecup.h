@@ -427,10 +427,6 @@ typedef struct ThreadData {
     bool check_different_fs;
     bool delete_excluded;
     bool delete_after;
-    char *relative_old;
-    char *relative_new;
-    int32 len_old;
-    int32 len_new;
     TaskList *tasks;
 } ThreadData;
 
