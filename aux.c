@@ -144,7 +144,7 @@ free_task_list(TaskList *tasks) {
         free(task, sizeof(*task));
     }
 
-    free(tasks, STRUCT_ARRAY_SIZE(tasks, Task, tasks->count));
+    free(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, tasks->count));
     return;
 }
 

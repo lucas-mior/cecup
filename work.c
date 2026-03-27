@@ -505,8 +505,7 @@ work_cleanup(void) {
     work_traverse_clean(&cecup.traversal_src);
     work_traverse_clean(&cecup.traversal_dst);
 
-    free(cecup.transfers,
-          cecup.transfers_capacity*SIZEOF(*cecup.transfers));
+    free(cecup.transfers, cecup.transfers_capacity*SIZEOF(*cecup.transfers));
     cecup.transfers = NULL;
     cecup.ntransfers = 0;
     cecup.transfers_capacity = 0;
