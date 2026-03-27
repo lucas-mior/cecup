@@ -945,6 +945,7 @@ work_rsync(void *user_data) {
             message->path_len = task->path_len;
             message->src_path = malloc(message->path_len + 1);
             memcpy64(message->src_path, task->path, message->path_len + 1);
+
             g_idle_add(update_ui_handler, message);
 
             LOG("Removed %s...\n", full_path);
