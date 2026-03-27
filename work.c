@@ -401,7 +401,7 @@ work_traverse_fs(Traversal *traversal) {
                 link_target = xmemdup(target, target_len + 1);
                 link_target_len = (int32)target_len;
             }
-        } else if (ent->fts_info == FTS_F && (ent->fts_statp->st_nlink > 1)) {
+        } else if ((ent->fts_info == FTS_F) && (ent->fts_statp->st_nlink > 1)) {
             char inode_str[64];
             int32 n;
             int32 *first_idx_ptr;
