@@ -182,10 +182,13 @@ cecup_list_model_list_model_init(GListModelInterface *iface) {
 static void
 cecup_list_model_update(CecupListModel *self,
                         int32 old_count, int32 new_count) {
-    /* * REMOVED: The O(N) loop that unrefs all proxies. 
-     * Destroying proxies while GTK is binding them causes 
-     * the use-after-free segfault.
-     */
+    for (int32 i = new_count; i < self->proxies_capacity; i += 1) {
+        if (self->proxies[i]) {
+            g_object_unref(self->proxies[i]);
+            self->proxies[i] = NULL;
+        }
+    }
+
     g_list_model_items_changed(G_LIST_MODEL(self), 0, (guint)old_count, (guint)new_count);
     return;
 }

@@ -487,9 +487,11 @@ free_task_list(TaskList *tasks) {
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
 
+        free(task->path, task->path_len + 1);
         free(task->link_target, task->link_target_len + 1);
         free(task->message, task->message_len);
-        free(task, sizeof(*task));
+
+        free(task, SIZEOF(*task));
     }
 
     free(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, tasks->count));
@@ -550,10 +552,8 @@ get_target_tasks(int32 side, char *clicked_path,
 
         if (link_target) {
             task->link_target_len = link_target_len;
-            task->link_target
-                = xmalloc(task->link_target_len + 1);
-            memcpy64(task->link_target, link_target,
-                     task->link_target_len + 1);
+            task->link_target = xmalloc(task->link_target_len + 1);
+            memcpy64(task->link_target, link_target, task->link_target_len + 1);
         }
 
         task->action = action;
@@ -563,14 +563,16 @@ get_target_tasks(int32 side, char *clicked_path,
         count += 1;
     }
 
-    tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count + 1));
-    tasks->count = count;
-
-    if ((tasks->count == 0) && clicked_path) {
-        Task *task = xmalloc(SIZEOF(*task));
+    if ((count == 0) && clicked_path) {
+        Task *task;
         Traversal *traversal;
         int32 *idx_ptr;
 
+        count = 1;
+        tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count));
+        tasks->count = count;
+
+        task = xmalloc(SIZEOF(*task));
         memset64(task, 0, SIZEOF(*task));
 
         task->path_len = strlen32(clicked_path);
@@ -588,9 +590,11 @@ get_target_tasks(int32 side, char *clicked_path,
 
         if ((idx_ptr = hash_lookup_fs_map(traversal->map,
                                           clicked_path, task->path_len))) {
-            int32 idx = *idx_ptr;
+            int32 idx;
             char *link_target;
-            
+
+            idx = *idx_ptr;
+
             if ((link_target = traversal->link_targets[idx])) {
                 task->link_target_len = traversal->link_targets_lens[idx];
                 task->link_target = xmalloc(task->link_target_len + 1);
@@ -599,7 +603,9 @@ get_target_tasks(int32 side, char *clicked_path,
         }
 
         tasks->items[0] = task;
-        tasks->count = 1;
+    } else {
+        tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count));
+        tasks->count = count;
     }
 
     return tasks;
@@ -875,10 +881,15 @@ static void
 free_message(void *data) {
     Message *message = data;
 
+    free(message->text, message->text_len + 1);
     free(message->src_path, message->path_len + 1);
+    free(message->dst_path, message->path_len + 1);
+    free(message->link_target, message->link_target_len + 1);
+    free(message->ignore_pattern, message->ignore_pattern_len + 1);
     free(message->old_path, message->old_path_len + 1);
     free(message->new_path, message->new_path_len + 1);
-    free(message, sizeof(*message));
+
+    free(message, SIZEOF(*message));
     return;
 }
 
