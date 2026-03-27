@@ -192,7 +192,8 @@ case "$target" in
     $CC $CPPFLAGS $CFLAGS main.c -o "$exe" $LDFLAGS
 
     if [ $target = "debug" ]; then
-        gdb $exe -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
+        G_DEBUG=fatal_warnings \
+            gdb $exe -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
     fi
     if [ $target = "run" ]; then
         $exe
