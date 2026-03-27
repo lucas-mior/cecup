@@ -106,97 +106,16 @@ work_finalize(bool preview_clean) {
 }
 
 static void
-work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
-             enum CecupReason reason, bool is_dir,
-             char *src_path, char *dst_path, int32 path_len,
-             char *link_target, int32 link_target_len,
-             char *ignore_pattern, int32 ignore_pattern_len,
-             int64 src_size_raw, int64 src_mtime_raw,
-             int64 dst_size_raw, int64 dst_mtime_raw) {
-    int32 slash;
-    char *final_src_path;
-    char *final_dst_path;
-    char *path;
-    time_t unix_timestamp;
-    CecupRow *row;
+work_add_item(int32 src_idx, int32 dst_idx) {
+    CecupItem *item;
 
     g_mutex_lock(&cecup.arena_mutex);
 
-    final_src_path = NULL;
-    final_dst_path = NULL;
+    item = xarena_push(cecup.arena, SIZEOF(*item));
+    memset64(item, 0, SIZEOF(*item));
 
-    slash = 0;
-    if (is_dir) {
-        slash = 1;
-    }
-
-    path = xarena_push(cecup.arena, path_len + slash + 1);
-
-    if (src_path) {
-        memcpy64(path, src_path, path_len + 1);
-        final_src_path = path;
-        if (dst_path) {
-            final_dst_path = path;
-        }
-    } else if (dst_path) {
-        memcpy64(path, dst_path, path_len + 1);
-        final_dst_path = path;
-    } else {
-        LOG_ERROR("Both source and destination paths are NULL.\n");
-        g_mutex_unlock(&cecup.arena_mutex);
-        return;
-    }
-
-    if (is_dir) {
-        if (path[path_len - 1] != '/') {
-            path[path_len] = '/';
-            path[path_len + 1] = '\0';
-            path_len += 1;
-        }
-    }
-
-    row = xarena_push(cecup.arena, SIZEOF(*row));
-    memset64(row, 0, SIZEOF(*row));
-
-    row->src_action = src_action;
-    row->dst_action = dst_action;
-    row->reason = reason;
-
-    bytes_pretty(row->src_size_text, src_size_raw);
-    bytes_pretty(row->dst_size_text, dst_size_raw);
-    row->src_size_raw = src_size_raw;
-    row->dst_size_raw = dst_size_raw;
-
-    if (src_mtime_raw > 0) {
-        struct tm time_information;
-        unix_timestamp = (time_t)src_mtime_raw;
-        unix_timestamp += timezone_offset;
-        gmtime_r(&unix_timestamp, &time_information);
-        STRFTIME(row->src_mtime_text, "%Y-%m-%d %H:%M:%S", &time_information);
-        row->src_mtime_raw = src_mtime_raw;
-    }
-
-    if (dst_mtime_raw > 0) {
-        struct tm time_information;
-        unix_timestamp = (time_t)dst_mtime_raw;
-        unix_timestamp += timezone_offset;
-        gmtime_r(&unix_timestamp, &time_information);
-        STRFTIME(row->dst_mtime_text, "%Y-%m-%d %H:%M:%S", &time_information);
-        row->dst_mtime_raw = dst_mtime_raw;
-    }
-
-    if (link_target) {
-        row->link_target_len = link_target_len;
-        row->link_target = xarena_push(cecup.arena, link_target_len + 1);
-        memcpy64(row->link_target, link_target, link_target_len + 1);
-    }
-
-    row->ignore_pattern_len = ignore_pattern_len;
-    row->ignore_pattern = ignore_pattern;
-
-    row->src_path = final_src_path;
-    row->dst_path = final_dst_path;
-    row->path_len = path_len;
+    item->src_idx = src_idx;
+    item->dst_idx = dst_idx;
 
     if (cecup.rows_len >= cecup.rows_capacity) {
         if (cecup.rows_capacity == 0) {
@@ -205,12 +124,12 @@ work_add_row(enum CecupAction src_action, enum CecupAction dst_action,
             cecup.rows_capacity *= 2;
         }
         cecup.rows = xrealloc(cecup.rows,
-                              cecup.rows_capacity*SIZEOF(CecupRow *));
+                              cecup.rows_capacity*SIZEOF(CecupItem *));
         cecup.rows_visible = xrealloc(cecup.rows_visible,
-                                      cecup.rows_capacity*SIZEOF(CecupRow *));
+                                      cecup.rows_capacity*SIZEOF(CecupItem *));
     }
 
-    cecup.rows[cecup.rows_len] = row;
+    cecup.rows[cecup.rows_len] = item;
     cecup.rows_len += 1;
 
     g_mutex_unlock(&cecup.arena_mutex);
@@ -606,6 +525,7 @@ work_preview(void *user_data) {
         Bucket_fs_map *bucket_src = &(cecup.traversal_src.map->array[i]);
         int32 src_idx;
         int32 *dst_idx_ptr;
+        int32 dst_idx;
         struct stat *stat_src;
         char *matched_pattern_src;
         char *link_target_src;
@@ -613,16 +533,7 @@ work_preview(void *user_data) {
         bool is_hardlink;
         bool is_dir;
         enum CecupAction action = 0;
-        enum CecupAction src_action;
-        enum CecupAction dst_action;
-        enum CecupReason reason;
-        char *dst_path = NULL;
-        int64 dst_size = 0;
-        int64 dst_mtime = 0;
-        int64 src_size = 0;
         int32 path_len;
-        int32 link_target_len;
-        int32 matched_pattern_len;
 
         if ((int64)bucket_src->key <= 0) {
             continue;
@@ -632,8 +543,6 @@ work_preview(void *user_data) {
         stat_src = &cecup.traversal_src.stats[src_idx];
         matched_pattern_src = cecup.traversal_src.matched_patterns[src_idx];
         link_target_src = cecup.traversal_src.link_targets[src_idx];
-        link_target_len = cecup.traversal_src.link_targets_lens[src_idx];
-        matched_pattern_len = cecup.traversal_src.matched_patterns_lens[src_idx];
         path_len = cecup.traversal_src.paths_lens[src_idx];
 
         is_symlink = S_ISLNK(stat_src->st_mode);
@@ -643,24 +552,20 @@ work_preview(void *user_data) {
         if ((dst_idx_ptr
              = hash_lookup_fs_map(cecup.traversal_dst.map,
                                   bucket_src->key, path_len))) {
-            int32 dst_idx = *dst_idx_ptr;
-            struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
-            char *link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
+            struct stat *stat_dst;
+            char *link_target_dst;
 
-            dst_path = bucket_src->key;
-            dst_size = stat_dst->st_size;
-            dst_mtime = stat_dst->st_mtime;
-            reason = 0;
+            dst_idx = *dst_idx_ptr;
+            stat_dst = &cecup.traversal_dst.stats[dst_idx];
+            link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
 
             if (matched_pattern_src) {
                 action = ACTION_IGNORE;
-                reason |= REASON_IGNORED;
             } else {
                 bool equal = false;
                 bool attributes_differ = false;
 
                 if (is_symlink) {
-                    reason |= REASON_SYMLINK;
                     if (S_ISLNK(stat_dst->st_mode)
                         && link_target_src
                         && link_target_dst
@@ -668,33 +573,23 @@ work_preview(void *user_data) {
                         equal = true;
                     }
                 } else {
-                    if (is_hardlink) {
-                        reason |= REASON_HARDLINK;
-                    }
-
                     if (!is_dir && (stat_src->st_size != stat_dst->st_size)) {
-                        reason |= REASON_SIZE;
                         attributes_differ = true;
                     }
                     if (stat_src->st_mtime != stat_dst->st_mtime) {
-                        reason |= REASON_MTIME;
                         attributes_differ = true;
                     }
                     if (is_dir && (stat_src->st_ctime > stat_dst->st_ctime)) {
-                        reason |= REASON_CTIME;
                         attributes_differ = true;
                     }
                     if (stat_src->st_uid != stat_dst->st_uid) {
-                        reason |= REASON_OWNER;
                         attributes_differ = true;
                     }
                     if (stat_src->st_gid != stat_dst->st_gid) {
-                        reason |= REASON_GROUP;
                         attributes_differ = true;
                     }
                     if ((stat_src->st_mode & 07777)
                          != (stat_dst->st_mode & 07777)) {
-                        reason |= REASON_PERM;
                         attributes_differ = true;
                     }
 
@@ -719,12 +614,11 @@ work_preview(void *user_data) {
                                 break;
                             }
                             if (strcmp(link_target_src, link_target_dst)
-                                && strcmp(link_target_src, dst_path)
-                                && strcmp(bucket_src->key, dst_path)) {
+                                && strcmp(link_target_src, bucket_src->key)
+                                && strcmp(link_target_dst, bucket_src->key)) {
                                 error("Names differ:\n");
                                 PRINTLN(link_target_src);
                                 PRINTLN(link_target_dst);
-                                PRINTLN(dst_path);
                                 PRINTLN(bucket_src->key);
                                 equal = false;
                                 break;
@@ -755,7 +649,7 @@ work_preview(void *user_data) {
                             if (!attributes_differ) {
                                 equal = true;
                             }
-                        }  while (0);
+                        } while (0);
                     } else {
                         if (!attributes_differ) {
                             equal = true;
@@ -765,7 +659,6 @@ work_preview(void *user_data) {
 
                 if (equal) {
                     action = ACTION_EQUAL;
-                    reason |= REASON_EQUAL;
                 } else {
                     if (is_hardlink) {
                         action = ACTION_HARDLINK;
@@ -777,41 +670,19 @@ work_preview(void *user_data) {
                 }
             }
         } else {
-            reason = 0;
+            dst_idx = -1;
+
             if (matched_pattern_src) {
                 action = ACTION_IGNORE;
-                reason |= REASON_IGNORED;
             } else {
-                reason |= REASON_NEW;
                 if (is_hardlink) {
                     action = ACTION_HARDLINK;
-                    reason |= REASON_HARDLINK;
                 } else if (is_symlink) {
                     action = ACTION_SYMLINK;
-                    reason |= REASON_SYMLINK;
                 } else {
                     action = ACTION_NEW;
                 }
             }
-        }
-
-        src_action = action;
-        dst_action = action;
-
-        if (action == ACTION_IGNORE) {
-            src_action = ACTION_IGNORE;
-            if (dst_path != NULL) {
-                if (thread_data->delete_excluded) {
-                    dst_action = ACTION_DELETE;
-                } else {
-                    dst_action = ACTION_IGNORE;
-                }
-            } else {
-                dst_action = ACTION_IGNORE;
-            }
-        } else if (action == ACTION_DELETE) {
-            src_action = ACTION_IGNORE;
-            dst_action = ACTION_DELETE;
         }
 
         if (strcmp(bucket_src->key, ".")
@@ -833,18 +704,7 @@ work_preview(void *user_data) {
             cecup.ntransfers += 1;
         }
 
-        if (is_dir) {
-            src_size = -1;
-        } else {
-            src_size = stat_src->st_size;
-        }
-
-        work_add_row(src_action, dst_action, reason, S_ISDIR(stat_src->st_mode),
-                     bucket_src->key, dst_path, path_len,
-                     link_target_src, link_target_len,
-                     matched_pattern_src, matched_pattern_len,
-                     src_size, stat_src->st_mtime,
-                     dst_size, dst_mtime);
+        work_add_item(src_idx, dst_idx);
 
         nfiles_processed += 1;
         if ((nfiles_processed % 1000) == 0) {
@@ -856,15 +716,6 @@ work_preview(void *user_data) {
     for (uint32 i = 0; i < cecup.traversal_dst.map->capacity; i += 1) {
         Bucket_fs_map *bucket_dst = &(cecup.traversal_dst.map->array[i]);
         int32 dst_idx;
-        struct stat *stat_dst;
-        char *matched_pattern_dst;
-        char *link_target_dst;
-        int32 link_target_len;
-        int32 matched_pattern_len;
-        enum CecupAction action = ACTION_DELETE;
-        enum CecupReason reason = 0;
-        enum CecupAction src_action;
-        enum CecupAction dst_action;
         int32 path_len;
 
         if ((int64)bucket_dst->key <= 0) {
@@ -876,42 +727,7 @@ work_preview(void *user_data) {
 
         if (hash_lookup_fs_map(cecup.traversal_src.map,
                                bucket_dst->key, path_len) == NULL) {
-            stat_dst = &cecup.traversal_dst.stats[dst_idx];
-            matched_pattern_dst = cecup.traversal_dst.matched_patterns[dst_idx];
-            link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
-            link_target_len = cecup.traversal_dst.link_targets_lens[dst_idx];
-            matched_pattern_len = cecup.traversal_dst.matched_patterns_lens[dst_idx];
-
-            if (matched_pattern_dst) {
-                if (!thread_data->delete_excluded) {
-                    action = ACTION_IGNORE;
-                }
-                reason |= REASON_IGNORED;
-            }
-
-            reason |= REASON_MISSING;
-
-            src_action = action;
-            dst_action = action;
-
-            if (action == ACTION_IGNORE) {
-                src_action = ACTION_IGNORE;
-                if (thread_data->delete_excluded) {
-                    dst_action = ACTION_DELETE;
-                } else {
-                    dst_action = ACTION_IGNORE;
-                }
-            } else if (action == ACTION_DELETE) {
-                src_action = ACTION_IGNORE;
-                dst_action = ACTION_DELETE;
-            }
-
-            work_add_row(src_action, dst_action, reason, S_ISDIR(stat_dst->st_mode),
-                         NULL, bucket_dst->key, path_len,
-                         link_target_dst, link_target_len,
-                         matched_pattern_dst, matched_pattern_len,
-                         0, 0,
-                         stat_dst->st_size, stat_dst->st_mtime);
+            work_add_item(-1, dst_idx);
         }
 
         nfiles_processed += 1;

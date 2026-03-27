@@ -49,10 +49,13 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     GtkSelectionModel *selection;
     GtkSingleSelection *single_sel;
     uint32 pos;
-    CecupRow *row;
+    CecupItem *item;
     char *filepath;
     int32 side;
     int32 path_len;
+    enum CecupAction src_act;
+    enum CecupAction dst_act;
+    enum CecupReason reason;
 
     if (menu_item == NULL) {
         return;
@@ -77,15 +80,9 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
         return;
     }
 
-    row = cecup.rows_visible[pos];
-
-    if (side == L) {
-        filepath = row->src_path;
-    } else {
-        filepath = row->dst_path;
-    }
-
-    path_len = row->path_len;
+    item = cecup.rows_visible[pos];
+    filepath = aux_item_path_side(item, side);
+    path_len = aux_item_path_len_side(item, side);
 
     if (filepath || (menu_item->callback == on_menu_rename)) {
         Message *message = xmalloc(SIZEOF(*message));
@@ -97,10 +94,12 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
             memcpy64(message->src_path, filepath, path_len + 1);
         }
 
+        aux_item_status_get(item, &src_act, &dst_act, &reason);
+
         if (side == L) {
-            message->action = row->src_action;
+            message->action = src_act;
         } else {
-            message->action = row->dst_action;
+            message->action = dst_act;
         }
 
         message->side = side;
@@ -334,7 +333,7 @@ on_reset_clicked(GtkWidget *b, void *data) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore), TRUE);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.check_fs), FALSE);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_excluded),
-                                  FALSE);
+                                 FALSE);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after), FALSE);
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "unidiff.bash");
@@ -470,16 +469,16 @@ static void on_cell_toggled(GtkCheckButton *renderer, void *user_data);
 static void
 update_visible_checkboxes(GtkWidget *widget) {
     GtkWidget *child;
-    CecupRow *row;
+    CecupItem *item;
 
     if (widget == NULL) {
         return;
     }
 
     if (GTK_IS_CHECK_BUTTON(widget)) {
-        if ((row = g_object_get_data(G_OBJECT(widget), "cecup-row"))) {
+        if ((item = g_object_get_data(G_OBJECT(widget), "cecup-item"))) {
             g_signal_handlers_block_by_func(widget, on_cell_toggled, NULL);
-            gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), row->selected);
+            gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), item->selected);
             g_signal_handlers_unblock_by_func(widget, on_cell_toggled, NULL);
         }
     }
@@ -496,30 +495,35 @@ update_visible_checkboxes(GtkWidget *widget) {
 
 static void
 on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
-    CecupRow *row_toggled;
+    CecupItem *item_toggled;
     char *parent_path;
     int32 parent_path_len;
     bool is_root;
     bool is_active;
-    int32 side = GPOINTER_TO_INT(user_data);
+    int32 side;
 
-    if ((row_toggled
-         = g_object_get_data(G_OBJECT(renderer), "cecup-row")) == NULL) {
+    side = GPOINTER_TO_INT(user_data);
+
+    if ((item_toggled
+         = g_object_get_data(G_OBJECT(renderer), "cecup-item")) == NULL) {
         return;
     }
 
     is_active = gtk_check_button_get_active(renderer);
 
-    if (row_toggled->selected == is_active) {
+    if (item_toggled->selected == is_active) {
         return;
     }
 
-    row_toggled->selected = is_active;
+    item_toggled->selected = is_active;
 
-    if (row_toggled->src_path) {
-        parent_path = row_toggled->src_path;
-    } else {
-        parent_path = row_toggled->dst_path;
+    parent_path = aux_item_path_side(item_toggled, side);
+    if (parent_path == NULL) {
+        if (side == L) {
+            parent_path = aux_item_path_side(item_toggled, R);
+        } else {
+            parent_path = aux_item_path_side(item_toggled, L);
+        }
     }
 
     if (parent_path == NULL) {
@@ -534,42 +538,58 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     }
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupRow *row = cecup.rows[i];
-        char *path = row_path_get(row);
-        int32 path_len = row->path_len;
+        CecupItem *item;
+        char *path;
+        int32 path_len;
 
-        if (row_toggled->selected) {
+        item = cecup.rows[i];
+        path = aux_item_path_side(item, side);
+        if (path == NULL) {
+            if (side == L) {
+                path = aux_item_path_side(item, R);
+            } else {
+                path = aux_item_path_side(item, L);
+            }
+        }
+
+        if (path == NULL) {
+            continue;
+        }
+
+        path_len = strlen32(path);
+
+        if (item_toggled->selected) {
             if (is_root) {
-                row->selected = true;
+                item->selected = true;
             } else if (parent_path_len > 0) {
                 if (parent_path[parent_path_len - 1] == '/') {
                     if (path_len >= parent_path_len) {
                         if (!strncmp32(path, parent_path, parent_path_len)) {
-                            row->selected = true;
+                            item->selected = true;
                         }
                     }
                 }
             }
         } else {
             if (is_root) {
-                row->selected = false;
+                item->selected = false;
             } else {
                 if (parent_path_len > 0) {
                     if (parent_path[parent_path_len - 1] == '/') {
                         if (path_len >= parent_path_len) {
                             if (!strncmp32(path, parent_path, parent_path_len)) {
-                                row->selected = false;
+                                item->selected = false;
                             }
                         }
                     }
                 }
 
                 if (strcmp(path, "./") == 0) {
-                    row->selected = false;
+                    item->selected = false;
                 } else if (path_len < parent_path_len) {
                     if (path[path_len - 1] == '/') {
                         if (strncmp32(parent_path, path, path_len) == 0) {
-                            row->selected = false;
+                            item->selected = false;
                         }
                     }
                 }
@@ -894,7 +914,7 @@ on_tree_button_press(GtkGestureClick *gesture,
     case GDK_BUTTON_SECONDARY: {
         GMenu *menu;
         GtkWidget *popover;
-        CecupRow *row;
+        CecupItem *item;
         char *filepath;
         char *other_path;
         GdkRectangle rect;
@@ -902,6 +922,9 @@ on_tree_button_press(GtkGestureClick *gesture,
         Message *message;
         GtkSelectionModel *selection;
         uint32 pos;
+        enum CecupAction src_act;
+        enum CecupAction dst_act;
+        enum CecupReason reason;
 
         if (n_press != 1) {
             break;
@@ -916,28 +939,31 @@ on_tree_button_press(GtkGestureClick *gesture,
 
         gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
         is_busy = gtk_widget_get_sensitive(cecup.stop_button);
-        row = cecup.rows_visible[pos];
+        item = cecup.rows_visible[pos];
 
         if (side == L) {
-            filepath = row->src_path;
-            other_path = row->dst_path;
+            filepath = aux_item_path_side(item, L);
+            other_path = aux_item_path_side(item, R);
         } else {
-            filepath = row->dst_path;
-            other_path = row->src_path;
+            filepath = aux_item_path_side(item, R);
+            other_path = aux_item_path_side(item, L);
         }
 
         message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
         if (filepath) {
-            message->path_len = row->path_len;
-            message->src_path = xmalloc(row->path_len + 1);
-            memcpy64(message->src_path, filepath, row->path_len + 1);
+            message->path_len = aux_item_path_len_side(item, side);
+            message->src_path = xmalloc(message->path_len + 1);
+            memcpy64(message->src_path, filepath, message->path_len + 1);
         }
         message->side = side;
+
+        aux_item_status_get(item, &src_act, &dst_act, &reason);
+
         if (side == L) {
-            message->action = row->src_action;
+            message->action = src_act;
         } else {
-            message->action = row->dst_action;
+            message->action = dst_act;
         }
 
         g_object_set_data(G_OBJECT(cecup.application),
@@ -953,7 +979,7 @@ on_tree_button_press(GtkGestureClick *gesture,
 
             if (menu_item->callback == NULL) {
                 GMenu *submenu;
-                GMenuItem *item;
+                GMenuItem *m_item;
                 char *name;
                 int32 path_len;
                 int32 length;
@@ -968,7 +994,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                     char path_copy[MAX_PATH_LENGTH];
                     bool is_dir = false;
 
-                    path_len = row->path_len;
+                    path_len = aux_item_path_len_side(item, side);
                     memcpy64(path_copy, filepath, path_len + 1);
 
                     if (path_len > 0 && path_copy[path_len - 1] == '/') {
@@ -982,21 +1008,21 @@ on_tree_button_press(GtkGestureClick *gesture,
                     if (extension && (extension != name)) {
                         SNPRINTF(label, _("by extension (*%s)"), extension);
                         SNPRINTF(pattern, "*%s", extension);
-                        item = g_menu_item_new(label, NULL);
-                        g_menu_item_set_action_and_target(item,
+                        m_item = g_menu_item_new(label, NULL);
+                        g_menu_item_set_action_and_target(m_item,
                                                           "app.ignore", "s", pattern);
-                        g_menu_append_item(submenu, item);
-                        g_object_unref(item);
+                        g_menu_append_item(submenu, m_item);
+                        g_object_unref(m_item);
             }
 
                     if (strcmp(directory, ".")) {
                         SNPRINTF(label, _("📁 Dir (/%s/)"), directory);
                         SNPRINTF(pattern, "/%s/", directory);
-                        item = g_menu_item_new(label, NULL);
-                        g_menu_item_set_action_and_target(item,
+                        m_item = g_menu_item_new(label, NULL);
+                        g_menu_item_set_action_and_target(m_item,
                                                           "app.ignore", "s", pattern);
-                        g_menu_append_item(submenu, item);
-                        g_object_unref(item);
+                        g_menu_append_item(submenu, m_item);
+                        g_object_unref(m_item);
                     }
 
                     if (is_dir) {
@@ -1005,38 +1031,38 @@ on_tree_button_press(GtkGestureClick *gesture,
                         SNPRINTF(label, _("This file only (/%s)"), filepath);
                     }
                     SNPRINTF(pattern, "/%s", filepath);
-                    item = g_menu_item_new(label, NULL);
-                    g_menu_item_set_action_and_target(item,
+                    m_item = g_menu_item_new(label, NULL);
+                    g_menu_item_set_action_and_target(m_item,
                                                       "app.ignore", "s", pattern);
-                    g_menu_append_item(submenu, item);
-                    g_object_unref(item);
+                    g_menu_append_item(submenu, m_item);
+                    g_object_unref(m_item);
 
                     SNPRINTF(label, _("This filename on any folder (*/%s)"), name);
                     SNPRINTF(pattern, "*/%s", name);
-                    item = g_menu_item_new(label, NULL);
-                    g_menu_item_set_action_and_target(item,
+                    m_item = g_menu_item_new(label, NULL);
+                    g_menu_item_set_action_and_target(m_item,
                                                       "app.ignore", "s", pattern);
-                    g_menu_append_item(submenu, item);
-                    g_object_unref(item);
+                    g_menu_append_item(submenu, m_item);
+                    g_object_unref(m_item);
                 }
 
-                item = g_menu_item_new_submenu(_(menu_item->label),
-                                               G_MENU_MODEL(submenu));
+                m_item = g_menu_item_new_submenu(_(menu_item->label),
+                                                 G_MENU_MODEL(submenu));
 
                 if (is_busy || (filepath == NULL)) {
-                    g_menu_item_set_action_and_target(item, "none.none", NULL);
+                    g_menu_item_set_action_and_target(m_item, "none.none", NULL);
                 }
 
-                g_menu_append_item(menu, item);
-                g_object_unref(item);
+                g_menu_append_item(menu, m_item);
+                g_object_unref(m_item);
                 g_object_unref(submenu);
             } else {
-                GMenuItem *item;
+                GMenuItem *m_item;
                 bool disabled;
 
                 disabled = false;
-                item = g_menu_item_new(_(menu_item->label), NULL);
-                g_menu_item_set_action_and_target(item,
+                m_item = g_menu_item_new(_(menu_item->label), NULL);
+                g_menu_item_set_action_and_target(m_item,
                                                   "app.tree_dispatch", "i", i);
 
                 if (is_busy) {
@@ -1058,11 +1084,11 @@ on_tree_button_press(GtkGestureClick *gesture,
                 }
 
                 if (disabled) {
-                    g_menu_item_set_action_and_target(item, "none.none", NULL);
+                    g_menu_item_set_action_and_target(m_item, "none.none", NULL);
                 }
 
-                g_menu_append_item(menu, item);
-                g_object_unref(item);
+                g_menu_append_item(menu, m_item);
+                g_object_unref(m_item);
             }
         }
 
@@ -1100,7 +1126,7 @@ static gboolean
 on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                 void *d) {
     GtkWidget *child;
-    CecupRow *row;
+    CecupItem *item;
     enum ColumnType column_type = COLUMN_LAST;
     int32 side;
     char *tip_text;
@@ -1108,19 +1134,20 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
     char reason_buf[1024];
     int32 rb_pos;
     int64 size_raw;
-    char *mtime_text;
+    int64 mtime_raw;
+    char text_buf[64] = "";
 
     (void)k;
     (void)d;
     tip_text = NULL;
-    row = NULL;
+    item = NULL;
 
     if ((child = gtk_widget_pick(w, (double)x, (double)y, GTK_PICK_DEFAULT)) == NULL) {
         return FALSE;
     }
 
     while (child) {
-        if ((row = g_object_get_data(G_OBJECT(child), "cecup-row"))) {
+        if ((item = g_object_get_data(G_OBJECT(child), "cecup-item"))) {
             void *col_data = g_object_get_data(G_OBJECT(child), "cecup-col");
             column_type = (enum ColumnType)GPOINTER_TO_INT(col_data);
             break;
@@ -1134,24 +1161,32 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
 
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
 
-    if (row) {
+    if (item) {
         char *filepath;
         enum CecupAction action;
+        enum CecupAction src_act;
+        enum CecupAction dst_act;
+        enum CecupReason reason;
         bool is_dir = false;
+        char *link_target;
+        char *ignore_pattern;
+        int32 path_len;
+
+        aux_item_status_get(item, &src_act, &dst_act, &reason);
 
         if (side == L) {
-            filepath = row->src_path;
-            action = row->src_action;
+            filepath = aux_item_path_side(item, L);
+            action = src_act;
         } else {
-            filepath = row->dst_path;
-            action = row->dst_action;
+            filepath = aux_item_path_side(item, R);
+            action = dst_act;
         }
 
         if (filepath == NULL) {
             if (side == L) {
-                filepath = row->dst_path;
+                filepath = aux_item_path_side(item, R);
             } else {
-                filepath = row->src_path;
+                filepath = aux_item_path_side(item, L);
             }
         }
 
@@ -1159,7 +1194,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             filepath = "";
         }
 
-        if (row->path_len > 0 && filepath[row->path_len - 1] == '/') {
+        path_len = strlen32(filepath);
+        if (path_len > 0 && filepath[path_len - 1] == '/') {
             is_dir = true;
         }
 
@@ -1190,7 +1226,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             reason_buf[0] = '\0';
             for (uint32 i = 0; i < REASON_BIT_COUNT; i += 1) {
                 char *base_msg;
-                if (!(row->reason & (1 << i))) {
+                if (!(reason & (1 << i))) {
                     continue;
                 }
 
@@ -1216,13 +1252,16 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                 }
             }
 
-            if (row->link_target) {
+            link_target = aux_item_link_target_side(item, side);
+            ignore_pattern = aux_item_ignore_pattern_side(item, side);
+
+            if (link_target) {
                 SNPRINTF(tip_buffer,
-                         "%s -> %s: %s", filepath, row->link_target, reason_buf);
-            } else if (row->ignore_pattern) {
+                         "%s -> %s: %s", filepath, link_target, reason_buf);
+            } else if (ignore_pattern) {
                 SNPRINTF(tip_buffer,
                          "%s: %s (" N_("pattern") ": %s)",
-                         filepath, reason_buf, row->ignore_pattern);
+                         filepath, reason_buf, ignore_pattern);
             } else {
                 SNPRINTF(tip_buffer, "%s: %s", filepath, reason_buf);
             }
@@ -1230,21 +1269,24 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             break;
         }
         case COLUMN_SIZE:
-            if (side == L) {
-                size_raw = row->src_size_raw;
-            } else {
-                size_raw = row->dst_size_raw;
+            size_raw = aux_item_size_side(item, side);
+            if (size_raw < 0) {
+                size_raw = 0;
             }
             SNPRINTF(tip_buffer, "%s: %lld bytes", filepath, (llong)size_raw);
             tip_text = tip_buffer;
             break;
         case COLUMN_MTIME:
-            if (side == L) {
-                mtime_text = row->src_mtime_text;
-            } else {
-                mtime_text = row->dst_mtime_text;
+            mtime_raw = aux_item_mtime_side(item, side);
+            if (mtime_raw > 0) {
+                struct tm time_information;
+                time_t unix_timestamp;
+
+                unix_timestamp = (time_t)mtime_raw + timezone_offset;
+                gmtime_r(&unix_timestamp, &time_information);
+                STRFTIME(text_buf, "%Y-%m-%d %H:%M:%S", &time_information);
             }
-            SNPRINTF(tip_buffer, "%s: %s", filepath, mtime_text);
+            SNPRINTF(tip_buffer, "%s: %s", filepath, text_buf);
             tip_text = tip_buffer;
             break;
         case COLUMN_LAST:
@@ -1281,7 +1323,7 @@ static void
 on_path_editing_started(GtkEditable *editable, void *data) {
     GtkWidget *tree;
     int32 side;
-    CecupRow *row;
+    CecupItem *item;
     char *relative;
 
     tree = data;
@@ -1292,15 +1334,11 @@ on_path_editing_started(GtkEditable *editable, void *data) {
 
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
-    if ((row = g_object_get_data(G_OBJECT(editable), "cecup-row")) == NULL) {
+    if ((item = g_object_get_data(G_OBJECT(editable), "cecup-item")) == NULL) {
         return;
     }
 
-    if (side == L) {
-        relative = row->src_path;
-    } else {
-        relative = row->dst_path;
-    }
+    relative = aux_item_path_side(item, side);
 
     if (relative) {
         char *name;
@@ -1308,20 +1346,22 @@ on_path_editing_started(GtkEditable *editable, void *data) {
         int32 name_len;
         int32 start_pos;
         int32 end_pos;
+        int32 path_len;
 
-        end_pos = row->path_len;
+        path_len = aux_item_path_len_side(item, side);
+        end_pos = path_len;
 
-        name = basename2(relative, &row->path_len, &name_len);
+        name = basename2(relative, &path_len, &name_len);
         last_dot = strrchr(name, '.');
 
-        start_pos = row->path_len - name_len;
+        start_pos = path_len - name_len;
 
         if (last_dot) {
             if (last_dot != name) {
                 end_pos = (int32)(last_dot - relative);
             }
-        } else if (relative[row->path_len - 1] == '/') {
-            end_pos = row->path_len - 1;
+        } else if (relative[path_len - 1] == '/') {
+            end_pos = path_len - 1;
         }
 
         if (end_pos > start_pos) {
@@ -1343,7 +1383,7 @@ on_path_editing_started(GtkEditable *editable, void *data) {
 static void
 on_path_edited(GtkEditable *editable, void *data) {
     GtkWidget *tree;
-    CecupRow *row;
+    CecupItem *item;
     int32 side;
     char *base_path;
     char old_full[MAX_PATH_LENGTH];
@@ -1355,7 +1395,7 @@ on_path_edited(GtkEditable *editable, void *data) {
     tree = data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
-    if ((row = g_object_get_data(G_OBJECT(editable), "cecup-row")) == NULL) {
+    if ((item = g_object_get_data(G_OBJECT(editable), "cecup-item")) == NULL) {
         return;
     }
 
@@ -1363,10 +1403,10 @@ on_path_edited(GtkEditable *editable, void *data) {
 
     if (side == L) {
         base_path = cecup.src_base;
-        relative_old = row->src_path;
+        relative_old = aux_item_path_side(item, L);
     } else {
         base_path = cecup.dst_base;
-        relative_old = row->dst_path;
+        relative_old = aux_item_path_side(item, R);
     }
 
     if (relative_old == NULL) {

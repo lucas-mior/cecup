@@ -259,43 +259,15 @@ enum CecupColumn {
     COL_SIZE_RAW,
     COL_MTIME_TEXT,
     COL_MTIME_RAW,
-    COL_ROW_PTR,
+    COL_ITEM_PTR,
     NUM_COLS
 };
 
-typedef struct CecupRow {
-    enum CecupAction src_action;
-    enum CecupAction dst_action;
-    enum CecupReason reason;
-
-    /* relative paths.
-     * must NOT have a slash at the beginning.
-     * must have a slash at the end if a directory.
-     * one of them must NOT be NULL 
-     * if both are not NULL, then they must be the same */
-    char *src_path;
-    char *dst_path;
-
-    /* might be relative or absolute. */
-    char *link_target;
-
-    char *ignore_pattern;
-
-    int32 path_len;
-    int32 link_target_len;
-    int32 ignore_pattern_len;
-
-    char src_size_text[16];
-    char dst_size_text[16];
-    char src_mtime_text[32];
-    char dst_mtime_text[32];
-    int64 src_size_raw;
-    int64 dst_size_raw;
-    int64 src_mtime_raw;
-    int64 dst_mtime_raw;
-
+typedef struct CecupItem {
+    int32 src_idx;
+    int32 dst_idx;
     bool selected;
-} CecupRow;
+} CecupItem;
 
 typedef struct Message {
     enum DataType type;
@@ -359,8 +331,8 @@ typedef struct TaskList {
     Task *items[];
 } TaskList;
 
-#define CECUP_TYPE_ROW_PROXY (cecup_row_proxy_get_type())
-G_DECLARE_FINAL_TYPE(CecupRowProxy, cecup_row_proxy, CECUP, ROW_PROXY, GObject)
+#define CECUP_TYPE_ITEM_PROXY (cecup_item_proxy_get_type())
+G_DECLARE_FINAL_TYPE(CecupItemProxy, cecup_item_proxy, CECUP, ITEM_PROXY, GObject)
 
 #define CECUP_TYPE_LIST_MODEL (cecup_list_model_get_type())
 G_DECLARE_FINAL_TYPE(CecupListModel, cecup_list_model, CECUP, LIST_MODEL, GObject)
@@ -417,11 +389,11 @@ static struct {
 
     GtkWidget *progress_preview;
 
-    CecupRow **rows;
+    CecupItem **rows;
     int32 rows_len;
     int32 rows_capacity;
 
-    CecupRow **rows_visible;
+    CecupItem **rows_visible;
     int32 rows_visible_len;
 
     enum CecupColumn sort_col;
@@ -541,7 +513,7 @@ static struct {
     /* {":",                     "_colon_in_filename_"                    }, */
     /* {"|",                     "_pipe_in_filename_"                     }, */
     /* {"?",                     "_question_mark_in_filename_"            }, */
-    {RSYNC_WILDCARD,          "_asterisk_in_filename_"                   },
+    {RSYNC_WILDCARD,          "_asterisk_in_filename_"                    },
     {RSYNC_HARDLINK_NOTATION, "_rsync_hardlink_notation_in_filename_"     },
     {RSYNC_SYMLINK_NOTATION,  "_rsync_symlink_notation_in_filename_"      },
     {RSYNC_IGNORE_PRE_FILE,   "rsync_ignore_prelude_file_in_filename"     },

@@ -38,7 +38,7 @@
 #define EXPAND_TRUE true
 
 CecupListModel *cecup_list_model_new(void);
-CecupRow *cecup_row_proxy_get_row(CecupRowProxy *proxy);
+CecupItem *cecup_item_proxy_get_item(CecupItemProxy *proxy);
 
 static void
 main_setup_tree_columns(GtkWidget *tree,
@@ -449,8 +449,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_entry_set_placeholder_text(GTK_ENTRY(cecup.search_entry),
                                    _("Search files..."));
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
-                                     GTK_ENTRY_ICON_PRIMARY,
-                                     "system-search-symbolic");
+                                      GTK_ENTRY_ICON_PRIMARY,
+                                      "system-search-symbolic");
     {
         GtkWidget *search_label = gtk_label_new(_("🔍"));
         gtk_box_append(GTK_BOX(search_hbox), search_label);
@@ -761,8 +761,8 @@ main(int32 argc, char **argv) {
 
     cecup.rows_len = 0;
     cecup.rows_capacity = 256;
-    cecup.rows = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
-    cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(CecupRow *));
+    cecup.rows = xmalloc(cecup.rows_capacity*SIZEOF(CecupItem *));
+    cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(CecupItem *));
 
     cecup.ignore_patterns = NULL;
     cecup.ignore_capacity = 0;
@@ -812,8 +812,8 @@ main(int32 argc, char **argv) {
     g_object_unref(cecup.application);
     g_object_unref(cecup.store);
 
-    free(cecup.rows, cecup.rows_capacity*SIZEOF(CecupRow *));
-    free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(CecupRow *));
+    free(cecup.rows, cecup.rows_capacity*SIZEOF(CecupItem *));
+    free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(CecupItem *));
     free(cecup.src_base, cecup.src_base_len + 1);
     free(cecup.dst_base, cecup.dst_base_len + 1);
 

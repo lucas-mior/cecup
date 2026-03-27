@@ -28,6 +28,360 @@
 #define TESTING_aux 0
 #endif
 
+static char *
+item_path_get(CecupItem *item) {
+    if (item->src_idx >= 0) {
+        return cecup.traversal_src.paths[item->src_idx];
+    } else if (item->dst_idx >= 0) {
+        return cecup.traversal_dst.paths[item->dst_idx];
+    } else {
+        error2("Error: src_path and dst_path are NULL.\n");
+        fatal(EXIT_FAILURE);
+    }
+}
+
+static int32
+item_path_len_get(CecupItem *item) {
+    if (item->src_idx >= 0) {
+        return cecup.traversal_src.paths_lens[item->src_idx];
+    }
+    if (item->dst_idx >= 0) {
+        return cecup.traversal_dst.paths_lens[item->dst_idx];
+    }
+    return 0;
+}
+
+static char *
+item_path_side(CecupItem *item, int32 side) {
+    if (side == L) {
+        if (item->src_idx >= 0) {
+            return cecup.traversal_src.paths[item->src_idx];
+        }
+    } else {
+        if (item->dst_idx >= 0) {
+            return cecup.traversal_dst.paths[item->dst_idx];
+        }
+    }
+    return NULL;
+}
+
+static int64
+item_size_side(CecupItem *item, int32 side) {
+    if (side == L) {
+        if (item->src_idx >= 0) {
+            if (!S_ISDIR(cecup.traversal_src.stats[item->src_idx].st_mode)) {
+                return cecup.traversal_src.stats[item->src_idx].st_size;
+            }
+        }
+    } else {
+        if (item->dst_idx >= 0) {
+            if (!S_ISDIR(cecup.traversal_dst.stats[item->dst_idx].st_mode)) {
+                return cecup.traversal_dst.stats[item->dst_idx].st_size;
+            }
+        }
+    }
+    return -1;
+}
+
+static int64
+item_mtime_side(CecupItem *item, int32 side) {
+    if (side == L) {
+        if (item->src_idx >= 0) {
+            return cecup.traversal_src.stats[item->src_idx].st_mtime;
+        }
+    } else {
+        if (item->dst_idx >= 0) {
+            return cecup.traversal_dst.stats[item->dst_idx].st_mtime;
+        }
+    }
+    return 0;
+}
+
+static char *
+aux_item_ignore_pattern_side(CecupItem *item, int32 side) {
+    if (side == L) {
+        if (item->src_idx >= 0) {
+            return cecup.traversal_src.matched_patterns[item->src_idx];
+        }
+    } else {
+        if (item->dst_idx >= 0) {
+            return cecup.traversal_dst.matched_patterns[item->dst_idx];
+        }
+    }
+    return NULL;
+}
+
+static char *
+aux_item_path_side(CecupItem *item, int32 side) {
+    if (side == L) {
+        if (item->src_idx >= 0) {
+            return cecup.traversal_src.paths[item->src_idx];
+        }
+    } else {
+        if (item->dst_idx >= 0) {
+            return cecup.traversal_dst.paths[item->dst_idx];
+        }
+    }
+    return NULL;
+}
+
+static int32
+aux_item_path_len_side(CecupItem *item, int32 side) {
+    if (side == L) {
+        if (item->src_idx >= 0) {
+            return (int32)cecup.traversal_src.paths_lens[item->src_idx];
+        }
+    } else {
+        if (item->dst_idx >= 0) {
+            return (int32)cecup.traversal_dst.paths_lens[item->dst_idx];
+        }
+    }
+    return 0;
+}
+
+static char *
+aux_item_link_target_side(CecupItem *item, int32 side) {
+    if (side == L) {
+        if (item->src_idx >= 0) {
+            return cecup.traversal_src.link_targets[item->src_idx];
+        }
+    } else {
+        if (item->dst_idx >= 0) {
+            return cecup.traversal_dst.link_targets[item->dst_idx];
+        }
+    }
+    return NULL;
+}
+
+static int32
+aux_item_link_target_len_side(CecupItem *item, int32 side) {
+    if (side == L) {
+        if (item->src_idx >= 0) {
+            return (int32)cecup.traversal_src.link_targets_lens[item->src_idx];
+        }
+    } else {
+        if (item->dst_idx >= 0) {
+            return (int32)cecup.traversal_dst.link_targets_lens[item->dst_idx];
+        }
+    }
+    return 0;
+}
+
+static int64
+aux_item_size_side(CecupItem *item, int32 side) {
+    if (side == L) {
+        if (item->src_idx >= 0) {
+            if (!S_ISDIR(cecup.traversal_src.stats[item->src_idx].st_mode)) {
+                return cecup.traversal_src.stats[item->src_idx].st_size;
+            }
+        }
+    } else {
+        if (item->dst_idx >= 0) {
+            if (!S_ISDIR(cecup.traversal_dst.stats[item->dst_idx].st_mode)) {
+                return cecup.traversal_dst.stats[item->dst_idx].st_size;
+            }
+        }
+    }
+    return -1;
+}
+
+static int64
+aux_item_mtime_side(CecupItem *item, int32 side) {
+    if (side == L) {
+        if (item->src_idx >= 0) {
+            return cecup.traversal_src.stats[item->src_idx].st_mtime;
+        }
+    } else {
+        if (item->dst_idx >= 0) {
+            return cecup.traversal_dst.stats[item->dst_idx].st_mtime;
+        }
+    }
+    return 0;
+}
+
+static void
+aux_item_status_get(CecupItem *item, enum CecupAction *src_act,
+                    enum CecupAction *dst_act, enum CecupReason *reason) {
+    int32 src_idx;
+    int32 dst_idx;
+    bool delete_excluded;
+
+    src_idx = item->src_idx;
+    dst_idx = item->dst_idx;
+    delete_excluded = false;
+
+    if (cecup.delete_excluded) {
+        delete_excluded = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
+    }
+
+    *reason = 0;
+
+    if ((src_idx >= 0) && (dst_idx >= 0)) {
+        struct stat *stat_src;
+        struct stat *stat_dst;
+        char *matched_src;
+        char *target_src;
+        char *target_dst;
+        bool is_symlink;
+        bool is_hardlink;
+        bool is_dir;
+        bool equal;
+        bool attributes_differ;
+        enum CecupAction action;
+
+        stat_src = &cecup.traversal_src.stats[src_idx];
+        stat_dst = &cecup.traversal_dst.stats[dst_idx];
+        matched_src = cecup.traversal_src.matched_patterns[src_idx];
+        target_src = cecup.traversal_src.link_targets[src_idx];
+        target_dst = cecup.traversal_dst.link_targets[dst_idx];
+        is_symlink = S_ISLNK(stat_src->st_mode);
+        is_hardlink = S_ISREG(stat_src->st_mode) && (target_src != NULL);
+        is_dir = S_ISDIR(stat_src->st_mode);
+        equal = false;
+        attributes_differ = false;
+        action = ACTION_UPDATE;
+
+        if (matched_src) {
+            action = ACTION_IGNORE;
+            *reason |= REASON_IGNORED;
+        } else {
+            if (is_symlink) {
+                *reason |= REASON_SYMLINK;
+                if (S_ISLNK(stat_dst->st_mode)) {
+                    if (target_src) {
+                        if (target_dst) {
+                            if (strcmp(target_src, target_dst) == 0) {
+                                equal = true;
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (is_hardlink) {
+                    *reason |= REASON_HARDLINK;
+                }
+                if (!is_dir) {
+                    if (stat_src->st_size != stat_dst->st_size) {
+                        *reason |= REASON_SIZE;
+                        attributes_differ = true;
+                    }
+                }
+                if (stat_src->st_mtime != stat_dst->st_mtime) {
+                    *reason |= REASON_MTIME;
+                    attributes_differ = true;
+                }
+                if (is_dir) {
+                    if (stat_src->st_ctime > stat_dst->st_ctime) {
+                        *reason |= REASON_CTIME;
+                        attributes_differ = true;
+                    }
+                }
+                if (stat_src->st_uid != stat_dst->st_uid) {
+                    *reason |= REASON_OWNER;
+                    attributes_differ = true;
+                }
+                if (stat_src->st_gid != stat_dst->st_gid) {
+                    *reason |= REASON_GROUP;
+                    attributes_differ = true;
+                }
+                if ((stat_src->st_mode & 07777) != (stat_dst->st_mode & 07777)) {
+                    *reason |= REASON_PERM;
+                    attributes_differ = true;
+                }
+
+                if (is_hardlink) {
+                    if (!S_ISREG(stat_dst->st_mode) || (target_dst == NULL) || strcmp(target_src, target_dst)) {
+                        equal = false;
+                        attributes_differ = true;
+                    }
+                }
+
+                if (!attributes_differ) {
+                    equal = true;
+                }
+            }
+
+            if (equal) {
+                action = ACTION_EQUAL;
+                *reason |= REASON_EQUAL;
+            } else {
+                if (is_hardlink) {
+                    action = ACTION_HARDLINK;
+                } else if (is_symlink) {
+                    action = ACTION_SYMLINK;
+                } else {
+                    action = ACTION_UPDATE;
+                }
+            }
+        }
+
+        *src_act = action;
+        *dst_act = action;
+
+        if (action == ACTION_IGNORE) {
+            *src_act = ACTION_IGNORE;
+            if (delete_excluded) {
+                *dst_act = ACTION_DELETE;
+            } else {
+                *dst_act = ACTION_IGNORE;
+            }
+        } else if (action == ACTION_DELETE) {
+            *src_act = ACTION_IGNORE;
+            *dst_act = ACTION_DELETE;
+        }
+    } else if (src_idx >= 0) {
+        char *matched_src;
+        struct stat *stat_src;
+        bool is_symlink;
+        bool is_hardlink;
+
+        matched_src = cecup.traversal_src.matched_patterns[src_idx];
+        stat_src = &cecup.traversal_src.stats[src_idx];
+        is_symlink = S_ISLNK(stat_src->st_mode);
+        is_hardlink = S_ISREG(stat_src->st_mode) && cecup.traversal_src.link_targets[src_idx];
+
+        if (matched_src) {
+            *src_act = ACTION_IGNORE;
+            *dst_act = ACTION_IGNORE;
+            *reason |= REASON_IGNORED;
+        } else {
+            *reason |= REASON_NEW;
+            if (is_hardlink) {
+                *src_act = ACTION_HARDLINK;
+                *dst_act = ACTION_HARDLINK;
+                *reason |= REASON_HARDLINK;
+            } else if (is_symlink) {
+                *src_act = ACTION_SYMLINK;
+                *dst_act = ACTION_SYMLINK;
+                *reason |= REASON_SYMLINK;
+            } else {
+                *src_act = ACTION_NEW;
+                *dst_act = ACTION_NEW;
+            }
+        }
+    } else if (dst_idx >= 0) {
+        char *matched_dst;
+
+        matched_dst = cecup.traversal_dst.matched_patterns[dst_idx];
+        *reason |= REASON_MISSING;
+
+        if (matched_dst) {
+            *reason |= REASON_IGNORED;
+            *src_act = ACTION_IGNORE;
+            if (delete_excluded) {
+                *dst_act = ACTION_DELETE;
+            } else {
+                *dst_act = ACTION_IGNORE;
+            }
+        } else {
+            *src_act = ACTION_IGNORE;
+            *dst_act = ACTION_DELETE;
+        }
+    }
+
+    return;
+}
+
 static void
 invalidate_preview(void) {
     cecup.preview_dirty = true;
@@ -159,24 +513,32 @@ get_target_tasks(int32 side, char *clicked_path,
     memset64(tasks, 0, tasks_size);
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupRow *row = cecup.rows[i];
+        CecupItem *item = cecup.rows[i];
         char *filepath;
         int32 path_len;
         enum CecupAction action;
+        enum CecupAction src_act;
+        enum CecupAction dst_act;
+        enum CecupReason reason;
+        char *link_target;
+        int32 link_target_len;
         Task *task;
 
-        if (!(row->selected)) {
+        if (!(item->selected)) {
             continue;
         }
 
+        aux_item_status_get(item, &src_act, &dst_act, &reason);
+
         if (side == L) {
-            filepath = row->src_path;
-            action = row->src_action;
+            filepath = aux_item_path_side(item, L);
+            path_len = aux_item_path_len_side(item, L);
+            action = src_act;
         } else {
-            filepath = row->dst_path;
-            action = row->dst_action;
+            filepath = aux_item_path_side(item, R);
+            path_len = aux_item_path_len_side(item, R);
+            action = dst_act;
         }
-        path_len = row->path_len;
 
         if (filepath == NULL) {
             continue;
@@ -189,11 +551,14 @@ get_target_tasks(int32 side, char *clicked_path,
         task->path = xmalloc(path_len + 1);
         memcpy64(task->path, filepath, path_len + 1);
 
-        if (row->link_target) {
-            task->link_target_len = row->link_target_len;
+        link_target = aux_item_link_target_side(item, side);
+        link_target_len = aux_item_link_target_len_side(item, side);
+
+        if (link_target) {
+            task->link_target_len = link_target_len;
             task->link_target
                 = xmalloc(task->link_target_len + 1);
-            memcpy64(task->link_target, row->link_target,
+            memcpy64(task->link_target, link_target,
                      task->link_target_len + 1);
         }
 
@@ -247,13 +612,25 @@ get_target_tasks(int32 side, char *clicked_path,
 }
 
 static int32
-cecup_row_compare(const void *a, const void *b) {
-    CecupRow *row_a;
-    CecupRow *row_b;
+cecup_item_compare(const void *a, const void *b) {
+    CecupItem *item_a;
+    CecupItem *item_b;
     int64 result;
+    char *path_a;
+    char *path_b;
+    int64 size_a;
+    int64 size_b;
+    int64 mtime_a;
+    int64 mtime_b;
+    enum CecupAction src_act_a;
+    enum CecupAction dst_act_a;
+    enum CecupAction src_act_b;
+    enum CecupAction dst_act_b;
+    enum CecupReason reason_a;
+    enum CecupReason reason_b;
 
-    row_a = *(CecupRow **)a;
-    row_b = *(CecupRow **)b;
+    item_a = *(CecupItem **)a;
+    item_b = *(CecupItem **)b;
 
 #define COMPARE(A, B) \
     do { \
@@ -268,42 +645,56 @@ cecup_row_compare(const void *a, const void *b) {
 
     switch (cecup.sort_col) {
     case COL_SRC_PATH:
-        if (row_a->src_path == NULL && row_b->src_path == NULL) {
+        path_a = aux_item_path_side(item_a, L);
+        path_b = aux_item_path_side(item_b, L);
+        if (path_a == NULL && path_b == NULL) {
             result = 0;
-        } else if (row_a->src_path == NULL) {
+        } else if (path_a == NULL) {
             result = -1;
-        } else if (row_b->src_path == NULL) {
+        } else if (path_b == NULL) {
             result = 1;
         } else {
-            result = strcmp(row_a->src_path, row_b->src_path);
+            result = strcmp(path_a, path_b);
         }
         break;
     case COL_DST_PATH:
-        if (row_a->dst_path == NULL && row_b->dst_path == NULL) {
+        path_a = aux_item_path_side(item_a, R);
+        path_b = aux_item_path_side(item_b, R);
+        if (path_a == NULL && path_b == NULL) {
             result = 0;
-        } else if (row_a->dst_path == NULL) {
+        } else if (path_a == NULL) {
             result = -1;
-        } else if (row_b->dst_path == NULL) {
+        } else if (path_b == NULL) {
             result = 1;
         } else {
-            result = strcmp(row_a->dst_path, row_b->dst_path);
+            result = strcmp(path_a, path_b);
         }
         break;
     case COL_SIZE_RAW:
-        COMPARE(row_a->src_size_raw, row_b->src_size_raw);
+        size_a = aux_item_size_side(item_a, L);
+        size_b = aux_item_size_side(item_b, L);
+        COMPARE(size_a, size_b);
         break;
     case COL_MTIME_RAW:
-        COMPARE(row_a->src_mtime_raw, row_b->src_mtime_raw);
+        mtime_a = aux_item_mtime_side(item_a, L);
+        mtime_b = aux_item_mtime_side(item_b, L);
+        COMPARE(mtime_a, mtime_b);
         break;
     case COL_DST_ACTION:
+        aux_item_status_get(item_a, &src_act_a, &dst_act_a, &reason_a);
+        aux_item_status_get(item_b, &src_act_b, &dst_act_b, &reason_b);
+        COMPARE(dst_act_a, dst_act_b);
+        break;
     case COL_MTIME_TEXT:
-    case COL_ROW_PTR:
+    case COL_ITEM_PTR:
     case COL_SELECTED:
     case COL_SIZE_TEXT:
     case COL_SRC_ACTION:
     case NUM_COLS:
     default:
-        COMPARE(row_a->src_action, row_b->src_action);
+        aux_item_status_get(item_a, &src_act_a, &dst_act_a, &reason_a);
+        aux_item_status_get(item_b, &src_act_b, &dst_act_b, &reason_b);
+        COMPARE(src_act_a, src_act_b);
         break;
     }
 
@@ -497,18 +888,6 @@ free_message(void *data) {
     return;
 }
 
-static char *
-row_path_get(CecupRow *row) {
-    if (row->src_path) {
-        return row->src_path;
-    } else if (row->dst_path) {
-        return row->dst_path;
-    } else {
-        error2("Error: src_path and dst_path are NULL.\n");
-        fatal(EXIT_FAILURE);
-    }
-}
-
 #if 0 == TESTING_aux
 static inline void
 aux_functions_sink(void) {
@@ -516,7 +895,7 @@ aux_functions_sink(void) {
     (void)get_target_tasks;
     (void)free_task_list;
     (void)free_message;
-    (void)cecup_row_compare;
+    (void)cecup_item_compare;
     (void)traversal_push;
     (void)protect_interface_from_user;
     (void)invalidate_preview;

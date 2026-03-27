@@ -49,23 +49,23 @@ static void
 bind_column_checkbox(GtkSignalListItemFactory *factory,
                      GtkListItem *list_item, void *data) {
     GtkWidget *check;
-    CecupRowProxy *proxy;
-    CecupRow *row;
+    CecupItemProxy *proxy;
+    CecupItem *item;
     uint32 position;
 
     (void)factory;
     (void)data;
 
     check = gtk_list_item_get_child(list_item);
-    proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
-    row = cecup_row_proxy_get_row(proxy);
+    proxy = CECUP_ITEM_PROXY(gtk_list_item_get_item(list_item));
+    item = cecup_item_proxy_get_item(proxy);
     position = gtk_list_item_get_position(list_item);
 
     g_signal_handlers_block_by_func(check, on_cell_toggled, NULL);
-    gtk_check_button_set_active(GTK_CHECK_BUTTON(check), row->selected);
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(check), item->selected);
     g_signal_handlers_unblock_by_func(check, on_cell_toggled, NULL);
 
-    g_object_set_data(G_OBJECT(check), "cecup-row", row);
+    g_object_set_data(G_OBJECT(check), "cecup-item", item);
     g_object_set_data(G_OBJECT(check), "cecup-pos", GUINT_TO_POINTER(position + 1));
     return;
 }
@@ -91,9 +91,12 @@ static void
 bind_column_action(GtkSignalListItemFactory *factory,
                    GtkListItem *list_item, void *data) {
     GtkWidget *label;
-    CecupRowProxy *proxy;
-    CecupRow *row;
+    CecupItemProxy *proxy;
+    CecupItem *item;
     int32 side;
+    enum CecupAction src_act;
+    enum CecupAction dst_act;
+    enum CecupReason reason;
     enum CecupAction action;
     char class_name[32];
     char *classes[2];
@@ -102,15 +105,17 @@ bind_column_action(GtkSignalListItemFactory *factory,
     (void)factory;
 
     label = gtk_list_item_get_child(list_item);
-    proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
-    row = cecup_row_proxy_get_row(proxy);
+    proxy = CECUP_ITEM_PROXY(gtk_list_item_get_item(list_item));
+    item = cecup_item_proxy_get_item(proxy);
     side = GPOINTER_TO_INT(data);
     position = gtk_list_item_get_position(list_item);
 
+    aux_item_status_get(item, &src_act, &dst_act, &reason);
+
     if (side == L) {
-        action = row->src_action;
+        action = src_act;
     } else {
-        action = row->dst_action;
+        action = dst_act;
     }
 
     gtk_label_set_text(GTK_LABEL(label), action_emojis[action]);
@@ -120,7 +125,7 @@ bind_column_action(GtkSignalListItemFactory *factory,
     classes[1] = NULL;
     gtk_widget_set_css_classes(label, (const char **)classes);
 
-    g_object_set_data(G_OBJECT(label), "cecup-row", row);
+    g_object_set_data(G_OBJECT(label), "cecup-item", item);
     g_object_set_data(G_OBJECT(label), "cecup-pos", GUINT_TO_POINTER(position + 1));
     g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(COLUMN_ACTION));
 
@@ -160,10 +165,14 @@ static void
 bind_column_path(GtkSignalListItemFactory *factory,
                  GtkListItem *list_item, void *data) {
     GtkWidget *editable;
-    CecupRowProxy *proxy;
-    CecupRow *row;
+    CecupItemProxy *proxy;
+    CecupItem *item;
     GtkWidget *tree;
     int32 side;
+    char *path;
+    enum CecupAction src_act;
+    enum CecupAction dst_act;
+    enum CecupReason reason;
     enum CecupAction action;
     char class_name[32];
     char *classes[2];
@@ -173,25 +182,25 @@ bind_column_path(GtkSignalListItemFactory *factory,
     tree = data;
 
     editable = gtk_list_item_get_child(list_item);
-    proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
-    row = cecup_row_proxy_get_row(proxy);
+    proxy = CECUP_ITEM_PROXY(gtk_list_item_get_item(list_item));
+    item = cecup_item_proxy_get_item(proxy);
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
     position = gtk_list_item_get_position(list_item);
 
-    if (side == L) {
-        if (row->src_path) {
-            gtk_editable_set_text(GTK_EDITABLE(editable), row->src_path);
-        } else {
-            gtk_editable_set_text(GTK_EDITABLE(editable), "");
-        }
-        action = row->src_action;
+    path = item_path_side(item, side);
+
+    if (path) {
+        gtk_editable_set_text(GTK_EDITABLE(editable), path);
     } else {
-        if (row->dst_path) {
-            gtk_editable_set_text(GTK_EDITABLE(editable), row->dst_path);
-        } else {
-            gtk_editable_set_text(GTK_EDITABLE(editable), "");
-        }
-        action = row->dst_action;
+        gtk_editable_set_text(GTK_EDITABLE(editable), "");
+    }
+
+    aux_item_status_get(item, &src_act, &dst_act, &reason);
+
+    if (side == L) {
+        action = src_act;
+    } else {
+        action = dst_act;
     }
 
     SNPRINTF(class_name, "cell-color-%u", action);
@@ -199,7 +208,7 @@ bind_column_path(GtkSignalListItemFactory *factory,
     classes[1] = NULL;
     gtk_widget_set_css_classes(editable, (const char **)classes);
 
-    g_object_set_data(G_OBJECT(editable), "cecup-row", row);
+    g_object_set_data(G_OBJECT(editable), "cecup-item", item);
     g_object_set_data(G_OBJECT(editable), "cecup-col", GINT_TO_POINTER(COLUMN_PATH));
     g_object_set_data(G_OBJECT(editable), "cecup-pos",
                       GUINT_TO_POINTER(position + 1));
@@ -211,53 +220,54 @@ static void
 bind_text_cb(GtkSignalListItemFactory *factory,
              GtkListItem *list_item, void *data) {
     GtkWidget *label;
-    CecupRowProxy *proxy;
-    CecupRow *row;
+    CecupItemProxy *proxy;
+    CecupItem *item;
+    enum CecupAction src_act;
+    enum CecupAction dst_act;
+    enum CecupReason reason;
     enum CecupAction action;
+    int64 size;
+    int64 mtime;
+    char text_buf[64] = "";
     char class_name[32];
     char *classes[2];
     uint32 position;
-    TextInfo *text_info = g_object_get_data(G_OBJECT(factory), "text_info");
+    TextInfo *text_info;
 
     (void)data;
+    text_info = g_object_get_data(G_OBJECT(factory), "text_info");
 
     label = gtk_list_item_get_child(list_item);
-    proxy = CECUP_ROW_PROXY(gtk_list_item_get_item(list_item));
-    row = cecup_row_proxy_get_row(proxy);
+    proxy = CECUP_ITEM_PROXY(gtk_list_item_get_item(list_item));
+    item = cecup_item_proxy_get_item(proxy);
     position = gtk_list_item_get_position(list_item);
 
+    aux_item_status_get(item, &src_act, &dst_act, &reason);
+
+    size = item_size_side(item, text_info->side);
+    mtime = item_mtime_side(item, text_info->side);
+
+    if (text_info->type == COLUMN_MTIME) {
+        if (mtime > 0) {
+            struct tm time_information;
+            time_t unix_timestamp;
+
+            unix_timestamp = (time_t)mtime + timezone_offset;
+            gmtime_r(&unix_timestamp, &time_information);
+            STRFTIME(text_buf, "%Y-%m-%d %H:%M:%S", &time_information);
+        }
+    } else if (text_info->type == COLUMN_SIZE) {
+        if (size >= 0) {
+            bytes_pretty(text_buf, size);
+        }
+    }
+
+    gtk_label_set_text(GTK_LABEL(label), text_buf);
+
     if (text_info->side == L) {
-        switch (text_info->type) {
-        case COLUMN_MTIME:
-            gtk_label_set_text(GTK_LABEL(label), row->src_mtime_text);
-            break;
-        case COLUMN_SIZE:
-            gtk_label_set_text(GTK_LABEL(label), row->src_size_text);
-            break;
-        case COLUMN_PATH:
-        case COLUMN_ACTION:
-        case COLUMN_LAST:
-        default:
-            break;
-        }
-
-        action = row->src_action;
+        action = src_act;
     } else {
-        switch (text_info->type) {
-        case COLUMN_MTIME:
-            gtk_label_set_text(GTK_LABEL(label), row->dst_mtime_text);
-            break;
-        case COLUMN_SIZE:
-            gtk_label_set_text(GTK_LABEL(label), row->dst_size_text);
-            break;
-        case COLUMN_PATH:
-        case COLUMN_ACTION:
-        case COLUMN_LAST:
-        default:
-            break;
-        }
-
-        action = row->dst_action;
+        action = dst_act;
     }
 
     SNPRINTF(class_name, "cell-color-%u", action);
@@ -265,10 +275,9 @@ bind_text_cb(GtkSignalListItemFactory *factory,
     classes[1] = NULL;
     gtk_widget_set_css_classes(label, (const char **)classes);
 
-    g_object_set_data(G_OBJECT(label), "cecup-row", row);
+    g_object_set_data(G_OBJECT(label), "cecup-item", item);
     g_object_set_data(G_OBJECT(label), "cecup-pos", GUINT_TO_POINTER(position + 1));
-    g_object_set_data(G_OBJECT(label),
-                      "cecup-col", GINT_TO_POINTER(text_info->type));
+    g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(text_info->type));
 
     return;
 }

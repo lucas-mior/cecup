@@ -29,42 +29,42 @@
 #define TESTING_tree_model 0
 #endif
 
-struct _CecupRowProxy {
+struct _CecupItemProxy {
     GObject parent_instance;
-    CecupRow *row;
+    CecupItem *item;
 };
 
-G_DEFINE_TYPE(CecupRowProxy, cecup_row_proxy, G_TYPE_OBJECT)
+G_DEFINE_TYPE(CecupItemProxy, cecup_item_proxy, G_TYPE_OBJECT)
 
 static void
-cecup_row_proxy_init(CecupRowProxy *self) {
-    self->row = NULL;
+cecup_item_proxy_init(CecupItemProxy *self) {
+    self->item = NULL;
     return;
 }
 
 static void
-cecup_row_proxy_class_init(CecupRowProxyClass *klass) {
+cecup_item_proxy_class_init(CecupItemProxyClass *klass) {
     (void)klass;
     return;
 }
 
-static CecupRowProxy *
-cecup_row_proxy_new(CecupRow *row) {
-    CecupRowProxy *self;
+static CecupItemProxy *
+cecup_item_proxy_new(CecupItem *item) {
+    CecupItemProxy *self;
 
-    self = g_object_new(CECUP_TYPE_ROW_PROXY, NULL);
-    self->row = row;
+    self = g_object_new(CECUP_TYPE_ITEM_PROXY, NULL);
+    self->item = item;
     return self;
 }
 
-static CecupRow *
-cecup_row_proxy_get_row(CecupRowProxy *proxy) {
-    return proxy->row;
+static CecupItem *
+cecup_item_proxy_get_item(CecupItemProxy *proxy) {
+    return proxy->item;
 }
 
 struct _CecupListModel {
     GObject parent_instance;
-    CecupRowProxy **proxies;
+    CecupItemProxy **proxies;
     int32 proxies_capacity;
 };
 
@@ -96,7 +96,7 @@ cecup_list_model_finalize(GObject *object) {
                 g_object_unref(self->proxies[i]);
             }
         }
-        free(self->proxies, self->proxies_capacity*SIZEOF(CecupRowProxy *));
+        free(self->proxies, self->proxies_capacity*SIZEOF(CecupItemProxy *));
     }
 
     G_OBJECT_CLASS(cecup_list_model_parent_class)->finalize(object);
@@ -120,7 +120,7 @@ cecup_list_model_new(void) {
 static GType
 cecup_list_model_get_item_type(GListModel *list) {
     (void)list;
-    return CECUP_TYPE_ROW_PROXY;
+    return CECUP_TYPE_ITEM_PROXY;
 }
 
 static guint
@@ -152,7 +152,7 @@ cecup_list_model_get_item(GListModel *list, guint position) {
         }
 
         self->proxies = xrealloc(self->proxies,
-                                 self->proxies_capacity*SIZEOF(CecupRowProxy *));
+                                 self->proxies_capacity*SIZEOF(CecupItemProxy *));
 
         for (int32 i = old_capacity; i < self->proxies_capacity; i += 1) {
             self->proxies[i] = NULL;
@@ -160,12 +160,12 @@ cecup_list_model_get_item(GListModel *list, guint position) {
     }
 
     if (self->proxies[pos]) {
-        if (self->proxies[pos]->row != cecup.rows_visible[pos]) {
+        if (self->proxies[pos]->item != cecup.rows_visible[pos]) {
             g_object_unref(self->proxies[pos]);
-            self->proxies[pos] = cecup_row_proxy_new(cecup.rows_visible[pos]);
+            self->proxies[pos] = cecup_item_proxy_new(cecup.rows_visible[pos]);
         }
     } else {
-        self->proxies[pos] = cecup_row_proxy_new(cecup.rows_visible[pos]);
+        self->proxies[pos] = cecup_item_proxy_new(cecup.rows_visible[pos]);
     }
 
     return g_object_ref(self->proxies[pos]);
@@ -240,7 +240,7 @@ cecup_list_model_row_changed(CecupListModel *self, int32 index) {
 static inline void
 tree_model_functions_sink(void) {
     (void)cecup_list_model_new;
-    (void)cecup_row_proxy_get_row;
+    (void)cecup_item_proxy_get_item;
 }
 
 #if TESTING_tree_model
