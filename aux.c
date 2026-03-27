@@ -239,6 +239,8 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
         char *matched_src = cecup.traversal_src.matched_patterns[src_idx];
         struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
         struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
+        char *path_src = cecup.traversal_src.paths[src_idx];
+        char *path_dst = cecup.traversal_dst.paths[dst_idx];
         char *target_src = cecup.traversal_src.link_targets[src_idx];
         char *target_dst = cecup.traversal_dst.link_targets[dst_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
@@ -326,14 +328,28 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
 
             if (is_hardlink) {
                 if (!S_ISREG(stat_dst->st_mode)) {
+                    LOG_ERROR("Updating hardlink"
+                              " because the correspondent file on the backup"
+                              " is not a regular file.\n");
                     equal = false;
                     attributes_differ = true;
                 } else if (target_dst == NULL) {
                     equal = false;
                     attributes_differ = true;
-                } else if (strcmp(target_src, target_dst) != 0) {
+                    LOG_ERROR("Updating hardlink"
+                              " because the correspondent file on the backup"
+                              " does not have a link target.\n");
+                } else if (
+                        strcmp(target_src, target_dst)
+                        && strcmp(path_src, target_dst)
+                        ) {
                     equal = false;
                     attributes_differ = true;
+                    LOG_ERROR("Updating hardlink \n%s => %s\n"
+                              " because the link target \n%s => %s\n"
+                              " of correspondent file on the backup"
+                              " does not match the link target on the source.\n",
+                              path_src, target_src, path_dst, target_dst);
                 }
             }
 
