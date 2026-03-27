@@ -115,15 +115,10 @@ ignore_patterns_load(void) {
 
 static bool
 work_match_pattern(char *pattern, char *str, bool restrict_slash) {
-    char *p;
-    char *s;
-    char *star_p;
-    char *star_s;
-
-    p = pattern;
-    s = str;
-    star_p = NULL;
-    star_s = NULL;
+    char *p = pattern;
+    char *s = str;
+    char *star_p = NULL;
+    char *star_s = NULL;
 
     while (*s != '\0') {
         if (*p == '*') {
@@ -134,7 +129,7 @@ work_match_pattern(char *pattern, char *str, bool restrict_slash) {
             p += 1;
             s += 1;
         } else {
-            if (star_p != NULL) {
+            if (star_p) {
                 if (restrict_slash && (*star_s == '/')) {
                     return false;
                 }
@@ -170,11 +165,7 @@ ignore_patterns_match(char *path, int32 path_len,
     memcpy64(path_copy, path, path_len + 1);
 
     for (int32 i = 0; i < count; i += 1) {
-        IgnorePattern *pattern;
-        bool matched;
-
-        pattern = &patterns[i];
-        matched = false;
+        IgnorePattern *pattern = &patterns[i];
 
         if (pattern->dir_only && !is_dir) {
             continue;
@@ -182,18 +173,15 @@ ignore_patterns_match(char *path, int32 path_len,
 
         if (pattern->has_slash) {
             if (work_match_pattern(pattern->match_str, path_copy, true)) {
-                matched = true;
+                return pattern;
             } else {
                 for (int32 j = 0; j < path_len; j += 1) {
                     if (path_copy[j] == '/') {
                         path_copy[j] = '\0';
                         if (work_match_pattern(pattern->match_str, path_copy, true)) {
-                            matched = true;
+                            return pattern;
                         }
                         path_copy[j] = '/';
-                        if (matched) {
-                            break;
-                        }
                     }
                 }
             }
@@ -224,7 +212,7 @@ ignore_patterns_match(char *path, int32 path_len,
                     comp_len = (int32)(next - comp);
 
                     if (work_match_pattern(pattern->match_str, comp, false)) {
-                        matched = true;
+                        return pattern;
                     }
 
                     *next = old_char;
@@ -232,19 +220,11 @@ ignore_patterns_match(char *path, int32 path_len,
                     comp = next + 1;
                 } else {
                     if (work_match_pattern(pattern->match_str, comp, false)) {
-                        matched = true;
+                        return pattern;
                     }
                     remaining = 0;
                 }
-
-                if (matched) {
-                    break;
-                }
             }
-        }
-
-        if (matched) {
-            return pattern;
         }
     }
 
