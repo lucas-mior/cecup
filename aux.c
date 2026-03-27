@@ -28,6 +28,17 @@
 #define TESTING_aux 0
 #endif
 
+static bool
+aux_is_root(char *path, int32 path_len) {
+    (void)path_len;
+    if (path[0] == '.') {
+        if ((path[1] == '/') || (path[1] == '\0')) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static char *
 item_path_get(CecupItem *item) {
     if (item->src_idx >= 0) {
