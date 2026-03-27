@@ -304,6 +304,7 @@ ignore_patterns_match(char *path, int32 path_len,
 #if TESTING_ignore_patterns
 #include "assert.c"
 #include "aux.c"
+#include "update.c"
 
 int
 main(void) {
