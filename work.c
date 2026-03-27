@@ -263,7 +263,7 @@ work_traverse_fs(Traversal *traversal) {
             problem = replacements[i].problem;
             problem_len = strlen32(problem);
 
-            if (memmem64(d_name, (int64)name_len, problem, problem_len)) {
+            if (memmem64(d_name, name_len, problem, problem_len)) {
                 LOG_ERROR(_("Error: filename contains problematic characters/patterns:\n"));
                 LOG_ERROR("'%s'\n", ent->fts_path);
                 LOG_ERROR(_("Please fix your file system.\n"));
