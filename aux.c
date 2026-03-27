@@ -240,7 +240,6 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
         struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
         struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
         char *path_src = cecup.traversal_src.paths[src_idx];
-        char *path_dst = cecup.traversal_dst.paths[dst_idx];
         char *target_src = cecup.traversal_src.link_targets[src_idx];
         char *target_dst = cecup.traversal_dst.link_targets[dst_idx];
         int32 nlinks_src = cecup.traversal_src.nlinks[src_idx];
