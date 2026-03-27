@@ -1102,7 +1102,7 @@ main(void) {
     Traversal tr;
     int64 count;
     int32 expected_files_count;
-    static TestEntry test_entries[] = {
+    TestEntry test_entries[] = {
         {"regular.txt", "regular.txt", FILE_TYPE_REGULAR,  "regular"},
         {"dir1",        "dir1/",       FILE_TYPE_DIR,      NULL},
         {"sym1",        "sym1",        FILE_TYPE_SYMLINK,  "regular.txt"},
