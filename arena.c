@@ -361,8 +361,8 @@ arena_push(Arena *arena, int64 size) {
 static void *
 arenas_push(Arena **arenas, int64 number, int64 size) {
     for (uint32 i = 0; i < number; i += 1) {
-        void *p = arena_push(arenas[i], size);
-        if (p) {
+        void *p;
+        if ((p = arena_push(arenas[i], size))) {
             return p;
         }
     }

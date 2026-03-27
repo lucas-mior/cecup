@@ -684,6 +684,13 @@ free2(void *pointer, int64 size) {
 #define free(pointer, size) free2(pointer, size)
 #endif
 
+static void *
+xmemdup(void *source, int64 size) {
+    void *p = xmalloc(size);
+    memcpy64(p, source, size);
+    return p;
+}
+
 static char *
 xstrdup(char *string) {
     char *p;
@@ -1331,13 +1338,6 @@ util_die_notify(char *program_name, char *format, ...) {
                buffer, NULL);
     }
     fatal(EXIT_FAILURE);
-}
-
-static void *
-xmemdup(void *source, int64 size) {
-    void *p = xmalloc(size);
-    memcpy64(p, source, size);
-    return p;
 }
 
 // Note: NEVER delete lines with // clang-format
