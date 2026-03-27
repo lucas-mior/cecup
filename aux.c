@@ -104,7 +104,7 @@ traversal_push(Traversal *data, char *path, int32 path_len,
         data->matched_patterns_lens = xrealloc(data->matched_patterns_lens,
                                                data->ncapacity*lens_type_size);
         data->nlinks= xrealloc(data->nlinks,
-                               data->ncapacity*SIZEOF(lens_type_size));
+                               data->ncapacity*lens_type_size);
     }
 
     idx = data->nfiles;
