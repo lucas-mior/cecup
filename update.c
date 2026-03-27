@@ -88,7 +88,10 @@ update_row_remove(Message *message) {
                     row->dst_action = ACTION_DELETE;
                     row->reason = REASON_MISSING;
                 } else {
-                    if (row->reason & REASON_HARDLINK) {
+                    if (row->reason & REASON_IGNORED) {
+                        row->src_action = ACTION_IGNORE;
+                        row->dst_action = ACTION_IGNORE;
+                    } else if (row->reason & REASON_HARDLINK) {
                         row->src_action = ACTION_HARDLINK;
                         row->dst_action = ACTION_HARDLINK;
                     } else if (row->reason & REASON_SYMLINK) {
@@ -102,7 +105,10 @@ update_row_remove(Message *message) {
                         &= ~(REASON_EQUAL
                                 | REASON_SIZE | REASON_MTIME | REASON_CTIME
                                 | REASON_OWNER | REASON_GROUP | REASON_PERM);
-                    row->reason |= REASON_NEW;
+
+                    if (!(row->reason & REASON_IGNORED)) {
+                        row->reason |= REASON_NEW;
+                    }
                 }
             }
 
@@ -531,7 +537,10 @@ update_row_rename(Message *message) {
                     row->dst_action = ACTION_DELETE;
                     row->reason = REASON_MISSING;
                 } else {
-                    if (row->reason & REASON_HARDLINK) {
+                    if (row->reason & REASON_IGNORED) {
+                        row->src_action = ACTION_IGNORE;
+                        row->dst_action = ACTION_IGNORE;
+                    } else if (row->reason & REASON_HARDLINK) {
                         row->src_action = ACTION_HARDLINK;
                         row->dst_action = ACTION_HARDLINK;
                     } else if (row->reason & REASON_SYMLINK) {
@@ -547,7 +556,9 @@ update_row_rename(Message *message) {
                                 | REASON_SIZE | REASON_MTIME | REASON_CTIME
                                 | REASON_OWNER | REASON_GROUP | REASON_PERM);
 
-                    row->reason |= REASON_NEW;
+                    if (!(row->reason & REASON_IGNORED)) {
+                        row->reason |= REASON_NEW;
+                    }
                 }
             }
 

@@ -1308,16 +1308,20 @@ work_rsync(void *user_data) {
 
         if (task->action == ACTION_HARDLINK) {
             write_len = task->link_target_len;
-            if (task->link_target[write_len - 1] == '/') {
-                write_len -= 1;
+            if (write_len > 1) {
+                if (task->link_target[write_len - 1] == '/') {
+                    write_len -= 1;
+                }
             }
             write64(files_from_fd, task->link_target, write_len);
             write64(files_from_fd, "\n", 1);
         }
 
         write_len = task->path_len;
-        if (task->path[write_len - 1] == '/') {
-            write_len -= 1;
+        if (write_len > 1) {
+            if (task->path[write_len - 1] == '/') {
+                write_len -= 1;
+            }
         }
         write64(files_from_fd, task->path, write_len);
         write64(files_from_fd, "\n", 1);
