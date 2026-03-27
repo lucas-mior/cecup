@@ -246,6 +246,8 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
         bool is_dir = S_ISDIR(stat_src->st_mode);
         bool equal = false;
         bool attributes_differ = false;
+        bool delete_after
+            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
         if (matched_src) {
             *action_src = ACTION_IGNORE;
@@ -291,9 +293,13 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
 
             if (stat_src->st_mtime < stat_dst->st_mtime) {
                 *reason |= REASON_MTIME_OLDER;
-                *action_src = ACTION_IGNORE;
-                *action_dst = ACTION_IGNORE;
-                return;
+                if (delete_after) {
+                    attributes_differ = true;
+                } else {
+                    *action_src = ACTION_IGNORE;
+                    *action_dst = ACTION_IGNORE;
+                    return;
+                }
             }
 
             if (is_dir) {

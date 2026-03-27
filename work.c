@@ -644,6 +644,9 @@ work_rsync_run(char *files_from_filename, bool checksum,
     int64 buf_output_pos = 0;
     pid_t child_pid;
     struct pollfd pipes[2];
+    bool delete_after;
+
+    delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
     SNPRINTF(src_base_with_slash, "%s/", cecup.src_base);
     SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
@@ -652,7 +655,10 @@ work_rsync_run(char *files_from_filename, bool checksum,
     rsync_args[rsync_args_len++] = "rsync";
     rsync_args[rsync_args_len++] = "--verbose";
     rsync_args[rsync_args_len++] = "--verbose";
-    rsync_args[rsync_args_len++] = "--update";
+
+    if (!delete_after) {
+        rsync_args[rsync_args_len++] = "--update";
+    }
 
     // these 2 options are implied by --files-from
     rsync_args[rsync_args_len++] = "--dirs";

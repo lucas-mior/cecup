@@ -293,7 +293,9 @@ on_delete_after_toggled(GtkCheckButton *b, void *data) {
             _("Warning: 'Sync 100%%' (delete-after) is enabled."
               " Files in the backup folder"
               " that do not exist in the source folder"
-              " will be PERMANENTLY DELETED."));
+              " will be PERMANENTLY DELETED."
+              " Also, files that are newer on the destination"
+              " will be OVERWRITTEN."));
         g_signal_connect(dialog, "response",
                          G_CALLBACK(gtk_window_destroy), NULL);
         gtk_widget_show(dialog);
