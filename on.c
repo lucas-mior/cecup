@@ -796,7 +796,7 @@ on_tree_key_press(GtkEventControllerKey *controller,
 
     modifiers = state & gtk_accelerator_get_default_mod_mask();
 
-    for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {
+    for (int32 i = 0; i < LENGTH(tree_menu_items); i += 1) {
         CecupMenuItem *menu_item = &tree_menu_items[i];
         uint32 target;
         uint32 pressed;
@@ -983,7 +983,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                                "active_message", message, free_message);
 
         menu = g_menu_new();
-        for (int32 i = 0; i < (int32)LENGTH(tree_menu_items); i += 1) {
+        for (int32 i = 0; i < LENGTH(tree_menu_items); i += 1) {
             CecupMenuItem *menu_item;
 
             menu_item = &tree_menu_items[i];
@@ -1241,7 +1241,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                     continue;
                 }
 
-                if (i >= (int32)LENGTH(reason_strings_file) || reason_strings_file[i] == NULL) {
+                if ((i >= LENGTH(reason_strings_file))
+                        || (reason_strings_file[i] == NULL)) {
                     continue;
                 }
 
