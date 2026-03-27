@@ -507,6 +507,8 @@ aux_functions_sink(void) {
 #include <assert.h>
 #include <string.h>
 
+#include "update.c"
+
 int
 main(void) {
     (void)cecup_get_dirs;
