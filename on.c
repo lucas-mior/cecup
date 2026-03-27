@@ -597,12 +597,15 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         }
     }
 
-    update_list_from_rows();
-    g_list_model_items_changed(cecup.store,
-                               0,
-                               (uint32)cecup.rows_visible_len,
-                               (uint32)cecup.rows_visible_len);
-    update_visible_checkboxes(cecup.tree[side]);
+    {
+        // something in this block is triggering segfault
+        update_list_from_rows();
+        g_list_model_items_changed(cecup.store,
+                                   0,
+                                   (uint32)cecup.rows_visible_len,
+                                   (uint32)cecup.rows_visible_len);
+        update_visible_checkboxes(cecup.tree[side]);
+    }
     return;
 }
 
