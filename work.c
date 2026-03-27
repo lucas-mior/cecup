@@ -568,7 +568,7 @@ work_preview(void *user_data) {
         item.dst_idx = dst_idx;
         item.selected = false;
 
-        item_status_get(&item, &src_act, &dst_act, &reason);
+        item_get_actions_reasons(&item, &src_act, &dst_act, &reason);
 
         if (!aux_is_root(bucket_src->key)
             && (src_act != ACTION_EQUAL) && (src_act != ACTION_IGNORE)) {

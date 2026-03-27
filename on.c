@@ -94,7 +94,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
             memcpy64(message->src_path, filepath, path_len + 1);
         }
 
-        item_status_get(item, &action_src, &action_dst, &reason);
+        item_get_actions_reasons(item, &action_src, &action_dst, &reason);
 
         if (side == L) {
             message->action = action_src;
@@ -573,7 +573,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                 int64 size;
 
                 count_selected += 1;
-                item_status_get(item, &action_src, &action_dst, &reason);
+                item_get_actions_reasons(item, &action_src, &action_dst, &reason);
 
                 size = item_size_side(item, L);
                 if (size < 0) {
@@ -960,7 +960,7 @@ on_tree_button_press(GtkGestureClick *gesture,
         }
         message->side = side;
 
-        item_status_get(item, &action_src, &action_dst, &reason);
+        item_get_actions_reasons(item, &action_src, &action_dst, &reason);
 
         if (side == L) {
             message->action = action_src;
@@ -1172,7 +1172,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         char *ignore_pattern;
         int32 path_len;
 
-        item_status_get(item, &action_src, &action_dst, &reason);
+        item_get_actions_reasons(item, &action_src, &action_dst, &reason);
 
         if (side == L) {
             filepath = item_path_side(item, L);

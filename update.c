@@ -605,7 +605,7 @@ update_list_from_rows(void) {
             count_selected += 1;
         }
 
-        item_status_get(item, &src_act, &dst_act, &reason);
+        item_get_actions_reasons(item, &src_act, &dst_act, &reason);
 
         sz = item_size_side(item, L);
         if (sz < 0) {

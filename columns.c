@@ -109,7 +109,7 @@ bind_column_action(GtkSignalListItemFactory *factory,
     side = GPOINTER_TO_INT(data);
     position = gtk_list_item_get_position(list_item);
 
-    item_status_get(item, &src_act, &dst_act, &reason);
+    item_get_actions_reasons(item, &src_act, &dst_act, &reason);
 
     if (side == L) {
         action = src_act;
@@ -194,7 +194,7 @@ bind_column_path(GtkSignalListItemFactory *factory,
         gtk_editable_set_text(GTK_EDITABLE(editable), "");
     }
 
-    item_status_get(item, &src_act, &dst_act, &reason);
+    item_get_actions_reasons(item, &src_act, &dst_act, &reason);
 
     if (side == L) {
         action = src_act;
@@ -241,7 +241,7 @@ bind_text_cb(GtkSignalListItemFactory *factory,
     item = cecup_item_proxy_get_item(proxy);
     position = gtk_list_item_get_position(list_item);
 
-    item_status_get(item, &src_act, &dst_act, &reason);
+    item_get_actions_reasons(item, &src_act, &dst_act, &reason);
 
     size = item_size_side(item, text_info->side);
     mtime = item_mtime_side(item, text_info->side);

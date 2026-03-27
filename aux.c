@@ -164,7 +164,7 @@ item_link_target_len_side(CecupItem *item, int32 side) {
 }
 
 static void
-item_status_get(CecupItem *item, enum CecupAction *action_src,
+item_get_actions_reasons(CecupItem *item, enum CecupAction *action_src,
                 enum CecupAction *action_dst, enum CecupReason *reason) {
     int32 src_idx = item->src_idx;
     int32 dst_idx = item->dst_idx;
@@ -518,7 +518,7 @@ get_target_tasks(int32 side, char *clicked_path,
             continue;
         }
 
-        item_status_get(item, &action_src, &action_dst, &reason);
+        item_get_actions_reasons(item, &action_src, &action_dst, &reason);
 
         if (side == L) {
             filepath = item_path_side(item, L);
@@ -671,8 +671,8 @@ cecup_item_compare(const void *a, const void *b) {
         COMPARE(mtime_a, mtime_b);
         break;
     case COL_DST_ACTION:
-        item_status_get(item_a, &src_act_a, &dst_act_a, &reason_a);
-        item_status_get(item_b, &src_act_b, &dst_act_b, &reason_b);
+        item_get_actions_reasons(item_a, &src_act_a, &dst_act_a, &reason_a);
+        item_get_actions_reasons(item_b, &src_act_b, &dst_act_b, &reason_b);
         COMPARE(dst_act_a, dst_act_b);
         break;
     case COL_MTIME_TEXT:
@@ -682,8 +682,8 @@ cecup_item_compare(const void *a, const void *b) {
     case COL_SRC_ACTION:
     case NUM_COLS:
     default:
-        item_status_get(item_a, &src_act_a, &dst_act_a, &reason_a);
-        item_status_get(item_b, &src_act_b, &dst_act_b, &reason_b);
+        item_get_actions_reasons(item_a, &src_act_a, &dst_act_a, &reason_a);
+        item_get_actions_reasons(item_b, &src_act_b, &dst_act_b, &reason_b);
         COMPARE(src_act_a, src_act_b);
         break;
     }
