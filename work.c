@@ -454,12 +454,15 @@ work_preview_cancel_and_reset(void) {
 
 static void *
 work_preview(void *user_data) {
-    ThreadData *thread_data = user_data;
     int64 nfiles_total = 0;
     int64 nfiles_processed = 0;
     bool same_fs = true;
+    bool check_different_fs
+        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
     struct timespec t0_work;
     struct timespec t1_work;
+
+    (void)user_data;
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_work);
     work_cleanup();
@@ -482,7 +485,7 @@ work_preview(void *user_data) {
         same_fs = (stat_src.st_dev == stat_dst.st_dev);
     }
 
-    if (thread_data->check_different_fs && same_fs) {
+    if (check_different_fs && same_fs) {
         LOG_ERROR(
             _("Safety stop: Original and backup are on the same storage "
               "device.\n"

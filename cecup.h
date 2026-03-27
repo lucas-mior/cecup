@@ -424,9 +424,6 @@ static struct {
 } cecup;
 
 typedef struct ThreadData {
-    bool check_different_fs;
-    bool delete_excluded;
-    bool delete_after;
     TaskList *tasks;
 } ThreadData;
 

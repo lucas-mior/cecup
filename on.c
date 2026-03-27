@@ -363,12 +363,6 @@ on_preview_clicked(GtkWidget *b, void *data) {
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
-    thread_data->check_different_fs
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
-    thread_data->delete_excluded
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
-    thread_data->delete_after
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
     g_thread_new("work_preview", work_preview, thread_data);
 
     return;
@@ -389,13 +383,6 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
 
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
-
-    thread_data->check_different_fs
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
-    thread_data->delete_after
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
-    thread_data->delete_excluded
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
 
     g_thread_new("work_rsync", work_rsync, thread_data);
     return;

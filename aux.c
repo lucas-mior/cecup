@@ -166,17 +166,10 @@ item_link_target_len_side(CecupItem *item, int32 side) {
 static void
 item_status_get(CecupItem *item, enum CecupAction *src_act,
                 enum CecupAction *dst_act, enum CecupReason *reason) {
-    int32 src_idx;
-    int32 dst_idx;
-    bool delete_excluded;
-
-    src_idx = item->src_idx;
-    dst_idx = item->dst_idx;
-    delete_excluded = false;
-
-    if (cecup.delete_excluded) {
-        delete_excluded = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
-    }
+    int32 src_idx = item->src_idx;
+    int32 dst_idx = item->dst_idx;
+    bool delete_excluded
+        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
 
     *reason = 0;
 
