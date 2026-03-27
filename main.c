@@ -737,6 +737,8 @@ main(int32 argc, char **argv) {
     program = argv[0];
     (void)program_len;
 
+    setenv("GTK_IM_MODULE", "gtk-im-context-simple", true);
+
     {
         char *locale_devel = "./po";
         char *locale_system = "/usr/share/locale/";
