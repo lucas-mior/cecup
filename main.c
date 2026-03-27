@@ -43,8 +43,6 @@ CecupItem *cecup_item_proxy_get_item(CecupItemProxy *proxy);
 static void
 main_setup_tree_columns(GtkWidget *tree,
                         enum CecupColumn col_act, enum CecupColumn col_path) {
-    GtkColumnViewColumn *column;
-    GtkEventController *key;
     GActionMap *action_map;
     int32 side;
 
@@ -68,24 +66,24 @@ main_setup_tree_columns(GtkWidget *tree,
 
     {
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+        GtkColumnViewColumn *column = gtk_column_view_column_new(NULL, factory);
+
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_column_checkbox), GINT_TO_POINTER(side));
         g_signal_connect(factory, "bind",
                          G_CALLBACK(bind_column_checkbox), GINT_TO_POINTER(side));
-        column = gtk_column_view_column_new(NULL, factory);
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
     }
 
     {
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Task"), factory);
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_column_action), NULL);
         g_signal_connect(factory, "bind",
                          G_CALLBACK(bind_column_action), GINT_TO_POINTER(side));
-
-        column = gtk_column_view_column_new(_("Task"), factory);
 
         gtk_column_view_column_set_resizable(column, TRUE);
         gtk_column_view_column_set_sorter(column, sorter);
@@ -97,13 +95,12 @@ main_setup_tree_columns(GtkWidget *tree,
     {
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Name"), factory);
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_column_path), tree);
         g_signal_connect(factory, "bind",
                          G_CALLBACK(bind_column_path), tree);
-
-        column = gtk_column_view_column_new(_("Name"), factory);
 
         gtk_column_view_column_set_resizable(column, TRUE);
         gtk_column_view_column_set_fixed_width(column, 500);
@@ -118,6 +115,8 @@ main_setup_tree_columns(GtkWidget *tree,
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
         TextInfo *text_info = xmalloc(SIZEOF(*text_info));
+        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Size"), factory);
+
         text_info->side = side;
         text_info->type = COLUMN_SIZE;
         g_object_set_data_full(G_OBJECT(factory), "text_info", text_info, free);
@@ -126,8 +125,6 @@ main_setup_tree_columns(GtkWidget *tree,
                          G_CALLBACK(setup_text_cb), NULL);
         g_signal_connect(factory, "bind",
                          G_CALLBACK(bind_text_cb), text_info);
-
-        column = gtk_column_view_column_new(_("Size"), factory);
 
         gtk_column_view_column_set_resizable(column, TRUE);
         gtk_column_view_column_set_sorter(column, sorter);
@@ -141,6 +138,8 @@ main_setup_tree_columns(GtkWidget *tree,
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
         TextInfo *text_info = xmalloc(SIZEOF(*text_info));
+        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Modification Time"), factory);
+
         text_info->side = side;
         text_info->type = COLUMN_MTIME;
         g_object_set_data_full(G_OBJECT(factory), "text_info", text_info, free);
@@ -149,8 +148,6 @@ main_setup_tree_columns(GtkWidget *tree,
                          G_CALLBACK(setup_text_cb), NULL);
         g_signal_connect(factory, "bind",
                          G_CALLBACK(bind_text_cb), text_info);
-
-        column = gtk_column_view_column_new(_("Modification Time"), factory);
 
         gtk_column_view_column_set_expand(column, TRUE);
         gtk_column_view_column_set_resizable(column, TRUE);
@@ -182,11 +179,14 @@ main_setup_tree_columns(GtkWidget *tree,
                          G_CALLBACK(on_tree_button_press), NULL);
     }
 
-    key = gtk_event_controller_key_new();
-    gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(key));
-    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(key),
-                                               GTK_PHASE_BUBBLE);
-    g_signal_connect(key, "key-pressed", G_CALLBACK(on_tree_key_press), NULL);
+    {
+        GtkEventController *key = gtk_event_controller_key_new();
+
+        gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(key));
+        gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(key),
+                                                   GTK_PHASE_BUBBLE);
+        g_signal_connect(key, "key-pressed", G_CALLBACK(on_tree_key_press), NULL);
+    }
 
     return;
 }
@@ -227,13 +227,10 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     (void)user_data;
 
     {
-        GtkCssProvider *provider;
+        GtkCssProvider *css_provider = gtk_css_provider_new();
         char css[BUFSIZ];
-        int32 offset;
+        int32 offset = 0;
         int32 n;
-
-        provider = gtk_css_provider_new();
-        offset = 0;
 
         n = snprintf2(css + offset, SIZEOF(css) - offset,
                       "columnview row { min-height: 0px; }\n"
@@ -257,12 +254,12 @@ main_application_run(GtkApplication *application, gpointer user_data) {
             offset += m;
         }
 
-        gtk_css_provider_load_from_string(provider, css);
+        gtk_css_provider_load_from_string(css_provider, css);
         gtk_style_context_add_provider_for_display(
             gdk_display_get_default(),
-            GTK_STYLE_PROVIDER(provider),
+            GTK_STYLE_PROVIDER(css_provider),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-        g_object_unref(provider);
+        g_object_unref(css_provider);
     }
 
     cecup.gtk_window = gtk_application_window_new(application);
@@ -403,6 +400,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     dst_path_len = SNPRINTF(dst_path_buffer, "%s/b/", cwd);
     default_dst = xmalloc(dst_path_len + 1);
     memcpy64(default_dst, dst_path_buffer, dst_path_len + 1);
+
+    free(default_src, src_path_len + 1);
+    free(default_dst, dst_path_len + 1);
 
     paths_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_widget_set_margin_start(paths_hbox, 10);
@@ -715,9 +715,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     cecup_get_dirs();
 
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
-
-    free(default_src, src_path_len + 1);
-    free(default_dst, dst_path_len + 1);
 
     return;
 }
