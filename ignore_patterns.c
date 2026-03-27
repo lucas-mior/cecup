@@ -170,24 +170,24 @@ ignore_patterns_match(char *path, int32 path_len,
     memcpy64(path_copy, path, path_len + 1);
 
     for (int32 i = 0; i < count; i += 1) {
-        IgnorePattern *p;
+        IgnorePattern *pattern;
         bool matched;
 
-        p = &patterns[i];
+        pattern = &patterns[i];
         matched = false;
 
-        if (p->dir_only && !is_dir) {
+        if (pattern->dir_only && !is_dir) {
             continue;
         }
 
-        if (p->has_slash) {
-            if (work_match_pattern(p->match_str, path_copy, true)) {
+        if (pattern->has_slash) {
+            if (work_match_pattern(pattern->match_str, path_copy, true)) {
                 matched = true;
             } else {
                 for (int32 j = 0; j < path_len; j += 1) {
                     if (path_copy[j] == '/') {
                         path_copy[j] = '\0';
-                        if (work_match_pattern(p->match_str, path_copy, true)) {
+                        if (work_match_pattern(pattern->match_str, path_copy, true)) {
                             matched = true;
                         }
                         path_copy[j] = '/';
@@ -223,7 +223,7 @@ ignore_patterns_match(char *path, int32 path_len,
                     *next = '\0';
                     comp_len = (int32)(next - comp);
 
-                    if (work_match_pattern(p->match_str, comp, false)) {
+                    if (work_match_pattern(pattern->match_str, comp, false)) {
                         matched = true;
                     }
 
@@ -231,7 +231,7 @@ ignore_patterns_match(char *path, int32 path_len,
                     remaining -= (comp_len + 1);
                     comp = next + 1;
                 } else {
-                    if (work_match_pattern(p->match_str, comp, false)) {
+                    if (work_match_pattern(pattern->match_str, comp, false)) {
                         matched = true;
                     }
                     remaining = 0;
@@ -244,7 +244,7 @@ ignore_patterns_match(char *path, int32 path_len,
         }
 
         if (matched) {
-            return p;
+            return pattern;
         }
     }
 
