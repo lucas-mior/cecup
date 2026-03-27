@@ -948,7 +948,11 @@ work_rsync_run(char *files_from_filename, bool checksum) {
     rsync_args[rsync_args_len++] = "rsync";
     rsync_args[rsync_args_len++] = "--verbose";
     rsync_args[rsync_args_len++] = "--update";
+
+    // these 2 options are implied by --files-from
     rsync_args[rsync_args_len++] = "--dirs";
+    rsync_args[rsync_args_len++] = "--relative";
+
     rsync_args[rsync_args_len++] = "--partial";
     rsync_args[rsync_args_len++] = "--progress";
     rsync_args[rsync_args_len++] = "--info=progress2";

@@ -393,6 +393,15 @@ update_row_rename(Message *message) {
                                    updated_path, updated_path_len, i);
             }
 
+            for (int32 j = 0; j < traversal->nfiles; j += 1) {
+                if (!S_ISLNK(traversal->stats[j].st_mode)) {
+                    if (traversal->link_targets[j] == path) {
+                        traversal->link_targets[j] = updated_path;
+                        traversal->link_targets_lens[j] = (int16)updated_path_len;
+                    }
+                }
+            }
+
             free(traversal->paths[i], path_len + 1);
             traversal->paths[i] = updated_path;
             traversal->paths_lens[i] = (int16)updated_path_len;
