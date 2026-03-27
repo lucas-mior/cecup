@@ -1136,12 +1136,16 @@ main(void) {
             ASSERT_MORE_EQUAL(fd, 0);
             len = strlen32(entry->target);
             write64(fd, entry->target, len);
-            close(fd);
+            XCLOSE(&fd);
             expected_files_count += 1;
         } else if (entry->type == 1) {
             mkdir(path_buf1, 0755);
         } else if (entry->type == 2) {
-            symlink(entry->target, path_buf1);
+            if (symlink(entry->target, path_buf1) < 0) {
+                error("Error linking %s to %s: %s.\n",
+                      entry->target, path_buf1, strerror(errno));
+            }
+
             expected_files_count += 1;
         } else if (entry->type == 3) {
             char path_buf2[MAX_PATH_LENGTH];
