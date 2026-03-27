@@ -378,8 +378,8 @@ work_traverse_fs(Traversal *data) {
         }
 
         if (path_len == 0) {
-            path = "./";
-            path_len = 2;
+            path = ".";
+            path_len = 1;
         }
 
         path = xmemdup(path, path_len + 1);
@@ -813,7 +813,8 @@ work_preview(void *user_data) {
             dst_action = ACTION_DELETE;
         }
 
-        if ((action != ACTION_EQUAL) && (action != ACTION_IGNORE)) {
+        if (strcmp(bucket_src->key, ".")
+                && (action != ACTION_EQUAL) && (action != ACTION_IGNORE)) {
             if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) {
                 if (cecup.transfers_capacity == 0) {
                     cecup.transfers_capacity = 256;
@@ -1275,6 +1276,12 @@ work_rsync(void *user_data) {
         written = 0;
         left = strlen32(file);
 
+        if (left > 1) {
+            if (file[left - 1] == '/') {
+                left -= 1;
+            }
+        }
+
         while ((w = write64(files_from_fd, &file[written], left)) > 0) {
             written += w;
             left -= w;
@@ -1293,16 +1300,26 @@ work_rsync(void *user_data) {
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
+        int32 write_len;
 
         if ((task->action == ACTION_EQUAL) || (task->action == ACTION_IGNORE)) {
             continue;
         }
 
         if (task->action == ACTION_HARDLINK) {
-            write64(files_from_fd, task->link_target, task->link_target_len);
+            write_len = task->link_target_len;
+            if (task->link_target[write_len - 1] == '/') {
+                write_len -= 1;
+            }
+            write64(files_from_fd, task->link_target, write_len);
             write64(files_from_fd, "\n", 1);
         }
-        write64(files_from_fd, task->path, task->path_len);
+
+        write_len = task->path_len;
+        if (task->path[write_len - 1] == '/') {
+            write_len -= 1;
+        }
+        write64(files_from_fd, task->path, write_len);
         write64(files_from_fd, "\n", 1);
     }
 
@@ -1317,9 +1334,9 @@ work_rsync(void *user_data) {
             work_rsync_run(files_from_filename, true);
         }
     } while (0);
-    if (!DEBUGGING) {
-        xunlink(files_from_filename);
-    }
+    /* if (!DEBUGGING) { */
+    /* xunlink(files_from_filename); */
+    /* } */
 
     if (tasks->count == 0) {
         work_cleanup();
