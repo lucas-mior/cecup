@@ -229,13 +229,10 @@ get_target_tasks(int32 side, char *clicked_path,
 
         if ((idx_ptr = hash_lookup_fs_map(traversal->map,
                                           clicked_path, task->path_len))) {
-            int32 idx;
+            int32 idx = *idx_ptr;
             char *link_target;
-
-            idx = *idx_ptr;
-            link_target = traversal->link_targets[idx];
-
-            if (link_target) {
+            
+            if ((link_target = traversal->link_targets[idx])) {
                 task->link_target_len = traversal->link_targets_lens[idx];
                 task->link_target = xmalloc(task->link_target_len + 1);
                 memcpy64(task->link_target, link_target, task->link_target_len + 1);
