@@ -177,7 +177,7 @@ work_traverse_fs(Traversal *traversal) {
             break;
         }
 
-        if (ent->fts_info == FTS_D || ent->fts_info == FTS_DOT) {
+        if (ent->fts_info == FTS_DP || ent->fts_info == FTS_DOT) {
             continue;
         }
 
@@ -284,7 +284,7 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        if (ent->fts_info != FTS_DP) {
+        if (ent->fts_info != FTS_D) {
             file_count += 1;
         }
 
@@ -302,7 +302,7 @@ work_traverse_fs(Traversal *traversal) {
         }
 
         path = xmemdup(path, path_len + 1);
-        is_dir = (ent->fts_info == FTS_DP);
+        is_dir = (ent->fts_info == FTS_D);
 
         link_target = NULL;
         link_target_len = 0;
@@ -362,6 +362,12 @@ work_traverse_fs(Traversal *traversal) {
             if (pattern) {
                 matched_pattern = pattern->str;
                 matched_pattern_len = pattern->len;
+                if (is_dir) {
+                    if (fts_set(fts_handle, ent, FTS_SKIP) < 0) {
+                        error("Error in fts_set(FTS_SKIP): %s.\n",
+                              strerror(errno));
+                    }
+                }
             }
         }
 
