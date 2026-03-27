@@ -80,6 +80,18 @@ ignore_patterns_load(void) {
             LOG_ERROR("This pattern will be interpreted literally.\n");
         }
 
+        if (memchr64(line_buffer, '?', length)) {
+            LOG_ERROR("Warning: exclusion pattern '%s' detected.\n", line_buffer);
+            LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
+            LOG_ERROR("This pattern will be interpreted literally.\n");
+        }
+
+        if (memchr64(line_buffer, '\\', length)) {
+            LOG_ERROR("Warning: backslash '%s' detected.\n", line_buffer);
+            LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
+            LOG_ERROR("This pattern will be interpreted literally.\n");
+        }
+
         if (count >= *capacity) {
             *capacity *= 2;
             cecup.ignore_patterns = xrealloc(cecup.ignore_patterns,
