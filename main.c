@@ -482,7 +482,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     vbox[L] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[L] = gtk_scrolled_window_new();
-    selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(cecup.store));
+    selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(g_object_ref(cecup.store))));
     tree[L] = gtk_column_view_new(selection_model);
     cecup.tree[L] = tree[L];
     g_object_set_data(G_OBJECT(tree[L]), "side", GINT_TO_POINTER(L));
@@ -494,7 +494,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     vbox[R] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[R] = gtk_scrolled_window_new();
-    selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(cecup.store));
+    selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(g_object_ref(cecup.store))));
     tree[R] = gtk_column_view_new(selection_model);
     cecup.tree[R] = tree[R];
     g_object_set_data(G_OBJECT(tree[R]), "side", GINT_TO_POINTER(R));
