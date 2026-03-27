@@ -248,12 +248,15 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
         int32 nlinks_src = cecup.traversal_src.nlinks[src_idx];
         int32 nlinks_dst = cecup.traversal_dst.nlinks[dst_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
-        bool is_hardlink = S_ISREG(stat_src->st_mode) && (target_src != NULL);
+        bool is_hardlink = cecup.traversal_src.nlinks[src_idx] > 1;
         bool is_dir = S_ISDIR(stat_src->st_mode);
         bool equal = false;
         bool attributes_differ = false;
         bool delete_after
             = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
+
+        PRINTLN(path_src);
+        PRINTLN(is_hardlink);
 
         if (matched_src) {
             *action_src = ACTION_IGNORE;
