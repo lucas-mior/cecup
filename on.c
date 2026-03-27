@@ -525,16 +525,17 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         parent_path = item_path_side(item_toggled, (side == L) ? R : L);
     }
 
-    if (parent_path != NULL) {
-        parent_path_len = strlen32(parent_path);
-        is_root = aux_is_root(parent_path);
-
-        /* Single O(N) pass for propagation and stats */
+    if (parent_path) {
         int64 count_selected = 0;
         int64 total_size_bytes = 0;
         bool filter_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
         bool filter_hard = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
         bool filter_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
+
+        parent_path_len = strlen32(parent_path);
+        is_root = aux_is_root(parent_path);
+
+        /* Single O(N) pass for propagation and stats */
 
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
             CecupItem *item = cecup.rows[i];
