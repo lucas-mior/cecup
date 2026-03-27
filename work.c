@@ -1106,7 +1106,7 @@ main(void) {
         {"regular.txt", "regular.txt", FILE_TYPE_REGULAR,  "regular"},
         {"dir1",        "dir1/",       FILE_TYPE_DIR,      NULL},
         {"sym1",        "sym1",        FILE_TYPE_SYMLINK,  "regular.txt"},
-        {"hard1.txt",  "hard1.txt",    FILE_TYPE_HARDLINK, "regular.txt"},
+        {"hard1.txt",   "hard1.txt",   FILE_TYPE_HARDLINK, "regular.txt"},
     };
     bool found_entries[LENGTH(test_entries)];
 
