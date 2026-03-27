@@ -716,8 +716,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
 
-    XFREE(default_src, src_path_len + 1);
-    XFREE(default_dst, dst_path_len + 1);
+    free(default_src, src_path_len + 1);
+    free(default_dst, dst_path_len + 1);
 
     return;
 }
@@ -812,10 +812,10 @@ main(int32 argc, char **argv) {
     g_object_unref(cecup.application);
     g_object_unref(cecup.store);
 
-    XFREE(cecup.rows, cecup.rows_capacity*SIZEOF(CecupRow *));
-    XFREE(cecup.rows_visible, cecup.rows_capacity*SIZEOF(CecupRow *));
-    XFREE(cecup.src_base, cecup.src_base_len + 1);
-    XFREE(cecup.dst_base, cecup.dst_base_len + 1);
+    free(cecup.rows, cecup.rows_capacity*SIZEOF(CecupRow *));
+    free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(CecupRow *));
+    free(cecup.src_base, cecup.src_base_len + 1);
+    free(cecup.dst_base, cecup.dst_base_len + 1);
 
     arena_destroy(cecup.arena);
     g_mutex_clear(&cecup.arena_mutex);

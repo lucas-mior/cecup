@@ -122,8 +122,8 @@ on_menu_apply(GtkWidget *m, void *data) {
         free_task_list(tasks);
     }
 
-    XFREE(message->src_path, message->path_len + 1);
-    XFREE(message, SIZEOF(*message));
+    free(message->src_path, message->path_len + 1);
+    free(message, SIZEOF(*message));
 
     return;
 }
@@ -139,8 +139,8 @@ on_menu_rename(GtkWidget *tree, void *data) {
     pos = gtk_single_selection_get_selected(GTK_SINGLE_SELECTION(selection));
 
     if (pos == GTK_INVALID_LIST_POSITION) {
-        XFREE(message->src_path, message->path_len + 1);
-        XFREE(message, SIZEOF(*message));
+        free(message->src_path, message->path_len + 1);
+        free(message, SIZEOF(*message));
         return;
     }
 
@@ -181,8 +181,8 @@ on_menu_rename(GtkWidget *tree, void *data) {
         }
     }
 
-    XFREE(message->src_path, message->path_len + 1);
-    XFREE(message, SIZEOF(*message));
+    free(message->src_path, message->path_len + 1);
+    free(message, SIZEOF(*message));
 
     return;
 }
@@ -237,8 +237,8 @@ on_menu_open_item(GtkWidget *m, void *data) {
     }
     free_task_list(tasks);
 
-    XFREE(message->src_path, message->path_len + 1);
-    XFREE(message, SIZEOF(*message));
+    free(message->src_path, message->path_len + 1);
+    free(message, SIZEOF(*message));
 
     return;
 }
@@ -309,9 +309,9 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     gdk_clipboard_set_text(clipboard, buffer);
     free_task_list(tasks);
 
-    XFREE(buffer, buffer_size);
-    XFREE(message->src_path, message->path_len + 1);
-    XFREE(message, SIZEOF(*message));
+    free(buffer, buffer_size);
+    free(message->src_path, message->path_len + 1);
+    free(message, SIZEOF(*message));
 
     return;
 }
@@ -364,8 +364,8 @@ on_menu_delete(GtkWidget *m, void *data) {
         gtk_widget_show(dialog);
     }
 
-    XFREE(message->src_path, message->path_len + 1);
-    XFREE(message, SIZEOF(*message));
+    free(message->src_path, message->path_len + 1);
+    free(message, SIZEOF(*message));
 
     return;
 }
@@ -425,8 +425,8 @@ on_menu_diff(GtkWidget *m, void *data) {
 
     free_task_list(tasks);
 
-    XFREE(message->src_path, message->path_len + 1);
-    XFREE(message, SIZEOF(*message));
+    free(message->src_path, message->path_len + 1);
+    free(message, SIZEOF(*message));
 
     return;
 }

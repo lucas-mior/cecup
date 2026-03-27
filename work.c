@@ -468,30 +468,30 @@ work_traverse_clean(Traversal *traversal) {
     int32 capacity = traversal->ncapacity;
 
     for (int32 i = 0; i < traversal->nfiles; i += 1) {
-        XFREE(traversal->paths[i],
+        free(traversal->paths[i],
               traversal->paths_lens[i] + 1);
         if (S_ISLNK(traversal->stats[i].st_mode)) {
-            XFREE(traversal->link_targets[i],
+            free(traversal->link_targets[i],
                   traversal->link_targets_lens[i] + 1);
         }
     }
 
-    XFREE(traversal->stats,
-          capacity*SIZEOF(*(traversal->stats)));
+    free(traversal->stats,
+         capacity*SIZEOF(*(traversal->stats)));
 
-    XFREE(traversal->matched_patterns,
-          capacity*SIZEOF(*(traversal->matched_patterns)));
-    XFREE(traversal->link_targets,
-          capacity*SIZEOF(*(traversal->link_targets)));
-    XFREE(traversal->paths,
-          capacity*SIZEOF(*(traversal->paths)));
+    free(traversal->matched_patterns,
+         capacity*SIZEOF(*(traversal->matched_patterns)));
+    free(traversal->link_targets,
+         capacity*SIZEOF(*(traversal->link_targets)));
+    free(traversal->paths,
+         capacity*SIZEOF(*(traversal->paths)));
 
-    XFREE(traversal->paths_lens,
-          capacity*SIZEOF(*(traversal->paths_lens)));
-    XFREE(traversal->link_targets_lens,
-          capacity*SIZEOF(*(traversal->link_targets_lens)));
-    XFREE(traversal->matched_patterns_lens,
-          capacity*SIZEOF(*(traversal->matched_patterns_lens)));
+    free(traversal->paths_lens,
+         capacity*SIZEOF(*(traversal->paths_lens)));
+    free(traversal->link_targets_lens,
+         capacity*SIZEOF(*(traversal->link_targets_lens)));
+    free(traversal->matched_patterns_lens,
+         capacity*SIZEOF(*(traversal->matched_patterns_lens)));
 
     hash_destroy_fs_map(traversal->map);
     hash_destroy_inode_map(traversal->inode_map);
@@ -505,7 +505,7 @@ work_cleanup(void) {
     work_traverse_clean(&cecup.traversal_src);
     work_traverse_clean(&cecup.traversal_dst);
 
-    XFREE(cecup.transfers,
+    free(cecup.transfers,
           cecup.transfers_capacity*SIZEOF(*cecup.transfers));
     cecup.transfers = NULL;
     cecup.ntransfers = 0;
@@ -1168,7 +1168,7 @@ work_rsync(void *user_data) {
         if (cecup.ntransfers <= 0) {
             LOG_ERROR("There are no operations to make.\n");
             work_finalize(false);
-            XFREE(thread_data, SIZEOF(*thread_data));
+            free(thread_data, SIZEOF(*thread_data));
             return NULL;
         } else {
             has_transfers = true;
@@ -1193,7 +1193,7 @@ work_rsync(void *user_data) {
             LOG_ERROR(_("Stop requested.\n"));
             free_task_list(tasks);
             work_finalize(false);
-            XFREE(thread_data, SIZEOF(*thread_data));
+            free(thread_data, SIZEOF(*thread_data));
             return NULL;
         }
 
@@ -1252,7 +1252,7 @@ work_rsync(void *user_data) {
         LOG_ERROR("No transfers to make.\n");
         work_finalize(false);
         free_task_list(tasks);
-        XFREE(thread_data, SIZEOF(*thread_data));
+        free(thread_data, SIZEOF(*thread_data));
         return NULL;
     }
 
@@ -1318,7 +1318,7 @@ work_rsync(void *user_data) {
     }
     free_task_list(tasks);
     work_finalize(false);
-    XFREE(thread_data, SIZEOF(*thread_data));
+    free(thread_data, SIZEOF(*thread_data));
     return NULL;
 }
 

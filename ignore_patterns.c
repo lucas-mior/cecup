@@ -43,7 +43,7 @@ ignore_patterns_load(void) {
     }
     for (int32 i = 0; i < cecup.ignore_count; i += 1) {
         IgnorePattern *pattern = &cecup.ignore_patterns[i];
-        XFREE(pattern->str, pattern->len + 1);
+        free(pattern->str, pattern->len + 1);
     }
 
     count = 0;

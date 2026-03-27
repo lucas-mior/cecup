@@ -254,7 +254,7 @@ on_search_changed(GtkEditable *editable, void *data) {
     len = strlen32(text);
 
     if (cecup.search_query) {
-        XFREE(cecup.search_query, cecup.search_query_len + 1);
+        free(cecup.search_query, cecup.search_query_len + 1);
     }
 
     cecup.search_query = xmemdup(text, len + 1);
@@ -1273,7 +1273,7 @@ on_path_selection_idle(void *data) {
     gtk_editable_select_region(selection_data->editable,
                                selection_data->start_pos,
                                selection_data->end_pos);
-    XFREE(selection_data, sizeof(*selection_data));
+    free(selection_data, sizeof(*selection_data));
     return G_SOURCE_REMOVE;
 }
 

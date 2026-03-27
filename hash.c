@@ -41,7 +41,6 @@
 #if 1 == TESTING_hash
 #define HASH_VALUE_TYPE int32
 #define HASH_VALUE_FORMATTER "%d"
-#define HASH_PADDING_TYPE uint32
 #define HASH_TYPE map
 #define HASH_AUTO_RESIZE 1
 #endif
@@ -202,13 +201,13 @@ CAT(hash_destroy_, HASH_TYPE)(struct Map *map) {
         case HASH_SLOT_FREE:
             break;
         default:
-            XFREE(map->array[i].key, map->array[i].key_len);
+            free(map->array[i].key, map->array[i].key_len);
             break;
         }
     }
 #endif
     xmunmap(map->array, map->size);
-    XFREE(map, sizeof(*map));
+    free(map, sizeof(*map));
     return;
 }
 
@@ -440,7 +439,7 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
         default:
             if ((iterator->hash == hash) && (strcmp(iterator->key, key) == 0)) {
 #if HASH_DUPLICATE_KEYS
-                XFREE(iterator->key, iterator->key_len);
+                free(iterator->key, iterator->key_len);
 #endif
                 iterator->key = (char *)HASH_SLOT_DELETED;
                 map->length -= 1;
@@ -613,12 +612,12 @@ random_string(Arena *arena, uint32 nbytes) {
     int32 size;
     int32 len;
 
-    len = nbytes + rand() % 16u;
+    len = (int32)(nbytes + (uint)rand() % 16u);
     size = len + 1;
     string.s = arena_push(arena, size);
 
     for (int32 i = 0; i < len; i += 1) {
-        int32 c = rand() % (sizeof(characters) - 1);
+        int32 c = (int32)((size_t)rand() % (sizeof(characters) - 1));
         string.s[i] = characters[c];
     }
     string.s[len] = '\0';
@@ -694,7 +693,7 @@ main(void) {
     ASSERT_EQUAL(hash_length(map), 10);
 
     hash_destroy_map(map);
-    XFREE(strings, NSTRINGS*sizeof(*strings));
+    free(strings, NSTRINGS*sizeof(*strings));
 
     exit(EXIT_SUCCESS);
 }

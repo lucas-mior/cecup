@@ -96,7 +96,7 @@ cecup_list_model_finalize(GObject *object) {
                 g_object_unref(self->proxies[i]);
             }
         }
-        XFREE(self->proxies, self->proxies_capacity*SIZEOF(CecupRowProxy *));
+        free(self->proxies, self->proxies_capacity*SIZEOF(CecupRowProxy *));
     }
 
     G_OBJECT_CLASS(cecup_list_model_parent_class)->finalize(object);

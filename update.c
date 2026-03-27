@@ -226,7 +226,7 @@ update_row_transfer(Message *message) {
                 if ((target_len = readlink(full_path, target, SIZEOF(target))) > 0) {
                     target[target_len] = '\0';
                     if (cecup.traversal_dst.link_targets[idx]) {
-                        XFREE(cecup.traversal_dst.link_targets[idx],
+                        free(cecup.traversal_dst.link_targets[idx],
                               cecup.traversal_dst.link_targets_lens[idx] + 1);
                     }
                     cecup.traversal_dst.link_targets[idx] = xmemdup(target, target_len + 1);
@@ -393,7 +393,7 @@ update_row_rename(Message *message) {
                                    updated_path, updated_path_len, i);
             }
 
-            XFREE(traversal->paths[i], path_len + 1);
+            free(traversal->paths[i], path_len + 1);
             traversal->paths[i] = updated_path;
             traversal->paths_lens[i] = (int16)updated_path_len;
         }
@@ -509,7 +509,7 @@ update_row_rename(Message *message) {
                 row->dst_path = NULL;
             }
 
-            XFREE(updated_path, updated_path_len + 1);
+            free(updated_path, updated_path_len + 1);
 
             remove_entirely = false;
             if ((row->src_path == NULL) && (row->dst_path == NULL)) {
@@ -955,21 +955,21 @@ update_ui_handler(void *data) {
         break;
     }
 
-    XFREE(message->text, message->text_len + 1);
-    XFREE(message->path_to_focus, message->focus_len + 1);
+    free(message->text, message->text_len + 1);
+    free(message->path_to_focus, message->focus_len + 1);
 
     if (message->src_path) {
-        XFREE(message->src_path, message->path_len + 1);
+        free(message->src_path, message->path_len + 1);
     } else if (message->dst_path) {
-        XFREE(message->dst_path, message->path_len + 1);
+        free(message->dst_path, message->path_len + 1);
     }
 
-    XFREE(message->old_path, message->old_path_len + 1);
-    XFREE(message->new_path, message->new_path_len + 1);
+    free(message->old_path, message->old_path_len + 1);
+    free(message->new_path, message->new_path_len + 1);
 
-    XFREE(message->link_target, message->link_target_len + 1);
-    XFREE(message->ignore_pattern, message->ignore_pattern_len + 1);
-    XFREE(message, sizeof(*message));
+    free(message->link_target, message->link_target_len + 1);
+    free(message->ignore_pattern, message->ignore_pattern_len + 1);
+    free(message, sizeof(*message));
 
     return G_SOURCE_REMOVE;
 }

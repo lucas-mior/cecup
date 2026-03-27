@@ -139,12 +139,12 @@ free_task_list(TaskList *tasks) {
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
 
-        XFREE(task->link_target, task->link_target_len + 1);
-        XFREE(task->message, task->message_len);
-        XFREE(task, sizeof(*task));
+        free(task->link_target, task->link_target_len + 1);
+        free(task->message, task->message_len);
+        free(task, sizeof(*task));
     }
 
-    XFREE(tasks, sizeof(*tasks));
+    free(tasks, STRUCT_ARRAY_SIZE(tasks, Task, tasks->count));
     return;
 }
 
@@ -342,10 +342,10 @@ cecup_get_dirs(void) {
     }
 
     if (cecup.src_base) {
-        XFREE(cecup.src_base, cecup.src_base_len + 1);
+        free(cecup.src_base, cecup.src_base_len + 1);
     }
     if (cecup.dst_base) {
-        XFREE(cecup.dst_base, cecup.dst_base_len + 1);
+        free(cecup.dst_base, cecup.dst_base_len + 1);
     }
 
     {
@@ -469,10 +469,10 @@ static void
 free_message(void *data) {
     Message *message = data;
 
-    XFREE(message->src_path, message->path_len + 1);
-    XFREE(message->old_path, message->old_path_len + 1);
-    XFREE(message->new_path, message->new_path_len + 1);
-    XFREE(message, sizeof(*message));
+    free(message->src_path, message->path_len + 1);
+    free(message->old_path, message->old_path_len + 1);
+    free(message->new_path, message->new_path_len + 1);
+    free(message, sizeof(*message));
     return;
 }
 
