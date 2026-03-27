@@ -73,6 +73,13 @@ ignore_patterns_load(void) {
             continue;
         }
 
+        if (memchr64(line_buffer, '[', length)
+             && memchr64(line_buffer, ']', length)) {
+            LOG_ERROR("Warning: advanced exclusion pattern '%s' detected.\n", line_buffer);
+            LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
+            LOG_ERROR("This pattern will be interpreted literally.\n");
+        }
+
         if (count >= *capacity) {
             *capacity *= 2;
             cecup.ignore_patterns = xrealloc(cecup.ignore_patterns,
@@ -114,13 +121,14 @@ ignore_patterns_load(void) {
 }
 
 static bool
-work_match_pattern(char *pattern, char *str, bool restrict_slash) {
+work_match_pattern(char *pattern, char *str, int32 str_len, bool restrict_slash) {
     char *p = pattern;
     char *s = str;
+    char *s_end = str + str_len;
     char *star_p = NULL;
     char *star_s = NULL;
 
-    while (*s != '\0') {
+    while (s < s_end) {
         if (*p == '*') {
             star_p = p;
             star_s = s;
@@ -156,13 +164,9 @@ work_match_pattern(char *pattern, char *str, bool restrict_slash) {
 static IgnorePattern *
 ignore_patterns_match(char *path, int32 path_len,
                       bool is_dir, IgnorePattern *patterns, int32 count) {
-    char path_copy[MAX_PATH_LENGTH];
-
     if (patterns == NULL || count == 0) {
         return NULL;
     }
-
-    memcpy64(path_copy, path, path_len + 1);
 
     for (int32 i = 0; i < count; i += 1) {
         IgnorePattern *pattern = &patterns[i];
@@ -172,26 +176,21 @@ ignore_patterns_match(char *path, int32 path_len,
         }
 
         if (pattern->has_slash) {
-            if (work_match_pattern(pattern->match_str, path_copy, true)) {
+            if (work_match_pattern(pattern->match_str, path, path_len, true)) {
                 return pattern;
             } else {
                 for (int32 j = 0; j < path_len; j += 1) {
-                    if (path_copy[j] == '/') {
-                        path_copy[j] = '\0';
-                        if (work_match_pattern(pattern->match_str, path_copy, true)) {
+                    if (path[j] == '/') {
+                        if (work_match_pattern(pattern->match_str, path, j, true)) {
                             return pattern;
                         }
-                        path_copy[j] = '/';
                     }
                 }
             }
         } else {
-            char *comp;
+            char *comp = path;
             char *next;
-            int32 remaining;
-
-            comp = path_copy;
-            remaining = path_len;
+            int32 remaining = path_len;
 
             while (remaining > 0) {
                 while (remaining > 0 && *comp == '/') {
@@ -204,22 +203,16 @@ ignore_patterns_match(char *path, int32 path_len,
                 }
 
                 if ((next = memchr64(comp, '/', remaining))) {
-                    char old_char;
-                    int32 comp_len;
+                    int32 comp_len = (int32)(next - comp);
 
-                    old_char = *next;
-                    *next = '\0';
-                    comp_len = (int32)(next - comp);
-
-                    if (work_match_pattern(pattern->match_str, comp, false)) {
+                    if (work_match_pattern(pattern->match_str, comp, comp_len, false)) {
                         return pattern;
                     }
 
-                    *next = old_char;
                     remaining -= (comp_len + 1);
                     comp = next + 1;
                 } else {
-                    if (work_match_pattern(pattern->match_str, comp, false)) {
+                    if (work_match_pattern(pattern->match_str, comp, remaining, false)) {
                         return pattern;
                     }
                     remaining = 0;
