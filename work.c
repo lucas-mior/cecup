@@ -1076,18 +1076,12 @@ work_rsync(void *user_data) {
 #include "assert.c"
 #include "arena.c"
 
-static void
-create_test_file(char *path, char *content) {
-    int32 fd;
-    int32 len;
-
-    fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-    ASSERT_MORE_EQUAL(fd, 0);
-    len = strlen32(content);
-    write64(fd, content, len);
-    close(fd);
-    return;
-}
+typedef struct TestEntry {
+    char *name;
+    char *expected_path;
+    int32 type;
+    char *target;
+} TestEntry;
 
 int
 main(void) {
@@ -1098,15 +1092,16 @@ main(void) {
     char temp_dir[] = "/tmp/cecup_work_test_XXXXXX";
     char src_dir[MAX_PATH_LENGTH];
     char dst_dir[MAX_PATH_LENGTH];
-    char path_buf1[MAX_PATH_LENGTH];
-    char path_buf2[MAX_PATH_LENGTH];
-    char cmd[MAX_PATH_LENGTH];
     Traversal tr;
     int64 count;
-    bool found_file = false;
-    bool found_dir = false;
-    bool found_sym = false;
-    bool found_hard = false;
+    int32 expected_files_count;
+    static TestEntry test_entries[] = {
+        {"regular.txt", "regular.txt", 0, "regular"},
+        {"dir1", "dir1/", 1, NULL},
+        {"sym1", "sym1", 2, "regular.txt"},
+        {"hard1.txt", "hard1.txt", 3, "regular.txt"},
+    };
+    bool found_entries[LENGTH(test_entries)];
 
     (void)work_rsync;
     (void)work_preview;
@@ -1124,21 +1119,40 @@ main(void) {
     mkdir(src_dir, 0755);
     mkdir(dst_dir, 0755);
 
-    SNPRINTF(path_buf1, "%s/regular.txt", src_dir);
-    create_test_file(path_buf1, "regular");
+    expected_files_count = 0;
 
-    SNPRINTF(path_buf1, "%s/dir1", src_dir);
-    mkdir(path_buf1, 0755);
+    for (int32 i = 0; i < LENGTH(test_entries); i += 1) {
+        TestEntry *entry;
+        char path_buf1[MAX_PATH_LENGTH];
 
-    SNPRINTF(path_buf1, "%s/sym1", src_dir);
-    symlink("regular.txt", path_buf1);
+        entry = &test_entries[i];
+        SNPRINTF(path_buf1, "%s/%s", src_dir, entry->name);
 
-    SNPRINTF(path_buf1, "%s/regular.txt", src_dir);
-    SNPRINTF(path_buf2, "%s/hard1.txt", src_dir);
+        if (entry->type == 0) {
+            int32 fd;
+            int32 len;
 
-    if (link(path_buf1, path_buf2) < 0) {
-        error("Error linking %s to %s: %s.\n",
-              path_buf1, path_buf2, strerror(errno));
+            fd = open(path_buf1, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+            ASSERT_MORE_EQUAL(fd, 0);
+            len = strlen32(entry->target);
+            write64(fd, entry->target, len);
+            close(fd);
+            expected_files_count += 1;
+        } else if (entry->type == 1) {
+            mkdir(path_buf1, 0755);
+        } else if (entry->type == 2) {
+            symlink(entry->target, path_buf1);
+            expected_files_count += 1;
+        } else if (entry->type == 3) {
+            char path_buf2[MAX_PATH_LENGTH];
+
+            SNPRINTF(path_buf2, "%s/%s", src_dir, entry->target);
+            if (link(path_buf2, path_buf1) < 0) {
+                error("Error linking %s to %s: %s.\n",
+                      path_buf2, path_buf1, strerror(errno));
+            }
+            expected_files_count += 1;
+        }
     }
 
     memset64(&cecup, 0, SIZEOF(cecup));
@@ -1151,35 +1165,40 @@ main(void) {
 
     count = work_traverse_fs(&tr);
 
-    ASSERT_EQUAL(count, 3);
+    ASSERT_EQUAL(count, expected_files_count);
+
+    memset64(found_entries, 0, SIZEOF(found_entries));
 
     for (int32 i = 0; i < tr.nfiles; i += 1) {
-        if (strcmp(tr.paths[i], "regular.txt") == 0) {
-            found_file = true;
-        }
-        if (strcmp(tr.paths[i], "dir1/") == 0) {
-            found_dir = true;
-        }
-        if (strcmp(tr.paths[i], "sym1") == 0) {
-            found_sym = true;
-            ASSERT(strcmp(tr.link_targets[i], "regular.txt") == 0);
-        }
-        if (strcmp(tr.paths[i], "hard1.txt") == 0) {
-            found_hard = true;
-            ASSERT(tr.link_targets[i] != NULL);
+        for (int32 j = 0; j < LENGTH(test_entries); j += 1) {
+            TestEntry *entry;
+
+            entry = &test_entries[j];
+
+            if (strcmp(tr.paths[i], entry->expected_path) == 0) {
+                found_entries[j] = true;
+
+                if (entry->type == 2) {
+                    ASSERT_EQUAL(tr.link_targets[i], entry->target);
+                } else if (entry->type == 3) {
+                    ASSERT(tr.link_targets[i] != NULL);
+                }
+            }
         }
     }
 
-    ASSERT(found_file);
-    ASSERT(found_dir);
-    ASSERT(found_sym);
-    ASSERT(found_hard);
+    for (int32 i = 0; i < LENGTH(test_entries); i += 1) {
+        ASSERT(found_entries[i]);
+    }
 
     work_traverse_clean(&tr);
     arena_destroy(tr.arena);
 
-    SNPRINTF(cmd, "rm -rf %s", temp_dir);
-    system(cmd);
+    {
+        char cmd[MAX_PATH_LENGTH];
+        SNPRINTF(cmd, "rm -rf %s", temp_dir);
+        system(cmd);
+    }
 
     exit(EXIT_SUCCESS);
 }
