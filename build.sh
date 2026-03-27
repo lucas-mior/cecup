@@ -95,7 +95,7 @@ case "$target" in
     CC=gcc
     CFLAGS="$CFLAGS $GNUSOURCE -DDEBUGGING=1 -fanalyzer"
     ;;
-"build") 
+"build"|"run") 
     CFLAGS="$CFLAGS $GNUSOURCE -O2 -flto -march=native -ftree-vectorize"
     ;;
 "release") 
@@ -174,7 +174,7 @@ if [ "$CC" = "clang" ]; then
 fi
 
 case "$target" in
-"build"|"debug"|"release"|"valgrind"|"callgrind"|"perf"|"profile")
+"build"|"debug"|"run"|"release"|"valgrind"|"callgrind"|"perf"|"profile")
     trace_on
 
     if [ ! -d "po" ]; then
@@ -193,6 +193,9 @@ case "$target" in
 
     if [ $target = "debug" ]; then
         gdb $exe -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
+    fi
+    if [ $target = "run" ]; then
+        $exe
     fi
 
     trace_off

@@ -3,6 +3,7 @@ test
 build
 release
 debug
+run
 # install
 # uninstall
 profile
