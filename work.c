@@ -204,7 +204,6 @@ work_traverse_fs(Traversal *traversal) {
         char *d_name;
         int32 name_len;
         int32 old_full_len;
-        bool changed;
         char *path;
         int32 path_len;
         bool is_dir;
@@ -257,71 +256,24 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        changed = false;
+        for (int32 i = 0; i < (int32)LENGTH(replacements); i += 1) {
+            char *problem;
+            int64 problem_len;
 
-        if (true) {
-            char new_name[MAX_PATH_LENGTH];
-            char new_full[MAX_PATH_LENGTH];
-            int32 j = 0;
-            int32 k = 0;
+            problem = replacements[i].problem;
+            problem_len = strlen32(problem);
 
-            while (k < name_len) {
-                char *earliest_match = NULL;
-                int32 replace_i = -1;
-
-                for (int32 ri = 0; ri < (int32)LENGTH(replacements); ri += 1) {
-                    char *search = replacements[ri].problem;
-                    int64 search_len = strlen32(search);
-                    char *match;
-
-                    if ((match = memmem64(&d_name[k], name_len - k,
-                                          search, search_len))) {
-                        if (earliest_match == NULL || match < earliest_match) {
-                            earliest_match = match;
-                            replace_i = ri;
-                        }
-                    }
-                }
-
-                if (earliest_match) {
-                    int64 prefix_len = earliest_match - &d_name[k];
-                    char *replace_str = replacements[replace_i].rename;
-                    int64 replace_len = strlen32(replace_str);
-
-                    if (prefix_len > 0) {
-                        memcpy64(&new_name[j], &d_name[k], prefix_len);
-                        j += (int32)prefix_len;
-                        k += (int32)prefix_len;
-                    }
-
-                    memcpy64(&new_name[j], replace_str, replace_len);
-                    j += (int32)replace_len;
-                    k += (int32)strlen32(replacements[replace_i].problem);
-                    changed = true;
-                } else {
-                    int64 remaining = name_len - k;
-                    memcpy64(&new_name[j], &d_name[k], remaining);
-                    j += (int32)remaining;
-                    k += (int32)remaining;
-                }
+            if (memmem64(d_name, (int64)name_len, problem, problem_len)) {
+                LOG_ERROR(_("Error: filename contains problematic characters/patterns:\n"));
+                LOG_ERROR("'%s'\n", ent->fts_path);
+                LOG_ERROR(_("Please fix your file system.\n"));
+                cecup.stop_working = true;
+                break;
             }
-            new_name[j] = '\0';
+        }
 
-            if (changed) {
-                int32 base_len = (int32)(ent->fts_pathlen - ent->fts_namelen);
-
-                memcpy64(new_full, ent->fts_path, base_len);
-                memcpy64(new_full + base_len, new_name, j + 1);
-
-                if (renameat2(AT_FDCWD, ent->fts_path,
-                              AT_FDCWD, new_full,
-                              RENAME_NOREPLACE) < 0) {
-                    LOG_ERROR(_("Error renaming %s to %s: %s\n"),
-                              ent->fts_path, new_full, strerror(errno));
-                } else {
-                    LOG(_("Fixed: %s -> %s\n"), d_name, new_name);
-                }
-            }
+        if (cecup.stop_working) {
+            break;
         }
 
         if (ent->fts_info != FTS_D) {
@@ -429,9 +381,9 @@ work_traverse_fs(Traversal *traversal) {
         }
 
         traversal_push(traversal, path, path_len,
-                       ent->fts_statp,
-                       link_target, link_target_len,
-                       matched_pattern, matched_pattern_len);
+                        ent->fts_statp,
+                        link_target, link_target_len,
+                        matched_pattern, matched_pattern_len);
     }
 
     if (fts_close(fts_handle) < 0) {
