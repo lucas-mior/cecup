@@ -94,7 +94,7 @@ work_check_itemize_line(char *buf_output) {
 
 static void
 work_finalize(bool preview_clean) {
-    Message *message = xmalloc(SIZEOF(*message));
+    Message *message = malloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
     message->type = DATA_TYPE_ENABLE_BUTTONS;
     message->preview_clean = preview_clean;
@@ -802,12 +802,12 @@ work_rsync_run(char *files_from_filename, bool checksum) {
                 PRINTLN(path);
 
                 if ((path_len != 2) || memcmp64(path, "./", 2)) {
-                    Message *msg_update = xmalloc(SIZEOF(*msg_update));
+                    Message *msg_update = malloc(SIZEOF(*msg_update));
                     memset64(msg_update, 0, SIZEOF(*msg_update));
 
                     msg_update->type = DATA_TYPE_ROW_TRANSFER;
                     msg_update->path_len = path_len;
-                    msg_update->src_path = xmalloc(path_len + 1);
+                    msg_update->src_path = malloc(path_len + 1);
                     memcpy64(msg_update->src_path, path, path_len + 1);
 
                     g_idle_add(update_ui_handler, msg_update);
@@ -876,7 +876,7 @@ work_rsync(void *user_data) {
         } else {
             has_transfers = true;
         }
-        tasks = xmalloc(sizeof(*tasks));
+        tasks = malloc(sizeof(*tasks));
         memset64(tasks, 0, sizeof(*tasks));
     }
 
@@ -937,13 +937,13 @@ work_rsync(void *user_data) {
         }
 
         if (removed) {
-            Message *message = xmalloc(SIZEOF(*message));
+            Message *message = malloc(SIZEOF(*message));
             memset64(message, 0, SIZEOF(*message));
 
             message->type = DATA_TYPE_ROW_REMOVE;
             message->side = task->side;
             message->path_len = task->path_len;
-            message->src_path = xmalloc(message->path_len + 1);
+            message->src_path = malloc(message->path_len + 1);
             memcpy64(message->src_path, task->path, message->path_len + 1);
             g_idle_add(update_ui_handler, message);
 
