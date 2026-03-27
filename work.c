@@ -526,167 +526,37 @@ work_preview(void *user_data) {
         int32 src_idx;
         int32 *dst_idx_ptr;
         int32 dst_idx;
-        struct stat *stat_src;
-        char *matched_pattern_src;
         char *link_target_src;
-        bool is_symlink;
-        bool is_hardlink;
-        bool is_dir;
-        enum CecupAction action = 0;
         int32 path_len;
+        CecupItem item;
+        enum CecupAction src_act;
+        enum CecupAction dst_act;
+        enum CecupReason reason;
 
         if ((int64)bucket_src->key <= 0) {
             continue;
         }
 
         src_idx = bucket_src->value;
-        stat_src = &cecup.traversal_src.stats[src_idx];
-        matched_pattern_src = cecup.traversal_src.matched_patterns[src_idx];
         link_target_src = cecup.traversal_src.link_targets[src_idx];
         path_len = cecup.traversal_src.paths_lens[src_idx];
-
-        is_symlink = S_ISLNK(stat_src->st_mode);
-        is_hardlink = S_ISREG(stat_src->st_mode) && link_target_src;
-        is_dir = S_ISDIR(stat_src->st_mode);
 
         if ((dst_idx_ptr
              = hash_lookup_fs_map(cecup.traversal_dst.map,
                                   bucket_src->key, path_len))) {
-            struct stat *stat_dst;
-            char *link_target_dst;
-
             dst_idx = *dst_idx_ptr;
-            stat_dst = &cecup.traversal_dst.stats[dst_idx];
-            link_target_dst = cecup.traversal_dst.link_targets[dst_idx];
-
-            if (matched_pattern_src) {
-                action = ACTION_IGNORE;
-            } else {
-                bool equal = false;
-                bool attributes_differ = false;
-
-                if (is_symlink) {
-                    if (S_ISLNK(stat_dst->st_mode)
-                        && link_target_src
-                        && link_target_dst
-                        && !strcmp(link_target_src, link_target_dst)) {
-                        equal = true;
-                    }
-                } else {
-                    if (!is_dir && (stat_src->st_size != stat_dst->st_size)) {
-                        attributes_differ = true;
-                    }
-                    if (stat_src->st_mtime != stat_dst->st_mtime) {
-                        attributes_differ = true;
-                    }
-                    if (is_dir && (stat_src->st_ctime > stat_dst->st_ctime)) {
-                        attributes_differ = true;
-                    }
-                    if (stat_src->st_uid != stat_dst->st_uid) {
-                        attributes_differ = true;
-                    }
-                    if (stat_src->st_gid != stat_dst->st_gid) {
-                        attributes_differ = true;
-                    }
-                    if ((stat_src->st_mode & 07777)
-                         != (stat_dst->st_mode & 07777)) {
-                        attributes_differ = true;
-                    }
-
-                    if (is_hardlink) {
-                        do {
-                            char inode_str[64];
-                            int32 n;
-                            int32 *master_src_ptr;
-                            int32 *master_dst_ptr;
-
-                            if (!S_ISREG(stat_dst->st_mode)) {
-                                LOG_ERROR(N_("Hardlink updated need for") "%s"
-                                          N_("Because correspondent file in the backup")
-                                          N_("Is not a regular file.\n"),
-                                          bucket_src->key);
-                                equal = false;
-                                break;
-                            }
-                            if (link_target_dst == NULL) {
-                                error("link_target_dst is NULL\n");
-                                equal = false;
-                                break;
-                            }
-                            if (strcmp(link_target_src, link_target_dst)
-                                && strcmp(link_target_src, bucket_src->key)
-                                && strcmp(link_target_dst, bucket_src->key)) {
-                                error("Names differ:\n");
-                                PRINTLN(link_target_src);
-                                PRINTLN(link_target_dst);
-                                PRINTLN(bucket_src->key);
-                                equal = false;
-                                break;
-                            }
-
-                            n = itoa2(inode_str, (long)stat_src->st_ino);
-                            master_src_ptr = hash_lookup_inode_map(cecup.traversal_src.inode_map,
-                                                                   inode_str, n);
-                            n = itoa2(inode_str, (long)stat_dst->st_ino);
-                            master_dst_ptr = hash_lookup_inode_map(cecup.traversal_dst.inode_map,
-                                                                   inode_str, n);
-
-                            if (master_src_ptr && master_dst_ptr) {
-                                if (cecup.traversal_src.nlinks[*master_src_ptr]
-                                    != cecup.traversal_dst.nlinks[*master_dst_ptr]) {
-                                    error("number of links differ:\n");
-                                    PRINTLN(cecup.traversal_src.nlinks[*master_src_ptr]);
-                                    PRINTLN(cecup.traversal_dst.nlinks[*master_dst_ptr]);
-                                    equal = false;
-                                    break;
-                                }
-                            } else {
-                                error("no master pointers\n");
-                                equal = false;
-                                break;
-                            }
-
-                            if (!attributes_differ) {
-                                equal = true;
-                            }
-                        } while (0);
-                    } else {
-                        if (!attributes_differ) {
-                            equal = true;
-                        }
-                    }
-                }
-
-                if (equal) {
-                    action = ACTION_EQUAL;
-                } else {
-                    if (is_hardlink) {
-                        action = ACTION_HARDLINK;
-                    } else if (is_symlink) {
-                        action = ACTION_SYMLINK;
-                    } else {
-                        action = ACTION_UPDATE;
-                    }
-                }
-            }
         } else {
             dst_idx = -1;
-
-            if (matched_pattern_src) {
-                action = ACTION_IGNORE;
-            } else {
-                if (is_hardlink) {
-                    action = ACTION_HARDLINK;
-                } else if (is_symlink) {
-                    action = ACTION_SYMLINK;
-                } else {
-                    action = ACTION_NEW;
-                }
-            }
         }
 
+        item.src_idx = src_idx;
+        item.dst_idx = dst_idx;
+        item.selected = false;
+
+        item_status_get(&item, &src_act, &dst_act, &reason);
+
         if (strcmp(bucket_src->key, ".")
-                && (action != ACTION_EQUAL) && (action != ACTION_IGNORE)) {
+                && (src_act != ACTION_EQUAL) && (src_act != ACTION_IGNORE)) {
             if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) {
                 if (cecup.transfers_capacity == 0) {
                     cecup.transfers_capacity = 256;
@@ -696,7 +566,7 @@ work_preview(void *user_data) {
                 cecup.transfers = xrealloc(cecup.transfers,
                                            cecup.transfers_capacity*SIZEOF(*cecup.transfers));
             }
-            if (action == ACTION_HARDLINK) {
+            if (src_act == ACTION_HARDLINK) {
                 cecup.transfers[cecup.ntransfers] = link_target_src;
                 cecup.ntransfers += 1;
             }
