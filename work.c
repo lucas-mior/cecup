@@ -195,7 +195,7 @@ work_traverse_fs(Traversal *traversal) {
          = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
         if (cecup.stop_working == false) {
             error(_("Error walking directory %s: %s.\n"),
-                    traversal->base_path, strerror(errno));
+                  traversal->base_path, strerror(errno));
         }
         return 0;
     }
@@ -337,9 +337,8 @@ work_traverse_fs(Traversal *traversal) {
             int32 *first_idx_ptr;
 
             n = itoa2(inode_str, (long)ent->fts_statp->st_ino);
-            first_idx_ptr = hash_lookup_inode_map(traversal->inode_map,
-                                                  inode_str, n);
-            if (first_idx_ptr) {
+            if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map,
+                                                       inode_str, n))) {
                 int32 first_idx;
 
                 first_idx = *first_idx_ptr;
@@ -388,6 +387,20 @@ work_traverse_fs(Traversal *traversal) {
     if (fts_close(fts_handle) < 0) {
         LOG_ERROR("Error in fts_close: %s.\n", strerror(errno));
     }
+
+    for (int32 i = 0; i < traversal->nfiles; i += 1) {
+        if (S_ISREG(traversal->stats[i].st_mode) && (traversal->stats[i].st_nlink > 1)) {
+            char inode_str[64];
+            int32 n;
+            int32 *first_idx_ptr;
+
+            n = itoa2(inode_str, (long)traversal->stats[i].st_ino);
+            if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n))) {
+                traversal->nlinks[i] = traversal->nlinks[*first_idx_ptr];
+            }
+        }
+    }
+
     return file_count;
 }
 
