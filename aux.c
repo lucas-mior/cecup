@@ -307,7 +307,9 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
 
             if (stat_src->st_mtime < stat_dst->st_mtime) {
                 *reason |= REASON_MTIME_OLDER;
-                attributes_differ = true;
+                *action_src = ACTION_IGNORE;
+                *action_dst = ACTION_IGNORE;
+                return;
             }
 
             if (is_dir) {
