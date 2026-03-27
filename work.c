@@ -129,7 +129,7 @@ work_check_itemize_line(char *buf_output) {
         return NULL;
     }
 
-    return buf_output + strlen32(RSYNC_ITEMIZE_PLACEHOLDERS);
+    return buf_output + strlen32(RSYNC_ITEMIZE_PLACEHOLDERS) + 1;
 }
 
 static void
@@ -1066,15 +1066,121 @@ work_rsync(void *user_data) {
 }
 
 #if TESTING_work
-#include "assert.c"
+
 #include <string.h>
-#include <stdio.h>
-#include "aux.c"
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include "assert.c"
+#include "arena.c"
+
+static void
+create_test_file(char *path, char *content) {
+    int32 fd;
+    int32 len;
+
+    fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    ASSERT_MORE_EQUAL(fd, 0);
+    len = strlen32(content);
+    write64(fd, content, len);
+    close(fd);
+    return;
+}
 
 int
 main(void) {
+    char buf1[] = ">f+++++++++ some/file.txt";
+    char buf2[] = "cd+++++++++ some/dir/";
+    char buf3[] = ".f...p..... some/file.txt";
+    char buf4[] = "invalid line";
+    char temp_dir[] = "/tmp/cecup_work_test_XXXXXX";
+    char src_dir[MAX_PATH_LENGTH];
+    char dst_dir[MAX_PATH_LENGTH];
+    char path_buf1[MAX_PATH_LENGTH];
+    char path_buf2[MAX_PATH_LENGTH];
+    char cmd[MAX_PATH_LENGTH];
+    Traversal tr;
+    int64 count;
+    bool found_file = false;
+    bool found_dir = false;
+    bool found_sym = false;
+    bool found_hard = false;
+
     (void)work_rsync;
     (void)work_preview;
+
+    ASSERT_EQUAL(work_check_itemize_line(buf1), "some/file.txt");
+    ASSERT_EQUAL(work_check_itemize_line(buf2), "some/dir/");
+    ASSERT_EQUAL(work_check_itemize_line(buf3), "some/file.txt");
+    ASSERT_NULL(work_check_itemize_line(buf4));
+
+    ASSERT(mkdtemp(temp_dir));
+
+    SNPRINTF(src_dir, "%s/src", temp_dir);
+    SNPRINTF(dst_dir, "%s/dst", temp_dir);
+
+    mkdir(src_dir, 0755);
+    mkdir(dst_dir, 0755);
+
+    SNPRINTF(path_buf1, "%s/regular.txt", src_dir);
+    create_test_file(path_buf1, "regular");
+
+    SNPRINTF(path_buf1, "%s/dir1", src_dir);
+    mkdir(path_buf1, 0755);
+
+    SNPRINTF(path_buf1, "%s/sym1", src_dir);
+    symlink("regular.txt", path_buf1);
+
+    SNPRINTF(path_buf1, "%s/regular.txt", src_dir);
+    SNPRINTF(path_buf2, "%s/hard1.txt", src_dir);
+
+    if (link(path_buf1, path_buf2) < 0) {
+        error("Error linking %s to %s: %s.\n",
+              path_buf1, path_buf2, strerror(errno));
+    }
+
+    memset64(&cecup, 0, SIZEOF(cecup));
+    memset64(&tr, 0, SIZEOF(tr));
+    tr.arena = arena_create(1024 * 1024);
+    tr.map = hash_create_fs_map(1024);
+    tr.inode_map = hash_create_inode_map(1024);
+    tr.base_path = src_dir;
+    tr.base_path_len = strlen32(src_dir);
+
+    count = work_traverse_fs(&tr);
+
+    ASSERT_EQUAL(count, 3);
+
+    for (int32 i = 0; i < tr.nfiles; i += 1) {
+        if (strcmp(tr.paths[i], "regular.txt") == 0) {
+            found_file = true;
+        }
+        if (strcmp(tr.paths[i], "dir1/") == 0) {
+            found_dir = true;
+        }
+        if (strcmp(tr.paths[i], "sym1") == 0) {
+            found_sym = true;
+            ASSERT(strcmp(tr.link_targets[i], "regular.txt") == 0);
+        }
+        if (strcmp(tr.paths[i], "hard1.txt") == 0) {
+            found_hard = true;
+            ASSERT(tr.link_targets[i] != NULL);
+        }
+    }
+
+    ASSERT(found_file);
+    ASSERT(found_dir);
+    ASSERT(found_sym);
+    ASSERT(found_hard);
+
+    work_traverse_clean(&tr);
+    arena_destroy(tr.arena);
+
+    SNPRINTF(cmd, "rm -rf %s", temp_dir);
+    system(cmd);
+
     exit(EXIT_SUCCESS);
 }
 
