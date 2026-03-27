@@ -651,6 +651,7 @@ work_rsync_run(char *files_from_filename, bool checksum,
     rsync_args_len = 0;
     rsync_args[rsync_args_len++] = "rsync";
     rsync_args[rsync_args_len++] = "--verbose";
+    rsync_args[rsync_args_len++] = "--verbose";
     rsync_args[rsync_args_len++] = "--update";
 
     // these 2 options are implied by --files-from
@@ -1050,10 +1051,6 @@ work_rsync(void *user_data) {
     /* if (!DEBUGGING) { */
     /* xunlink(files_from_filename); */
     /* } */
-
-    if (tasks->count == 0) {
-        work_cleanup();
-    }
 
     work_batch_flush(&batch);
     free_task_list(tasks);
