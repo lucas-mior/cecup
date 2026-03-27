@@ -696,8 +696,16 @@ update_list_from_rows(void) {
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
 
     if (cecup.rows_visible_len > 0) {
+        struct timespec t0_sort;
+        struct timespec t1_sort;
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t0_sort);
+
         qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(CecupItem *),
                 cecup_item_compare);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t1_sort);
+        PRINT_TIMINGS(cecup.rows_visible_len,
+                      t0_sort, t1_sort, "sorting visible rows");
     }
 
     cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
