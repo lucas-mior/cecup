@@ -98,7 +98,7 @@ item_mtime_side(CecupItem *item, int32 side) {
 }
 
 static char *
-aux_item_ignore_pattern_side(CecupItem *item, int32 side) {
+item_ignore_pattern_side(CecupItem *item, int32 side) {
     if (side == L) {
         if (item->src_idx >= 0) {
             return cecup.traversal_src.matched_patterns[item->src_idx];
@@ -111,22 +111,8 @@ aux_item_ignore_pattern_side(CecupItem *item, int32 side) {
     return NULL;
 }
 
-static char *
-aux_item_path_side(CecupItem *item, int32 side) {
-    if (side == L) {
-        if (item->src_idx >= 0) {
-            return cecup.traversal_src.paths[item->src_idx];
-        }
-    } else {
-        if (item->dst_idx >= 0) {
-            return cecup.traversal_dst.paths[item->dst_idx];
-        }
-    }
-    return NULL;
-}
-
 static int32
-aux_item_path_len_side(CecupItem *item, int32 side) {
+item_path_len_side(CecupItem *item, int32 side) {
     if (side == L) {
         if (item->src_idx >= 0) {
             return (int32)cecup.traversal_src.paths_lens[item->src_idx];
@@ -140,7 +126,7 @@ aux_item_path_len_side(CecupItem *item, int32 side) {
 }
 
 static char *
-aux_item_link_target_side(CecupItem *item, int32 side) {
+item_link_target_side(CecupItem *item, int32 side) {
     if (side == L) {
         if (item->src_idx >= 0) {
             return cecup.traversal_src.link_targets[item->src_idx];
@@ -154,7 +140,7 @@ aux_item_link_target_side(CecupItem *item, int32 side) {
 }
 
 static int32
-aux_item_link_target_len_side(CecupItem *item, int32 side) {
+item_link_target_len_side(CecupItem *item, int32 side) {
     if (side == L) {
         if (item->src_idx >= 0) {
             return (int32)cecup.traversal_src.link_targets_lens[item->src_idx];
@@ -167,40 +153,8 @@ aux_item_link_target_len_side(CecupItem *item, int32 side) {
     return 0;
 }
 
-static int64
-aux_item_size_side(CecupItem *item, int32 side) {
-    if (side == L) {
-        if (item->src_idx >= 0) {
-            if (!S_ISDIR(cecup.traversal_src.stats[item->src_idx].st_mode)) {
-                return cecup.traversal_src.stats[item->src_idx].st_size;
-            }
-        }
-    } else {
-        if (item->dst_idx >= 0) {
-            if (!S_ISDIR(cecup.traversal_dst.stats[item->dst_idx].st_mode)) {
-                return cecup.traversal_dst.stats[item->dst_idx].st_size;
-            }
-        }
-    }
-    return -1;
-}
-
-static int64
-aux_item_mtime_side(CecupItem *item, int32 side) {
-    if (side == L) {
-        if (item->src_idx >= 0) {
-            return cecup.traversal_src.stats[item->src_idx].st_mtime;
-        }
-    } else {
-        if (item->dst_idx >= 0) {
-            return cecup.traversal_dst.stats[item->dst_idx].st_mtime;
-        }
-    }
-    return 0;
-}
-
 static void
-aux_item_status_get(CecupItem *item, enum CecupAction *src_act,
+item_status_get(CecupItem *item, enum CecupAction *src_act,
                     enum CecupAction *dst_act, enum CecupReason *reason) {
     int32 src_idx;
     int32 dst_idx;
@@ -528,15 +482,15 @@ get_target_tasks(int32 side, char *clicked_path,
             continue;
         }
 
-        aux_item_status_get(item, &src_act, &dst_act, &reason);
+        item_status_get(item, &src_act, &dst_act, &reason);
 
         if (side == L) {
-            filepath = aux_item_path_side(item, L);
-            path_len = aux_item_path_len_side(item, L);
+            filepath = item_path_side(item, L);
+            path_len = item_path_len_side(item, L);
             action = src_act;
         } else {
-            filepath = aux_item_path_side(item, R);
-            path_len = aux_item_path_len_side(item, R);
+            filepath = item_path_side(item, R);
+            path_len = item_path_len_side(item, R);
             action = dst_act;
         }
 
@@ -551,8 +505,8 @@ get_target_tasks(int32 side, char *clicked_path,
         task->path = xmalloc(path_len + 1);
         memcpy64(task->path, filepath, path_len + 1);
 
-        link_target = aux_item_link_target_side(item, side);
-        link_target_len = aux_item_link_target_len_side(item, side);
+        link_target = item_link_target_side(item, side);
+        link_target_len = item_link_target_len_side(item, side);
 
         if (link_target) {
             task->link_target_len = link_target_len;
@@ -645,8 +599,8 @@ cecup_item_compare(const void *a, const void *b) {
 
     switch (cecup.sort_col) {
     case COL_SRC_PATH:
-        path_a = aux_item_path_side(item_a, L);
-        path_b = aux_item_path_side(item_b, L);
+        path_a = item_path_side(item_a, L);
+        path_b = item_path_side(item_b, L);
         if (path_a == NULL && path_b == NULL) {
             result = 0;
         } else if (path_a == NULL) {
@@ -658,8 +612,8 @@ cecup_item_compare(const void *a, const void *b) {
         }
         break;
     case COL_DST_PATH:
-        path_a = aux_item_path_side(item_a, R);
-        path_b = aux_item_path_side(item_b, R);
+        path_a = item_path_side(item_a, R);
+        path_b = item_path_side(item_b, R);
         if (path_a == NULL && path_b == NULL) {
             result = 0;
         } else if (path_a == NULL) {
@@ -671,18 +625,18 @@ cecup_item_compare(const void *a, const void *b) {
         }
         break;
     case COL_SIZE_RAW:
-        size_a = aux_item_size_side(item_a, L);
-        size_b = aux_item_size_side(item_b, L);
+        size_a = item_size_side(item_a, L);
+        size_b = item_size_side(item_b, L);
         COMPARE(size_a, size_b);
         break;
     case COL_MTIME_RAW:
-        mtime_a = aux_item_mtime_side(item_a, L);
-        mtime_b = aux_item_mtime_side(item_b, L);
+        mtime_a = item_mtime_side(item_a, L);
+        mtime_b = item_mtime_side(item_b, L);
         COMPARE(mtime_a, mtime_b);
         break;
     case COL_DST_ACTION:
-        aux_item_status_get(item_a, &src_act_a, &dst_act_a, &reason_a);
-        aux_item_status_get(item_b, &src_act_b, &dst_act_b, &reason_b);
+        item_status_get(item_a, &src_act_a, &dst_act_a, &reason_a);
+        item_status_get(item_b, &src_act_b, &dst_act_b, &reason_b);
         COMPARE(dst_act_a, dst_act_b);
         break;
     case COL_MTIME_TEXT:
@@ -692,8 +646,8 @@ cecup_item_compare(const void *a, const void *b) {
     case COL_SRC_ACTION:
     case NUM_COLS:
     default:
-        aux_item_status_get(item_a, &src_act_a, &dst_act_a, &reason_a);
-        aux_item_status_get(item_b, &src_act_b, &dst_act_b, &reason_b);
+        item_status_get(item_a, &src_act_a, &dst_act_a, &reason_a);
+        item_status_get(item_b, &src_act_b, &dst_act_b, &reason_b);
         COMPARE(src_act_a, src_act_b);
         break;
     }

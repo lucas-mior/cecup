@@ -81,8 +81,8 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     }
 
     item = cecup.rows_visible[pos];
-    filepath = aux_item_path_side(item, side);
-    path_len = aux_item_path_len_side(item, side);
+    filepath = item_path_side(item, side);
+    path_len = item_path_len_side(item, side);
 
     if (filepath || (menu_item->callback == on_menu_rename)) {
         Message *message = xmalloc(SIZEOF(*message));
@@ -94,7 +94,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
             memcpy64(message->src_path, filepath, path_len + 1);
         }
 
-        aux_item_status_get(item, &src_act, &dst_act, &reason);
+        item_status_get(item, &src_act, &dst_act, &reason);
 
         if (side == L) {
             message->action = src_act;
@@ -517,12 +517,12 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 
     item_toggled->selected = is_active;
 
-    parent_path = aux_item_path_side(item_toggled, side);
+    parent_path = item_path_side(item_toggled, side);
     if (parent_path == NULL) {
         if (side == L) {
-            parent_path = aux_item_path_side(item_toggled, R);
+            parent_path = item_path_side(item_toggled, R);
         } else {
-            parent_path = aux_item_path_side(item_toggled, L);
+            parent_path = item_path_side(item_toggled, L);
         }
     }
 
@@ -543,12 +543,12 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         int32 path_len;
 
         item = cecup.rows[i];
-        path = aux_item_path_side(item, side);
+        path = item_path_side(item, side);
         if (path == NULL) {
             if (side == L) {
-                path = aux_item_path_side(item, R);
+                path = item_path_side(item, R);
             } else {
-                path = aux_item_path_side(item, L);
+                path = item_path_side(item, L);
             }
         }
 
@@ -942,23 +942,23 @@ on_tree_button_press(GtkGestureClick *gesture,
         item = cecup.rows_visible[pos];
 
         if (side == L) {
-            filepath = aux_item_path_side(item, L);
-            other_path = aux_item_path_side(item, R);
+            filepath = item_path_side(item, L);
+            other_path = item_path_side(item, R);
         } else {
-            filepath = aux_item_path_side(item, R);
-            other_path = aux_item_path_side(item, L);
+            filepath = item_path_side(item, R);
+            other_path = item_path_side(item, L);
         }
 
         message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
         if (filepath) {
-            message->path_len = aux_item_path_len_side(item, side);
+            message->path_len = item_path_len_side(item, side);
             message->src_path = xmalloc(message->path_len + 1);
             memcpy64(message->src_path, filepath, message->path_len + 1);
         }
         message->side = side;
 
-        aux_item_status_get(item, &src_act, &dst_act, &reason);
+        item_status_get(item, &src_act, &dst_act, &reason);
 
         if (side == L) {
             message->action = src_act;
@@ -994,7 +994,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                     char path_copy[MAX_PATH_LENGTH];
                     bool is_dir = false;
 
-                    path_len = aux_item_path_len_side(item, side);
+                    path_len = item_path_len_side(item, side);
                     memcpy64(path_copy, filepath, path_len + 1);
 
                     if (path_len > 0 && path_copy[path_len - 1] == '/') {
@@ -1172,21 +1172,21 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         char *ignore_pattern;
         int32 path_len;
 
-        aux_item_status_get(item, &src_act, &dst_act, &reason);
+        item_status_get(item, &src_act, &dst_act, &reason);
 
         if (side == L) {
-            filepath = aux_item_path_side(item, L);
+            filepath = item_path_side(item, L);
             action = src_act;
         } else {
-            filepath = aux_item_path_side(item, R);
+            filepath = item_path_side(item, R);
             action = dst_act;
         }
 
         if (filepath == NULL) {
             if (side == L) {
-                filepath = aux_item_path_side(item, R);
+                filepath = item_path_side(item, R);
             } else {
-                filepath = aux_item_path_side(item, L);
+                filepath = item_path_side(item, L);
             }
         }
 
@@ -1252,8 +1252,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                 }
             }
 
-            link_target = aux_item_link_target_side(item, side);
-            ignore_pattern = aux_item_ignore_pattern_side(item, side);
+            link_target = item_link_target_side(item, side);
+            ignore_pattern = item_ignore_pattern_side(item, side);
 
             if (link_target) {
                 SNPRINTF(tip_buffer,
@@ -1269,7 +1269,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             break;
         }
         case COLUMN_SIZE:
-            size_raw = aux_item_size_side(item, side);
+            size_raw = item_size_side(item, side);
             if (size_raw < 0) {
                 size_raw = 0;
             }
@@ -1277,7 +1277,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             tip_text = tip_buffer;
             break;
         case COLUMN_MTIME:
-            mtime_raw = aux_item_mtime_side(item, side);
+            mtime_raw = item_mtime_side(item, side);
             if (mtime_raw > 0) {
                 struct tm time_information;
                 time_t unix_timestamp;
@@ -1338,7 +1338,7 @@ on_path_editing_started(GtkEditable *editable, void *data) {
         return;
     }
 
-    relative = aux_item_path_side(item, side);
+    relative = item_path_side(item, side);
 
     if (relative) {
         char *name;
@@ -1348,7 +1348,7 @@ on_path_editing_started(GtkEditable *editable, void *data) {
         int32 end_pos;
         int32 path_len;
 
-        path_len = aux_item_path_len_side(item, side);
+        path_len = item_path_len_side(item, side);
         end_pos = path_len;
 
         name = basename2(relative, &path_len, &name_len);
@@ -1403,10 +1403,10 @@ on_path_edited(GtkEditable *editable, void *data) {
 
     if (side == L) {
         base_path = cecup.src_base;
-        relative_old = aux_item_path_side(item, L);
+        relative_old = item_path_side(item, L);
     } else {
         base_path = cecup.dst_base;
-        relative_old = aux_item_path_side(item, R);
+        relative_old = item_path_side(item, R);
     }
 
     if (relative_old == NULL) {
