@@ -337,7 +337,8 @@ work_traverse_fs(Traversal *traversal) {
             int32 *first_idx_ptr;
 
             n = itoa2(inode_str, (long)ent->fts_statp->st_ino);
-            first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n);
+            first_idx_ptr = hash_lookup_inode_map(traversal->inode_map,
+                                                  inode_str, n);
             if (first_idx_ptr) {
                 int32 first_idx;
 
