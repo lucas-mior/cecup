@@ -53,8 +53,8 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     char *filepath;
     int32 side;
     int32 path_len;
-    enum CecupAction src_act;
-    enum CecupAction dst_act;
+    enum CecupAction action_src;
+    enum CecupAction action_dst;
     enum CecupReason reason;
 
     if (menu_item == NULL) {
@@ -94,12 +94,12 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
             memcpy64(message->src_path, filepath, path_len + 1);
         }
 
-        item_status_get(item, &src_act, &dst_act, &reason);
+        item_status_get(item, &action_src, &action_dst, &reason);
 
         if (side == L) {
-            message->action = src_act;
+            message->action = action_src;
         } else {
-            message->action = dst_act;
+            message->action = action_dst;
         }
 
         message->side = side;
@@ -567,22 +567,22 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
             }
 
             if (item->selected) {
-                enum CecupAction src_act;
-                enum CecupAction dst_act;
+                enum CecupAction action_src;
+                enum CecupAction action_dst;
                 enum CecupReason reason;
                 int64 size;
 
                 count_selected += 1;
-                item_status_get(item, &src_act, &dst_act, &reason);
+                item_status_get(item, &action_src, &action_dst, &reason);
 
                 size = item_size_side(item, L);
                 if (size < 0) {
                     size = 0;
                 }
 
-                if ((src_act == ACTION_NEW && filter_new) ||
-                    ((src_act == ACTION_HARDLINK || src_act == ACTION_SYMLINK) && filter_hard) ||
-                    (src_act == ACTION_UPDATE && filter_update)) {
+                if ((action_src == ACTION_NEW && filter_new) ||
+                    ((action_src == ACTION_HARDLINK || action_src == ACTION_SYMLINK) && filter_hard) ||
+                    (action_src == ACTION_UPDATE && filter_update)) {
                     total_size_bytes += size;
                 }
             }
@@ -924,8 +924,8 @@ on_tree_button_press(GtkGestureClick *gesture,
         Message *message;
         GtkSelectionModel *selection;
         uint32 pos;
-        enum CecupAction src_act;
-        enum CecupAction dst_act;
+        enum CecupAction action_src;
+        enum CecupAction action_dst;
         enum CecupReason reason;
 
         if (n_press != 1) {
@@ -960,12 +960,12 @@ on_tree_button_press(GtkGestureClick *gesture,
         }
         message->side = side;
 
-        item_status_get(item, &src_act, &dst_act, &reason);
+        item_status_get(item, &action_src, &action_dst, &reason);
 
         if (side == L) {
-            message->action = src_act;
+            message->action = action_src;
         } else {
-            message->action = dst_act;
+            message->action = action_dst;
         }
 
         g_object_set_data(G_OBJECT(cecup.application),
@@ -1164,22 +1164,22 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
     if (item) {
         char *filepath;
         enum CecupAction action;
-        enum CecupAction src_act;
-        enum CecupAction dst_act;
+        enum CecupAction action_src;
+        enum CecupAction action_dst;
         enum CecupReason reason;
         bool is_dir = false;
         char *link_target;
         char *ignore_pattern;
         int32 path_len;
 
-        item_status_get(item, &src_act, &dst_act, &reason);
+        item_status_get(item, &action_src, &action_dst, &reason);
 
         if (side == L) {
             filepath = item_path_side(item, L);
-            action = src_act;
+            action = action_src;
         } else {
             filepath = item_path_side(item, R);
-            action = dst_act;
+            action = action_dst;
         }
 
         if (filepath == NULL) {
