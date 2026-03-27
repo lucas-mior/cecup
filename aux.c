@@ -180,7 +180,6 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
         error("This probably means that there is some race condition.\n");
         error("Or another bug.\n");
         fatal(EXIT_FAILURE);
-        return;
     }
 
     if (src_idx < 0) {
