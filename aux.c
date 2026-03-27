@@ -164,8 +164,8 @@ item_link_target_len_side(CecupItem *item, int32 side) {
 }
 
 static void
-item_status_get(CecupItem *item, enum CecupAction *src_act,
-                enum CecupAction *dst_act, enum CecupReason *reason) {
+item_status_get(CecupItem *item, enum CecupAction *action_src,
+                enum CecupAction *action_dst, enum CecupReason *reason) {
     int32 src_idx = item->src_idx;
     int32 dst_idx = item->dst_idx;
     bool delete_excluded
@@ -260,19 +260,19 @@ item_status_get(CecupItem *item, enum CecupAction *src_act,
             }
         }
 
-        *src_act = action;
-        *dst_act = action;
+        *action_src = action;
+        *action_dst = action;
 
         if (action == ACTION_IGNORE) {
-            *src_act = ACTION_IGNORE;
+            *action_src = ACTION_IGNORE;
             if (delete_excluded) {
-                *dst_act = ACTION_DELETE;
+                *action_dst = ACTION_DELETE;
             } else {
-                *dst_act = ACTION_IGNORE;
+                *action_dst = ACTION_IGNORE;
             }
         } else if (action == ACTION_DELETE) {
-            *src_act = ACTION_IGNORE;
-            *dst_act = ACTION_DELETE;
+            *action_src = ACTION_IGNORE;
+            *action_dst = ACTION_DELETE;
         }
     } else if (src_idx >= 0) {
         char *matched_src = cecup.traversal_src.matched_patterns[src_idx];
@@ -282,22 +282,22 @@ item_status_get(CecupItem *item, enum CecupAction *src_act,
                            && cecup.traversal_src.link_targets[src_idx];
 
         if (matched_src) {
-            *src_act = ACTION_IGNORE;
-            *dst_act = ACTION_IGNORE;
+            *action_src = ACTION_IGNORE;
+            *action_dst = ACTION_IGNORE;
             *reason |= REASON_IGNORED;
         } else {
             *reason |= REASON_NEW;
             if (is_hardlink) {
-                *src_act = ACTION_HARDLINK;
-                *dst_act = ACTION_HARDLINK;
+                *action_src = ACTION_HARDLINK;
+                *action_dst = ACTION_HARDLINK;
                 *reason |= REASON_HARDLINK;
             } else if (is_symlink) {
-                *src_act = ACTION_SYMLINK;
-                *dst_act = ACTION_SYMLINK;
+                *action_src = ACTION_SYMLINK;
+                *action_dst = ACTION_SYMLINK;
                 *reason |= REASON_SYMLINK;
             } else {
-                *src_act = ACTION_NEW;
-                *dst_act = ACTION_NEW;
+                *action_src = ACTION_NEW;
+                *action_dst = ACTION_NEW;
             }
         }
     } else if (dst_idx >= 0) {
@@ -308,18 +308,18 @@ item_status_get(CecupItem *item, enum CecupAction *src_act,
 
         if (matched_dst) {
             *reason |= REASON_IGNORED;
-            *src_act = ACTION_IGNORE;
+            *action_src = ACTION_IGNORE;
             if (delete_excluded) {
-                *dst_act = ACTION_DELETE;
+                *action_dst = ACTION_DELETE;
             } else {
-                *dst_act = ACTION_IGNORE;
+                *action_dst = ACTION_IGNORE;
             }
         } else {
-            *src_act = ACTION_IGNORE;
+            *action_src = ACTION_IGNORE;
             if (delete_excluded) {
-                *dst_act = ACTION_DELETE;
+                *action_dst = ACTION_DELETE;
             } else {
-                *dst_act = ACTION_IGNORE;
+                *action_dst = ACTION_IGNORE;
             }
         }
     }
@@ -462,8 +462,8 @@ get_target_tasks(int32 side, char *clicked_path,
         char *filepath;
         int32 path_len;
         enum CecupAction action;
-        enum CecupAction src_act;
-        enum CecupAction dst_act;
+        enum CecupAction action_src;
+        enum CecupAction action_dst;
         enum CecupReason reason;
         char *link_target;
         int32 link_target_len;
@@ -473,16 +473,16 @@ get_target_tasks(int32 side, char *clicked_path,
             continue;
         }
 
-        item_status_get(item, &src_act, &dst_act, &reason);
+        item_status_get(item, &action_src, &action_dst, &reason);
 
         if (side == L) {
             filepath = item_path_side(item, L);
             path_len = item_path_len_side(item, L);
-            action = src_act;
+            action = action_src;
         } else {
             filepath = item_path_side(item, R);
             path_len = item_path_len_side(item, R);
-            action = dst_act;
+            action = action_dst;
         }
 
         if (filepath == NULL) {
