@@ -209,6 +209,9 @@ get_target_tasks(int32 side, char *clicked_path,
 
     if ((tasks->count == 0) && clicked_path) {
         Task *task = xmalloc(SIZEOF(*task));
+        Traversal *traversal;
+        int32 *idx_ptr;
+
         memset64(task, 0, SIZEOF(*task));
 
         task->path_len = strlen32(clicked_path);
@@ -217,6 +220,27 @@ get_target_tasks(int32 side, char *clicked_path,
 
         task->action = clicked_action;
         task->side = side;
+
+        if (side == L) {
+            traversal = &cecup.traversal_src;
+        } else {
+            traversal = &cecup.traversal_dst;
+        }
+
+        if ((idx_ptr = hash_lookup_fs_map(traversal->map,
+                                          clicked_path, task->path_len))) {
+            int32 idx;
+            char *link_target;
+
+            idx = *idx_ptr;
+            link_target = traversal->link_targets[idx];
+
+            if (link_target) {
+                task->link_target_len = traversal->link_targets_lens[idx];
+                task->link_target = xmalloc(task->link_target_len + 1);
+                memcpy64(task->link_target, link_target, task->link_target_len + 1);
+            }
+        }
 
         tasks->items[0] = task;
         tasks->count = 1;
