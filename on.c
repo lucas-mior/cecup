@@ -579,20 +579,20 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                 enum CecupAction src_act;
                 enum CecupAction dst_act;
                 enum CecupReason reason;
-                int64 sz;
+                int64 size;
 
                 count_selected += 1;
                 item_status_get(item, &src_act, &dst_act, &reason);
 
-                sz = item_size_side(item, L);
-                if (sz < 0) {
-                    sz = 0;
+                size = item_size_side(item, L);
+                if (size < 0) {
+                    size = 0;
                 }
 
                 if ((src_act == ACTION_NEW && filter_new) ||
                     ((src_act == ACTION_HARDLINK || src_act == ACTION_SYMLINK) && filter_hard) ||
                     (src_act == ACTION_UPDATE && filter_update)) {
-                    total_size_bytes += sz;
+                    total_size_bytes += size;
                 }
             }
         }
@@ -608,7 +608,6 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         }
     }
 
-    /* Update the Model and UI */
     g_list_model_items_changed(cecup.store, 0,
                                (uint32)cecup.rows_visible_len,
                                (uint32)cecup.rows_visible_len);
