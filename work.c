@@ -1076,10 +1076,17 @@ work_rsync(void *user_data) {
 #include "assert.c"
 #include "arena.c"
 
+enum FileType {
+    FILE_TYPE_REGULAR,
+    FILE_TYPE_DIR,
+    FILE_TYPE_SYMLINK,
+    FILE_TYPE_HARDLINK,
+};
+
 typedef struct TestEntry {
     char *name;
     char *expected_path;
-    int32 type;
+    enum FileType type;
     char *target;
 } TestEntry;
 
@@ -1096,10 +1103,10 @@ main(void) {
     int64 count;
     int32 expected_files_count;
     static TestEntry test_entries[] = {
-        {"regular.txt", "regular.txt", 0, "regular"},
-        {"dir1", "dir1/", 1, NULL},
-        {"sym1", "sym1", 2, "regular.txt"},
-        {"hard1.txt", "hard1.txt", 3, "regular.txt"},
+        {"regular.txt", "regular.txt", FILE_TYPE_REGULAR,  "regular"},
+        {"dir1",        "dir1/",       FILE_TYPE_DIR,      NULL},
+        {"sym1",        "sym1",        FILE_TYPE_SYMLINK,  "regular.txt"},
+        {"hard1.txt",  "hard1.txt",    FILE_TYPE_HARDLINK, "regular.txt"},
     };
     bool found_entries[LENGTH(test_entries)];
 
@@ -1128,7 +1135,7 @@ main(void) {
         entry = &test_entries[i];
         SNPRINTF(path_buf1, "%s/%s", src_dir, entry->name);
 
-        if (entry->type == 0) {
+        if (entry->type == FILE_TYPE_REGULAR) {
             int32 fd;
             int32 len;
 
@@ -1138,16 +1145,16 @@ main(void) {
             write64(fd, entry->target, len);
             XCLOSE(&fd);
             expected_files_count += 1;
-        } else if (entry->type == 1) {
+        } else if (entry->type == FILE_TYPE_DIR) {
             mkdir(path_buf1, 0755);
-        } else if (entry->type == 2) {
+        } else if (entry->type == FILE_TYPE_SYMLINK) {
             if (symlink(entry->target, path_buf1) < 0) {
                 error("Error linking %s to %s: %s.\n",
                       entry->target, path_buf1, strerror(errno));
             }
 
             expected_files_count += 1;
-        } else if (entry->type == 3) {
+        } else if (entry->type == FILE_TYPE_HARDLINK) {
             char path_buf2[MAX_PATH_LENGTH];
 
             SNPRINTF(path_buf2, "%s/%s", src_dir, entry->target);
@@ -1182,9 +1189,9 @@ main(void) {
             if (strcmp(tr.paths[i], entry->expected_path) == 0) {
                 found_entries[j] = true;
 
-                if (entry->type == 2) {
+                if (entry->type == FILE_TYPE_SYMLINK) {
                     ASSERT_EQUAL(tr.link_targets[i], entry->target);
-                } else if (entry->type == 3) {
+                } else if (entry->type == FILE_TYPE_HARDLINK) {
                     ASSERT(tr.link_targets[i] != NULL);
                 }
             }
