@@ -243,6 +243,8 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
         char *path_dst = cecup.traversal_dst.paths[dst_idx];
         char *target_src = cecup.traversal_src.link_targets[src_idx];
         char *target_dst = cecup.traversal_dst.link_targets[dst_idx];
+        int32 nlinks_src = cecup.traversal_src.nlinks[src_idx];
+        int32 nlinks_dst = cecup.traversal_dst.nlinks[dst_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
         bool is_hardlink = S_ISREG(stat_src->st_mode) && (target_src != NULL);
         bool is_dir = S_ISDIR(stat_src->st_mode);
@@ -328,30 +330,20 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
 
             if (is_hardlink) {
                 if (!S_ISREG(stat_dst->st_mode)) {
-                    LOG_ERROR("Updating hardlink"
-                              " because the correspondent file on the backup"
-                              " is not a regular file.\n");
                     equal = false;
                     *reason |= REASON_HARDLINK_NOT_REGULAR;
                     attributes_differ = true;
                 } else if (target_dst == NULL) {
                     equal = false;
                     attributes_differ = true;
-                    LOG_ERROR("Updating hardlink"
-                              " because the correspondent file on the backup"
-                              " does not have a link target.\n");
                     *reason |= REASON_HARDLINK_MISSING_LINK;
                 } else if (
                         strcmp(target_src, target_dst)
                         && strcmp(path_src, target_dst)
+                        && (nlinks_src != nlinks_dst)
                         ) {
                     equal = false;
                     attributes_differ = true;
-                    LOG_ERROR("Updating hardlink \n%s => %s\n"
-                              " because the link target \n%s => %s\n"
-                              " of correspondent file on the backup"
-                              " does not match the link target on the source.\n",
-                              path_src, target_src, path_dst, target_dst);
                     *reason |= REASON_HARDLINK_NOT_MATCH;
                 }
             }
