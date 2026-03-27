@@ -256,7 +256,7 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        for (int32 i = 0; i < (int32)LENGTH(replacements); i += 1) {
+        for (int32 i = 0; i < LENGTH(replacements); i += 1) {
             char *problem;
             int64 problem_len;
 
