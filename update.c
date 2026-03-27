@@ -51,33 +51,24 @@ update_row_remove(Message *message) {
     deleted_side = message->side;
 
     for (int32 i = 0; i < cecup.rows_len;) {
-        CecupItem *item;
-        char *path_test;
-        int32 path_test_len;
-        bool match;
-
-        item = cecup.rows[i];
-        path_test = item_path_get(item);
-        path_test_len = item_path_len_get(item);
-        match = false;
+        CecupItem *item = cecup.rows[i];
+        char *path_test = item_path_get(item);
+        int32 path_test_len = item_path_len_get(item);
+        bool match = false;
 
         if (pattern[pattern_len - 1] == '/') {
             if (BEGINS_WITH(path_test, pattern, pattern_len)) {
                 match = true;
             }
-        } else {
-            if (path_test_len == pattern_len) {
-                if (!memcmp64(path_test, pattern, pattern_len)) {
-                    match = true;
-                }
+        } if (path_test_len == pattern_len) {
+            if (!memcmp64(path_test, pattern, pattern_len)) {
+                match = true;
             }
         }
 
         if (match) {
-            bool remove_entirely;
+            bool remove_entirely = false;
             Traversal *traversal;
-
-            remove_entirely = false;
 
             if (deleted_side == L) {
                 if (item->src_idx >= 0) {
@@ -173,16 +164,12 @@ update_row_transfer(Message *message) {
     pattern_len = message->path_len;
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupItem *item;
-        char *path_test;
-        int32 path_test_len;
+        CecupItem *item = cecup.rows[i];
+        char *path_test = item_path_get(item);
+        int32 path_test_len = item_path_len_get(item);
         bool show_equal;
         char full_path[MAX_PATH_LENGTH];
         int32 *idx_ptr;
-
-        item = cecup.rows[i];
-        path_test = item_path_get(item);
-        path_test_len = item_path_len_get(item);
 
         if (path_test_len != pattern_len) {
             continue;
@@ -320,8 +307,8 @@ update_row_transfer(Message *message) {
         if (show_equal) {
             for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
                 if (cecup.rows_visible[k] == item) {
-                    cecup_list_model_row_changed(
-                        CECUP_LIST_MODEL(cecup.store), k);
+                    cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store),
+                                                 k);
                     break;
                 }
             }
