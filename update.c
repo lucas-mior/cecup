@@ -300,6 +300,7 @@ update_row_rename(Message *message) {
     int32 side;
     int32 other_side;
     bool is_dir;
+    bool changed;
 
     old_path = message->old_path;
     new_path = message->new_path;
@@ -308,35 +309,25 @@ update_row_rename(Message *message) {
     side = message->side;
     other_side = (side == L) ? R : L;
     is_dir = (old_path[old_path_len - 1] == '/');
+    changed = false;
 
-    if ((message->old_path == NULL)
-            || (message->new_path == NULL)
-            || (message->old_path_len == 0)
-            || (message->new_path_len == 0)) {
-        error("Invalid message.\n");
-        fatal(EXIT_FAILURE);
-        return;
-    }
-
-    if (message->side == L) {
+    if (side == L) {
         traversal = &cecup.traversal_src;
     } else {
         traversal = &cecup.traversal_dst;
     }
 
+    /* Pass 1: Update Traversal Data and handle Splits/Joins in cecup.rows */
     for (int32 i = 0; i < cecup.rows_len; ) {
         CecupItem *it;
         CecupItem *merge_item;
         char *p_old;
         char *p_new;
-        char *m_pattern;
         int32 idx;
         int32 other_idx;
         int32 n_idx;
-        int32 v_idx;
         int32 sub_len;
         int32 suffix_len;
-        int32 m_pattern_len;
         IgnorePattern *p_match;
         bool is_match;
 
@@ -359,14 +350,13 @@ update_row_rename(Message *message) {
             continue;
         }
 
-        /* 1. Calculate the new path for this specific item */
+        changed = true;
         sub_len = item_path_len_side(it, side);
         suffix_len = sub_len - old_path_len;
         p_new = xarena_push(traversal->arena, new_path_len + suffix_len + 1);
         memcpy64(p_new, new_path, new_path_len);
         memcpy64(p_new + new_path_len, p_old + old_path_len, suffix_len + 1);
 
-        /* 2. Update the underlying traversal data */
         idx = (side == L) ? it->src_idx : it->dst_idx;
         other_idx = (side == L) ? it->dst_idx : it->src_idx;
 
@@ -375,15 +365,12 @@ update_row_rename(Message *message) {
         p_match = ignore_patterns_match(p_new, new_path_len + suffix_len,
                                         S_ISDIR(traversal->stats[idx].st_mode),
                                         cecup.ignore_patterns, cecup.ignore_count);
-        m_pattern = (p_match) ? p_match->str : NULL;
-        m_pattern_len = (p_match) ? p_match->len : 0;
 
         n_idx = traversal_push(traversal, p_new, new_path_len + suffix_len,
                                &traversal->stats[idx],
                                traversal->link_targets[idx], traversal->link_targets_lens[idx],
-                               m_pattern, m_pattern_len);
+                               (p_match ? p_match->str : NULL), (p_match ? p_match->len : 0));
 
-        /* 3. Check for a merge candidate on the other side */
         merge_item = NULL;
         for (int32 j = 0; j < cecup.rows_len; j += 1) {
             char *p_other;
@@ -394,94 +381,48 @@ update_row_rename(Message *message) {
             }
         }
 
-        /* 4. Locate current item in the visible list */
-        v_idx = -1;
-        for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
-            if (cecup.rows_visible[v] == it) {
-                v_idx = v;
-                break;
-            }
-        }
-
         if (merge_item) {
-            /* JOIN LOGIC */
-            if (side == L) {
-                merge_item->src_idx = n_idx;
-            } else {
-                merge_item->dst_idx = n_idx;
-            }
-
-            for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
-                if (cecup.rows_visible[v] == merge_item) {
-                    cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), v);
-                    if (v < v_idx) {
-                        v_idx -= 1;
-                    }
-                    break;
-                }
-            }
-
-            if (v_idx >= 0) {
-                cecup.rows_visible[v_idx] = merge_item;
-                cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v_idx);
-            }
+            if (side == L) { merge_item->src_idx = n_idx; } else { merge_item->dst_idx = n_idx; }
 
             if (other_idx >= 0) {
+                /* Split: this item remains but only for the 'other' side */
                 if (side == L) { it->src_idx = -1; } else { it->dst_idx = -1; }
-                if (v_idx >= 0) {
-                    cecup_list_model_row_added(CECUP_LIST_MODEL(cecup.store), it, v_idx + 1);
-                }
                 i += 1;
             } else {
-                /* Remove 'it' from global rows as it's now fully merged */
-                for (int32 j = 0; j < cecup.rows_len; j += 1) {
-                    if (cecup.rows[j] == it) {
-                        for (int32 k = j; k < cecup.rows_len - 1; k += 1) { cecup.rows[k] = cecup.rows[k+1]; }
-                        cecup.rows_len -= 1;
-                        break;
-                    }
+                /* Full Join: 'it' is now empty, remove from global list */
+                for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
+                    cecup.rows[j] = cecup.rows[j + 1];
                 }
-                /* Do not increment i because the current element was removed */
+                cecup.rows_len -= 1;
             }
         } else {
-            /* SPLIT LOGIC */
-            if (side == L) {
-                it->src_idx = n_idx;
-                if (other_idx >= 0) {
-                    CecupItem *new_it;
+            /* Simple Rename or Split into a new orphan */
+            if (other_idx >= 0) {
+                CecupItem *orphan;
+                if (side == L) {
+                    it->src_idx = n_idx;
                     it->dst_idx = -1;
-                    new_it = item_add(-1, other_idx);
-                    if (v_idx >= 0) {
-                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v_idx);
-                        cecup_list_model_row_added(CECUP_LIST_MODEL(cecup.store), new_it, v_idx + 1);
-                    }
-                } else if (v_idx >= 0) {
-                    cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v_idx);
+                    orphan = item_add(-1, other_idx);
+                } else {
+                    it->dst_idx = n_idx;
+                    it->src_idx = -1;
+                    orphan = item_add(other_idx, -1);
                 }
             } else {
-                it->dst_idx = n_idx;
-                if (other_idx >= 0) {
-                    CecupItem *new_it;
-                    it->src_idx = -1;
-                    new_it = item_add(other_idx, -1);
-                    if (v_idx >= 0) {
-                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v_idx);
-                        cecup_list_model_row_added(CECUP_LIST_MODEL(cecup.store), new_it, v_idx + 1);
-                    }
-                } else if (v_idx >= 0) {
-                    cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v_idx);
-                }
+                if (side == L) { it->src_idx = n_idx; } else { it->dst_idx = n_idx; }
             }
             i += 1;
         }
 
-        /* If this was not a directory, we only rename the single matched item */
-        if (!is_dir) {
-            break;
-        }
+        if (!is_dir) { break; }
     }
 
-    invalidate_preview();
+    if (changed) {
+        invalidate_preview();
+        /* Pass 2: Rebuild rows_visible and signal GTK once */
+        update_list_from_rows();
+    }
+
     return;
 }
 
