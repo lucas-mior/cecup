@@ -133,8 +133,8 @@ traversal_push(Traversal *traversal, char *path, int32 path_len,
     traversal->nfiles += 1;
 
     memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
-    if (st) {
-        memcpy64(&traversal->stats[idx], st, SIZEOF(struct stat));
+    if (stat) {
+        memcpy64(&traversal->stats[idx], stat, SIZEOF(struct stat));
     }
 
     traversal->paths[idx] = path;
