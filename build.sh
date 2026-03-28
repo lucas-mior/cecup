@@ -8,7 +8,8 @@ alias trace_off='{ set +x; } 2>/dev/null'
 
 export LC_ALL=C
 
-dir=$(dirname "$0")
+dir=$(dirname "$(readlink -f "$0")")
+cd "$dir" || exit
 program=$(basename "$(readlink -f "$dir")")
 script=$(basename "$0")
 

@@ -694,27 +694,6 @@ main(void) {
             .expected_src_action = ACTION_SYMLINK,
             .expected_reason_mask = REASON_SYMLINK,
         },
-        /* { */
-        /*     .name = "hardlink_base.txt", */
-        /*     .expected_src_action = ACTION_EQUAL, */
-        /*     .expected_reason_mask = REASON_EQUAL, */
-        /* }, */
-        /* { */
-        /*     .name = "hardlink_new.txt", */
-        /*     .target = "hardlink_base.txt", */
-        /*     .src_hardlink = true, */
-        /*     .dst_missing = true, */
-        /*     .expected_src_action = ACTION_HARDLINK, */
-        /*     .expected_reason_mask = REASON_HARDLINK | REASON_NEW, */
-        /* }, */
-        /* { */
-        /*     .name = "hardlink_equal.txt", */
-        /*     .target = "hardlink_base.txt", */
-        /*     .src_hardlink = true, */
-        /*     .dst_hardlink = true, */
-        /*     .expected_src_action = ACTION_EQUAL, */
-        /*     .expected_reason_mask = REASON_EQUAL, */
-        /* }, */
         {
             .name = "ignored_file.txt",
             .expected_src_action = ACTION_IGNORE,
@@ -850,6 +829,7 @@ main(void) {
     }
 
     memset64(&cecup, 0, SIZEOF(cecup));
+    g_mutex_init(&cecup.arena_mutex);
 
     pattern.str = "ignored_file.txt";
     pattern.len = strlen32(pattern.str);
@@ -886,7 +866,7 @@ main(void) {
         int32 dst_idx;
         char expected_path[MAX_PATH_LENGTH];
         int32 name_len;
-        CecupItem item;
+        int32 row_id;
         enum Action act_src;
         enum Action act_dst;
         enum Reason reason;
@@ -930,11 +910,8 @@ main(void) {
             ASSERT_MORE_EQUAL(dst_idx, 0);
         }
 
-        memset64(&item, 0, SIZEOF(item));
-        item.src_idx = src_idx;
-        item.dst_idx = dst_idx;
-
-        item_get_actions_reasons(&item, &act_src, &act_dst, &reason);
+        row_id = item_add(src_idx, dst_idx);
+        item_get_actions_reasons(row_id, &act_src, &act_dst, &reason);
 
         ASSERT_EQUAL(act_src, entry->expected_src_action);
         ASSERT_EQUAL((reason & entry->expected_reason_mask), entry->expected_reason_mask);
@@ -945,6 +922,15 @@ main(void) {
 
     work_traverse_clean(&cecup.traversal_dst);
     arena_destroy(cecup.traversal_dst.arena);
+
+    if (cecup.rows_capacity > 0) {
+        free(cecup.rows_src, cecup.rows_capacity * SIZEOF(*(cecup.rows_src)));
+        free(cecup.rows_dst, cecup.rows_capacity * SIZEOF(*(cecup.rows_dst)));
+        free(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
+        free(cecup.rows_visible, cecup.rows_capacity * SIZEOF(*(cecup.rows_visible)));
+    }
+    
+    g_mutex_clear(&cecup.arena_mutex);
 
     {
         char cmd[MAX_PATH_LENGTH];
