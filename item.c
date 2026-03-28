@@ -135,6 +135,8 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
     int32 dst_idx = item->dst_idx;
     bool delete_excluded
         = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
+    bool delete_after
+        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
     *reason = 0;
 
@@ -157,7 +159,7 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
 
         *action_src = ACTION_IGNORE;
 
-        if (delete_excluded) {
+        if (delete_after || ((*reason & REASON_IGNORED) && delete_excluded)) {
             *action_dst = ACTION_DELETE;
         } else {
             *action_dst = ACTION_IGNORE;
@@ -212,8 +214,6 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
         bool is_dir = S_ISDIR(stat_src->st_mode);
         bool equal = false;
         bool attributes_differ = false;
-        bool delete_after
-            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
         if (matched_src) {
             *action_src = ACTION_IGNORE;
