@@ -123,7 +123,79 @@ update_row_remove(Message *message) {
 
 static void
 update_row_transfer(Message *message) {
-    // dont implement update_row_transfer yet
+    char *pattern;
+    int32 pattern_len;
+    bool changed;
+
+    pattern = message->src_path;
+    pattern_len = message->path_len;
+    changed = false;
+
+    if (pattern == NULL || pattern_len == 0) {
+        return;
+    }
+
+    for (int32 i = 0; i < cecup.rows_len; i += 1) {
+        CecupItem *item = cecup.rows[i];
+        char *path;
+        int32 path_len;
+        bool match;
+
+        path = item_path_get(item);
+        path_len = item_path_len_get(item);
+        match = false;
+
+        if (pattern[pattern_len - 1] == '/') {
+            if (BEGINS_WITH(path, pattern, pattern_len)) {
+                match = true;
+            }
+        } else if (path_len == pattern_len) {
+            if (memcmp64(path, pattern, pattern_len) == 0) {
+                match = true;
+            }
+        }
+
+        if (!match) {
+            continue;
+        }
+
+        if (item->src_idx >= 0) {
+            Traversal *src;
+            Traversal *dst;
+
+            src = &cecup.traversal_src;
+            dst = &cecup.traversal_dst;
+
+            if (item->dst_idx < 0) {
+                int32 *lookup;
+
+                if ((lookup = hash_lookup_fs_map(dst->map, path, path_len))) {
+                    item->dst_idx = *lookup;
+                } else {
+                    item->dst_idx = traversal_push(dst,
+                                                   src->paths[item->src_idx],
+                                                   src->paths_lens[item->src_idx],
+                                                   &src->stats[item->src_idx],
+                                                   src->link_targets[item->src_idx],
+                                                   src->link_targets_lens[item->src_idx],
+                                                   src->matched_patterns[item->src_idx],
+                                                   src->matched_patterns_lens[item->src_idx]);
+                }
+            } else {
+                memcpy64(&dst->stats[item->dst_idx],
+                         &src->stats[item->src_idx],
+                         SIZEOF(struct stat));
+            }
+
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        update_list_from_rows();
+    }
+
+    return;
 }
 
 static void
