@@ -23,7 +23,6 @@
 #include "cecup.h"
 #include "util.c"
 #include "update.c"
-#include "work.c"
 #include "on.h"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
