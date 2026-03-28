@@ -299,6 +299,14 @@ item_add(int32 src_idx, int32 dst_idx) {
     cecup.rows_selected[index] = 0;
     cecup.rows_len += 1;
 
+    if (src_idx >= 0) {
+        cecup.traversal_src.row_ids[src_idx] = index;
+    }
+
+    if (dst_idx >= 0) {
+        cecup.traversal_dst.row_ids[dst_idx] = index;
+    }
+
     g_mutex_unlock(&cecup.arena_mutex);
     return index;
 }
