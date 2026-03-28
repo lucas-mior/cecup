@@ -529,23 +529,23 @@ check_consistent_state(void) {
     }
 
     for (int32 idx = 0; idx < cecup.traversal_src.nfiles; idx += 1) {
-        int32 rid;
+        int32 row_id;
         int32 *lookup_ptr;
         char *path;
         int32 path_len;
 
-        rid = cecup.traversal_src.row_ids[idx];
+        row_id = cecup.traversal_src.row_ids[idx];
         path = cecup.traversal_src.paths[idx];
         path_len = (int32)cecup.traversal_src.paths_lens[idx];
 
-        if (rid != -1) {
-            if (rid >= cecup.rows_len) {
-                error("Consistency error: src_idx %d points to invalid row %d.\n", idx, rid);
+        if (row_id != -1) {
+            if (row_id >= cecup.rows_len) {
+                error("Consistency error: src_idx %d points to invalid row %d.\n", idx, row_id);
                 fatal(EXIT_FAILURE);
             }
-            if (cecup.rows_src[rid] != idx) {
+            if (cecup.rows_src[row_id] != idx) {
                 error("Consistency error: src_idx %d -> row %d, but rows_src[%d] -> %d.\n",
-                      idx, rid, rid, cecup.rows_src[rid]);
+                      idx, row_id, row_id, cecup.rows_src[row_id]);
                 fatal(EXIT_FAILURE);
             }
 
