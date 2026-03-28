@@ -1,10 +1,31 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
 # shellcheck disable=SC2086
 
 set -e
+
+if [ -n "$BASH_VERSION" ]; then
+    # shellcheck disable=SC3044
+    shopt -s expand_aliases
+fi
+
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
+
+if [[ "${1:-}" != "--wrapped" ]]; then
+    # \x0a       = Literal Newline
+
+    pattern='/^/ {
+        s/ (-[A-Za-z])/  \\\x0a    \1/g;
+        s/^\+/+/;
+    }'
+
+    "$0" --wrapped "$@" 2> >(sed -Eu "$pattern" >&2)
+    exit $?
+fi
+
+echo "here"
+shift
 
 export LC_ALL=C
 
