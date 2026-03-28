@@ -136,13 +136,9 @@ update_row_transfer(Message *message) {
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupItem *item = cecup.rows[i];
-        char *path;
-        int32 path_len;
-        bool match;
-
-        path = item_path_get(item);
-        path_len = item_path_len_get(item);
-        match = false;
+        char *path = item_path_get(item);
+        int32 path_len = item_path_len_get(item);
+        bool match = false;
 
         if (pattern[pattern_len - 1] == '/') {
             if (BEGINS_WITH(path, pattern, pattern_len)) {
