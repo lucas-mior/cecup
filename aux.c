@@ -80,65 +80,65 @@ protect_interface_from_user(bool state) {
 }
 
 static int32
-traversal_push(Traversal *data, char *path, int32 path_len,
+traversal_push(Traversal *traversal, char *path, int32 path_len,
                struct stat *st, char *link_target, int32 link_target_len,
                char *matched_pattern, int32 matched_pattern_len) {
     int32 idx;
 
-    if (data->nfiles >= data->ncapacity) {
-        int64 lens_type_size = SIZEOF(*(data->paths_lens));
+    if (traversal->nfiles >= traversal->ncapacity) {
+        int64 lens_type_size = SIZEOF(*(traversal->paths_lens));
 
-        ASSERT_EQUAL(SIZEOF(*(data->paths_lens)),
-                     SIZEOF(*(data->link_targets_lens)));
-        ASSERT_EQUAL(SIZEOF(*(data->paths_lens)),
-                     SIZEOF(*(data->matched_patterns_lens)));
-        ASSERT_EQUAL(SIZEOF(*(data->paths_lens)),
-                     SIZEOF(*(data->nlinks)));
+        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)),
+                     SIZEOF(*(traversal->link_targets_lens)));
+        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)),
+                     SIZEOF(*(traversal->matched_patterns_lens)));
+        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)),
+                     SIZEOF(*(traversal->nlinks)));
 
-        if (data->ncapacity == 0) {
-            data->ncapacity = 1024;
+        if (traversal->ncapacity == 0) {
+            traversal->ncapacity = 1024;
         } else {
-            data->ncapacity *= 2;
+            traversal->ncapacity *= 2;
         }
 
-        data->stats = xrealloc(data->stats,
-                               data->ncapacity*SIZEOF(*(data->stats)));
+        traversal->stats = xrealloc(traversal->stats,
+                               traversal->ncapacity*SIZEOF(*(traversal->stats)));
 
-        data->paths = xrealloc(data->paths,
-                               data->ncapacity*SIZEOF(char *));
-        data->link_targets = xrealloc(data->link_targets,
-                                      data->ncapacity*SIZEOF(char *));
-        data->matched_patterns = xrealloc(data->matched_patterns,
-                                          data->ncapacity*SIZEOF(char *));
+        traversal->paths = xrealloc(traversal->paths,
+                               traversal->ncapacity*SIZEOF(char *));
+        traversal->link_targets = xrealloc(traversal->link_targets,
+                                      traversal->ncapacity*SIZEOF(char *));
+        traversal->matched_patterns = xrealloc(traversal->matched_patterns,
+                                          traversal->ncapacity*SIZEOF(char *));
 
-        data->paths_lens = xrealloc(data->paths_lens,
-                                    data->ncapacity*lens_type_size);
-        data->link_targets_lens = xrealloc(data->link_targets_lens,
-                                           data->ncapacity*lens_type_size);
-        data->matched_patterns_lens = xrealloc(data->matched_patterns_lens,
-                                               data->ncapacity*lens_type_size);
-        data->nlinks= xrealloc(data->nlinks,
-                               data->ncapacity*lens_type_size);
+        traversal->paths_lens = xrealloc(traversal->paths_lens,
+                                    traversal->ncapacity*lens_type_size);
+        traversal->link_targets_lens = xrealloc(traversal->link_targets_lens,
+                                           traversal->ncapacity*lens_type_size);
+        traversal->matched_patterns_lens = xrealloc(traversal->matched_patterns_lens,
+                                               traversal->ncapacity*lens_type_size);
+        traversal->nlinks= xrealloc(traversal->nlinks,
+                               traversal->ncapacity*lens_type_size);
     }
 
-    idx = data->nfiles;
-    data->nfiles += 1;
+    idx = traversal->nfiles;
+    traversal->nfiles += 1;
 
-    memset64(&data->stats[idx], 0, SIZEOF(struct stat));
+    memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
     if (st) {
-        memcpy64(&data->stats[idx], st, SIZEOF(struct stat));
+        memcpy64(&traversal->stats[idx], st, SIZEOF(struct stat));
     }
 
-    data->paths[idx] = path;
-    data->paths_lens[idx] = (int16)path_len;
-    data->link_targets[idx] = link_target;
-    data->link_targets_lens[idx] = (int16)link_target_len;
-    data->matched_patterns[idx] = matched_pattern;
-    data->matched_patterns_lens[idx] = (int16)matched_pattern_len;
-    data->nlinks[idx] = 1;
+    traversal->paths[idx] = path;
+    traversal->paths_lens[idx] = (int16)path_len;
+    traversal->link_targets[idx] = link_target;
+    traversal->link_targets_lens[idx] = (int16)link_target_len;
+    traversal->matched_patterns[idx] = matched_pattern;
+    traversal->matched_patterns_lens[idx] = (int16)matched_pattern_len;
+    traversal->nlinks[idx] = 1;
 
-    if (data->map) {
-        hash_insert_fs_map(data->map, path, path_len, idx);
+    if (traversal->map) {
+        hash_insert_fs_map(traversal->map, path, path_len, idx);
     }
 
     return idx;
