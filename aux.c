@@ -101,33 +101,42 @@ traversal_push(Traversal *traversal, struct stat *stat,
         }
 
         traversal->stats = xrealloc2(traversal->stats,
+                                     old_capacity,
                                      traversal->ncapacity,
                                      SIZEOF(*(traversal->stats)));
 
         traversal->paths = xrealloc2(traversal->paths,
+                                     old_capacity,
                                      traversal->ncapacity,
                                      SIZEOF(char *));
         traversal->link_targets = xrealloc2(traversal->link_targets,
+                                            old_capacity,
                                             traversal->ncapacity,
                                             SIZEOF(char *));
         traversal->matched_patterns = xrealloc2(traversal->matched_patterns,
+                                                old_capacity,
                                                 traversal->ncapacity,
                                                 SIZEOF(char *));
 
         traversal->paths_lens = xrealloc2(traversal->paths_lens,
+                                          old_capacity,
                                           traversal->ncapacity,
                                           lens_type_size);
         traversal->link_targets_lens = xrealloc2(traversal->link_targets_lens,
+                                                 old_capacity,
                                                  traversal->ncapacity,
                                                  lens_type_size);
         traversal->matched_patterns_lens = xrealloc2(traversal->matched_patterns_lens,
+                                                     old_capacity,
                                                      traversal->ncapacity,
                                                      lens_type_size);
         traversal->nlinks = xrealloc2(traversal->nlinks,
+                                      old_capacity,
                                       traversal->ncapacity,
                                       lens_type_size);
 
         traversal->row_ids = xrealloc2(traversal->row_ids,
+                                       old_capacity,
                                        traversal->ncapacity,
                                        SIZEOF(*(traversal->row_ids)));
 
