@@ -30,6 +30,7 @@
 #include "list_model.c"
 #include "ignore_patterns.c"
 #include "on_path.c"
+#include "item.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_update 1
