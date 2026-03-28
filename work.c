@@ -60,7 +60,7 @@ work_batch_flush(MessageBatch **batch_ptr) {
     *batch_ptr = NULL;
     return;
 }
-
+// TODO: Use more efficent batches.
 static void
 work_batch_push(MessageBatch **batch_ptr, Message *message) {
     MessageBatch *batch = *batch_ptr;
