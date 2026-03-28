@@ -556,7 +556,6 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
 
 static void
 check_consistent_state(void) {
-    HERE;
     g_mutex_lock(&cecup.arena_mutex);
 
     for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
