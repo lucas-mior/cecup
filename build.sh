@@ -257,6 +257,7 @@ case "$target" in
         fi
         printf "\nTesting ${RED}${src}${RES} ...\n"
         name="$(echo "$src" | sed 's/\.c//g')"
+        name="$(echo "$name" | sed 's|src/||g')"
 
         flags="$(awk '/\/\/ flags:/ { $1=$2=""; print $0 }' "$src")"
         if [ $src = "src/windows_functions.c" ]; then
@@ -267,16 +268,16 @@ case "$target" in
             cmdline=$(option_remove "$cmdline" "-D_GNU_SOURCE")
             cmdline="$cmdline -target x86_64-windows-gnu"
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1"
-            cmdline="$cmdline $flags -o /tmp/$src.exe $src"
+            cmdline="$cmdline $flags -o /tmp/$name.c.exe $src"
         else
             cmdline="$CC $CPPFLAGS $CFLAGS"
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 $LDFLAGS"
-            cmdline="$cmdline $flags -o /tmp/$src.exe $src"
+            cmdline="$cmdline $flags -o /tmp/$name.c.exe $src"
         fi
 
         trace_on
         if $cmdline; then
-            /tmp/$src.exe || gdb /tmp/$src.exe -ex run
+            /tmp/$name.c.exe || gdb /tmp/$name.c.exe -ex run
         else
             continue
         fi
