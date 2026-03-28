@@ -292,29 +292,40 @@ update_row_transfer(Message *message) {
 
 static void
 update_row_rename(Message *message) {
-    char *old_pattern = message->src_path;
-    char *new_pattern = message->dst_path;
-    int32 old_len = message->path_len;
-    int32 side = message->side;
-    int32 new_len;
     Traversal *traversal;
+    char *old_path = message->old_path;
+    char *new_path = message->new_path;
+    int32 old_path_len = message->old_path_len;
+    int32 new_path_len = message->new_path_len;
+    bool is_dir;
 
-    if (old_pattern == NULL || old_len == 0 || new_pattern == NULL) {
+    if ((message->old_path == NULL)
+            || (message->new_path == NULL)
+            || (message->old_path_len == 0)
+            || (message->new_path_len == 0)) {
         error("Invalid message.\n");
         fatal(EXIT_FAILURE);
         return;
     }
 
-    new_len = strlen32(new_pattern);
-
-    if (side == L) {
+    if (message->side == L) {
         traversal = &cecup.traversal_src;
     } else {
         traversal = &cecup.traversal_dst;
     }
 
+    PRINTLN(message->side);
+    PRINTLN(traversal->base_path);
+
+    if (old_path[old_path_len - 1] == '/') {
+        is_dir = true;
+    }
+
+    PRINTLN(is_dir);
+
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupItem *item = cecup.rows[i];
+        char *path = item_path_get(item);
     }
 
     invalidate_preview();
