@@ -8,6 +8,12 @@
 #include "update.c"
 #include "cecup.h"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_on_path 1
+#elif !defined(TESTING_on_path)
+#define TESTING_on_path 0
+#endif
+
 typedef struct SelectionData {
     GtkEditable *editable;
     int32 start_pos;
