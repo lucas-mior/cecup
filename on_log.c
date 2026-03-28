@@ -64,7 +64,7 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
 
 static void
 on_log_button_press(GtkGestureClick *gesture,
-                    int32 n_press, double x, double y, void *data) {
+                    int32 npress, double x, double y, void *data) {
     GtkWidget *widget;
     GtkWidget *parent;
     GtkWidget *popover;
@@ -79,7 +79,7 @@ on_log_button_press(GtkGestureClick *gesture,
     (void)data;
     button = gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
 
-    if (n_press != 1) {
+    if (npress != 1) {
         return;
     }
 
