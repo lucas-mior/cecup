@@ -219,7 +219,8 @@ main_setup_tree_columns(GtkWidget *tree,
         gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(key));
         gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(key),
                                                    GTK_PHASE_BUBBLE);
-        g_signal_connect(key, "key-pressed", G_CALLBACK(on_tree_key_press), NULL);
+        g_signal_connect(key, "key-pressed",
+                         G_CALLBACK(on_tree_key_press), NULL);
     }
 
     return;
@@ -256,21 +257,27 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     (void)user_data;
 
-    {
+{
+        static char *base_css[] = {
+            "columnview row { min-height: 0px; }",
+            "columnview cell { padding: 0px; }",
+            "paned > separator { min-width: 10px; min-height: 10px; }",
+            "scrollbar.vertical slider { min-width: 12px; }",
+            "scrollbar.horizontal slider { min-height: 12px; }"
+        };
         GtkCssProvider *css_provider;
         char css[BUFSIZ];
         int32 offset;
-        int32 n;
 
         css_provider = gtk_css_provider_new();
         offset = 0;
-        n = snprintf2(css + offset, SIZEOF(css) - offset,
-                      "columnview row { min-height: 0px; }\n"
-                      "columnview cell { padding: 0px; }\n"
-                      "paned > separator { min-width: 10px; min-height: 10px; }\n"
-                      "scrollbar.vertical slider { min-width: 12px; }\n"
-                      "scrollbar.horizontal slider { min-height: 12px; }\n");
-        offset += n;
+
+        for (int32 i = 0; i < LENGTH(base_css); i += 1) {
+            int32 n;
+            n = snprintf2(css + offset, SIZEOF(css) - offset,
+                          "%s\n", base_css[i]);
+            offset += n;
+        }
 
         for (int32 i = 0; i < LENGTH(colors); i += 1) {
             int32 m;
