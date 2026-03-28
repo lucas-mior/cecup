@@ -42,15 +42,10 @@ static void update_list_from_rows(void);
 
 static void
 update_row_remove(Message *message) {
-    char *pattern;
-    int32 pattern_len;
-    int32 side;
-    bool changed;
-
-    pattern = message->src_path;
-    pattern_len = message->path_len;
-    side = message->side;
-    changed = false;
+    char *pattern = message->src_path;
+    int32 pattern_len = message->path_len;
+    int32 side = message->side;
+    bool changed = false;
 
     if (pattern == NULL || pattern_len == 0) {
         return;
