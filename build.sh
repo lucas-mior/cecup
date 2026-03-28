@@ -249,7 +249,7 @@ case "$target" in
     ;;
 "test")
     for src in src/*.c; do
-        if [ -n "$2" ] && [ $src != "$2" ]; then
+        if [ -n "$2" ] && [ $src != "src/$2" ]; then
             continue
         fi
         if [ "$src" = "src/$main" ]; then

@@ -23,6 +23,7 @@
 #include "item.c"
 #include "aux.c"
 #include "cecup.h"
+#include "on.h"
 
 static void
 on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y, void *data) {
