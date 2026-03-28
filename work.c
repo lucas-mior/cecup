@@ -256,11 +256,11 @@ work_traverse_fs(Traversal *traversal) {
         }
 
         if ((ent->fts_info == FTS_F) && (ent->fts_statp->st_nlink > 1)) {
-            char inode_str[64];
+            char inode_str[32];
             int32 n;
             int32 *first_idx_ptr;
 
-            n = itoa2(inode_str, (long)ent->fts_statp->st_ino);
+            n = ITOA(inode_str, (long)ent->fts_statp->st_ino);
             if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n))) {
                 int32 first_idx;
 
@@ -317,7 +317,7 @@ work_traverse_fs(Traversal *traversal) {
             int32 n;
             int32 *first_idx_ptr;
 
-            n = itoa2(inode_str, (long)traversal->stats[i].st_ino);
+            n = ITOA(inode_str, (long)traversal->stats[i].st_ino);
             if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n))) {
                 traversal->nlinks[i] = traversal->nlinks[*first_idx_ptr];
             }

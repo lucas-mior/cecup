@@ -88,10 +88,10 @@ update_row_remove(Message *message) {
         if (traversal->inode_map
             && S_ISREG(traversal->stats[*idx_ptr].st_mode)) {
             if (traversal->stats[*idx_ptr].st_nlink > 1) {
-                char inode_str[64];
+                char inode_str[32];
                 int32 n;
 
-                n = itoa2(inode_str, (long)traversal->stats[*idx_ptr].st_ino);
+                n = ITOA(inode_str, (long)traversal->stats[*idx_ptr].st_ino);
                 hash_remove_inode_map(traversal->inode_map, inode_str, n);
             }
         }
@@ -157,11 +157,10 @@ update_row_remove(Message *message) {
                 if (traversal->inode_map
                     && S_ISREG(traversal->stats[idx].st_mode)) {
                     if (traversal->stats[idx].st_nlink > 1) {
-                        char inode_str[64];
+                        char inode_str[32];
                         int32 n;
 
-                        n = itoa2(inode_str,
-                                  (long)traversal->stats[idx].st_ino);
+                        n = ITOA(inode_str, (long)traversal->stats[idx].st_ino);
                         hash_remove_inode_map(traversal->inode_map, inode_str,
                                               n);
                     }
