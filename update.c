@@ -200,7 +200,7 @@ update_row_transfer(Message *message) {
 
 static void
 update_row_rename(Message *message) {
-    // dont implement update_row_rename yet
+    // implement here
 }
 
 static void
