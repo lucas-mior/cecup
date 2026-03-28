@@ -47,7 +47,8 @@ invalidate_preview(void) {
     cecup.preview_dirty = true;
     if (!gtk_widget_get_sensitive(cecup.stop_button)) {
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-        gtk_widget_set_tooltip_text(cecup.sync_button, _("Click Analysis first"));
+        gtk_widget_set_tooltip_text(cecup.sync_button,
+                                    _("Click Analysis first"));
     }
     return;
 }
@@ -66,7 +67,8 @@ protect_interface_from_user(bool state) {
     } else {
         if (cecup.preview_dirty) {
             gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-            gtk_widget_set_tooltip_text(cecup.sync_button, _("Click Analysis first"));
+            gtk_widget_set_tooltip_text(cecup.sync_button,
+                                        _("Click Analysis first"));
         } else {
             gtk_widget_set_sensitive(cecup.sync_button, TRUE);
             gtk_widget_set_tooltip_text(cecup.sync_button,
@@ -268,7 +270,12 @@ get_target_tasks(int32 side, char *clicked_path, enum Action clicked_action) {
         task->action = clicked_action;
         task->side = side;
 
-        traversal = (side == L) ? &cecup.traversal_src : &cecup.traversal_dst;
+        if (side == L) {
+            traversal = &cecup.traversal_src;
+        }
+        else {
+            traversal = &cecup.traversal_dst;
+        }
 
         if ((idx_ptr = hash_lookup_fs_map(traversal->map,
                                           clicked_path, task->path_len))) {
@@ -279,7 +286,8 @@ get_target_tasks(int32 side, char *clicked_path, enum Action clicked_action) {
             if ((link_target = traversal->link_targets[idx])) {
                 task->link_target_len = traversal->link_targets_lens[idx];
                 task->link_target = xmalloc(task->link_target_len + 1);
-                memcpy64(task->link_target, link_target, task->link_target_len + 1);
+                memcpy64(task->link_target,
+                         link_target, task->link_target_len + 1);
             }
         }
 
@@ -445,7 +453,12 @@ log_internal(char *file, int line,
     message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
-    m = (!RELEASING) ? SNPRINTF(fileline, "%s:%d: ", file, line) : SNPRINTF(fileline, "%s", "");
+    if ((!RELEASING)) {
+        m = SNPRINTF(fileline, "%s:%d: ", file, line);
+    }
+    else {
+        m = SNPRINTF(fileline, "%s", "");
+    }
 
     message->text_len = n + m;
     message->text = xmalloc(n + m + 1);
