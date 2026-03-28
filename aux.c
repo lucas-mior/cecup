@@ -478,6 +478,164 @@ free_message(void *data) {
     return;
 }
 
+static void
+check_consistent_state(void) {
+    int32 row_id;
+    int32 idx;
+
+    HERE;
+
+    g_mutex_lock(&cecup.arena_mutex);
+
+    for (row_id = 0; row_id < cecup.rows_len; row_id += 1) {
+        int32 src_idx;
+        int32 dst_idx;
+
+        src_idx = cecup.rows_src[row_id];
+        dst_idx = cecup.rows_dst[row_id];
+
+        if (src_idx == -1 && dst_idx == -1) {
+            error("Consistency error: Row %d has no index for either side.\n", row_id);
+            fatal(EXIT_FAILURE);
+        }
+
+        if (src_idx >= 0) {
+            if (src_idx >= cecup.traversal_src.nfiles) {
+                error("Consistency error: Row %d points to invalid src_idx %d.\n", row_id, src_idx);
+                fatal(EXIT_FAILURE);
+            }
+            if (cecup.traversal_src.row_ids[src_idx] != row_id) {
+                error("Consistency error: Row %d -> src_idx %d, but row_ids[%d] -> %d.\n",
+                      row_id, src_idx, src_idx, cecup.traversal_src.row_ids[src_idx]);
+                fatal(EXIT_FAILURE);
+            }
+        }
+
+        if (dst_idx >= 0) {
+            if (dst_idx >= cecup.traversal_dst.nfiles) {
+                error("Consistency error: Row %d points to invalid dst_idx %d.\n", row_id, dst_idx);
+                fatal(EXIT_FAILURE);
+            }
+            if (cecup.traversal_dst.row_ids[dst_idx] != row_id) {
+                error("Consistency error: Row %d -> dst_idx %d, but row_ids[%d] -> %d.\n",
+                      row_id, dst_idx, dst_idx, cecup.traversal_dst.row_ids[dst_idx]);
+                fatal(EXIT_FAILURE);
+            }
+        }
+    }
+
+    for (idx = 0; idx < cecup.traversal_src.nfiles; idx += 1) {
+        int32 rid;
+        int32 *lookup_ptr;
+        char *path;
+        int32 path_len;
+
+        rid = cecup.traversal_src.row_ids[idx];
+        path = cecup.traversal_src.paths[idx];
+        path_len = (int32)cecup.traversal_src.paths_lens[idx];
+
+        if (rid != -1) {
+            if (rid >= cecup.rows_len) {
+                error("Consistency error: src_idx %d points to invalid row %d.\n", idx, rid);
+                fatal(EXIT_FAILURE);
+            }
+            if (cecup.rows_src[rid] != idx) {
+                error("Consistency error: src_idx %d -> row %d, but rows_src[%d] -> %d.\n",
+                      idx, rid, rid, cecup.rows_src[rid]);
+                fatal(EXIT_FAILURE);
+            }
+
+            lookup_ptr = hash_lookup_fs_map(cecup.traversal_src.map, path, path_len);
+            if (lookup_ptr == NULL || *lookup_ptr != idx) {
+                error("Consistency error: src_idx %d (path %s) is mapped to row but missing/mismatched in hash.\n",
+                      idx, path);
+                fatal(EXIT_FAILURE);
+            }
+        } else {
+            lookup_ptr = hash_lookup_fs_map(cecup.traversal_src.map, path, path_len);
+            if (lookup_ptr != NULL && *lookup_ptr == idx) {
+                error("Consistency error: src_idx %d (path %s) has no row but exists in hash.\n",
+                      idx, path);
+                fatal(EXIT_FAILURE);
+            }
+        }
+    }
+
+    for (idx = 0; idx < cecup.traversal_dst.nfiles; idx += 1) {
+        int32 rid;
+        int32 *lookup_ptr;
+        char *path;
+        int32 path_len;
+
+        rid = cecup.traversal_dst.row_ids[idx];
+        path = cecup.traversal_dst.paths[idx];
+        path_len = (int32)cecup.traversal_dst.paths_lens[idx];
+
+        if (rid != -1) {
+            if (rid >= cecup.rows_len) {
+                error("Consistency error: dst_idx %d points to invalid row %d.\n", idx, rid);
+                fatal(EXIT_FAILURE);
+            }
+            if (cecup.rows_dst[rid] != idx) {
+                error("Consistency error: dst_idx %d -> row %d, but rows_dst[%d] -> %d.\n",
+                      idx, rid, rid, cecup.rows_dst[rid]);
+                fatal(EXIT_FAILURE);
+            }
+
+            lookup_ptr = hash_lookup_fs_map(cecup.traversal_dst.map, path, path_len);
+            if (lookup_ptr == NULL || *lookup_ptr != idx) {
+                error("Consistency error: dst_idx %d (path %s) is mapped to row but missing/mismatched in hash.\n",
+                      idx, path);
+                fatal(EXIT_FAILURE);
+            }
+        } else {
+            lookup_ptr = hash_lookup_fs_map(cecup.traversal_dst.map, path, path_len);
+            if (lookup_ptr != NULL && *lookup_ptr == idx) {
+                error("Consistency error: dst_idx %d (path %s) has no row but exists in hash.\n",
+                      idx, path);
+                fatal(EXIT_FAILURE);
+            }
+        }
+    }
+
+    for (uint32 bucket_idx = 0; bucket_idx < cecup.traversal_src.map->capacity; bucket_idx += 1) {
+        Bucket_fs_map *bucket;
+        bucket = &cecup.traversal_src.map->array[bucket_idx];
+        if ((int64)bucket->key > 0) {
+            int32 v;
+            v = bucket->value;
+            if (v < 0 || v >= cecup.traversal_src.nfiles) {
+                error("Consistency error: src hash map contains invalid index %d.\n", v);
+                fatal(EXIT_FAILURE);
+            }
+            if (cecup.traversal_src.row_ids[v] == -1) {
+                error("Consistency error: src hash map contains index %d with no row_id.\n", v);
+                fatal(EXIT_FAILURE);
+            }
+        }
+    }
+
+    for (uint32 bucket_idx = 0; bucket_idx < cecup.traversal_dst.map->capacity; bucket_idx += 1) {
+        Bucket_fs_map *bucket;
+        bucket = &cecup.traversal_dst.map->array[bucket_idx];
+        if ((int64)bucket->key > 0) {
+            int32 v;
+            v = bucket->value;
+            if (v < 0 || v >= cecup.traversal_dst.nfiles) {
+                error("Consistency error: dst hash map contains invalid index %d.\n", v);
+                fatal(EXIT_FAILURE);
+            }
+            if (cecup.traversal_dst.row_ids[v] == -1) {
+                error("Consistency error: dst hash map contains index %d with no row_id.\n", v);
+                fatal(EXIT_FAILURE);
+            }
+        }
+    }
+
+    g_mutex_unlock(&cecup.arena_mutex);
+    return;
+}
+
 #if 0 == TESTING_aux
 static inline void
 aux_functions_sink(void) {

@@ -794,6 +794,11 @@ update_ui_process_message(Message *message) {
 
         cecup.preview_dirty = !message->preview_clean;
         protect_interface_from_user(false);
+
+        if (DEBUGGING) {
+            check_consistent_state();
+        }
+
         break;
     case DATA_TYPE_CLEAR_TREES:
         if (cecup.refresh_id != 0) {
