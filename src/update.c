@@ -867,6 +867,7 @@ update_ui_handler(void *data) {
     if (message->type == DATA_TYPE_BATCH) {
         batch = data;
         for (int32 i = 0; i < batch->count; i += 1) {
+            PRINTLN(i);
             update_ui_process_message(batch->messages[i]);
         }
         free(batch, sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));

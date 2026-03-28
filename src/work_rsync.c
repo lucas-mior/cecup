@@ -261,7 +261,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
                     path_len = (int32)(sep - path);
                 }
 
-                if ((path_len != 2) || memcmp64(path, "./", 2)) {
+                if (checksum && ((path_len != 2) || memcmp64(path, "./", 2))) {
                     Message *msg_update = xmalloc(SIZEOF(*msg_update));
                     memset64(msg_update, 0, SIZEOF(*msg_update));
 
@@ -499,9 +499,9 @@ work_rsync(void *user_data) {
             work_rsync_run(files_from_filename, true, &batch);
         }
     } while (0);
-    if (!DEBUGGING) {
-        xunlink(files_from_filename);
-    }
+    /* if (!DEBUGGING) { */
+        /* xunlink(files_from_filename); */
+    /* } */
 
     work_batch_flush(&batch);
     free_task_list(tasks);
