@@ -480,14 +480,10 @@ free_message(void *data) {
 
 static void
 check_consistent_state(void) {
-    int32 row_id;
-    int32 idx;
-
     HERE;
-
     g_mutex_lock(&cecup.arena_mutex);
 
-    for (row_id = 0; row_id < cecup.rows_len; row_id += 1) {
+    for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
         int32 src_idx;
         int32 dst_idx;
 
@@ -524,7 +520,7 @@ check_consistent_state(void) {
         }
     }
 
-    for (idx = 0; idx < cecup.traversal_src.nfiles; idx += 1) {
+    for (int32 idx = 0; idx < cecup.traversal_src.nfiles; idx += 1) {
         int32 rid;
         int32 *lookup_ptr;
         char *path;
@@ -561,7 +557,7 @@ check_consistent_state(void) {
         }
     }
 
-    for (idx = 0; idx < cecup.traversal_dst.nfiles; idx += 1) {
+    for (int32 idx = 0; idx < cecup.traversal_dst.nfiles; idx += 1) {
         int32 rid;
         int32 *lookup_ptr;
         char *path;
