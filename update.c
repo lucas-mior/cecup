@@ -46,6 +46,13 @@ update_row_remove(Message *message) {
     int32 pattern_len = message->path_len;
     int32 side = message->side;
     bool changed = false;
+    Traversal *traversal;
+
+    if (side == L) {
+        traversal = &cecup.traversal_src;
+    } else {
+        traversal = &cecup.traversal_dst;
+    }
 
     if (pattern == NULL || pattern_len == 0) {
         return;
@@ -57,7 +64,6 @@ update_row_remove(Message *message) {
         int32 path_len = item_path_len_get(item);
         bool match = false;
 
-        /* Match directory recursively or exact file */
         if (pattern[pattern_len - 1] == '/') {
             if (BEGINS_WITH(path, pattern, pattern_len)) {
                 match = true;
@@ -75,30 +81,32 @@ update_row_remove(Message *message) {
 
         changed = true;
 
-        /* Clean up the side being deleted */
-        Traversal *tr = (side == L) ? &cecup.traversal_src : &cecup.traversal_dst;
-        int32 *idx_ptr = (side == L) ? &item->src_idx : &item->dst_idx;
+        int32 *idx_ptr;
+        if (side == L) {
+            idx_ptr = &item->src_idx;
+        } else {
+            idx_ptr = &item->dst_idx;
+        }
 
         if (*idx_ptr >= 0) {
             int32 idx = *idx_ptr;
             
-            /* Remove from inode map if it's a hardlink */
-            if (tr->inode_map && S_ISREG(tr->stats[idx].st_mode)) {
-                if (tr->stats[idx].st_nlink > 1) {
+            if (traversal->inode_map && S_ISREG(traversal->stats[idx].st_mode)) {
+                if (traversal->stats[idx].st_nlink > 1) {
                     char inode_str[64];
-                    int32 n = itoa2(inode_str, (long)tr->stats[idx].st_ino);
-                    hash_remove_inode_map(tr->inode_map, inode_str, n);
+                    int32 n = itoa2(inode_str, (long)traversal->stats[idx].st_ino);
+                    hash_remove_inode_map(traversal->inode_map, inode_str, n);
                 }
             }
 
-            /* Remove from path map and clear stats */
-            hash_remove_fs_map(tr->map, tr->paths[idx], tr->paths_lens[idx]);
-            memset64(&tr->stats[idx], 0, SIZEOF(struct stat));
+            hash_remove_fs_map(traversal->map,
+                               traversal->paths[idx],
+                               traversal->paths_lens[idx]);
+            memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
             *idx_ptr = -1;
         }
 
-        /* If the item is gone from both sides, purge from master rows */
-        if (item->src_idx == -1 && item->dst_idx == -1) {
+        if ((item->src_idx == -1) && (item->dst_idx == -1)) {
             for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                 cecup.rows[j] = cecup.rows[j + 1];
             }
