@@ -694,11 +694,10 @@ on_tree_key_press(GtkEventControllerKey *controller,
     modifiers = state & gtk_accelerator_get_default_mod_mask();
 
     for (int32 i = 0; i < LENGTH(tree_menu_items); i += 1) {
-        CecupMenuItem *menu_item;
+        CecupMenuItem *menu_item = &tree_menu_items[i];
         uint32 target;
         uint32 pressed;
 
-        menu_item = &tree_menu_items[i];
         if (menu_item->keyval == 0) {
             continue;
         }

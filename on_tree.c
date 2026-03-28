@@ -142,9 +142,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y
 
         menu = g_menu_new();
         for (int32 i = 0; i < LENGTH(tree_menu_items); i += 1) {
-            CecupMenuItem *menu_item;
-
-            menu_item = &tree_menu_items[i];
+            CecupMenuItem *menu_item = &tree_menu_items[i];
 
             if (menu_item->callback == NULL) {
                 GMenu *submenu;
