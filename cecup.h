@@ -146,6 +146,8 @@ typedef struct Traversal {
     int16 *link_targets_lens;
     int16 *matched_patterns_lens;
     int16 *nlinks;
+
+    int32 *row_ids;
 } Traversal;
 
 typedef struct TextInfo {
