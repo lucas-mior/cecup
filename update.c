@@ -349,13 +349,15 @@ update_row_rename(Message *message) {
         int32 *lookup_ptr;
         int32 other_idx = -1;
         bool linked = false;
+        CecupItem *item = NULL;
 
         for (int32 j = 0; j < cecup.rows_len; j += 1) {
-            CecupItem *item = cecup.rows[j];
-            int32 *idx_ptr = (side == L) ? &item->src_idx : &item->dst_idx;
+            CecupItem *row_item = cecup.rows[j];
+            int32 *idx_ptr = (side == L) ? &row_item->src_idx : &row_item->dst_idx;
 
             if (*idx_ptr == idx) {
                 *idx_ptr = -1;
+                item = row_item;
                 break;
             }
         }
@@ -382,9 +384,9 @@ update_row_rename(Message *message) {
 
         if (other_idx >= 0) {
             for (int32 j = 0; j < cecup.rows_len; j += 1) {
-                CecupItem *item = cecup.rows[j];
-                int32 *side_idx = (side == L) ? &item->src_idx : &item->dst_idx;
-                int32 *other_side_idx = (side == L) ? &item->dst_idx : &item->src_idx;
+                CecupItem *row_item = cecup.rows[j];
+                int32 *side_idx = (side == L) ? &row_item->src_idx : &row_item->dst_idx;
+                int32 *other_side_idx = (side == L) ? &row_item->dst_idx : &row_item->src_idx;
 
                 if (*other_side_idx == other_idx && *side_idx == -1) {
                     *side_idx = idx;
@@ -399,6 +401,23 @@ update_row_rename(Message *message) {
                 work_add_item(idx, -1);
             } else {
                 work_add_item(-1, idx);
+            }
+        }
+
+        if (item) {
+            for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
+                if (cecup.rows_visible[v] == item) {
+                    if (((item->src_idx == -1) && (item->dst_idx == -1)) || !item_is_visible(item)) {
+                        for (int32 k = v; k < (cecup.rows_visible_len - 1); k += 1) {
+                            cecup.rows_visible[k] = cecup.rows_visible[k + 1];
+                        }
+                        cecup.rows_visible_len -= 1;
+                        cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), v);
+                    } else {
+                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v);
+                    }
+                    break;
+                }
             }
         }
 
@@ -417,7 +436,7 @@ update_row_rename(Message *message) {
                 i += 1;
             }
         }
-        update_list_from_rows();
+        invalidate_preview();
     }
 
     free(matches, original_nfiles * SIZEOF(int32));
