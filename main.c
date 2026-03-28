@@ -481,7 +481,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     scroll[L] = gtk_scrolled_window_new();
     {
         GtkSelectionModel *selection_model;
-        selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(g_object_ref(cecup.store))));
+        GListModel *list_model = g_object_ref(cecup.store);
+        selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(list_model));
         tree[L] = gtk_column_view_new(selection_model);
     }
     cecup.tree[L] = tree[L];
@@ -496,7 +497,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     scroll[R] = gtk_scrolled_window_new();
     {
         GtkSelectionModel *selection_model;
-        selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(g_object_ref(cecup.store))));
+        GListModel *list_model = g_object_ref(cecup.store);
+        selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(list_model));
         tree[R] = gtk_column_view_new(selection_model);
     }
     cecup.tree[R] = tree[R];
