@@ -555,6 +555,14 @@ update_list_from_rows(void) {
     struct timespec t0;
     struct timespec t1;
 
+    bool show_new;
+    bool show_link;
+    bool show_update;
+    bool show_equal;
+    bool show_delete;
+    bool show_ignore;
+    bool visible;
+
     count_new = 0;
     count_hard = 0;
     count_update = 0;
@@ -567,6 +575,13 @@ update_list_from_rows(void) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
     current_store_count = (int64)g_list_model_get_n_items(cecup.store);
 
+    show_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
+    show_link = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
+    show_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
+    show_equal = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_equal));
+    show_delete = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
+    show_ignore = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
+
     cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         int32 row_id;
@@ -574,6 +589,7 @@ update_list_from_rows(void) {
         enum Action dst_act;
         enum Reason reason;
         int64 sz;
+        bool is_visible = false;
 
         row_id = i;
         if (cecup.rows_selected[row_id]) {
@@ -591,28 +607,35 @@ update_list_from_rows(void) {
         case ACTION_NEW:
             count_new += 1;
             total_size_bytes += sz;
+            is_visible = show_new;
             break;
         case ACTION_HARDLINK:
         case ACTION_SYMLINK:
             count_hard += 1;
             total_size_bytes += sz;
+            is_visible = show_link;
             break;
         case ACTION_UPDATE:
             count_update += 1;
             total_size_bytes += sz;
+            is_visible = show_update;
             break;
         case ACTION_EQUAL:
             count_equal += 1;
+            is_visible = show_equal;
             break;
         case ACTION_DELETED:
         case ACTION_DELETE:
             count_delete += 1;
+            is_visible = show_delete;
             break;
         case ACTION_IGNORE:
             if (dst_act == ACTION_DELETE) {
                 count_delete += 1;
+                is_visible = show_delete;
             } else {
                 count_ignore += 1;
+                is_visible = show_ignore;
             }
             break;
         case ACTION_LAST:
@@ -620,7 +643,7 @@ update_list_from_rows(void) {
             break;
         }
 
-        if (item_is_visible(row_id)) {
+        if (is_visible) {
             cecup.rows_visible[cecup.rows_visible_len] = row_id;
             cecup.rows_visible_len += 1;
         }
