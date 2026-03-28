@@ -68,11 +68,8 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkListItemFactory *factory;
-        GtkColumnViewColumn *column;
-
-        factory = gtk_signal_list_item_factory_new();
-        column = gtk_column_view_column_new(NULL, factory);
+        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+        GtkColumnViewColumn *column = gtk_column_view_column_new(NULL, factory);
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_column_checkbox), GINT_TO_POINTER(side));
@@ -83,13 +80,9 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkListItemFactory *factory;
-        GtkSorter *sorter;
-        GtkColumnViewColumn *column;
-
-        factory = gtk_signal_list_item_factory_new();
-        sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
-        column = gtk_column_view_column_new(_("Task"), factory);
+        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Task"), factory);
+        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_column_action), NULL);
@@ -105,13 +98,9 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkListItemFactory *factory;
-        GtkSorter *sorter;
-        GtkColumnViewColumn *column;
-
-        factory = gtk_signal_list_item_factory_new();
-        sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
-        column = gtk_column_view_column_new(_("Name"), factory);
+        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Name"), factory);
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_column_path), tree);
@@ -129,15 +118,10 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkListItemFactory *factory;
-        GtkSorter *sorter;
-        TextInfo *text_info;
-        GtkColumnViewColumn *column;
-
-        factory = gtk_signal_list_item_factory_new();
-        sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
-        text_info = xmalloc(SIZEOF(*text_info));
-        column = gtk_column_view_column_new(_("Size"), factory);
+        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+        TextInfo *text_info = xmalloc(SIZEOF(*text_info));
+        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Size"), factory);
 
         text_info->side = side;
         text_info->type = COLUMN_SIZE;
@@ -159,15 +143,10 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkListItemFactory *factory;
-        GtkSorter *sorter;
-        TextInfo *text_info;
-        GtkColumnViewColumn *column;
-
-        factory = gtk_signal_list_item_factory_new();
-        sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
-        text_info = xmalloc(SIZEOF(*text_info));
-        column = gtk_column_view_column_new(_("Modification Time"), factory);
+        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+        TextInfo *text_info = xmalloc(SIZEOF(*text_info));
+        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Modification Time"), factory);
 
         text_info->side = side;
         text_info->type = COLUMN_MTIME;
@@ -193,17 +172,15 @@ main_setup_tree_columns(GtkWidget *tree,
     gtk_widget_set_focusable(tree, TRUE);
 
     g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
-    {
-        GtkSorter *sorter;
 
-        sorter = gtk_column_view_get_sorter(GTK_COLUMN_VIEW(tree));
+    {
+        GtkSorter *sorter = gtk_column_view_get_sorter(GTK_COLUMN_VIEW(tree));
         g_signal_connect(sorter, "changed", G_CALLBACK(on_sort_changed), tree);
     }
 
     {
-        GtkGesture *click;
+        GtkGesture *click = gtk_gesture_click_new();
 
-        click = gtk_gesture_click_new();
         gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(click));
         gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(click),
                                                    GTK_PHASE_CAPTURE);
@@ -213,9 +190,8 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkEventController *key;
+        GtkEventController *key = gtk_event_controller_key_new();
 
-        key = gtk_event_controller_key_new();
         gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(key));
         gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(key),
                                                    GTK_PHASE_BUBBLE);
@@ -504,8 +480,10 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     vbox[L] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[L] = gtk_scrolled_window_new();
-    selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(g_object_ref(cecup.store))));
-    tree[L] = gtk_column_view_new(selection_model);
+    {
+        selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(g_object_ref(cecup.store))));
+        tree[L] = gtk_column_view_new(selection_model);
+    }
     cecup.tree[L] = tree[L];
     g_object_set_data(G_OBJECT(tree[L]), "side", GINT_TO_POINTER(L));
     main_setup_tree_columns(tree[L], COL_SRC_ACTION, COL_SRC_PATH);
@@ -516,8 +494,10 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     vbox[R] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[R] = gtk_scrolled_window_new();
-    selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(g_object_ref(cecup.store))));
-    tree[R] = gtk_column_view_new(selection_model);
+    {
+        selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(g_object_ref(cecup.store))));
+        tree[R] = gtk_column_view_new(selection_model);
+    }
     cecup.tree[R] = tree[R];
     g_object_set_data(G_OBJECT(tree[R]), "side", GINT_TO_POINTER(R));
     main_setup_tree_columns(tree[R], COL_DST_ACTION, COL_DST_PATH);
