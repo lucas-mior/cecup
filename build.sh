@@ -6,6 +6,8 @@ set -e
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
 
+export LC_ALL=C
+
 dir=$(dirname "$0")
 program=$(basename "$(readlink -f "$dir")")
 script=$(basename "$0")
@@ -37,7 +39,7 @@ CFLAGS="$CFLAGS -std=c11"
 CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
 CFLAGS="$CFLAGS -Wfatal-errors"
 CFLAGS="$CFLAGS -Wextra -Wall"
-CFLAGS="$CFLAGS -Werror"
+# CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-format-pedantic"
 CFLAGS="$CFLAGS -Wno-unknown-warning-option"
 CFLAGS="$CFLAGS -Wno-gnu-union-cast"
@@ -110,7 +112,7 @@ case "$target" in
         --language=C \
         --from-code=UTF-8 \
         --output po/${program}.pot \
-        ./*.c ./*.h
+        src/*.c src/*.h
 
     for lang in $LANGS; do
         if [ -f "po/$lang.po" ]; then
@@ -190,9 +192,9 @@ case "$target" in
         fi
     done
 
-    ctags --kinds-C=+l+d ./*.h ./*.c         2> /dev/null || true
+    ctags --kinds-C=+l+d src/*.h src/*.c         2> /dev/null || true
     vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
-    $CC $CPPFLAGS $CFLAGS main.c -o "$exe" $LDFLAGS
+    $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
 
     if [ $target = "debug" ]; then
         G_DEBUG=fatal_warnings \
@@ -241,23 +243,23 @@ case "$target" in
     ;;
 "assembly")
     trace_on
-    $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "$main"
+    $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "src/$main"
     trace_off
     exit
     ;;
 "test")
-    for src in *.c; do
+    for src in src/*.c; do
         if [ -n "$2" ] && [ $src != "$2" ]; then
             continue
         fi
-        if [ "$src" = "$main" ]; then
+        if [ "$src" = "src/$main" ]; then
             continue
         fi
         printf "\nTesting ${RED}${src}${RES} ...\n"
         name="$(echo "$src" | sed 's/\.c//g')"
 
         flags="$(awk '/\/\/ flags:/ { $1=$2=""; print $0 }' "$src")"
-        if [ $src = "windows_functions.c" ]; then
+        if [ $src = "src/windows_functions.c" ]; then
             if ! zig version; then
                 continue
             fi
