@@ -293,16 +293,16 @@ item_add(int32 src_idx, int32 dst_idx) {
 
         cecup.rows_src = xrealloc2(cecup.rows_src,
                                    old_capacity, cecup.rows_capacity,
-                                   SIZEOF(int32));
+                                   SIZEOF(*(cecup.rows_src)));
         cecup.rows_dst = xrealloc2(cecup.rows_dst,
                                    old_capacity, cecup.rows_capacity,
-                                   SIZEOF(int32));
+                                   SIZEOF(*(cecup.rows_dst)));
         cecup.rows_selected = xrealloc2(cecup.rows_selected,
                                         old_capacity, cecup.rows_capacity,
                                         SIZEOF(uint8));
         cecup.rows_visible = xrealloc2(cecup.rows_visible,
                                        old_capacity, cecup.rows_capacity,
-                                       SIZEOF(int32));
+                                       SIZEOF(*(cecup.rows_visible)));
     }
 
     index = cecup.rows_len;
