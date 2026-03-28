@@ -192,39 +192,38 @@ update_row_transfer(Message *message) {
 
 static void
 update_row_rename(Message *message) {
-    char *old_pattern;
-    int32 old_len;
-    char *new_pattern;
-    int32 new_len;
-    int32 side;
-    Traversal *tr;
-    Traversal *other_tr;
-    bool changed;
+    char *old_pattern = message->old_path;
+    int32 old_len = message->old_path_len;
+    char *new_pattern = message->new_path;
+    int32 new_len = message->new_path_len;
+    int32 side = message->side;
+    Traversal *traversal;
+    Traversal *traversal_other;
+    bool changed = false;
     int32 *matches;
     int32 n_matches;
     int32 original_nfiles;
 
-    old_pattern = message->old_path;
-    old_len = message->old_path_len;
-    new_pattern = message->new_path;
-    new_len = message->new_path_len;
-    side = message->side;
-    tr = (side == L) ? &cecup.traversal_src : &cecup.traversal_dst;
-    other_tr = (side == L) ? &cecup.traversal_dst : &cecup.traversal_src;
-    changed = false;
+    if (side == L) {
+        traversal = &cecup.traversal_src;
+        traversal_other = &cecup.traversal_dst;
+    } else {
+        traversal = &cecup.traversal_dst;
+        traversal_other = &cecup.traversal_src;
+    }
 
     if (old_pattern == NULL || (old_len == 0) || (new_pattern == NULL)) {
         return;
     }
 
     /* 1. Identify all affected indices (handling directories recursively) */
-    original_nfiles = tr->nfiles;
+    original_nfiles = traversal->nfiles;
     matches = xmalloc(original_nfiles * SIZEOF(int32));
     n_matches = 0;
 
     for (int32 idx = 0; idx < original_nfiles; idx += 1) {
-        char *path = tr->paths[idx];
-        int32 path_len = (int32)tr->paths_lens[idx];
+        char *path = traversal->paths[idx];
+        int32 path_len = (int32)traversal->paths_lens[idx];
         bool match = false;
 
         if (old_pattern[old_len - 1] == '/') {
@@ -246,8 +245,8 @@ update_row_rename(Message *message) {
     /* 2. Process renames and update row relationships */
     for (int32 i = 0; i < n_matches; i += 1) {
         int32 idx = matches[i];
-        char *path = tr->paths[idx];
-        int32 path_len = (int32)tr->paths_lens[idx];
+        char *path = traversal->paths[idx];
+        int32 path_len = (int32)traversal->paths_lens[idx];
         int32 suffix_len;
         int32 final_len;
         char *final_path;
@@ -267,7 +266,7 @@ update_row_rename(Message *message) {
         }
 
         /* Update Traversal path and hash map */
-        hash_remove_fs_map(tr->map, path, path_len);
+        hash_remove_fs_map(traversal->map, path, path_len);
 
         suffix_len = path_len - old_len;
         final_len = new_len + suffix_len;
@@ -279,12 +278,12 @@ update_row_rename(Message *message) {
         }
         final_path[final_len] = '\0';
 
-        tr->paths[idx] = final_path;
-        tr->paths_lens[idx] = (int16)final_len;
-        hash_insert_fs_map(tr->map, final_path, final_len, idx);
+        traversal->paths[idx] = final_path;
+        traversal->paths_lens[idx] = (int16)final_len;
+        hash_insert_fs_map(traversal->map, final_path, final_len, idx);
 
         /* Re-link: Find if the new path exists on the other side */
-        if ((lookup_ptr = hash_lookup_fs_map(other_tr->map, final_path, final_len))) {
+        if ((lookup_ptr = hash_lookup_fs_map(traversal_other->map, final_path, final_len))) {
             other_idx = *lookup_ptr;
         }
 
