@@ -102,6 +102,7 @@ bind_column_action(GtkSignalListItemFactory *factory,
     uint32 position;
 
     (void)factory;
+    HERE;
 
     label = gtk_list_item_get_child(list_item);
     proxy = CECUP_ITEM_PROXY(gtk_list_item_get_item(list_item));
@@ -176,6 +177,8 @@ bind_column_path(GtkSignalListItemFactory *factory,
     char class_name[32];
     char *classes[2];
     uint32 position;
+
+    HERE;
 
     (void)factory;
     tree = data;

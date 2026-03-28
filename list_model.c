@@ -193,6 +193,7 @@ cecup_list_model_update(CecupListModel *self,
         }
     }
 
+    HERE;
     g_list_model_items_changed(G_LIST_MODEL(self), 0, (guint)old_count, (guint)new_count);
     return;
 }
@@ -213,6 +214,7 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
     }
     self->proxies[self->proxies_capacity - 1] = NULL;
 
+    HERE;
     g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 0);
     return;
 }
@@ -226,6 +228,7 @@ cecup_list_model_row_changed(CecupListModel *self, int32 index) {
     /* * We don't unref here to avoid flickering. GTK calls get_item()
      * automatically after the signal, where we verify the item match.
      */
+    HERE;
     g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 1);
     return;
 }
