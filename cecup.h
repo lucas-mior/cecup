@@ -538,6 +538,19 @@ static char *problems[] = {
     RSYNC_SHOW_PRE_DIR,
 };
 
+static void work_batch_flush(MessageBatch **batch_ptr);
+static void work_batch_push(MessageBatch **batch_ptr, Message *message);
+static void work_finalize(bool preview_clean);
+static int64 work_traverse_fs(Traversal *traversal);
+static void *work_traverse_fs_thread(void *user_data);
+static void work_traverse_clean(Traversal *traversal);
+static void work_cleanup(void);
+static void __attribute__((noreturn)) work_preview_cancel_and_reset(void);
+static void * work_preview(void *user_data);
+static char * work_check_itemize_line(char *buf_output);
+static bool work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_ptr);
+static void * work_rsync(void *user_data);
+
 static void on_menu_open_item(GtkWidget *m, void *data);
 static void on_menu_copy_path(GtkWidget *m, void *data);
 static void on_menu_apply(GtkWidget *m, void *data);
@@ -559,18 +572,5 @@ static CecupMenuItem tree_menu_items[] = {
 {N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
 {N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
 };
-
-static void work_batch_flush(MessageBatch **batch_ptr);
-static void work_batch_push(MessageBatch **batch_ptr, Message *message);
-static void work_finalize(bool preview_clean);
-static int64 work_traverse_fs(Traversal *traversal);
-static void *work_traverse_fs_thread(void *user_data);
-static void work_traverse_clean(Traversal *traversal);
-static void work_cleanup(void);
-static void __attribute__((noreturn)) work_preview_cancel_and_reset(void);
-static void * work_preview(void *user_data);
-static char * work_check_itemize_line(char *buf_output);
-static bool work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_ptr);
-static void * work_rsync(void *user_data);
 
 #endif /* CECUP_H */
