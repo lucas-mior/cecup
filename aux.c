@@ -532,6 +532,26 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
         }
     }
 
+    for (uint32 bucket_idx = 0; bucket_idx < traversal->map->capacity; bucket_idx += 1) {
+        Bucket_fs_map *bucket;
+        int32 v;
+
+        bucket = &traversal->map->array[bucket_idx];
+        if ((int64)bucket->key > 0) {
+            v = bucket->value;
+            if (v < 0 || v >= traversal->nfiles) {
+                error("Consistency error: %s hash map contains invalid index %d.\n",
+                      which_traversal, v);
+                fatal(EXIT_FAILURE);
+            }
+            if (traversal->row_ids[v] == -1) {
+                error("Consistency error: %s hash map contains index %d with no row_id.\n",
+                      which_traversal, v);
+                fatal(EXIT_FAILURE);
+            }
+        }
+    }
+
     return;
 }
 
@@ -591,40 +611,6 @@ check_consistent_state(void) {
 
     CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal_src, cecup.rows_src);
     CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal_dst, cecup.rows_dst);
-
-    for (uint32 bucket_idx = 0; bucket_idx < cecup.traversal_src.map->capacity; bucket_idx += 1) {
-        Bucket_fs_map *bucket;
-        bucket = &cecup.traversal_src.map->array[bucket_idx];
-        if ((int64)bucket->key > 0) {
-            int32 v;
-            v = bucket->value;
-            if (v < 0 || v >= cecup.traversal_src.nfiles) {
-                error("Consistency error: src hash map contains invalid index %d.\n", v);
-                fatal(EXIT_FAILURE);
-            }
-            if (cecup.traversal_src.row_ids[v] == -1) {
-                error("Consistency error: src hash map contains index %d with no row_id.\n", v);
-                fatal(EXIT_FAILURE);
-            }
-        }
-    }
-
-    for (uint32 bucket_idx = 0; bucket_idx < cecup.traversal_dst.map->capacity; bucket_idx += 1) {
-        Bucket_fs_map *bucket;
-        bucket = &cecup.traversal_dst.map->array[bucket_idx];
-        if ((int64)bucket->key > 0) {
-            int32 v;
-            v = bucket->value;
-            if (v < 0 || v >= cecup.traversal_dst.nfiles) {
-                error("Consistency error: dst hash map contains invalid index %d.\n", v);
-                fatal(EXIT_FAILURE);
-            }
-            if (cecup.traversal_dst.row_ids[v] == -1) {
-                error("Consistency error: dst hash map contains index %d with no row_id.\n", v);
-                fatal(EXIT_FAILURE);
-            }
-        }
-    }
 
     g_mutex_unlock(&cecup.arena_mutex);
     return;
