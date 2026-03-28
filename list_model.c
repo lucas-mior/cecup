@@ -133,7 +133,6 @@ static gpointer
 cecup_list_model_get_item(GListModel *list, guint position) {
     CecupListModel *self = CECUP_LIST_MODEL(list);
     int32 pos = (int32)position;
-    HERE;
 
     if ((pos < 0) || (pos >= cecup.rows_visible_len)) {
         return NULL;
@@ -194,7 +193,6 @@ cecup_list_model_update(CecupListModel *self,
         }
     }
 
-    HERE;
     g_list_model_items_changed(G_LIST_MODEL(self), 0, (guint)old_count, (guint)new_count);
     return;
 }
@@ -215,7 +213,6 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
     }
     self->proxies[self->proxies_capacity - 1] = NULL;
 
-    HERE;
     g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 0);
     return;
 }
@@ -226,10 +223,15 @@ cecup_list_model_row_changed(CecupListModel *self, int32 index) {
         return;
     }
 
-    /* * We don't unref here to avoid flickering. GTK calls get_item()
-     * automatically after the signal, where we verify the item match.
+    /* * We must unref and NULL the proxy here. 
+     * This forces get_item() to create a fresh CecupItemProxy object.
+     * When GTK sees a different GObject pointer, it will trigger the bind callback.
      */
-    HERE;
+    if ((index < self->proxies_capacity) && self->proxies[index]) {
+        g_object_unref(self->proxies[index]);
+        self->proxies[index] = NULL;
+    }
+
     g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 1);
     return;
 }

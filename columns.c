@@ -191,6 +191,9 @@ bind_column_path(GtkSignalListItemFactory *factory,
 
     path = item_path_side(item, side);
 
+    PRINTLN(item->src_idx);
+    PRINTLN(item->dst_idx);
+
     if (path) {
         gtk_editable_set_text(GTK_EDITABLE(editable), path);
     } else {
