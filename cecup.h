@@ -514,8 +514,8 @@ enum RsyncCharAttribute {
 #define RSYNC_WILDCARD        "*"
 #define RSYNC_INCLUDE_DIRS    "*/"
 
-#define RSYNC_HARDLINK_NOTATION " => "
-#define RSYNC_SYMLINK_NOTATION " -> "
+#define RSYNC_HARDLINK " => "
+#define RSYNC_SYMLINK " -> "
 #define BATCH_SIZE 256
 
 static char *problems[] = {
@@ -529,8 +529,8 @@ static char *problems[] = {
     /* "|", */
     /* "?", */
     RSYNC_WILDCARD,
-    RSYNC_HARDLINK_NOTATION,
-    RSYNC_SYMLINK_NOTATION,
+    RSYNC_HARDLINK,
+    RSYNC_SYMLINK,
     RSYNC_IGNORE_PRE_FILE,
     RSYNC_IGNORE_PRE_DIR,
     RSYNC_IGNORE_INTER,

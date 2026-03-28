@@ -255,11 +255,11 @@ work_rsync_run(char *files_from_filename, bool checksum,
                 }
                 path_len = (int32)(eol - path);
                 if ((sep = memmem64(path, path_len,
-                                    RSYNC_HARDLINK_NOTATION, strlen32(RSYNC_HARDLINK_NOTATION)))) {
+                                    RSYNC_HARDLINK, strlen32(RSYNC_HARDLINK)))) {
                     *sep = '\0';
                     path_len = (int32)(sep - path);
                 } else if ((sep = memmem64(path, path_len,
-                                           RSYNC_SYMLINK_NOTATION, strlen32(RSYNC_SYMLINK_NOTATION)))) {
+                                           RSYNC_SYMLINK, strlen32(RSYNC_SYMLINK)))) {
                     *sep = '\0';
                     path_len = (int32)(sep - path);
                 }

@@ -436,10 +436,10 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                 char *notation;
 
                 if ((reason & REASON_HARDLINK)) {
-                    notation = RSYNC_HARDLINK_NOTATION;
+                    notation = RSYNC_HARDLINK;
                 }
                 else {
-                    notation = RSYNC_SYMLINK_NOTATION;
+                    notation = RSYNC_SYMLINK;
                 }
                 SNPRINTF(tip_buffer, "%s%s%s: %s", filepath, notation, link_target, reason_buf);
             } else if (ignore_pattern) {
