@@ -235,7 +235,7 @@ cecup_list_model_row_changed(CecupListModel *self, int32 index) {
     return;
 }
 
-static void
+static CecupItem *
 item_add(int32 src_idx, int32 dst_idx) {
     CecupItem *item;
 
@@ -263,6 +263,17 @@ item_add(int32 src_idx, int32 dst_idx) {
     cecup.rows_len += 1;
 
     g_mutex_unlock(&cecup.arena_mutex);
+    return item;
+}
+
+static void
+cecup_list_model_row_added(CecupListModel *self, CecupItem *item) {
+    int32 position = cecup.rows_visible_len;
+
+    cecup.rows_visible[position] = item;
+    cecup.rows_visible_len += 1;
+
+    g_list_model_items_changed(G_LIST_MODEL(self), (guint)position, 0, 1);
     return;
 }
 

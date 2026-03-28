@@ -456,7 +456,7 @@ static void save_config(void);
 static void protect_interface_from_user(bool state);
 static void log_internal(char *file, int line,
                          enum DataType type, char *format, ...);
-static void item_add(int32 src_idx, int32 dst_idx);
+static CecupItem *item_add(int32 src_idx, int32 dst_idx);
 
 #pragma clang diagnostic pop
 
