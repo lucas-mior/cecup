@@ -199,10 +199,11 @@ cecup_list_model_update(CecupListModel *self,
 
 static void
 cecup_list_model_row_removed(CecupListModel *self, int32 index) {
-    if (index < 0) {
+    if (index < 0 || index >= cecup.rows_visible_len) {
         return;
     }
 
+    /* 1. Synchronize the proxy cache */
     if ((index < self->proxies_capacity) && self->proxies[index]) {
         g_object_unref(self->proxies[index]);
         self->proxies[index] = NULL;
@@ -213,6 +214,13 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
     }
     self->proxies[self->proxies_capacity - 1] = NULL;
 
+    /* 2. Synchronize the actual data array */
+    for (int32 i = index; i < (cecup.rows_visible_len - 1); i += 1) {
+        cecup.rows_visible[i] = cecup.rows_visible[i + 1];
+    }
+    cecup.rows_visible_len -= 1;
+
+    /* 3. Signal GTK: 1 item removed at 'index' */
     g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 0);
     return;
 }
@@ -268,8 +276,25 @@ item_add(int32 src_idx, int32 dst_idx) {
 }
 
 static void
-cecup_list_model_row_added(CecupListModel *self, CecupItem *item) {
-    int32 position = cecup.rows_visible_len;
+cecup_list_model_row_added(CecupListModel *self, CecupItem *item, int32 position) {
+    if (position < 0 || position > cecup.rows_visible_len) {
+        position = cecup.rows_visible_len;
+    }
+
+    /* Shift proxies in the cache to maintain alignment with the visible rows */
+    if (self->proxies && position < self->proxies_capacity) {
+        if (self->proxies[self->proxies_capacity - 1]) {
+            g_object_unref(self->proxies[self->proxies_capacity - 1]);
+        }
+        for (int32 i = self->proxies_capacity - 1; i > position; i -= 1) {
+            self->proxies[i] = self->proxies[i - 1];
+        }
+        self->proxies[position] = NULL;
+    }
+
+    for (int32 i = cecup.rows_visible_len; i > position; i -= 1) {
+        cecup.rows_visible[i] = cecup.rows_visible[i - 1];
+    }
 
     cecup.rows_visible[position] = item;
     cecup.rows_visible_len += 1;
