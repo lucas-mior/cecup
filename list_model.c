@@ -88,9 +88,7 @@ cecup_list_model_init(CecupListModel *self) {
 
 static void
 cecup_list_model_finalize(GObject *object) {
-    CecupListModel *self;
-
-    self = CECUP_LIST_MODEL(object);
+    CecupListModel *self = CECUP_LIST_MODEL(object);
 
     if (self->proxies) {
         for (int32 i = 0; i < self->proxies_capacity; i += 1) {
