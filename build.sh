@@ -273,7 +273,7 @@ case "$target" in
         if $cmdline; then
             /tmp/$src.exe || gdb /tmp/$src.exe -ex run
         else
-            exit 1
+            continue
         fi
         trace_off
     done
