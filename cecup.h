@@ -18,6 +18,8 @@
 #if !defined(CECUP_H)
 #define CECUP_H
 
+#if !defined(__INCLUDE_LEVEL__) || (__INCLUDE_LEVEL__ >= 1)
+
 #include <gtk/gtk.h>
 #include <sys/stat.h>
 #include "generic.c"
@@ -572,5 +574,7 @@ static CecupMenuItem tree_menu_items[] = {
 {N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
 {N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
 };
+
+#endif
 
 #endif /* CECUP_H */
