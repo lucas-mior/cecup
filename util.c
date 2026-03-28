@@ -1617,6 +1617,8 @@ itoa2(char *str, long num) {
         str[j] = str[i - j - 1];
         str[i - j - 1] = temp;
     }
+    // gcc static analyzer complains about buffer overflows later
+    assert(i < 22);
     return i;
 }
 
