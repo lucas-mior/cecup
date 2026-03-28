@@ -126,10 +126,6 @@ traversal_push(Traversal *traversal, char *path, int32 path_len,
         traversal->nlinks = xrealloc2(traversal->nlinks,
                                       traversal->ncapacity,
                                       lens_type_size);
-        
-        traversal->row_ids = xrealloc2(traversal->row_ids,
-                                       traversal->ncapacity,
-                                       SIZEOF(*(traversal->row_ids)));
     }
 
     idx = traversal->nfiles;
@@ -147,7 +143,6 @@ traversal_push(Traversal *traversal, char *path, int32 path_len,
     traversal->matched_patterns[idx] = matched_pattern;
     traversal->matched_patterns_lens[idx] = (int16)matched_pattern_len;
     traversal->nlinks[idx] = 1;
-    traversal->row_ids[idx] = -1;
 
     if (traversal->map) {
         hash_insert_fs_map(traversal->map, path, path_len, idx);
