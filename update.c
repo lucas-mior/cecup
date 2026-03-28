@@ -161,12 +161,13 @@ update_row_remove(Message *message) {
                         int32 n;
 
                         n = ITOA(inode_str, (long)traversal->stats[idx].st_ino);
-                        hash_remove_inode_map(traversal->inode_map, inode_str,
-                                              n);
+                        hash_remove_inode_map(traversal->inode_map,
+                                              inode_str, n);
                     }
                 }
 
-                hash_remove_fs_map(traversal->map, traversal->paths[idx],
+                hash_remove_fs_map(traversal->map,
+                                   traversal->paths[idx],
                                    traversal->paths_lens[idx]);
                 memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
                 traversal->row_ids[idx] = -1;
@@ -298,8 +299,8 @@ update_row_transfer(Message *message) {
                 if (cecup.rows_dst[row_id] < 0) {
                     int32 *lookup;
 
-                    if ((lookup = hash_lookup_fs_map(traversal_dst->map, path,
-                                                     path_len))) {
+                    if ((lookup = hash_lookup_fs_map(traversal_dst->map,
+                                                     path, path_len))) {
                         cecup.rows_dst[row_id] = *lookup;
                     } else {
                         cecup.rows_dst[row_id] = traversal_push(
@@ -409,8 +410,8 @@ update_row_rename(Message *message) {
             other_idx = cecup.rows_src[row_id];
         }
 
-        hash_remove_fs_map(traversal->map, traversal->paths[idx],
-                           traversal->paths_lens[idx]);
+        hash_remove_fs_map(traversal->map,
+                           traversal->paths[idx], traversal->paths_lens[idx]);
         traversal->row_ids[idx] = -1;
 
         p_match
@@ -439,7 +440,8 @@ update_row_rename(Message *message) {
         merge_row_id = -1;
         {
             int32 *m_idx_ptr;
-            if ((m_idx_ptr = hash_lookup_fs_map(other_traversal->map, p_new,
+            if ((m_idx_ptr = hash_lookup_fs_map(other_traversal->map,
+                                                p_new,
                                                 new_path_len + suffix_len))) {
                 merge_row_id = other_traversal->row_ids[*m_idx_ptr];
             }
