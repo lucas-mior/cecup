@@ -228,7 +228,7 @@ static int64 util_page_size = 0;
 static void error_async_safe(char *message);
 static void fatal(int) __attribute__((noreturn));
 static void util_segv_handler(int32) __attribute__((noreturn));
-static int32 itoa2(char *, long);
+static int32 itoa2(char *, llong);
 static long atoi2(char *);
 INLINE void *memchr64(void *pointer, int32 value, int64 size);
 static int xclose(char *file, int line,
@@ -1590,7 +1590,7 @@ send_signal(char *executable, int32 signal_number) {
 #endif
 
 int32
-itoa2(char *str, long num) {
+itoa2(char *str, llong num) {
     int i = 0;
     bool negative = false;
 
