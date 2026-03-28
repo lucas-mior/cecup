@@ -336,6 +336,51 @@ update_row_rename(Message *message) {
 }
 
 static void
+update_row_ignore(Message *message) {
+    (void)message;
+
+    invalidate_preview();
+    ignore_patterns_load();
+
+    for (int32 i = 0; i < cecup.rows_len; i += 1) {
+        CecupItem *item;
+        char *path;
+        int32 path_len;
+        bool is_dir;
+        IgnorePattern *match;
+
+        item = cecup.rows[i];
+        path = item_path_get(item);
+        path_len = item_path_len_get(item);
+        is_dir = false;
+
+        if (path_len > 0) {
+            if (path[path_len - 1] == '/') {
+                is_dir = true;
+            }
+        }
+
+        match = ignore_patterns_match(path, path_len, is_dir,
+                                      cecup.ignore_patterns,
+                                      cecup.ignore_count);
+
+        if (match) {
+            if (item->src_idx >= 0) {
+                cecup.traversal_src.matched_patterns[item->src_idx] = match->str;
+                cecup.traversal_src.matched_patterns_lens[item->src_idx] = (int16)match->len;
+            }
+            if (item->dst_idx >= 0) {
+                cecup.traversal_dst.matched_patterns[item->dst_idx] = match->str;
+                cecup.traversal_dst.matched_patterns_lens[item->dst_idx] = (int16)match->len;
+            }
+        }
+    }
+
+    update_list_from_rows();
+    return;
+}
+
+static void
 update_list_from_rows(void) {
     int32 count_new;
     int32 count_hard;
@@ -503,51 +548,6 @@ update_list_from_rows(void) {
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
     PRINT_TIMINGS(cecup.rows_visible_len, t0, t1);
-    return;
-}
-
-static void
-update_row_ignore(Message *message) {
-    (void)message;
-
-    invalidate_preview();
-    ignore_patterns_load();
-
-    for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupItem *item;
-        char *path;
-        int32 path_len;
-        bool is_dir;
-        IgnorePattern *match;
-
-        item = cecup.rows[i];
-        path = item_path_get(item);
-        path_len = item_path_len_get(item);
-        is_dir = false;
-
-        if (path_len > 0) {
-            if (path[path_len - 1] == '/') {
-                is_dir = true;
-            }
-        }
-
-        match = ignore_patterns_match(path, path_len, is_dir,
-                                      cecup.ignore_patterns,
-                                      cecup.ignore_count);
-
-        if (match) {
-            if (item->src_idx >= 0) {
-                cecup.traversal_src.matched_patterns[item->src_idx] = match->str;
-                cecup.traversal_src.matched_patterns_lens[item->src_idx] = (int16)match->len;
-            }
-            if (item->dst_idx >= 0) {
-                cecup.traversal_dst.matched_patterns[item->dst_idx] = match->str;
-                cecup.traversal_dst.matched_patterns_lens[item->dst_idx] = (int16)match->len;
-            }
-        }
-    }
-
-    update_list_from_rows();
     return;
 }
 
