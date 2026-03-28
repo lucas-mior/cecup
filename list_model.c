@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined(TREE_MODEL_C)
-#define TREE_MODEL_C
+#if !defined(LIST_MODEL_C)
+#define LIST_MODEL_C
 
 #include <gtk/gtk.h>
 
@@ -24,9 +24,9 @@
 #include "util.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
-#define TESTING_tree_model 1
-#elif !defined(TESTING_tree_model)
-#define TESTING_tree_model 0
+#define TESTING_list_model 1
+#elif !defined(TESTING_list_model)
+#define TESTING_list_model 0
 #endif
 
 struct _CecupItemProxy {
@@ -267,7 +267,7 @@ item_add(int32 src_idx, int32 dst_idx) {
 }
 
 static inline void
-tree_model_functions_sink(void) {
+list_model_functions_sink(void) {
     (void)cecup_list_model_new;
     (void)cecup_list_model_update;
     (void)cecup_list_model_row_removed;
@@ -275,7 +275,7 @@ tree_model_functions_sink(void) {
     (void)cecup_item_proxy_get_item;
 }
 
-#if TESTING_tree_model
+#if TESTING_list_model
 #include "update.c"
 int
 main(void) {
@@ -283,4 +283,4 @@ main(void) {
 }
 #endif
 
-#endif /* TREE_MODEL_C */
+#endif /* LIST_MODEL_C */

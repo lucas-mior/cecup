@@ -519,7 +519,7 @@ enum RsyncCharAttribute {
 #define RSYNC_SYMLINK_NOTATION " -> "
 #define BATCH_SIZE 256
 
-char *problems[] = {
+static char *problems[] = {
     "\n",
     "\\",
     "\"",
