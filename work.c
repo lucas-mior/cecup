@@ -55,7 +55,7 @@ work_batch_flush(MessageBatch **batch_ptr) {
     if (batch->count > 0) {
         g_idle_add(update_ui_handler, batch);
     } else {
-        free(batch, sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));
+        free(batch, sizeof(MessageBatch) + (BATCH_SIZE*sizeof(Message *)));
     }
 
     *batch_ptr = NULL;
@@ -68,7 +68,7 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
 
     batch = *batch_ptr;
     if (batch == NULL) {
-        batch = xmalloc(sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));
+        batch = xmalloc(sizeof(MessageBatch) + (BATCH_SIZE*sizeof(Message *)));
         memset64(batch, 0, sizeof(MessageBatch));
         batch->type = DATA_TYPE_BATCH;
         batch->count = 0;
@@ -117,8 +117,7 @@ work_traverse_fs(Traversal *traversal) {
 
     if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
         if (cecup.stop_working == false) {
-            error(_("Error walking directory %s: %s.\n"),
-                  traversal->base_path, strerror(errno));
+            error(_("Error walking directory %s: %s.\n"), traversal->base_path, strerror(errno));
         }
         return 0;
     }
@@ -245,8 +244,7 @@ work_traverse_fs(Traversal *traversal) {
             int64 target_len;
 
             if ((target_len = readlink(ent->fts_path, target, SIZEOF(target))) < 0) {
-                LOG_ERROR("Error in readlink(%s): %s.\n",
-                          ent->fts_path, strerror(errno));
+                LOG_ERROR("Error in readlink(%s): %s.\n", ent->fts_path, strerror(errno));
             } else {
                 target[target_len] = '\0';
                 link_target = xarena_push(traversal->arena, target_len + 1);
@@ -274,9 +272,7 @@ work_traverse_fs(Traversal *traversal) {
                 }
                 traversal->nlinks[first_idx] += 1;
             } else {
-                hash_insert_inode_map(traversal->inode_map,
-                                      inode_str, n,
-                                      traversal->nfiles);
+                hash_insert_inode_map(traversal->inode_map, inode_str, n, traversal->nfiles);
             }
         }
 
@@ -285,17 +281,14 @@ work_traverse_fs(Traversal *traversal) {
         {
             IgnorePattern *pattern;
 
-            pattern = ignore_patterns_match(path, path_len,
-                                            is_dir,
-                                            cecup.ignore_patterns,
-                                            cecup.ignore_count);
+            pattern = ignore_patterns_match(path, path_len, is_dir,
+                                            cecup.ignore_patterns, cecup.ignore_count);
             if (pattern) {
                 matched_pattern = pattern->str;
                 matched_pattern_len = pattern->len;
                 if (is_dir) {
                     if (fts_set(fts_handle, ent, FTS_SKIP) < 0) {
-                        error("Error in fts_set(FTS_SKIP): %s.\n",
-                              strerror(errno));
+                        error("Error in fts_set(FTS_SKIP): %s.\n", strerror(errno));
                     }
                 }
             }
@@ -343,16 +336,16 @@ work_traverse_clean(Traversal *traversal) {
     capacity = traversal->ncapacity;
     arena_reset(traversal->arena);
 
-    free(traversal->stats, capacity * SIZEOF(*(traversal->stats)));
-    free(traversal->matched_patterns, capacity * SIZEOF(*(traversal->matched_patterns)));
-    free(traversal->link_targets, capacity * SIZEOF(*(traversal->link_targets)));
-    free(traversal->paths, capacity * SIZEOF(*(traversal->paths)));
+    free(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
+    free(traversal->matched_patterns, capacity*SIZEOF(*(traversal->matched_patterns)));
+    free(traversal->link_targets, capacity*SIZEOF(*(traversal->link_targets)));
+    free(traversal->paths, capacity*SIZEOF(*(traversal->paths)));
 
-    free(traversal->paths_lens, capacity * SIZEOF(*(traversal->paths_lens)));
-    free(traversal->link_targets_lens, capacity * SIZEOF(*(traversal->link_targets_lens)));
-    free(traversal->matched_patterns_lens, capacity * SIZEOF(*(traversal->matched_patterns_lens)));
-    free(traversal->nlinks, capacity * SIZEOF(*(traversal->nlinks)));
-    free(traversal->row_ids, capacity * SIZEOF(*(traversal->row_ids)));
+    free(traversal->paths_lens, capacity*SIZEOF(*(traversal->paths_lens)));
+    free(traversal->link_targets_lens, capacity*SIZEOF(*(traversal->link_targets_lens)));
+    free(traversal->matched_patterns_lens, capacity*SIZEOF(*(traversal->matched_patterns_lens)));
+    free(traversal->nlinks, capacity*SIZEOF(*(traversal->nlinks)));
+    free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
 
     hash_destroy_fs_map(traversal->map);
     hash_destroy_inode_map(traversal->inode_map);
@@ -374,7 +367,7 @@ work_cleanup(void) {
     work_traverse_clean(&cecup.traversal_src);
     work_traverse_clean(&cecup.traversal_dst);
 
-    free(cecup.transfers, cecup.transfers_capacity * SIZEOF(*cecup.transfers));
+    free(cecup.transfers, cecup.transfers_capacity*SIZEOF(*cecup.transfers));
     cecup.transfers = NULL;
     cecup.ntransfers = 0;
     cecup.transfers_capacity = 0;
@@ -513,7 +506,7 @@ work_preview(void *user_data) {
                     cecup.transfers_capacity *= 2;
                 }
                 cecup.transfers = xrealloc(cecup.transfers,
-                                           cecup.transfers_capacity * SIZEOF(*cecup.transfers));
+                                           cecup.transfers_capacity*SIZEOF(*cecup.transfers));
             }
             if (src_act == ACTION_HARDLINK) {
                 cecup.transfers[cecup.ntransfers] = link_target_src;
