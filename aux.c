@@ -479,6 +479,66 @@ free_message(void *data) {
 }
 
 static void
+check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
+                                char *which_traversal, char *which_rows) {
+    for (int32 idx = 0; idx < traversal->nfiles; idx += 1) {
+        int32 row_id;
+        int32 *lookup_ptr;
+        char *path;
+        int32 path_len;
+
+        row_id = traversal->row_ids[idx];
+        path = traversal->paths[idx];
+        path_len = (int32)traversal->paths_lens[idx];
+        lookup_ptr = hash_lookup_fs_map(traversal->map, path, path_len);
+
+        if (row_id != -1) {
+            if (row_id >= cecup.rows_len) {
+                error("Consistency error:"
+                      " %s.row_ids[%d] points to invalid row %d.\n",
+                      which_traversal, idx, row_id);
+                fatal(EXIT_FAILURE);
+            }
+            if (rows[row_id] != idx) {
+                error("Consistency error:"
+                      " %s.row_ids["RED"%d"RESET"] -> row_id="YELLOW"%d"RESET","
+                      " but %s["YELLOW"%d"RESET"] -> idx="RED"%d"RESET".\n",
+                      which_traversal, idx, row_id,
+                      which_rows, row_id, rows[row_id]);
+                fatal(EXIT_FAILURE);
+            }
+
+            if (lookup_ptr == NULL) {
+                error("Consistency error:"
+                      " %s index %d (path %s)"
+                      " is mapped to row but missing in hash map.\n",
+                      which_traversal, idx, path);
+                fatal(EXIT_FAILURE);
+            } else if (*lookup_ptr != idx) {
+                error("Consistency error:"
+                      " %s index %d (path %s)"
+                      " is mapped to row but mismatched in hash map.\n",
+                      which_traversal, idx, path);
+                fatal(EXIT_FAILURE);
+            }
+        } else {
+            if (lookup_ptr && (*lookup_ptr == idx)) {
+                error("Consistency error:"
+                      " %s index %d (path %s)"
+                      " has no row but exists in hash.\n",
+                      which_traversal, idx, path);
+                fatal(EXIT_FAILURE);
+            }
+        }
+    }
+
+    return;
+}
+
+#define CHECK_CONSISTENT_TRAVERSAL_ROWS(TRAVERSAl, ROWS) \
+    check_consistent_traversal_rows(TRAVERSAl, ROWS, #TRAVERSAl, #ROWS)
+
+static void
 check_consistent_state(void) {
     HERE;
     g_mutex_lock(&cecup.arena_mutex);
@@ -499,7 +559,7 @@ check_consistent_state(void) {
         if (src_idx >= 0) {
             if (src_idx >= cecup.traversal_src.nfiles) {
                 error("Consistency error:"
-                      " Row %d points to invalid index %d.\n", row_id, src_idx);
+                      " Row %d points to invalid src_idx %d.\n", row_id, src_idx);
                 fatal(EXIT_FAILURE);
             }
             if (cecup.traversal_src.row_ids[src_idx] != row_id) {
@@ -515,7 +575,7 @@ check_consistent_state(void) {
         if (dst_idx >= 0) {
             if (dst_idx >= cecup.traversal_dst.nfiles) {
                 error("Consistency error:"
-                      " Row %d points to invalid index %d.\n", row_id, dst_idx);
+                      " Row %d points to invalid dst_idx %d.\n", row_id, dst_idx);
                 fatal(EXIT_FAILURE);
             }
             if (cecup.traversal_dst.row_ids[dst_idx] != row_id) {
@@ -529,93 +589,8 @@ check_consistent_state(void) {
         }
     }
 
-    for (int32 idx = 0; idx < cecup.traversal_src.nfiles; idx += 1) {
-        int32 row_id;
-        int32 *lookup_ptr;
-        char *path;
-        int32 path_len;
-
-        row_id = cecup.traversal_src.row_ids[idx];
-        path = cecup.traversal_src.paths[idx];
-        path_len = (int32)cecup.traversal_src.paths_lens[idx];
-        lookup_ptr = hash_lookup_fs_map(cecup.traversal_src.map,
-                                        path, path_len);
-
-        if (row_id != -1) {
-            if (row_id >= cecup.rows_len) {
-                error("Consistency error:"
-                      " src_idx %d points to invalid row %d.\n", idx, row_id);
-                fatal(EXIT_FAILURE);
-            }
-            if (cecup.rows_src[row_id] != idx) {
-                error("Consistency error:"
-                      "src.row_ids["RED"%d"RESET"] -> row_id="YELLOW"%d"RESET","
-                      " but rows_src["YELLOW"%d"RESET"] -> src_idx="RED"%d"RESET".\n",
-                      idx, row_id, row_id, cecup.rows_src[row_id]);
-                fatal(EXIT_FAILURE);
-            }
-
-            if (lookup_ptr == NULL) {
-                error("Consistency error:"
-                      " src_idx %d (path %s)"
-                      " is mapped to row but missing in hash map.\n",
-                      idx, path);
-            } else if (*lookup_ptr != idx) {
-                error("Consistency error:"
-                      " src_idx %d (path %s)"
-                      " is mapped to row mismatched in hash map.\n",
-                      idx, path);
-                fatal(EXIT_FAILURE);
-            }
-        } else {
-            if (lookup_ptr && (*lookup_ptr == idx)) {
-                error("Consistency error:"
-                      " src_idx %d (path %s)"
-                      " has no row but exists in hash.\n",
-                      idx, path);
-                fatal(EXIT_FAILURE);
-            }
-        }
-    }
-
-    for (int32 idx = 0; idx < cecup.traversal_dst.nfiles; idx += 1) {
-        int32 row_id;
-        int32 *lookup_ptr;
-        char *path;
-        int32 path_len;
-
-        row_id = cecup.traversal_dst.row_ids[idx];
-        path = cecup.traversal_dst.paths[idx];
-        path_len = (int32)cecup.traversal_dst.paths_lens[idx];
-
-        if (row_id != -1) {
-            if (row_id >= cecup.rows_len) {
-                error("Consistency error: dst_idx %d points to invalid row %d.\n", idx, row_id);
-                fatal(EXIT_FAILURE);
-            }
-            if (cecup.rows_dst[row_id] != idx) {
-                error("Consistency error:"
-                      "dst.row_ids["RED"%d"RESET"] -> row_id="YELLOW"%d"RESET","
-                      " but rows_dst["YELLOW"%d"RESET"] -> dst_idx="RED"%d"RESET".\n",
-                      idx, row_id, row_id, cecup.rows_dst[row_id]);
-                fatal(EXIT_FAILURE);
-            }
-
-            lookup_ptr = hash_lookup_fs_map(cecup.traversal_dst.map, path, path_len);
-            if (lookup_ptr == NULL || *lookup_ptr != idx) {
-                error("Consistency error: dst_idx %d (path %s) is mapped to row but missing/mismatched in hash.\n",
-                      idx, path);
-                fatal(EXIT_FAILURE);
-            }
-        } else {
-            lookup_ptr = hash_lookup_fs_map(cecup.traversal_dst.map, path, path_len);
-            if (lookup_ptr != NULL && *lookup_ptr == idx) {
-                error("Consistency error: dst_idx %d (path %s) has no row but exists in hash.\n",
-                      idx, path);
-                fatal(EXIT_FAILURE);
-            }
-        }
-    }
+    CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal_src, cecup.rows_src);
+    CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal_dst, cecup.rows_dst);
 
     for (uint32 bucket_idx = 0; bucket_idx < cecup.traversal_src.map->capacity; bucket_idx += 1) {
         Bucket_fs_map *bucket;
