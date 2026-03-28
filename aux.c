@@ -255,9 +255,6 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
         bool delete_after
             = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
-        PRINTLN(path_src);
-        PRINTLN(is_hardlink);
-
         if (matched_src) {
             *action_src = ACTION_IGNORE;
             *reason |= REASON_IGNORED;
