@@ -18,11 +18,14 @@
 #if !defined(ON_C)
 #define ON_C
 
+#include <gtk/gtk.h>
+
 #include "cecup.h"
 #include "work.c"
 #include "update.c"
 #include "on.h"
 #include "on_menu.c"
+#include "on_log.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_on 1
@@ -111,114 +114,6 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
 
         menu_item->callback(tree, message);
     }
-
-    return;
-}
-
-static void
-on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
-    char *which = data;
-    GtkTextIter start;
-    GtkTextIter end;
-    char *text;
-    int32 line_num;
-    GdkClipboard *clipboard;
-
-    (void)action;
-    clipboard = gdk_display_get_clipboard(gdk_display_get_default());
-
-    if (strcmp(which, "all") == 0) {
-        gtk_text_buffer_get_bounds(cecup.log_buffer, &start, &end);
-    } else if (strcmp(which, "line") == 0) {
-        line_num = g_variant_get_int32(parameter);
-        gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &start, line_num);
-        end = start;
-
-        if (!gtk_text_iter_ends_line(&end)) {
-            gtk_text_iter_forward_to_line_end(&end);
-        }
-    } else {
-        return;
-    }
-
-    if ((text = gtk_text_buffer_get_text(cecup.log_buffer,
-                                         &start, &end, FALSE))) {
-        gdk_clipboard_set_text(clipboard, text);
-        g_free(text);
-    }
-
-    return;
-}
-
-static void
-on_log_button_press(GtkGestureClick *gesture,
-                    int32 n_press, double x, double y, void *data) {
-    GtkWidget *widget;
-    GtkWidget *parent;
-    GtkWidget *popover;
-    GMenu *menu;
-    GMenuItem *item;
-    GtkTextIter iter;
-    int32 buffer_x;
-    int32 buffer_y;
-    int32 line_num;
-    GdkRectangle rect;
-    uint32 button;
-    double translated_x;
-    double translated_y;
-
-    (void)data;
-    button = gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
-
-    if (n_press != 1) {
-        return;
-    }
-
-    if (button != GDK_BUTTON_SECONDARY) {
-        return;
-    }
-
-    widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    parent = gtk_widget_get_parent(widget);
-    gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
-
-    gtk_text_view_window_to_buffer_coords(GTK_TEXT_VIEW(widget),
-                                          GTK_TEXT_WINDOW_WIDGET,
-                                          (int32)x, (int32)y,
-                                          &buffer_x, &buffer_y);
-    gtk_text_view_get_iter_at_location(GTK_TEXT_VIEW(widget),
-                                       &iter, buffer_x, buffer_y);
-
-    line_num = gtk_text_iter_get_line(&iter);
-
-    if (!gtk_widget_translate_coordinates(widget, parent,
-                                          x, y, &translated_x, &translated_y)) {
-        error("error tranlating coords...\n");
-        return;
-    }
-
-    menu = g_menu_new();
-    g_menu_append(menu, _("📋 Copy Whole Log"), "app.copy_all");
-
-    item = g_menu_item_new(_("📝 Copy Line"), NULL);
-    g_menu_item_set_action_and_target(item, "app.copy_line", "i", line_num);
-    g_menu_append_item(menu, item);
-    g_object_unref(item);
-
-    popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
-    gtk_widget_set_parent(popover, parent);
-
-    rect.x = (int32)translated_x;
-    rect.y = (int32)translated_y;
-    rect.width = 1;
-    rect.height = 1;
-
-    gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
-    gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
-    g_signal_connect(popover, "closed", G_CALLBACK(on_popover_closed), NULL);
-    gtk_popover_popup(GTK_POPOVER(popover));
-
-    g_object_unref(menu);
 
     return;
 }
