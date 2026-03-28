@@ -40,6 +40,73 @@
 
 static void update_list_from_rows(void);
 
+static bool
+item_is_visible(CecupItem *item) {
+    enum Action src_act;
+    enum Action dst_act;
+    enum Reason reason;
+    bool show_new;
+    bool show_link;
+    bool show_update;
+    bool show_equal;
+    bool show_delete;
+    bool show_ignore;
+    bool visible;
+
+    show_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
+    show_link = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
+    show_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
+    show_equal = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_equal));
+    show_delete = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
+    show_ignore = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
+
+    item_get_actions_reasons(item, &src_act, &dst_act, &reason);
+    visible = false;
+
+    switch (src_act) {
+    case ACTION_NEW:
+        visible = show_new;
+        break;
+    case ACTION_HARDLINK:
+    case ACTION_SYMLINK:
+        visible = show_link;
+        break;
+    case ACTION_UPDATE:
+        visible = show_update;
+        break;
+    case ACTION_EQUAL:
+        visible = show_equal;
+        break;
+    case ACTION_DELETED:
+        visible = show_delete;
+        break;
+    case ACTION_IGNORE:
+        if (dst_act == ACTION_DELETE) {
+            visible = show_delete;
+        } else {
+            visible = show_ignore;
+        }
+        break;
+    default:
+        break;
+    }
+
+    if (visible) {
+        if (cecup.search_query) {
+            if (cecup.search_query[0] != '\0') {
+                char *path;
+
+                path = item_path_get(item);
+                if (strcasestr(path, cecup.search_query) == NULL) {
+                    visible = false;
+                }
+            }
+        }
+    }
+
+    return visible;
+}
+
 static void
 update_row_remove(Message *message) {
     char *pattern = message->src_path;
@@ -106,6 +173,21 @@ update_row_remove(Message *message) {
             *idx_ptr = -1;
         }
 
+        for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
+            if (cecup.rows_visible[v] == item) {
+                if (((item->src_idx == -1) && (item->dst_idx == -1)) || !item_is_visible(item)) {
+                    for (int32 k = v; k < (cecup.rows_visible_len - 1); k += 1) {
+                        cecup.rows_visible[k] = cecup.rows_visible[k + 1];
+                    }
+                    cecup.rows_visible_len -= 1;
+                    cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), v);
+                } else {
+                    cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v);
+                }
+                break;
+            }
+        }
+
         if ((item->src_idx == -1) && (item->dst_idx == -1)) {
             for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                 cecup.rows[j] = cecup.rows[j + 1];
@@ -117,8 +199,7 @@ update_row_remove(Message *message) {
     }
 
     if (changed) {
-        /* This will call cecup_list_model_update, which now clears proxies */
-        update_list_from_rows();
+        invalidate_preview();
     }
 
     return;
@@ -180,11 +261,26 @@ update_row_transfer(Message *message) {
             }
 
             changed = true;
+
+            for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
+                if (cecup.rows_visible[v] == item) {
+                    if (item_is_visible(item)) {
+                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v);
+                    } else {
+                        for (int32 k = v; k < (cecup.rows_visible_len - 1); k += 1) {
+                            cecup.rows_visible[k] = cecup.rows_visible[k + 1];
+                        }
+                        cecup.rows_visible_len -= 1;
+                        cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), v);
+                    }
+                    break;
+                }
+            }
         }
     }
 
     if (changed) {
-        update_list_from_rows();
+        invalidate_preview();
     }
 
     return;
@@ -216,7 +312,6 @@ update_row_rename(Message *message) {
         return;
     }
 
-    /* 1. Identify all affected indices (handling directories recursively) */
     original_nfiles = traversal->nfiles;
     matches = xmalloc(original_nfiles * SIZEOF(int32));
     n_matches = 0;
@@ -242,7 +337,6 @@ update_row_rename(Message *message) {
         }
     }
 
-    /* 2. Process renames and update row relationships */
     for (int32 i = 0; i < n_matches; i += 1) {
         int32 idx = matches[i];
         char *path = traversal->paths[idx];
@@ -254,7 +348,6 @@ update_row_rename(Message *message) {
         int32 other_idx = -1;
         bool linked = false;
 
-        /* Break the link in any existing CecupItem using this index */
         for (int32 j = 0; j < cecup.rows_len; j += 1) {
             CecupItem *item = cecup.rows[j];
             int32 *idx_ptr = (side == L) ? &item->src_idx : &item->dst_idx;
@@ -265,7 +358,6 @@ update_row_rename(Message *message) {
             }
         }
 
-        /* Update Traversal path and hash map */
         hash_remove_fs_map(traversal->map, path, path_len);
 
         suffix_len = path_len - old_len;
@@ -282,13 +374,11 @@ update_row_rename(Message *message) {
         traversal->paths_lens[idx] = (int16)final_len;
         hash_insert_fs_map(traversal->map, final_path, final_len, idx);
 
-        /* Re-link: Find if the new path exists on the other side */
         if ((lookup_ptr = hash_lookup_fs_map(traversal_other->map, final_path, final_len))) {
             other_idx = *lookup_ptr;
         }
 
         if (other_idx >= 0) {
-            /* Look for a row that has the other index but is currently unlinked on our side */
             for (int32 j = 0; j < cecup.rows_len; j += 1) {
                 CecupItem *item = cecup.rows[j];
                 int32 *side_idx = (side == L) ? &item->src_idx : &item->dst_idx;
@@ -314,7 +404,6 @@ update_row_rename(Message *message) {
     }
 
     if (changed) {
-        /* 3. Cleanup: Remove rows that became empty (-1, -1) */
         for (int32 i = 0; i < cecup.rows_len; ) {
             CecupItem *item = cecup.rows[i];
             if (item->src_idx == -1 && item->dst_idx == -1) {
@@ -326,11 +415,133 @@ update_row_rename(Message *message) {
                 i += 1;
             }
         }
-
         update_list_from_rows();
     }
 
     free(matches, original_nfiles * SIZEOF(int32));
+    return;
+}
+
+static void
+update_list_from_rows(void) {
+    int32 count_new;
+    int32 count_hard;
+    int32 count_update;
+    int32 count_equal;
+    int32 count_delete;
+    int32 count_ignore;
+    int64 count_selected;
+    int64 total_size_bytes;
+    int64 current_store_count;
+    char pretty_size[16];
+    char stats_text[256];
+    char button_label[64];
+    struct timespec t0;
+    struct timespec t1;
+
+    count_new = 0;
+    count_hard = 0;
+    count_update = 0;
+    count_equal = 0;
+    count_delete = 0;
+    count_ignore = 0;
+    count_selected = 0;
+    total_size_bytes = 0;
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
+    current_store_count = (int64)g_list_model_get_n_items(cecup.store);
+
+    cecup.rows_visible_len = 0;
+    for (int32 i = 0; i < cecup.rows_len; i += 1) {
+        CecupItem *item;
+        enum Action src_act;
+        enum Action dst_act;
+        enum Reason reason;
+        int64 sz;
+
+        item = cecup.rows[i];
+        if (item->selected) {
+            count_selected += 1;
+        }
+
+        item_get_actions_reasons(item, &src_act, &dst_act, &reason);
+
+        sz = item_size_side(item, L);
+        if (sz < 0) {
+            sz = 0;
+        }
+
+        switch (src_act) {
+        case ACTION_NEW:
+            count_new += 1;
+            total_size_bytes += sz;
+            break;
+        case ACTION_HARDLINK:
+        case ACTION_SYMLINK:
+            count_hard += 1;
+            total_size_bytes += sz;
+            break;
+        case ACTION_UPDATE:
+            count_update += 1;
+            total_size_bytes += sz;
+            break;
+        case ACTION_EQUAL:
+            count_equal += 1;
+            break;
+        case ACTION_DELETED:
+            count_delete += 1;
+            break;
+        case ACTION_IGNORE:
+            if (dst_act == ACTION_DELETE) {
+                count_delete += 1;
+            } else {
+                count_ignore += 1;
+            }
+            break;
+        default:
+            break;
+        }
+
+        if (item_is_visible(item)) {
+            cecup.rows_visible[cecup.rows_visible_len] = item;
+            cecup.rows_visible_len += 1;
+        }
+    }
+
+    SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_new), button_label);
+
+    SNPRINTF(button_label, "%s/%s %d", EMOJI_LINK, EMOJI_SYMLINK, count_hard);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_hard), button_label);
+
+    SNPRINTF(button_label, "%s %d", EMOJI_UPDATE, count_update);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_update), button_label);
+
+    SNPRINTF(button_label, "%s %d", EMOJI_EQUAL, count_equal);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_equal), button_label);
+
+    SNPRINTF(button_label, "%s %d", EMOJI_DELETE, count_delete);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), button_label);
+
+    SNPRINTF(button_label, "%s %d", EMOJI_IGNORE, count_ignore);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
+
+    bytes_pretty(pretty_size, total_size_bytes);
+    SNPRINTF(stats_text, _("Selected files: %lld\nTotal Transfer Size: 📦 %s"),
+             (llong)count_selected, pretty_size);
+    gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
+
+    if (cecup.rows_visible_len > 0) {
+        qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(CecupItem *),
+                cecup_item_compare);
+    }
+
+    cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
+                            (int32)current_store_count,
+                            cecup.rows_visible_len);
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
+    PRINT_TIMINGS(cecup.rows_visible_len, t0, t1);
     return;
 }
 
@@ -378,180 +589,6 @@ update_row_ignore(Message *message) {
     update_list_from_rows();
     return;
 }
-
-static void
-update_list_from_rows(void) {
-    int32 count_new;
-    int32 count_hard;
-    int32 count_update;
-    int32 count_equal;
-    int32 count_delete;
-    int32 count_ignore;
-    int64 count_selected;
-    int64 total_size_bytes;
-    int64 current_store_count;
-    char pretty_size[16];
-    char stats_text[256];
-    char button_label[64];
-    bool show_new;
-    bool show_link;
-    bool show_update;
-    bool show_equal;
-    bool show_delete;
-    bool show_ignore;
-    struct timespec t0;
-    struct timespec t1;
-
-    count_new = 0;
-    count_hard = 0;
-    count_update = 0;
-    count_equal = 0;
-    count_delete = 0;
-    count_ignore = 0;
-    count_selected = 0;
-    total_size_bytes = 0;
-
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
-
-    current_store_count = (int64)g_list_model_get_n_items(cecup.store);
-
-    show_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
-    show_link = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
-    show_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
-    show_equal = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_equal));
-    show_delete = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
-    show_ignore = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
-
-    cecup.rows_visible_len = 0;
-    for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupItem *item;
-        enum Action src_act;
-        enum Action dst_act;
-        enum Reason reason;
-        bool visible;
-        int64 sz;
-
-        item = cecup.rows[i];
-        visible = false;
-
-        if (item->selected) {
-            count_selected += 1;
-        }
-
-        item_get_actions_reasons(item, &src_act, &dst_act, &reason);
-
-        sz = item_size_side(item, L);
-        if (sz < 0) {
-            sz = 0;
-        }
-
-        switch (src_act) {
-        case ACTION_NEW:
-            visible = show_new;
-            count_new += 1;
-            total_size_bytes += sz;
-            break;
-        case ACTION_HARDLINK:
-        case ACTION_SYMLINK:
-            visible = show_link;
-            count_hard += 1;
-            total_size_bytes += sz;
-            break;
-        case ACTION_UPDATE:
-            visible = show_update;
-            count_update += 1;
-            total_size_bytes += sz;
-            break;
-        case ACTION_EQUAL:
-            visible = show_equal;
-            count_equal += 1;
-            break;
-        case ACTION_DELETED:
-            visible = show_delete;
-            count_delete += 1;
-            break;
-        case ACTION_IGNORE:
-            if (dst_act == ACTION_DELETE) {
-                visible = show_delete;
-                count_delete += 1;
-            } else {
-                visible = show_ignore;
-                count_ignore += 1;
-            }
-            break;
-        case ACTION_DELETE:
-        case ACTION_LAST:
-        default:
-            error("Invalid src_action: %u\n", src_act);
-            fatal(EXIT_FAILURE);
-        }
-
-        if (visible) {
-            if (cecup.search_query) {
-                if (cecup.search_query[0] != '\0') {
-                    char *path;
-
-                    path = item_path_get(item);
-                    if (strcasestr(path, cecup.search_query) == NULL) {
-                        visible = false;
-                    }
-                }
-            }
-        }
-
-        if (visible) {
-            cecup.rows_visible[cecup.rows_visible_len] = item;
-            cecup.rows_visible_len += 1;
-        }
-    }
-
-    SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_new), button_label);
-
-    SNPRINTF(button_label, "%s/%s %d", EMOJI_LINK, EMOJI_SYMLINK, count_hard);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_hard), button_label);
-
-    SNPRINTF(button_label, "%s %d", EMOJI_UPDATE, count_update);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_update), button_label);
-
-    SNPRINTF(button_label, "%s %d", EMOJI_EQUAL, count_equal);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_equal), button_label);
-
-    SNPRINTF(button_label, "%s %d", EMOJI_DELETE, count_delete);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), button_label);
-
-    SNPRINTF(button_label, "%s %d", EMOJI_IGNORE, count_ignore);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
-
-    bytes_pretty(pretty_size, total_size_bytes);
-    SNPRINTF(stats_text, _("Selected files: %lld\nTotal Transfer Size: 📦 %s"),
-             (llong)count_selected, pretty_size);
-    gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
-
-    if (cecup.rows_visible_len > 0) {
-        struct timespec t0_sort;
-        struct timespec t1_sort;
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t0_sort);
-
-        qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(CecupItem *),
-                cecup_item_compare);
-
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t1_sort);
-        PRINT_TIMINGS(cecup.rows_visible_len,
-                      t0_sort, t1_sort, "sorting visible rows");
-    }
-
-    cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
-                            (int32)current_store_count,
-                            cecup.rows_visible_len);
-
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
-    PRINT_TIMINGS(cecup.rows_visible_len, t0, t1);
-    return;
-}
-
-static void cecup_list_model_row_removed(CecupListModel *self, int32 index);
-static void cecup_list_model_row_changed(CecupListModel *self, int32 index);
 
 static void
 update_ui_process_message(Message *message) {
@@ -665,7 +702,7 @@ update_ui_process_message(Message *message) {
         cecup.rows_visible_len = 0;
 
         cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
-                                current_store_count, 0);
+                                (int32)current_store_count, 0);
 
         g_mutex_unlock(&cecup.arena_mutex);
 
@@ -711,7 +748,6 @@ update_progress_bar(enum DataType type, double fraction) {
     int32 index;
 
     index = 0;
-
     if (type == DATA_TYPE_PROGRESS_PREVIEW) {
         index = 3;
     }
