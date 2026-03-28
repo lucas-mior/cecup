@@ -752,9 +752,9 @@ main(int32 argc, char **argv) {
     g_object_unref(cecup.application);
     g_object_unref(cecup.store);
 
-    free(cecup.rows_src, cecup.rows_capacity*SIZEOF(int32));
-    free(cecup.rows_dst, cecup.rows_capacity*SIZEOF(int32));
-    free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(int32));
+    free(cecup.rows_src, cecup.rows_capacity*SIZEOF(*(cecup.rows_src)));
+    free(cecup.rows_dst, cecup.rows_capacity*SIZEOF(*(cecup.rows_dst)));
+    free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     free(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
 
     free(cecup.src_base, cecup.src_base_len + 1);
