@@ -27,8 +27,8 @@
 static void
 on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     char *which = data;
-    GtkTextIter start;
-    GtkTextIter end;
+    GtkTextIter text_start;
+    GtkTextIter text_end;
     char *text;
     int32 line_num;
     GdkClipboard *clipboard;
@@ -37,21 +37,21 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
 
     if (strcmp(which, "all") == 0) {
-        gtk_text_buffer_get_bounds(cecup.log_buffer, &start, &end);
+        gtk_text_buffer_get_bounds(cecup.log_buffer, &text_start, &text_end);
     } else if (strcmp(which, "line") == 0) {
         line_num = g_variant_get_int32(parameter);
-        gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &start, line_num);
-        end = start;
+        gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &text_start, line_num);
+        text_end = text_start;
 
-        if (!gtk_text_iter_ends_line(&end)) {
-            gtk_text_iter_forward_to_line_end(&end);
+        if (!gtk_text_iter_ends_line(&text_end)) {
+            gtk_text_iter_forward_to_line_end(&text_end);
         }
     } else {
         return;
     }
 
     if ((text = gtk_text_buffer_get_text(cecup.log_buffer,
-                                         &start, &end, FALSE))) {
+                                         &text_start, &text_end, FALSE))) {
         gdk_clipboard_set_text(clipboard, text);
         g_free(text);
     }
