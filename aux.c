@@ -81,7 +81,7 @@ protect_interface_from_user(bool state) {
 
 static int32
 traversal_push(Traversal *traversal, char *path, int32 path_len,
-               struct stat *st, char *link_target, int32 link_target_len,
+               struct stat *stat, char *link_target, int32 link_target_len,
                char *matched_pattern, int32 matched_pattern_len) {
     int32 idx;
 
