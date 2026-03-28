@@ -302,6 +302,7 @@ update_row_rename(Message *message) {
     IgnorePattern *pattern;
     char *matched_pattern = NULL;
     int32 matched_pattern_len = 0;
+    char *path_new;
 
     if ((message->old_path == NULL)
             || (message->new_path == NULL)
@@ -327,40 +328,30 @@ update_row_rename(Message *message) {
         matched_pattern_len = pattern->len;
     }
 
-    PRINTLN(message->side);
-    PRINTLN(traversal->base_path);
-
     if (old_path[old_path_len - 1] == '/') {
         is_dir = true;
         slash = 1;
     }
-
-    PRINTLN(is_dir);
-
-    char *path_new;
-    path_new = xarena_push(traversal->arena, new_path_len + slash + 1);
-    memcpy64(path_new, new_path, new_path_len + 1);
-
-    if (is_dir && (path_new[new_path_len] != '/')) {
-        new_path_len += 1;
-        path_new[new_path_len - 1] = '/';
-        path_new[new_path_len] = '\0';
-    }
-
-    PRINTLN(path_new);
 
     if (is_dir) {
         error("Renaming does not support dirs yet.\n");
         return;
     }
 
+    path_new = xarena_push(traversal->arena, new_path_len + slash + 1);
+    memcpy64(path_new, new_path, new_path_len + 1);
+
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         CecupItem *item = cecup.rows[i];
         char *path_match = item_path_get(item);
         int32 new_idx;
         int32 other_idx;
-        
         int32 idx;
+
+        if (strcmp(old_path, path_match) != 0) {
+            continue;
+        }
+
         if (message->side == L) {
             idx = item->src_idx;
             other_idx = item->dst_idx;
@@ -369,34 +360,54 @@ update_row_rename(Message *message) {
             other_idx = item->src_idx;
         }
 
-        if (strcmp(old_path, path_match)) {
+        if (idx < 0) {
             continue;
         }
 
-        if (!is_dir && !strcmp(old_path, path_match)) {
-            new_idx = traversal_push(traversal, new_path, new_path_len,
-                                     &traversal->stats[idx],
-                                     traversal->link_targets[idx], traversal->link_targets_lens[idx],
-                                     matched_pattern, matched_pattern_len);
-            hash_remove_fs_map(traversal->map,
-                               traversal->paths[idx],
-                               traversal->paths_lens[idx]);
-            if (message->side == L) {
-                item->src_idx = new_idx;
-            } else {
-                item->dst_idx = new_idx;
-            }
+        new_idx = traversal_push(traversal, path_new, new_path_len,
+                                 &traversal->stats[idx],
+                                 traversal->link_targets[idx], traversal->link_targets_lens[idx],
+                                 matched_pattern, matched_pattern_len);
+        
+        hash_remove_fs_map(traversal->map,
+                           traversal->paths[idx],
+                           traversal->paths_lens[idx]);
 
-            if (other_idx < 0) {
-                error("other side is empty\n");
-            } else {
-                error("adding -1, %d\n", other_idx);
-                CecupItem *new_item = item_add(-1, other_idx);
+        if (message->side == L) {
+            item->src_idx = new_idx;
+            if (other_idx >= 0) {
+                CecupItem *new_item;
+
+                item->dst_idx = -1;
+                new_item = item_add(-1, other_idx);
                 cecup_list_model_row_added(CECUP_LIST_MODEL(cecup.store), new_item);
             }
-            cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), i);
-            HERE;
+        } else {
+            item->dst_idx = new_idx;
+            if (other_idx >= 0) {
+                CecupItem *new_item;
+
+                item->src_idx = -1;
+                new_item = item_add(other_idx, -1);
+                cecup_list_model_row_added(CECUP_LIST_MODEL(cecup.store), new_item);
+            }
         }
+
+        for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
+            if (cecup.rows_visible[v] == item) {
+                if (item_is_visible(item)) {
+                    cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v);
+                } else {
+                    for (int32 k = v; k < (cecup.rows_visible_len - 1); k += 1) {
+                        cecup.rows_visible[k] = cecup.rows_visible[k + 1];
+                    }
+                    cecup.rows_visible_len -= 1;
+                    cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), v);
+                }
+                break;
+            }
+        }
+        break;
     }
 
     invalidate_preview();
