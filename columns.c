@@ -210,7 +210,7 @@ column_bind_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
 }
 
 static void
-setup_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+column_text_setup(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *label;
 
     (void)factory;
@@ -227,7 +227,7 @@ setup_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *d
 }
 
 static void
-bind_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *label;
     CecupItemProxy *proxy;
     int32 row_id;
@@ -294,8 +294,8 @@ bind_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *da
 #if TESTING_columns
 static inline void
 columns_functions_sink(void) {
-    (void)setup_text_cb;
-    (void)bind_text_cb;
+    (void)column_text_setup;
+    (void)column_text_bind;
     (void)column_bind_path;
     (void)column_setup_path;
     (void)column_setup_action;

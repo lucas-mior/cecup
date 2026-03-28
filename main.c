@@ -114,8 +114,8 @@ main_setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupCol
         text_info->type = COLUMN_SIZE;
         g_object_set_data_full(G_OBJECT(factory), "text_info", text_info, free_text_info);
 
-        g_signal_connect(factory, "setup", G_CALLBACK(setup_text_cb), NULL);
-        g_signal_connect(factory, "bind", G_CALLBACK(bind_text_cb), text_info);
+        g_signal_connect(factory, "setup", G_CALLBACK(column_text_setup), NULL);
+        g_signal_connect(factory, "bind", G_CALLBACK(column_text_bind), text_info);
 
         gtk_column_view_column_set_resizable(column, TRUE);
         gtk_column_view_column_set_sorter(column, sorter);
@@ -135,8 +135,8 @@ main_setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupCol
         text_info->type = COLUMN_MTIME;
         g_object_set_data_full(G_OBJECT(factory), "text_info", text_info, free_text_info);
 
-        g_signal_connect(factory, "setup", G_CALLBACK(setup_text_cb), NULL);
-        g_signal_connect(factory, "bind", G_CALLBACK(bind_text_cb), text_info);
+        g_signal_connect(factory, "setup", G_CALLBACK(column_text_setup), NULL);
+        g_signal_connect(factory, "bind", G_CALLBACK(column_text_bind), text_info);
 
         gtk_column_view_column_set_expand(column, TRUE);
         gtk_column_view_column_set_resizable(column, TRUE);
