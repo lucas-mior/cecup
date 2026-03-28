@@ -46,24 +46,19 @@ free_text_info(void *data) {
 static void
 main_setup_tree_columns(GtkWidget *tree,
                         enum CecupColumn col_act, enum CecupColumn col_path) {
-    GActionMap *action_map;
-    int32 side;
-
-    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
-    action_map = G_ACTION_MAP(cecup.application);
+    GActionMap *action_map = G_ACTION_MAP(cecup.application);
+    int32 side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
     if (g_action_map_lookup_action(action_map, "tree_dispatch") == NULL) {
         GSimpleAction *dispatch;
         GSimpleAction *ignore;
 
         dispatch = g_simple_action_new("tree_dispatch", G_VARIANT_TYPE_INT32);
-        g_signal_connect(dispatch, "activate",
-                         G_CALLBACK(on_menu_dispatch), NULL);
+        g_signal_connect(dispatch, "activate", G_CALLBACK(on_menu_dispatch), NULL);
         g_action_map_add_action(action_map, G_ACTION(dispatch));
 
         ignore = g_simple_action_new("ignore", G_VARIANT_TYPE_STRING);
-        g_signal_connect(ignore, "activate",
-                         G_CALLBACK(on_menu_ignore_action), NULL);
+        g_signal_connect(ignore, "activate", G_CALLBACK(on_menu_ignore_action), NULL);
         g_action_map_add_action(action_map, G_ACTION(ignore));
     }
 
@@ -71,10 +66,8 @@ main_setup_tree_columns(GtkWidget *tree,
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         GtkColumnViewColumn *column = gtk_column_view_column_new(NULL, factory);
 
-        g_signal_connect(factory, "setup",
-                         G_CALLBACK(setup_column_checkbox), GINT_TO_POINTER(side));
-        g_signal_connect(factory, "bind",
-                         G_CALLBACK(bind_column_checkbox), GINT_TO_POINTER(side));
+        g_signal_connect(factory, "setup", G_CALLBACK(setup_column_checkbox), GINT_TO_POINTER(side));
+        g_signal_connect(factory, "bind", G_CALLBACK(bind_column_checkbox), GINT_TO_POINTER(side));
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
         g_object_unref(column);
     }
@@ -84,10 +77,8 @@ main_setup_tree_columns(GtkWidget *tree,
         GtkColumnViewColumn *column = gtk_column_view_column_new(_("Task"), factory);
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
 
-        g_signal_connect(factory, "setup",
-                         G_CALLBACK(setup_column_action), NULL);
-        g_signal_connect(factory, "bind",
-                         G_CALLBACK(bind_column_action), GINT_TO_POINTER(side));
+        g_signal_connect(factory, "setup", G_CALLBACK(setup_column_action), NULL);
+        g_signal_connect(factory, "bind", G_CALLBACK(bind_column_action), GINT_TO_POINTER(side));
 
         gtk_column_view_column_set_resizable(column, TRUE);
         gtk_column_view_column_set_sorter(column, sorter);
@@ -784,7 +775,7 @@ main(int32 argc, char **argv) {
 
     cecup.rows_len = 0;
     cecup.rows_capacity = 256;
-    
+
     /* These replace the old cecup.rows allocation */
     cecup.rows_src = xmalloc(cecup.rows_capacity * SIZEOF(int32));
     cecup.rows_dst = xmalloc(cecup.rows_capacity * SIZEOF(int32));
@@ -845,7 +836,7 @@ main(int32 argc, char **argv) {
     free(cecup.rows_dst, cecup.rows_capacity * SIZEOF(int32));
     free(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
     free(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
-    
+
     free(cecup.src_base, cecup.src_base_len + 1);
     free(cecup.dst_base, cecup.dst_base_len + 1);
 
