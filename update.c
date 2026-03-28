@@ -42,7 +42,107 @@ static void update_list_from_rows(void);
 
 static void
 update_row_remove(Message *message) {
-    // implement update_row_remove
+    char *pattern;
+    int32 pattern_len;
+    int32 side;
+    bool changed;
+
+    pattern = message->src_path;
+    pattern_len = message->path_len;
+    side = message->side;
+    changed = false;
+
+    for (int32 i = 0; i < cecup.rows_len; ) {
+        CecupItem *item;
+        char *path;
+        int32 path_len;
+        bool match;
+
+        item = cecup.rows[i];
+        path = item_path_get(item);
+        path_len = item_path_len_get(item);
+        match = false;
+
+        if (pattern[pattern_len - 1] == '/') {
+            if (BEGINS_WITH(path, pattern, pattern_len)) {
+                match = true;
+            }
+        } else {
+            if (path_len == pattern_len) {
+                if (memcmp64(path, pattern, pattern_len) == 0) {
+                    match = true;
+                }
+            }
+        }
+
+        if (match == false) {
+            i += 1;
+            continue;
+        }
+
+        changed = true;
+
+        if (side == L) {
+            if (item->src_idx >= 0) {
+                Traversal *traversal;
+
+                traversal = &cecup.traversal_src;
+                if (traversal->inode_map) {
+                    if (S_ISREG(traversal->stats[item->src_idx].st_mode)) {
+                        if (traversal->stats[item->src_idx].st_nlink > 1) {
+                            char inode_str[64];
+                            int32 n;
+
+                            n = itoa2(inode_str, (long)traversal->stats[item->src_idx].st_ino);
+                            hash_remove_inode_map(traversal->inode_map, inode_str, n);
+                        }
+                    }
+                }
+
+                hash_remove_fs_map(traversal->map, traversal->paths[item->src_idx],
+                                   traversal->paths_lens[item->src_idx]);
+                memset64(&traversal->stats[item->src_idx], 0, SIZEOF(struct stat));
+                item->src_idx = -1;
+            }
+        } else {
+            if (item->dst_idx >= 0) {
+                Traversal *traversal;
+
+                traversal = &cecup.traversal_dst;
+                if (traversal->inode_map) {
+                    if (S_ISREG(traversal->stats[item->dst_idx].st_mode)) {
+                        if (traversal->stats[item->dst_idx].st_nlink > 1) {
+                            char inode_str[64];
+                            int32 n;
+
+                            n = itoa2(inode_str, (long)traversal->stats[item->dst_idx].st_ino);
+                            hash_remove_inode_map(traversal->inode_map, inode_str, n);
+                        }
+                    }
+                }
+
+                hash_remove_fs_map(traversal->map, traversal->paths[item->dst_idx],
+                                   traversal->paths_lens[item->dst_idx]);
+                memset64(&traversal->stats[item->dst_idx], 0, SIZEOF(struct stat));
+                item->dst_idx = -1;
+            }
+        }
+
+        if ((item->src_idx == -1) && (item->dst_idx == -1)) {
+            for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
+                cecup.rows[j] = cecup.rows[j + 1];
+            }
+            cecup.rows_len -= 1;
+        } else {
+            i += 1;
+        }
+    }
+
+    if (changed) {
+        update_list_from_rows();
+    }
+
+    return;
 }
 
 static void
