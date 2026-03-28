@@ -360,8 +360,8 @@ update_row_rename(Message *message) {
 
     for (int32 i = 0; i < cecup.rows_len;) {
         int32 row_id;
-        char *p_old;
-        char *p_new;
+        char *path_old;
+        char *path_new;
         int32 idx;
         int32 other_idx;
         int32 n_idx;
@@ -372,15 +372,15 @@ update_row_rename(Message *message) {
         bool is_match;
 
         row_id = i;
-        p_old = item_path_side(row_id, side);
+        path_old = item_path_side(row_id, side);
         is_match = false;
 
-        if (p_old) {
+        if (path_old) {
             if (is_dir) {
-                if (BEGINS_WITH(p_old, old_path, old_path_len)) {
+                if (BEGINS_WITH(path_old, old_path, old_path_len)) {
                     is_match = true;
                 }
-            } else if (strcmp(p_old, old_path) == 0) {
+            } else if (strcmp(path_old, old_path) == 0) {
                 is_match = true;
             }
         }
@@ -393,9 +393,9 @@ update_row_rename(Message *message) {
         changed = true;
         sub_len = item_path_len_side(row_id, side);
         suffix_len = sub_len - old_path_len;
-        p_new = xarena_push(traversal->arena, new_path_len + suffix_len + 1);
-        memcpy64(p_new, new_path, new_path_len);
-        memcpy64(p_new + new_path_len, p_old + old_path_len, suffix_len + 1);
+        path_new = xarena_push(traversal->arena, new_path_len + suffix_len + 1);
+        memcpy64(path_new, new_path, new_path_len);
+        memcpy64(path_new + new_path_len, path_old + old_path_len, suffix_len + 1);
 
         if (side == L) {
             idx = cecup.rows_src[row_id];
@@ -408,7 +408,7 @@ update_row_rename(Message *message) {
         hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
         traversal->row_ids[idx] = -1;
 
-        p_match = ignore_patterns_match(p_new, new_path_len + suffix_len,
+        p_match = ignore_patterns_match(path_new, new_path_len + suffix_len,
                                         S_ISDIR(traversal->stats[idx].st_mode),
                                         cecup.ignore_patterns, cecup.ignore_count);
 
@@ -425,7 +425,7 @@ update_row_rename(Message *message) {
             }
 
             n_idx = traversal_push(traversal, &traversal->stats[idx],
-                                   p_new, new_path_len + suffix_len,
+                                   path_new, new_path_len + suffix_len,
                                    traversal->link_targets[idx],
                                    traversal->link_targets_lens[idx], p_match_str, p_match_len);
         }
@@ -434,7 +434,7 @@ update_row_rename(Message *message) {
         {
             int32 *m_idx_ptr;
             if ((m_idx_ptr = hash_lookup_fs_map(other_traversal->map,
-                                                p_new,
+                                                path_new,
                                                 new_path_len + suffix_len))) {
                 merge_row_id = other_traversal->row_ids[*m_idx_ptr];
             }
