@@ -36,7 +36,6 @@ CPPFLAGS="$CPPFLAGS -DGETTEXT_PACKAGE=\"$program\""
 CPPFLAGS="$CPPFLAGS -DLOCALEDIR=\"$PREFIX/share/locale\""
 
 CFLAGS="$CFLAGS -std=c11"
-CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
 CFLAGS="$CFLAGS -Wfatal-errors"
 CFLAGS="$CFLAGS -Wextra -Wall"
 # CFLAGS="$CFLAGS -Werror"
