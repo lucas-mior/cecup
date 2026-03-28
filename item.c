@@ -169,8 +169,8 @@ item_link_target_len_side(int32 row_id, int32 side) {
 }
 
 static void
-item_get_actions_reasons(int32 row_id, enum Action *action_src,
-                         enum Action *action_dst, enum Reason *reason) {
+item_get_actions_reasons(int32 row_id,
+                         enum Action *action_src, enum Action *action_dst, enum Reason *reason) {
     int32 src_idx;
     int32 dst_idx;
     bool delete_ignored;
@@ -185,8 +185,7 @@ item_get_actions_reasons(int32 row_id, enum Action *action_src,
 
     if ((cecup.traversal_src.stats == NULL)
          || (cecup.traversal_dst.stats == NULL)) {
-        error("Function %s called while the traversal stats array is null.",
-              __func__);
+        error("Function %s called while the traversal stats array is null.", __func__);
         error("This probably means that there is some race condition.\n");
         error("Or another bug.\n");
         fatal(EXIT_FAILURE);
