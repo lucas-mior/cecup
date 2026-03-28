@@ -126,13 +126,9 @@ update_row_remove(Message *message) {
 
 static void
 update_row_transfer(Message *message) {
-    char *pattern;
-    int32 pattern_len;
-    bool changed;
-
-    pattern = message->src_path;
-    pattern_len = message->path_len;
-    changed = false;
+    char *pattern = message->src_path;
+    int32 pattern_len = message->path_len;
+    bool changed = false;
 
     if (pattern == NULL || pattern_len == 0) {
         return;
