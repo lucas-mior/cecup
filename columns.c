@@ -91,8 +91,8 @@ bind_column_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, vo
     CecupItemProxy *proxy;
     int32 row_id;
     int32 side;
-    enum Action src_act;
-    enum Action dst_act;
+    enum Action action_src;
+    enum Action action_dst;
     enum Reason reason;
     enum Action action;
     char class_name[32];
@@ -107,12 +107,12 @@ bind_column_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, vo
     side = GPOINTER_TO_INT(data);
     position = gtk_list_item_get_position(list_item);
 
-    item_get_actions_reasons(row_id, &src_act, &dst_act, &reason);
+    item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
     if (side == L) {
-        action = src_act;
+        action = action_src;
     } else {
-        action = dst_act;
+        action = action_dst;
     }
 
     gtk_label_set_text(GTK_LABEL(label), action_emojis[action]);
@@ -164,8 +164,8 @@ bind_column_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
     GtkWidget *tree;
     int32 side;
     char *path;
-    enum Action src_act;
-    enum Action dst_act;
+    enum Action action_src;
+    enum Action action_dst;
     enum Reason reason;
     enum Action action;
     char class_name[32];
@@ -189,12 +189,12 @@ bind_column_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
         gtk_editable_set_text(GTK_EDITABLE(editable), "");
     }
 
-    item_get_actions_reasons(row_id, &src_act, &dst_act, &reason);
+    item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
     if (side == L) {
-        action = src_act;
+        action = action_src;
     } else {
-        action = dst_act;
+        action = action_dst;
     }
 
     SNPRINTF(class_name, "cell-color-%u", action);
@@ -214,8 +214,8 @@ bind_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *da
     GtkWidget *label;
     CecupItemProxy *proxy;
     int32 row_id;
-    enum Action src_act;
-    enum Action dst_act;
+    enum Action action_src;
+    enum Action action_dst;
     enum Reason reason;
     enum Action action;
     int64 size;
@@ -234,7 +234,7 @@ bind_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *da
     row_id = cecup_item_proxy_get_index(proxy);
     position = gtk_list_item_get_position(list_item);
 
-    item_get_actions_reasons(row_id, &src_act, &dst_act, &reason);
+    item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
     size = item_size_side(row_id, text_info->side);
     mtime = item_mtime_side(row_id, text_info->side);
@@ -257,9 +257,9 @@ bind_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *da
     gtk_label_set_text(GTK_LABEL(label), text_buf);
 
     if (text_info->side == L) {
-        action = src_act;
+        action = action_src;
     } else {
-        action = dst_act;
+        action = action_dst;
     }
 
     SNPRINTF(class_name, "cell-color-%u", action);
