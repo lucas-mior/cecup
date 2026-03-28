@@ -78,6 +78,7 @@ item_is_visible(CecupItem *item) {
         visible = show_equal;
         break;
     case ACTION_DELETED:
+    case ACTION_DELETE:
         visible = show_delete;
         break;
     case ACTION_IGNORE:
@@ -87,6 +88,7 @@ item_is_visible(CecupItem *item) {
             visible = show_ignore;
         }
         break;
+    case ACTION_LAST:
     default:
         break;
     }
@@ -489,6 +491,7 @@ update_list_from_rows(void) {
             count_equal += 1;
             break;
         case ACTION_DELETED:
+        case ACTION_DELETE:
             count_delete += 1;
             break;
         case ACTION_IGNORE:
@@ -498,6 +501,7 @@ update_list_from_rows(void) {
                 count_ignore += 1;
             }
             break;
+        case ACTION_LAST:
         default:
             break;
         }
