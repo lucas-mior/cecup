@@ -825,8 +825,6 @@ work_rsync_run(char *files_from_filename, bool checksum,
                     path_len = (int32)(sep - path);
                 }
 
-                PRINTLN(path);
-
                 if ((path_len != 2) || memcmp64(path, "./", 2)) {
                     Message *msg_update = xmalloc(SIZEOF(*msg_update));
                     memset64(msg_update, 0, SIZEOF(*msg_update));
