@@ -257,7 +257,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     (void)user_data;
 
-{
+    {
         static char *base_css[] = {
             "columnview row { min-height: 0px; }",
             "columnview cell { padding: 0px; }",
