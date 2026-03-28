@@ -88,8 +88,8 @@ on_tree_button_press(GtkGestureClick *gesture,
         GMenu *menu;
         GtkWidget *popover;
         int32 row_id;
-        char *filepath;
-        char *other_path;
+        char *filepath = NULL;
+        char *other_path = NULL;
         GdkRectangle rect;
         bool is_busy;
         Message *message;
@@ -164,7 +164,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                     char label[MAX_PATH_LENGTH];
                     char directory[MAX_PATH_LENGTH];
                     char pattern[MAX_PATH_LENGTH];
-                    char path_copy[MAX_PATH_LENGTH];
+                    char path_copy[MAX_PATH_LENGTH] = {0};
                     bool is_dir = false;
 
                     path_len = item_path_len_side(row_id, side);
