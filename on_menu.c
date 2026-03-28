@@ -97,11 +97,11 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
 }
 
 static void
-on_menu_apply(GtkWidget *m, void *data) {
+on_menu_apply(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
 
-    (void)m;
+    (void)widget;
 
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
@@ -178,13 +178,13 @@ on_menu_rename(GtkWidget *tree, void *data) {
 }
 
 static void
-on_menu_open_item(GtkWidget *m, void *data) {
+on_menu_open_item(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
     char *variant;
 
-    if (m) {
-        variant = g_object_get_data(G_OBJECT(m), "variant");
+    if (widget) {
+        variant = g_object_get_data(G_OBJECT(widget), "variant");
     } else {
         variant = NULL;
     }
@@ -229,7 +229,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
 }
 
 static void
-on_menu_copy_path(GtkWidget *m, void *data) {
+on_menu_copy_path(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
     char *buffer;
@@ -257,7 +257,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
         int32 path_len;
         char path_full[PATH_MAX];
         char *path;
-        char *variant = g_object_get_data(G_OBJECT(m), "variant");
+        char *variant = g_object_get_data(G_OBJECT(widget), "variant");
 
         if (variant && !strcmp(variant, "absolute")) {
             char path_relative[MAX_PATH_LENGTH];
@@ -319,13 +319,13 @@ on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
 }
 
 static void
-on_menu_delete(GtkWidget *m, void *data) {
+on_menu_delete(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
     GtkWidget *dialog;
     int32 count;
 
-    (void)m;
+    (void)widget;
 
     tasks = get_target_tasks(message->side, message->src_path, ACTION_DELETE);
 
@@ -349,13 +349,13 @@ on_menu_delete(GtkWidget *m, void *data) {
 }
 
 static void
-on_menu_diff(GtkWidget *m, void *data) {
+on_menu_diff(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
     char *diff_tool;
     char *term_cmd;
 
-    (void)m;
+    (void)widget;
     diff_tool = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry));
     term_cmd = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry));
 
