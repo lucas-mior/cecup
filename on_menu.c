@@ -22,8 +22,8 @@
 
 #include "cecup.h"
 #include "util.c"
-#include "on.h"
-#include "work.h"
+#include "aux.c"
+#include "work.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_on_menu 1
@@ -411,8 +411,6 @@ on_menu_functions_sink(void) {
 /* #endif */
 
 #if TESTING_on_menu
-
-#include "on.c"
 
 int
 main(void) {

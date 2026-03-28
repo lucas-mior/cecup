@@ -34,7 +34,6 @@
 #include "util.c"
 #include "update.c"
 #include "ignore_patterns.c"
-#include "work.h"
 #include "work_rsync.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)

@@ -19,7 +19,6 @@
 #define WORK_RSYNC
 
 #include "cecup.h"
-#include "work.h"
 
 static char *
 work_check_itemize_line(char *buf_output) {
