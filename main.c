@@ -65,8 +65,8 @@ main_setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupCol
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         GtkColumnViewColumn *column = gtk_column_view_column_new(NULL, factory);
 
-        g_signal_connect(factory, "setup", G_CALLBACK(setup_column_checkbox), GINT_TO_POINTER(side));
-        g_signal_connect(factory, "bind", G_CALLBACK(bind_column_checkbox), GINT_TO_POINTER(side));
+        g_signal_connect(factory, "setup", G_CALLBACK(column_setup_checkbox), GINT_TO_POINTER(side));
+        g_signal_connect(factory, "bind", G_CALLBACK(column_bind_checkbox), GINT_TO_POINTER(side));
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
         g_object_unref(column);
     }
@@ -76,8 +76,8 @@ main_setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupCol
         GtkColumnViewColumn *column = gtk_column_view_column_new(_("Task"), factory);
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
 
-        g_signal_connect(factory, "setup", G_CALLBACK(setup_column_action), NULL);
-        g_signal_connect(factory, "bind", G_CALLBACK(bind_column_action), GINT_TO_POINTER(side));
+        g_signal_connect(factory, "setup", G_CALLBACK(column_setup_action), NULL);
+        g_signal_connect(factory, "bind", G_CALLBACK(column_bind_action), GINT_TO_POINTER(side));
 
         gtk_column_view_column_set_resizable(column, TRUE);
         gtk_column_view_column_set_sorter(column, sorter);
@@ -92,8 +92,8 @@ main_setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupCol
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
         GtkColumnViewColumn *column = gtk_column_view_column_new(_("Name"), factory);
 
-        g_signal_connect(factory, "setup", G_CALLBACK(setup_column_path), tree);
-        g_signal_connect(factory, "bind", G_CALLBACK(bind_column_path), tree);
+        g_signal_connect(factory, "setup", G_CALLBACK(column_setup_path), tree);
+        g_signal_connect(factory, "bind", G_CALLBACK(column_bind_path), tree);
 
         gtk_column_view_column_set_resizable(column, TRUE);
         gtk_column_view_column_set_fixed_width(column, 500);

@@ -30,7 +30,7 @@
 #endif
 
 static void
-setup_column_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+column_setup_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *check;
 
     (void)factory;
@@ -46,7 +46,7 @@ setup_column_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item,
 }
 
 static void
-bind_column_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+column_bind_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *check;
     CecupItemProxy *proxy;
     int32 row_id;
@@ -69,7 +69,7 @@ bind_column_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, 
 }
 
 static void
-setup_column_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+column_setup_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *label;
 
     (void)factory;
@@ -86,7 +86,7 @@ setup_column_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, v
 }
 
 static void
-bind_column_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+column_bind_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *label;
     CecupItemProxy *proxy;
     int32 row_id;
@@ -130,7 +130,7 @@ bind_column_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, vo
 }
 
 static void
-setup_column_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+column_setup_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *editable;
     GtkWidget *tree;
     GtkGesture *click;
@@ -157,7 +157,7 @@ setup_column_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, voi
 }
 
 static void
-bind_column_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+column_bind_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *editable;
     CecupItemProxy *proxy;
     int32 row_id;
@@ -296,12 +296,12 @@ static inline void
 columns_functions_sink(void) {
     (void)setup_text_cb;
     (void)bind_text_cb;
-    (void)bind_column_path;
-    (void)setup_column_path;
-    (void)setup_column_action;
-    (void)bind_column_action;
-    (void)setup_column_checkbox;
-    (void)bind_column_checkbox;
+    (void)column_bind_path;
+    (void)column_setup_path;
+    (void)column_setup_action;
+    (void)column_bind_action;
+    (void)column_setup_checkbox;
+    (void)column_bind_checkbox;
     return;
 }
 
