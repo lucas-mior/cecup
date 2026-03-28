@@ -510,4 +510,4 @@ work_rsync(void *user_data) {
     return NULL;
 }
 
-#endif
+#endif /* WORK_RSYNC_C */

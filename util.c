@@ -2512,4 +2512,4 @@ main(int argc, char **argv) {
 
 #endif
 
-#endif
+#endif /* UTIL_C */

@@ -819,4 +819,4 @@ main(void) {
 }
 #endif
 
-#endif
+#endif /* ON_C */

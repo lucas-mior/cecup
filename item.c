@@ -494,4 +494,4 @@ cecup_item_compare(const void *a, const void *b) {
     return (int32)result;
 }
 
-#endif
+#endif /* ITEM_C */

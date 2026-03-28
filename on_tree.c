@@ -478,4 +478,4 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     return FALSE;
 }
 
-#endif
+#endif /* ON_TREE */
