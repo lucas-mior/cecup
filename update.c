@@ -180,14 +180,28 @@ update_row_remove(Message *message) {
 
             hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
             memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
+            traversal->row_ids[idx] = -1;
             *idx_ptr = -1;
         }
 
         if ((cecup.rows_src[row_id] == -1) && (cecup.rows_dst[row_id] == -1)) {
             for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
+                int32 s_idx;
+                int32 d_idx;
+
                 cecup.rows_src[j] = cecup.rows_src[j + 1];
                 cecup.rows_dst[j] = cecup.rows_dst[j + 1];
                 cecup.rows_selected[j] = cecup.rows_selected[j + 1];
+
+                s_idx = cecup.rows_src[j];
+                d_idx = cecup.rows_dst[j];
+
+                if (s_idx >= 0) {
+                    cecup.traversal_src.row_ids[s_idx] = j;
+                }
+                if (d_idx >= 0) {
+                    cecup.traversal_dst.row_ids[d_idx] = j;
+                }
             }
             cecup.rows_len -= 1;
         } else {
@@ -258,14 +272,15 @@ update_row_transfer(Message *message) {
                     cecup.rows_dst[row_id] = *lookup;
                 } else {
                     cecup.rows_dst[row_id] = traversal_push(traversal_dst,
-                                                   traversal_src->paths[s_idx],
-                                                   traversal_src->paths_lens[s_idx],
-                                                   &traversal_src->stats[s_idx],
-                                                   traversal_src->link_targets[s_idx],
-                                                   traversal_src->link_targets_lens[s_idx],
-                                                   traversal_src->matched_patterns[s_idx],
-                                                   traversal_src->matched_patterns_lens[s_idx]);
+                                                           traversal_src->paths[s_idx],
+                                                           traversal_src->paths_lens[s_idx],
+                                                           &traversal_src->stats[s_idx],
+                                                           traversal_src->link_targets[s_idx],
+                                                           traversal_src->link_targets_lens[s_idx],
+                                                           traversal_src->matched_patterns[s_idx],
+                                                           traversal_src->matched_patterns_lens[s_idx]);
                 }
+                traversal_dst->row_ids[cecup.rows_dst[row_id]] = row_id;
             } else {
                 memcpy64(&traversal_dst->stats[cecup.rows_dst[row_id]],
                          &traversal_src->stats[s_idx],
@@ -350,6 +365,7 @@ update_row_rename(Message *message) {
         other_idx = (side == L) ? cecup.rows_dst[row_id] : cecup.rows_src[row_id];
 
         hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
+        traversal->row_ids[idx] = -1;
 
         p_match = ignore_patterns_match(p_new, new_path_len + suffix_len,
                                         S_ISDIR(traversal->stats[idx].st_mode),
@@ -373,15 +389,29 @@ update_row_rename(Message *message) {
 
         if (merge_row_id >= 0) {
             if (side == L) { cecup.rows_src[merge_row_id] = n_idx; } else { cecup.rows_dst[merge_row_id] = n_idx; }
+            traversal->row_ids[n_idx] = merge_row_id;
 
             if (other_idx >= 0) {
                 if (side == L) { cecup.rows_src[row_id] = -1; } else { cecup.rows_dst[row_id] = -1; }
                 i += 1;
             } else {
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
+                    int32 s_idx;
+                    int32 d_idx;
+
                     cecup.rows_src[j] = cecup.rows_src[j + 1];
                     cecup.rows_dst[j] = cecup.rows_dst[j + 1];
                     cecup.rows_selected[j] = cecup.rows_selected[j + 1];
+
+                    s_idx = cecup.rows_src[j];
+                    d_idx = cecup.rows_dst[j];
+
+                    if (s_idx >= 0) {
+                        cecup.traversal_src.row_ids[s_idx] = j;
+                    }
+                    if (d_idx >= 0) {
+                        cecup.traversal_dst.row_ids[d_idx] = j;
+                    }
                 }
                 cecup.rows_len -= 1;
             }
@@ -390,14 +420,17 @@ update_row_rename(Message *message) {
                 if (side == L) {
                     cecup.rows_src[row_id] = n_idx;
                     cecup.rows_dst[row_id] = -1;
+                    cecup.traversal_src.row_ids[n_idx] = row_id;
                     item_add(-1, other_idx);
                 } else {
                     cecup.rows_dst[row_id] = n_idx;
                     cecup.rows_src[row_id] = -1;
+                    cecup.traversal_dst.row_ids[n_idx] = row_id;
                     item_add(other_idx, -1);
                 }
             } else {
                 if (side == L) { cecup.rows_src[row_id] = n_idx; } else { cecup.rows_dst[row_id] = n_idx; }
+                traversal->row_ids[n_idx] = row_id;
             }
             i += 1;
         }
