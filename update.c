@@ -69,8 +69,7 @@ update_row_remove(Message *message) {
         int32 row_id;
         int32 *side_ptr;
 
-        if ((idx_ptr = hash_lookup_fs_map(traversal->map,
-                                          pattern, pattern_len)) == NULL) {
+        if ((idx_ptr = hash_lookup_fs_map(traversal->map, pattern, pattern_len)) == NULL) {
             return;
         }
 
@@ -96,8 +95,8 @@ update_row_remove(Message *message) {
             }
         }
 
-        hash_remove_fs_map(traversal->map, traversal->paths[*idx_ptr],
-                           traversal->paths_lens[*idx_ptr]);
+        hash_remove_fs_map(traversal->map,
+                           traversal->paths[*idx_ptr], traversal->paths_lens[*idx_ptr]);
         memset64(&traversal->stats[*idx_ptr], 0, SIZEOF(struct stat));
         traversal->row_ids[*idx_ptr] = -1;
         *side_ptr = -1;
@@ -161,14 +160,12 @@ update_row_remove(Message *message) {
                         int32 n;
 
                         n = ITOA(inode_str, (long)traversal->stats[idx].st_ino);
-                        hash_remove_inode_map(traversal->inode_map,
-                                              inode_str, n);
+                        hash_remove_inode_map(traversal->inode_map, inode_str, n);
                     }
                 }
 
                 hash_remove_fs_map(traversal->map,
-                                   traversal->paths[idx],
-                                   traversal->paths_lens[idx]);
+                                   traversal->paths[idx], traversal->paths_lens[idx]);
                 memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
                 traversal->row_ids[idx] = -1;
                 *idx_ptr = -1;
@@ -246,8 +243,7 @@ update_row_transfer(Message *message) {
                 if (cecup.rows_dst[row_id] < 0) {
                     int32 *lookup;
 
-                    if ((lookup = hash_lookup_fs_map(traversal_dst->map,
-                                                     pattern, pattern_len))) {
+                    if ((lookup = hash_lookup_fs_map(traversal_dst->map, pattern, pattern_len))) {
                         cecup.rows_dst[row_id] = *lookup;
                     } else {
                         cecup.rows_dst[row_id] = traversal_push(
@@ -299,8 +295,7 @@ update_row_transfer(Message *message) {
                 if (cecup.rows_dst[row_id] < 0) {
                     int32 *lookup;
 
-                    if ((lookup = hash_lookup_fs_map(traversal_dst->map,
-                                                     path, path_len))) {
+                    if ((lookup = hash_lookup_fs_map(traversal_dst->map, path, path_len))) {
                         cecup.rows_dst[row_id] = *lookup;
                     } else {
                         cecup.rows_dst[row_id] = traversal_push(
@@ -410,14 +405,12 @@ update_row_rename(Message *message) {
             other_idx = cecup.rows_src[row_id];
         }
 
-        hash_remove_fs_map(traversal->map,
-                           traversal->paths[idx], traversal->paths_lens[idx]);
+        hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
         traversal->row_ids[idx] = -1;
 
-        p_match
-            = ignore_patterns_match(p_new, new_path_len + suffix_len,
-                                    S_ISDIR(traversal->stats[idx].st_mode),
-                                    cecup.ignore_patterns, cecup.ignore_count);
+        p_match = ignore_patterns_match(p_new, new_path_len + suffix_len,
+                                        S_ISDIR(traversal->stats[idx].st_mode),
+                                        cecup.ignore_patterns, cecup.ignore_count);
 
         {
             char *p_match_str;
@@ -431,11 +424,10 @@ update_row_rename(Message *message) {
                 p_match_len = 0;
             }
 
-            n_idx = traversal_push(
-                traversal, &traversal->stats[idx],
-                p_new, new_path_len + suffix_len,
-                traversal->link_targets[idx],
-                traversal->link_targets_lens[idx], p_match_str, p_match_len);
+            n_idx = traversal_push(traversal, &traversal->stats[idx],
+                                   p_new, new_path_len + suffix_len,
+                                   traversal->link_targets[idx],
+                                   traversal->link_targets_lens[idx], p_match_str, p_match_len);
         }
 
         merge_row_id = -1;
