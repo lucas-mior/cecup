@@ -494,8 +494,7 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
 
         if (row_id != -1) {
             if (row_id >= cecup.rows_len) {
-                error("Consistency error:"
-                      " %s.row_ids[%d] points to invalid row %d.\n",
+                error("Consistency error: %s.row_ids[%d] points to invalid row %d.\n",
                       which_traversal, idx, row_id);
                 fatal(EXIT_FAILURE);
             }
@@ -510,22 +509,19 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
 
             if (lookup_ptr == NULL) {
                 error("Consistency error:"
-                      " %s index %d (path %s)"
-                      " is mapped to row but missing in hash map.\n",
+                      " %s index %d (path %s) is mapped to row but missing in hash map.\n",
                       which_traversal, idx, path);
                 fatal(EXIT_FAILURE);
             } else if (*lookup_ptr != idx) {
                 error("Consistency error:"
-                      " %s index %d (path %s)"
-                      " is mapped to row but mismatched in hash map.\n",
+                      " %s index %d (path %s) is mapped to row but mismatched in hash map.\n",
                       which_traversal, idx, path);
                 fatal(EXIT_FAILURE);
             }
         } else {
             if (lookup_ptr && (*lookup_ptr == idx)) {
                 error("Consistency error:"
-                      " %s index %d (path %s)"
-                      " has no row but exists in hash.\n",
+                      " %s index %d (path %s) has no row but exists in hash.\n",
                       which_traversal, idx, path);
                 fatal(EXIT_FAILURE);
             }
@@ -568,15 +564,13 @@ check_consistent_state(void) {
         int32 dst_idx = cecup.rows_dst[row_id];
 
         if ((src_idx == -1) && (dst_idx == -1)) {
-            error("Consistency error:"
-                  " Row %d has no index for either side.\n", row_id);
+            error("Consistency error: Row %d has no index for either side.\n", row_id);
             fatal(EXIT_FAILURE);
         }
 
         if (src_idx >= 0) {
             if (src_idx >= cecup.traversal_src.nfiles) {
-                error("Consistency error:"
-                      " Row %d points to invalid src_idx %d.\n", row_id, src_idx);
+                error("Consistency error: Row %d points to invalid src_idx %d.\n", row_id, src_idx);
                 fatal(EXIT_FAILURE);
             }
             if (cecup.traversal_src.row_ids[src_idx] != row_id) {
@@ -591,8 +585,7 @@ check_consistent_state(void) {
 
         if (dst_idx >= 0) {
             if (dst_idx >= cecup.traversal_dst.nfiles) {
-                error("Consistency error:"
-                      " Row %d points to invalid dst_idx %d.\n", row_id, dst_idx);
+                error("Consistency error: Row %d points to invalid dst_idx %d.\n", row_id, dst_idx);
                 fatal(EXIT_FAILURE);
             }
             if (cecup.traversal_dst.row_ids[dst_idx] != row_id) {
