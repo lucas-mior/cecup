@@ -73,8 +73,7 @@ work_check_itemize_line(char *buf_output) {
 }
 
 static bool
-work_rsync_run(char *files_from_filename, bool checksum,
-               MessageBatch **batch_ptr) {
+work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_ptr) {
     char *rsync_args[64];
     char buf_error[MAX_PATH_LENGTH*2];
     char buf_output[MAX_PATH_LENGTH*2];
@@ -454,8 +453,7 @@ work_rsync(void *user_data) {
             }
         }
         if (w < 0) {
-            error("Error writing to %s: %s.\n",
-                  files_from_filename, strerror(errno));
+            error("Error writing to %s: %s.\n", files_from_filename, strerror(errno));
             fatal(EXIT_FAILURE);
         }
 
