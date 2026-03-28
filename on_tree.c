@@ -299,7 +299,7 @@ static gboolean
 on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                 void *d) {
     GtkWidget *child;
-    int32 row_id;
+    int32 row_id = 0;
     void *row_id_ptr;
     enum ColumnType column_type;
     int32 side;
