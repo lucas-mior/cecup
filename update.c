@@ -724,6 +724,16 @@ update_ui_process_message(Message *message) {
 
         current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
+        /* * Before we zero out the rows, we MUST invalidate the back-pointers
+         * in the traversals so they don't point to non-existent row indices.
+         */
+        for (int32 i = 0; i < cecup.traversal_src.nfiles; i += 1) {
+            cecup.traversal_src.row_ids[i] = -1;
+        }
+        for (int32 i = 0; i < cecup.traversal_dst.nfiles; i += 1) {
+            cecup.traversal_dst.row_ids[i] = -1;
+        }
+
         cecup.rows_len = 0;
         cecup.rows_visible_len = 0;
 

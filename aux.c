@@ -85,6 +85,7 @@ traversal_push(Traversal *traversal, char *path, int32 path_len,
 
     if (traversal->nfiles >= traversal->ncapacity) {
         int64 lens_type_size;
+        int32 old_capacity = traversal->ncapacity;
 
         lens_type_size = SIZEOF(*(traversal->paths_lens));
         ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)),
@@ -130,6 +131,10 @@ traversal_push(Traversal *traversal, char *path, int32 path_len,
         traversal->row_ids = xrealloc2(traversal->row_ids,
                                        traversal->ncapacity,
                                        SIZEOF(*(traversal->row_ids)));
+
+        for (int32 i = old_capacity; i < traversal->ncapacity; i += 1) {
+            traversal->row_ids[i] = -1;
+        }
     }
 
     idx = traversal->nfiles;
