@@ -79,8 +79,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
         fprintf(fp, "\n%s", pattern);
         fclose(fp);
     } else {
-        LOG_ERROR(_("Error opening %s: %s.\n"),
-                  cecup.ignore_path, strerror(errno));
+        LOG_ERROR(_("Error opening %s: %s.\n"), cecup.ignore_path, strerror(errno));
         return;
     }
 
@@ -339,8 +338,7 @@ on_menu_delete(GtkWidget *widget, void *data) {
             GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
             GTK_BUTTONS_YES_NO, _("Permanently delete %d item(s)?"), count);
 
-        g_signal_connect(dialog, "response",
-                         G_CALLBACK(on_delete_response), tasks);
+        g_signal_connect(dialog, "response", G_CALLBACK(on_delete_response), tasks);
         gtk_widget_show(dialog);
     }
 
@@ -379,10 +377,8 @@ on_menu_diff(GtkWidget *widget, void *data) {
             path_src = xmalloc(size_src);
             path_dst = xmalloc(size_dst);
 
-            snprintf2(path_src, size_src,
-                      "%s/%s", cecup.src_base, task->path);
-            snprintf2(path_dst, size_dst,
-                      "%s/%s", cecup.dst_base, task->path);
+            snprintf2(path_src, size_src, "%s/%s", cecup.src_base, task->path);
+            snprintf2(path_dst, size_dst, "%s/%s", cecup.dst_base, task->path);
 
             {
                 char cmd[MAX_PATH_LENGTH * 2];
@@ -391,8 +387,7 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 };
 
                 execvp(diff_command[0], diff_command);
-                STRING_FROM_ARRAY(cmd, " ", diff_command,
-                                  LENGTH(diff_command));
+                STRING_FROM_ARRAY(cmd, " ", diff_command, LENGTH(diff_command));
                 error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
                 _exit(1);
             }
