@@ -52,7 +52,7 @@ work_batch_flush(MessageBatch **batch_ptr) {
     if (batch->count > 0) {
         g_idle_add(update_ui_handler, batch);
     } else {
-        free(batch, sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));
+        free(batch, sizeof(MessageBatch) + (BATCH_SIZE*sizeof(Message *)));
     }
 
     *batch_ptr = NULL;
@@ -64,7 +64,7 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
     MessageBatch *batch = *batch_ptr;
 
     if (batch == NULL) {
-        batch = xmalloc(sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));
+        batch = xmalloc(sizeof(MessageBatch) + (BATCH_SIZE*sizeof(Message *)));
         memset64(batch, 0, sizeof(MessageBatch));
         batch->type = DATA_TYPE_BATCH;
         batch->count = 0;
@@ -1353,13 +1353,13 @@ main(void) {
     cecup.dst_base = dst_dir;
     cecup.dst_base_len = strlen32(dst_dir);
 
-    cecup.traversal_src.arena = arena_create(1024 * 1024);
+    cecup.traversal_src.arena = arena_create(1024*1024);
     cecup.traversal_src.map = hash_create_fs_map(1024);
     cecup.traversal_src.inode_map = hash_create_inode_map(1024);
     cecup.traversal_src.base_path = src_dir;
     cecup.traversal_src.base_path_len = strlen32(src_dir);
 
-    cecup.traversal_dst.arena = arena_create(1024 * 1024);
+    cecup.traversal_dst.arena = arena_create(1024*1024);
     cecup.traversal_dst.map = hash_create_fs_map(1024);
     cecup.traversal_dst.inode_map = hash_create_inode_map(1024);
     cecup.traversal_dst.base_path = dst_dir;
