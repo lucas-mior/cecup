@@ -453,11 +453,10 @@ log_internal(char *file, int line,
     message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
-    if (!RELEASING) {
-        m = SNPRINTF(fileline, "%s:%d: ", file, line);
-    }
-    else {
+    if (RELEASING) {
         m = SNPRINTF(fileline, "%s", "");
+    } else {
+        m = SNPRINTF(fileline, "%s:%d: ", file, line);
     }
 
     message->text_len = n + m;
