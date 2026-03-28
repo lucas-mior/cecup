@@ -557,7 +557,7 @@ check_consistent_state(void) {
             }
         } else {
             lookup_ptr = hash_lookup_fs_map(cecup.traversal_src.map, path, path_len);
-            if (lookup_ptr != NULL && *lookup_ptr == idx) {
+            if (lookup_ptr && (*lookup_ptr == idx)) {
                 error("Consistency error: src_idx %d (path %s) has no row but exists in hash.\n",
                       idx, path);
                 fatal(EXIT_FAILURE);
