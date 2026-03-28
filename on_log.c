@@ -27,7 +27,7 @@ static void
 on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     char *which = data;
     char *text;
-    int32 line;
+    int32 line_num;
 
     GtkTextIter text_start;
     GtkTextIter text_end;
@@ -38,22 +38,20 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     if (strcmp(which, "all") == 0) {
         gtk_text_buffer_get_bounds(cecup.log_buffer, &text_start, &text_end);
     } else if (strcmp(which, "line") == 0) {
-        line = g_variant_get_int32(parameter);
-        gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &text_start, line);
+        line_num = g_variant_get_int32(parameter);
+        gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &text_start, line_num);
         text_end = text_start;
 
         if (!gtk_text_iter_ends_line(&text_end)) {
             gtk_text_iter_forward_to_line_end(&text_end);
         }
     } else {
-        error("%s called with wrong argument (which = %s\n)\n",
-              __func__, which);
+        error("%s called with wrong argument (which = %s\n)\n", __func__, which);
         fatal(EXIT_FAILURE);
     }
 
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
-    if ((text = gtk_text_buffer_get_text(cecup.log_buffer,
-                                         &text_start, &text_end, FALSE))) {
+    if ((text = gtk_text_buffer_get_text(cecup.log_buffer, &text_start, &text_end, FALSE))) {
         gdk_clipboard_set_text(clipboard, text);
         g_free(text);
     }
