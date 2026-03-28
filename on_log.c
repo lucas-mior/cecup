@@ -28,7 +28,7 @@ static void
 on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     char *which = data;
     char *text;
-    int32 line_num;
+    int32 line;
 
     GtkTextIter text_start;
     GtkTextIter text_end;
@@ -39,8 +39,8 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     if (strcmp(which, "all") == 0) {
         gtk_text_buffer_get_bounds(cecup.log_buffer, &text_start, &text_end);
     } else if (strcmp(which, "line") == 0) {
-        line_num = g_variant_get_int32(parameter);
-        gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &text_start, line_num);
+        line = g_variant_get_int32(parameter);
+        gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &text_start, line);
         text_end = text_start;
 
         if (!gtk_text_iter_ends_line(&text_end)) {
