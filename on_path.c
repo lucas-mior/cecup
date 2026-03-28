@@ -26,8 +26,7 @@ on_path_selection_idle(void *data) {
 
     selection_data = data;
     gtk_editable_select_region(selection_data->editable,
-                               selection_data->start_pos,
-                               selection_data->end_pos);
+                               selection_data->start_pos, selection_data->end_pos);
 
     free(selection_data, sizeof(*selection_data));
     return G_SOURCE_REMOVE;
@@ -35,21 +34,19 @@ on_path_selection_idle(void *data) {
 
 static void
 on_path_editing_started(GtkEditable *editable, void *data) {
-    GtkWidget *tree;
+    GtkWidget *tree = data;
     int32 side;
     int32 row_id;
     void *row_id_ptr;
     char *relative;
 
-    tree = data;
     if (!GTK_IS_EDITABLE(editable) || (tree == NULL)) {
         return;
     }
 
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
-    row_id_ptr = g_object_get_data(G_OBJECT(editable), "cecup-row-id");
 
-    if (row_id_ptr == NULL) {
+    if ((row_id_ptr = g_object_get_data(G_OBJECT(editable), "cecup-row-id")) == NULL) {
         return;
     }
 
@@ -98,7 +95,7 @@ on_path_editing_started(GtkEditable *editable, void *data) {
 
 static void
 on_path_edited(GtkEditable *editable, void *data) {
-    GtkWidget *tree;
+    GtkWidget *tree = data;
     int32 row_id;
     void *row_id_ptr;
     int32 side;
@@ -109,11 +106,9 @@ on_path_edited(GtkEditable *editable, void *data) {
     int32 new_length;
     char *new_text;
 
-    tree = data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
-    row_id_ptr = g_object_get_data(G_OBJECT(editable), "cecup-row-id");
 
-    if (row_id_ptr == NULL) {
+    if ((row_id_ptr = g_object_get_data(G_OBJECT(editable), "cecup-row-id")) == NULL) {
         return;
     }
 
@@ -157,10 +152,8 @@ on_path_edited(GtkEditable *editable, void *data) {
         new_full_length = SNPRINTF(new_full, "%s/%s", base_path, relative_new);
         normalize(new_full, &new_full_length);
 
-        if (renameat2(AT_FDCWD, old_full,
-                      AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
-            LOG_ERROR(_("Error renaming %s to %s: %s\n"),
-                      old_full, new_full, strerror(errno));
+        if (renameat2(AT_FDCWD, old_full, AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
+            LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full, new_full, strerror(errno));
             return;
         }
 
