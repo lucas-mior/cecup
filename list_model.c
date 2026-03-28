@@ -152,8 +152,9 @@ cecup_list_model_get_item(GListModel *list, guint position) {
             self->proxies_capacity = pos + 256;
         }
 
-        self->proxies = xrealloc(self->proxies,
-                                 self->proxies_capacity*SIZEOF(CecupItemProxy *));
+        self->proxies = xrealloc2(self->proxies,
+                                  old_capacity, self->proxies_capacity,
+                                  SIZEOF(CecupItemProxy *));
 
         for (int32 i = old_capacity; i < self->proxies_capacity; i += 1) {
             self->proxies[i] = NULL;
@@ -282,15 +283,26 @@ item_add(int32 src_idx, int32 dst_idx) {
     g_mutex_lock(&cecup.arena_mutex);
 
     if (cecup.rows_len >= cecup.rows_capacity) {
+        int64 old_capacity = cecup.rows_capacity;
+
         if (cecup.rows_capacity == 0) {
             cecup.rows_capacity = 1024;
         } else {
             cecup.rows_capacity *= 2;
         }
-        cecup.rows_src = xrealloc(cecup.rows_src, cecup.rows_capacity*SIZEOF(int32));
-        cecup.rows_dst = xrealloc(cecup.rows_dst, cecup.rows_capacity*SIZEOF(int32));
-        cecup.rows_selected = xrealloc(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
-        cecup.rows_visible = xrealloc(cecup.rows_visible, cecup.rows_capacity*SIZEOF(int32));
+
+        cecup.rows_src = xrealloc2(cecup.rows_src,
+                                   old_capacity, cecup.rows_capacity,
+                                   SIZEOF(int32));
+        cecup.rows_dst = xrealloc2(cecup.rows_dst,
+                                   old_capacity, cecup.rows_capacity,
+                                   SIZEOF(int32));
+        cecup.rows_selected = xrealloc2(cecup.rows_selected,
+                                        old_capacity, cecup.rows_capacity,
+                                        SIZEOF(uint8));
+        cecup.rows_visible = xrealloc2(cecup.rows_visible,
+                                       old_capacity, cecup.rows_capacity,
+                                       SIZEOF(int32));
     }
 
     index = cecup.rows_len;
