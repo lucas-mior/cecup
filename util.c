@@ -622,6 +622,12 @@ xrealloc(void *old, int64 size) {
     return p;
 }
 
+INLINE void *
+xrealloc2(void *old, int64 length, int64 obj_size) {
+    int64 size = length*obj_size;
+    return xrealloc(old, size);
+}
+
 static void *
 realloc_debug(char *file, int32 line, void *old, int64 size) {
     void *p;

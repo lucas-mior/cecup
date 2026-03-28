@@ -101,24 +101,32 @@ traversal_push(Traversal *traversal, char *path, int32 path_len,
             traversal->ncapacity *= 2;
         }
 
-        traversal->stats = xrealloc(traversal->stats,
-                               traversal->ncapacity*SIZEOF(*(traversal->stats)));
+        traversal->stats = xrealloc2(traversal->stats,
+                                     traversal->ncapacity,
+                                     SIZEOF(*(traversal->stats)));
 
-        traversal->paths = xrealloc(traversal->paths,
-                               traversal->ncapacity*SIZEOF(char *));
-        traversal->link_targets = xrealloc(traversal->link_targets,
-                                      traversal->ncapacity*SIZEOF(char *));
-        traversal->matched_patterns = xrealloc(traversal->matched_patterns,
-                                          traversal->ncapacity*SIZEOF(char *));
+        traversal->paths = xrealloc2(traversal->paths,
+                                     traversal->ncapacity,
+                                     SIZEOF(char *));
+        traversal->link_targets = xrealloc2(traversal->link_targets,
+                                            traversal->ncapacity,
+                                            SIZEOF(char *));
+        traversal->matched_patterns = xrealloc2(traversal->matched_patterns,
+                                                traversal->ncapacity,
+                                                SIZEOF(char *));
 
-        traversal->paths_lens = xrealloc(traversal->paths_lens,
-                                    traversal->ncapacity*lens_type_size);
-        traversal->link_targets_lens = xrealloc(traversal->link_targets_lens,
-                                           traversal->ncapacity*lens_type_size);
-        traversal->matched_patterns_lens = xrealloc(traversal->matched_patterns_lens,
-                                               traversal->ncapacity*lens_type_size);
-        traversal->nlinks= xrealloc(traversal->nlinks,
-                               traversal->ncapacity*lens_type_size);
+        traversal->paths_lens = xrealloc2(traversal->paths_lens,
+                                          traversal->ncapacity,
+                                          lens_type_size);
+        traversal->link_targets_lens = xrealloc2(traversal->link_targets_lens,
+                                                 traversal->ncapacity,
+                                                 lens_type_size);
+        traversal->matched_patterns_lens = xrealloc2(traversal->matched_patterns_lens,
+                                                     traversal->ncapacity,
+                                                     lens_type_size);
+        traversal->nlinks= xrealloc2(traversal->nlinks,
+                                     traversal->ncapacity,
+                                     lens_type_size);
     }
 
     idx = traversal->nfiles;
