@@ -763,6 +763,8 @@ update_ui_process_message(Message *message) {
 
         table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
 
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wswitch-enum"
         switch (message->type) {
         case DATA_TYPE_LOG_ERROR:
             if (gtk_text_tag_table_lookup(table, "err_red") == NULL) {
@@ -782,6 +784,7 @@ update_ui_process_message(Message *message) {
             gtk_text_buffer_insert(cecup.log_buffer, &end, message->text, -1);
             break;
         }
+         #pragma clang diagnostic pop
 
         gtk_text_view_scroll_to_mark(
             GTK_TEXT_VIEW(cecup.log_view),
