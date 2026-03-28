@@ -211,41 +211,41 @@ static char *dst_action_strings_dir[] = {
 };
 
 static char *reason_strings_file[] = {
-    [REASON_EQUAL_BIT_IDX]    = N_("Files have the same size and modification time"),
-    [REASON_IGNORED_BIT_IDX]  = N_("Matches an ignore pattern"),
-    [REASON_MISSING_BIT_IDX]  = N_("File does not exist in the original folder"),
-    [REASON_NEW_BIT_IDX]      = N_("New file found in the original folder"),
-    [REASON_HARDLINK_BIT_IDX] = N_("Hardlinked file in the original folder"),
-    [REASON_SYMLINK_BIT_IDX]  = N_("Symlink in the original folder"),
-    [REASON_SIZE_BIT_IDX]     = N_("File sizes differ"),
-    [REASON_MTIME_NEWER_BIT_IDX] = N_("File in the source is newer than backup"),
-    [REASON_MTIME_OLDER_BIT_IDX] = N_("File in the source is older than backup"),
-    [REASON_CTIME_BIT_IDX]    = N_("Metadata change times differ"),
-    [REASON_OWNER_BIT_IDX]    = N_("Owners differ"),
-    [REASON_GROUP_BIT_IDX]    = N_("Groups differ"),
-    [REASON_PERM_BIT_IDX]     = N_("Permissions differ"),
-    [REASON_HARDLINK_NOT_REGULAR_BIT_IDX] = N_("Backup item is not a regular file"),
+    [REASON_EQUAL_BIT_IDX]                 = N_("Files are equal"),
+    [REASON_IGNORED_BIT_IDX]               = N_("Matches an ignore pattern"),
+    [REASON_MISSING_BIT_IDX]               = N_("File does not exist in the original folder"),
+    [REASON_NEW_BIT_IDX]                   = N_("New file found in the original folder"),
+    [REASON_HARDLINK_BIT_IDX]              = N_("Hardlinked file in the original folder"),
+    [REASON_HARDLINK_NOT_REGULAR_BIT_IDX]  = N_("Backup item is not a regular file"),
     [REASON_HARDLINK_MISSING_LINK_BIT_IDX] = N_("Backup item is missing link target"),
-    [REASON_HARDLINK_NOT_MATCH_BIT_IDX] = N_("Link targets do not match"),
+    [REASON_HARDLINK_NOT_MATCH_BIT_IDX]    = N_("Link targets do not match"),
+    [REASON_SYMLINK_BIT_IDX]               = N_("Symlink in the original folder"),
+    [REASON_SIZE_BIT_IDX]                  = N_("File sizes differ"),
+    [REASON_MTIME_NEWER_BIT_IDX]           = N_("File in the source is newer than backup"),
+    [REASON_MTIME_OLDER_BIT_IDX]           = N_("File in the source is older than backup"),
+    [REASON_CTIME_BIT_IDX]                 = N_("Metadata change times differ"),
+    [REASON_OWNER_BIT_IDX]                 = N_("Owners differ"),
+    [REASON_GROUP_BIT_IDX]                 = N_("Groups differ"),
+    [REASON_PERM_BIT_IDX]                  = N_("Permissions differ"),
 };
 
 static char *reason_strings_dir[] = {
-    [REASON_EQUAL_BIT_IDX]    = N_("Folders have the same size and modification time"),
-    [REASON_IGNORED_BIT_IDX]  = N_("Matches an ignore pattern"),
-    [REASON_MISSING_BIT_IDX]  = N_("Folder does not exist in the original folder"),
-    [REASON_NEW_BIT_IDX]      = N_("New folder found in the original folder"),
-    [REASON_HARDLINK_BIT_IDX] = N_("Hardlinked folder in the original folder"),
-    [REASON_SYMLINK_BIT_IDX]  = N_("Symlink in the original folder"),
-    [REASON_SIZE_BIT_IDX]     = N_("Folder sizes differ"),
-    [REASON_MTIME_NEWER_BIT_IDX] = N_("Folder in the source is newer than backup"),
-    [REASON_MTIME_OLDER_BIT_IDX] = N_("Folder in the source is older than backup"),
-    [REASON_CTIME_BIT_IDX]    = N_("Metadata change times differ"),
-    [REASON_OWNER_BIT_IDX]    = N_("Owners differ"),
-    [REASON_GROUP_BIT_IDX]    = N_("Groups differ"),
-    [REASON_PERM_BIT_IDX]     = N_("Permissions differ"),
-    [REASON_HARDLINK_NOT_REGULAR_BIT_IDX] = N_("Backup item is not a regular file"),
+    [REASON_EQUAL_BIT_IDX]                 = N_("Folders are equal"),
+    [REASON_IGNORED_BIT_IDX]               = N_("Matches an ignore pattern"),
+    [REASON_MISSING_BIT_IDX]               = N_("Folder does not exist in the original folder"),
+    [REASON_NEW_BIT_IDX]                   = N_("New folder found in the original folder"),
+    [REASON_HARDLINK_BIT_IDX]              = N_("Hardlinked folder in the original folder"),
+    [REASON_HARDLINK_NOT_REGULAR_BIT_IDX]  = N_("Backup item is not a regular file"),
     [REASON_HARDLINK_MISSING_LINK_BIT_IDX] = N_("Backup item is missing link target"),
-    [REASON_HARDLINK_NOT_MATCH_BIT_IDX] = N_("Link targets do not match"),
+    [REASON_HARDLINK_NOT_MATCH_BIT_IDX]    = N_("Link targets do not match"),
+    [REASON_SYMLINK_BIT_IDX]               = N_("Symlink in the original folder"),
+    [REASON_SIZE_BIT_IDX]                  = N_("Folder sizes differ"),
+    [REASON_MTIME_NEWER_BIT_IDX]           = N_("Folder in the source is newer than backup"),
+    [REASON_MTIME_OLDER_BIT_IDX]           = N_("Folder in the source is older than backup"),
+    [REASON_CTIME_BIT_IDX]                 = N_("Metadata change times differ"),
+    [REASON_OWNER_BIT_IDX]                 = N_("Owners differ"),
+    [REASON_GROUP_BIT_IDX]                 = N_("Groups differ"),
+    [REASON_PERM_BIT_IDX]                  = N_("Permissions differ"),
 };
 
 static char *colors[] = {
@@ -342,10 +342,12 @@ typedef struct TaskList {
 } TaskList;
 
 #define CECUP_TYPE_ITEM_PROXY (cecup_item_proxy_get_type())
-G_DECLARE_FINAL_TYPE(CecupItemProxy, cecup_item_proxy, CECUP, ITEM_PROXY, GObject)
+G_DECLARE_FINAL_TYPE(CecupItemProxy, cecup_item_proxy,
+                     CECUP, ITEM_PROXY, GObject)
 
 #define CECUP_TYPE_LIST_MODEL (cecup_list_model_get_type())
-G_DECLARE_FINAL_TYPE(CecupListModel, cecup_list_model, CECUP, LIST_MODEL, GObject)
+G_DECLARE_FINAL_TYPE(CecupListModel, cecup_list_model,
+                     CECUP, LIST_MODEL, GObject)
 
 static CecupListModel *cecup_list_model_new(void);
 static int32 cecup_item_proxy_get_index(CecupItemProxy *proxy);
