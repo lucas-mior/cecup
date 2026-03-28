@@ -255,6 +255,10 @@ update_row_remove(Message *message) {
         }
     }
 
+    if (DEBUGGING) {
+        check_consistent_state();
+    }
+
     if (changed) {
         invalidate_preview();
         update_list_from_rows();
@@ -370,6 +374,10 @@ update_row_transfer(Message *message) {
                 changed = true;
             }
         }
+    }
+
+    if (DEBUGGING) {
+        check_consistent_state();
     }
 
     if (changed) {
@@ -516,6 +524,10 @@ update_row_rename(Message *message) {
         }
 
         if (!is_dir) { break; }
+    }
+
+    if (DEBUGGING) {
+        check_consistent_state();
     }
 
     if (changed) {
