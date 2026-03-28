@@ -390,16 +390,13 @@ work_preview_cancel_and_reset(void) {
 static void *
 work_preview(void *user_data) {
     int64 nfiles_total;
-    int64 nfiles_processed;
+    int64 nfiles_processed = 0;
     bool same_fs;
     bool check_different_fs;
     struct timespec t0_work;
     struct timespec t1_work;
 
     (void)user_data;
-    nfiles_total = 0;
-    nfiles_processed = 0;
-    same_fs = true;
     check_different_fs = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_work);
