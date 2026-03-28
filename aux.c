@@ -173,8 +173,7 @@ free_task_list(TaskList *tasks) {
 }
 
 static TaskList *
-get_target_tasks(int32 side, char *clicked_path,
-                 enum Action clicked_action) {
+get_target_tasks(int32 side, char *clicked_path, enum Action clicked_action) {
     TaskList *tasks;
     int64 tasks_size = STRUCT_ARRAY_SIZE(tasks, Task *, cecup.rows_len);
     int32 count = 0;
