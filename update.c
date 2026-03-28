@@ -251,9 +251,9 @@ update_row_transfer(Message *message) {
                         cecup.rows_dst[row_id] = *lookup;
                     } else {
                         cecup.rows_dst[row_id] = traversal_push(
-                            traversal_dst, traversal_src->paths[s_idx],
+                            traversal_dst, &traversal_src->stats[s_idx],
+                            traversal_src->paths[s_idx],
                             traversal_src->paths_lens[s_idx],
-                            &traversal_src->stats[s_idx],
                             traversal_src->link_targets[s_idx],
                             traversal_src->link_targets_lens[s_idx],
                             traversal_src->matched_patterns[s_idx],
@@ -304,9 +304,9 @@ update_row_transfer(Message *message) {
                         cecup.rows_dst[row_id] = *lookup;
                     } else {
                         cecup.rows_dst[row_id] = traversal_push(
-                            traversal_dst, traversal_src->paths[s_idx],
+                            traversal_dst, &traversal_src->stats[s_idx],
+                            traversal_src->paths[s_idx],
                             traversal_src->paths_lens[s_idx],
-                            &traversal_src->stats[s_idx],
                             traversal_src->link_targets[s_idx],
                             traversal_src->link_targets_lens[s_idx],
                             traversal_src->matched_patterns[s_idx],
@@ -432,8 +432,9 @@ update_row_rename(Message *message) {
             }
 
             n_idx = traversal_push(
-                traversal, p_new, new_path_len + suffix_len,
-                &traversal->stats[idx], traversal->link_targets[idx],
+                traversal, &traversal->stats[idx],
+                p_new, new_path_len + suffix_len,
+                traversal->link_targets[idx],
                 traversal->link_targets_lens[idx], p_match_str, p_match_len);
         }
 

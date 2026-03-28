@@ -47,8 +47,7 @@ invalidate_preview(void) {
     cecup.preview_dirty = true;
     if (!gtk_widget_get_sensitive(cecup.stop_button)) {
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-        gtk_widget_set_tooltip_text(cecup.sync_button,
-                                    _("Click Analysis first"));
+        gtk_widget_set_tooltip_text(cecup.sync_button, _("Click Analysis first"));
     }
     return;
 }
@@ -64,24 +63,21 @@ protect_interface_from_user(bool state) {
 
     if (state) {
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+    } else if (cecup.preview_dirty) {
+        gtk_widget_set_sensitive(cecup.sync_button, FALSE);
+        gtk_widget_set_tooltip_text(cecup.sync_button, _("Click Analysis first"));
     } else {
-        if (cecup.preview_dirty) {
-            gtk_widget_set_sensitive(cecup.sync_button, FALSE);
-            gtk_widget_set_tooltip_text(cecup.sync_button,
-                                        _("Click Analysis first"));
-        } else {
-            gtk_widget_set_sensitive(cecup.sync_button, TRUE);
-            gtk_widget_set_tooltip_text(cecup.sync_button,
-                                        _("Start copying and updating all files"));
-        }
+        gtk_widget_set_sensitive(cecup.sync_button, TRUE);
+        gtk_widget_set_tooltip_text(cecup.sync_button, _("Start copying and updating all files"));
     }
     cecup.stop_working = false;
     return;
 }
 
 static int32
-traversal_push(Traversal *traversal, char *path, int32 path_len,
-               struct stat *stat, char *link_target, int32 link_target_len,
+traversal_push(Traversal *traversal, struct stat *stat,
+               char *path, int32 path_len,
+               char *link_target, int32 link_target_len,
                char *matched_pattern, int32 matched_pattern_len) {
     struct stat stat_copy = *stat;
     int32 idx;

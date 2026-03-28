@@ -301,8 +301,8 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        traversal_push(traversal, path, path_len,
-                       ent->fts_statp,
+        traversal_push(traversal, ent->fts_statp,
+                       path, path_len,
                        link_target, link_target_len,
                        matched_pattern, matched_pattern_len);
     }
