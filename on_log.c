@@ -64,13 +64,11 @@ on_log_button_press(GtkGestureClick *gesture,
     GtkWidget *widget;
     GtkWidget *parent;
     GtkWidget *popover;
-    GMenu *menu;
     GMenuItem *item;
     GtkTextIter iter;
     int32 buffer_x;
     int32 buffer_y;
     int32 line_num;
-    GdkRectangle rect;
     uint32 button;
     double translated_x;
     double translated_y;
@@ -101,32 +99,38 @@ on_log_button_press(GtkGestureClick *gesture,
 
     if (!gtk_widget_translate_coordinates(widget, parent,
                                           x, y, &translated_x, &translated_y)) {
-        error("error tranlating coords...\n");
-        return;
+        error("Error translating coordinates.");
+        fatal(EXIT_FAILURE);
     }
 
-    menu = g_menu_new();
-    g_menu_append(menu, _("📋 Copy Whole Log"), "app.copy_all");
+    {
+        GMenu *menu = g_menu_new();
+        g_menu_append(menu, _("📋 Copy Whole Log"), "app.copy_all");
 
-    item = g_menu_item_new(_("📝 Copy Line"), NULL);
-    g_menu_item_set_action_and_target(item, "app.copy_line", "i", line_num);
-    g_menu_append_item(menu, item);
-    g_object_unref(item);
+        item = g_menu_item_new(_("📝 Copy Line"), NULL);
+        g_menu_item_set_action_and_target(item, "app.copy_line", "i", line_num);
+        g_menu_append_item(menu, item);
+        g_object_unref(item);
 
-    popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
+        popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
+        g_object_unref(menu);
+    }
+
     gtk_widget_set_parent(popover, parent);
 
-    rect.x = (int32)translated_x;
-    rect.y = (int32)translated_y;
-    rect.width = 1;
-    rect.height = 1;
+    {
+        GdkRectangle rect;
+        rect.x = (int32)translated_x;
+        rect.y = (int32)translated_y;
+        rect.width = 1;
+        rect.height = 1;
 
-    gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
+        gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
+    }
+
     gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
     g_signal_connect(popover, "closed", G_CALLBACK(on_popover_closed), NULL);
     gtk_popover_popup(GTK_POPOVER(popover));
-
-    g_object_unref(menu);
 
     return;
 }
