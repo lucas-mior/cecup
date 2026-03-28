@@ -281,7 +281,6 @@ item_add(int32 src_idx, int32 dst_idx) {
 
     g_mutex_lock(&cecup.arena_mutex);
 
-    index = cecup.rows_len;
     if (cecup.rows_len >= cecup.rows_capacity) {
         if (cecup.rows_capacity == 0) {
             cecup.rows_capacity = 1024;
@@ -293,6 +292,8 @@ item_add(int32 src_idx, int32 dst_idx) {
         cecup.rows_selected = xrealloc(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
         cecup.rows_visible = xrealloc(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
     }
+
+    index = cecup.rows_len;
 
     cecup.rows_src[index] = src_idx;
     cecup.rows_dst[index] = dst_idx;
