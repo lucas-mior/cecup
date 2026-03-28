@@ -503,8 +503,8 @@ check_consistent_state(void) {
             }
             if (cecup.traversal_src.row_ids[src_idx] != row_id) {
                 error("Consistency error:"
-                      " rows_src[%d] -> src_idx=%d,"
-                      " but row_ids[%d] -> row_id=%d.\n",
+                      " rows_src["RED"%d"RESET"] -> src_idx="GREEN"%d"RESET","
+                      " but src.row_ids["GREEN"%d"RESET"] -> row_id="RED"%d"RESET".\n",
                       row_id, src_idx,
                       src_idx, cecup.traversal_src.row_ids[src_idx]);
                 fatal(EXIT_FAILURE);
@@ -519,8 +519,8 @@ check_consistent_state(void) {
             }
             if (cecup.traversal_dst.row_ids[dst_idx] != row_id) {
                 error("Consistency error:"
-                      " rows_src[%d] -> dst_idx=%d,"
-                      " but row_ids[%d] -> row_id=%d.\n",
+                      " rows_dst["RED"%d"RESET"] -> dst_idx="GREEN"%d"RESET","
+                      " but dst.row_ids["GREEN"%d"RESET"] -> row_id="RED"%d"RESET".\n",
                       row_id, dst_idx,
                       dst_idx, cecup.traversal_dst.row_ids[dst_idx]);
                 fatal(EXIT_FAILURE);
@@ -540,11 +540,14 @@ check_consistent_state(void) {
 
         if (row_id != -1) {
             if (row_id >= cecup.rows_len) {
-                error("Consistency error: src_idx %d points to invalid row %d.\n", idx, row_id);
+                error("Consistency error:"
+                      " src_idx %d points to invalid row %d.\n", idx, row_id);
                 fatal(EXIT_FAILURE);
             }
             if (cecup.rows_src[row_id] != idx) {
-                error("Consistency error: src_idx %d -> row %d, but rows_src[%d] -> %d.\n",
+                error("Consistency error:"
+                      "src.row_ids["RED"%d"RESET"] -> row_id="YELLOW"%d"RESET","
+                      " but rows_src["YELLOW"%d"RESET"] -> src_idx="RED"%d"RESET".\n",
                       idx, row_id, row_id, cecup.rows_src[row_id]);
                 fatal(EXIT_FAILURE);
             }
@@ -566,23 +569,25 @@ check_consistent_state(void) {
     }
 
     for (int32 idx = 0; idx < cecup.traversal_dst.nfiles; idx += 1) {
-        int32 rid;
+        int32 row_id;
         int32 *lookup_ptr;
         char *path;
         int32 path_len;
 
-        rid = cecup.traversal_dst.row_ids[idx];
+        row_id = cecup.traversal_dst.row_ids[idx];
         path = cecup.traversal_dst.paths[idx];
         path_len = (int32)cecup.traversal_dst.paths_lens[idx];
 
-        if (rid != -1) {
-            if (rid >= cecup.rows_len) {
-                error("Consistency error: dst_idx %d points to invalid row %d.\n", idx, rid);
+        if (row_id != -1) {
+            if (row_id >= cecup.rows_len) {
+                error("Consistency error: dst_idx %d points to invalid row %d.\n", idx, row_id);
                 fatal(EXIT_FAILURE);
             }
-            if (cecup.rows_dst[rid] != idx) {
-                error("Consistency error: dst_idx %d -> row %d, but rows_dst[%d] -> %d.\n",
-                      idx, rid, rid, cecup.rows_dst[rid]);
+            if (cecup.rows_dst[row_id] != idx) {
+                error("Consistency error:"
+                      "dst.row_ids["RED"%d"RESET"] -> row_id="YELLOW"%d"RESET","
+                      " but rows_dst["YELLOW"%d"RESET"] -> dst_idx="RED"%d"RESET".\n",
+                      idx, row_id, row_id, cecup.rows_dst[row_id]);
                 fatal(EXIT_FAILURE);
             }
 
