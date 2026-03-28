@@ -30,8 +30,7 @@
 #endif
 
 static void
-setup_column_checkbox(GtkSignalListItemFactory *factory,
-                      GtkListItem *list_item, void *data) {
+setup_column_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *check;
 
     (void)factory;
@@ -47,8 +46,7 @@ setup_column_checkbox(GtkSignalListItemFactory *factory,
 }
 
 static void
-bind_column_checkbox(GtkSignalListItemFactory *factory,
-                     GtkListItem *list_item, void *data) {
+bind_column_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *check;
     CecupItemProxy *proxy;
     int32 row_id;
@@ -71,8 +69,7 @@ bind_column_checkbox(GtkSignalListItemFactory *factory,
 }
 
 static void
-setup_column_action(GtkSignalListItemFactory *factory,
-                    GtkListItem *list_item, void *data) {
+setup_column_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *label;
 
     (void)factory;
@@ -89,8 +86,7 @@ setup_column_action(GtkSignalListItemFactory *factory,
 }
 
 static void
-bind_column_action(GtkSignalListItemFactory *factory,
-                   GtkListItem *list_item, void *data) {
+bind_column_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *label;
     CecupItemProxy *proxy;
     int32 row_id;
@@ -134,8 +130,7 @@ bind_column_action(GtkSignalListItemFactory *factory,
 }
 
 static void
-setup_column_path(GtkSignalListItemFactory *factory,
-                  GtkListItem *list_item, void *data) {
+setup_column_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *editable;
     GtkWidget *tree;
     GtkGesture *click;
@@ -149,12 +144,10 @@ setup_column_path(GtkSignalListItemFactory *factory,
     gtk_editable_set_alignment(GTK_EDITABLE(editable), 0.0);
     gtk_editable_set_width_chars(GTK_EDITABLE(editable), 1);
 
-    g_signal_connect(editable, "notify::editing",
-                     G_CALLBACK(on_path_editing_notify), tree);
+    g_signal_connect(editable, "notify::editing", G_CALLBACK(on_path_editing_notify), tree);
 
     click = gtk_gesture_click_new();
-    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(click),
-                                               GTK_PHASE_CAPTURE);
+    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(click), GTK_PHASE_CAPTURE);
     g_signal_connect(click, "pressed", G_CALLBACK(on_path_click_pressed), tree);
     gtk_widget_add_controller(editable, GTK_EVENT_CONTROLLER(click));
 
@@ -164,8 +157,7 @@ setup_column_path(GtkSignalListItemFactory *factory,
 }
 
 static void
-bind_column_path(GtkSignalListItemFactory *factory,
-                 GtkListItem *list_item, void *data) {
+bind_column_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *editable;
     CecupItemProxy *proxy;
     int32 row_id;
@@ -212,15 +204,13 @@ bind_column_path(GtkSignalListItemFactory *factory,
 
     g_object_set_data(G_OBJECT(editable), "cecup-row-id", GINT_TO_POINTER(row_id));
     g_object_set_data(G_OBJECT(editable), "cecup-col", GINT_TO_POINTER(COLUMN_PATH));
-    g_object_set_data(G_OBJECT(editable), "cecup-pos",
-                      GUINT_TO_POINTER(position + 1));
+    g_object_set_data(G_OBJECT(editable), "cecup-pos", GUINT_TO_POINTER(position + 1));
 
     return;
 }
 
 static void
-bind_text_cb(GtkSignalListItemFactory *factory,
-             GtkListItem *list_item, void *data) {
+bind_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *label;
     CecupItemProxy *proxy;
     int32 row_id;
@@ -285,8 +275,7 @@ bind_text_cb(GtkSignalListItemFactory *factory,
 }
 
 static void
-setup_text_cb(GtkSignalListItemFactory *factory,
-              GtkListItem *list_item, void *data) {
+setup_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *label;
 
     (void)factory;
