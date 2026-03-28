@@ -42,17 +42,17 @@ static void update_list_from_rows(void);
 
 static void
 update_row_remove(Message *message) {
-    // implement
+    // implement update_row_remove
 }
 
 static void
 update_row_transfer(Message *message) {
-    // implement
+    // dont implement update_row_transfer yet
 }
 
 static void
 update_row_rename(Message *message) {
-    // implement
+    // dont implement update_row_rename yet
 }
 
 static void
