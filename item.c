@@ -173,12 +173,12 @@ item_get_actions_reasons(int32 row_id, enum Action *action_src,
                          enum Action *action_dst, enum Reason *reason) {
     int32 src_idx;
     int32 dst_idx;
-    bool delete_excluded;
+    bool delete_ignored;
     bool delete_after;
 
     src_idx = cecup.rows_src[row_id];
     dst_idx = cecup.rows_dst[row_id];
-    delete_excluded = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
+    delete_ignored = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_ignored));
     delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
     *reason = 0;
@@ -203,7 +203,7 @@ item_get_actions_reasons(int32 row_id, enum Action *action_src,
 
         *action_src = ACTION_IGNORE;
 
-        if (delete_after || ((*reason & REASON_IGNORED) && delete_excluded)) {
+        if (delete_after || ((*reason & REASON_IGNORED) && delete_ignored)) {
             *action_dst = ACTION_DELETE;
         } else {
             *action_dst = ACTION_IGNORE;
@@ -282,7 +282,7 @@ item_get_actions_reasons(int32 row_id, enum Action *action_src,
             *action_src = ACTION_IGNORE;
             *reason |= REASON_IGNORED;
 
-            if (delete_excluded) {
+            if (delete_ignored) {
                 *action_dst = ACTION_DELETE;
             } else {
                 *action_dst = ACTION_IGNORE;

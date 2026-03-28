@@ -307,7 +307,7 @@ typedef struct Message {
     int32 side;
     double fraction;
 
-    bool delete_excluded;
+    bool delete_ignored;
     bool is_dir;
     bool preview_clean;
 } Message;
@@ -384,7 +384,7 @@ static struct {
     GtkWidget *ignore_button;
 
     GtkWidget *check_fs;
-    GtkWidget *delete_excluded;
+    GtkWidget *delete_ignored;
     GtkWidget *delete_after;
     
     GtkWidget *filter_new;

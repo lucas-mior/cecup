@@ -309,15 +309,13 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(header_vbox), button_hbox);
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
-    cecup.check_fs
-        = gtk_check_button_new_with_label(_("Protect same-drive sync"));
-    cecup.delete_excluded
-        = gtk_check_button_new_with_label(_("Remove ignored items"));
+    cecup.check_fs = gtk_check_button_new_with_label(_("Protect same-drive sync"));
+    cecup.delete_ignored = gtk_check_button_new_with_label(_("Remove ignored items"));
     cecup.delete_after = gtk_check_button_new_with_label(_("Sync 100%"));
 
     gtk_widget_set_tooltip_text(cecup.check_fs,
                                 _("Prevent copying if original and backup are on the same disk"));
-    gtk_widget_set_tooltip_text(cecup.delete_excluded,
+    gtk_widget_set_tooltip_text(cecup.delete_ignored,
                                 _("Remove files from backup if they were added to the ignore list"));
     gtk_widget_set_tooltip_text(cecup.delete_after,
                                 _("Delete files in backup that do not exist in the original"));
@@ -335,9 +333,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_start(cecup.check_fs, PADDING_BUTTON);
     gtk_widget_set_margin_end(cecup.check_fs, PADDING_BUTTON);
 
-    gtk_box_append(GTK_BOX(options_hbox), cecup.delete_excluded);
-    gtk_widget_set_margin_start(cecup.delete_excluded, PADDING_BUTTON);
-    gtk_widget_set_margin_end(cecup.delete_excluded, PADDING_BUTTON);
+    gtk_box_append(GTK_BOX(options_hbox), cecup.delete_ignored);
+    gtk_widget_set_margin_start(cecup.delete_ignored, PADDING_BUTTON);
+    gtk_widget_set_margin_end(cecup.delete_ignored, PADDING_BUTTON);
 
     gtk_box_append(GTK_BOX(options_hbox), cecup.delete_after);
     gtk_widget_set_margin_start(cecup.delete_after, PADDING_BUTTON);
@@ -610,9 +608,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
             gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.check_fs),
                                         g_key_file_get_boolean(key, "Options", "check_fs", NULL));
         }
-        if (g_key_file_has_key(key, "Options", "delete_excluded", NULL)) {
-            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_excluded),
-                                        g_key_file_get_boolean(key, "Options", "delete_excluded", NULL));
+        if (g_key_file_has_key(key, "Options", "delete_ignored", NULL)) {
+            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_ignored),
+                                        g_key_file_get_boolean(key, "Options", "delete_ignored", NULL));
         }
         if (g_key_file_has_key(key, "Options", "delete_after", NULL)) {
             gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after),
@@ -622,50 +620,30 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         g_key_file_free(key);
     } while (0);
 
-    g_signal_connect(browse[L], "clicked",
-                     G_CALLBACK(on_browse_src), NULL);
-    g_signal_connect(browse[R], "clicked",
-                     G_CALLBACK(on_browse_dst), NULL);
-    g_signal_connect(cecup.invert_button, "clicked",
-                     G_CALLBACK(on_invert_clicked), NULL);
-    g_signal_connect(cecup.preview_button, "clicked",
-                     G_CALLBACK(on_preview_clicked), NULL);
-    g_signal_connect(cecup.stop_button, "clicked",
-                     G_CALLBACK(on_stop_clicked), NULL);
-    g_signal_connect(cecup.sync_button, "clicked",
-                     G_CALLBACK(on_sync_clicked), NULL);
-    g_signal_connect(cecup.ignore_button, "clicked",
-                     G_CALLBACK(on_ignore_clicked), NULL);
-    g_signal_connect(reset_button, "clicked",
-                     G_CALLBACK(on_reset_clicked), NULL);
+    g_signal_connect(browse[L],            "clicked", G_CALLBACK(on_browse_src), NULL);
+    g_signal_connect(browse[R],            "clicked", G_CALLBACK(on_browse_dst), NULL);
+    g_signal_connect(cecup.invert_button,  "clicked", G_CALLBACK(on_invert_clicked), NULL);
+    g_signal_connect(cecup.preview_button, "clicked", G_CALLBACK(on_preview_clicked), NULL);
+    g_signal_connect(cecup.stop_button,    "clicked", G_CALLBACK(on_stop_clicked), NULL);
+    g_signal_connect(cecup.sync_button,    "clicked", G_CALLBACK(on_sync_clicked), NULL);
+    g_signal_connect(cecup.ignore_button,  "clicked", G_CALLBACK(on_ignore_clicked), NULL);
+    g_signal_connect(reset_button,         "clicked", G_CALLBACK(on_reset_clicked), NULL);
 
-    g_signal_connect(cecup.search_entry, "changed",
-                     G_CALLBACK(on_search_changed), NULL);
+    g_signal_connect(cecup.search_entry, "changed", G_CALLBACK(on_search_changed), NULL);
 
-    g_signal_connect(cecup.filter_new, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
-    g_signal_connect(cecup.filter_hard, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
-    g_signal_connect(cecup.filter_update, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
-    g_signal_connect(cecup.filter_equal, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
-    g_signal_connect(cecup.filter_delete, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
-    g_signal_connect(cecup.filter_ignore, "toggled",
-                     G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup.filter_new,    "toggled", G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup.filter_hard,   "toggled", G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup.filter_update, "toggled", G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup.filter_equal,  "toggled", G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup.filter_delete, "toggled", G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup.filter_ignore, "toggled", G_CALLBACK(on_filter_toggled), NULL);
 
-    g_signal_connect(cecup.diff_entry, "changed",
-                     G_CALLBACK(on_config_changed), NULL);
-    g_signal_connect(cecup.term_entry, "changed",
-                     G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup.diff_entry, "changed", G_CALLBACK(on_config_changed), NULL);
+    g_signal_connect(cecup.term_entry, "changed", G_CALLBACK(on_config_changed), NULL);
 
-    g_signal_connect(cecup.check_fs, "toggled",
-                     G_CALLBACK(on_preview_setting_toggled), NULL);
-    g_signal_connect(cecup.delete_excluded, "toggled",
-                     G_CALLBACK(on_delete_excluded_toggled), NULL);
-    g_signal_connect(cecup.delete_after, "toggled",
-                     G_CALLBACK(on_delete_after_toggled), NULL);
+    g_signal_connect(cecup.check_fs, "toggled", G_CALLBACK(on_preview_setting_toggled), NULL);
+    g_signal_connect(cecup.delete_ignored, "toggled", G_CALLBACK(on_delete_ignored_toggled), NULL);
+    g_signal_connect(cecup.delete_after, "toggled", G_CALLBACK(on_delete_after_toggled), NULL);
 
     cecup_get_dirs();
 

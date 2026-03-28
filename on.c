@@ -207,7 +207,7 @@ on_delete_after_toggled(GtkCheckButton *b, void *data) {
 }
 
 static void
-on_delete_excluded_toggled(GtkCheckButton *b, void *data) {
+on_delete_ignored_toggled(GtkCheckButton *b, void *data) {
     (void)data;
     if (gtk_check_button_get_active(b)) {
         g_signal_handlers_block_by_func(cecup.delete_after,
@@ -234,7 +234,7 @@ on_reset_clicked(GtkWidget *b, void *data) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore), TRUE);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.check_fs), FALSE);
-    gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_excluded),
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_ignored),
                                  FALSE);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after), FALSE);
 
@@ -813,7 +813,7 @@ on_functions_sink(void) {
     (void)on_sync_clicked;
     (void)on_preview_clicked;
     (void)on_reset_clicked;
-    (void)on_delete_excluded_toggled;
+    (void)on_delete_ignored_toggled;
     (void)on_preview_setting_toggled;
     (void)on_search_changed;
     (void)on_config_changed;

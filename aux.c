@@ -420,7 +420,7 @@ save_config(void) {
 
     config_bool_set(key, "Options", "check_fs",        cecup.check_fs);
     config_bool_set(key, "Options", "delete_after",    cecup.delete_after);
-    config_bool_set(key, "Options", "delete_excluded", cecup.delete_excluded);
+    config_bool_set(key, "Options", "delete_ignored", cecup.delete_ignored);
 
     out = g_key_file_to_data(key, &len, NULL);
     g_file_set_contents(cecup.config_path, out, (gssize)len, NULL);
