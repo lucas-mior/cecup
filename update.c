@@ -492,7 +492,6 @@ update_list_from_rows(void) {
     bool show_equal;
     bool show_delete;
     bool show_ignore;
-    bool visible;
 
     count_new = 0;
     count_hard = 0;
