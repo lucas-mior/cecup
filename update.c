@@ -200,7 +200,85 @@ update_row_transfer(Message *message) {
 
 static void
 update_row_rename(Message *message) {
-    // implement here
+    char *old_pattern;
+    int32 old_len;
+    char *new_pattern;
+    int32 new_len;
+    int32 side;
+    Traversal *tr;
+    bool changed;
+
+    old_pattern = message->old_path;
+    old_len = message->old_path_len;
+    new_pattern = message->new_path;
+    new_len = message->new_path_len;
+    side = message->side;
+    tr = (side == L) ? &cecup.traversal_src : &cecup.traversal_dst;
+    changed = false;
+
+    if (old_pattern == NULL || (old_len == 0) || (new_pattern == NULL)) {
+        return;
+    }
+
+    for (int32 i = 0; i < cecup.rows_len; i += 1) {
+        CecupItem *item;
+        int32 *idx_ptr;
+
+        item = cecup.rows[i];
+        idx_ptr = (side == L) ? &item->src_idx : &item->dst_idx;
+
+        if (*idx_ptr >= 0) {
+            int32 idx;
+            char *path;
+            int32 path_len;
+            bool match;
+
+            idx = *idx_ptr;
+            path = tr->paths[idx];
+            path_len = (int32)tr->paths_lens[idx];
+            match = false;
+
+            if (old_pattern[old_len - 1] == '/') {
+                if (BEGINS_WITH(path, old_pattern, old_len)) {
+                    match = true;
+                }
+            } else if (path_len == old_len) {
+                if (memcmp64(path, old_pattern, old_len) == 0) {
+                    match = true;
+                }
+            }
+
+            if (match) {
+                int32 suffix_len;
+                int32 final_len;
+                char *final_path;
+
+                hash_remove_fs_map(tr->map, path, path_len);
+
+                suffix_len = path_len - old_len;
+                final_len = new_len + suffix_len;
+                final_path = xmalloc(final_len + 1);
+
+                memcpy64(final_path, new_pattern, new_len);
+                if (suffix_len > 0) {
+                    memcpy64(final_path + new_len, path + old_len, suffix_len);
+                }
+                final_path[final_len] = '\0';
+
+                tr->paths[idx] = final_path;
+                tr->paths_lens[idx] = (int16)final_len;
+
+                hash_insert_fs_map(tr->map, final_path, final_len, idx);
+                changed = true;
+            }
+        }
+    }
+
+    if (changed) {
+        update_list_from_rows();
+    }
+
+    return;
 }
 
 static void
