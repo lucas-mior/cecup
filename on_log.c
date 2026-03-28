@@ -60,8 +60,7 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
 }
 
 static void
-on_log_button_press(GtkGestureClick *gesture,
-                    int32 npress, double x, double y, void *data) {
+on_log_button_press(GtkGestureClick *gesture, int32 npress, double x, double y, void *data) {
     GtkWidget *widget;
     GtkWidget *parent;
     GtkWidget *popover;
@@ -88,12 +87,10 @@ on_log_button_press(GtkGestureClick *gesture,
     parent = gtk_widget_get_parent(widget);
     gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
 
-    gtk_text_view_window_to_buffer_coords(GTK_TEXT_VIEW(widget),
-                                          GTK_TEXT_WINDOW_WIDGET,
+    gtk_text_view_window_to_buffer_coords(GTK_TEXT_VIEW(widget), GTK_TEXT_WINDOW_WIDGET,
                                           (int32)x, (int32)y,
                                           &buffer_x, &buffer_y);
-    gtk_text_view_get_iter_at_location(GTK_TEXT_VIEW(widget),
-                                       &iter, buffer_x, buffer_y);
+    gtk_text_view_get_iter_at_location(GTK_TEXT_VIEW(widget), &iter, buffer_x, buffer_y);
 
     line_num = gtk_text_iter_get_line(&iter);
 
@@ -104,8 +101,8 @@ on_log_button_press(GtkGestureClick *gesture,
     }
 
     {
-        GMenuItem *item = g_menu_item_new(_("📝 Copy Line"), NULL);
         GMenu *menu = g_menu_new();
+        GMenuItem *item = g_menu_item_new(_("📝 Copy Line"), NULL);
         g_menu_append(menu, _("📋 Copy Whole Log"), "app.copy_all");
 
         g_menu_item_set_action_and_target(item, "app.copy_line", "i", line_num);
