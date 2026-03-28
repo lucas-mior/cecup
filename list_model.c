@@ -131,11 +131,8 @@ cecup_list_model_get_n_items(GListModel *list) {
 
 static gpointer
 cecup_list_model_get_item(GListModel *list, guint position) {
-    CecupListModel *self;
-    int32 pos;
-
-    self = CECUP_LIST_MODEL(list);
-    pos = (int32)position;
+    CecupListModel *self = CECUP_LIST_MODEL(list);
+    int32 pos = (int32)position;
 
     if ((pos < 0) || (pos >= cecup.rows_visible_len)) {
         return NULL;
