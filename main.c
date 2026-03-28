@@ -225,7 +225,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
-    GtkSelectionModel *selection_model;
 
     char cwd[MAX_PATH_LENGTH];
     char src_path_buffer[MAX_PATH_LENGTH];
@@ -481,6 +480,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     vbox[L] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[L] = gtk_scrolled_window_new();
     {
+        GtkSelectionModel *selection_model;
         selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(g_object_ref(cecup.store))));
         tree[L] = gtk_column_view_new(selection_model);
     }
@@ -495,6 +495,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     vbox[R] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[R] = gtk_scrolled_window_new();
     {
+        GtkSelectionModel *selection_model;
         selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(g_object_ref(cecup.store))));
         tree[R] = gtk_column_view_new(selection_model);
     }
