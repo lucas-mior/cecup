@@ -200,8 +200,8 @@ work_rsync_run(char *files_from_filename, bool checksum,
             goto read_error_pipe;
         }
 
-        r = read64(pipe_stdout[0], buf_output + buf_output_pos,
-                   SIZEOF(buf_output) - buf_output_pos - 1);
+        r = read64(pipe_stdout[0],
+                   buf_output + buf_output_pos, SIZEOF(buf_output) - buf_output_pos - 1);
         if (r <= 0) {
             if (r < 0) {
                 LOG_ERROR("Error reading stdout pipe: %s.\n", strerror(errno));
@@ -255,13 +255,11 @@ work_rsync_run(char *files_from_filename, bool checksum,
                 }
                 path_len = (int32)(eol - path);
                 if ((sep = memmem64(path, path_len,
-                                    RSYNC_HARDLINK_NOTATION,
-                                    strlen32(RSYNC_HARDLINK_NOTATION)))) {
+                                    RSYNC_HARDLINK_NOTATION, strlen32(RSYNC_HARDLINK_NOTATION)))) {
                     *sep = '\0';
                     path_len = (int32)(sep - path);
                 } else if ((sep = memmem64(path, path_len,
-                                           RSYNC_SYMLINK_NOTATION,
-                                           strlen32(RSYNC_SYMLINK_NOTATION)))) {
+                                           RSYNC_SYMLINK_NOTATION, strlen32(RSYNC_SYMLINK_NOTATION)))) {
                     *sep = '\0';
                     path_len = (int32)(sep - path);
                 }
