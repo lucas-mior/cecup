@@ -524,14 +524,14 @@ enum RsyncCharAttribute {
 
 static char *problems[] = {
     "\n",
-    "\\",
-    "\"",
+    /* "\\", */
+    /* "\"", */
     /* "\'", */
-    "<",
-    ">",
-    ":",
-    "|",
-    "?",
+    /* "<", */
+    /* ">", */
+    /* ":", */
+    /* "|", */
+    /* "?", */
     RSYNC_WILDCARD,
     RSYNC_HARDLINK_NOTATION,
     RSYNC_SYMLINK_NOTATION,
