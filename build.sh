@@ -9,6 +9,8 @@ if [ -n "$BASH_VERSION" ]; then
     shopt -s expand_aliases
 fi
 
+export XDG_DATA_DIRS=""
+
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
 
