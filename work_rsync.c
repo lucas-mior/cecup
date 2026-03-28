@@ -495,9 +495,9 @@ work_rsync(void *user_data) {
             work_rsync_run(files_from_filename, true, &batch);
         }
     } while (0);
-    /* if (!DEBUGGING) { */
-    /* xunlink(files_from_filename); */
-    /* } */
+    if (!DEBUGGING) {
+        xunlink(files_from_filename);
+    }
 
     work_batch_flush(&batch);
     free_task_list(tasks);
