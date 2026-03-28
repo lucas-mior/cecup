@@ -351,6 +351,9 @@ G_DECLARE_FINAL_TYPE(CecupItemProxy, cecup_item_proxy, CECUP, ITEM_PROXY, GObjec
 #define CECUP_TYPE_LIST_MODEL (cecup_list_model_get_type())
 G_DECLARE_FINAL_TYPE(CecupListModel, cecup_list_model, CECUP, LIST_MODEL, GObject)
 
+static CecupListModel *cecup_list_model_new(void);
+static CecupItem *cecup_item_proxy_get_item(CecupItemProxy *proxy);
+
 typedef struct IgnorePattern {
     char *str;
     int32 len;

@@ -37,9 +37,6 @@
 #define FILL_TRUE true
 #define EXPAND_TRUE true
 
-CecupListModel *cecup_list_model_new(void);
-CecupItem *cecup_item_proxy_get_item(CecupItemProxy *proxy);
-
 static void
 free_text_info(void *data) {
     free(data, SIZEOF(TextInfo));
