@@ -87,12 +87,9 @@ traversal_push(Traversal *traversal, struct stat *stat,
         int32 old_capacity = traversal->ncapacity;
 
         lens_type_size = SIZEOF(*(traversal->paths_lens));
-        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)),
-                     SIZEOF(*(traversal->link_targets_lens)));
-        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)),
-                     SIZEOF(*(traversal->matched_patterns_lens)));
-        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)),
-                     SIZEOF(*(traversal->nlinks)));
+        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)), SIZEOF(*(traversal->link_targets_lens)));
+        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)), SIZEOF(*(traversal->matched_patterns_lens)));
+        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)), SIZEOF(*(traversal->nlinks)));
 
         if (traversal->ncapacity == 0) {
             traversal->ncapacity = 1024;
@@ -101,43 +98,34 @@ traversal_push(Traversal *traversal, struct stat *stat,
         }
 
         traversal->stats = xrealloc2(traversal->stats,
-                                     old_capacity,
-                                     traversal->ncapacity,
+                                     old_capacity, traversal->ncapacity,
                                      SIZEOF(*(traversal->stats)));
 
         traversal->paths = xrealloc2(traversal->paths,
-                                     old_capacity,
-                                     traversal->ncapacity,
+                                     old_capacity, traversal->ncapacity,
                                      SIZEOF(char *));
         traversal->link_targets = xrealloc2(traversal->link_targets,
-                                            old_capacity,
-                                            traversal->ncapacity,
+                                            old_capacity, traversal->ncapacity,
                                             SIZEOF(char *));
         traversal->matched_patterns = xrealloc2(traversal->matched_patterns,
-                                                old_capacity,
-                                                traversal->ncapacity,
+                                                old_capacity, traversal->ncapacity,
                                                 SIZEOF(char *));
 
         traversal->paths_lens = xrealloc2(traversal->paths_lens,
-                                          old_capacity,
-                                          traversal->ncapacity,
+                                          old_capacity, traversal->ncapacity,
                                           lens_type_size);
         traversal->link_targets_lens = xrealloc2(traversal->link_targets_lens,
-                                                 old_capacity,
-                                                 traversal->ncapacity,
+                                                 old_capacity, traversal->ncapacity,
                                                  lens_type_size);
         traversal->matched_patterns_lens = xrealloc2(traversal->matched_patterns_lens,
-                                                     old_capacity,
-                                                     traversal->ncapacity,
+                                                     old_capacity, traversal->ncapacity,
                                                      lens_type_size);
         traversal->nlinks = xrealloc2(traversal->nlinks,
-                                      old_capacity,
-                                      traversal->ncapacity,
+                                      old_capacity, traversal->ncapacity,
                                       lens_type_size);
 
         traversal->row_ids = xrealloc2(traversal->row_ids,
-                                       old_capacity,
-                                       traversal->ncapacity,
+                                       old_capacity, traversal->ncapacity,
                                        SIZEOF(*(traversal->row_ids)));
 
         for (int32 i = old_capacity; i < traversal->ncapacity; i += 1) {
@@ -282,8 +270,7 @@ get_target_tasks(int32 side, char *clicked_path, enum Action clicked_action) {
             traversal = &cecup.traversal_dst;
         }
 
-        if ((idx_ptr = hash_lookup_fs_map(traversal->map,
-                                          clicked_path, task->path_len))) {
+        if ((idx_ptr = hash_lookup_fs_map(traversal->map, clicked_path, task->path_len))) {
             int32 idx;
             char *link_target;
 
@@ -291,8 +278,7 @@ get_target_tasks(int32 side, char *clicked_path, enum Action clicked_action) {
             if ((link_target = traversal->link_targets[idx])) {
                 task->link_target_len = traversal->link_targets_lens[idx];
                 task->link_target = xmalloc(task->link_target_len + 1);
-                memcpy64(task->link_target,
-                         link_target, task->link_target_len + 1);
+                memcpy64(task->link_target, link_target, task->link_target_len + 1);
             }
         }
 
@@ -339,14 +325,12 @@ cecup_get_dirs(void) {
     }
 
     if (realpath(tmp_src, full_src) == NULL) {
-        LOG_ERROR("Error getting full path of %s: %s.\n", tmp_src,
-                   strerror(errno));
+        LOG_ERROR("Error getting full path of %s: %s.\n", tmp_src, strerror(errno));
         cecup_reset_dir(L);
         return;
     }
     if (realpath(tmp_dst, full_dst) == NULL) {
-        LOG_ERROR("Error getting full path of %s: %s.\n", tmp_dst,
-                   strerror(errno));
+        LOG_ERROR("Error getting full path of %s: %s.\n", tmp_dst, strerror(errno));
         cecup_reset_dir(R);
         return;
     }
@@ -449,8 +433,7 @@ log_internal(char *file, int line,
     n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
 
     if ((n < 0) || (n >= SIZEOF(buffer))) {
-        error("%s:%d: Error in vsnprintf(%s) (n = %lld)\n",
-              file, line, format, (llong)n);
+        error("%s:%d: Error in vsnprintf(%s) (n = %lld)\n", file, line, format, (llong)n);
         fatal(EXIT_FAILURE);
     }
     va_end(va_args);
