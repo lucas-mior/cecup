@@ -324,4 +324,4 @@ main(void) {
 }
 #endif
 
-#endif
+#endif /* IGNORE_PATTERNS_C */
