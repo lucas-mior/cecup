@@ -273,15 +273,9 @@ enum CecupColumn {
     COL_SIZE_RAW,
     COL_MTIME_TEXT,
     COL_MTIME_RAW,
-    COL_ITEM_PTR,
+    COL_ROW_ID,
     NUM_COLS
 };
-
-typedef struct CecupItem {
-    int32 src_idx;
-    int32 dst_idx;
-    bool selected;
-} CecupItem;
 
 typedef struct Message {
     enum DataType type;
@@ -352,7 +346,7 @@ G_DECLARE_FINAL_TYPE(CecupItemProxy, cecup_item_proxy, CECUP, ITEM_PROXY, GObjec
 G_DECLARE_FINAL_TYPE(CecupListModel, cecup_list_model, CECUP, LIST_MODEL, GObject)
 
 static CecupListModel *cecup_list_model_new(void);
-static CecupItem *cecup_item_proxy_get_item(CecupItemProxy *proxy);
+static int32 cecup_item_proxy_get_index(CecupItemProxy *proxy);
 
 typedef struct IgnorePattern {
     char *str;
@@ -409,11 +403,13 @@ static struct {
 
     GtkWidget *progress_preview;
 
-    CecupItem **rows;
+    int32 *rows_src;
+    int32 *rows_dst;
+    uint8 *rows_selected;
     int32 rows_len;
     int32 rows_capacity;
 
-    CecupItem **rows_visible;
+    int32 *rows_visible;
     int32 rows_visible_len;
 
     enum CecupColumn sort_col;
@@ -459,7 +455,7 @@ static void save_config(void);
 static void protect_interface_from_user(bool state);
 static void log_internal(char *file, int line,
                          enum DataType type, char *format, ...);
-static CecupItem *item_add(int32 src_idx, int32 dst_idx);
+static int32 item_add(int32 src_idx, int32 dst_idx);
 
 #pragma clang diagnostic pop
 
@@ -505,10 +501,6 @@ enum RsyncCharAttribute {
 #define RSYNC_ITEMIZE_PLACEHOLDERS "YXcstpoguax"
 
 #define RSYNC_MESSAGE_DELETING "*deleting   0 "
-
-/* for ignored files on the source, rsync --verbose --verbose outputs:
- * [sender] hiding file <filename> because of pattern <pattern>
- */
 
 #define RSYNC_IGNORE_PRE_DIR  "[sender] hiding directory "
 #define RSYNC_IGNORE_PRE_FILE "[sender] hiding file "

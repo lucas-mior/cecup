@@ -34,16 +34,13 @@
 
 static void
 on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
-    int32 index;
-    CecupMenuItem *menu_item;
+    int32 index = g_variant_get_int32(parameter);
+    CecupMenuItem *menu_item = &tree_menu_items[index];
     GtkWidget *tree;
     Message *message;
 
     (void)action;
     (void)data;
-
-    index = g_variant_get_int32(parameter);
-    menu_item = &tree_menu_items[index];
 
     tree = g_object_get_data(G_OBJECT(cecup.application), "active_tree");
     message = g_object_steal_data(G_OBJECT(cecup.application), "active_message");
@@ -66,14 +63,12 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
 
 static void
 on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
-    char *pattern;
+    char *pattern = (char *)g_variant_get_string(parameter, NULL);
     FILE *fp;
     Message *message;
 
     (void)action;
     (void)data;
-
-    pattern = (char *)g_variant_get_string(parameter, NULL);
 
     if (pattern == NULL) {
         error("Ignore pattern is NULL.\n");
@@ -188,12 +183,7 @@ on_menu_open_item(GtkWidget *m, void *data) {
     TaskList *tasks;
     char *variant;
 
-    if (m) {
-        variant = g_object_get_data(G_OBJECT(m), "variant");
-    } else {
-        variant = NULL;
-    }
-
+    variant = (m) ? g_object_get_data(G_OBJECT(m), "variant") : NULL;
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
     for (int32 i = 0; i < tasks->count; i += 1) {
@@ -202,18 +192,12 @@ on_menu_open_item(GtkWidget *m, void *data) {
         char *base_path;
         int32 n;
 
-        if (message->side == L) {
-            base_path = cecup.src_base;
-        } else {
-            base_path = cecup.dst_base;
-        }
-
+        base_path = (message->side == L) ? cecup.src_base : cecup.dst_base;
         n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
 
         if (variant) {
             if (strcmp(variant, "folder") == 0) {
-                int32 path_len;
-                path_len = n;
+                int32 path_len = n;
                 dirname2(full_path, full_path, &path_len);
             }
         }
@@ -253,12 +237,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     write_pointer = buffer;
     remaining_capacity = buffer_size - 1;
 
-    if (message->side == L) {
-        base_path = cecup.src_base;
-    } else {
-        base_path = cecup.dst_base;
-    }
-
+    base_path = (message->side == L) ? cecup.src_base : cecup.dst_base;
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
     for (int32 i = 0; i < tasks->count; i += 1) {
@@ -309,9 +288,7 @@ on_menu_copy_path(GtkWidget *m, void *data) {
 
 static void
 on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
-    TaskList *tasks;
-
-    tasks = data;
+    TaskList *tasks = data;
 
     if (response_id == GTK_RESPONSE_YES) {
         ThreadData *thread_data;
@@ -396,7 +373,7 @@ on_menu_diff(GtkWidget *m, void *data) {
                       "%s/%s", cecup.dst_base, task->path);
 
             {
-                char cmd[MAX_PATH_LENGTH*2];
+                char cmd[MAX_PATH_LENGTH * 2];
                 char *diff_command[] = {
                     term_cmd, "-e", diff_tool, path_dst, path_src, NULL,
                 };

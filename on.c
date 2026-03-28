@@ -36,7 +36,9 @@
 
 static gboolean
 unparent_popover_idle(void *data) {
-    GtkWidget *widget = data;
+    GtkWidget *widget;
+
+    widget = data;
     gtk_widget_unparent(widget);
     return G_SOURCE_REMOVE;
 }
@@ -53,7 +55,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     GtkSelectionModel *selection;
     GtkSingleSelection *single_sel;
     uint32 pos;
-    CecupItem *item;
+    int32 row_id;
     char *filepath;
     int32 side;
     int32 path_len;
@@ -84,12 +86,14 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
         return;
     }
 
-    item = cecup.rows_visible[pos];
-    filepath = item_path_side(item, side);
-    path_len = item_path_len_side(item, side);
+    row_id = cecup.rows_visible[pos];
+    filepath = item_path_side(row_id, side);
+    path_len = item_path_len_side(row_id, side);
 
     if (filepath || (menu_item->callback == on_menu_rename)) {
-        Message *message = xmalloc(SIZEOF(*message));
+        Message *message;
+
+        message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         if (filepath) {
@@ -98,14 +102,9 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
             memcpy64(message->src_path, filepath, path_len + 1);
         }
 
-        item_get_actions_reasons(item, &action_src, &action_dst, &reason);
+        item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
-        if (side == L) {
-            message->action = action_src;
-        } else {
-            message->action = action_dst;
-        }
-
+        message->action = (side == L) ? action_src : action_dst;
         message->side = side;
 
         if (menu_item->variant) {
@@ -343,7 +342,9 @@ on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
         order = gtk_column_view_sorter_get_primary_sort_order(GTK_COLUMN_VIEW_SORTER(view_sorter));
 
         if (col) {
-            void *col_data = g_object_get_data(G_OBJECT(col), "col_id");
+            void *col_data;
+
+            col_data = g_object_get_data(G_OBJECT(col), "col_id");
             cecup.sort_col = (enum CecupColumn)GPOINTER_TO_INT(col_data);
             cecup.sort_order = order;
             update_list_from_rows();
@@ -358,17 +359,19 @@ static void on_cell_toggled(GtkCheckButton *renderer, void *user_data);
 static void
 update_visible_checkboxes(GtkWidget *widget, int32 side) {
     GtkWidget *child;
-    CecupItem *item;
+    void *row_id_ptr;
 
     if (widget == NULL) {
         return;
     }
 
     if (GTK_IS_CHECK_BUTTON(widget)) {
-        if ((item = g_object_get_data(G_OBJECT(widget), "cecup-item"))) {
-            /* FIX: Pass GINT_TO_POINTER(side) to match the connection */
+        if ((row_id_ptr = g_object_get_data(G_OBJECT(widget), "cecup-row-id"))) {
+            int32 row_id;
+
+            row_id = GPOINTER_TO_INT(row_id_ptr);
             g_signal_handlers_block_by_func(widget, on_cell_toggled, GINT_TO_POINTER(side));
-            gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), item->selected);
+            gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), (bool)cecup.rows_selected[row_id]);
             g_signal_handlers_unblock_by_func(widget, on_cell_toggled, GINT_TO_POINTER(side));
         }
     }
@@ -383,7 +386,8 @@ update_visible_checkboxes(GtkWidget *widget, int32 side) {
 
 static void
 on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
-    CecupItem *item_toggled;
+    int32 row_id_toggled;
+    void *row_id_ptr;
     char *parent_path;
     int32 parent_path_len;
     bool is_root;
@@ -397,83 +401,92 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 
     side = GPOINTER_TO_INT(user_data);
 
-    if ((item_toggled = g_object_get_data(G_OBJECT(renderer), "cecup-item")) == NULL) {
+    if ((row_id_ptr = g_object_get_data(G_OBJECT(renderer), "cecup-row-id")) == NULL) {
         return;
     }
 
+    row_id_toggled = GPOINTER_TO_INT(row_id_ptr);
     is_active = gtk_check_button_get_active(renderer);
-    if (item_toggled->selected == is_active) {
+    if ((bool)cecup.rows_selected[row_id_toggled] == is_active) {
         return;
     }
 
     in_update = true;
-    item_toggled->selected = is_active;
+    cecup.rows_selected[row_id_toggled] = (uint8)is_active;
 
-    parent_path = item_path_side(item_toggled, side);
+    parent_path = item_path_side(row_id_toggled, side);
     if (parent_path == NULL) {
-        parent_path = item_path_side(item_toggled, (side == L) ? R : L);
+        parent_path = item_path_side(row_id_toggled, (side == L) ? R : L);
     }
 
     if (parent_path) {
-        int64 count_selected = 0;
-        int64 total_size_bytes = 0;
-        bool filter_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
-        bool filter_hard = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
-        bool filter_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
+        int64 count_selected;
+        int64 total_size_bytes;
+        bool filter_new;
+        bool filter_hard;
+        bool filter_update;
+
+        count_selected = 0;
+        total_size_bytes = 0;
+        filter_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
+        filter_hard = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
+        filter_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
 
         parent_path_len = strlen32(parent_path);
         is_root = aux_is_root(parent_path);
 
-        /* Single O(N) pass for propagation and stats */
-
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
-            CecupItem *item = cecup.rows[i];
-            char *path = item_path_side(item, side);
+            int32 row_id;
+            char *path;
+
+            row_id = i;
+            path = item_path_side(row_id, side);
             if (path == NULL) {
-                path = item_path_side(item, (side == L) ? R : L);
+                path = item_path_side(row_id, (side == L) ? R : L);
             }
 
             if (path != NULL) {
-                int32 path_len = strlen32(path);
+                int32 path_len;
 
-                if (item_toggled->selected) {
+                path_len = strlen32(path);
+                if (cecup.rows_selected[row_id_toggled]) {
                     if (is_root) {
-                        item->selected = true;
+                        cecup.rows_selected[row_id] = 1;
                     } else if (parent_path_len > 0 && parent_path[parent_path_len - 1] == '/') {
                         if (path_len >= parent_path_len && !strncmp32(path, parent_path, parent_path_len)) {
-                            item->selected = true;
+                            cecup.rows_selected[row_id] = 1;
                         }
                     }
                 } else {
                     if (is_root) {
-                        item->selected = false;
+                        cecup.rows_selected[row_id] = 0;
                     } else {
                         if (parent_path_len > 0 && parent_path[parent_path_len - 1] == '/') {
                             if (path_len >= parent_path_len && !strncmp32(path, parent_path, parent_path_len)) {
-                                item->selected = false;
+                                cecup.rows_selected[row_id] = 0;
                             }
                         }
                         if (aux_is_root(path)) {
-                            item->selected = false;
+                            cecup.rows_selected[row_id] = 0;
                         } else if (path_len < parent_path_len && path[path_len - 1] == '/') {
                             if (strncmp32(parent_path, path, path_len) == 0) {
-                                item->selected = false;
+                                cecup.rows_selected[row_id] = 0;
                             }
                         }
                     }
                 }
             }
 
-            if (item->selected) {
+            if (cecup.rows_selected[row_id]) {
                 enum Action action_src;
                 enum Action action_dst;
                 enum Reason reason;
                 int64 size;
 
                 count_selected += 1;
-                item_get_actions_reasons(item, &action_src, &action_dst, &reason);
+                item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
-                size = item_size_side(item, L);
+                size = item_size_side(row_id, L);
                 if (size < 0) {
                     size = 0;
                 }
@@ -489,6 +502,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         {
             char pretty_size[16];
             char stats_text[256];
+
             bytes_pretty(pretty_size, total_size_bytes);
             SNPRINTF(stats_text,
                      _("Selected files: %lld\nTotal Transfer Size: 📦 %s"),
@@ -508,8 +522,9 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 
 static void
 on_ignore_response(GtkDialog *dialog, int32 response_id, void *data) {
-    GtkTextBuffer *buffer = data;
+    GtkTextBuffer *buffer;
 
+    buffer = data;
     if (response_id == GTK_RESPONSE_ACCEPT) {
         GtkTextIter start;
         GtkTextIter end;
@@ -551,11 +566,11 @@ on_ignore_clicked(GtkWidget *b, void *data) {
 
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), view);
     gtk_box_append(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
-                   scroll);
+                    scroll);
     gtk_widget_set_vexpand(scroll, TRUE);
 
     g_signal_connect(dialog, "response",
-                     G_CALLBACK(on_ignore_response), buffer);
+                      G_CALLBACK(on_ignore_response), buffer);
     gtk_widget_show(dialog);
     return;
 }
@@ -611,7 +626,7 @@ on_browse_src(GtkWidget *b, void *data) {
         GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
     g_signal_connect(dialog, "response",
-                     G_CALLBACK(on_browse_response_src), NULL);
+                      G_CALLBACK(on_browse_response_src), NULL);
     gtk_widget_show(dialog);
     return;
 }
@@ -646,7 +661,7 @@ on_browse_dst(GtkWidget *b, void *data) {
         GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
     g_signal_connect(dialog, "response",
-                     G_CALLBACK(on_browse_response_dst), NULL);
+                      G_CALLBACK(on_browse_response_dst), NULL);
     gtk_widget_show(dialog);
     return;
 }
@@ -686,10 +701,11 @@ on_tree_key_press(GtkEventControllerKey *controller,
     modifiers = state & gtk_accelerator_get_default_mod_mask();
 
     for (int32 i = 0; i < LENGTH(tree_menu_items); i += 1) {
-        CecupMenuItem *menu_item = &tree_menu_items[i];
+        CecupMenuItem *menu_item;
         uint32 target;
         uint32 pressed;
 
+        menu_item = &tree_menu_items[i];
         if (menu_item->keyval == 0) {
             continue;
         }

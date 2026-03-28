@@ -1,3 +1,6 @@
+#if !defined (ON_PATH_C)
+#define ON_PATH_C
+
 #include <gtk/gtk.h>
 
 #include "util.c"
@@ -13,11 +16,13 @@ typedef struct SelectionData {
 
 static gboolean
 on_path_selection_idle(void *data) {
-    SelectionData *selection_data = data;
+    SelectionData *selection_data;
 
+    selection_data = data;
     gtk_editable_select_region(selection_data->editable,
                                selection_data->start_pos,
                                selection_data->end_pos);
+
     free(selection_data, sizeof(*selection_data));
     return G_SOURCE_REMOVE;
 }
@@ -26,22 +31,24 @@ static void
 on_path_editing_started(GtkEditable *editable, void *data) {
     GtkWidget *tree;
     int32 side;
-    CecupItem *item;
+    int32 row_id;
+    void *row_id_ptr;
     char *relative;
 
     tree = data;
-
     if (!GTK_IS_EDITABLE(editable) || (tree == NULL)) {
         return;
     }
 
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
+    row_id_ptr = g_object_get_data(G_OBJECT(editable), "cecup-row-id");
 
-    if ((item = g_object_get_data(G_OBJECT(editable), "cecup-item")) == NULL) {
+    if (row_id_ptr == NULL) {
         return;
     }
 
-    relative = item_path_side(item, side);
+    row_id = GPOINTER_TO_INT(row_id_ptr);
+    relative = item_path_side(row_id, side);
 
     if (relative) {
         char *name;
@@ -51,7 +58,7 @@ on_path_editing_started(GtkEditable *editable, void *data) {
         int32 end_pos;
         int32 path_len;
 
-        path_len = item_path_len_side(item, side);
+        path_len = item_path_len_side(row_id, side);
         end_pos = path_len;
 
         name = basename2(relative, &path_len, &name_len);
@@ -86,7 +93,8 @@ on_path_editing_started(GtkEditable *editable, void *data) {
 static void
 on_path_edited(GtkEditable *editable, void *data) {
     GtkWidget *tree;
-    CecupItem *item;
+    int32 row_id;
+    void *row_id_ptr;
     int32 side;
     char *base_path;
     char old_full[MAX_PATH_LENGTH];
@@ -97,19 +105,21 @@ on_path_edited(GtkEditable *editable, void *data) {
 
     tree = data;
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
+    row_id_ptr = g_object_get_data(G_OBJECT(editable), "cecup-row-id");
 
-    if ((item = g_object_get_data(G_OBJECT(editable), "cecup-item")) == NULL) {
+    if (row_id_ptr == NULL) {
         return;
     }
 
+    row_id = GPOINTER_TO_INT(row_id_ptr);
     new_text = (char *)gtk_editable_get_text(editable);
 
     if (side == L) {
         base_path = cecup.src_base;
-        relative_old = item_path_side(item, L);
+        relative_old = item_path_side(row_id, L);
     } else {
         base_path = cecup.dst_base;
-        relative_old = item_path_side(item, R);
+        relative_old = item_path_side(row_id, R);
     }
 
     if (relative_old == NULL) {
@@ -153,7 +163,7 @@ on_path_edited(GtkEditable *editable, void *data) {
         if ((relative_old[old_length - 1] == '/')
             && (relative_new[new_length - 1] != '/')) {
             relative_new[new_length] = '/';
-            relative_new[new_length+1] = '\0';
+            relative_new[new_length + 1] = '\0';
             new_length += 1;
         }
 
@@ -168,6 +178,7 @@ on_path_edited(GtkEditable *editable, void *data) {
         message->new_path_len = new_length;
         message->new_path = xmalloc(new_length + 1);
         memcpy64(message->new_path, relative_new, new_length + 1);
+
         invalidate_preview();
         g_idle_add(update_ui_handler, message);
     }
@@ -196,3 +207,5 @@ int main(void) {
     return 0;
 }
 #endif
+
+#endif /* ON_PATH_C */

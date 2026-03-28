@@ -45,8 +45,9 @@
 
 static void
 work_batch_flush(MessageBatch **batch_ptr) {
-    MessageBatch *batch = *batch_ptr;
+    MessageBatch *batch;
 
+    batch = *batch_ptr;
     if (batch == NULL) {
         return;
     }
@@ -54,19 +55,20 @@ work_batch_flush(MessageBatch **batch_ptr) {
     if (batch->count > 0) {
         g_idle_add(update_ui_handler, batch);
     } else {
-        free(batch, sizeof(MessageBatch) + (BATCH_SIZE*sizeof(Message *)));
+        free(batch, sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));
     }
 
     *batch_ptr = NULL;
     return;
 }
-// TODO: Use more efficent batches.
+
 static void
 work_batch_push(MessageBatch **batch_ptr, Message *message) {
-    MessageBatch *batch = *batch_ptr;
+    MessageBatch *batch;
 
+    batch = *batch_ptr;
     if (batch == NULL) {
-        batch = xmalloc(sizeof(MessageBatch) + (BATCH_SIZE*sizeof(Message *)));
+        batch = xmalloc(sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));
         memset64(batch, 0, sizeof(MessageBatch));
         batch->type = DATA_TYPE_BATCH;
         batch->count = 0;
@@ -85,7 +87,9 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
 
 static void
 work_finalize(bool preview_clean) {
-    Message *message = xmalloc(SIZEOF(*message));
+    Message *message;
+
+    message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
     message->type = DATA_TYPE_ENABLE_BUTTONS;
     message->preview_clean = preview_clean;
@@ -111,8 +115,7 @@ work_traverse_fs(Traversal *traversal) {
     paths[0] = traversal->base_path;
     paths[1] = NULL;
 
-    if ((fts_handle
-         = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
+    if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
         if (cecup.stop_working == false) {
             error(_("Error walking directory %s: %s.\n"),
                   traversal->base_path, strerror(errno));
@@ -177,8 +180,11 @@ work_traverse_fs(Traversal *traversal) {
         }
 
         for (int32 i = 0; i < LENGTH(problems); i += 1) {
-            char *problem = problems[i];
-            int64 problem_len = strlen32(problem);
+            char *problem;
+            int64 problem_len;
+
+            problem = problems[i];
+            problem_len = strlen32(problem);
 
             if (memmem64(d_name, name_len, problem, problem_len)) {
                 LOG_ERROR(_("Error: filename contains problematic characters/patterns:\n"));
@@ -201,7 +207,9 @@ work_traverse_fs(Traversal *traversal) {
 
         {
             char *path_tmp;
-            int32 slash = 0;
+            int32 slash;
+
+            slash = 0;
             path_tmp = ent->fts_path + traversal->base_path_len;
             path_len = old_full_len - traversal->base_path_len;
 
@@ -236,8 +244,7 @@ work_traverse_fs(Traversal *traversal) {
             char target[MAX_PATH_LENGTH];
             int64 target_len;
 
-            if ((target_len
-                 = readlink(ent->fts_path, target, SIZEOF(target))) < 0) {
+            if ((target_len = readlink(ent->fts_path, target, SIZEOF(target))) < 0) {
                 LOG_ERROR("Error in readlink(%s): %s.\n",
                           ent->fts_path, strerror(errno));
             } else {
@@ -254,8 +261,7 @@ work_traverse_fs(Traversal *traversal) {
             int32 *first_idx_ptr;
 
             n = itoa2(inode_str, (long)ent->fts_statp->st_ino);
-            if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map,
-                                                       inode_str, n))) {
+            if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n))) {
                 int32 first_idx;
 
                 first_idx = *first_idx_ptr;
@@ -323,39 +329,37 @@ work_traverse_fs(Traversal *traversal) {
 
 static void *
 work_traverse_fs_thread(void *user_data) {
-    Traversal *data = user_data;
+    Traversal *data;
+
+    data = user_data;
     data->file_count = work_traverse_fs(data);
     return NULL;
 }
 
 static void
 work_traverse_clean(Traversal *traversal) {
-    int32 capacity = traversal->ncapacity;
+    int32 capacity;
 
+    capacity = traversal->ncapacity;
     arena_reset(traversal->arena);
 
-    free(traversal->stats,
-         capacity*SIZEOF(*(traversal->stats)));
+    free(traversal->stats, capacity * SIZEOF(*(traversal->stats)));
+    free(traversal->matched_patterns, capacity * SIZEOF(*(traversal->matched_patterns)));
+    free(traversal->link_targets, capacity * SIZEOF(*(traversal->link_targets)));
+    free(traversal->paths, capacity * SIZEOF(*(traversal->paths)));
 
-    free(traversal->matched_patterns,
-         capacity*SIZEOF(*(traversal->matched_patterns)));
-    free(traversal->link_targets,
-         capacity*SIZEOF(*(traversal->link_targets)));
-    free(traversal->paths,
-         capacity*SIZEOF(*(traversal->paths)));
-
-    free(traversal->paths_lens,
-         capacity*SIZEOF(*(traversal->paths_lens)));
-    free(traversal->link_targets_lens,
-         capacity*SIZEOF(*(traversal->link_targets_lens)));
-    free(traversal->matched_patterns_lens,
-         capacity*SIZEOF(*(traversal->matched_patterns_lens)));
+    free(traversal->paths_lens, capacity * SIZEOF(*(traversal->paths_lens)));
+    free(traversal->link_targets_lens, capacity * SIZEOF(*(traversal->link_targets_lens)));
+    free(traversal->matched_patterns_lens, capacity * SIZEOF(*(traversal->matched_patterns_lens)));
+    free(traversal->nlinks, capacity * SIZEOF(*(traversal->nlinks)));
 
     hash_destroy_fs_map(traversal->map);
     hash_destroy_inode_map(traversal->inode_map);
 
     {
-        Arena *arena_save = traversal->arena;
+        Arena *arena_save;
+
+        arena_save = traversal->arena;
         memset64(traversal, 0, SIZEOF(*traversal));
         traversal->arena = arena_save;
     }
@@ -367,10 +371,12 @@ work_cleanup(void) {
     work_traverse_clean(&cecup.traversal_src);
     work_traverse_clean(&cecup.traversal_dst);
 
-    free(cecup.transfers, cecup.transfers_capacity*SIZEOF(*cecup.transfers));
+    free(cecup.transfers, cecup.transfers_capacity * SIZEOF(*cecup.transfers));
     cecup.transfers = NULL;
     cecup.ntransfers = 0;
     cecup.transfers_capacity = 0;
+
+    cecup.rows_len = 0;
     return;
 }
 
@@ -383,15 +389,18 @@ work_preview_cancel_and_reset(void) {
 
 static void *
 work_preview(void *user_data) {
-    int64 nfiles_total = 0;
-    int64 nfiles_processed = 0;
-    bool same_fs = true;
-    bool check_different_fs
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
+    int64 nfiles_total;
+    int64 nfiles_processed;
+    bool same_fs;
+    bool check_different_fs;
     struct timespec t0_work;
     struct timespec t1_work;
 
     (void)user_data;
+    nfiles_total = 0;
+    nfiles_processed = 0;
+    same_fs = true;
+    check_different_fs = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs));
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_work);
     work_cleanup();
@@ -443,10 +452,8 @@ work_preview(void *user_data) {
         GThread *t1;
         GThread *t2;
 
-        t2 = g_thread_new("traversal_dst",
-                          work_traverse_fs_thread, &cecup.traversal_dst);
-        t1 = g_thread_new("traversal_src",
-                          work_traverse_fs_thread, &cecup.traversal_src);
+        t2 = g_thread_new("traversal_dst", work_traverse_fs_thread, &cecup.traversal_dst);
+        t1 = g_thread_new("traversal_src", work_traverse_fs_thread, &cecup.traversal_src);
 
         g_thread_join(t1);
         g_thread_join(t2);
@@ -466,17 +473,18 @@ work_preview(void *user_data) {
     LOG(_("Found %lld files to analyse...\n"), (llong)nfiles_total);
 
     for (uint32 i = 0; i < cecup.traversal_src.map->capacity; i += 1) {
-        Bucket_fs_map *bucket_src = &(cecup.traversal_src.map->array[i]);
+        Bucket_fs_map *bucket_src;
         int32 src_idx;
         int32 *dst_idx_ptr;
         int32 dst_idx;
         char *link_target_src;
         int32 path_len;
-        CecupItem item;
+        int32 row_id;
         enum Action src_act;
         enum Action dst_act;
         enum Reason reason;
 
+        bucket_src = &(cecup.traversal_src.map->array[i]);
         if ((int64)bucket_src->key <= 0) {
             continue;
         }
@@ -485,19 +493,14 @@ work_preview(void *user_data) {
         link_target_src = cecup.traversal_src.link_targets[src_idx];
         path_len = cecup.traversal_src.paths_lens[src_idx];
 
-        if ((dst_idx_ptr
-             = hash_lookup_fs_map(cecup.traversal_dst.map,
-                                  bucket_src->key, path_len))) {
+        if ((dst_idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.map, bucket_src->key, path_len))) {
             dst_idx = *dst_idx_ptr;
         } else {
             dst_idx = -1;
         }
 
-        item.src_idx = src_idx;
-        item.dst_idx = dst_idx;
-        item.selected = false;
-
-        item_get_actions_reasons(&item, &src_act, &dst_act, &reason);
+        row_id = item_add(src_idx, dst_idx);
+        item_get_actions_reasons(row_id, &src_act, &dst_act, &reason);
 
         if (!aux_is_root(bucket_src->key)
             && (src_act != ACTION_EQUAL) && (src_act != ACTION_IGNORE)) {
@@ -508,7 +511,7 @@ work_preview(void *user_data) {
                     cecup.transfers_capacity *= 2;
                 }
                 cecup.transfers = xrealloc(cecup.transfers,
-                                           cecup.transfers_capacity*SIZEOF(*cecup.transfers));
+                                           cecup.transfers_capacity * SIZEOF(*cecup.transfers));
             }
             if (src_act == ACTION_HARDLINK) {
                 cecup.transfers[cecup.ntransfers] = link_target_src;
@@ -518,8 +521,6 @@ work_preview(void *user_data) {
             cecup.ntransfers += 1;
         }
 
-        item_add(src_idx, dst_idx);
-
         nfiles_processed += 1;
         if ((nfiles_processed % 1000) == 0) {
             update_progress_bar(DATA_TYPE_PROGRESS_PREVIEW,
@@ -528,10 +529,11 @@ work_preview(void *user_data) {
     }
 
     for (uint32 i = 0; i < cecup.traversal_dst.map->capacity; i += 1) {
-        Bucket_fs_map *bucket_dst = &(cecup.traversal_dst.map->array[i]);
+        Bucket_fs_map *bucket_dst;
         int32 dst_idx;
         int32 path_len;
 
+        bucket_dst = &(cecup.traversal_dst.map->array[i]);
         if ((int64)bucket_dst->key <= 0) {
             continue;
         }
@@ -539,8 +541,7 @@ work_preview(void *user_data) {
         dst_idx = bucket_dst->value;
         path_len = cecup.traversal_dst.paths_lens[dst_idx];
 
-        if (hash_lookup_fs_map(cecup.traversal_src.map,
-                               bucket_dst->key, path_len) == NULL) {
+        if (hash_lookup_fs_map(cecup.traversal_src.map, bucket_dst->key, path_len) == NULL) {
             item_add(-1, dst_idx);
         }
 
@@ -963,4 +964,4 @@ main(void) {
 
 #endif
 
-#endif
+#endif /* WORK_C */

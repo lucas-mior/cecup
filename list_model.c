@@ -31,14 +31,14 @@
 
 struct _CecupItemProxy {
     GObject parent_instance;
-    CecupItem *item;
+    int32 index;
 };
 
 G_DEFINE_TYPE(CecupItemProxy, cecup_item_proxy, G_TYPE_OBJECT)
 
 static void
 cecup_item_proxy_init(CecupItemProxy *self) {
-    self->item = NULL;
+    self->index = -1;
     return;
 }
 
@@ -49,19 +49,19 @@ cecup_item_proxy_class_init(CecupItemProxyClass *klass) {
 }
 
 static CecupItemProxy *
-cecup_item_proxy_new(CecupItem *item) {
+cecup_item_proxy_new(int32 index) {
     CecupItemProxy *self;
 
     if ((self = g_object_new(CECUP_TYPE_ITEM_PROXY, NULL))) {
-        self->item = item;
+        self->index = index;
     }
 
     return self;
 }
 
-static CecupItem *
-cecup_item_proxy_get_item(CecupItemProxy *proxy) {
-    return proxy->item;
+static int32
+cecup_item_proxy_get_index(CecupItemProxy *proxy) {
+    return proxy->index;
 }
 
 struct _CecupListModel {
@@ -88,15 +88,16 @@ cecup_list_model_init(CecupListModel *self) {
 
 static void
 cecup_list_model_finalize(GObject *object) {
-    CecupListModel *self = CECUP_LIST_MODEL(object);
+    CecupListModel *self;
 
+    self = CECUP_LIST_MODEL(object);
     if (self->proxies) {
         for (int32 i = 0; i < self->proxies_capacity; i += 1) {
             if (self->proxies[i]) {
                 g_object_unref(self->proxies[i]);
             }
         }
-        free(self->proxies, self->proxies_capacity*SIZEOF(CecupItemProxy *));
+        free(self->proxies, self->proxies_capacity * SIZEOF(CecupItemProxy *));
     }
 
     G_OBJECT_CLASS(cecup_list_model_parent_class)->finalize(object);
@@ -131,8 +132,12 @@ cecup_list_model_get_n_items(GListModel *list) {
 
 static gpointer
 cecup_list_model_get_item(GListModel *list, guint position) {
-    CecupListModel *self = CECUP_LIST_MODEL(list);
-    int32 pos = (int32)position;
+    CecupListModel *self;
+    int32 pos;
+    int32 row_id;
+
+    self = CECUP_LIST_MODEL(list);
+    pos = (int32)position;
 
     if ((pos < 0) || (pos >= cecup.rows_visible_len)) {
         return NULL;
@@ -143,31 +148,30 @@ cecup_list_model_get_item(GListModel *list, guint position) {
 
         old_capacity = self->proxies_capacity;
         self->proxies_capacity = cecup.rows_capacity;
-
         if (self->proxies_capacity <= pos) {
             self->proxies_capacity = pos + 256;
         }
 
         self->proxies = xrealloc(self->proxies,
-                                 self->proxies_capacity*SIZEOF(CecupItemProxy *));
+                                 self->proxies_capacity * SIZEOF(CecupItemProxy *));
 
         for (int32 i = old_capacity; i < self->proxies_capacity; i += 1) {
             self->proxies[i] = NULL;
         }
     }
 
+    row_id = cecup.rows_visible[pos];
     if (self->proxies[pos]) {
         /*
-         * Critical: Even if the CecupItem pointer is the same,
-         * we must ensure the UI re-binds if the row identity has shifted
-         * (e.g., after sorting or filtering).
+         * Check if the row identity at this position has changed.
+         * If it has, we create a new proxy to trigger a re-bind.
          */
-        if (self->proxies[pos]->item != cecup.rows_visible[pos]) {
+        if (self->proxies[pos]->index != row_id) {
             g_object_unref(self->proxies[pos]);
-            self->proxies[pos] = cecup_item_proxy_new(cecup.rows_visible[pos]);
+            self->proxies[pos] = cecup_item_proxy_new(row_id);
         }
     } else {
-        self->proxies[pos] = cecup_item_proxy_new(cecup.rows_visible[pos]);
+        self->proxies[pos] = cecup_item_proxy_new(row_id);
     }
 
     return g_object_ref(self->proxies[pos]);
@@ -182,8 +186,7 @@ cecup_list_model_list_model_init(GListModelInterface *iface) {
 }
 
 static void
-cecup_list_model_update(CecupListModel *self,
-                        int32 old_count, int32 new_count) {
+cecup_list_model_update(CecupListModel *self, int32 old_count, int32 new_count) {
     if (self->proxies) {
         for (int32 i = 0; i < self->proxies_capacity; i += 1) {
             if (self->proxies[i]) {
@@ -203,7 +206,6 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
         return;
     }
 
-    /* 1. Synchronize the proxy cache: Shift only the active range */
     if (self->proxies) {
         if (index < self->proxies_capacity && self->proxies[index]) {
             g_object_unref(self->proxies[index]);
@@ -221,24 +223,21 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
         }
     }
 
-    /* 2. Synchronize the actual data array */
     for (int32 i = index; i < (cecup.rows_visible_len - 1); i += 1) {
         cecup.rows_visible[i] = cecup.rows_visible[i + 1];
     }
     cecup.rows_visible_len -= 1;
 
-    /* 3. Signal GTK */
     g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 0);
     return;
 }
 
 static void
-cecup_list_model_row_added(CecupListModel *self, CecupItem *item, int32 position) {
+cecup_list_model_row_added(CecupListModel *self, int32 row_index, int32 position) {
     if (position < 0 || position > cecup.rows_visible_len) {
         position = cecup.rows_visible_len;
     }
 
-    /* 1. Shift proxies up to make a NULL hole at 'position' */
     if (self->proxies) {
         int32 limit;
 
@@ -251,14 +250,12 @@ cecup_list_model_row_added(CecupListModel *self, CecupItem *item, int32 position
         }
     }
 
-    /* 2. Update the data array */
     for (int32 i = cecup.rows_visible_len; i > position; i -= 1) {
         cecup.rows_visible[i] = cecup.rows_visible[i - 1];
     }
-    cecup.rows_visible[position] = item;
+    cecup.rows_visible[position] = row_index;
     cecup.rows_visible_len += 1;
 
-    /* 3. Signal GTK */
     g_list_model_items_changed(G_LIST_MODEL(self), (guint)position, 0, 1);
     return;
 }
@@ -269,10 +266,6 @@ cecup_list_model_row_changed(CecupListModel *self, int32 index) {
         return;
     }
 
-    /* * We must unref and NULL the proxy here. 
-     * This forces get_item() to create a fresh CecupItemProxy object.
-     * When GTK sees a different GObject pointer, it will trigger the bind callback.
-     */
     if ((index < self->proxies_capacity) && self->proxies[index]) {
         g_object_unref(self->proxies[index]);
         self->proxies[index] = NULL;
@@ -282,35 +275,32 @@ cecup_list_model_row_changed(CecupListModel *self, int32 index) {
     return;
 }
 
-static CecupItem *
+static int32
 item_add(int32 src_idx, int32 dst_idx) {
-    CecupItem *item;
+    int32 index;
 
     g_mutex_lock(&cecup.arena_mutex);
 
-    item = xarena_push(cecup.arena, SIZEOF(*item));
-    memset64(item, 0, SIZEOF(*item));
-
-    item->src_idx = src_idx;
-    item->dst_idx = dst_idx;
-
+    index = cecup.rows_len;
     if (cecup.rows_len >= cecup.rows_capacity) {
         if (cecup.rows_capacity == 0) {
             cecup.rows_capacity = 1024;
         } else {
             cecup.rows_capacity *= 2;
         }
-        cecup.rows = xrealloc(cecup.rows,
-                              cecup.rows_capacity*SIZEOF(CecupItem *));
-        cecup.rows_visible = xrealloc(cecup.rows_visible,
-                                      cecup.rows_capacity*SIZEOF(CecupItem *));
+        cecup.rows_src = xrealloc(cecup.rows_src, cecup.rows_capacity * SIZEOF(int32));
+        cecup.rows_dst = xrealloc(cecup.rows_dst, cecup.rows_capacity * SIZEOF(int32));
+        cecup.rows_selected = xrealloc(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
+        cecup.rows_visible = xrealloc(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
     }
 
-    cecup.rows[cecup.rows_len] = item;
+    cecup.rows_src[index] = src_idx;
+    cecup.rows_dst[index] = dst_idx;
+    cecup.rows_selected[index] = 0;
     cecup.rows_len += 1;
 
     g_mutex_unlock(&cecup.arena_mutex);
-    return item;
+    return index;
 }
 
 static inline void
@@ -319,7 +309,8 @@ list_model_functions_sink(void) {
     (void)cecup_list_model_update;
     (void)cecup_list_model_row_removed;
     (void)cecup_list_model_row_changed;
-    (void)cecup_item_proxy_get_item;
+    (void)cecup_item_proxy_get_index;
+    return;
 }
 
 #if TESTING_list_model

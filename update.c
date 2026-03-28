@@ -43,7 +43,7 @@
 static void update_list_from_rows(void);
 
 static bool
-item_is_visible(CecupItem *item) {
+item_is_visible(int32 row_id) {
     enum Action src_act;
     enum Action dst_act;
     enum Reason reason;
@@ -62,7 +62,7 @@ item_is_visible(CecupItem *item) {
     show_delete = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
     show_ignore = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
-    item_get_actions_reasons(item, &src_act, &dst_act, &reason);
+    item_get_actions_reasons(row_id, &src_act, &dst_act, &reason);
     visible = false;
 
     switch (src_act) {
@@ -100,7 +100,7 @@ item_is_visible(CecupItem *item) {
             if (cecup.search_query[0] != '\0') {
                 char *path;
 
-                path = item_path_get(item);
+                path = item_path_get(row_id);
                 if (strcasestr(path, cecup.search_query) == NULL) {
                     visible = false;
                 }
@@ -113,11 +113,16 @@ item_is_visible(CecupItem *item) {
 
 static void
 update_row_remove(Message *message) {
-    char *pattern = message->src_path;
-    int32 pattern_len = message->path_len;
-    int32 side = message->side;
-    bool changed = false;
+    char *pattern;
+    int32 pattern_len;
+    int32 side;
+    bool changed;
     Traversal *traversal;
+
+    pattern = message->src_path;
+    pattern_len = message->path_len;
+    side = message->side;
+    changed = false;
 
     if (side == L) {
         traversal = &cecup.traversal_src;
@@ -130,11 +135,16 @@ update_row_remove(Message *message) {
     }
 
     for (int32 i = 0; i < cecup.rows_len; ) {
-        CecupItem *item = cecup.rows[i];
-        char *path = item_path_get(item);
-        int32 path_len = item_path_len_get(item);
-        bool match = false;
+        int32 row_id;
+        char *path;
+        int32 path_len;
+        bool match;
         int32 *idx_ptr;
+
+        row_id = i;
+        path = item_path_get(row_id);
+        path_len = item_path_len_get(row_id);
+        match = false;
 
         if (pattern[pattern_len - 1] == '/') {
             if (BEGINS_WITH(path, pattern, pattern_len)) {
@@ -152,49 +162,32 @@ update_row_remove(Message *message) {
         }
 
         changed = true;
-
-        if (side == L) {
-            idx_ptr = &item->src_idx;
-        } else {
-            idx_ptr = &item->dst_idx;
-        }
+        idx_ptr = (side == L) ? &cecup.rows_src[row_id] : &cecup.rows_dst[row_id];
 
         if (*idx_ptr >= 0) {
-            int32 idx = *idx_ptr;
+            int32 idx;
 
+            idx = *idx_ptr;
             if (traversal->inode_map && S_ISREG(traversal->stats[idx].st_mode)) {
                 if (traversal->stats[idx].st_nlink > 1) {
                     char inode_str[64];
-                    int32 n = itoa2(inode_str, (long)traversal->stats[idx].st_ino);
+                    int32 n;
+
+                    n = itoa2(inode_str, (long)traversal->stats[idx].st_ino);
                     hash_remove_inode_map(traversal->inode_map, inode_str, n);
                 }
             }
 
-            hash_remove_fs_map(traversal->map,
-                               traversal->paths[idx],
-                               traversal->paths_lens[idx]);
+            hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
             memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
             *idx_ptr = -1;
         }
 
-        for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
-            if (cecup.rows_visible[v] == item) {
-                if (((item->src_idx == -1) && (item->dst_idx == -1)) || !item_is_visible(item)) {
-                    for (int32 k = v; k < (cecup.rows_visible_len - 1); k += 1) {
-                        cecup.rows_visible[k] = cecup.rows_visible[k + 1];
-                    }
-                    cecup.rows_visible_len -= 1;
-                    cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), v);
-                } else {
-                    cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v);
-                }
-                break;
-            }
-        }
-
-        if ((item->src_idx == -1) && (item->dst_idx == -1)) {
+        if ((cecup.rows_src[row_id] == -1) && (cecup.rows_dst[row_id] == -1)) {
             for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
-                cecup.rows[j] = cecup.rows[j + 1];
+                cecup.rows_src[j] = cecup.rows_src[j + 1];
+                cecup.rows_dst[j] = cecup.rows_dst[j + 1];
+                cecup.rows_selected[j] = cecup.rows_selected[j + 1];
             }
             cecup.rows_len -= 1;
         } else {
@@ -204,6 +197,7 @@ update_row_remove(Message *message) {
 
     if (changed) {
         invalidate_preview();
+        update_list_from_rows();
     }
 
     return;
@@ -211,19 +205,28 @@ update_row_remove(Message *message) {
 
 static void
 update_row_transfer(Message *message) {
-    char *pattern = message->src_path;
-    int32 pattern_len = message->path_len;
-    bool changed = false;
+    char *pattern;
+    int32 pattern_len;
+    bool changed;
+
+    pattern = message->src_path;
+    pattern_len = message->path_len;
+    changed = false;
 
     if (pattern == NULL || pattern_len == 0) {
         return;
     }
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupItem *item = cecup.rows[i];
-        char *path = item_path_get(item);
-        int32 path_len = item_path_len_get(item);
-        bool match = false;
+        int32 row_id;
+        char *path;
+        int32 path_len;
+        bool match;
+
+        row_id = i;
+        path = item_path_get(row_id);
+        path_len = item_path_len_get(row_id);
+        match = false;
 
         if (pattern[pattern_len - 1] == '/') {
             if (BEGINS_WITH(path, pattern, pattern_len)) {
@@ -239,52 +242,43 @@ update_row_transfer(Message *message) {
             continue;
         }
 
-        if (item->src_idx >= 0) {
-            Traversal *traversal_src = &cecup.traversal_src;
-            Traversal *traversal_dst = &cecup.traversal_dst;
+        if (cecup.rows_src[row_id] >= 0) {
+            Traversal *traversal_src;
+            Traversal *traversal_dst;
+            int32 s_idx;
 
-            if (item->dst_idx < 0) {
+            traversal_src = &cecup.traversal_src;
+            traversal_dst = &cecup.traversal_dst;
+            s_idx = cecup.rows_src[row_id];
+
+            if (cecup.rows_dst[row_id] < 0) {
                 int32 *lookup;
 
                 if ((lookup = hash_lookup_fs_map(traversal_dst->map, path, path_len))) {
-                    item->dst_idx = *lookup;
+                    cecup.rows_dst[row_id] = *lookup;
                 } else {
-                    item->dst_idx = traversal_push(traversal_dst,
-                                                   traversal_src->paths[item->src_idx],
-                                                   traversal_src->paths_lens[item->src_idx],
-                                                   &traversal_src->stats[item->src_idx],
-                                                   traversal_src->link_targets[item->src_idx],
-                                                   traversal_src->link_targets_lens[item->src_idx],
-                                                   traversal_src->matched_patterns[item->src_idx],
-                                                   traversal_src->matched_patterns_lens[item->src_idx]);
+                    cecup.rows_dst[row_id] = traversal_push(traversal_dst,
+                                                   traversal_src->paths[s_idx],
+                                                   traversal_src->paths_lens[s_idx],
+                                                   &traversal_src->stats[s_idx],
+                                                   traversal_src->link_targets[s_idx],
+                                                   traversal_src->link_targets_lens[s_idx],
+                                                   traversal_src->matched_patterns[s_idx],
+                                                   traversal_src->matched_patterns_lens[s_idx]);
                 }
             } else {
-                memcpy64(&traversal_dst->stats[item->dst_idx],
-                         &traversal_src->stats[item->src_idx],
+                memcpy64(&traversal_dst->stats[cecup.rows_dst[row_id]],
+                         &traversal_src->stats[s_idx],
                          SIZEOF(struct stat));
             }
 
             changed = true;
-
-            for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
-                if (cecup.rows_visible[v] == item) {
-                    if (item_is_visible(item)) {
-                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v);
-                    } else {
-                        for (int32 k = v; k < (cecup.rows_visible_len - 1); k += 1) {
-                            cecup.rows_visible[k] = cecup.rows_visible[k + 1];
-                        }
-                        cecup.rows_visible_len -= 1;
-                        cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), v);
-                    }
-                    break;
-                }
-            }
         }
     }
 
     if (changed) {
         invalidate_preview();
+        update_list_from_rows();
     }
 
     return;
@@ -311,16 +305,10 @@ update_row_rename(Message *message) {
     is_dir = (old_path[old_path_len - 1] == '/');
     changed = false;
 
-    if (side == L) {
-        traversal = &cecup.traversal_src;
-    } else {
-        traversal = &cecup.traversal_dst;
-    }
+    traversal = (side == L) ? &cecup.traversal_src : &cecup.traversal_dst;
 
-    /* Pass 1: Update Traversal Data and handle Splits/Joins in cecup.rows */
     for (int32 i = 0; i < cecup.rows_len; ) {
-        CecupItem *it;
-        CecupItem *merge_item;
+        int32 row_id;
         char *p_old;
         char *p_new;
         int32 idx;
@@ -328,11 +316,12 @@ update_row_rename(Message *message) {
         int32 n_idx;
         int32 sub_len;
         int32 suffix_len;
+        int32 merge_row_id;
         IgnorePattern *p_match;
         bool is_match;
 
-        it = cecup.rows[i];
-        p_old = item_path_side(it, side);
+        row_id = i;
+        p_old = item_path_side(row_id, side);
         is_match = false;
 
         if (p_old) {
@@ -351,14 +340,14 @@ update_row_rename(Message *message) {
         }
 
         changed = true;
-        sub_len = item_path_len_side(it, side);
+        sub_len = item_path_len_side(row_id, side);
         suffix_len = sub_len - old_path_len;
         p_new = xarena_push(traversal->arena, new_path_len + suffix_len + 1);
         memcpy64(p_new, new_path, new_path_len);
         memcpy64(p_new + new_path_len, p_old + old_path_len, suffix_len + 1);
 
-        idx = (side == L) ? it->src_idx : it->dst_idx;
-        other_idx = (side == L) ? it->dst_idx : it->src_idx;
+        idx = (side == L) ? cecup.rows_src[row_id] : cecup.rows_dst[row_id];
+        other_idx = (side == L) ? cecup.rows_dst[row_id] : cecup.rows_src[row_id];
 
         hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
 
@@ -371,45 +360,44 @@ update_row_rename(Message *message) {
                                traversal->link_targets[idx], traversal->link_targets_lens[idx],
                                (p_match ? p_match->str : NULL), (p_match ? p_match->len : 0));
 
-        merge_item = NULL;
+        merge_row_id = -1;
         for (int32 j = 0; j < cecup.rows_len; j += 1) {
             char *p_other;
-            p_other = item_path_side(cecup.rows[j], other_side);
+
+            p_other = item_path_side(j, other_side);
             if (p_other && strcmp(p_other, p_new) == 0) {
-                merge_item = cecup.rows[j];
+                merge_row_id = j;
                 break;
             }
         }
 
-        if (merge_item) {
-            if (side == L) { merge_item->src_idx = n_idx; } else { merge_item->dst_idx = n_idx; }
+        if (merge_row_id >= 0) {
+            if (side == L) { cecup.rows_src[merge_row_id] = n_idx; } else { cecup.rows_dst[merge_row_id] = n_idx; }
 
             if (other_idx >= 0) {
-                /* Split: this item remains but only for the 'other' side */
-                if (side == L) { it->src_idx = -1; } else { it->dst_idx = -1; }
+                if (side == L) { cecup.rows_src[row_id] = -1; } else { cecup.rows_dst[row_id] = -1; }
                 i += 1;
             } else {
-                /* Full Join: 'it' is now empty, remove from global list */
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
-                    cecup.rows[j] = cecup.rows[j + 1];
+                    cecup.rows_src[j] = cecup.rows_src[j + 1];
+                    cecup.rows_dst[j] = cecup.rows_dst[j + 1];
+                    cecup.rows_selected[j] = cecup.rows_selected[j + 1];
                 }
                 cecup.rows_len -= 1;
             }
         } else {
-            /* Simple Rename or Split into a new orphan */
             if (other_idx >= 0) {
-                CecupItem *orphan;
                 if (side == L) {
-                    it->src_idx = n_idx;
-                    it->dst_idx = -1;
-                    orphan = item_add(-1, other_idx);
+                    cecup.rows_src[row_id] = n_idx;
+                    cecup.rows_dst[row_id] = -1;
+                    item_add(-1, other_idx);
                 } else {
-                    it->dst_idx = n_idx;
-                    it->src_idx = -1;
-                    orphan = item_add(other_idx, -1);
+                    cecup.rows_dst[row_id] = n_idx;
+                    cecup.rows_src[row_id] = -1;
+                    item_add(other_idx, -1);
                 }
             } else {
-                if (side == L) { it->src_idx = n_idx; } else { it->dst_idx = n_idx; }
+                if (side == L) { cecup.rows_src[row_id] = n_idx; } else { cecup.rows_dst[row_id] = n_idx; }
             }
             i += 1;
         }
@@ -419,7 +407,6 @@ update_row_rename(Message *message) {
 
     if (changed) {
         invalidate_preview();
-        /* Pass 2: Rebuild rows_visible and signal GTK once */
         update_list_from_rows();
     }
 
@@ -457,20 +444,20 @@ update_list_from_rows(void) {
 
     cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupItem *item;
+        int32 row_id;
         enum Action src_act;
         enum Action dst_act;
         enum Reason reason;
         int64 sz;
 
-        item = cecup.rows[i];
-        if (item->selected) {
+        row_id = i;
+        if (cecup.rows_selected[row_id]) {
             count_selected += 1;
         }
 
-        item_get_actions_reasons(item, &src_act, &dst_act, &reason);
+        item_get_actions_reasons(row_id, &src_act, &dst_act, &reason);
 
-        sz = item_size_side(item, L);
+        sz = item_size_side(row_id, L);
         if (sz < 0) {
             sz = 0;
         }
@@ -508,8 +495,8 @@ update_list_from_rows(void) {
             break;
         }
 
-        if (item_is_visible(item)) {
-            cecup.rows_visible[cecup.rows_visible_len] = item;
+        if (item_is_visible(row_id)) {
+            cecup.rows_visible[cecup.rows_visible_len] = row_id;
             cecup.rows_visible_len += 1;
         }
     }
@@ -538,7 +525,7 @@ update_list_from_rows(void) {
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
 
     if (cecup.rows_visible_len > 0) {
-        qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(CecupItem *),
+        qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(int32),
                 cecup_item_compare);
     }
 
@@ -559,15 +546,15 @@ update_row_ignore(Message *message) {
     ignore_patterns_load();
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupItem *item;
+        int32 row_id;
         char *path;
         int32 path_len;
         bool is_dir;
         IgnorePattern *match;
 
-        item = cecup.rows[i];
-        path = item_path_get(item);
-        path_len = item_path_len_get(item);
+        row_id = i;
+        path = item_path_get(row_id);
+        path_len = item_path_len_get(row_id);
         is_dir = false;
 
         if (path_len > 0) {
@@ -581,13 +568,19 @@ update_row_ignore(Message *message) {
                                       cecup.ignore_count);
 
         if (match) {
-            if (item->src_idx >= 0) {
-                cecup.traversal_src.matched_patterns[item->src_idx] = match->str;
-                cecup.traversal_src.matched_patterns_lens[item->src_idx] = (int16)match->len;
+            if (cecup.rows_src[row_id] >= 0) {
+                int32 s_idx;
+
+                s_idx = cecup.rows_src[row_id];
+                cecup.traversal_src.matched_patterns[s_idx] = match->str;
+                cecup.traversal_src.matched_patterns_lens[s_idx] = (int16)match->len;
             }
-            if (item->dst_idx >= 0) {
-                cecup.traversal_dst.matched_patterns[item->dst_idx] = match->str;
-                cecup.traversal_dst.matched_patterns_lens[item->dst_idx] = (int16)match->len;
+            if (cecup.rows_dst[row_id] >= 0) {
+                int32 d_idx;
+
+                d_idx = cecup.rows_dst[row_id];
+                cecup.traversal_dst.matched_patterns[d_idx] = match->str;
+                cecup.traversal_dst.matched_patterns_lens[d_idx] = (int16)match->len;
             }
         }
     }
@@ -686,12 +679,7 @@ update_ui_process_message(Message *message) {
         }
         update_list_from_rows();
 
-        if (message->preview_clean) {
-            cecup.preview_dirty = false;
-        } else {
-            cecup.preview_dirty = true;
-        }
-
+        cecup.preview_dirty = !message->preview_clean;
         protect_interface_from_user(false);
         break;
     case DATA_TYPE_CLEAR_TREES:
@@ -703,7 +691,6 @@ update_ui_process_message(Message *message) {
 
         current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
-        arena_reset(cecup.arena);
         cecup.rows_len = 0;
         cecup.rows_visible_len = 0;
 
@@ -753,10 +740,7 @@ update_progress_bar(enum DataType type, double fraction) {
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index;
 
-    index = 0;
-    if (type == DATA_TYPE_PROGRESS_PREVIEW) {
-        index = 3;
-    }
+    index = (type == DATA_TYPE_PROGRESS_PREVIEW) ? 3 : 0;
 
     if (fraction < 1.0) {
         if ((fraction - last_fractions[index]) < 0.001) {

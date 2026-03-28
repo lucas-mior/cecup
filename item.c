@@ -4,11 +4,17 @@
 #include "cecup.h"
 
 static char *
-item_path_get(CecupItem *item) {
-    if (item->src_idx >= 0) {
-        return cecup.traversal_src.paths[item->src_idx];
-    } else if (item->dst_idx >= 0) {
-        return cecup.traversal_dst.paths[item->dst_idx];
+item_path_get(int32 row_id) {
+    int32 src_idx;
+    int32 dst_idx;
+
+    src_idx = cecup.rows_src[row_id];
+    dst_idx = cecup.rows_dst[row_id];
+
+    if (src_idx >= 0) {
+        return cecup.traversal_src.paths[src_idx];
+    } else if (dst_idx >= 0) {
+        return cecup.traversal_dst.paths[dst_idx];
     } else {
         error2("Error: src_path and dst_path are NULL.\n");
         fatal(EXIT_FAILURE);
@@ -16,42 +22,56 @@ item_path_get(CecupItem *item) {
 }
 
 static int32
-item_path_len_get(CecupItem *item) {
-    if (item->src_idx >= 0) {
-        return cecup.traversal_src.paths_lens[item->src_idx];
+item_path_len_get(int32 row_id) {
+    int32 src_idx;
+    int32 dst_idx;
+
+    src_idx = cecup.rows_src[row_id];
+    dst_idx = cecup.rows_dst[row_id];
+
+    if (src_idx >= 0) {
+        return cecup.traversal_src.paths_lens[src_idx];
     }
-    if (item->dst_idx >= 0) {
-        return cecup.traversal_dst.paths_lens[item->dst_idx];
+    if (dst_idx >= 0) {
+        return cecup.traversal_dst.paths_lens[dst_idx];
     }
     return 0;
 }
 
 static char *
-item_path_side(CecupItem *item, int32 side) {
+item_path_side(int32 row_id, int32 side) {
+    int32 idx;
+
     if (side == L) {
-        if (item->src_idx >= 0) {
-            return cecup.traversal_src.paths[item->src_idx];
+        idx = cecup.rows_src[row_id];
+        if (idx >= 0) {
+            return cecup.traversal_src.paths[idx];
         }
     } else {
-        if (item->dst_idx >= 0) {
-            return cecup.traversal_dst.paths[item->dst_idx];
+        idx = cecup.rows_dst[row_id];
+        if (idx >= 0) {
+            return cecup.traversal_dst.paths[idx];
         }
     }
     return NULL;
 }
 
 static int64
-item_size_side(CecupItem *item, int32 side) {
+item_size_side(int32 row_id, int32 side) {
+    int32 idx;
+
     if (side == L) {
-        if (item->src_idx >= 0) {
-            if (!S_ISDIR(cecup.traversal_src.stats[item->src_idx].st_mode)) {
-                return cecup.traversal_src.stats[item->src_idx].st_size;
+        idx = cecup.rows_src[row_id];
+        if (idx >= 0) {
+            if (!S_ISDIR(cecup.traversal_src.stats[idx].st_mode)) {
+                return cecup.traversal_src.stats[idx].st_size;
             }
         }
     } else {
-        if (item->dst_idx >= 0) {
-            if (!S_ISDIR(cecup.traversal_dst.stats[item->dst_idx].st_mode)) {
-                return cecup.traversal_dst.stats[item->dst_idx].st_size;
+        idx = cecup.rows_dst[row_id];
+        if (idx >= 0) {
+            if (!S_ISDIR(cecup.traversal_dst.stats[idx].st_mode)) {
+                return cecup.traversal_dst.stats[idx].st_size;
             }
         }
     }
@@ -59,84 +79,107 @@ item_size_side(CecupItem *item, int32 side) {
 }
 
 static int64
-item_mtime_side(CecupItem *item, int32 side) {
+item_mtime_side(int32 row_id, int32 side) {
+    int32 idx;
+
     if (side == L) {
-        if (item->src_idx >= 0) {
-            return cecup.traversal_src.stats[item->src_idx].st_mtime;
+        idx = cecup.rows_src[row_id];
+        if (idx >= 0) {
+            return cecup.traversal_src.stats[idx].st_mtime;
         }
     } else {
-        if (item->dst_idx >= 0) {
-            return cecup.traversal_dst.stats[item->dst_idx].st_mtime;
+        idx = cecup.rows_dst[row_id];
+        if (idx >= 0) {
+            return cecup.traversal_dst.stats[idx].st_mtime;
         }
     }
     return 0;
 }
 
 static char *
-item_ignore_pattern_side(CecupItem *item, int32 side) {
+item_ignore_pattern_side(int32 row_id, int32 side) {
+    int32 idx;
+
     if (side == L) {
-        if (item->src_idx >= 0) {
-            return cecup.traversal_src.matched_patterns[item->src_idx];
+        idx = cecup.rows_src[row_id];
+        if (idx >= 0) {
+            return cecup.traversal_src.matched_patterns[idx];
         }
     } else {
-        if (item->dst_idx >= 0) {
-            return cecup.traversal_dst.matched_patterns[item->dst_idx];
+        idx = cecup.rows_dst[row_id];
+        if (idx >= 0) {
+            return cecup.traversal_dst.matched_patterns[idx];
         }
     }
     return NULL;
 }
 
 static int32
-item_path_len_side(CecupItem *item, int32 side) {
+item_path_len_side(int32 row_id, int32 side) {
+    int32 idx;
+
     if (side == L) {
-        if (item->src_idx >= 0) {
-            return (int32)cecup.traversal_src.paths_lens[item->src_idx];
+        idx = cecup.rows_src[row_id];
+        if (idx >= 0) {
+            return (int32)cecup.traversal_src.paths_lens[idx];
         }
     } else {
-        if (item->dst_idx >= 0) {
-            return (int32)cecup.traversal_dst.paths_lens[item->dst_idx];
+        idx = cecup.rows_dst[row_id];
+        if (idx >= 0) {
+            return (int32)cecup.traversal_dst.paths_lens[idx];
         }
     }
     return 0;
 }
 
 static char *
-item_link_target_side(CecupItem *item, int32 side) {
+item_link_target_side(int32 row_id, int32 side) {
+    int32 idx;
+
     if (side == L) {
-        if (item->src_idx >= 0) {
-            return cecup.traversal_src.link_targets[item->src_idx];
+        idx = cecup.rows_src[row_id];
+        if (idx >= 0) {
+            return cecup.traversal_src.link_targets[idx];
         }
     } else {
-        if (item->dst_idx >= 0) {
-            return cecup.traversal_dst.link_targets[item->dst_idx];
+        idx = cecup.rows_dst[row_id];
+        if (idx >= 0) {
+            return cecup.traversal_dst.link_targets[idx];
         }
     }
     return NULL;
 }
 
 static int32
-item_link_target_len_side(CecupItem *item, int32 side) {
+item_link_target_len_side(int32 row_id, int32 side) {
+    int32 idx;
+
     if (side == L) {
-        if (item->src_idx >= 0) {
-            return (int32)cecup.traversal_src.link_targets_lens[item->src_idx];
+        idx = cecup.rows_src[row_id];
+        if (idx >= 0) {
+            return (int32)cecup.traversal_src.link_targets_lens[idx];
         }
     } else {
-        if (item->dst_idx >= 0) {
-            return (int32)cecup.traversal_dst.link_targets_lens[item->dst_idx];
+        idx = cecup.rows_dst[row_id];
+        if (idx >= 0) {
+            return (int32)cecup.traversal_dst.link_targets_lens[idx];
         }
     }
     return 0;
 }
 
 static void
-item_get_actions_reasons(CecupItem *item, enum Action *action_src,
+item_get_actions_reasons(int32 row_id, enum Action *action_src,
                          enum Action *action_dst, enum Reason *reason) {
-    int32 src_idx = item->src_idx;
-    int32 dst_idx = item->dst_idx;
-    bool delete_excluded
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
-    bool delete_after
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
+    int32 src_idx;
+    int32 dst_idx;
+    bool delete_excluded;
+    bool delete_after;
+
+    src_idx = cecup.rows_src[row_id];
+    dst_idx = cecup.rows_dst[row_id];
+    delete_excluded = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_excluded));
+    delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
     *reason = 0;
 
@@ -150,7 +193,8 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
     }
 
     if (src_idx < 0) {
-        char *matched_dst = cecup.traversal_dst.matched_patterns[dst_idx];
+        char *matched_dst;
+        matched_dst = cecup.traversal_dst.matched_patterns[dst_idx];
         *reason |= REASON_MISSING;
 
         if (matched_dst) {
@@ -169,10 +213,15 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
     }
 
     if (dst_idx < 0) {
-        char *matched_src = cecup.traversal_src.matched_patterns[src_idx];
-        struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
-        bool is_symlink = S_ISLNK(stat_src->st_mode);
-        bool is_hardlink = S_ISREG(stat_src->st_mode)
+        char *matched_src;
+        struct stat *stat_src;
+        bool is_symlink;
+        bool is_hardlink;
+
+        matched_src = cecup.traversal_src.matched_patterns[src_idx];
+        stat_src = &cecup.traversal_src.stats[src_idx];
+        is_symlink = S_ISLNK(stat_src->st_mode);
+        is_hardlink = S_ISREG(stat_src->st_mode)
                            && cecup.traversal_src.link_targets[src_idx];
 
         if (matched_src) {
@@ -201,19 +250,33 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
     }
 
     {
-        char *matched_src = cecup.traversal_src.matched_patterns[src_idx];
-        struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
-        struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
-        char *path_src = cecup.traversal_src.paths[src_idx];
-        char *target_src = cecup.traversal_src.link_targets[src_idx];
-        char *target_dst = cecup.traversal_dst.link_targets[dst_idx];
-        int32 nlinks_src = cecup.traversal_src.nlinks[src_idx];
-        int32 nlinks_dst = cecup.traversal_dst.nlinks[dst_idx];
-        bool is_symlink = S_ISLNK(stat_src->st_mode);
-        bool is_hardlink = cecup.traversal_src.nlinks[src_idx] > 1;
-        bool is_dir = S_ISDIR(stat_src->st_mode);
-        bool equal = false;
-        bool attributes_differ = false;
+        char *matched_src;
+        struct stat *stat_src;
+        struct stat *stat_dst;
+        char *path_src;
+        char *target_src;
+        char *target_dst;
+        int32 nlinks_src;
+        int32 nlinks_dst;
+        bool is_symlink;
+        bool is_hardlink;
+        bool is_dir;
+        bool equal;
+        bool attributes_differ;
+
+        matched_src = cecup.traversal_src.matched_patterns[src_idx];
+        stat_src = &cecup.traversal_src.stats[src_idx];
+        stat_dst = &cecup.traversal_dst.stats[dst_idx];
+        path_src = cecup.traversal_src.paths[src_idx];
+        target_src = cecup.traversal_src.link_targets[src_idx];
+        target_dst = cecup.traversal_dst.link_targets[dst_idx];
+        nlinks_src = cecup.traversal_src.nlinks[src_idx];
+        nlinks_dst = cecup.traversal_dst.nlinks[dst_idx];
+        is_symlink = S_ISLNK(stat_src->st_mode);
+        is_hardlink = cecup.traversal_src.nlinks[src_idx] > 1;
+        is_dir = S_ISDIR(stat_src->st_mode);
+        equal = false;
+        attributes_differ = false;
 
         if (matched_src) {
             *action_src = ACTION_IGNORE;
@@ -338,8 +401,8 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
 
 static int32
 cecup_item_compare(const void *a, const void *b) {
-    CecupItem *item_a;
-    CecupItem *item_b;
+    int32 item_a;
+    int32 item_b;
     int64 result;
     char *path_a;
     char *path_b;
@@ -354,8 +417,8 @@ cecup_item_compare(const void *a, const void *b) {
     enum Reason reason_a;
     enum Reason reason_b;
 
-    item_a = *(CecupItem **)a;
-    item_b = *(CecupItem **)b;
+    item_a = *(int32 *)a;
+    item_b = *(int32 *)b;
 
 #define COMPARE(A, B) \
     do { \
@@ -411,7 +474,7 @@ cecup_item_compare(const void *a, const void *b) {
         COMPARE(dst_act_a, dst_act_b);
         break;
     case COL_MTIME_TEXT:
-    case COL_ITEM_PTR:
+    case COL_ROW_ID:
     case COL_SELECTED:
     case COL_SIZE_TEXT:
     case COL_SRC_ACTION:

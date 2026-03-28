@@ -68,8 +68,11 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
-        GtkColumnViewColumn *column = gtk_column_view_column_new(NULL, factory);
+        GtkListItemFactory *factory;
+        GtkColumnViewColumn *column;
+
+        factory = gtk_signal_list_item_factory_new();
+        column = gtk_column_view_column_new(NULL, factory);
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_column_checkbox), GINT_TO_POINTER(side));
@@ -80,9 +83,13 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
-        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
-        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Task"), factory);
+        GtkListItemFactory *factory;
+        GtkSorter *sorter;
+        GtkColumnViewColumn *column;
+
+        factory = gtk_signal_list_item_factory_new();
+        sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+        column = gtk_column_view_column_new(_("Task"), factory);
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_column_action), NULL);
@@ -98,9 +105,13 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
-        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
-        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Name"), factory);
+        GtkListItemFactory *factory;
+        GtkSorter *sorter;
+        GtkColumnViewColumn *column;
+
+        factory = gtk_signal_list_item_factory_new();
+        sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+        column = gtk_column_view_column_new(_("Name"), factory);
 
         g_signal_connect(factory, "setup",
                          G_CALLBACK(setup_column_path), tree);
@@ -118,10 +129,15 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
-        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
-        TextInfo *text_info = xmalloc(SIZEOF(*text_info));
-        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Size"), factory);
+        GtkListItemFactory *factory;
+        GtkSorter *sorter;
+        TextInfo *text_info;
+        GtkColumnViewColumn *column;
+
+        factory = gtk_signal_list_item_factory_new();
+        sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+        text_info = xmalloc(SIZEOF(*text_info));
+        column = gtk_column_view_column_new(_("Size"), factory);
 
         text_info->side = side;
         text_info->type = COLUMN_SIZE;
@@ -143,10 +159,15 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
-        GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
-        TextInfo *text_info = xmalloc(SIZEOF(*text_info));
-        GtkColumnViewColumn *column = gtk_column_view_column_new(_("Modification Time"), factory);
+        GtkListItemFactory *factory;
+        GtkSorter *sorter;
+        TextInfo *text_info;
+        GtkColumnViewColumn *column;
+
+        factory = gtk_signal_list_item_factory_new();
+        sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
+        text_info = xmalloc(SIZEOF(*text_info));
+        column = gtk_column_view_column_new(_("Modification Time"), factory);
 
         text_info->side = side;
         text_info->type = COLUMN_MTIME;
@@ -173,7 +194,9 @@ main_setup_tree_columns(GtkWidget *tree,
 
     g_signal_connect(tree, "query-tooltip", G_CALLBACK(on_tree_tooltip), NULL);
     {
-        GtkSorter *sorter = gtk_column_view_get_sorter(GTK_COLUMN_VIEW(tree));
+        GtkSorter *sorter;
+
+        sorter = gtk_column_view_get_sorter(GTK_COLUMN_VIEW(tree));
         g_signal_connect(sorter, "changed", G_CALLBACK(on_sort_changed), tree);
     }
 
@@ -190,8 +213,9 @@ main_setup_tree_columns(GtkWidget *tree,
     }
 
     {
-        GtkEventController *key = gtk_event_controller_key_new();
+        GtkEventController *key;
 
+        key = gtk_event_controller_key_new();
         gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(key));
         gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(key),
                                                    GTK_PHASE_BUBBLE);
@@ -227,21 +251,19 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     GtkSelectionModel *selection_model;
 
     char cwd[MAX_PATH_LENGTH];
-    char *default_src;
-    char *default_dst;
     char src_path_buffer[MAX_PATH_LENGTH];
     char dst_path_buffer[MAX_PATH_LENGTH];
-    int32 dst_path_len;
-    int32 src_path_len;
 
     (void)user_data;
 
     {
-        GtkCssProvider *css_provider = gtk_css_provider_new();
+        GtkCssProvider *css_provider;
         char css[BUFSIZ];
-        int32 offset = 0;
+        int32 offset;
         int32 n;
 
+        css_provider = gtk_css_provider_new();
+        offset = 0;
         n = snprintf2(css + offset, SIZEOF(css) - offset,
                       "columnview row { min-height: 0px; }\n"
                       "columnview cell { padding: 0px; }\n"
@@ -314,7 +336,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_end(cecup.ignore_button, PADDING_BUTTON);
 
     {
-        GtkWidget *spacer = gtk_label_new("");
+        GtkWidget *spacer;
+
+        spacer = gtk_label_new("");
         gtk_widget_set_hexpand(spacer, TRUE);
         gtk_box_append(GTK_BOX(button_hbox), spacer);
     }
@@ -403,16 +427,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         exit(EXIT_FAILURE);
     }
 
-    src_path_len = SNPRINTF(src_path_buffer, "%s/a/", cwd);
-    default_src = xmalloc(src_path_len + 1);
-    memcpy64(default_src, src_path_buffer, src_path_len + 1);
-
-    dst_path_len = SNPRINTF(dst_path_buffer, "%s/b/", cwd);
-    default_dst = xmalloc(dst_path_len + 1);
-    memcpy64(default_dst, dst_path_buffer, dst_path_len + 1);
-
-    free(default_src, src_path_len + 1);
-    free(default_dst, dst_path_len + 1);
+    SNPRINTF(src_path_buffer, "%s/a/", cwd);
+    SNPRINTF(dst_path_buffer, "%s/b/", cwd);
 
     paths_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_widget_set_margin_start(paths_hbox, 10);
@@ -425,7 +441,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     cecup.dir_entry[L] = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.dir_entry[L],
                                 _("Folder containing your original files"));
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), default_src);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), src_path_buffer);
     browse[L] = gtk_button_new_with_label(_("Select Folder"));
 
     gtk_widget_set_hexpand(cecup.dir_entry[L], TRUE);
@@ -443,7 +459,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     cecup.dir_entry[R] = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.dir_entry[R],
                                 _("Folder where the backup will be stored"));
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), default_dst);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), dst_path_buffer);
     browse[R] = gtk_button_new_with_label(_("Select Folder"));
 
     gtk_widget_set_hexpand(cecup.dir_entry[R], TRUE);
@@ -462,7 +478,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                                       GTK_ENTRY_ICON_PRIMARY,
                                       "system-search-symbolic");
     {
-        GtkWidget *search_label = gtk_label_new(_("🔍"));
+        GtkWidget *search_label;
+
+        search_label = gtk_label_new(_("🔍"));
         gtk_box_append(GTK_BOX(search_hbox), search_label);
         gtk_widget_set_margin_start(search_label, 5);
         gtk_widget_set_margin_end(search_label, 5);
@@ -518,8 +536,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_paned_set_end_child(GTK_PANED(v_paned), log_scroll);
 
     {
-        GtkGesture *log_gesture = gtk_gesture_click_new();
+        GtkGesture *log_gesture;
 
+        log_gesture = gtk_gesture_click_new();
         gtk_widget_add_controller(cecup.log_view,
                                   GTK_EVENT_CONTROLLER(log_gesture));
         gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(log_gesture),
@@ -532,8 +551,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     {
         GSimpleAction *action_copy_all;
         GSimpleAction *action_copy_line;
-        GActionMap *action_map = G_ACTION_MAP(cecup.application);
+        GActionMap *action_map;
 
+        action_map = G_ACTION_MAP(cecup.application);
         action_copy_all = g_simple_action_new("copy_all", NULL);
         g_signal_connect(action_copy_all, "activate",
                          G_CALLBACK(on_log_copy), "all");
@@ -599,9 +619,10 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                                           G_CALLBACK(on_config_changed), NULL);
 
     do {
-        GKeyFile *key = g_key_file_new();
+        GKeyFile *key;
         char *value;
 
+        key = g_key_file_new();
         if (!g_key_file_load_from_file(key, cecup.config_path,
                                        G_KEY_FILE_NONE, NULL)) {
             g_key_file_free(key);
@@ -732,14 +753,17 @@ main(int32 argc, char **argv) {
     int32 status;
 
     program = argv[0];
-    (void)program_len;
 
     setenv("GTK_IM_MODULE", "gtk-im-context-simple", true);
 
     {
-        char *locale_devel = "./po";
-        char *locale_system = "/usr/share/locale/";
-        char *locale_local_system = "/usr/local/share/locale/";
+        char *locale_devel;
+        char *locale_system;
+        char *locale_local_system;
+
+        locale_devel = "./po";
+        locale_system = "/usr/share/locale/";
+        locale_local_system = "/usr/local/share/locale/";
 
         if (setlocale(LC_ALL, "") == NULL) {
             error("Error setting locale: %s.\n", strerror(errno));
@@ -770,8 +794,12 @@ main(int32 argc, char **argv) {
 
     cecup.rows_len = 0;
     cecup.rows_capacity = 256;
-    cecup.rows = xmalloc(cecup.rows_capacity*SIZEOF(CecupItem *));
-    cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(CecupItem *));
+    
+    /* These replace the old cecup.rows allocation */
+    cecup.rows_src = xmalloc(cecup.rows_capacity * SIZEOF(int32));
+    cecup.rows_dst = xmalloc(cecup.rows_capacity * SIZEOF(int32));
+    cecup.rows_visible = xmalloc(cecup.rows_capacity * SIZEOF(int32));
+    cecup.rows_selected = xmalloc(cecup.rows_capacity * SIZEOF(uint8));
 
     cecup.ignore_patterns = NULL;
     cecup.ignore_capacity = 0;
@@ -788,6 +816,7 @@ main(int32 argc, char **argv) {
 
         if ((XDG_CONFIG_HOME = getenv("XDG_CONFIG_HOME")) == NULL) {
             char *HOME;
+
             if ((HOME = getenv("HOME")) == NULL) {
                 error("HOME is not defined. Fix your system.\n");
                 exit(EXIT_FAILURE);
@@ -799,8 +828,8 @@ main(int32 argc, char **argv) {
 
         if (access(config_base, F_OK) == -1) {
             char cmd[MAX_PATH_LENGTH];
-            g_mkdir_with_parents(config_base, 0755);
 
+            g_mkdir_with_parents(config_base, 0755);
             SNPRINTF(cmd, "cp -r /etc/cecup/* '%s/'", config_base);
             system(cmd);
         }
@@ -821,8 +850,12 @@ main(int32 argc, char **argv) {
     g_object_unref(cecup.application);
     g_object_unref(cecup.store);
 
-    free(cecup.rows, cecup.rows_capacity*SIZEOF(CecupItem *));
-    free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(CecupItem *));
+    /* Cleanup must also use the new members */
+    free(cecup.rows_src, cecup.rows_capacity * SIZEOF(int32));
+    free(cecup.rows_dst, cecup.rows_capacity * SIZEOF(int32));
+    free(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
+    free(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
+    
     free(cecup.src_base, cecup.src_base_len + 1);
     free(cecup.dst_base, cecup.dst_base_len + 1);
 
@@ -831,5 +864,5 @@ main(int32 argc, char **argv) {
     arena_destroy(cecup.arena);
     g_mutex_clear(&cecup.arena_mutex);
 
-    exit(status);
+    return status;
 }

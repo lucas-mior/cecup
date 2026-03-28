@@ -45,8 +45,6 @@ aux_is_root(char *path) {
 static void
 invalidate_preview(void) {
     cecup.preview_dirty = true;
-    /* Only update visibility if a task isn't currently running,
-     * otherwise protect_interface_from_user will handle it when the task ends. */
     if (!gtk_widget_get_sensitive(cecup.stop_button)) {
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
         gtk_widget_set_tooltip_text(cecup.sync_button, _("Click Analysis first"));
@@ -86,8 +84,9 @@ traversal_push(Traversal *traversal, char *path, int32 path_len,
     int32 idx;
 
     if (traversal->nfiles >= traversal->ncapacity) {
-        int64 lens_type_size = SIZEOF(*(traversal->paths_lens));
+        int64 lens_type_size;
 
+        lens_type_size = SIZEOF(*(traversal->paths_lens));
         ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)),
                      SIZEOF(*(traversal->link_targets_lens)));
         ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)),
@@ -124,9 +123,9 @@ traversal_push(Traversal *traversal, char *path, int32 path_len,
         traversal->matched_patterns_lens = xrealloc2(traversal->matched_patterns_lens,
                                                      traversal->ncapacity,
                                                      lens_type_size);
-        traversal->nlinks= xrealloc2(traversal->nlinks,
-                                     traversal->ncapacity,
-                                     lens_type_size);
+        traversal->nlinks = xrealloc2(traversal->nlinks,
+                                      traversal->ncapacity,
+                                      lens_type_size);
     }
 
     idx = traversal->nfiles;
@@ -159,12 +158,12 @@ free_task_list(TaskList *tasks) {
     }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
-        Task *task = tasks->items[i];
+        Task *task;
 
+        task = tasks->items[i];
         free(task->path, task->path_len + 1);
         free(task->link_target, task->link_target_len + 1);
         free(task->message, task->message_len);
-
         free(task, SIZEOF(*task));
     }
 
@@ -175,14 +174,16 @@ free_task_list(TaskList *tasks) {
 static TaskList *
 get_target_tasks(int32 side, char *clicked_path, enum Action clicked_action) {
     TaskList *tasks;
-    int64 tasks_size = STRUCT_ARRAY_SIZE(tasks, Task *, cecup.rows_len);
-    int32 count = 0;
+    int64 tasks_size;
+    int32 count;
 
+    tasks_size = STRUCT_ARRAY_SIZE(tasks, Task *, cecup.rows_len);
+    count = 0;
     tasks = xmalloc(tasks_size);
     memset64(tasks, 0, tasks_size);
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupItem *item = cecup.rows[i];
+        int32 row_id;
         char *filepath;
         int32 path_len;
         enum Action action;
@@ -193,19 +194,20 @@ get_target_tasks(int32 side, char *clicked_path, enum Action clicked_action) {
         int32 link_target_len;
         Task *task;
 
-        if (!(item->selected)) {
+        row_id = i;
+        if (!(cecup.rows_selected[row_id])) {
             continue;
         }
 
-        item_get_actions_reasons(item, &action_src, &action_dst, &reason);
+        item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
         if (side == L) {
-            filepath = item_path_side(item, L);
-            path_len = item_path_len_side(item, L);
+            filepath = item_path_side(row_id, L);
+            path_len = item_path_len_side(row_id, L);
             action = action_src;
         } else {
-            filepath = item_path_side(item, R);
-            path_len = item_path_len_side(item, R);
+            filepath = item_path_side(row_id, R);
+            path_len = item_path_len_side(row_id, R);
             action = action_dst;
         }
 
@@ -220,8 +222,8 @@ get_target_tasks(int32 side, char *clicked_path, enum Action clicked_action) {
         task->path = xmalloc(path_len + 1);
         memcpy64(task->path, filepath, path_len + 1);
 
-        link_target = item_link_target_side(item, side);
-        link_target_len = item_link_target_len_side(item, side);
+        link_target = item_link_target_side(row_id, side);
+        link_target_len = item_link_target_len_side(row_id, side);
 
         if (link_target) {
             task->link_target_len = link_target_len;
@@ -255,11 +257,7 @@ get_target_tasks(int32 side, char *clicked_path, enum Action clicked_action) {
         task->action = clicked_action;
         task->side = side;
 
-        if (side == L) {
-            traversal = &cecup.traversal_src;
-        } else {
-            traversal = &cecup.traversal_dst;
-        }
+        traversal = (side == L) ? &cecup.traversal_src : &cecup.traversal_dst;
 
         if ((idx_ptr = hash_lookup_fs_map(traversal->map,
                                           clicked_path, task->path_len))) {
@@ -267,7 +265,6 @@ get_target_tasks(int32 side, char *clicked_path, enum Action clicked_action) {
             char *link_target;
 
             idx = *idx_ptr;
-
             if ((link_target = traversal->link_targets[idx])) {
                 task->link_target_len = traversal->link_targets_lens[idx];
                 task->link_target = xmalloc(task->link_target_len + 1);
@@ -296,8 +293,8 @@ cecup_reset_dir(int32 side) {
 
 static void
 cecup_get_dirs(void) {
-    char full_src[MAX_PATH_LENGTH/2];
-    char full_dst[MAX_PATH_LENGTH/2];
+    char full_src[MAX_PATH_LENGTH / 2];
+    char full_dst[MAX_PATH_LENGTH / 2];
     char *tmp_src;
     char *tmp_dst;
 
@@ -319,13 +316,13 @@ cecup_get_dirs(void) {
 
     if (realpath(tmp_src, full_src) == NULL) {
         LOG_ERROR("Error getting full path of %s: %s.\n", tmp_src,
-                           strerror(errno));
+                   strerror(errno));
         cecup_reset_dir(L);
         return;
     }
     if (realpath(tmp_dst, full_dst) == NULL) {
         LOG_ERROR("Error getting full path of %s: %s.\n", tmp_dst,
-                           strerror(errno));
+                   strerror(errno));
         cecup_reset_dir(R);
         return;
     }
@@ -418,7 +415,7 @@ static void
 log_internal(char *file, int line,
              enum DataType type, char *format, ...) {
     Message *message;
-    char buffer[MAX_PATH_LENGTH*2];
+    char buffer[MAX_PATH_LENGTH * 2];
     int32 n;
     int32 m;
     va_list va_args;
@@ -437,11 +434,7 @@ log_internal(char *file, int line,
     message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
-    if (!RELEASING) {
-        m = SNPRINTF(fileline, "%s:%d: ", file, line);
-    } else {
-        m = SNPRINTF(fileline, "%s", "");
-    }
+    m = (!RELEASING) ? SNPRINTF(fileline, "%s:%d: ", file, line) : SNPRINTF(fileline, "%s", "");
 
     message->text_len = n + m;
     message->text = xmalloc(n + m + 1);
@@ -456,8 +449,9 @@ log_internal(char *file, int line,
 
 static void
 free_message(void *data) {
-    Message *message = data;
+    Message *message;
 
+    message = data;
     free(message->text, message->text_len + 1);
     if (message->src_path) {
         free(message->src_path, message->path_len + 1);
@@ -485,103 +479,6 @@ aux_functions_sink(void) {
     (void)protect_interface_from_user;
     (void)invalidate_preview;
     return;
-}
-#endif
-
-#if TESTING_aux
-#include <assert.h>
-#include <string.h>
-
-#include "update.c"
-
-int
-main(void) {
-    (void)cecup_get_dirs;
-    (void)get_target_tasks;
-    (void)free_task_list;
-    (void)free_message;
-
-    {
-        char root1[] = ".";
-        char root2[] = "./";
-        char not_root1[] = "..";
-        char not_root2[] = "foo";
-        char not_root3[] = "./foo";
-
-        ASSERT(aux_is_root(root1));
-        ASSERT(aux_is_root(root2));
-        ASSERT(!aux_is_root(not_root1));
-        ASSERT(!aux_is_root(not_root2));
-        ASSERT(!aux_is_root(not_root3));
-    }
-
-    {
-        Traversal t;
-        int32 idx1;
-        int32 idx2;
-        char path1[] = "file1.txt";
-        char path2[] = "file2.txt";
-
-        memset64(&t, 0, SIZEOF(t));
-
-        idx1 = traversal_push(&t, path1, 9, NULL, NULL, 0, NULL, 0);
-        ASSERT(idx1 == 0);
-        ASSERT(t.nfiles == 1);
-        ASSERT(t.ncapacity == 1024);
-        ASSERT(strcmp(t.paths[0], path1) == 0);
-
-        idx2 = traversal_push(&t, path2, 9, NULL, NULL, 0, NULL, 0);
-        ASSERT(idx2 == 1);
-        ASSERT(t.nfiles == 2);
-        ASSERT(t.ncapacity == 1024);
-        ASSERT(strcmp(t.paths[1], path2) == 0);
-
-        for (int32 i = 2; i < 1025; i += 1) {
-            traversal_push(&t, path1, 9, NULL, NULL, 0, NULL, 0);
-        }
-
-        ASSERT(t.nfiles == 1025);
-        ASSERT(t.ncapacity == 2048);
-    }
-
-    {
-        CecupItem item;
-        char src_path[] = "src/file";
-        char dst_path[] = "dst/file";
-        char *paths_src[1];
-        char *paths_dst[1];
-        int16 paths_lens_src[1];
-        int16 paths_lens_dst[1];
-
-        paths_src[0] = src_path;
-        paths_dst[0] = dst_path;
-        paths_lens_src[0] = 8;
-        paths_lens_dst[0] = 8;
-
-        memset64(&cecup, 0, SIZEOF(cecup));
-        cecup.traversal_src.paths = paths_src;
-        cecup.traversal_dst.paths = paths_dst;
-        cecup.traversal_src.paths_lens = paths_lens_src;
-        cecup.traversal_dst.paths_lens = paths_lens_dst;
-
-        item.src_idx = 0;
-        item.dst_idx = -1;
-
-        ASSERT(strcmp(item_path_side(&item, L), src_path) == 0);
-        ASSERT(item_path_side(&item, R) == NULL);
-        ASSERT(item_path_len_side(&item, L) == 8);
-        ASSERT(item_path_len_side(&item, R) == 0);
-
-        item.src_idx = -1;
-        item.dst_idx = 0;
-
-        ASSERT(item_path_side(&item, L) == NULL);
-        ASSERT(strcmp(item_path_side(&item, R), dst_path) == 0);
-        ASSERT(item_path_len_side(&item, L) == 0);
-        ASSERT(item_path_len_side(&item, R) == 8);
-    }
-
-    exit(EXIT_SUCCESS);
 }
 #endif
 

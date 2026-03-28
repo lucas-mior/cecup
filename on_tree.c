@@ -53,8 +53,11 @@ on_tree_button_press(GtkGestureClick *gesture,
             }
 
             if (child) {
-                uint32 position = GPOINTER_TO_UINT(position_pointer) - 1;
-                GtkSelectionModel *model = gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
+                uint32 position;
+                GtkSelectionModel *model;
+
+                position = GPOINTER_TO_UINT(position_pointer) - 1;
+                model = gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
                 gtk_selection_model_select_item(model, position, TRUE);
             }
         }
@@ -84,7 +87,7 @@ on_tree_button_press(GtkGestureClick *gesture,
     case GDK_BUTTON_SECONDARY: {
         GMenu *menu;
         GtkWidget *popover;
-        CecupItem *item;
+        int32 row_id;
         char *filepath;
         char *other_path;
         GdkRectangle rect;
@@ -109,26 +112,26 @@ on_tree_button_press(GtkGestureClick *gesture,
 
         gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
         is_busy = gtk_widget_get_sensitive(cecup.stop_button);
-        item = cecup.rows_visible[pos];
+        row_id = cecup.rows_visible[pos];
 
         if (side == L) {
-            filepath = item_path_side(item, L);
-            other_path = item_path_side(item, R);
+            filepath = item_path_side(row_id, L);
+            other_path = item_path_side(row_id, R);
         } else {
-            filepath = item_path_side(item, R);
-            other_path = item_path_side(item, L);
+            filepath = item_path_side(row_id, R);
+            other_path = item_path_side(row_id, L);
         }
 
         message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
         if (filepath) {
-            message->path_len = item_path_len_side(item, side);
+            message->path_len = item_path_len_side(row_id, side);
             message->src_path = xmalloc(message->path_len + 1);
             memcpy64(message->src_path, filepath, message->path_len + 1);
         }
         message->side = side;
 
-        item_get_actions_reasons(item, &action_src, &action_dst, &reason);
+        item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
         if (side == L) {
             message->action = action_src;
@@ -164,7 +167,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                     char path_copy[MAX_PATH_LENGTH];
                     bool is_dir = false;
 
-                    path_len = item_path_len_side(item, side);
+                    path_len = item_path_len_side(row_id, side);
                     memcpy64(path_copy, filepath, path_len + 1);
 
                     if (path_len > 0 && path_copy[path_len - 1] == '/') {
@@ -183,7 +186,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                                                           "app.ignore", "s", pattern);
                         g_menu_append_item(submenu, m_item);
                         g_object_unref(m_item);
-            }
+                    }
 
                     if (!aux_is_root(directory)) {
                         SNPRINTF(label, _("📁 Dir (/%s/)"), directory);
@@ -296,8 +299,9 @@ static gboolean
 on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                 void *d) {
     GtkWidget *child;
-    CecupItem *item;
-    enum ColumnType column_type = COLUMN_LAST;
+    int32 row_id;
+    void *row_id_ptr;
+    enum ColumnType column_type;
     int32 side;
     char *tip_text;
     char tip_buffer[MAX_PATH_LENGTH*2];
@@ -308,15 +312,19 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
     (void)k;
     (void)d;
     tip_text = NULL;
-    item = NULL;
+    row_id_ptr = NULL;
+    column_type = COLUMN_LAST;
 
     if ((child = gtk_widget_pick(w, (double)x, (double)y, GTK_PICK_DEFAULT)) == NULL) {
         return FALSE;
     }
 
     while (child) {
-        if ((item = g_object_get_data(G_OBJECT(child), "cecup-item"))) {
-            void *col_data = g_object_get_data(G_OBJECT(child), "cecup-col");
+        if ((row_id_ptr = g_object_get_data(G_OBJECT(child), "cecup-row-id"))) {
+            void *col_data;
+
+            row_id = GPOINTER_TO_INT(row_id_ptr);
+            col_data = g_object_get_data(G_OBJECT(child), "cecup-col");
             column_type = (enum ColumnType)GPOINTER_TO_INT(col_data);
             break;
         }
@@ -329,7 +337,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
 
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
 
-    if (item) {
+    if (row_id_ptr) {
         char *filepath;
         enum Action action;
         enum Action action_src;
@@ -340,22 +348,18 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         char *ignore_pattern;
         int32 path_len;
 
-        item_get_actions_reasons(item, &action_src, &action_dst, &reason);
+        item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
         if (side == L) {
-            filepath = item_path_side(item, L);
+            filepath = item_path_side(row_id, L);
             action = action_src;
         } else {
-            filepath = item_path_side(item, R);
+            filepath = item_path_side(row_id, R);
             action = action_dst;
         }
 
         if (filepath == NULL) {
-            if (side == L) {
-                filepath = item_path_side(item, R);
-            } else {
-                filepath = item_path_side(item, L);
-            }
+            filepath = (side == L) ? item_path_side(row_id, R) : item_path_side(row_id, L);
         }
 
         if (filepath == NULL) {
@@ -372,17 +376,9 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         {
             char *msg;
             if (side == L) {
-                if (is_dir) {
-                    msg = _(src_action_strings_dir[action]);
-                } else {
-                    msg = _(src_action_strings_file[action]);
-                }
+                msg = is_dir ? _(src_action_strings_dir[action]) : _(src_action_strings_file[action]);
             } else {
-                if (is_dir) {
-                    msg = _(dst_action_strings_dir[action]);
-                } else {
-                    msg = _(dst_action_strings_file[action]);
-                }
+                msg = is_dir ? _(dst_action_strings_dir[action]) : _(dst_action_strings_file[action]);
             }
 
             tip_text = msg;
@@ -394,49 +390,36 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             reason_buf[0] = '\0';
             for (uint32 i = 0; i < REASON_BIT_COUNT; i += 1) {
                 char *base_msg;
+
                 if (!(reason & (1 << i))) {
                     continue;
                 }
 
-                if ((i >= LENGTH(reason_strings_file))
-                        || (reason_strings_file[i] == NULL)) {
+                if ((i >= LENGTH(reason_strings_file)) || (reason_strings_file[i] == NULL)) {
                     continue;
                 }
 
                 if (rb_pos > 0) {
-                    rb_pos += snprintf2(reason_buf + rb_pos,
-                                        SIZEOF(reason_buf) - rb_pos, ", ");
+                    rb_pos += snprintf2(reason_buf + rb_pos, SIZEOF(reason_buf) - rb_pos, ", ");
                 }
 
-                if (is_dir) {
-                    base_msg = _(reason_strings_dir[i]);
-                } else {
-                    base_msg = _(reason_strings_file[i]);
-                }
+                base_msg = is_dir ? _(reason_strings_dir[i]) : _(reason_strings_file[i]);
 
                 if (base_msg) {
-                    rb_pos += snprintf2(reason_buf + rb_pos,
-                                        SIZEOF(reason_buf) - rb_pos,
-                                        "%s", base_msg);
+                    rb_pos += snprintf2(reason_buf + rb_pos, SIZEOF(reason_buf) - rb_pos, "%s", base_msg);
                 }
             }
 
-            link_target = item_link_target_side(item, side);
-            ignore_pattern = item_ignore_pattern_side(item, side);
+            link_target = item_link_target_side(row_id, side);
+            ignore_pattern = item_ignore_pattern_side(row_id, side);
 
             if (link_target) {
                 char *notation;
-                if (reason & REASON_HARDLINK) {
-                    notation = RSYNC_HARDLINK_NOTATION;
-                } else {
-                    notation = RSYNC_SYMLINK_NOTATION;
-                }
-                SNPRINTF(tip_buffer,
-                         "%s%s%s: %s", filepath, notation, link_target, reason_buf);
+
+                notation = (reason & REASON_HARDLINK) ? RSYNC_HARDLINK_NOTATION : RSYNC_SYMLINK_NOTATION;
+                SNPRINTF(tip_buffer, "%s%s%s: %s", filepath, notation, link_target, reason_buf);
             } else if (ignore_pattern) {
-                SNPRINTF(tip_buffer,
-                         "%s: %s (" N_("pattern") ": %s)",
-                         filepath, reason_buf, ignore_pattern);
+                SNPRINTF(tip_buffer, "%s: %s (" N_("pattern") ": %s)", filepath, reason_buf, ignore_pattern);
             } else {
                 SNPRINTF(tip_buffer, "%s: %s", filepath, reason_buf);
             }
@@ -445,7 +428,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         }
         case COLUMN_SIZE:
         {
-            int64 size_raw = item_size_side(item, side);
+            int64 size_raw = item_size_side(row_id, side);
+
             if (size_raw < 0) {
                 size_raw = 0;
             }
@@ -455,7 +439,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         }
         case COLUMN_MTIME:
         {
-            int64 mtime_raw = item_mtime_side(item, side);
+            int64 mtime_raw = item_mtime_side(row_id, side);
+
             if (mtime_raw > 0) {
                 struct tm time_information;
                 time_t unix_timestamp;
@@ -481,4 +466,4 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
     return FALSE;
 }
 
-#endif /* ON_TREE_C */
+#endif
