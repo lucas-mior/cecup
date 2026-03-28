@@ -206,7 +206,11 @@ update_row_rename(Message *message) {
     int32 new_len;
     int32 side;
     Traversal *tr;
+    Traversal *other_tr;
     bool changed;
+    int32 *matches;
+    int32 n_matches;
+    int32 original_nfiles;
 
     old_pattern = message->old_path;
     old_len = message->old_path_len;
@@ -214,70 +218,128 @@ update_row_rename(Message *message) {
     new_len = message->new_path_len;
     side = message->side;
     tr = (side == L) ? &cecup.traversal_src : &cecup.traversal_dst;
+    other_tr = (side == L) ? &cecup.traversal_dst : &cecup.traversal_src;
     changed = false;
 
     if (old_pattern == NULL || (old_len == 0) || (new_pattern == NULL)) {
         return;
     }
 
-    for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupItem *item;
-        int32 *idx_ptr;
+    /* 1. Identify all affected indices (handling directories recursively) */
+    original_nfiles = tr->nfiles;
+    matches = xmalloc(original_nfiles * SIZEOF(int32));
+    n_matches = 0;
 
-        item = cecup.rows[i];
-        idx_ptr = (side == L) ? &item->src_idx : &item->dst_idx;
+    for (int32 idx = 0; idx < original_nfiles; idx += 1) {
+        char *path = tr->paths[idx];
+        int32 path_len = (int32)tr->paths_lens[idx];
+        bool match = false;
 
-        if (*idx_ptr >= 0) {
-            int32 idx;
-            char *path;
-            int32 path_len;
-            bool match;
-
-            idx = *idx_ptr;
-            path = tr->paths[idx];
-            path_len = (int32)tr->paths_lens[idx];
-            match = false;
-
-            if (old_pattern[old_len - 1] == '/') {
-                if (BEGINS_WITH(path, old_pattern, old_len)) {
-                    match = true;
-                }
-            } else if (path_len == old_len) {
-                if (memcmp64(path, old_pattern, old_len) == 0) {
-                    match = true;
-                }
+        if (old_pattern[old_len - 1] == '/') {
+            if (BEGINS_WITH(path, old_pattern, old_len)) {
+                match = true;
             }
-
-            if (match) {
-                int32 suffix_len;
-                int32 final_len;
-                char *final_path;
-
-                hash_remove_fs_map(tr->map, path, path_len);
-
-                suffix_len = path_len - old_len;
-                final_len = new_len + suffix_len;
-                final_path = xmalloc(final_len + 1);
-
-                memcpy64(final_path, new_pattern, new_len);
-                if (suffix_len > 0) {
-                    memcpy64(final_path + new_len, path + old_len, suffix_len);
-                }
-                final_path[final_len] = '\0';
-
-                tr->paths[idx] = final_path;
-                tr->paths_lens[idx] = (int16)final_len;
-
-                hash_insert_fs_map(tr->map, final_path, final_len, idx);
-                changed = true;
+        } else if (path_len == old_len) {
+            if (memcmp64(path, old_pattern, old_len) == 0) {
+                match = true;
             }
+        }
+
+        if (match) {
+            matches[n_matches] = idx;
+            n_matches += 1;
         }
     }
 
+    /* 2. Process renames and update row relationships */
+    for (int32 i = 0; i < n_matches; i += 1) {
+        int32 idx = matches[i];
+        char *path = tr->paths[idx];
+        int32 path_len = (int32)tr->paths_lens[idx];
+        int32 suffix_len;
+        int32 final_len;
+        char *final_path;
+        int32 *lookup_ptr;
+        int32 other_idx = -1;
+        bool linked = false;
+
+        /* Break the link in any existing CecupItem using this index */
+        for (int32 j = 0; j < cecup.rows_len; j += 1) {
+            CecupItem *item = cecup.rows[j];
+            int32 *idx_ptr = (side == L) ? &item->src_idx : &item->dst_idx;
+
+            if (*idx_ptr == idx) {
+                *idx_ptr = -1;
+                break;
+            }
+        }
+
+        /* Update Traversal path and hash map */
+        hash_remove_fs_map(tr->map, path, path_len);
+
+        suffix_len = path_len - old_len;
+        final_len = new_len + suffix_len;
+        final_path = xmalloc(final_len + 1);
+
+        memcpy64(final_path, new_pattern, new_len);
+        if (suffix_len > 0) {
+            memcpy64(final_path + new_len, path + old_len, suffix_len);
+        }
+        final_path[final_len] = '\0';
+
+        tr->paths[idx] = final_path;
+        tr->paths_lens[idx] = (int16)final_len;
+        hash_insert_fs_map(tr->map, final_path, final_len, idx);
+
+        /* Re-link: Find if the new path exists on the other side */
+        if ((lookup_ptr = hash_lookup_fs_map(other_tr->map, final_path, final_len))) {
+            other_idx = *lookup_ptr;
+        }
+
+        if (other_idx >= 0) {
+            /* Look for a row that has the other index but is currently unlinked on our side */
+            for (int32 j = 0; j < cecup.rows_len; j += 1) {
+                CecupItem *item = cecup.rows[j];
+                int32 *side_idx = (side == L) ? &item->src_idx : &item->dst_idx;
+                int32 *other_side_idx = (side == L) ? &item->dst_idx : &item->src_idx;
+
+                if (*other_side_idx == other_idx && *side_idx == -1) {
+                    *side_idx = idx;
+                    linked = true;
+                    break;
+                }
+            }
+        }
+
+        if (!linked) {
+            if (side == L) {
+                work_add_item(idx, -1);
+            } else {
+                work_add_item(-1, idx);
+            }
+        }
+
+        changed = true;
+    }
+
     if (changed) {
+        /* 3. Cleanup: Remove rows that became empty (-1, -1) */
+        for (int32 i = 0; i < cecup.rows_len; ) {
+            CecupItem *item = cecup.rows[i];
+            if (item->src_idx == -1 && item->dst_idx == -1) {
+                for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
+                    cecup.rows[j] = cecup.rows[j + 1];
+                }
+                cecup.rows_len -= 1;
+            } else {
+                i += 1;
+            }
+        }
+
         update_list_from_rows();
     }
 
+    free(matches, original_nfiles * SIZEOF(int32));
     return;
 }
 
