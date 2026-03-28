@@ -63,6 +63,7 @@ update_row_remove(Message *message) {
         char *path = item_path_get(item);
         int32 path_len = item_path_len_get(item);
         bool match = false;
+        int32 *idx_ptr;
 
         if (pattern[pattern_len - 1] == '/') {
             if (BEGINS_WITH(path, pattern, pattern_len)) {
@@ -81,7 +82,6 @@ update_row_remove(Message *message) {
 
         changed = true;
 
-        int32 *idx_ptr;
         if (side == L) {
             idx_ptr = &item->src_idx;
         } else {
