@@ -113,8 +113,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
         message->side = side;
 
         if (menu_item->variant) {
-            g_object_set_data(G_OBJECT(tree),
-                              "variant", menu_item->variant);
+            g_object_set_data(G_OBJECT(tree), "variant", menu_item->variant);
         }
 
         menu_item->callback(tree, message);
@@ -137,8 +136,7 @@ static gboolean
 on_search_timeout(void *data) {
     (void)data;
     update_list_from_rows();
-    gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
-                                      GTK_ENTRY_ICON_SECONDARY, NULL);
+    gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry), GTK_ENTRY_ICON_SECONDARY, NULL);
     cecup.search_timeout_id = 0;
     return G_SOURCE_REMOVE;
 }
@@ -164,8 +162,7 @@ on_search_changed(GtkEditable *editable, void *data) {
     }
 
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
-                                      GTK_ENTRY_ICON_SECONDARY,
-                                      "view-refresh-symbolic");
+                                      GTK_ENTRY_ICON_SECONDARY, "view-refresh-symbolic");
 
     cecup.search_timeout_id = g_timeout_add(250, on_search_timeout, NULL);
     return;
@@ -187,17 +184,16 @@ on_delete_after_toggled(GtkCheckButton *b, void *data) {
     if (gtk_check_button_get_active(b)) {
         GtkWidget *dialog;
 
-        dialog = gtk_message_dialog_new(
-            GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
-            GTK_BUTTONS_OK,
-            _("Warning: 'Sync 100%%' (delete-after) is enabled."
-              " Files in the backup folder"
-              " that do not exist in the source folder"
-              " will be PERMANENTLY DELETED."
-              " Also, files that are newer on the destination"
-              " will be OVERWRITTEN."));
-        g_signal_connect(dialog, "response",
-                         G_CALLBACK(gtk_window_destroy), NULL);
+        dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
+                                        GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+                                        _("Warning: 'Sync 100%%' (delete-after) is enabled."
+                                          " Files in the backup folder"
+                                          " that do not exist in the source folder"
+                                          " will be PERMANENTLY DELETED."
+                                          " Also, files that are newer on the destination"
+                                          " will be OVERWRITTEN."));
+
+        g_signal_connect(dialog, "response", G_CALLBACK(gtk_window_destroy), NULL);
         gtk_widget_show(dialog);
         invalidate_preview();
     }
@@ -210,12 +206,9 @@ static void
 on_delete_ignored_toggled(GtkCheckButton *b, void *data) {
     (void)data;
     if (gtk_check_button_get_active(b)) {
-        g_signal_handlers_block_by_func(cecup.delete_after,
-                                        on_delete_after_toggled, NULL);
-        gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after),
-                                    TRUE);
-        g_signal_handlers_unblock_by_func(cecup.delete_after,
-                                          on_delete_after_toggled, NULL);
+        g_signal_handlers_block_by_func(cecup.delete_after, on_delete_after_toggled, NULL);
+        gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after), TRUE);
+        g_signal_handlers_unblock_by_func(cecup.delete_after, on_delete_after_toggled, NULL);
         invalidate_preview();
     }
     save_config();
@@ -234,8 +227,7 @@ on_reset_clicked(GtkWidget *b, void *data) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore), TRUE);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.check_fs), FALSE);
-    gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_ignored),
-                                 FALSE);
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_ignored), FALSE);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after), FALSE);
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "unidiff.bash");
@@ -301,9 +293,9 @@ on_sync_clicked(GtkWidget *b, void *data) {
     path_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
     path_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R]));
 
-    dialog = gtk_message_dialog_new(
-        GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
-        GTK_BUTTONS_YES_NO, _("Sync %s -> %s?"), path_src, path_dst);
+    dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
+                                    GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
+                                    _("Sync %s -> %s?"), path_src, path_dst);
     g_signal_connect(dialog, "response", G_CALLBACK(on_sync_response), NULL);
     gtk_widget_show(dialog);
     return;
@@ -570,12 +562,10 @@ on_ignore_clicked(GtkWidget *b, void *data) {
     }
 
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), view);
-    gtk_box_append(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
-                    scroll);
+    gtk_box_append(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), scroll);
     gtk_widget_set_vexpand(scroll, TRUE);
 
-    g_signal_connect(dialog, "response",
-                      G_CALLBACK(on_ignore_response), buffer);
+    g_signal_connect(dialog, "response", G_CALLBACK(on_ignore_response), buffer);
     gtk_widget_show(dialog);
     return;
 }
@@ -630,8 +620,7 @@ on_browse_src(GtkWidget *b, void *data) {
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel",
         GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
-    g_signal_connect(dialog, "response",
-                      G_CALLBACK(on_browse_response_src), NULL);
+    g_signal_connect(dialog, "response", G_CALLBACK(on_browse_response_src), NULL);
     gtk_widget_show(dialog);
     return;
 }
@@ -665,8 +654,7 @@ on_browse_dst(GtkWidget *b, void *data) {
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel",
         GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
-    g_signal_connect(dialog, "response",
-                      G_CALLBACK(on_browse_response_dst), NULL);
+    g_signal_connect(dialog, "response", G_CALLBACK(on_browse_response_dst), NULL);
     gtk_widget_show(dialog);
     return;
 }
@@ -730,7 +718,8 @@ on_tree_key_press(GtkEventControllerKey *controller,
 
 static void
 on_path_click_pressed(GtkGestureClick *gesture,
-                      int32 n_press, double x, double y, void *data) {
+                      int32 npress, double x, double y,
+                      void *data) {
     GtkWidget *editable;
     GtkWidget *tree;
     uint32 button;
@@ -752,7 +741,7 @@ on_path_click_pressed(GtkGestureClick *gesture,
         return;
     }
 
-    if (n_press == 1) {
+    if (npress == 1) {
         void *pos_ptr;
 
         if ((pos_ptr = g_object_get_data(G_OBJECT(editable), "cecup-pos"))) {
@@ -765,7 +754,7 @@ on_path_click_pressed(GtkGestureClick *gesture,
         }
 
         gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
-    } else if (n_press == 2) {
+    } else if (npress == 2) {
         gtk_editable_label_start_editing(GTK_EDITABLE_LABEL(editable));
         gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
     }

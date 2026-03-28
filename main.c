@@ -745,16 +745,13 @@ main(int32 argc, char **argv) {
     cecup.store = G_LIST_MODEL(cecup_list_model_new());
     cecup.stop_working = false;
 
-    cecup.application = gtk_application_new("com.cecup.app",
-                                            G_APPLICATION_NON_UNIQUE);
-    g_signal_connect(cecup.application, "activate",
-                     G_CALLBACK(main_application_run), NULL);
+    cecup.application = gtk_application_new("com.cecup.app", G_APPLICATION_NON_UNIQUE);
+    g_signal_connect(cecup.application, "activate", G_CALLBACK(main_application_run), NULL);
     status = g_application_run(G_APPLICATION(cecup.application), argc, argv);
 
     g_object_unref(cecup.application);
     g_object_unref(cecup.store);
 
-    /* Cleanup must also use the new members */
     free(cecup.rows_src, cecup.rows_capacity * SIZEOF(int32));
     free(cecup.rows_dst, cecup.rows_capacity * SIZEOF(int32));
     free(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
