@@ -25,5 +25,6 @@ static void work_batch_push(MessageBatch **batch_ptr, Message *message);
 static void work_finalize(bool preview_clean);
 
 static void *work_rsync(void *user_data);
+static void *work_preview(void *user_data);
 
 #endif

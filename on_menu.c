@@ -22,7 +22,6 @@
 
 #include "cecup.h"
 #include "util.c"
-#include "update.c"
 #include "on.h"
 #include "work.h"
 
@@ -75,12 +74,14 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
         return;
     }
 
-    if ((fp = fopen(cecup.ignore_path, "a"))) {
-        fprintf(fp, "\n%s", pattern);
-        fclose(fp);
-    } else {
+    if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
         LOG_ERROR(_("Error opening %s: %s.\n"), cecup.ignore_path, strerror(errno));
         return;
+    }
+
+    fprintf(fp, "\n%s", pattern);
+    if (fclose(fp)) {
+        LOG_ERROR(_("Error closing %s: %s.\n"), cecup.ignore_path, strerror(errno));
     }
 
     message = xmalloc(SIZEOF(*message));

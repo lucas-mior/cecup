@@ -21,7 +21,7 @@
 #include <gtk/gtk.h>
 
 #include "cecup.h"
-#include "work.c"
+#include "work.h"
 #include "update.c"
 #include "on.h"
 #include "on_menu.c"
