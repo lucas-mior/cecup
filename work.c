@@ -352,6 +352,7 @@ work_traverse_clean(Traversal *traversal) {
     free(traversal->link_targets_lens, capacity * SIZEOF(*(traversal->link_targets_lens)));
     free(traversal->matched_patterns_lens, capacity * SIZEOF(*(traversal->matched_patterns_lens)));
     free(traversal->nlinks, capacity * SIZEOF(*(traversal->nlinks)));
+    free(traversal->row_ids, capacity * SIZEOF(*(traversal->row_ids)));
 
     hash_destroy_fs_map(traversal->map);
     hash_destroy_inode_map(traversal->inode_map);
@@ -368,6 +369,8 @@ work_traverse_clean(Traversal *traversal) {
 
 static void
 work_cleanup(void) {
+    g_mutex_lock(&cecup.arena_mutex);
+
     work_traverse_clean(&cecup.traversal_src);
     work_traverse_clean(&cecup.traversal_dst);
 
@@ -377,6 +380,8 @@ work_cleanup(void) {
     cecup.transfers_capacity = 0;
 
     cecup.rows_len = 0;
+
+    g_mutex_unlock(&cecup.arena_mutex);
     return;
 }
 
