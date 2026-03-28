@@ -74,8 +74,7 @@ update_row_remove(Message *message) {
             return;
         }
 
-        row_id = traversal->row_ids[*idx_ptr];
-        if (row_id < 0) {
+        if ((row_id = traversal->row_ids[*idx_ptr]) < 0) {
             return;
         }
 
