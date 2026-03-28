@@ -80,8 +80,11 @@ update_row_remove(Message *message) {
         }
 
         changed = true;
-        side_ptr
-            = (side == L) ? &cecup.rows_src[row_id] : &cecup.rows_dst[row_id];
+        if (side == L) {
+            side_ptr = &cecup.rows_src[row_id];
+        } else {
+            side_ptr = &cecup.rows_dst[row_id];
+        }
 
         if (traversal->inode_map
             && S_ISREG(traversal->stats[*idx_ptr].st_mode)) {
@@ -142,8 +145,11 @@ update_row_remove(Message *message) {
             }
 
             changed = true;
-            idx_ptr = (side == L) ? &cecup.rows_src[row_id]
-                                  : &cecup.rows_dst[row_id];
+            if (side == L) {
+                idx_ptr = &cecup.rows_src[row_id];
+            } else {
+                idx_ptr = &cecup.rows_dst[row_id];
+            }
 
             if (*idx_ptr >= 0) {
                 int32 idx;
@@ -339,7 +345,6 @@ update_row_rename(Message *message) {
     int32 old_path_len;
     int32 new_path_len;
     int32 side;
-    int32 other_side;
     bool is_dir;
     bool changed;
 
@@ -348,13 +353,16 @@ update_row_rename(Message *message) {
     old_path_len = message->old_path_len;
     new_path_len = message->new_path_len;
     side = message->side;
-    other_side = (side == L) ? R : L;
     is_dir = (old_path[old_path_len - 1] == '/');
     changed = false;
 
-    traversal = (side == L) ? &cecup.traversal_src : &cecup.traversal_dst;
-    other_traversal
-        = (other_side == L) ? &cecup.traversal_src : &cecup.traversal_dst;
+    if (side == L) {
+        traversal = &cecup.traversal_src;
+        other_traversal = &cecup.traversal_dst;
+    } else {
+        traversal = &cecup.traversal_dst;
+        other_traversal = &cecup.traversal_src;
+    }
 
     for (int32 i = 0; i < cecup.rows_len;) {
         int32 row_id;
@@ -395,9 +403,13 @@ update_row_rename(Message *message) {
         memcpy64(p_new, new_path, new_path_len);
         memcpy64(p_new + new_path_len, p_old + old_path_len, suffix_len + 1);
 
-        idx = (side == L) ? cecup.rows_src[row_id] : cecup.rows_dst[row_id];
-        other_idx
-            = (side == L) ? cecup.rows_dst[row_id] : cecup.rows_src[row_id];
+        if (side == L) {
+            idx = cecup.rows_src[row_id];
+            other_idx = cecup.rows_dst[row_id];
+        } else {
+            idx = cecup.rows_dst[row_id];
+            other_idx = cecup.rows_src[row_id];
+        }
 
         hash_remove_fs_map(traversal->map, traversal->paths[idx],
                            traversal->paths_lens[idx]);
@@ -408,10 +420,23 @@ update_row_rename(Message *message) {
                                     S_ISDIR(traversal->stats[idx].st_mode),
                                     cecup.ignore_patterns, cecup.ignore_count);
 
-        n_idx = traversal_push(
-            traversal, p_new, new_path_len + suffix_len, &traversal->stats[idx],
-            traversal->link_targets[idx], traversal->link_targets_lens[idx],
-            (p_match ? p_match->str : NULL), (p_match ? p_match->len : 0));
+        {
+            char *p_match_str;
+            int32 p_match_len;
+
+            if (p_match) {
+                p_match_str = p_match->str;
+                p_match_len = p_match->len;
+            } else {
+                p_match_str = NULL;
+                p_match_len = 0;
+            }
+
+            n_idx = traversal_push(
+                traversal, p_new, new_path_len + suffix_len,
+                &traversal->stats[idx], traversal->link_targets[idx],
+                traversal->link_targets_lens[idx], p_match_str, p_match_len);
+        }
 
         merge_row_id = -1;
         {
@@ -865,7 +890,11 @@ update_progress_bar(enum DataType type, double fraction) {
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index;
 
-    index = (type == DATA_TYPE_PROGRESS_PREVIEW) ? 3 : 0;
+    if (type == DATA_TYPE_PROGRESS_PREVIEW) {
+        index = 3;
+    } else {
+        index = 0;
+    }
 
     if (fraction < 1.0) {
         if ((fraction - last_fractions[index]) < 0.001) {
