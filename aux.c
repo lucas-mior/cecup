@@ -491,7 +491,8 @@ check_consistent_state(void) {
         dst_idx = cecup.rows_dst[row_id];
 
         if ((src_idx == -1) && (dst_idx == -1)) {
-            error("Consistency error: Row %d has no index for either side.\n", row_id);
+            error("Consistency error:"
+                  " Row %d has no index for either side.\n", row_id);
             fatal(EXIT_FAILURE);
         }
 
