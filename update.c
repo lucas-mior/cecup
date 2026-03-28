@@ -434,8 +434,7 @@ update_row_rename(Message *message) {
         {
             int32 *m_idx_ptr;
             if ((m_idx_ptr = hash_lookup_fs_map(other_traversal->map,
-                                                path_new,
-                                                new_path_len + suffix_len))) {
+                                                path_new, new_path_len + suffix_len))) {
                 merge_row_id = other_traversal->row_ids[*m_idx_ptr];
             }
         }
@@ -657,8 +656,7 @@ update_list_from_rows(void) {
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
 
     if (cecup.rows_visible_len > 0) {
-        qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(int32),
-                cecup_item_compare);
+        qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(int32), cecup_item_compare);
     }
 
     cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
@@ -765,22 +763,24 @@ update_ui_process_message(Message *message) {
 
         table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
 
-        if (message->type == DATA_TYPE_LOG_ERROR) {
+        switch (message->type) {
+        case DATA_TYPE_LOG_ERROR:
             if (gtk_text_tag_table_lookup(table, "err_red") == NULL) {
-                gtk_text_buffer_create_tag(cecup.log_buffer, "err_red",
-                                           "foreground", "red", NULL);
+                gtk_text_buffer_create_tag(cecup.log_buffer, "err_red", "foreground", "red", NULL);
             }
             gtk_text_buffer_insert_with_tags_by_name(
                 cecup.log_buffer, &end, message->text, -1, "err_red", NULL);
-        } else if (message->type == DATA_TYPE_LOG_CMD) {
+            break;
+        case DATA_TYPE_LOG_CMD:
             if (gtk_text_tag_table_lookup(table, "err_blue") == NULL) {
-                gtk_text_buffer_create_tag(cecup.log_buffer, "err_blue",
-                                           "foreground", "blue", NULL);
+                gtk_text_buffer_create_tag(cecup.log_buffer, "err_blue", "foreground", "blue", NULL);
             }
             gtk_text_buffer_insert_with_tags_by_name(
                 cecup.log_buffer, &end, message->text, -1, "err_blue", NULL);
-        } else {
+            break;
+        default:
             gtk_text_buffer_insert(cecup.log_buffer, &end, message->text, -1);
+            break;
         }
 
         gtk_text_view_scroll_to_mark(
