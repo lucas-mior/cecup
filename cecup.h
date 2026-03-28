@@ -18,8 +18,6 @@
 #if !defined(CECUP_H)
 #define CECUP_H
 
-#if !defined(__INCLUDE_LEVEL__) || (__INCLUDE_LEVEL__ >= 1)
-
 #include <gtk/gtk.h>
 #include <sys/stat.h>
 #include "generic.c"
@@ -553,6 +551,8 @@ static char * work_check_itemize_line(char *buf_output);
 static bool work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_ptr);
 static void * work_rsync(void *user_data);
 
+static gboolean update_ui_handler(void *data);
+
 static void on_menu_open_item(GtkWidget *m, void *data);
 static void on_menu_copy_path(GtkWidget *m, void *data);
 static void on_menu_apply(GtkWidget *m, void *data);
@@ -574,7 +574,5 @@ static CecupMenuItem tree_menu_items[] = {
 {N_("🗑️ Delete"),             0,          0,                                 on_menu_delete,    NULL},
 {N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL},
 };
-
-#endif
 
 #endif /* CECUP_H */
