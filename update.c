@@ -159,30 +159,27 @@ update_row_transfer(Message *message) {
         }
 
         if (item->src_idx >= 0) {
-            Traversal *src;
-            Traversal *dst;
-
-            src = &cecup.traversal_src;
-            dst = &cecup.traversal_dst;
+            Traversal *traversal_src = &cecup.traversal_src;
+            Traversal *traversal_dst = &cecup.traversal_dst;
 
             if (item->dst_idx < 0) {
                 int32 *lookup;
 
-                if ((lookup = hash_lookup_fs_map(dst->map, path, path_len))) {
+                if ((lookup = hash_lookup_fs_map(traversal_dst->map, path, path_len))) {
                     item->dst_idx = *lookup;
                 } else {
-                    item->dst_idx = traversal_push(dst,
-                                                   src->paths[item->src_idx],
-                                                   src->paths_lens[item->src_idx],
-                                                   &src->stats[item->src_idx],
-                                                   src->link_targets[item->src_idx],
-                                                   src->link_targets_lens[item->src_idx],
-                                                   src->matched_patterns[item->src_idx],
-                                                   src->matched_patterns_lens[item->src_idx]);
+                    item->dst_idx = traversal_push(traversal_dst,
+                                                   traversal_src->paths[item->src_idx],
+                                                   traversal_src->paths_lens[item->src_idx],
+                                                   &traversal_src->stats[item->src_idx],
+                                                   traversal_src->link_targets[item->src_idx],
+                                                   traversal_src->link_targets_lens[item->src_idx],
+                                                   traversal_src->matched_patterns[item->src_idx],
+                                                   traversal_src->matched_patterns_lens[item->src_idx]);
                 }
             } else {
-                memcpy64(&dst->stats[item->dst_idx],
-                         &src->stats[item->src_idx],
+                memcpy64(&traversal_dst->stats[item->dst_idx],
+                         &traversal_src->stats[item->src_idx],
                          SIZEOF(struct stat));
             }
 
