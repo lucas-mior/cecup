@@ -700,10 +700,10 @@ main(int32 argc, char **argv) {
     cecup.rows_capacity = 256;
 
     /* These replace the old cecup.rows allocation */
-    cecup.rows_src = xmalloc(cecup.rows_capacity * SIZEOF(int32));
-    cecup.rows_dst = xmalloc(cecup.rows_capacity * SIZEOF(int32));
-    cecup.rows_visible = xmalloc(cecup.rows_capacity * SIZEOF(int32));
-    cecup.rows_selected = xmalloc(cecup.rows_capacity * SIZEOF(uint8));
+    cecup.rows_src = xmalloc(cecup.rows_capacity*SIZEOF(int32));
+    cecup.rows_dst = xmalloc(cecup.rows_capacity*SIZEOF(int32));
+    cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(int32));
+    cecup.rows_selected = xmalloc(cecup.rows_capacity*SIZEOF(uint8));
 
     cecup.ignore_patterns = NULL;
     cecup.ignore_capacity = 0;
@@ -752,10 +752,10 @@ main(int32 argc, char **argv) {
     g_object_unref(cecup.application);
     g_object_unref(cecup.store);
 
-    free(cecup.rows_src, cecup.rows_capacity * SIZEOF(int32));
-    free(cecup.rows_dst, cecup.rows_capacity * SIZEOF(int32));
-    free(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
-    free(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
+    free(cecup.rows_src, cecup.rows_capacity*SIZEOF(int32));
+    free(cecup.rows_dst, cecup.rows_capacity*SIZEOF(int32));
+    free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(int32));
+    free(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
 
     free(cecup.src_base, cecup.src_base_len + 1);
     free(cecup.dst_base, cecup.dst_base_len + 1);
