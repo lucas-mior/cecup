@@ -439,6 +439,14 @@ typedef struct ThreadData {
     TaskList *tasks;
 } ThreadData;
 
+typedef struct CecupMenuItem {
+    char *label;
+    uint32 keyval;
+    GdkModifierType mask;
+    void (*callback)(GtkWidget *, void *);
+    char *variant;
+} CecupMenuItem;
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
 
@@ -511,35 +519,24 @@ enum RsyncCharAttribute {
 #define RSYNC_SYMLINK_NOTATION " -> "
 #define BATCH_SIZE 256
 
-static struct {
-    char *problem;
-    char *rename;
-} replacements[] = {
-    {"\n",                    "_newline_in_filename_"                    },
-    /* {"\\",                    "_backslash_in_filename_"                }, */
-    /* {"\"",                    "_double_quote_in_filename_"             }, */
-    /* {"\'",                    "_single_quote_in_filename_"             }, */
-    /* {"<",                     "_less_than_in_filename_"                }, */
-    /* {">",                     "_greater_than_in_filename_"             }, */
-    /* {":",                     "_colon_in_filename_"                    }, */
-    /* {"|",                     "_pipe_in_filename_"                     }, */
-    /* {"?",                     "_question_mark_in_filename_"            }, */
-    {RSYNC_WILDCARD,          "_asterisk_in_filename_"                    },
-    {RSYNC_HARDLINK_NOTATION, "_rsync_hardlink_notation_in_filename_"     },
-    {RSYNC_SYMLINK_NOTATION,  "_rsync_symlink_notation_in_filename_"      },
-    {RSYNC_IGNORE_PRE_FILE,   "rsync_ignore_prelude_file_in_filename"     },
-    {RSYNC_IGNORE_PRE_DIR,    "rsync_ignore_prelude_dir_in_filename"      },
-    {RSYNC_IGNORE_INTER,      "rsync_ignore_interlude_in_filename"        },
-    {RSYNC_SHOW_PRE_FILE,     "rsync_show_prelude_file_in_filename"       },
-    {RSYNC_SHOW_PRE_DIR,      "rsync_show_prelude_dir_in_filename"        },
+char *problems[] = {
+    "\n",
+    "\\",
+    "\"",
+    "\'",
+    "<",
+    ">",
+    ":",
+    "|",
+    "?",
+    RSYNC_WILDCARD,
+    RSYNC_HARDLINK_NOTATION,
+    RSYNC_SYMLINK_NOTATION,
+    RSYNC_IGNORE_PRE_FILE,
+    RSYNC_IGNORE_PRE_DIR,
+    RSYNC_IGNORE_INTER,
+    RSYNC_SHOW_PRE_FILE,
+    RSYNC_SHOW_PRE_DIR,
 };
-
-typedef struct CecupMenuItem {
-    char *label;
-    uint32 keyval;
-    GdkModifierType mask;
-    void (*callback)(GtkWidget *, void *);
-    char *variant;
-} CecupMenuItem;
 
 #endif /* CECUP_H */

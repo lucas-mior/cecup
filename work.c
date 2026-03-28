@@ -225,12 +225,9 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        for (int32 i = 0; i < LENGTH(replacements); i += 1) {
-            char *problem;
-            int64 problem_len;
-
-            problem = replacements[i].problem;
-            problem_len = strlen32(problem);
+        for (int32 i = 0; i < LENGTH(problems); i += 1) {
+            char *problem = problems[i];
+            int64 problem_len = strlen32(problem);
 
             if (memmem64(d_name, name_len, problem, problem_len)) {
                 LOG_ERROR(_("Error: filename contains problematic characters/patterns:\n"));
