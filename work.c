@@ -145,37 +145,6 @@ work_finalize(bool preview_clean) {
     return;
 }
 
-static void
-work_add_item(int32 src_idx, int32 dst_idx) {
-    CecupItem *item;
-
-    g_mutex_lock(&cecup.arena_mutex);
-
-    item = xarena_push(cecup.arena, SIZEOF(*item));
-    memset64(item, 0, SIZEOF(*item));
-
-    item->src_idx = src_idx;
-    item->dst_idx = dst_idx;
-
-    if (cecup.rows_len >= cecup.rows_capacity) {
-        if (cecup.rows_capacity == 0) {
-            cecup.rows_capacity = 1024;
-        } else {
-            cecup.rows_capacity *= 2;
-        }
-        cecup.rows = xrealloc(cecup.rows,
-                              cecup.rows_capacity*SIZEOF(CecupItem *));
-        cecup.rows_visible = xrealloc(cecup.rows_visible,
-                                      cecup.rows_capacity*SIZEOF(CecupItem *));
-    }
-
-    cecup.rows[cecup.rows_len] = item;
-    cecup.rows_len += 1;
-
-    g_mutex_unlock(&cecup.arena_mutex);
-    return;
-}
-
 static int64
 work_traverse_fs(Traversal *traversal) {
     int64 file_count;
@@ -601,7 +570,7 @@ work_preview(void *user_data) {
             cecup.ntransfers += 1;
         }
 
-        work_add_item(src_idx, dst_idx);
+        item_add(src_idx, dst_idx);
 
         nfiles_processed += 1;
         if ((nfiles_processed % 1000) == 0) {
@@ -624,7 +593,7 @@ work_preview(void *user_data) {
 
         if (hash_lookup_fs_map(cecup.traversal_src.map,
                                bucket_dst->key, path_len) == NULL) {
-            work_add_item(-1, dst_idx);
+            item_add(-1, dst_idx);
         }
 
         nfiles_processed += 1;
@@ -1364,7 +1333,7 @@ main(void) {
 
             tv[1].tv_usec = 0;
             utimes(path_dst, tv);
-            
+
             if (entry->diff_perm) {
                 chmod(path_dst, 0644);
             }

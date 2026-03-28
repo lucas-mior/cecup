@@ -235,6 +235,37 @@ cecup_list_model_row_changed(CecupListModel *self, int32 index) {
     return;
 }
 
+static void
+item_add(int32 src_idx, int32 dst_idx) {
+    CecupItem *item;
+
+    g_mutex_lock(&cecup.arena_mutex);
+
+    item = xarena_push(cecup.arena, SIZEOF(*item));
+    memset64(item, 0, SIZEOF(*item));
+
+    item->src_idx = src_idx;
+    item->dst_idx = dst_idx;
+
+    if (cecup.rows_len >= cecup.rows_capacity) {
+        if (cecup.rows_capacity == 0) {
+            cecup.rows_capacity = 1024;
+        } else {
+            cecup.rows_capacity *= 2;
+        }
+        cecup.rows = xrealloc(cecup.rows,
+                              cecup.rows_capacity*SIZEOF(CecupItem *));
+        cecup.rows_visible = xrealloc(cecup.rows_visible,
+                                      cecup.rows_capacity*SIZEOF(CecupItem *));
+    }
+
+    cecup.rows[cecup.rows_len] = item;
+    cecup.rows_len += 1;
+
+    g_mutex_unlock(&cecup.arena_mutex);
+    return;
+}
+
 static inline void
 tree_model_functions_sink(void) {
     (void)cecup_list_model_new;

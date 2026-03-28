@@ -159,7 +159,7 @@ update_row_remove(Message *message) {
 
         if (*idx_ptr >= 0) {
             int32 idx = *idx_ptr;
-            
+
             if (traversal->inode_map && S_ISREG(traversal->stats[idx].st_mode)) {
                 if (traversal->stats[idx].st_nlink > 1) {
                     char inode_str[64];
@@ -353,7 +353,13 @@ update_row_rename(Message *message) {
 
         for (int32 j = 0; j < cecup.rows_len; j += 1) {
             CecupItem *row_item = cecup.rows[j];
-            int32 *idx_ptr = (side == L) ? &row_item->src_idx : &row_item->dst_idx;
+            int32 *idx_ptr;
+
+            if (side == L) {
+                idx_ptr = &row_item->src_idx;
+            } else {
+                idx_ptr = &row_item->dst_idx;
+            }
 
             if (*idx_ptr == idx) {
                 *idx_ptr = -1;
@@ -385,8 +391,16 @@ update_row_rename(Message *message) {
         if (other_idx >= 0) {
             for (int32 j = 0; j < cecup.rows_len; j += 1) {
                 CecupItem *row_item = cecup.rows[j];
-                int32 *side_idx = (side == L) ? &row_item->src_idx : &row_item->dst_idx;
-                int32 *other_side_idx = (side == L) ? &row_item->dst_idx : &row_item->src_idx;
+                int32 *side_idx;
+                int32 *other_side_idx;
+
+                if (side == L) {
+                    side_idx = &row_item->src_idx;
+                    other_side_idx = &row_item->dst_idx;
+                } else {
+                    side_idx = &row_item->dst_idx;
+                    other_side_idx = &row_item->src_idx;
+                }
 
                 if (*other_side_idx == other_idx && *side_idx == -1) {
                     *side_idx = idx;
@@ -398,9 +412,9 @@ update_row_rename(Message *message) {
 
         if (!linked) {
             if (side == L) {
-                work_add_item(idx, -1);
+                item_add(idx, -1);
             } else {
-                work_add_item(-1, idx);
+                item_add(-1, idx);
             }
         }
 
