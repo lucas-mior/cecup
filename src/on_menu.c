@@ -21,7 +21,7 @@
 #include <gtk/gtk.h>
 
 #include "cecup.h"
-#include "util.c"
+#include "cbase/util.c"
 #include "aux.c"
 #include "on.h"
 

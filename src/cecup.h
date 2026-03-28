@@ -20,8 +20,8 @@
 
 #include <gtk/gtk.h>
 #include <sys/stat.h>
-#include "generic.c"
-#include "arena.c"
+#include "cbase/generic.c"
+#include "cbase/arena.c"
 #include "i18n.h"
 
 #define EMOJI_NEW "➕"
@@ -53,7 +53,7 @@
     X(DELETED)          \
     X(DELETE)           \
     X(IGNORE)
-#include "xenums.c"
+#include "cbase/xenums.c"
 
 #define ENUM_BITFLAGS 1
 #define ENUM_NAME Reason
@@ -75,7 +75,7 @@
     X(EQUAL)            \
     X(IGNORED)          \
     X(MISSING)
-#include "xenums.c"
+#include "cbase/xenums.c"
 
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME ColumnType
@@ -85,7 +85,7 @@
     X(PATH)             \
     X(SIZE)             \
     X(MTIME)
-#include "xenums.c"
+#include "cbase/xenums.c"
 
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME DataType
@@ -103,7 +103,7 @@
     X(CLEAR_TREES)        \
     X(PROGRESS_PREVIEW)   \
     X(ADD_ROW)
-#include "xenums.c"
+#include "cbase/xenums.c"
 
 #if !defined(error2)
 #define error2(...) fprintf(stderr, __VA_ARGS__)
@@ -115,7 +115,7 @@
 #define HASH_DUPLICATE_KEYS 0
 #define HASH_AUTO_RESIZE 1
 #define HASH_TYPE fs_map
-#include "hash.c"
+#include "cbase/hash.c"
 
 #define HASH_VALUE_TYPE int32
 #define HASH_VALUE_FORMATTER "%d"
@@ -123,7 +123,7 @@
 #define HASH_DUPLICATE_KEYS 1
 #define HASH_AUTO_RESIZE 1
 #define HASH_TYPE inode_map
-#include "hash.c"
+#include "cbase/hash.c"
 
 typedef struct Traversal {
     Arena *arena;

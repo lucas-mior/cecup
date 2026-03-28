@@ -31,7 +31,7 @@
 
 #include "cecup.h"
 #include "aux.c"
-#include "util.c"
+#include "cbase/util.c"
 #include "update.c"
 #include "ignore_patterns.c"
 #include "work_rsync.c"

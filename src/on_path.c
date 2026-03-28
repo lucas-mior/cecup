@@ -20,7 +20,7 @@
 
 #include <gtk/gtk.h>
 
-#include "util.c"
+#include "cbase/util.c"
 #include "aux.c"
 #include "update.c"
 #include "cecup.h"
