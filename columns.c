@@ -210,6 +210,23 @@ bind_column_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
 }
 
 static void
+setup_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
+    GtkWidget *label;
+
+    (void)factory;
+    (void)data;
+
+    label = gtk_label_new(NULL);
+    gtk_widget_set_halign(label, GTK_ALIGN_FILL);
+    gtk_widget_set_valign(label, GTK_ALIGN_FILL);
+    gtk_label_set_xalign(GTK_LABEL(label), 0.0);
+    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+    gtk_list_item_set_child(list_item, label);
+
+    return;
+}
+
+static void
 bind_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *label;
     CecupItemProxy *proxy;
@@ -270,23 +287,6 @@ bind_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *da
     g_object_set_data(G_OBJECT(label), "cecup-row-id", GINT_TO_POINTER(row_id));
     g_object_set_data(G_OBJECT(label), "cecup-pos", GUINT_TO_POINTER(position + 1));
     g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(text_info->type));
-
-    return;
-}
-
-static void
-setup_text_cb(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
-    GtkWidget *label;
-
-    (void)factory;
-    (void)data;
-
-    label = gtk_label_new(NULL);
-    gtk_widget_set_halign(label, GTK_ALIGN_FILL);
-    gtk_widget_set_valign(label, GTK_ALIGN_FILL);
-    gtk_label_set_xalign(GTK_LABEL(label), 0.0);
-    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
-    gtk_list_item_set_child(list_item, label);
 
     return;
 }
