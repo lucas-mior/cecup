@@ -23,8 +23,7 @@
 #include "cecup.h"
 
 static void
-on_tree_button_press(GtkGestureClick *gesture,
-                     int32 n_press, double x, double y, void *data) {
+on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y, void *data) {
     GtkWidget *widget;
     GtkWidget *parent;
     double translated_x;
@@ -46,8 +45,7 @@ on_tree_button_press(GtkGestureClick *gesture,
 
         if ((child = gtk_widget_pick(widget, x, y, GTK_PICK_DEFAULT))) {
             while (child
-                   && (position_pointer = g_object_get_data(G_OBJECT(child),
-                                                            "cecup-pos"))
+                   && (position_pointer = g_object_get_data(G_OBJECT(child), "cecup-pos"))
                        == NULL) {
                 child = gtk_widget_get_parent(child);
             }
@@ -139,10 +137,8 @@ on_tree_button_press(GtkGestureClick *gesture,
             message->action = action_dst;
         }
 
-        g_object_set_data(G_OBJECT(cecup.application),
-                          "active_tree", widget);
-        g_object_set_data_full(G_OBJECT(cecup.application),
-                               "active_message", message, free_message);
+        g_object_set_data(G_OBJECT(cecup.application), "active_tree", widget);
+        g_object_set_data_full(G_OBJECT(cecup.application), "active_message", message, free_message);
 
         menu = g_menu_new();
         for (int32 i = 0; i < LENGTH(tree_menu_items); i += 1) {
@@ -182,8 +178,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                         SNPRINTF(label, _("by extension (*%s)"), extension);
                         SNPRINTF(pattern, "*%s", extension);
                         m_item = g_menu_item_new(label, NULL);
-                        g_menu_item_set_action_and_target(m_item,
-                                                          "app.ignore", "s", pattern);
+                        g_menu_item_set_action_and_target(m_item, "app.ignore", "s", pattern);
                         g_menu_append_item(submenu, m_item);
                         g_object_unref(m_item);
                     }
@@ -192,8 +187,7 @@ on_tree_button_press(GtkGestureClick *gesture,
                         SNPRINTF(label, _("📁 Dir (/%s/)"), directory);
                         SNPRINTF(pattern, "/%s/", directory);
                         m_item = g_menu_item_new(label, NULL);
-                        g_menu_item_set_action_and_target(m_item,
-                                                          "app.ignore", "s", pattern);
+                        g_menu_item_set_action_and_target(m_item, "app.ignore", "s", pattern);
                         g_menu_append_item(submenu, m_item);
                         g_object_unref(m_item);
                     }
@@ -205,22 +199,19 @@ on_tree_button_press(GtkGestureClick *gesture,
                     }
                     SNPRINTF(pattern, "/%s", filepath);
                     m_item = g_menu_item_new(label, NULL);
-                    g_menu_item_set_action_and_target(m_item,
-                                                      "app.ignore", "s", pattern);
+                    g_menu_item_set_action_and_target(m_item, "app.ignore", "s", pattern);
                     g_menu_append_item(submenu, m_item);
                     g_object_unref(m_item);
 
                     SNPRINTF(label, _("This filename on any folder (*/%s)"), name);
                     SNPRINTF(pattern, "*/%s", name);
                     m_item = g_menu_item_new(label, NULL);
-                    g_menu_item_set_action_and_target(m_item,
-                                                      "app.ignore", "s", pattern);
+                    g_menu_item_set_action_and_target(m_item, "app.ignore", "s", pattern);
                     g_menu_append_item(submenu, m_item);
                     g_object_unref(m_item);
                 }
 
-                m_item = g_menu_item_new_submenu(_(menu_item->label),
-                                                 G_MENU_MODEL(submenu));
+                m_item = g_menu_item_new_submenu(_(menu_item->label), G_MENU_MODEL(submenu));
 
                 if (is_busy || (filepath == NULL)) {
                     g_menu_item_set_action_and_target(m_item, "none.none", NULL);
@@ -235,8 +226,7 @@ on_tree_button_press(GtkGestureClick *gesture,
 
                 disabled = false;
                 m_item = g_menu_item_new(_(menu_item->label), NULL);
-                g_menu_item_set_action_and_target(m_item,
-                                                  "app.tree_dispatch", "i", i);
+                g_menu_item_set_action_and_target(m_item, "app.tree_dispatch", "i", i);
 
                 if (is_busy) {
                     if ((menu_item->callback == on_menu_apply) ||
@@ -280,8 +270,7 @@ on_tree_button_press(GtkGestureClick *gesture,
 
             gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
             gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
-            g_signal_connect(popover, "closed",
-                             G_CALLBACK(on_popover_closed), NULL);
+            g_signal_connect(popover, "closed", G_CALLBACK(on_popover_closed), NULL);
             gtk_popover_popup(GTK_POPOVER(popover));
         }
 
@@ -296,8 +285,7 @@ on_tree_button_press(GtkGestureClick *gesture,
 }
 
 static gboolean
-on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
-                void *d) {
+on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void *d) {
     GtkWidget *child;
     int32 row_id = 0;
     void *row_id_ptr;
