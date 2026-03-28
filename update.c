@@ -293,16 +293,34 @@ update_row_transfer(Message *message) {
 static void
 update_row_rename(Message *message) {
     Traversal *traversal;
-    char *old_path = message->old_path;
-    char *new_path = message->new_path;
-    int32 old_path_len = message->old_path_len;
-    int32 new_path_len = message->new_path_len;
-    bool is_dir = false;
-    int32 slash = 0;
-    IgnorePattern *pattern;
-    char *matched_pattern = NULL;
-    int32 matched_pattern_len = 0;
+    char *old_path;
+    char *new_path;
     char *path_new;
+    char *matched_pattern;
+    int32 old_path_len;
+    int32 new_path_len;
+    int32 slash;
+    int32 matched_pattern_len;
+    bool is_dir;
+    IgnorePattern *pattern;
+    int32 side;
+    int32 other_side;
+
+    old_path = message->old_path;
+    new_path = message->new_path;
+    old_path_len = message->old_path_len;
+    new_path_len = message->new_path_len;
+    side = message->side;
+    other_side = L;
+
+    if (side == L) {
+        other_side = R;
+    }
+
+    is_dir = false;
+    slash = 0;
+    matched_pattern = NULL;
+    matched_pattern_len = 0;
 
     if ((message->old_path == NULL)
             || (message->new_path == NULL)
@@ -342,13 +360,17 @@ update_row_rename(Message *message) {
     memcpy64(path_new, new_path, new_path_len + 1);
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        CecupItem *item = cecup.rows[i];
-        char *path_match = item_path_get(item);
-        int32 new_idx;
-        int32 other_idx;
+        CecupItem *item;
+        char *path_match;
         int32 idx;
+        int32 other_idx;
+        int32 new_idx;
+        CecupItem *merge_item;
 
-        if (strcmp(old_path, path_match) != 0) {
+        item = cecup.rows[i];
+        path_match = item_path_side(item, side);
+
+        if (path_match == NULL || strcmp(old_path, path_match) != 0) {
             continue;
         }
 
@@ -364,52 +386,146 @@ update_row_rename(Message *message) {
             continue;
         }
 
-        new_idx = traversal_push(traversal, path_new, new_path_len,
-                                 &traversal->stats[idx],
-                                 traversal->link_targets[idx], traversal->link_targets_lens[idx],
-                                 matched_pattern, matched_pattern_len);
-        
         hash_remove_fs_map(traversal->map,
                            traversal->paths[idx],
                            traversal->paths_lens[idx]);
 
-        if (message->side == L) {
-            error("SIDELEFT\n");
-            item->src_idx = new_idx;
-            if (other_idx >= 0) {
-                CecupItem *new_item;
+        new_idx = traversal_push(traversal, path_new, new_path_len,
+                                 &traversal->stats[idx],
+                                 traversal->link_targets[idx], traversal->link_targets_lens[idx],
+                                 matched_pattern, matched_pattern_len);
 
-                item->dst_idx = -1;
-                new_item = item_add(-1, other_idx);
-                cecup_list_model_row_added(CECUP_LIST_MODEL(cecup.store), new_item);
-            }
-        } else {
-            item->dst_idx = new_idx;
-            if (other_idx >= 0) {
-                CecupItem *new_item;
+        merge_item = NULL;
+        for (int32 j = 0; j < cecup.rows_len; j += 1) {
+            char *p;
 
-                item->src_idx = -1;
-                new_item = item_add(other_idx, -1);
-                cecup_list_model_row_added(CECUP_LIST_MODEL(cecup.store), new_item);
+            p = item_path_side(cecup.rows[j], other_side);
+            if (p) {
+                if (strcmp(p, new_path) == 0) {
+                    merge_item = cecup.rows[j];
+                    break;
+                }
             }
         }
 
-        for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
-            if (cecup.rows_visible[v] == item) {
-                HERE;
-                PRINTLN(item->src_idx);
-                PRINTLN(item->dst_idx);
-                cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v);
-                /* if (item_is_visible(item)) { */
-                /*     cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v); */
-                /* } else { */
-                /*     for (int32 k = v; k < (cecup.rows_visible_len - 1); k += 1) { */
-                /*         cecup.rows_visible[k] = cecup.rows_visible[k + 1]; */
-                /*     } */
-                /*     cecup.rows_visible_len -= 1; */
-                /*     cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), v); */
-                /* } */
-                break;
+        if (merge_item) {
+            bool was_visible_merge;
+            int32 visible_idx_merge;
+            bool was_visible_item;
+            int32 visible_idx_item;
+
+            if (side == L) {
+                merge_item->src_idx = new_idx;
+            } else {
+                merge_item->dst_idx = new_idx;
+            }
+
+            was_visible_merge = false;
+            visible_idx_merge = -1;
+            for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
+                if (cecup.rows_visible[v] == merge_item) {
+                    was_visible_merge = true;
+                    visible_idx_merge = v;
+                    break;
+                }
+            }
+
+            if (item_is_visible(merge_item)) {
+                if (was_visible_merge) {
+                    cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), visible_idx_merge);
+                } else {
+                    cecup_list_model_row_added(CECUP_LIST_MODEL(cecup.store), merge_item);
+                }
+            } else if (was_visible_merge) {
+                for (int32 k = visible_idx_merge; k < (cecup.rows_visible_len - 1); k += 1) {
+                    cecup.rows_visible[k] = cecup.rows_visible[k + 1];
+                }
+                cecup.rows_visible_len -= 1;
+                cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), visible_idx_merge);
+            }
+
+            was_visible_item = false;
+            visible_idx_item = -1;
+            for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
+                if (cecup.rows_visible[v] == item) {
+                    was_visible_item = true;
+                    visible_idx_item = v;
+                    break;
+                }
+            }
+
+            if (other_idx >= 0) {
+                if (side == L) {
+                    item->src_idx = -1;
+                } else {
+                    item->dst_idx = -1;
+                }
+
+                if (item_is_visible(item)) {
+                    if (was_visible_item) {
+                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), visible_idx_item);
+                    } else {
+                        cecup_list_model_row_added(CECUP_LIST_MODEL(cecup.store), item);
+                    }
+                } else if (was_visible_item) {
+                    for (int32 k = visible_idx_item; k < (cecup.rows_visible_len - 1); k += 1) {
+                        cecup.rows_visible[k] = cecup.rows_visible[k + 1];
+                    }
+                    cecup.rows_visible_len -= 1;
+                    cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), visible_idx_item);
+                }
+            } else {
+                if (was_visible_item) {
+                    for (int32 k = visible_idx_item; k < (cecup.rows_visible_len - 1); k += 1) {
+                        cecup.rows_visible[k] = cecup.rows_visible[k + 1];
+                    }
+                    cecup.rows_visible_len -= 1;
+                    cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), visible_idx_item);
+                }
+
+                for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
+                    cecup.rows[j] = cecup.rows[j + 1];
+                }
+                cecup.rows_len -= 1;
+            }
+        } else {
+            if (side == L) {
+                item->src_idx = new_idx;
+                if (other_idx >= 0) {
+                    CecupItem *new_item;
+
+                    item->dst_idx = -1;
+                    new_item = item_add(-1, other_idx);
+                    if (item_is_visible(new_item)) {
+                        cecup_list_model_row_added(CECUP_LIST_MODEL(cecup.store), new_item);
+                    }
+                }
+            } else {
+                item->dst_idx = new_idx;
+                if (other_idx >= 0) {
+                    CecupItem *new_item;
+
+                    item->src_idx = -1;
+                    new_item = item_add(other_idx, -1);
+                    if (item_is_visible(new_item)) {
+                        cecup_list_model_row_added(CECUP_LIST_MODEL(cecup.store), new_item);
+                    }
+                }
+            }
+
+            for (int32 v = 0; v < cecup.rows_visible_len; v += 1) {
+                if (cecup.rows_visible[v] == item) {
+                    if (item_is_visible(item)) {
+                        cecup_list_model_row_changed(CECUP_LIST_MODEL(cecup.store), v);
+                    } else {
+                        for (int32 k = v; k < (cecup.rows_visible_len - 1); k += 1) {
+                            cecup.rows_visible[k] = cecup.rows_visible[k + 1];
+                        }
+                        cecup.rows_visible_len -= 1;
+                        cecup_list_model_row_removed(CECUP_LIST_MODEL(cecup.store), v);
+                    }
+                    break;
+                }
             }
         }
         break;
