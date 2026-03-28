@@ -497,24 +497,32 @@ check_consistent_state(void) {
 
         if (src_idx >= 0) {
             if (src_idx >= cecup.traversal_src.nfiles) {
-                error("Consistency error: Row %d points to invalid src_idx %d.\n", row_id, src_idx);
+                error("Consistency error:"
+                      " Row %d points to invalid index %d.\n", row_id, src_idx);
                 fatal(EXIT_FAILURE);
             }
             if (cecup.traversal_src.row_ids[src_idx] != row_id) {
-                error("Consistency error: Row %d -> src_idx %d, but row_ids[%d] -> %d.\n",
-                      row_id, src_idx, src_idx, cecup.traversal_src.row_ids[src_idx]);
+                error("Consistency error:"
+                      " rows_src[%d] -> src_idx=%d,"
+                      " but row_ids[%d] -> row_id=%d.\n",
+                      row_id, src_idx,
+                      src_idx, cecup.traversal_src.row_ids[src_idx]);
                 fatal(EXIT_FAILURE);
             }
         }
 
         if (dst_idx >= 0) {
             if (dst_idx >= cecup.traversal_dst.nfiles) {
-                error("Consistency error: Row %d points to invalid dst_idx %d.\n", row_id, dst_idx);
+                error("Consistency error:"
+                      " Row %d points to invalid index %d.\n", row_id, dst_idx);
                 fatal(EXIT_FAILURE);
             }
             if (cecup.traversal_dst.row_ids[dst_idx] != row_id) {
-                error("Consistency error: Row %d -> dst_idx %d, but row_ids[%d] -> %d.\n",
-                      row_id, dst_idx, dst_idx, cecup.traversal_dst.row_ids[dst_idx]);
+                error("Consistency error:"
+                      " rows_src[%d] -> dst_idx=%d,"
+                      " but row_ids[%d] -> row_id=%d.\n",
+                      row_id, dst_idx,
+                      dst_idx, cecup.traversal_dst.row_ids[dst_idx]);
                 fatal(EXIT_FAILURE);
             }
         }
