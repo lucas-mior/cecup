@@ -254,12 +254,11 @@ work_rsync_run(char *files_from_filename, bool checksum,
                     path += 1;
                 }
                 path_len = (int32)(eol - path);
-                if ((sep = memmem64(path, path_len,
-                                    RSYNC_HARDLINK, strlen32(RSYNC_HARDLINK)))) {
+                if ((sep = memmem64(path, path_len, RSYNC_HARDLINK, strlen32(RSYNC_HARDLINK)))) {
                     *sep = '\0';
                     path_len = (int32)(sep - path);
-                } else if ((sep = memmem64(path, path_len,
-                                           RSYNC_SYMLINK, strlen32(RSYNC_SYMLINK)))) {
+                }
+                if ((sep = memmem64(path, path_len, RSYNC_SYMLINK, strlen32(RSYNC_SYMLINK)))) {
                     *sep = '\0';
                     path_len = (int32)(sep - path);
                 }
