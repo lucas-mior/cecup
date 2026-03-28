@@ -26,6 +26,7 @@
 #include "on_log.c"
 #include "on_tree.c"
 #include "on_path.c"
+#include "work.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_on 1

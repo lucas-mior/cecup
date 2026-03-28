@@ -335,7 +335,6 @@ list_model_functions_sink(void) {
 }
 
 #if TESTING_list_model
-#include "update.c"
 int
 main(void) {
     exit(EXIT_SUCCESS);

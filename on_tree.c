@@ -20,6 +20,8 @@
 
 #include <gtk/gtk.h>
 #include "util.c"
+#include "item.c"
+#include "aux.c"
 #include "cecup.h"
 
 static void
