@@ -20,7 +20,7 @@
 
 #include <gtk/gtk.h>
 #include <string.h>
-#include "cbase/util.c"
+#include "util.c"
 #include "cecup.h"
 
 static void

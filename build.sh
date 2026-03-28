@@ -9,6 +9,9 @@ alias trace_off='{ set +x; } 2>/dev/null'
 export LC_ALL=C
 
 dir=$(dirname "$(readlink -f "$0")")
+cbase="cbase"
+CPPFLAGS="$CPPFLAGS -I "$dir/$cbase""
+
 cd "$dir" || exit
 program=$(basename "$(readlink -f "$dir")")
 script=$(basename "$0")

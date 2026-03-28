@@ -19,7 +19,7 @@
 #define ON_TREE_C
 
 #include <gtk/gtk.h>
-#include "cbase/util.c"
+#include "util.c"
 #include "item.c"
 #include "aux.c"
 #include "cecup.h"

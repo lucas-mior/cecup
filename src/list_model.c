@@ -21,7 +21,7 @@
 #include <gtk/gtk.h>
 
 #include "cecup.h"
-#include "cbase/util.c"
+#include "util.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_list_model 1

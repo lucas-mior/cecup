@@ -22,7 +22,7 @@
 #include <glib/gmain.h>
 #include <stdlib.h>
 
-#include "cbase/util.c"
+#include "util.c"
 #include "i18n.h"
 
 #include "cecup.h"
