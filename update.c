@@ -52,83 +52,58 @@ update_row_remove(Message *message) {
     side = message->side;
     changed = false;
 
+    if (pattern == NULL || pattern_len == 0) {
+        return;
+    }
+
     for (int32 i = 0; i < cecup.rows_len; ) {
-        CecupItem *item;
-        char *path;
-        int32 path_len;
-        bool match;
+        CecupItem *item = cecup.rows[i];
+        char *path = item_path_get(item);
+        int32 path_len = item_path_len_get(item);
+        bool match = false;
 
-        item = cecup.rows[i];
-        path = item_path_get(item);
-        path_len = item_path_len_get(item);
-        match = false;
-
+        /* Match directory recursively or exact file */
         if (pattern[pattern_len - 1] == '/') {
             if (BEGINS_WITH(path, pattern, pattern_len)) {
                 match = true;
             }
-        } else {
-            if (path_len == pattern_len) {
-                if (memcmp64(path, pattern, pattern_len) == 0) {
-                    match = true;
-                }
+        } else if (path_len == pattern_len) {
+            if (memcmp64(path, pattern, pattern_len) == 0) {
+                match = true;
             }
         }
 
-        if (match == false) {
+        if (!match) {
             i += 1;
             continue;
         }
 
         changed = true;
 
-        if (side == L) {
-            if (item->src_idx >= 0) {
-                Traversal *traversal;
+        /* Clean up the side being deleted */
+        Traversal *tr = (side == L) ? &cecup.traversal_src : &cecup.traversal_dst;
+        int32 *idx_ptr = (side == L) ? &item->src_idx : &item->dst_idx;
 
-                traversal = &cecup.traversal_src;
-                if (traversal->inode_map) {
-                    if (S_ISREG(traversal->stats[item->src_idx].st_mode)) {
-                        if (traversal->stats[item->src_idx].st_nlink > 1) {
-                            char inode_str[64];
-                            int32 n;
-
-                            n = itoa2(inode_str, (long)traversal->stats[item->src_idx].st_ino);
-                            hash_remove_inode_map(traversal->inode_map, inode_str, n);
-                        }
-                    }
+        if (*idx_ptr >= 0) {
+            int32 idx = *idx_ptr;
+            
+            /* Remove from inode map if it's a hardlink */
+            if (tr->inode_map && S_ISREG(tr->stats[idx].st_mode)) {
+                if (tr->stats[idx].st_nlink > 1) {
+                    char inode_str[64];
+                    int32 n = itoa2(inode_str, (long)tr->stats[idx].st_ino);
+                    hash_remove_inode_map(tr->inode_map, inode_str, n);
                 }
-
-                hash_remove_fs_map(traversal->map, traversal->paths[item->src_idx],
-                                   traversal->paths_lens[item->src_idx]);
-                memset64(&traversal->stats[item->src_idx], 0, SIZEOF(struct stat));
-                item->src_idx = -1;
             }
-        } else {
-            if (item->dst_idx >= 0) {
-                Traversal *traversal;
 
-                traversal = &cecup.traversal_dst;
-                if (traversal->inode_map) {
-                    if (S_ISREG(traversal->stats[item->dst_idx].st_mode)) {
-                        if (traversal->stats[item->dst_idx].st_nlink > 1) {
-                            char inode_str[64];
-                            int32 n;
-
-                            n = itoa2(inode_str, (long)traversal->stats[item->dst_idx].st_ino);
-                            hash_remove_inode_map(traversal->inode_map, inode_str, n);
-                        }
-                    }
-                }
-
-                hash_remove_fs_map(traversal->map, traversal->paths[item->dst_idx],
-                                   traversal->paths_lens[item->dst_idx]);
-                memset64(&traversal->stats[item->dst_idx], 0, SIZEOF(struct stat));
-                item->dst_idx = -1;
-            }
+            /* Remove from path map and clear stats */
+            hash_remove_fs_map(tr->map, tr->paths[idx], tr->paths_lens[idx]);
+            memset64(&tr->stats[idx], 0, SIZEOF(struct stat));
+            *idx_ptr = -1;
         }
 
-        if ((item->src_idx == -1) && (item->dst_idx == -1)) {
+        /* If the item is gone from both sides, purge from master rows */
+        if (item->src_idx == -1 && item->dst_idx == -1) {
             for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
                 cecup.rows[j] = cecup.rows[j + 1];
             }
@@ -139,6 +114,7 @@ update_row_remove(Message *message) {
     }
 
     if (changed) {
+        /* This will call cecup_list_model_update, which now clears proxies */
         update_list_from_rows();
     }
 

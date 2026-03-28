@@ -182,10 +182,12 @@ cecup_list_model_list_model_init(GListModelInterface *iface) {
 static void
 cecup_list_model_update(CecupListModel *self,
                         int32 old_count, int32 new_count) {
-    for (int32 i = new_count; i < self->proxies_capacity; i += 1) {
-        if (self->proxies[i]) {
-            g_object_unref(self->proxies[i]);
-            self->proxies[i] = NULL;
+    if (self->proxies) {
+        for (int32 i = 0; i < self->proxies_capacity; i += 1) {
+            if (self->proxies[i]) {
+                g_object_unref(self->proxies[i]);
+                self->proxies[i] = NULL;
+            }
         }
     }
 
