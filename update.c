@@ -786,13 +786,12 @@ update_ui_process_message(Message *message) {
         }
          #pragma clang diagnostic pop
 
-        gtk_text_view_scroll_to_mark(
-            GTK_TEXT_VIEW(cecup.log_view),
-            gtk_text_buffer_get_insert(cecup.log_buffer), 0.0, FALSE, 0.0, 0.0);
+        gtk_text_view_scroll_to_mark(GTK_TEXT_VIEW(cecup.log_view),
+                                     gtk_text_buffer_get_insert(cecup.log_buffer), 0.0,
+                                     FALSE, 0.0, 0.0);
         break;
     case DATA_TYPE_PROGRESS_PREVIEW:
-        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
-                                      message->fraction);
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview), message->fraction);
         break;
     case DATA_TYPE_ROW_REMOVE:
         update_row_remove(message);
@@ -840,13 +839,11 @@ update_ui_process_message(Message *message) {
         cecup.rows_len = 0;
         cecup.rows_visible_len = 0;
 
-        cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
-                                (int32)current_store_count, 0);
+        cecup_list_model_update(CECUP_LIST_MODEL(cecup.store), (int32)current_store_count, 0);
 
         g_mutex_unlock(&cecup.arena_mutex);
 
-        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview),
-                                      0.0);
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview), 0.0);
         break;
     case DATA_TYPE_ADD_ROW:
     case DATA_TYPE_BATCH:
