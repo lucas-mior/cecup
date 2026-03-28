@@ -22,6 +22,7 @@
 #include <string.h>
 #include "util.c"
 #include "cecup.h"
+#include "on.h"
 
 static void
 on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
