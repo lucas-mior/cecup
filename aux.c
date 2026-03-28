@@ -81,6 +81,7 @@ static int32
 traversal_push(Traversal *traversal, char *path, int32 path_len,
                struct stat *stat, char *link_target, int32 link_target_len,
                char *matched_pattern, int32 matched_pattern_len) {
+    struct stat stat_copy = *stat;
     int32 idx;
 
     if (traversal->nfiles >= traversal->ncapacity) {
@@ -142,7 +143,7 @@ traversal_push(Traversal *traversal, char *path, int32 path_len,
 
     memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
     if (stat) {
-        memcpy64(&traversal->stats[idx], stat, SIZEOF(struct stat));
+        memcpy64(&traversal->stats[idx], &stat_copy, SIZEOF(struct stat));
     }
 
     traversal->paths[idx] = path;
