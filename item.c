@@ -148,9 +148,7 @@ item_get_actions_reasons(CecupItem *item, enum Action *action_src,
     }
 
     if (src_idx < 0) {
-        char *matched_dst;
-
-        matched_dst = cecup.traversal_dst.matched_patterns[dst_idx];
+        char *matched_dst = cecup.traversal_dst.matched_patterns[dst_idx];
         *reason |= REASON_MISSING;
 
         if (matched_dst) {
