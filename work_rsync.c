@@ -221,9 +221,19 @@ work_rsync_run(char *files_from_filename, bool checksum,
             int64 remaining;
 
             if (eol_lf && eol_cr) {
-                eol = (eol_lf < eol_cr) ? eol_lf : eol_cr;
+                if ((eol_lf < eol_cr)) {
+                    eol = eol_lf;
+                }
+                else {
+                    eol = eol_cr;
+                }
             } else {
-                eol = eol_lf ? eol_lf : eol_cr;
+                if (eol_lf) {
+                    eol = eol_lf;
+                }
+                else {
+                    eol = eol_cr;
+                }
             }
 
             if (eol == NULL) {

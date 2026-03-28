@@ -183,7 +183,11 @@ on_menu_open_item(GtkWidget *m, void *data) {
     TaskList *tasks;
     char *variant;
 
-    variant = (m) ? g_object_get_data(G_OBJECT(m), "variant") : NULL;
+    if (m) {
+        variant = g_object_get_data(G_OBJECT(m), "variant");
+    } else {
+        variant = NULL;
+    }
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
     for (int32 i = 0; i < tasks->count; i += 1) {
@@ -192,7 +196,11 @@ on_menu_open_item(GtkWidget *m, void *data) {
         char *base_path;
         int32 n;
 
-        base_path = (message->side == L) ? cecup.src_base : cecup.dst_base;
+        if (message->side == L) {
+            base_path = cecup.src_base;
+        } else {
+            base_path = cecup.dst_base;
+        }
         n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
 
         if (variant) {
@@ -237,7 +245,11 @@ on_menu_copy_path(GtkWidget *m, void *data) {
     write_pointer = buffer;
     remaining_capacity = buffer_size - 1;
 
-    base_path = (message->side == L) ? cecup.src_base : cecup.dst_base;
+    if (message->side == L) {
+        base_path = cecup.src_base;
+    } else {
+        base_path = cecup.dst_base;
+    }
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
     for (int32 i = 0; i < tasks->count; i += 1) {

@@ -105,7 +105,11 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
 
         item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
-        message->action = (side == L) ? action_src : action_dst;
+        if (side == L) {
+            message->action = action_src;
+        } else {
+            message->action = action_dst;
+        }
         message->side = side;
 
         if (menu_item->variant) {

@@ -359,7 +359,11 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         }
 
         if (filepath == NULL) {
-            filepath = (side == L) ? item_path_side(row_id, R) : item_path_side(row_id, L);
+            if (side == L) {
+                filepath = item_path_side(row_id, R);
+            } else {
+                filepath = item_path_side(row_id, L);
+            }
         }
 
         if (filepath == NULL) {
@@ -376,9 +380,19 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
         {
             char *msg;
             if (side == L) {
-                msg = is_dir ? _(src_action_strings_dir[action]) : _(src_action_strings_file[action]);
+                if (is_dir) {
+                    msg = _(src_action_strings_dir[action]);
+                }
+                else {
+                    msg = _(src_action_strings_file[action]);
+                }
             } else {
-                msg = is_dir ? _(dst_action_strings_dir[action]) : _(dst_action_strings_file[action]);
+                if (is_dir) {
+                    msg = _(dst_action_strings_dir[action]);
+                }
+                else {
+                    msg = _(dst_action_strings_file[action]);
+                }
             }
 
             tip_text = msg;
@@ -403,7 +417,12 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
                     rb_pos += snprintf2(reason_buf + rb_pos, SIZEOF(reason_buf) - rb_pos, ", ");
                 }
 
-                base_msg = is_dir ? _(reason_strings_dir[i]) : _(reason_strings_file[i]);
+                if (is_dir) {
+                    base_msg = _(reason_strings_dir[i]);
+                }
+                else {
+                    base_msg = _(reason_strings_file[i]);
+                }
 
                 if (base_msg) {
                     rb_pos += snprintf2(reason_buf + rb_pos, SIZEOF(reason_buf) - rb_pos, "%s", base_msg);
@@ -416,7 +435,12 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t,
             if (link_target) {
                 char *notation;
 
-                notation = (reason & REASON_HARDLINK) ? RSYNC_HARDLINK_NOTATION : RSYNC_SYMLINK_NOTATION;
+                if ((reason & REASON_HARDLINK)) {
+                    notation = RSYNC_HARDLINK_NOTATION;
+                }
+                else {
+                    notation = RSYNC_SYMLINK_NOTATION;
+                }
                 SNPRINTF(tip_buffer, "%s%s%s: %s", filepath, notation, link_target, reason_buf);
             } else if (ignore_pattern) {
                 SNPRINTF(tip_buffer, "%s: %s (" N_("pattern") ": %s)", filepath, reason_buf, ignore_pattern);
