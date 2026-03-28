@@ -564,11 +564,8 @@ check_consistent_state(void) {
     g_mutex_lock(&cecup.arena_mutex);
 
     for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
-        int32 src_idx;
-        int32 dst_idx;
-
-        src_idx = cecup.rows_src[row_id];
-        dst_idx = cecup.rows_dst[row_id];
+        int32 src_idx = cecup.rows_src[row_id];
+        int32 dst_idx = cecup.rows_dst[row_id];
 
         if ((src_idx == -1) && (dst_idx == -1)) {
             error("Consistency error:"
