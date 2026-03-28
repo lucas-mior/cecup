@@ -52,8 +52,10 @@ static CecupItemProxy *
 cecup_item_proxy_new(CecupItem *item) {
     CecupItemProxy *self;
 
-    self = g_object_new(CECUP_TYPE_ITEM_PROXY, NULL);
-    self->item = item;
+    if ((self = g_object_new(CECUP_TYPE_ITEM_PROXY, NULL))) {
+        self->item = item;
+    }
+
     return self;
 }
 
@@ -160,6 +162,11 @@ cecup_list_model_get_item(GListModel *list, guint position) {
     }
 
     if (self->proxies[pos]) {
+        /*
+         * Critical: Even if the CecupItem pointer is the same,
+         * we must ensure the UI re-binds if the row identity has shifted
+         * (e.g., after sorting or filtering).
+         */
         if (self->proxies[pos]->item != cecup.rows_visible[pos]) {
             g_object_unref(self->proxies[pos]);
             self->proxies[pos] = cecup_item_proxy_new(cecup.rows_visible[pos]);
@@ -220,18 +227,20 @@ cecup_list_model_row_changed(CecupListModel *self, int32 index) {
     if (index < 0 || index >= cecup.rows_visible_len) {
         return;
     }
-    /* * DO NOT unref/NULL the proxy here. 
-     * Just signal the change. GTK will call get_item(), 
-     * and your existing logic will verify if the item matches.
+
+    /* * We don't unref here to avoid flickering. GTK calls get_item()
+     * automatically after the signal, where we verify the item match.
      */
     g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 1);
     return;
 }
 
-
 static inline void
 tree_model_functions_sink(void) {
     (void)cecup_list_model_new;
+    (void)cecup_list_model_update;
+    (void)cecup_list_model_row_removed;
+    (void)cecup_list_model_row_changed;
     (void)cecup_item_proxy_get_item;
 }
 
