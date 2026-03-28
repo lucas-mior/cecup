@@ -296,8 +296,8 @@ cecup_reset_dir(int32 side) {
 
 static void
 cecup_get_dirs(void) {
-    char full_src[MAX_PATH_LENGTH];
-    char full_dst[MAX_PATH_LENGTH];
+    char full_src[MAX_PATH_LENGTH/2];
+    char full_dst[MAX_PATH_LENGTH/2];
     char *tmp_src;
     char *tmp_dst;
 
