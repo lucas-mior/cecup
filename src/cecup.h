@@ -282,7 +282,6 @@ enum CecupColumn {
 typedef struct Message {
     enum DataType type;
     enum Action action;
-    enum Reason reason;
 
     char *text;
     char *src_path;
@@ -299,15 +298,9 @@ typedef struct Message {
     int32 old_path_len;
     int32 new_path_len;
 
-    int64 src_size;
-    int64 src_mtime;
-    int64 dst_size;
-    int64 dst_mtime;
-
     int32 side;
     double fraction;
 
-    bool delete_ignored;
     bool is_dir;
     bool preview_clean;
 } Message;
