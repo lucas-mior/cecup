@@ -295,7 +295,9 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
             line_len = (int64)(eol - buf_output);
             *eol = '\0';
 
-            LOG("%s%c", buf_output, end);
+            if (!BEGINS_WITH(buf_output, "removing duplicate")) {
+                LOG("%s%c", buf_output, end);
+            }
 
             if ((path = work_check_itemize_line(buf_output))) {
                 int32 path_len;
