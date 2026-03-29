@@ -432,8 +432,8 @@ work_preview(void *user_data) {
         char *link_target_src;
         int32 path_len;
         int32 row_id;
-        enum Action src_act;
-        enum Action dst_act;
+        enum Action action_src;
+        enum Action action_dst;
         enum Reason reason;
 
         bucket_src = &(cecup.traversal_src.map->array[i]);
@@ -452,10 +452,10 @@ work_preview(void *user_data) {
         }
 
         row_id = item_add(src_idx, dst_idx);
-        item_get_actions_reasons(row_id, &src_act, &dst_act, &reason);
+        item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
         if (!aux_is_root(bucket_src->key)
-            && (src_act != ACTION_EQUAL) && (src_act != ACTION_IGNORE)) {
+            && (action_src != ACTION_EQUAL) && (action_src != ACTION_IGNORE)) {
             if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) {
                 if (cecup.transfers_capacity == 0) {
                     cecup.transfers_capacity = 256;
@@ -465,7 +465,7 @@ work_preview(void *user_data) {
                 cecup.transfers = xrealloc(cecup.transfers,
                                            cecup.transfers_capacity*SIZEOF(*cecup.transfers));
             }
-            if (src_act == ACTION_HARDLINK) {
+            if (action_src == ACTION_HARDLINK) {
                 cecup.transfers[cecup.ntransfers] = link_target_src;
                 cecup.ntransfers += 1;
             }
