@@ -783,7 +783,15 @@ update_ui_process_message(Message *message) {
                                      FALSE, 0.0, 0.0);
         break;
     case DATA_TYPE_PROGRESS_PREVIEW:
-        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), message->fraction);
+        if (message->fraction >= 0.0) {
+            gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), message->fraction);
+        }
+        if (message->text) {
+            gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), message->text);
+        }
+        if (message->src_path) {
+            gtk_widget_set_tooltip_text(cecup.progress_bar, message->src_path);
+        }
         break;
     case DATA_TYPE_ROW_REMOVE:
         needs_update = update_row_remove(message);
@@ -831,11 +839,13 @@ update_ui_process_message(Message *message) {
         cecup.rows_len = 0;
         cecup.rows_visible_len = 0;
 
-        cecup_list_model_update(CECUP_LIST_MODEL(cecup.store), (int32)current_store_count, 0);
+        cecup_list_model_update(CECUP_LIST_MODEL(cecup.store), current_store_count, 0);
 
         g_mutex_unlock(&cecup.arena_mutex);
 
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), 0.0);
+        gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), "");
+        gtk_widget_set_tooltip_text(cecup.progress_bar, "");
         break;
     case DATA_TYPE_ADD_ROW:
     case DATA_TYPE_BATCH:
@@ -903,6 +913,32 @@ update_progress_bar(enum DataType type, double fraction) {
 
     message->type = type;
     message->fraction = fraction;
+    g_idle_add(update_ui_handler, message);
+    return;
+}
+
+static void
+update_progress_state(char *text, char *tooltip) {
+    Message *message;
+
+    message = xmalloc(SIZEOF(*message));
+    memset64(message, 0, SIZEOF(*message));
+
+    message->type = DATA_TYPE_PROGRESS_PREVIEW;
+    message->fraction = -1.0;
+
+    if (text) {
+        message->text_len = strlen32(text);
+        message->text = xmalloc(message->text_len + 1);
+        memcpy64(message->text, text, message->text_len + 1);
+    }
+
+    if (tooltip) {
+        message->path_len = strlen32(tooltip);
+        message->src_path = xmalloc(message->path_len + 1);
+        memcpy64(message->src_path, tooltip, message->path_len + 1);
+    }
+
     g_idle_add(update_ui_handler, message);
     return;
 }

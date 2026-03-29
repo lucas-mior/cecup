@@ -144,6 +144,14 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
 
     delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
+    if (checksum) {
+        update_progress_state(_("Verifying checksums"),
+                              _("Performing verification of the new files..."));
+    } else {
+        update_progress_state(_("Syncing files"),
+                              _("Transferring data and updating metadata..."));
+    }
+
     SNPRINTF(src_base_with_slash, "%s/", cecup.src_base);
     SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
 
