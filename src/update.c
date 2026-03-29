@@ -41,7 +41,7 @@
 
 static void update_list_from_rows(void);
 
-static void
+static bool
 update_row_remove(Message *message) {
     char *pattern;
     int32 pattern_len;
@@ -61,7 +61,7 @@ update_row_remove(Message *message) {
     }
 
     if (pattern == NULL || pattern_len == 0) {
-        return;
+        return false;
     }
 
     if (pattern[pattern_len - 1] != '/') {
@@ -70,11 +70,11 @@ update_row_remove(Message *message) {
         int32 *side_ptr;
 
         if ((idx_ptr = hash_lookup_fs_map(traversal->map, pattern, pattern_len)) == NULL) {
-            return;
+            return false;
         }
 
         if ((row_id = traversal->row_ids[*idx_ptr]) < 0) {
-            return;
+            return false;
         }
 
         changed = true;
@@ -204,13 +204,12 @@ update_row_remove(Message *message) {
 
     if (changed) {
         invalidate_preview();
-        update_list_from_rows();
     }
 
-    return;
+    return changed;
 }
 
-static void
+static bool
 update_row_transfer(Message *message) {
     char *pattern;
     int32 pattern_len;
@@ -221,7 +220,7 @@ update_row_transfer(Message *message) {
     changed = false;
 
     if (pattern == NULL || pattern_len == 0) {
-        return;
+        return false;
     }
 
     if (pattern[pattern_len - 1] != '/') {
@@ -324,13 +323,12 @@ update_row_transfer(Message *message) {
 
     if (changed) {
         invalidate_preview();
-        update_list_from_rows();
     }
 
-    return;
+    return changed;
 }
 
-static void
+static bool
 update_row_rename(Message *message) {
     Traversal *traversal;
     Traversal *other_traversal;
@@ -510,10 +508,9 @@ update_row_rename(Message *message) {
 
     if (changed) {
         invalidate_preview();
-        update_list_from_rows();
     }
 
-    return;
+    return changed;
 }
 
 static void
@@ -667,7 +664,7 @@ update_list_from_rows(void) {
     return;
 }
 
-static void
+static bool
 update_row_ignore(Message *message) {
     (void)message;
 
@@ -715,11 +712,10 @@ update_row_ignore(Message *message) {
         }
     }
 
-    update_list_from_rows();
-    return;
+    return true;
 }
 
-static void
+static bool
 update_ui_process_message(Message *message) {
     GtkTextIter end;
     GtkTextIter start_line;
@@ -727,6 +723,9 @@ update_ui_process_message(Message *message) {
     int32 current_store_count;
     bool is_cr;
     bool buffer_ends_in_lf;
+    bool needs_update;
+
+    needs_update = false;
 
     switch (message->type) {
     case DATA_TYPE_LOG:
@@ -794,16 +793,16 @@ update_ui_process_message(Message *message) {
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview), message->fraction);
         break;
     case DATA_TYPE_ROW_REMOVE:
-        update_row_remove(message);
+        needs_update = update_row_remove(message);
         break;
     case DATA_TYPE_ROW_RENAME:
-        update_row_rename(message);
+        needs_update = update_row_rename(message);
         break;
     case DATA_TYPE_ROW_TRANSFER:
-        update_row_transfer(message);
+        needs_update = update_row_transfer(message);
         break;
     case DATA_TYPE_IGNORE_PATTERN:
-        update_row_ignore(message);
+        needs_update = update_row_ignore(message);
         break;
     case DATA_TYPE_ENABLE_BUTTONS:
         if (cecup.refresh_id != 0) {
@@ -854,25 +853,32 @@ update_ui_process_message(Message *message) {
     }
 
     free_message(message);
-    return;
+    return needs_update;
 }
 
 static gboolean
 update_ui_handler(void *data) {
     MessageBatch *batch;
     Message *message;
+    bool needs_update;
 
     message = data;
+    needs_update = false;
 
     if (message->type == DATA_TYPE_BATCH) {
         batch = data;
         for (int32 i = 0; i < batch->count; i += 1) {
-            PRINTLN(i);
-            update_ui_process_message(batch->messages[i]);
+            if (update_ui_process_message(batch->messages[i])) {
+                needs_update = true;
+            }
         }
         free(batch, sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));
     } else {
-        update_ui_process_message(message);
+        needs_update = update_ui_process_message(message);
+    }
+
+    if (needs_update) {
+        update_list_from_rows();
     }
 
     return G_SOURCE_REMOVE;
