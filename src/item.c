@@ -229,17 +229,17 @@ item_get_actions_reasons(int32 row_id,
     }
 
     if (dst_idx < 0) {
-        char *matched_src;
+        char *pattern_src;
         struct stat *stat_src;
         bool is_symlink;
         bool is_hardlink;
 
-        matched_src = cecup.traversal_src.patterns[src_idx];
+        pattern_src = cecup.traversal_src.patterns[src_idx];
         stat_src = &cecup.traversal_src.stats[src_idx];
         is_symlink = S_ISLNK(stat_src->st_mode);
         is_hardlink = S_ISREG(stat_src->st_mode) && cecup.traversal_src.link_targets[src_idx];
 
-        if (matched_src) {
+        if (pattern_src) {
             *action_src = ACTION_IGNORE;
             *action_dst = ACTION_IGNORE;
             *reason |= REASON_IGNORED;
@@ -265,7 +265,7 @@ item_get_actions_reasons(int32 row_id,
     }
 
     {
-        char *matched_src;
+        char *pattern_src;
         struct stat *stat_src;
         struct stat *stat_dst;
         char *path_src;
@@ -279,7 +279,7 @@ item_get_actions_reasons(int32 row_id,
         bool equal;
         bool attributes_differ;
 
-        matched_src = cecup.traversal_src.patterns[src_idx];
+        pattern_src = cecup.traversal_src.patterns[src_idx];
         stat_src = &cecup.traversal_src.stats[src_idx];
         stat_dst = &cecup.traversal_dst.stats[dst_idx];
         path_src = cecup.traversal_src.paths[src_idx];
@@ -293,7 +293,7 @@ item_get_actions_reasons(int32 row_id,
         equal = false;
         attributes_differ = false;
 
-        if (matched_src) {
+        if (pattern_src) {
             *action_src = ACTION_IGNORE;
             *reason |= REASON_IGNORED;
 
