@@ -314,9 +314,7 @@ work_traverse_clean(Traversal *traversal) {
     hash_destroy_inode_map(traversal->inode_map);
 
     {
-        Arena *arena_save;
-
-        arena_save = traversal->arena;
+        Arena *arena_save = traversal->arena;
         memset64(traversal, 0, SIZEOF(*traversal));
         traversal->arena = arena_save;
     }
