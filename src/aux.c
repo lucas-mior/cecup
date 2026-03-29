@@ -495,6 +495,15 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
         lookup_ptr = hash_lookup_fs_map(traversal->map, path, path_len);
 
         if (row_id != -1) {
+            if (traversal->nlinks[idx] > 1) {
+                if (traversal->link_targets[idx] == NULL) {
+                    error("Consistency error:"
+                          " %s index %d (path %s) has nlinks > 1 but target is NULL.\n",
+                          which_traversal, idx, path);
+                    fatal(EXIT_FAILURE);
+                }
+            }
+
             if (row_id >= cecup.rows_len) {
                 error("Consistency error: %s.row_ids[%d] points to invalid row %d.\n",
                       which_traversal, idx, row_id);
@@ -521,11 +530,13 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
                 fatal(EXIT_FAILURE);
             }
         } else {
-            if (lookup_ptr && (*lookup_ptr == idx)) {
-                error("Consistency error:"
-                      " %s index %d (path %s) has no row but exists in hash.\n",
-                      which_traversal, idx, path);
-                fatal(EXIT_FAILURE);
+            if (lookup_ptr) {
+                if (*lookup_ptr == idx) {
+                    error("Consistency error:"
+                          " %s index %d (path %s) has no row but exists in hash.\n",
+                          which_traversal, idx, path);
+                    fatal(EXIT_FAILURE);
+                }
             }
         }
     }
