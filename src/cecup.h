@@ -125,6 +125,11 @@
 #define HASH_TYPE inode_map
 #include "hash.c"
 
+#define HASH_DUPLICATE_KEYS 1
+#define HASH_AUTO_RESIZE 1
+#define HASH_TYPE transfer_set
+#include "hash.c"
+
 typedef struct Traversal {
     Arena *arena;
     char *base_path;
@@ -423,6 +428,8 @@ static struct {
 
     Traversal traversal_src;
     Traversal traversal_dst;
+
+    struct Hash_transfer_set *transfer_set;
     char **transfers;
     int32 ntransfers;
     int32 transfers_capacity;

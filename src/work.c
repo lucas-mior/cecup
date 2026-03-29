@@ -325,6 +325,7 @@ work_cleanup(void) {
     work_traverse_clean(&cecup.traversal_dst);
 
     free(cecup.transfers, cecup.transfers_capacity*SIZEOF(*cecup.transfers));
+    hash_zero_transfer_set(cecup.transfer_set);
     cecup.transfers = NULL;
     cecup.ntransfers = 0;
     cecup.transfers_capacity = 0;
@@ -430,6 +431,7 @@ work_preview(void *user_data) {
         int32 *dst_idx_ptr;
         int32 dst_idx;
         char *link_target_src;
+        int32 link_target_src_len;
         int32 path_len;
         int32 row_id;
         enum Action action_src;
@@ -443,6 +445,7 @@ work_preview(void *user_data) {
 
         src_idx = bucket_src->value;
         link_target_src = cecup.traversal_src.link_targets[src_idx];
+        link_target_src_len = cecup.traversal_src.link_targets_lens[src_idx];
         path_len = cecup.traversal_src.paths_lens[src_idx];
 
         if ((dst_idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.map, bucket_src->key, path_len))) {
@@ -466,11 +469,16 @@ work_preview(void *user_data) {
                                            cecup.transfers_capacity*SIZEOF(*cecup.transfers));
             }
             if (action_src == ACTION_HARDLINK) {
-                cecup.transfers[cecup.ntransfers] = link_target_src;
+                if (hash_insert_transfer_set(cecup.transfer_set,
+                                             link_target_src, link_target_src_len)) {
+                    cecup.transfers[cecup.ntransfers] = link_target_src;
+                    cecup.ntransfers += 1;
+                }
+            }
+            if (hash_insert_transfer_set(cecup.transfer_set, bucket_src->key, path_len)) {
+                cecup.transfers[cecup.ntransfers] = bucket_src->key;
                 cecup.ntransfers += 1;
             }
-            cecup.transfers[cecup.ntransfers] = bucket_src->key;
-            cecup.ntransfers += 1;
         }
 
         nfiles_processed += 1;

@@ -705,6 +705,8 @@ main(int32 argc, char **argv) {
     cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(int32));
     cecup.rows_selected = xmalloc(cecup.rows_capacity*SIZEOF(uint8));
 
+    cecup.transfer_set = hash_create_transfer_set(1024);
+
     cecup.ignore_patterns = NULL;
     cecup.ignore_capacity = 0;
     cecup.ignore_count = 0;
