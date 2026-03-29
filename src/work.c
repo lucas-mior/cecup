@@ -57,9 +57,10 @@ work_finalize(bool preview_clean) {
     return;
 }
 
-static int64
+static int32
 work_traverse_fs(Traversal *traversal) {
-    int64 file_count;
+    int64 file_count = 0;
+    int32 file_count_return = 0;
     char *paths[2];
     FTS *fts_handle;
     FTSENT *ent;
@@ -68,7 +69,6 @@ work_traverse_fs(Traversal *traversal) {
         return 0;
     }
 
-    file_count = 0;
     paths[0] = traversal->base_path;
     paths[1] = NULL;
 
@@ -151,12 +151,17 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        if (cecup.stop_working) {
-            break;
+        if (ent->fts_info != FTS_D) {
+            if (file_count >= MAXOF(file_count_return)) {
+                LOG_ERROR("More than %lld files found.\n", MAXOF(file_count_return));
+                LOG_ERROR("Please work in smaller subdirs.\n");
+                cecup.stop_working = true;
+            }
+            file_count += 1;
         }
 
-        if (ent->fts_info != FTS_D) {
-            file_count += 1;
+        if (cecup.stop_working) {
+            break;
         }
 
         is_dir = (ent->fts_info == FTS_D);
@@ -274,7 +279,8 @@ work_traverse_fs(Traversal *traversal) {
         }
     }
 
-    return file_count;
+    file_count_return = (int32)file_count;
+    return file_count_return;
 }
 
 static void *
@@ -462,23 +468,32 @@ work_preview(void *user_data) {
         if (!aux_is_root(bucket_src->key)
             && (action_src != ACTION_EQUAL) && (action_src != ACTION_IGNORE)) {
             if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) {
-                if (cecup.transfers_capacity == 0) {
+                int32 old_capacity = cecup.transfers_capacity;
+
+                if (old_capacity <= 0) {
                     cecup.transfers_capacity = 256;
                 } else {
                     cecup.transfers_capacity *= 2;
                 }
-                cecup.transfers = xrealloc(cecup.transfers,
-                                           cecup.transfers_capacity*SIZEOF(*cecup.transfers));
+
+                cecup.transfers = xrealloc2(cecup.transfers,
+                                            old_capacity, cecup.transfers_capacity,
+                                            SIZEOF(*cecup.transfers));
+                cecup.transfers_lens = xrealloc2(cecup.transfers_lens,
+                                                 old_capacity, cecup.transfers_capacity,
+                                                 SIZEOF(*cecup.transfers_lens));
             }
             if (action_src == ACTION_HARDLINK) {
                 if (hash_insert_transfer_set(cecup.transfer_set,
                                              link_target_src, link_target_src_len)) {
                     cecup.transfers[cecup.ntransfers] = link_target_src;
+                    cecup.transfers_lens[cecup.ntransfers] = link_target_src_len;
                     cecup.ntransfers += 1;
                 }
             }
             if (hash_insert_transfer_set(cecup.transfer_set, bucket_src->key, path_len)) {
                 cecup.transfers[cecup.ntransfers] = bucket_src->key;
+                cecup.transfers_lens[cecup.ntransfers] = path_len;
                 cecup.ntransfers += 1;
             }
         }

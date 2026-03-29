@@ -431,6 +431,7 @@ static struct {
 
     struct Hash_transfer_set *transfer_set;
     char **transfers;
+    int32 *transfers_lens;
     int32 ntransfers;
     int32 transfers_capacity;
     bool preview_dirty;
@@ -538,7 +539,7 @@ static char *problems[] = {
 static void work_batch_flush(MessageBatch **batch_ptr);
 static void work_batch_push(MessageBatch **batch_ptr, Message *message);
 static void work_finalize(bool preview_clean);
-static int64 work_traverse_fs(Traversal *traversal);
+static int32 work_traverse_fs(Traversal *traversal);
 static void *work_traverse_fs_thread(void *user_data);
 static void work_traverse_clean(Traversal *traversal);
 static void work_cleanup(void);

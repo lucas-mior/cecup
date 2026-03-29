@@ -141,7 +141,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
     pid_t child_pid;
     struct pollfd pipes[2];
     bool delete_after;
-    int32 nfiles_checksummed;
+    int32 nfiles_checksummed = 0;
 
     delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
