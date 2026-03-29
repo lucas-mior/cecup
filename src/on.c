@@ -112,7 +112,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
         message->side = side;
 
         if (menu_item->variant) {
-            g_object_set_data(G_OBJECT(tree), "variant", menu_item->variant);
+            g_object_set_data_full(G_OBJECT(tree), "variant", menu_item->variant, NULL);
         }
 
         menu_item->callback(tree, message);
