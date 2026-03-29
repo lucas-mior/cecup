@@ -851,8 +851,8 @@ main(void) {
         char expected_path[MAX_PATH_LENGTH];
         int32 name_len;
         int32 row_id;
-        enum Action act_src;
-        enum Action act_dst;
+        enum Action action_src;
+        enum Action action_dst;
         enum Reason reason;
 
         entry = &test_entries[i];
@@ -895,9 +895,9 @@ main(void) {
         }
 
         row_id = item_add(src_idx, dst_idx);
-        item_get_actions_reasons(row_id, &act_src, &act_dst, &reason);
+        item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
-        ASSERT_EQUAL(act_src, entry->expected_src_action);
+        ASSERT_EQUAL(action_src, entry->expected_src_action);
         ASSERT_EQUAL((reason & entry->expected_reason_mask), entry->expected_reason_mask);
     }
 
