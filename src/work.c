@@ -54,7 +54,7 @@ work_batch_flush(MessageBatch **batch_ptr) {
     if (batch->count > 0) {
         g_idle_add(update_ui_handler, batch);
     } else {
-        free(batch, sizeof(MessageBatch) + (BATCH_SIZE*sizeof(Message *)));
+        free(batch, sizeof(*batch));
     }
 
     *batch_ptr = NULL;
@@ -72,8 +72,8 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
 
     batch = *batch_ptr;
     if (batch == NULL) {
-        batch = xmalloc(sizeof(MessageBatch) + (BATCH_SIZE*sizeof(Message *)));
-        memset64(batch, 0, sizeof(MessageBatch));
+        batch = xmalloc(SIZEOF(*batch));
+        memset64(batch, 0, SIZEOF(*batch));
         batch->type = DATA_TYPE_BATCH;
         batch->count = 0;
         *batch_ptr = batch;
@@ -82,7 +82,7 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
     batch->messages[batch->count] = message;
     batch->count += 1;
 
-    if (batch->count >= BATCH_SIZE) {
+    if (batch->count >= LENGTH(batch->messages)) {
         work_batch_flush(batch_ptr);
         clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_flush);
     } else {

@@ -872,7 +872,7 @@ update_ui_handler(void *data) {
                 needs_update = true;
             }
         }
-        free(batch, sizeof(MessageBatch) + (BATCH_SIZE * sizeof(Message *)));
+        free(batch, SIZEOF(*batch));
     } else {
         needs_update = update_ui_process_message(message);
     }

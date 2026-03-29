@@ -312,10 +312,12 @@ typedef struct Message {
     bool preview_clean;
 } Message;
 
+#define BATCH_SIZE 256
+
 typedef struct MessageBatch {
     enum DataType type;
     int32 count;
-    Message *messages[];
+    Message *messages[BATCH_SIZE];
 } MessageBatch;
 
 typedef struct Task {
@@ -516,7 +518,6 @@ enum RsyncCharAttribute {
 
 #define RSYNC_HARDLINK " => "
 #define RSYNC_SYMLINK " -> "
-#define BATCH_SIZE 256
 
 static char *problems[] = {
     "\n",
