@@ -240,9 +240,10 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     GdkClipboard *clipboard;
 
     buffer_size = SIZEMB(2);
-    clipboard = gdk_display_get_clipboard(gdk_display_get_default());
     buffer = xmalloc(buffer_size);
     write_pointer = buffer;
+
+    clipboard = gdk_display_get_clipboard(gdk_display_get_default());
     remaining_capacity = buffer_size - 1;
 
     if (message->side == L) {
