@@ -18,7 +18,9 @@
 #if !defined(WORK_RSYNC)
 #define WORK_RSYNC
 
+#include <ctype.h>
 #include "cecup.h"
+#include "update.c"
 
 static void
 work_batch_flush(MessageBatch **batch_ptr) {
@@ -274,15 +276,13 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
             if (eol_lf && eol_cr) {
                 if ((eol_lf < eol_cr)) {
                     eol = eol_lf;
-                }
-                else {
+                } else {
                     eol = eol_cr;
                 }
             } else {
                 if (eol_lf) {
                     eol = eol_lf;
-                }
-                else {
+                } else {
                     eol = eol_cr;
                 }
             }
@@ -326,6 +326,19 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
                     memcpy64(msg_update->src_path, path, path_len + 1);
 
                     work_batch_push(batch_ptr, msg_update);
+                }
+            } else {
+                char *percentage;
+                int64 progress;
+
+                if ((percentage = memmem64(buf_output + 1, line_len - 1, "% ", 2))) {
+                    while (isdigit(*(percentage - 1))) {
+                        percentage -= 1;
+                    }
+                    if (*(percentage - 1) == ' ') {
+                        progress = atoi(percentage);
+                        update_progress_bar(DATA_TYPE_PROGRESS_PREVIEW, (double)progress / 100.0);
+                    }
                 }
             }
 
