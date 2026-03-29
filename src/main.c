@@ -737,11 +737,38 @@ main(int32 argc, char **argv) {
         SNPRINTF(config_base, "%s/cecup", XDG_CONFIG_HOME);
 
         if (access(config_base, F_OK) == -1) {
-            char cmd[MAX_PATH_LENGTH];
+            pid_t child_cp;
 
             g_mkdir_with_parents(config_base, 0755);
-            SNPRINTF(cmd, "cp -r /etc/cecup/* '%s/'", config_base);
-            system(cmd);
+
+            switch (child_cp = fork()) {
+            case -1:
+                error("Error forking: %s.\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            case 0:
+            {
+                char *args_cp[] = {
+                    "cp",
+                    "-r",
+                    "/etc/cecup/.",
+                    config_base,
+                    NULL,
+                };
+
+                execvp(args_cp[0], args_cp);
+                error("Error executing cp: %s.\n", strerror(errno));
+                _exit(EXIT_FAILURE);
+            }
+            default:
+            {
+                int child_status = 0;
+
+                if (waitpid(child_cp, &child_status, 0) < 0) {
+                    error("Error waiting for cp: %s.\n", strerror(errno));
+                }
+                break;
+            }
+            }
         }
 
         SNPRINTF(cecup.ignore_path, "%s/ignore.conf", config_base);

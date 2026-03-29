@@ -26,7 +26,6 @@ if [[ "${1:-}" != "--wrapped" ]]; then
     exit $?
 fi
 
-echo "here"
 shift
 
 export LC_ALL=C
@@ -129,6 +128,10 @@ case "$target" in
 "release") 
     CFLAGS="$CFLAGS $GNUSOURCE -DRELEASING=1 -O2 -flto -march=native -ftree-vectorize"
     ;;
+"fast_feedback")
+    CC=clang
+    CFLAGS="$CFLAGS $GNUSOURCE -Werror"
+    ;;
 "po")
     mkdir -p po
 
@@ -205,6 +208,11 @@ if [ "$CC" = "clang" ]; then
 fi
 
 case "$target" in
+"fast_feedback")
+    trace_on
+    $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && LC_ALL=C "$exe"
+    trace_off
+    ;;
 "build"|"debug"|"run"|"release"|"valgrind"|"callgrind"|"perf"|"profile")
     trace_on
 
@@ -275,6 +283,7 @@ case "$target" in
     ;;
 "test")
     for src in src/*.c; do
+        trace_off
         if [ -n "$2" ] && [ $src != "src/$2" ]; then
             continue
         fi
@@ -305,7 +314,7 @@ case "$target" in
         if $cmdline; then
             /tmp/$name.c.exe || gdb /tmp/$name.c.exe -ex run
         else
-            continue
+            exit
         fi
         trace_off
     done

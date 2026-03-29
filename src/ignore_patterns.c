@@ -237,6 +237,10 @@ ignore_patterns_match(char *path, int32 path_len,
 #if TESTING_ignore_patterns
 #include "assert.c"
 
+#include "aux.c"   
+#include "update.c"
+#include "work.c"
+
 static void
 test_pattern_init(IgnorePattern *p, char *raw) {
     int32 length;
