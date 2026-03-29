@@ -216,9 +216,8 @@ work_traverse_fs(Traversal *traversal) {
 
             n = ITOA(inode_str, (long)ent->fts_statp->st_ino);
             if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n))) {
-                int32 first_idx;
+                int32 first_idx = *first_idx_ptr;
 
-                first_idx = *first_idx_ptr;
                 link_target = traversal->paths[first_idx];
                 link_target_len = traversal->paths_lens[first_idx];
 
