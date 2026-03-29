@@ -101,7 +101,7 @@
     X(IGNORE_PATTERN)     \
     X(ENABLE_BUTTONS)     \
     X(CLEAR_TREES)        \
-    X(PROGRESS_PREVIEW)   \
+    X(PROGRESS)           \
     X(ADD_ROW)
 #include "xenums.c"
 

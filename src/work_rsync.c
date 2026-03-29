@@ -314,7 +314,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
 
                 if (checksum) {
                     nfiles_checksummed += 1;
-                    update_progress_bar(DATA_TYPE_PROGRESS_PREVIEW,
+                    update_progress_bar(DATA_TYPE_PROGRESS,
                                         (double)nfiles_checksummed / (double)cecup.ntransfers);
                 }
 
@@ -352,7 +352,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
                     }
                     if (*(percentage - 1) == ' ') {
                         progress = atoll(percentage);
-                        update_progress_bar(DATA_TYPE_PROGRESS_PREVIEW, (double)progress / 100.0);
+                        update_progress_bar(DATA_TYPE_PROGRESS, (double)progress / 100.0);
                     }
                 }
             }

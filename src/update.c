@@ -782,7 +782,7 @@ update_ui_process_message(Message *message) {
                                      gtk_text_buffer_get_insert(cecup.log_buffer), 0.0,
                                      FALSE, 0.0, 0.0);
         break;
-    case DATA_TYPE_PROGRESS_PREVIEW:
+    case DATA_TYPE_PROGRESS:
         if (message->fraction >= 0.0) {
             gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), message->fraction);
         }
@@ -893,7 +893,7 @@ update_progress_bar(enum DataType type, double fraction) {
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index;
 
-    if (type == DATA_TYPE_PROGRESS_PREVIEW) {
+    if (type == DATA_TYPE_PROGRESS) {
         index = 3;
     } else {
         index = 0;
@@ -924,7 +924,7 @@ update_progress_state(char *text, char *tooltip) {
     message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
-    message->type = DATA_TYPE_PROGRESS_PREVIEW;
+    message->type = DATA_TYPE_PROGRESS;
     message->fraction = -1.0;
 
     if (text) {

@@ -51,7 +51,7 @@ work_finalize(bool preview_clean) {
     message->type = DATA_TYPE_ENABLE_BUTTONS;
     message->preview_clean = preview_clean;
 
-    update_progress_bar(DATA_TYPE_PROGRESS_PREVIEW, 1.0);
+    update_progress_bar(DATA_TYPE_PROGRESS, 1.0);
 
     g_idle_add(update_ui_handler, message);
     return;
@@ -500,7 +500,7 @@ work_preview(void *user_data) {
 
         nfiles_processed += 1;
         if ((nfiles_processed % 1000) == 0) {
-            update_progress_bar(DATA_TYPE_PROGRESS_PREVIEW,
+            update_progress_bar(DATA_TYPE_PROGRESS,
                                 (double)nfiles_processed / (double)nfiles_total);
         }
     }
@@ -524,7 +524,7 @@ work_preview(void *user_data) {
 
         nfiles_processed += 1;
         if ((nfiles_processed % 1000) == 0) {
-            update_progress_bar(DATA_TYPE_PROGRESS_PREVIEW,
+            update_progress_bar(DATA_TYPE_PROGRESS,
                                 (double)nfiles_processed / (double)nfiles_total);
         }
     }
