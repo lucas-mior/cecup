@@ -216,7 +216,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
             "progressbar text { font-size: 11pt; font-weight: bold; }"
         };
         GtkCssProvider *css_provider;
-        char css[BUFSIZ];
+        char css_buffer[BUFSIZ];
         int32 offset;
 
         css_provider = gtk_css_provider_new();
@@ -224,8 +224,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
         for (int32 i = 0; i < LENGTH(base_css); i += 1) {
             int32 n;
-            n = snprintf2(css + offset, SIZEOF(css) - offset,
-                          "%s\n", base_css[i]);
+            n = snprintf2(css_buffer + offset, SIZEOF(css_buffer) - offset, "%s\n", base_css[i]);
             offset += n;
         }
 
@@ -236,14 +235,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                 continue;
             }
 
-            m = snprintf2(css + offset, SIZEOF(css) - offset,
+            m = snprintf2(css_buffer + offset, SIZEOF(css_buffer) - offset,
                           "row:not(:selected)"
                           " .cell-color-%d { background-color: %s; }\n",
                           i, colors[i]);
             offset += m;
         }
 
-        gtk_css_provider_load_from_string(css_provider, css);
+        gtk_css_provider_load_from_string(css_provider, css_buffer);
         gtk_style_context_add_provider_for_display(gdk_display_get_default(),
                                                    GTK_STYLE_PROVIDER(css_provider),
                                                    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
