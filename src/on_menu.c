@@ -233,9 +233,9 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
     char *buffer;
-    int64 buffer_size;
+    int32 buffer_size;
     char *write_pointer;
-    int64 remaining_capacity;
+    int32 remaining_capacity;
     char *base_path;
     GdkClipboard *clipboard;
 
