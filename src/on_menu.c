@@ -47,7 +47,7 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     if (tree && message) {
         if (menu_item->callback) {
             if (menu_item->variant) {
-                g_object_set_data(G_OBJECT(tree), "variant", menu_item->variant);
+                g_object_set_data_full(G_OBJECT(tree), "variant", menu_item->variant, NULL);
             }
             menu_item->callback(tree, message);
         } else {
