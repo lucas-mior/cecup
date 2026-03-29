@@ -401,7 +401,7 @@ static struct {
     GtkWidget *tree[2];
     GtkWidget *stats_label;
 
-    GtkWidget *progress_preview;
+    GtkWidget *progress_bar;
 
     int32 *rows_src;
     int32 *rows_dst;

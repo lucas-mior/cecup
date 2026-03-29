@@ -353,13 +353,13 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(header_vbox), options_hbox);
 
     progress_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
-    cecup.progress_preview = gtk_progress_bar_new();
-    gtk_widget_set_tooltip_text(cecup.progress_preview, _("Preview analysis progress"));
+    cecup.progress_bar = gtk_progress_bar_new();
+    gtk_widget_set_tooltip_text(cecup.progress_bar, _("Preview analysis progress"));
 
-    gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_preview), TRUE);
-    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_preview), _("Analyzing changes"));
+    gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_bar), TRUE);
+    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), _("Analyzing changes"));
 
-    gtk_box_append(GTK_BOX(progress_vbox), cecup.progress_preview);
+    gtk_box_append(GTK_BOX(progress_vbox), cecup.progress_bar);
     gtk_box_append(GTK_BOX(header_vbox), progress_vbox);
     gtk_widget_set_margin_bottom(progress_vbox, 5);
 

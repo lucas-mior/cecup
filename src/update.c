@@ -783,7 +783,7 @@ update_ui_process_message(Message *message) {
                                      FALSE, 0.0, 0.0);
         break;
     case DATA_TYPE_PROGRESS_PREVIEW:
-        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview), message->fraction);
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), message->fraction);
         break;
     case DATA_TYPE_ROW_REMOVE:
         needs_update = update_row_remove(message);
@@ -835,7 +835,7 @@ update_ui_process_message(Message *message) {
 
         g_mutex_unlock(&cecup.arena_mutex);
 
-        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_preview), 0.0);
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), 0.0);
         break;
     case DATA_TYPE_ADD_ROW:
     case DATA_TYPE_BATCH:
