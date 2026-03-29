@@ -384,7 +384,7 @@ on_menu_diff(GtkWidget *widget, void *data) {
             snprintf2(path_dst, size_dst, "%s/%s", cecup.dst_base, task->path);
 
             {
-                char cmd[MAX_PATH_LENGTH * 2];
+                char cmd[MAX_PATH_LENGTH*2];
                 char *diff_command[] = {
                     term_cmd, "-e", diff_tool, path_dst, path_src, NULL,
                 };
