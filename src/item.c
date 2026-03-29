@@ -195,6 +195,10 @@ item_get_actions_reasons(int32 row_id,
 
     src_idx = cecup.rows_src[row_id];
     dst_idx = cecup.rows_dst[row_id];
+    // TODO: Querying GTK widgets (like gtk_check_button_get_active) heavily during sorting
+    // operations (via cecup_item_compare) causes massive overhead and will tank performance on
+    // large lists. Consider caching the state of `delete_ignored` and `delete_after` inside the
+    // global `cecup` struct ahead of the UI updates.
     delete_ignored = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_ignored));
     delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
@@ -305,11 +309,9 @@ item_get_actions_reasons(int32 row_id,
             *reason |= REASON_SYMLINK;
 
             if (S_ISLNK(stat_dst->st_mode)) {
-                if (target_src) {
-                    if (target_dst) {
-                        if (strcmp(target_src, target_dst) == 0) {
-                            equal = true;
-                        }
+                if (target_src && target_dst) {
+                    if (strcmp(target_src, target_dst) == 0) {
+                        equal = true;
                     }
                 }
             }
@@ -373,7 +375,7 @@ item_get_actions_reasons(int32 row_id,
                     attributes_differ = true;
                     *reason |= REASON_HARDLINK_MISSING_LINK;
                 } else if (
-                        strcmp(target_src, target_dst)
+                        ((target_src == NULL) || strcmp(target_src, target_dst))
                         && strcmp(path_src, target_dst)
                         && (nlinks_src != nlinks_dst)
                         ) {
