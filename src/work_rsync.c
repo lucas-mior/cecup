@@ -512,14 +512,10 @@ work_rsync(void *user_data) {
     }
 
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
-        char *file;
+        char *file = cecup.transfers[i];
         int64 w;
-        int64 written;
-        int64 left;
-
-        file = cecup.transfers[i];
-        written = 0;
-        left = strlen32(file);
+        int64 written = 0;
+        int64 left = strlen32(file);
 
         if (left > 1) {
             if (file[left - 1] == '/') {
