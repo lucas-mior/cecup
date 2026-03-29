@@ -424,7 +424,7 @@ work_preview(void *user_data) {
     LOG(_("Found %lld files to analyse...\n"), (llong)nfiles_total);
 
     for (uint32 i = 0; i < cecup.traversal_src.map->capacity; i += 1) {
-        Bucket_fs_map *bucket_src;
+        Bucket_fs_map *bucket_src = &(cecup.traversal_src.map->array[i]);
         int32 src_idx;
         int32 *dst_idx_ptr;
         int32 dst_idx;
@@ -436,7 +436,6 @@ work_preview(void *user_data) {
         enum Action action_dst;
         enum Reason reason;
 
-        bucket_src = &(cecup.traversal_src.map->array[i]);
         if ((int64)bucket_src->key <= 0) {
             continue;
         }
@@ -496,11 +495,10 @@ work_preview(void *user_data) {
     }
 
     for (uint32 i = 0; i < cecup.traversal_dst.map->capacity; i += 1) {
-        Bucket_fs_map *bucket_dst;
+        Bucket_fs_map *bucket_dst = &(cecup.traversal_dst.map->array[i]);
         int32 dst_idx;
         int32 path_len;
 
-        bucket_dst = &(cecup.traversal_dst.map->array[i]);
         if ((int64)bucket_dst->key <= 0) {
             continue;
         }
@@ -514,8 +512,7 @@ work_preview(void *user_data) {
 
         nfiles_processed += 1;
         if ((nfiles_processed % 1000) == 0) {
-            update_progress_bar(MSG_PROGRESS,
-                                (double)nfiles_processed / (double)nfiles_total);
+            update_progress_bar(MSG_PROGRESS, (double)nfiles_processed / (double)nfiles_total);
         }
     }
 
