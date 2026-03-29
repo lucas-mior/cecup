@@ -237,8 +237,7 @@ item_get_actions_reasons(int32 row_id,
         matched_src = cecup.traversal_src.patterns[src_idx];
         stat_src = &cecup.traversal_src.stats[src_idx];
         is_symlink = S_ISLNK(stat_src->st_mode);
-        is_hardlink = S_ISREG(stat_src->st_mode)
-                           && cecup.traversal_src.link_targets[src_idx];
+        is_hardlink = S_ISREG(stat_src->st_mode) && cecup.traversal_src.link_targets[src_idx];
 
         if (matched_src) {
             *action_src = ACTION_IGNORE;

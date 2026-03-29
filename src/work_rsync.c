@@ -142,6 +142,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
     struct pollfd pipes[2];
     bool delete_after;
     int32 nfiles_checksummed = 0;
+    struct timespec time_stop = {0};
 
     delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
@@ -238,7 +239,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
         pipes[0].revents = 0;
         pipes[1].revents = 0;
 
-        switch (poll(pipes, 2, -1)) {
+        switch (poll(pipes, 2, 100)) {
         case -1:
             if (errno != EINTR) {
                 error("Error in poll: %s.\n", strerror(errno));
@@ -249,6 +250,23 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
             continue;
         default:
             break;
+        }
+
+        if (cecup.stop_working) {
+            if (time_stop.tv_sec == 0) {
+                clock_gettime(CLOCK_MONOTONIC_COARSE, &time_stop);
+            } else {
+                struct timespec time_now;
+                int64 time_diff;
+
+                clock_gettime(CLOCK_MONOTONIC_COARSE, &time_now);
+                time_diff = (int64)(time_now.tv_sec - time_stop.tv_sec);
+
+                if (time_diff > 5) {
+                    xkill(-child_pid, SIGKILL);
+                    time_stop.tv_sec = time_now.tv_sec;
+                }
+            }
         }
 
         if (pipes[0].revents & POLLERR) {
@@ -390,9 +408,9 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     if (waitpid(child_pid, NULL, 0) < 0) {
-        LOG_ERROR(_("Error waiting for child: %s.\n"), strerror(errno));
-        LOG_ERROR(_("Killing the child with SIGKILL..."));
-        xkill(child_pid, SIGKILL);
+        LOG_ERROR(_("Error waiting for child process: %s.\n"), strerror(errno));
+        LOG_ERROR(_("Killing the child process with SIGKILL..."));
+        xkill(-child_pid, SIGKILL);
         return false;
     }
 
@@ -430,6 +448,7 @@ work_rsync(void *user_data) {
         pid_t child_rm;
         int child_status;
         bool removed = false;
+        int32 term_timeout;
 
         if (task->action != ACTION_DELETE) {
             has_transfers = true;
@@ -471,10 +490,21 @@ work_rsync(void *user_data) {
             _exit(EXIT_FAILURE);
         }
         default:
+            term_timeout = 0;
             cecup.child_pid = child_rm;
-            if (waitpid(child_rm, &child_status, 0) < 0) {
-                LOG_ERROR("Error waiting for child: %s.\n", strerror(errno));
-            } else if (WIFEXITED(child_status)) {
+
+            while (waitpid(child_rm, &child_status, WNOHANG) == 0) {
+                if (cecup.stop_working) {
+                    term_timeout += 1;
+                    if (term_timeout > 50) {
+                        xkill(-child_rm, SIGKILL);
+                        term_timeout = 0;
+                    }
+                }
+                usleep(100 * 1000);
+            }
+
+            if (WIFEXITED(child_status)) {
                 removed = !WEXITSTATUS(child_status);
             }
             cecup.child_pid = 0;
