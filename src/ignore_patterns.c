@@ -58,33 +58,33 @@ ignore_patterns_load(void) {
     }
 
     while (fgets(line_buffer, SIZEOF(line_buffer), file)) {
-        int32 len = strlen32(line_buffer);
+        int32 line_len = strlen32(line_buffer);
         IgnorePattern *pattern;
         char *raw;
 
-        if ((len > 0) && (line_buffer[len - 1] == '\n')) {
-            line_buffer[len - 1] = '\0';
-            len -= 1;
+        if ((line_len > 0) && (line_buffer[line_len - 1] == '\n')) {
+            line_buffer[line_len - 1] = '\0';
+            line_len -= 1;
         }
 
-        if (len == 0 || line_buffer[0] == '#') {
+        if (line_len == 0 || line_buffer[0] == '#') {
             continue;
         }
 
-        if (memchr64(line_buffer, '[', len)
-             && memchr64(line_buffer, ']', len)) {
+        if (memchr64(line_buffer, '[', line_len)
+             && memchr64(line_buffer, ']', line_len)) {
             LOG_ERROR("Warning: advanced exclusion pattern '%s' detected.\n", line_buffer);
             LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
             LOG_ERROR("This pattern will be interpreted literally.\n");
         }
 
-        if (memchr64(line_buffer, '?', len)) {
+        if (memchr64(line_buffer, '?', line_len)) {
             LOG_ERROR("Warning: exclusion pattern '%s' detected.\n", line_buffer);
             LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
             LOG_ERROR("This pattern will be interpreted literally.\n");
         }
 
-        if (memchr64(line_buffer, '\\', len)) {
+        if (memchr64(line_buffer, '\\', line_len)) {
             LOG_ERROR("Warning: backslash '%s' detected.\n", line_buffer);
             LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
             LOG_ERROR("This pattern will be interpreted literally.\n");
@@ -98,23 +98,23 @@ ignore_patterns_load(void) {
 
         pattern = &cecup.ignore_patterns[count];
         pattern->str = xstrdup(line_buffer);
-        pattern->len = len;
+        pattern->len = line_len;
         
         raw = pattern->str;
         pattern->dir_only = false;
         pattern->has_slash = false;
 
-        if (raw[len - 1] == '/') {
+        if (raw[line_len - 1] == '/') {
             pattern->dir_only = true;
-            raw[len - 1] = '\0';
-            len -= 1;
+            raw[line_len - 1] = '\0';
+            line_len -= 1;
         }
 
         pattern->match_str = raw;
         if (raw[0] == '/') {
             pattern->has_slash = true;
             pattern->match_str = raw + 1;
-        } else if (memchr64(raw, '/', len) != NULL) {
+        } else if (memchr64(raw, '/', line_len) != NULL) {
             pattern->has_slash = true;
         }
 
@@ -236,8 +236,6 @@ ignore_patterns_match(char *path, int32 path_len,
 
 #if TESTING_ignore_patterns
 #include "assert.c"
-#include "aux.c"
-#include "update.c"
 
 static void
 test_pattern_init(IgnorePattern *p, char *raw) {
