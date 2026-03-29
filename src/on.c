@@ -261,6 +261,13 @@ on_preview_clicked(GtkWidget *b, void *data) {
     return;
 }
 
+static int
+transfers_compare(const void *transfer1, const void *transfer2) {
+    const char *t1 = transfer1;
+    const char *t2 = transfer2;
+    return strcmp(t1, t2);
+}
+
 static void
 on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     ThreadData *thread_data;
@@ -277,6 +284,7 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
+    /* qsort64(cecup.transfers, cecup.ntransfers, sizeof(*(cecup.transfers)), transfers_compare); */
     g_thread_new("work_rsync", work_rsync, thread_data);
     return;
 }
