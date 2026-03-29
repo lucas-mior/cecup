@@ -262,8 +262,8 @@ work_traverse_fs(Traversal *traversal) {
     for (int32 i = 0; i < traversal->nfiles; i += 1) {
         if (S_ISREG(traversal->stats[i].st_mode) && (traversal->stats[i].st_nlink > 1)) {
             char inode_str[64];
-            int32 n;
             int32 *first_idx_ptr;
+            int32 n;
 
             n = ITOA(inode_str, (long)traversal->stats[i].st_ino);
             if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n))) {
