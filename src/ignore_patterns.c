@@ -58,35 +58,33 @@ ignore_patterns_load(void) {
     }
 
     while (fgets(line_buffer, SIZEOF(line_buffer), file)) {
-        int32 length;
-        IgnorePattern *p;
+        int32 len = strlen32(line_buffer);
+        IgnorePattern *pattern;
         char *raw;
 
-        length = strlen32(line_buffer);
-
-        if ((length > 0) && (line_buffer[length - 1] == '\n')) {
-            line_buffer[length - 1] = '\0';
-            length -= 1;
+        if ((len > 0) && (line_buffer[len - 1] == '\n')) {
+            line_buffer[len - 1] = '\0';
+            len -= 1;
         }
 
-        if (length == 0 || line_buffer[0] == '#') {
+        if (len == 0 || line_buffer[0] == '#') {
             continue;
         }
 
-        if (memchr64(line_buffer, '[', length)
-             && memchr64(line_buffer, ']', length)) {
+        if (memchr64(line_buffer, '[', len)
+             && memchr64(line_buffer, ']', len)) {
             LOG_ERROR("Warning: advanced exclusion pattern '%s' detected.\n", line_buffer);
             LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
             LOG_ERROR("This pattern will be interpreted literally.\n");
         }
 
-        if (memchr64(line_buffer, '?', length)) {
+        if (memchr64(line_buffer, '?', len)) {
             LOG_ERROR("Warning: exclusion pattern '%s' detected.\n", line_buffer);
             LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
             LOG_ERROR("This pattern will be interpreted literally.\n");
         }
 
-        if (memchr64(line_buffer, '\\', length)) {
+        if (memchr64(line_buffer, '\\', len)) {
             LOG_ERROR("Warning: backslash '%s' detected.\n", line_buffer);
             LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
             LOG_ERROR("This pattern will be interpreted literally.\n");
@@ -98,26 +96,26 @@ ignore_patterns_load(void) {
                                              *capacity * SIZEOF(IgnorePattern));
         }
 
-        p = &cecup.ignore_patterns[count];
-        p->str = xstrdup(line_buffer);
-        p->len = length;
+        pattern = &cecup.ignore_patterns[count];
+        pattern->str = xstrdup(line_buffer);
+        pattern->len = len;
         
-        raw = p->str;
-        p->dir_only = false;
-        p->has_slash = false;
+        raw = pattern->str;
+        pattern->dir_only = false;
+        pattern->has_slash = false;
 
-        if (raw[length - 1] == '/') {
-            p->dir_only = true;
-            raw[length - 1] = '\0';
-            length -= 1;
+        if (raw[len - 1] == '/') {
+            pattern->dir_only = true;
+            raw[len - 1] = '\0';
+            len -= 1;
         }
 
-        p->match_str = raw;
+        pattern->match_str = raw;
         if (raw[0] == '/') {
-            p->has_slash = true;
-            p->match_str = raw + 1;
-        } else if (memchr64(raw, '/', length) != NULL) {
-            p->has_slash = true;
+            pattern->has_slash = true;
+            pattern->match_str = raw + 1;
+        } else if (memchr64(raw, '/', len) != NULL) {
+            pattern->has_slash = true;
         }
 
         count += 1;
