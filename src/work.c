@@ -897,8 +897,8 @@ main(void) {
         row_id = item_add(src_idx, dst_idx);
         item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
-        ASSERT_EQUAL(action_src, entry->expected_src_action);
-        ASSERT_EQUAL((reason & entry->expected_reason_mask), entry->expected_reason_mask);
+        ASSERT(action_src == entry->expected_src_action);
+        ASSERT((reason & entry->expected_reason_mask) == entry->expected_reason_mask);
     }
 
     work_traverse_clean(&cecup.traversal_src);
