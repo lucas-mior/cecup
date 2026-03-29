@@ -336,7 +336,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
                         percentage -= 1;
                     }
                     if (*(percentage - 1) == ' ') {
-                        progress = atol(percentage);
+                        progress = atoll(percentage);
                         update_progress_bar(DATA_TYPE_PROGRESS_PREVIEW, (double)progress / 100.0);
                     }
                 }
