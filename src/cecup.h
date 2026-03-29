@@ -420,6 +420,8 @@ static struct {
     GMutex arena_mutex;
 
     pid_t child_pid;
+    // TODO: using volatile so that the compiler know it can change between reads
+    //       what is the right way to do it?
     volatile bool stop_working;
 
     IgnorePattern *ignore_patterns;
