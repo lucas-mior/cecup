@@ -218,7 +218,7 @@ case "$target" in
         fi
     done
 
-    ctags --kinds-C=+l+d src/*.h src/*.c         2> /dev/null || true
+    ctags --kinds-C=+l+d cbase/*.c src/*.h src/*.c  2> /dev/null || true
     vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
 
