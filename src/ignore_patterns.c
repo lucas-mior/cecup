@@ -60,7 +60,6 @@ ignore_patterns_load(void) {
     while (fgets(line_buffer, SIZEOF(line_buffer), file)) {
         int32 line_len = strlen32(line_buffer);
         IgnorePattern *pattern;
-        char *raw;
 
         if ((line_len > 0) && (line_buffer[line_len - 1] == '\n')) {
             line_buffer[line_len - 1] = '\0';
@@ -100,21 +99,20 @@ ignore_patterns_load(void) {
         pattern->str = xstrdup(line_buffer);
         pattern->len = line_len;
         
-        raw = pattern->str;
         pattern->dir_only = false;
         pattern->has_slash = false;
 
-        if (raw[line_len - 1] == '/') {
+        if (pattern->str[line_len - 1] == '/') {
             pattern->dir_only = true;
-            raw[line_len - 1] = '\0';
+            pattern->str[line_len - 1] = '\0';
             line_len -= 1;
         }
 
-        pattern->match_str = raw;
-        if (raw[0] == '/') {
+        pattern->match_str = pattern->str;
+        if (pattern->str[0] == '/') {
             pattern->has_slash = true;
-            pattern->match_str = raw + 1;
-        } else if (memchr64(raw, '/', line_len) != NULL) {
+            pattern->match_str = pattern->str + 1;
+        } else if (memchr64(pattern->str, '/', line_len) != NULL) {
             pattern->has_slash = true;
         }
 

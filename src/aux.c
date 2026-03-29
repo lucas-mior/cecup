@@ -108,8 +108,8 @@ traversal_push(Traversal *traversal, struct stat *stat,
                                             old_capacity, traversal->ncapacity,
                                             SIZEOF(char *));
         traversal->patterns = xrealloc2(traversal->patterns,
-                                                old_capacity, traversal->ncapacity,
-                                                SIZEOF(char *));
+                                        old_capacity, traversal->ncapacity,
+                                        SIZEOF(char *));
 
         traversal->paths_lens = xrealloc2(traversal->paths_lens,
                                           old_capacity, traversal->ncapacity,
@@ -118,8 +118,8 @@ traversal_push(Traversal *traversal, struct stat *stat,
                                                  old_capacity, traversal->ncapacity,
                                                  lens_type_size);
         traversal->patterns_lens = xrealloc2(traversal->patterns_lens,
-                                                     old_capacity, traversal->ncapacity,
-                                                     lens_type_size);
+                                             old_capacity, traversal->ncapacity,
+                                             lens_type_size);
         traversal->nlinks = xrealloc2(traversal->nlinks,
                                       old_capacity, traversal->ncapacity,
                                       lens_type_size);
@@ -147,6 +147,10 @@ traversal_push(Traversal *traversal, struct stat *stat,
     traversal->link_targets_lens[idx] = (int16)link_target_len;
     traversal->patterns[idx] = matched_pattern;
     traversal->patterns_lens[idx] = (int16)matched_pattern_len;
+    // TODO: Hardcoding traversal->nlinks[idx] to 1 effectively overrides the actual filesystem link
+    // count from `stat->st_nlink`. This will cause the `is_hardlink = (nlinks > 1)` checks
+    // elsewhere to silently fail. Consider initializing this via the `stat` struct if it's
+    // available.
     traversal->nlinks[idx] = 1;
     traversal->row_ids[idx] = -1;
 
