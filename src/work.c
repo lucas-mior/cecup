@@ -63,7 +63,12 @@ work_batch_flush(MessageBatch **batch_ptr) {
 
 static void
 work_batch_push(MessageBatch **batch_ptr, Message *message) {
+    static struct timespec time_last_flush = {0};
     MessageBatch *batch;
+
+    if (time_last_flush.tv_sec == 0) {
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_flush);
+    }
 
     batch = *batch_ptr;
     if (batch == NULL) {
@@ -79,6 +84,19 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
 
     if (batch->count >= BATCH_SIZE) {
         work_batch_flush(batch_ptr);
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_flush);
+    } else {
+        struct timespec time_this_push;
+        int64 time_diff;
+
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &time_this_push);
+        time_diff = (int64)(time_this_push.tv_sec - time_last_flush.tv_sec);
+
+        if (time_diff > 10) {
+            work_batch_flush(batch_ptr);
+            time_last_flush.tv_sec = time_this_push.tv_sec;
+            time_last_flush.tv_nsec = time_this_push.tv_nsec;
+        }
     }
 
     return;
