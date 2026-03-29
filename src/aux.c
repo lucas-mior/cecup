@@ -297,6 +297,7 @@ cecup_reset_dir(int32 side) {
     } else {
         gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), "./");
     }
+    invalidate_preview();
     return;
 }
 
@@ -363,6 +364,8 @@ cecup_get_dirs(void) {
 
     g_signal_handler_unblock(cecup.dir_entry[L], cecup.src_entry_id);
     g_signal_handler_unblock(cecup.dir_entry[R], cecup.dst_entry_id);
+
+    invalidate_preview();
 
     return;
 }
