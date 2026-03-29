@@ -641,8 +641,8 @@ update_list_from_rows(void) {
     gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
 
     bytes_pretty(pretty_size, total_size_bytes);
-    SNPRINTF(stats_text, _("Selected files: %lld\nTotal Transfer Size: 📦 %s"),
-             (llong)count_selected, pretty_size);
+    SNPRINTF(stats_text,
+             _("Selected files: %d\nTotal Transfer Size: 📦 %s"), count_selected, pretty_size);
     gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
 
     if (cecup.rows_visible_len > 0) {
