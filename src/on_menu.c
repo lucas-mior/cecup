@@ -277,6 +277,9 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
             path_len = task->path_len;
         }
 
+        // TODO: If `remaining_capacity` is less than `path_len`, this item is silently dropped.
+        // Consider dynamically reallocating the buffer to fit all selected paths to prevent data
+        // loss.
         if (i > 0) {
             if (remaining_capacity > 0) {
                 *write_pointer = '\n';
@@ -295,6 +298,9 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     gdk_clipboard_set_text(clipboard, buffer);
     free_task_list(tasks);
 
+    // TODO: Depending on GTK's clipboard implementation, `gdk_clipboard_set_text` might not copy
+    // the string immediately. Freeing `buffer` right after setting it might lead to undefined
+    // behavior or garbled clipboard data. Verify ownership semantics.
     free(buffer, buffer_size);
     free_message(message);
     return;
@@ -395,6 +401,9 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 _exit(1);
             }
         default:
+            // TODO: The parent process forks a new child but never waits for it
+            // (e.g., via // `waitpid` or `g_child_watch_add`).
+            // This will result in zombie processes accumulating until the main application exits.
             break;
         }
     }

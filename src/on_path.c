@@ -169,6 +169,9 @@ on_path_edited(GtkEditable *editable, void *data) {
         new_full_length = SNPRINTF(new_full, "%s/%s", base_path, relative_new);
         normalize(new_full, &new_full_length);
 
+        // TODO: If `renameat2` fails, the function returns immediately. Ensure that no cleanup
+        // (e.g., reverting the UI state or freeing dynamically allocated memory if `new_text`
+        // ownership was transferred) is missed here.
         if (renameat2(AT_FDCWD, old_full, AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
             LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full, new_full, strerror(errno));
             return;
