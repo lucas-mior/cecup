@@ -317,7 +317,6 @@ typedef struct MessageBatch {
 typedef struct Task {
     enum DataType type;
     enum Action action;
-    enum Reason reason;
     int32 side;
 
     char *message;
