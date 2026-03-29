@@ -141,6 +141,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
     pid_t child_pid;
     struct pollfd pipes[2];
     bool delete_after;
+    int32 nfiles_checksummed;
 
     delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
 
@@ -311,6 +312,12 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
                 int32 path_len;
                 char *sep;
 
+                if (checksum) {
+                    nfiles_checksummed += 1;
+                    update_progress_bar(DATA_TYPE_PROGRESS_PREVIEW,
+                                        (double)nfiles_checksummed / (double)cecup.ntransfers);
+                }
+
                 while (*path == ' ') {
                     path += 1;
                 }
@@ -339,7 +346,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
                 char *percentage;
                 int64 progress;
 
-                if ((percentage = memmem64(buf_output + 1, line_len - 1, "% ", 2))) {
+                if (!checksum && (percentage = memmem64(buf_output + 1, line_len - 1, "% ", 2))) {
                     while (isdigit(*(percentage - 1))) {
                         percentage -= 1;
                     }
