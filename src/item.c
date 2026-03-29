@@ -265,9 +265,9 @@ item_get_actions_reasons(int32 row_id,
     }
 
     {
-        char *pattern_src;
         struct stat *stat_src;
         struct stat *stat_dst;
+        char *pattern_src;
         char *path_src;
         char *target_src;
         char *target_dst;
