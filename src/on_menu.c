@@ -87,7 +87,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
-    message->type = DATA_TYPE_IGNORE_PATTERN;
+    message->type = MSG_IGNORE_PATTERN;
     message->ignore_pattern_len = strlen32(pattern);
     message->ignore_pattern = xmalloc(message->ignore_pattern_len + 1);
     memcpy64(message->ignore_pattern, pattern, message->ignore_pattern_len + 1);

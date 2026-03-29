@@ -88,8 +88,8 @@
 #include "xenums.c"
 
 #define ENUM_BITFLAGS 0
-#define ENUM_NAME DataType
-#define ENUM_PREFIX_ DATA_TYPE_
+#define ENUM_NAME MsgType
+#define ENUM_PREFIX_ MSG_
 #define ENUM_FIELDS \
     X(LOG)                \
     X(LOG_ERROR)          \
@@ -285,7 +285,7 @@ enum CecupColumn {
 };
 
 typedef struct Message {
-    enum DataType type;
+    enum MsgType type;
     enum Action action;
 
     char *text;
@@ -313,14 +313,14 @@ typedef struct Message {
 #define BATCH_SIZE 256
 
 typedef struct MessageBatch {
-    enum DataType type;
+    enum MsgType type;
     int32 count;
     struct timespec time_last_flush;
     Message *messages[BATCH_SIZE];
 } MessageBatch;
 
 typedef struct Task {
-    enum DataType type;
+    enum MsgType type;
     enum Action action;
     int32 side;
 
@@ -457,17 +457,17 @@ static void free_task_list(TaskList *tasks);
 static void save_config(void);
 static void protect_interface_from_user(bool state);
 static void log_internal(char *file, int line,
-                         enum DataType type, char *format, ...);
+                         enum MsgType type, char *format, ...);
 static int32 item_add(int32 src_idx, int32 dst_idx);
 
 #pragma clang diagnostic pop
 
 #define LOG(...)        \
-    log_internal(__FILE__, __LINE__, DATA_TYPE_LOG, __VA_ARGS__)
+    log_internal(__FILE__, __LINE__, MSG_LOG, __VA_ARGS__)
 #define LOG_ERROR(...)  \
-    log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_ERROR, __VA_ARGS__)
+    log_internal(__FILE__, __LINE__, MSG_LOG_ERROR, __VA_ARGS__)
 #define LOG_CMD(...)    \
-    log_internal(__FILE__, __LINE__, DATA_TYPE_LOG_CMD, __VA_ARGS__)
+    log_internal(__FILE__, __LINE__, MSG_LOG_CMD, __VA_ARGS__)
 
 enum RsyncCharAction {
     RSYNC_CHAR0_ACTION_SEND = '<',

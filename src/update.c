@@ -721,9 +721,9 @@ update_ui_process_message(Message *message) {
     needs_update = false;
 
     switch (message->type) {
-    case DATA_TYPE_LOG:
-    case DATA_TYPE_LOG_CMD:
-    case DATA_TYPE_LOG_ERROR:
+    case MSG_LOG:
+    case MSG_LOG_CMD:
+    case MSG_LOG_ERROR:
         is_cr = false;
 
         if (message->text_len > 0) {
@@ -758,14 +758,14 @@ update_ui_process_message(Message *message) {
         #pragma clang diagnostic push
         #pragma clang diagnostic ignored "-Wswitch-enum"
         switch (message->type) {
-        case DATA_TYPE_LOG_ERROR:
+        case MSG_LOG_ERROR:
             if (gtk_text_tag_table_lookup(table, "err_red") == NULL) {
                 gtk_text_buffer_create_tag(cecup.log_buffer, "err_red", "foreground", "red", NULL);
             }
             gtk_text_buffer_insert_with_tags_by_name(
                 cecup.log_buffer, &end, message->text, -1, "err_red", NULL);
             break;
-        case DATA_TYPE_LOG_CMD:
+        case MSG_LOG_CMD:
             if (gtk_text_tag_table_lookup(table, "err_blue") == NULL) {
                 gtk_text_buffer_create_tag(cecup.log_buffer, "err_blue", "foreground", "blue", NULL);
             }
@@ -782,7 +782,7 @@ update_ui_process_message(Message *message) {
                                      gtk_text_buffer_get_insert(cecup.log_buffer), 0.0,
                                      FALSE, 0.0, 0.0);
         break;
-    case DATA_TYPE_PROGRESS:
+    case MSG_PROGRESS:
         if (message->fraction >= 0.0) {
             gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), message->fraction);
         }
@@ -793,19 +793,19 @@ update_ui_process_message(Message *message) {
             gtk_widget_set_tooltip_text(cecup.progress_bar, message->src_path);
         }
         break;
-    case DATA_TYPE_ROW_REMOVE:
+    case MSG_ROW_REMOVE:
         needs_update = update_row_remove(message);
         break;
-    case DATA_TYPE_ROW_RENAME:
+    case MSG_ROW_RENAME:
         needs_update = update_row_rename(message);
         break;
-    case DATA_TYPE_ROW_TRANSFER:
+    case MSG_ROW_TRANSFER:
         needs_update = update_row_transfer(message);
         break;
-    case DATA_TYPE_IGNORE_PATTERN:
+    case MSG_IGNORE_PATTERN:
         needs_update = update_row_ignore(message);
         break;
-    case DATA_TYPE_ENABLE_BUTTONS:
+    case MSG_ENABLE_BUTTONS:
         if (cecup.refresh_id != 0) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
@@ -820,7 +820,7 @@ update_ui_process_message(Message *message) {
         }
 
         break;
-    case DATA_TYPE_CLEAR_TREES:
+    case MSG_CLEAR_TREES:
         if (cecup.refresh_id != 0) {
             g_source_remove(cecup.refresh_id);
             cecup.refresh_id = 0;
@@ -847,11 +847,11 @@ update_ui_process_message(Message *message) {
         gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), "");
         gtk_widget_set_tooltip_text(cecup.progress_bar, "");
         break;
-    case DATA_TYPE_ADD_ROW:
-    case DATA_TYPE_BATCH:
-    case DATA_TYPE_LAST:
+    case MSG_ADD_ROW:
+    case MSG_BATCH:
+    case MSG_LAST:
     default:
-        LOG("Ignoring %s.\n", DATA_TYPE_str(message->type));
+        LOG("Ignoring %s.\n", MSG_str(message->type));
         break;
     }
 
@@ -868,7 +868,7 @@ update_ui_handler(void *data) {
     message = data;
     needs_update = false;
 
-    if (message->type == DATA_TYPE_BATCH) {
+    if (message->type == MSG_BATCH) {
         batch = data;
         for (int32 i = 0; i < batch->count; i += 1) {
             if (update_ui_process_message(batch->messages[i])) {
@@ -888,12 +888,12 @@ update_ui_handler(void *data) {
 }
 
 static void
-update_progress_bar(enum DataType type, double fraction) {
+update_progress_bar(enum MsgType type, double fraction) {
     Message *message;
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index;
 
-    if (type == DATA_TYPE_PROGRESS) {
+    if (type == MSG_PROGRESS) {
         index = 3;
     } else {
         index = 0;
@@ -924,7 +924,7 @@ update_progress_state(char *text, char *tooltip) {
     message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
-    message->type = DATA_TYPE_PROGRESS;
+    message->type = MSG_PROGRESS;
     message->fraction = -1.0;
 
     if (text) {

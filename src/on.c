@@ -250,7 +250,7 @@ on_preview_clicked(GtkWidget *b, void *data) {
 
     message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
-    message->type = DATA_TYPE_CLEAR_TREES;
+    message->type = MSG_CLEAR_TREES;
     update_ui_handler(message);
 
     thread_data = xmalloc(SIZEOF(*thread_data));

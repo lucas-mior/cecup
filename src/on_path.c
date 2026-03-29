@@ -186,7 +186,7 @@ on_path_edited(GtkEditable *editable, void *data) {
         message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
-        message->type = DATA_TYPE_ROW_RENAME;
+        message->type = MSG_ROW_RENAME;
         message->side = side;
         message->old_path_len = old_length;
         message->old_path = xmalloc(old_length + 1);

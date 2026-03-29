@@ -49,7 +49,7 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
     if (batch == NULL) {
         batch = xmalloc(SIZEOF(*batch));
         memset64(batch, 0, SIZEOF(*batch));
-        batch->type = DATA_TYPE_BATCH;
+        batch->type = MSG_BATCH;
         batch->count = 0;
         clock_gettime(CLOCK_MONOTONIC_COARSE, &batch->time_last_flush);
         *batch_ptr = batch;
@@ -314,7 +314,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
 
                 if (checksum) {
                     nfiles_checksummed += 1;
-                    update_progress_bar(DATA_TYPE_PROGRESS,
+                    update_progress_bar(MSG_PROGRESS,
                                         (double)nfiles_checksummed / (double)cecup.ntransfers);
                 }
 
@@ -335,7 +335,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
                     Message *msg_update = xmalloc(SIZEOF(*msg_update));
                     memset64(msg_update, 0, SIZEOF(*msg_update));
 
-                    msg_update->type = DATA_TYPE_ROW_TRANSFER;
+                    msg_update->type = MSG_ROW_TRANSFER;
                     msg_update->path_len = path_len;
                     msg_update->src_path = xmalloc(path_len + 1);
                     memcpy64(msg_update->src_path, path, path_len + 1);
@@ -352,7 +352,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
                     }
                     if (*(percentage - 1) == ' ') {
                         progress = atoll(percentage);
-                        update_progress_bar(DATA_TYPE_PROGRESS, (double)progress / 100.0);
+                        update_progress_bar(MSG_PROGRESS, (double)progress / 100.0);
                     }
                 }
             }
@@ -485,7 +485,7 @@ work_rsync(void *user_data) {
             Message *message = xmalloc(SIZEOF(*message));
             memset64(message, 0, SIZEOF(*message));
 
-            message->type = DATA_TYPE_ROW_REMOVE;
+            message->type = MSG_ROW_REMOVE;
             message->side = task->side;
             message->path_len = task->path_len;
             message->src_path = xmalloc(message->path_len + 1);

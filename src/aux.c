@@ -420,7 +420,7 @@ save_config(void) {
 
 static void
 log_internal(char *file, int line,
-             enum DataType type, char *format, ...) {
+             enum MsgType type, char *format, ...) {
     Message *message;
     char buffer[MAX_PATH_LENGTH * 2];
     int32 n;
