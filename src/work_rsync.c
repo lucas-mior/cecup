@@ -20,6 +20,67 @@
 
 #include "cecup.h"
 
+static void
+work_batch_flush(MessageBatch **batch_ptr) {
+    MessageBatch *batch;
+
+    batch = *batch_ptr;
+    if (batch == NULL) {
+        return;
+    }
+
+    if (batch->count > 0) {
+        g_idle_add(update_ui_handler, batch);
+    } else {
+        free(batch, sizeof(*batch));
+    }
+
+    *batch_ptr = NULL;
+    return;
+}
+
+static void
+work_batch_push(MessageBatch **batch_ptr, Message *message) {
+    static struct timespec time_last_flush = {0};
+    MessageBatch *batch;
+
+    if (time_last_flush.tv_sec == 0) {
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_flush);
+    }
+
+    batch = *batch_ptr;
+    if (batch == NULL) {
+        batch = xmalloc(SIZEOF(*batch));
+        memset64(batch, 0, SIZEOF(*batch));
+        batch->type = DATA_TYPE_BATCH;
+        batch->count = 0;
+        *batch_ptr = batch;
+    }
+
+    batch->messages[batch->count] = message;
+    batch->count += 1;
+
+    if (batch->count >= LENGTH(batch->messages)) {
+        work_batch_flush(batch_ptr);
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_flush);
+    } else {
+        struct timespec time_this_push;
+        int64 time_diff;
+
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &time_this_push);
+        time_diff = (int64)(time_this_push.tv_sec - time_last_flush.tv_sec);
+
+        if (time_diff > 10) {
+            work_batch_flush(batch_ptr);
+            time_last_flush.tv_sec = time_this_push.tv_sec;
+            time_last_flush.tv_nsec = time_this_push.tv_nsec;
+        }
+    }
+
+    return;
+}
+
+
 static char *
 work_check_itemize_line(char *buf_output) {
     switch (buf_output[0]) {
