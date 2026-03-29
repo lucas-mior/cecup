@@ -285,9 +285,7 @@ work_traverse_fs(Traversal *traversal) {
 
 static void *
 work_traverse_fs_thread(void *user_data) {
-    Traversal *data;
-
-    data = user_data;
+    Traversal *data = user_data;
     data->file_count = work_traverse_fs(data);
     return NULL;
 }
