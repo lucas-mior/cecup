@@ -232,6 +232,7 @@ static void
 on_menu_copy_path(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
+    char *variant;
     char *buffer;
     int32 buffer_size;
     char *write_pointer;
@@ -245,6 +246,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
 
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
     remaining_capacity = buffer_size - 1;
+    variant = g_object_get_data(G_OBJECT(widget), "variant");
 
     if (message->side == L) {
         base_path = cecup.src_base;
@@ -258,7 +260,6 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
         int32 path_len;
         char path_full[PATH_MAX];
         char *path;
-        char *variant = g_object_get_data(G_OBJECT(widget), "variant");
 
         if (variant && !strcmp(variant, "absolute")) {
             char path_relative[MAX_PATH_LENGTH];
