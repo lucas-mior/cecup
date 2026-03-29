@@ -761,9 +761,7 @@ main(int32 argc, char **argv) {
             }
             default:
             {
-                int child_status = 0;
-
-                if (waitpid(child_cp, &child_status, 0) < 0) {
+                if (waitpid(child_cp, NULL, 0) < 0) {
                     error("Error waiting for cp: %s.\n", strerror(errno));
                 }
                 break;
