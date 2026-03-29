@@ -140,11 +140,11 @@ typedef struct Traversal {
     struct stat *stats;
     char **paths;
     char **link_targets;
-    char **matched_patterns;
+    char **patterns;
 
     int16 *paths_lens;
     int16 *link_targets_lens;
-    int16 *matched_patterns_lens;
+    int16 *patterns_lens;
     int16 *nlinks;
 
     int32 *row_ids;

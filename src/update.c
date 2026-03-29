@@ -251,8 +251,8 @@ update_row_transfer(Message *message) {
                             traversal_src->paths_lens[s_idx],
                             traversal_src->link_targets[s_idx],
                             traversal_src->link_targets_lens[s_idx],
-                            traversal_src->matched_patterns[s_idx],
-                            traversal_src->matched_patterns_lens[s_idx]);
+                            traversal_src->patterns[s_idx],
+                            traversal_src->patterns_lens[s_idx]);
                     }
                     traversal_dst->row_ids[cecup.rows_dst[row_id]] = row_id;
                 } else {
@@ -303,8 +303,8 @@ update_row_transfer(Message *message) {
                             traversal_src->paths_lens[s_idx],
                             traversal_src->link_targets[s_idx],
                             traversal_src->link_targets_lens[s_idx],
-                            traversal_src->matched_patterns[s_idx],
-                            traversal_src->matched_patterns_lens[s_idx]);
+                            traversal_src->patterns[s_idx],
+                            traversal_src->patterns_lens[s_idx]);
                     }
                     traversal_dst->row_ids[cecup.rows_dst[row_id]] = row_id;
                 } else {
@@ -690,16 +690,16 @@ update_row_ignore(Message *message) {
                 int32 s_idx;
 
                 s_idx = cecup.rows_src[row_id];
-                cecup.traversal_src.matched_patterns[s_idx] = match->str;
-                cecup.traversal_src.matched_patterns_lens[s_idx]
+                cecup.traversal_src.patterns[s_idx] = match->str;
+                cecup.traversal_src.patterns_lens[s_idx]
                     = (int16)match->len;
             }
             if (cecup.rows_dst[row_id] >= 0) {
                 int32 d_idx;
 
                 d_idx = cecup.rows_dst[row_id];
-                cecup.traversal_dst.matched_patterns[d_idx] = match->str;
-                cecup.traversal_dst.matched_patterns_lens[d_idx]
+                cecup.traversal_dst.patterns[d_idx] = match->str;
+                cecup.traversal_dst.patterns_lens[d_idx]
                     = (int16)match->len;
             }
         }

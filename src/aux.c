@@ -88,7 +88,7 @@ traversal_push(Traversal *traversal, struct stat *stat,
 
         lens_type_size = SIZEOF(*(traversal->paths_lens));
         ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)), SIZEOF(*(traversal->link_targets_lens)));
-        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)), SIZEOF(*(traversal->matched_patterns_lens)));
+        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)), SIZEOF(*(traversal->patterns_lens)));
         ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)), SIZEOF(*(traversal->nlinks)));
 
         if (traversal->ncapacity == 0) {
@@ -107,7 +107,7 @@ traversal_push(Traversal *traversal, struct stat *stat,
         traversal->link_targets = xrealloc2(traversal->link_targets,
                                             old_capacity, traversal->ncapacity,
                                             SIZEOF(char *));
-        traversal->matched_patterns = xrealloc2(traversal->matched_patterns,
+        traversal->patterns = xrealloc2(traversal->patterns,
                                                 old_capacity, traversal->ncapacity,
                                                 SIZEOF(char *));
 
@@ -117,7 +117,7 @@ traversal_push(Traversal *traversal, struct stat *stat,
         traversal->link_targets_lens = xrealloc2(traversal->link_targets_lens,
                                                  old_capacity, traversal->ncapacity,
                                                  lens_type_size);
-        traversal->matched_patterns_lens = xrealloc2(traversal->matched_patterns_lens,
+        traversal->patterns_lens = xrealloc2(traversal->patterns_lens,
                                                      old_capacity, traversal->ncapacity,
                                                      lens_type_size);
         traversal->nlinks = xrealloc2(traversal->nlinks,
@@ -145,8 +145,8 @@ traversal_push(Traversal *traversal, struct stat *stat,
     traversal->paths_lens[idx] = (int16)path_len;
     traversal->link_targets[idx] = link_target;
     traversal->link_targets_lens[idx] = (int16)link_target_len;
-    traversal->matched_patterns[idx] = matched_pattern;
-    traversal->matched_patterns_lens[idx] = (int16)matched_pattern_len;
+    traversal->patterns[idx] = matched_pattern;
+    traversal->patterns_lens[idx] = (int16)matched_pattern_len;
     traversal->nlinks[idx] = 1;
     traversal->row_ids[idx] = -1;
 

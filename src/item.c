@@ -120,12 +120,12 @@ item_ignore_pattern_side(int32 row_id, int32 side) {
     if (side == L) {
         idx = cecup.rows_src[row_id];
         if (idx >= 0) {
-            return cecup.traversal_src.matched_patterns[idx];
+            return cecup.traversal_src.patterns[idx];
         }
     } else {
         idx = cecup.rows_dst[row_id];
         if (idx >= 0) {
-            return cecup.traversal_dst.matched_patterns[idx];
+            return cecup.traversal_dst.patterns[idx];
         }
     }
     return NULL;
@@ -210,7 +210,7 @@ item_get_actions_reasons(int32 row_id,
 
     if (src_idx < 0) {
         char *matched_dst;
-        matched_dst = cecup.traversal_dst.matched_patterns[dst_idx];
+        matched_dst = cecup.traversal_dst.patterns[dst_idx];
         *reason |= REASON_MISSING;
 
         if (matched_dst) {
@@ -234,7 +234,7 @@ item_get_actions_reasons(int32 row_id,
         bool is_symlink;
         bool is_hardlink;
 
-        matched_src = cecup.traversal_src.matched_patterns[src_idx];
+        matched_src = cecup.traversal_src.patterns[src_idx];
         stat_src = &cecup.traversal_src.stats[src_idx];
         is_symlink = S_ISLNK(stat_src->st_mode);
         is_hardlink = S_ISREG(stat_src->st_mode)
@@ -280,7 +280,7 @@ item_get_actions_reasons(int32 row_id,
         bool equal;
         bool attributes_differ;
 
-        matched_src = cecup.traversal_src.matched_patterns[src_idx];
+        matched_src = cecup.traversal_src.patterns[src_idx];
         stat_src = &cecup.traversal_src.stats[src_idx];
         stat_dst = &cecup.traversal_dst.stats[dst_idx];
         path_src = cecup.traversal_src.paths[src_idx];

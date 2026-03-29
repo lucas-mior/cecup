@@ -294,13 +294,13 @@ work_traverse_clean(Traversal *traversal) {
     arena_reset(traversal->arena);
 
     free(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
-    free(traversal->matched_patterns, capacity*SIZEOF(*(traversal->matched_patterns)));
+    free(traversal->patterns, capacity*SIZEOF(*(traversal->patterns)));
     free(traversal->link_targets, capacity*SIZEOF(*(traversal->link_targets)));
     free(traversal->paths, capacity*SIZEOF(*(traversal->paths)));
 
     free(traversal->paths_lens, capacity*SIZEOF(*(traversal->paths_lens)));
     free(traversal->link_targets_lens, capacity*SIZEOF(*(traversal->link_targets_lens)));
-    free(traversal->matched_patterns_lens, capacity*SIZEOF(*(traversal->matched_patterns_lens)));
+    free(traversal->patterns_lens, capacity*SIZEOF(*(traversal->patterns_lens)));
     free(traversal->nlinks, capacity*SIZEOF(*(traversal->nlinks)));
     free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
 
