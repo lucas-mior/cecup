@@ -62,15 +62,12 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
 static void
 on_log_button_press(GtkGestureClick *gesture, int32 npress, double x, double y, void *data) {
     GtkWidget *widget;
-    GtkWidget *parent;
     GtkWidget *popover;
     GtkTextIter iter;
     int32 buffer_x;
     int32 buffer_y;
     int32 line_num;
     uint32 button;
-    double translated_x;
-    double translated_y;
 
     (void)data;
     button = gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
@@ -84,7 +81,6 @@ on_log_button_press(GtkGestureClick *gesture, int32 npress, double x, double y, 
     }
 
     widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    parent = gtk_widget_get_parent(widget);
     gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
 
     gtk_text_view_window_to_buffer_coords(GTK_TEXT_VIEW(widget), GTK_TEXT_WINDOW_WIDGET,
@@ -93,12 +89,6 @@ on_log_button_press(GtkGestureClick *gesture, int32 npress, double x, double y, 
     gtk_text_view_get_iter_at_location(GTK_TEXT_VIEW(widget), &iter, buffer_x, buffer_y);
 
     line_num = gtk_text_iter_get_line(&iter);
-
-    if (!gtk_widget_translate_coordinates(widget, parent,
-                                          x, y, &translated_x, &translated_y)) {
-        error("Error translating coordinates.");
-        fatal(EXIT_FAILURE);
-    }
 
     {
         GMenu *menu = g_menu_new();
@@ -113,12 +103,12 @@ on_log_button_press(GtkGestureClick *gesture, int32 npress, double x, double y, 
         g_object_unref(menu);
     }
 
-    gtk_widget_set_parent(popover, parent);
+    gtk_widget_set_parent(popover, widget);
 
     {
         GdkRectangle rect;
-        rect.x = (int32)translated_x;
-        rect.y = (int32)translated_y;
+        rect.x = (int32)x;
+        rect.y = (int32)y;
         rect.width = 1;
         rect.height = 1;
 
