@@ -908,10 +908,10 @@ main(void) {
     arena_destroy(cecup.traversal_dst.arena);
 
     if (cecup.rows_capacity > 0) {
-        free(cecup.rows_src, cecup.rows_capacity * SIZEOF(*(cecup.rows_src)));
-        free(cecup.rows_dst, cecup.rows_capacity * SIZEOF(*(cecup.rows_dst)));
-        free(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
-        free(cecup.rows_visible, cecup.rows_capacity * SIZEOF(*(cecup.rows_visible)));
+        free(cecup.rows_src, cecup.rows_capacity*SIZEOF(*(cecup.rows_src)));
+        free(cecup.rows_dst, cecup.rows_capacity*SIZEOF(*(cecup.rows_dst)));
+        free(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
+        free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     }
     
     g_mutex_clear(&cecup.arena_mutex);
