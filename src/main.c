@@ -354,7 +354,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     progress_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     cecup.progress_bar = gtk_progress_bar_new();
-    gtk_widget_set_tooltip_text(cecup.progress_bar, _("Preview analysis progress"));
 
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_bar), TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), _("Analyzing changes"));
