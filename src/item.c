@@ -229,15 +229,10 @@ item_get_actions_reasons(int32 row_id,
     }
 
     if (dst_idx < 0) {
-        char *pattern_src;
-        struct stat *stat_src;
-        bool is_symlink;
-        bool is_hardlink;
-
-        pattern_src = cecup.traversal_src.patterns[src_idx];
-        stat_src = &cecup.traversal_src.stats[src_idx];
-        is_symlink = S_ISLNK(stat_src->st_mode);
-        is_hardlink = S_ISREG(stat_src->st_mode) && cecup.traversal_src.link_targets[src_idx];
+        char *pattern_src = cecup.traversal_src.patterns[src_idx];
+        struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
+        bool is_symlink = S_ISLNK(stat_src->st_mode);
+        bool is_hardlink = S_ISREG(stat_src->st_mode) && cecup.traversal_src.link_targets[src_idx];
 
         if (pattern_src) {
             *action_src = ACTION_IGNORE;
