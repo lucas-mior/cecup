@@ -38,8 +38,7 @@ ignore_patterns_load(void) {
 
     if (cecup.ignore_patterns == NULL) {
         *capacity = 16;
-        cecup.ignore_patterns
-            = xmalloc(*capacity * SIZEOF(*cecup.ignore_patterns));
+        cecup.ignore_patterns = xmalloc(*capacity * SIZEOF(*cecup.ignore_patterns));
         cecup.ignore_count = 0;
     }
 
@@ -52,8 +51,7 @@ ignore_patterns_load(void) {
     count = 0;
 
     if ((file = fopen(cecup.ignore_path, "r")) == NULL) {
-        LOG_ERROR("Error opening %s: %s.\n",
-                  cecup.ignore_path, strerror(errno));
+        LOG_ERROR("Error opening %s: %s.\n", cecup.ignore_path, strerror(errno));
         return;
     }
 
@@ -91,8 +89,7 @@ ignore_patterns_load(void) {
 
         if (count >= *capacity) {
             *capacity *= 2;
-            cecup.ignore_patterns = xrealloc(cecup.ignore_patterns,
-                                             *capacity * SIZEOF(IgnorePattern));
+            cecup.ignore_patterns = xrealloc(cecup.ignore_patterns, *capacity*SIZEOF(IgnorePattern));
         }
 
         pattern = &cecup.ignore_patterns[count];
@@ -122,8 +119,7 @@ ignore_patterns_load(void) {
     cecup.ignore_count = count;
 
     if (fclose(file)) {
-        LOG_ERROR("Error closing %s: %s.\n",
-                  cecup.ignore_path, strerror(errno));
+        LOG_ERROR("Error closing %s: %s.\n", cecup.ignore_path, strerror(errno));
     }
     return;
 }
