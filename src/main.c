@@ -200,7 +200,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     GtkAdjustment *l_adj;
     GtkAdjustment *r_adj;
 
-    char cwd[MAX_PATH_LENGTH];
     char src_path_buffer[MAX_PATH_LENGTH];
     char dst_path_buffer[MAX_PATH_LENGTH];
 
@@ -362,13 +361,21 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(header_vbox), progress_vbox);
     gtk_widget_set_margin_bottom(progress_vbox, 5);
 
-    if (getcwd(cwd, sizeof(cwd)) == NULL) {
-        error("Error getting current working directory: %s.\n", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
+    {
+        char cwd[MAX_PATH_LENGTH];
+        if (getcwd(cwd, sizeof(cwd)) == NULL) {
+            error("Error getting current working directory: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
+        }
 
-    SNPRINTF(src_path_buffer, "%s/a/", cwd);
-    SNPRINTF(dst_path_buffer, "%s/b/", cwd);
+        if (strlen32(cwd) > (SIZEOF(src_path_buffer) / 2)) {
+            error("Error: current working directory path is too long.\n");
+            fatal(EXIT_FAILURE);
+        }
+
+        SNPRINTF(src_path_buffer, "%s/a/", cwd);
+        SNPRINTF(dst_path_buffer, "%s/b/", cwd);
+    }
 
     paths_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_widget_set_margin_start(paths_hbox, 10);
@@ -669,6 +676,8 @@ main(int32 argc, char **argv) {
         char *locale_system;
         char *locale_local_system;
 
+        // TODO: Hardcoded locale paths might fail if the application is installed in non-standard
+        //       prefixes (like /opt) or sandboxed environments (like Flatpak/Snap).
         locale_devel = "./po";
         locale_system = "/usr/share/locale/";
         locale_local_system = "/usr/local/share/locale/";
