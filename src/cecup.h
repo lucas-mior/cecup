@@ -129,7 +129,7 @@ typedef struct Traversal {
     Arena *arena;
     char *base_path;
     int32 base_path_len;
-    int64 file_count;
+    int32 file_count;
 
     struct Hash_fs_map *map;
     struct Hash_inode_map *inode_map;

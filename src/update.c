@@ -515,18 +515,20 @@ update_row_rename(Message *message) {
 
 static void
 update_list_from_rows(void) {
-    int32 count_new;
-    int32 count_hard;
-    int32 count_update;
-    int32 count_equal;
-    int32 count_delete;
-    int32 count_ignore;
-    int64 count_selected;
-    int64 total_size_bytes;
-    int64 current_store_count;
+    int32 count_new = 0;
+    int32 count_hard = 0;
+    int32 count_update = 0;
+    int32 count_equal = 0;
+    int32 count_delete = 0;
+    int32 count_ignore = 0;
+    int32 count_selected = 0;
+    int32 current_store_count = 0;
+
+    int64 total_size_bytes = 0;
     char pretty_size[16];
     char stats_text[256];
     char button_label[64];
+
     struct timespec t0;
     struct timespec t1;
 
@@ -537,17 +539,8 @@ update_list_from_rows(void) {
     bool show_delete;
     bool show_ignore;
 
-    count_new = 0;
-    count_hard = 0;
-    count_update = 0;
-    count_equal = 0;
-    count_delete = 0;
-    count_ignore = 0;
-    count_selected = 0;
-    total_size_bytes = 0;
-
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
-    current_store_count = (int64)g_list_model_get_n_items(cecup.store);
+    current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
     show_new
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
