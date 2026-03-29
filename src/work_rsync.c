@@ -32,7 +32,7 @@ work_batch_flush(MessageBatch **batch_ptr) {
     if (batch->count > 0) {
         g_idle_add(update_ui_handler, batch);
     } else {
-        free(batch, sizeof(*batch));
+        free(batch, SIZEOF(*batch));
     }
 
     *batch_ptr = NULL;
@@ -41,12 +41,7 @@ work_batch_flush(MessageBatch **batch_ptr) {
 
 static void
 work_batch_push(MessageBatch **batch_ptr, Message *message) {
-    static struct timespec time_last_flush = {0};
     MessageBatch *batch;
-
-    if (time_last_flush.tv_sec == 0) {
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_flush);
-    }
 
     batch = *batch_ptr;
     if (batch == NULL) {
@@ -54,6 +49,7 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
         memset64(batch, 0, SIZEOF(*batch));
         batch->type = DATA_TYPE_BATCH;
         batch->count = 0;
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &batch->time_last_flush);
         *batch_ptr = batch;
     }
 
@@ -62,24 +58,20 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
 
     if (batch->count >= LENGTH(batch->messages)) {
         work_batch_flush(batch_ptr);
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_flush);
     } else {
         struct timespec time_this_push;
         int64 time_diff;
 
         clock_gettime(CLOCK_MONOTONIC_COARSE, &time_this_push);
-        time_diff = (int64)(time_this_push.tv_sec - time_last_flush.tv_sec);
+        time_diff = (int64)(time_this_push.tv_sec - batch->time_last_flush.tv_sec);
 
         if (time_diff > 10) {
             work_batch_flush(batch_ptr);
-            time_last_flush.tv_sec = time_this_push.tv_sec;
-            time_last_flush.tv_nsec = time_this_push.tv_nsec;
         }
     }
 
     return;
 }
-
 
 static char *
 work_check_itemize_line(char *buf_output) {

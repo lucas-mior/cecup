@@ -317,6 +317,7 @@ typedef struct Message {
 typedef struct MessageBatch {
     enum DataType type;
     int32 count;
+    struct timespec time_last_flush;
     Message *messages[BATCH_SIZE];
 } MessageBatch;
 
