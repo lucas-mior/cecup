@@ -85,7 +85,7 @@ work_traverse_fs(Traversal *traversal) {
         int32 old_full_len;
         char *path;
         int32 path_len;
-        bool is_dir;
+        int32 is_dir;
         char *link_target;
         int32 link_target_len;
         char *matched_pattern;
@@ -168,9 +168,7 @@ work_traverse_fs(Traversal *traversal) {
 
         {
             char *path_tmp;
-            int32 slash;
 
-            slash = 0;
             path_tmp = ent->fts_path + traversal->base_path_len;
             path_len = old_full_len - traversal->base_path_len;
 
@@ -184,11 +182,7 @@ work_traverse_fs(Traversal *traversal) {
                 path_len = 1;
             }
 
-            if (is_dir) {
-                slash = 1;
-            }
-
-            path = xarena_push(traversal->arena, path_len + slash + 1);
+            path = xarena_push(traversal->arena, path_len + is_dir + 1);
             memcpy64(path, path_tmp, path_len + 1);
 
             if (is_dir && (path[path_len] != '/')) {
