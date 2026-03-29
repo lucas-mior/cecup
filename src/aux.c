@@ -169,7 +169,6 @@ free_task_list(TaskList *tasks) {
         task = tasks->items[i];
         free(task->path, task->path_len + 1);
         free(task->link_target, task->link_target_len + 1);
-        free(task->message, task->message_len);
         free(task, SIZEOF(*task));
     }
 

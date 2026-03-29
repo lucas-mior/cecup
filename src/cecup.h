@@ -319,15 +319,11 @@ typedef struct Task {
     enum Action action;
     int32 side;
 
-    char *message;
     char *path;
     char *link_target;
-    char *ignore_pattern;
 
-    int32 message_len;
     int32 path_len;
     int32 link_target_len;
-    int32 ignore_pattern_len;
 } Task;
 
 typedef struct TaskList {
