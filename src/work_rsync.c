@@ -322,7 +322,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
             line_len = (int64)(eol - buf_output);
             *eol = '\0';
 
-            if (!BEGINS_WITH(buf_output, "removing duplicate")) {
+            if (!BEGINS_WITH(buf_output, RSYNC_DUPLICATE)) {
                 LOG("%s%c", buf_output, end);
             }
 

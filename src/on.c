@@ -317,10 +317,14 @@ on_sync_clicked(GtkWidget *b, void *data) {
 
 static void
 on_stop_clicked(GtkWidget *b, void *data) {
+    int32 pid_to_kill;
+
     (void)b;
     (void)data;
-    if (cecup.child_pid > 0) {
-        xkill(-cecup.child_pid, SIGTERM);
+
+    pid_to_kill = cecup.child_pid;
+    if (pid_to_kill > 0) {
+        xkill(-pid_to_kill, SIGTERM);
     }
     cecup.stop_working = true;
     return;

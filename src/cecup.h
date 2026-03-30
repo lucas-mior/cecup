@@ -507,6 +507,7 @@ enum RsyncCharAttribute {
 
 #define RSYNC_MESSAGE_DELETING "*deleting   0 "
 
+#define RSYNC_DUPLICATE       "removing duplicate"
 #define RSYNC_IGNORE_PRE_DIR  "[sender] hiding directory "
 #define RSYNC_IGNORE_PRE_FILE "[sender] hiding file "
 #define RSYNC_SHOW_PRE_FILE   "[sender] showing file "
