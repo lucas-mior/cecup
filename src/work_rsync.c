@@ -287,6 +287,15 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 
         r = read64(pipe_stdout[0],
                    buf_output + buf_output_pos, SIZEOF(buf_output) - buf_output_pos - 1);
+
+        // TODO: Infinite Loop / Buffer Deadlock. If a single line of rsync output exceeds the
+        // available buffer space (`SIZEOF(buf_output) - 1`), `eol` will be NULL. The code breaks
+        // out of the `while` loop below, but `buf_output_pos` will remain equal to the buffer
+        // capacity. On the next `read64` iteration, the read size `SIZEOF(buf_output) -
+        // buf_output_pos - 1` will evaluate to zero. `read64` will return 0, triggering the `r <=
+        // 0` branch and looping back to `poll` indefinitely without ever consuming the buffer or
+        // closing the pipe. You must handle buffer-full conditions by forcibly truncating or
+        // consuming the oversized line.
         if (r <= 0) {
             if (r < 0) {
                 LOG_ERROR("Error reading stdout pipe: %s.\n", strerror(errno));
@@ -537,6 +546,12 @@ work_rsync(void *user_data) {
         }
     }
 
+    // TODO: Logic Bug / Misleading Error. If all of your selected tasks are exclusively
+    // `ACTION_DELETE`, they are successfully processed by `rm -rvf` in the loop above, but
+    // `has_transfers` remains `false`. This causes the function to log the error "No transfers to
+    // make." and exit here, which will confuse the user by reporting an error right after a
+    // successful batch deletion. You should differentiate between having no valid tasks at all and
+    // simply having no tasks that require rsync to run.
     if (!has_transfers) {
         LOG_ERROR("No transfers to make.\n");
         work_batch_flush(&batch);
