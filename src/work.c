@@ -309,8 +309,8 @@ work_traverse_clean(Traversal *traversal) {
     free(traversal->nlinks, capacity*SIZEOF(*(traversal->nlinks)));
     free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
 
-    hash_destroy_fs_map(traversal->map);
-    hash_destroy_inode_map(traversal->inode_map);
+    hash_zero_fs_map(traversal->map);
+    hash_zero_inode_map(traversal->inode_map);
 
     {
         Arena *arena_save = traversal->arena;
@@ -394,11 +394,6 @@ work_preview(void *user_data) {
     }
 
     ignore_patterns_load();
-
-    cecup.traversal_src.map = hash_create_fs_map(1024);
-    cecup.traversal_dst.map = hash_create_fs_map(1024);
-    cecup.traversal_src.inode_map = hash_create_inode_map(1024);
-    cecup.traversal_dst.inode_map = hash_create_inode_map(1024);
 
     cecup.traversal_src.base_path = cecup.src_base;
     cecup.traversal_src.base_path_len = cecup.src_base_len;

@@ -745,6 +745,11 @@ main(int32 argc, char **argv) {
 
     cecup.transfer_set = hash_create_transfer_set(1024);
 
+    cecup.traversal_src.map = hash_create_fs_map(1024);
+    cecup.traversal_dst.map = hash_create_fs_map(1024);
+    cecup.traversal_src.inode_map = hash_create_inode_map(1024);
+    cecup.traversal_dst.inode_map = hash_create_inode_map(1024);
+
     cecup.ignore_patterns = NULL;
     cecup.ignore_capacity = 0;
     cecup.ignore_count = 0;
