@@ -742,8 +742,8 @@ main(int32 argc, char **argv) {
             error("Can't find any locale directory available.\n");
         }
 
-        bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-        textdomain(GETTEXT_PACKAGE);
+        bind_textdomain_codeset(QUOTE(GETTEXT_PACKAGE), "UTF-8");
+        textdomain(QUOTE(GETTEXT_PACKAGE));
     }
 
     timezone_init();
