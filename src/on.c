@@ -621,14 +621,14 @@ on_invert_clicked(GtkWidget *button, void *data) {
 
     entry_text = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
     if ((entry_len = strlen32(entry_text)) >= (MAX_PATH_LENGTH / 2)) {
-        LOG_ERROR("Error: source directory path is too long.\n");
+        LOG_ERROR(_("Error: source directory path is too long.\n"));
         return;
     }
     memcpy64(path_src, entry_text, entry_len + 1);
 
     entry_text = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R]));
     if ((entry_len = strlen32(entry_text)) >= (MAX_PATH_LENGTH / 2)) {
-        LOG_ERROR("Error: source directory path is too long.\n");
+        LOG_ERROR(_("Error: destination directory path is too long.\n"));
         return;
     }
     memcpy64(path_dst, entry_text, entry_len + 1);
