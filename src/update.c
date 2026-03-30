@@ -737,8 +737,10 @@ update_ui_process_message(Message *message) {
             gtk_text_buffer_insert(cecup.log_buffer, &end, message->text, -1);
             break;
         }
-         #pragma clang diagnostic pop
+        #pragma clang diagnostic pop
 
+        gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
+        gtk_text_buffer_place_cursor(cecup.log_buffer, &end);
         gtk_text_view_scroll_to_mark(GTK_TEXT_VIEW(cecup.log_view),
                                      gtk_text_buffer_get_insert(cecup.log_buffer), 0.0,
                                      FALSE, 0.0, 0.0);
