@@ -184,8 +184,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     GtkWidget *search_hbox;
     GtkWidget *options_hbox;
     GtkWidget *reset_button;
-    GtkWidget *v_paned_outer;
-    GtkWidget *v_paned_inner;
+    GtkWidget *v_paned;
+    GtkWidget *top_vbox;
     GtkWidget *footer_vbox;
     GtkWidget *paned_trees;
 
@@ -437,16 +437,16 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_box_append(GTK_BOX(main_vbox), search_hbox);
 
-    v_paned_outer = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
-    gtk_widget_set_vexpand(v_paned_outer, TRUE);
-    gtk_box_append(GTK_BOX(main_vbox), v_paned_outer);
+    v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
+    gtk_widget_set_vexpand(v_paned, TRUE);
+    gtk_box_append(GTK_BOX(main_vbox), v_paned);
 
-    v_paned_inner = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
-    gtk_paned_set_start_child(GTK_PANED(v_paned_outer), v_paned_inner);
+    top_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_paned_set_start_child(GTK_PANED(v_paned), top_vbox);
 
     paned_trees = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_widget_set_vexpand(paned_trees, TRUE);
-    gtk_paned_set_start_child(GTK_PANED(v_paned_inner), paned_trees);
+    gtk_box_append(GTK_BOX(top_vbox), paned_trees);
 
     vbox[L] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[L] = gtk_scrolled_window_new();
@@ -486,7 +486,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
 
     footer_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, SPACING_BOX);
-    gtk_paned_set_end_child(GTK_PANED(v_paned_inner), footer_vbox);
+    gtk_widget_set_margin_top(footer_vbox, SPACING_BOX);
+    gtk_widget_set_margin_bottom(footer_vbox, SPACING_BOX);
+    gtk_box_append(GTK_BOX(top_vbox), footer_vbox);
 
     filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     gtk_widget_set_halign(filter_hbox, GTK_ALIGN_CENTER);
@@ -535,19 +537,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_top(cecup.stats_label, 5);
     gtk_widget_set_margin_bottom(cecup.stats_label, 5);
 
-    gtk_paned_set_resize_end_child(GTK_PANED(v_paned_inner), FALSE);
-    gtk_paned_set_shrink_end_child(GTK_PANED(v_paned_inner), FALSE);
-    gtk_paned_set_resize_start_child(GTK_PANED(v_paned_inner), TRUE);
-    gtk_paned_set_shrink_start_child(GTK_PANED(v_paned_inner), TRUE);
-
-    gtk_paned_set_resize_end_child(GTK_PANED(v_paned_outer), TRUE);
-    gtk_paned_set_shrink_end_child(GTK_PANED(v_paned_outer), TRUE);
-    gtk_paned_set_resize_start_child(GTK_PANED(v_paned_outer), TRUE);
-    gtk_paned_set_shrink_start_child(GTK_PANED(v_paned_outer), TRUE);
-
-    gtk_widget_set_name(v_paned_inner, "v_paned_inner");
-    gtk_widget_set_name(v_paned_outer, "v_paned_outer");
-
     {
         GtkWidget *log_scroll = gtk_scrolled_window_new();
 
@@ -559,7 +548,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         cecup.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(cecup.log_view));
         gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(log_scroll), cecup.log_view);
 
-        gtk_paned_set_end_child(GTK_PANED(v_paned_outer), log_scroll);
+        gtk_paned_set_end_child(GTK_PANED(v_paned), log_scroll);
     }
 
     {
