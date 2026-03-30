@@ -240,6 +240,7 @@ static void
 on_preview_clicked(GtkWidget *b, void *data) {
     ThreadData *thread_data;
     Message *message;
+    GThread *thread;
 
     (void)data;
     (void)b;
@@ -256,8 +257,11 @@ on_preview_clicked(GtkWidget *b, void *data) {
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
-    g_thread_new("work_preview", work_preview, thread_data);
-
+    // TODO: g_thread_new returns a GThread pointer holding a reference to the thread. If you don't
+    // call g_thread_unref() on it, the thread structure leaks memory. Add g_thread_unref(thread)
+    // immediately if you intend to run it detached.
+    thread = g_thread_new("work_preview", work_preview, thread_data);
+    g_thread_unref(thread);
     return;
 }
 
@@ -271,6 +275,7 @@ transfers_compare(const void *transfer1, const void *transfer2) {
 static void
 on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     ThreadData *thread_data;
+    GThread *thread;
 
     (void)data;
     gtk_window_destroy(GTK_WINDOW(dialog));
@@ -285,7 +290,9 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
     /* qsort64(cecup.transfers, cecup.ntransfers, sizeof(*(cecup.transfers)), transfers_compare); */
-    g_thread_new("work_rsync", work_rsync, thread_data);
+    // TODO: Same as above: unref the returned GThread pointer to avoid leaking thread handles.
+    thread = g_thread_new("work_rsync", work_rsync, thread_data);
+    g_thread_unref(thread);
     return;
 }
 
@@ -582,15 +589,24 @@ on_invert_clicked(GtkWidget *b, void *data) {
     char path_src[MAX_PATH_LENGTH];
     char path_dst[MAX_PATH_LENGTH];
     char *entry_text;
+    int32 entry_len;
 
     (void)b;
     (void)data;
 
     entry_text = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
-    SNPRINTF(path_src, "%s", entry_text);
+    if ((entry_len = strlen32(entry_text)) >= (MAX_PATH_LENGTH / 2)) {
+        LOG_ERROR("Error: source directory path is too long.\n");
+        return;
+    }
+    memcpy64(path_src, entry_text, entry_len + 1);
 
     entry_text = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R]));
-    SNPRINTF(path_dst, "%s", entry_text);
+    if ((entry_len = strlen32(entry_text)) >= (MAX_PATH_LENGTH / 2)) {
+        LOG_ERROR("Error: source directory path is too long.\n");
+        return;
+    }
+    memcpy64(path_dst, entry_text, entry_len + 1);
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), path_dst);
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), path_src);

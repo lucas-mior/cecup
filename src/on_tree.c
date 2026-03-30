@@ -403,6 +403,12 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 }
 
                 if (rb_pos > 0) {
+                    // TODO: Accumulating rb_pos with the return value of snprintf2 can lead to
+                    // buffer overflows. If truncation occurs, snprintf returns the total length
+                    // that WOULD have been written. On the next call, `SIZEOF(reason_buf) - rb_pos`
+                    // becomes a negative integer which underflows the `size_t` length parameter,
+                    // allowing snprintf to write past the end of the buffer. Add a check to cap
+                    // rb_pos or break if truncation happens.
                     rb_pos += snprintf2(reason_buf + rb_pos, SIZEOF(reason_buf) - rb_pos, ", ");
                 }
 
