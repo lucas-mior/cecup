@@ -243,6 +243,11 @@ cecup_list_model_row_added(CecupListModel *self, int32 row_index, int32 position
         int32 limit;
 
         limit = MIN(cecup.rows_visible_len, self->proxies_capacity - 1);
+
+        // TODO: Memory Leak. When `limit` equals `self->proxies_capacity - 1`, the proxy reference
+        // at `self->proxies[limit]` is overwritten by the loop below without being unreferenced.
+        // This will silently leak a GObject. You should call `g_object_unref(self->proxies[limit])`
+        // if it is not NULL before shifting elements.
         for (int32 i = limit; i > position; i -= 1) {
             self->proxies[i] = self->proxies[i - 1];
         }

@@ -45,6 +45,10 @@ on_path_selection_idle(void *data) {
     gtk_editable_select_region(selection_data->editable,
                                selection_data->start_pos, selection_data->end_pos);
 
+    // TODO: Potential Use-After-Free. `selection_data->editable` is part of a GtkListItem that
+    // might be destroyed, recycled, or unmapped before this idle callback runs (e.g., if the user
+    // scrolls quickly). You should `g_object_unref(selection_data->editable)` here and
+    // `g_object_ref(editable)` before queueing the idle task.
     free(selection_data, sizeof(*selection_data));
     return G_SOURCE_REMOVE;
 }
