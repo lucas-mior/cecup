@@ -16,6 +16,12 @@ previewing and confirming:
 - which files are on the backup, but (no longer) exist on the source
 - which files have different size
 - which files are meant to be ignored
+- which files are links to other files
+
+FreeFileSync does have a similar interface (while also supporting 2 way backup),
+however it does not support hard links. Rsync does support everything
+imaginable, but it has no GUI for this use case, while also being too
+overwhelming for the average user.
 
 ## TODO
 - Hard links:
