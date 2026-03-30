@@ -729,7 +729,6 @@ main(int32 argc, char **argv) {
 
         if (setlocale(LC_ALL, "") == NULL) {
             error("Error setting locale: %s.\n", strerror(errno));
-            exit(EXIT_FAILURE);
         }
 
         if (access(locale_devel, F_OK) == 0) {
@@ -787,7 +786,7 @@ main(int32 argc, char **argv) {
 
             if ((HOME = getenv("HOME")) == NULL) {
                 error("HOME is not defined. Fix your system.\n");
-                exit(EXIT_FAILURE);
+                fatal(EXIT_FAILURE);
             }
             SNPRINTF(xdg_buffer, "%s/.config", HOME);
             XDG_CONFIG_HOME = xdg_buffer;
@@ -802,7 +801,7 @@ main(int32 argc, char **argv) {
             switch (child_cp = fork()) {
             case -1:
                 error("Error forking: %s.\n", strerror(errno));
-                exit(EXIT_FAILURE);
+                fatal(EXIT_FAILURE);
             case 0:
             {
                 char *args_cp[] = {
