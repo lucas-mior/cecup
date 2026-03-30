@@ -201,6 +201,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     char src_path_buffer[MAX_PATH_LENGTH];
     char dst_path_buffer[MAX_PATH_LENGTH];
+    bool is_first_run = false;
 
     (void)user_data;
 
@@ -568,6 +569,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
         key = g_key_file_new();
         if (!g_key_file_load_from_file(key, cecup.config_path, G_KEY_FILE_NONE, NULL)) {
+            is_first_run = true;
             g_key_file_free(key);
             break;
         }
@@ -663,6 +665,17 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     cecup_get_dirs();
 
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
+
+    if (true) {
+        GtkWidget *dialog;
+
+        dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
+                                        GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
+                                        _(cecup_welcome_text));
+
+        g_signal_connect(dialog, "response", G_CALLBACK(gtk_window_destroy), NULL);
+        gtk_widget_show(dialog);
+    }
 
     return;
 }
