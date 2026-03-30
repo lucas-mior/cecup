@@ -28,7 +28,7 @@ fi
 
 shift
 
-export LC_ALL=C
+# export LC_ALL=C
 
 dir=$(dirname "$(readlink -f "$0")")
 cbase="cbase"
@@ -235,7 +235,7 @@ case "$target" in
             gdb $exe -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
     fi
     if [ $target = "run" ]; then
-        LC_ALL=C $exe
+        $exe
     fi
 
     trace_off
