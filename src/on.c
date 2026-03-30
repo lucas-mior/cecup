@@ -57,7 +57,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     uint32 pos;
     int32 row_id;
     char *filepath;
-    int32 side;
+    int8 side;
     int32 path_len;
     enum Action action_src;
     enum Action action_dst;
@@ -68,7 +68,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
     }
 
     selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
-    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
+    side = (int8)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
     single_sel = GTK_SINGLE_SELECTION(selection);
 
@@ -375,7 +375,7 @@ on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
 static void on_cell_toggled(GtkCheckButton *renderer, void *user_data);
 
 static void
-update_visible_checkboxes(GtkWidget *widget, int32 side) {
+update_visible_checkboxes(GtkWidget *widget, int8 side) {
     GtkWidget *child;
     void *row_id_ptr;
 
@@ -410,14 +410,14 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     int32 parent_path_len;
     bool is_root;
     bool is_active;
-    int32 side;
+    int8 side;
     static bool in_update = false;
 
     if (in_update) {
         return;
     }
 
-    side = GPOINTER_TO_INT(user_data);
+    side = (int8)GPOINTER_TO_INT(user_data);
 
     if ((row_id_ptr = g_object_get_data(G_OBJECT(renderer), "cecup-row-id")) == NULL) {
         return;

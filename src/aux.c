@@ -190,7 +190,7 @@ free_task_list(TaskList *tasks) {
 }
 
 static TaskList *
-get_target_tasks(int32 side, char *clicked_path, enum Action clicked_action) {
+get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
     TaskList *tasks;
     int64 tasks_size;
     int32 count;

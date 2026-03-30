@@ -115,14 +115,14 @@ on_path_edited(GtkEditable *editable, void *data) {
     GtkWidget *tree = data;
     int32 row_id;
     void *row_id_ptr;
-    int32 side;
+    int8 side;
     char *base_path;
     char old_full[MAX_PATH_LENGTH];
     char *relative_old;
     int32 new_length;
     char *new_text;
 
-    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
+    side = (int8)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
     if ((row_id_ptr = g_object_get_data(G_OBJECT(editable), "cecup-row-id")) == NULL) {
         return;

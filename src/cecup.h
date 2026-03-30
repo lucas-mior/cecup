@@ -156,7 +156,7 @@ typedef struct Traversal {
 } Traversal;
 
 typedef struct TextInfo {
-    int32 side;
+    int8 side;
     enum ColumnType type;
 } TextInfo;
 
@@ -264,12 +264,6 @@ static char *colors[] = {
     [ACTION_DELETED]  = "#F8D7DA",
 };
 
-enum RefreshType {
-    REFRESH_FINAL = 1,
-    REFRESH_PARTIAL = 1 << 1,
-    REFRESH_FILTER_CHANGED = 1 << 2,
-};
-
 enum CecupColumn {
     COL_SELECTED = 0,
     COL_SRC_ACTION,
@@ -303,10 +297,9 @@ typedef struct Message {
     int32 old_path_len;
     int32 new_path_len;
 
-    int32 side;
+    int8 side;
     double fraction;
 
-    bool is_dir;
     bool preview_clean;
 } Message;
 
@@ -322,7 +315,7 @@ typedef struct MessageBatch {
 typedef struct Task {
     enum MsgType type;
     enum Action action;
-    int32 side;
+    int8 side;
 
     char *path;
     char *link_target;

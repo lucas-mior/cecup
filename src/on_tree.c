@@ -31,7 +31,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y
     GtkWidget *parent;
     double translated_x;
     double translated_y;
-    int32 side;
+    int8 side;
     int32 button;
 
     (void)data;
@@ -39,7 +39,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y
 
     gtk_widget_grab_focus(widget);
 
-    side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
+    side = (int8)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "side"));
     button = (int32)gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
 
     if (button == GDK_BUTTON_SECONDARY && n_press == 1) {
