@@ -71,7 +71,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
 
     if (pattern == NULL) {
         error("Ignore pattern is NULL.\n");
-        return;
+        fatal(EXIT_FAILURE);
     }
 
     if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
@@ -399,7 +399,7 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 execvp(diff_command[0], diff_command);
                 STRING_FROM_ARRAY(cmd, " ", diff_command, LENGTH(diff_command));
                 error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
-                _exit(1);
+                _exit(EXIT_FAILURE);
             }
         default:
             // TODO: Zombie Process Creation. The parent iterates through the loop and `fork()`s
