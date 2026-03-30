@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-27 16:25-0300\n"
+"POT-Creation-Date: 2026-03-30 00:27-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -18,181 +18,167 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: aux.c:373 aux.c:392
+#: src/aux.c:50 src/aux.c:76
 msgid "Click Analysis first"
 msgstr "Clique em \"Analisar\" primeiro"
 
-#: aux.c:396 main.c:302
+#: src/aux.c:79 src/main.c:281
 msgid "Start copying and updating all files"
 msgstr "Iniciar a cópia e atualização de todos os arquivos"
 
-#: main.c:88
+#: src/main.c:76
 msgid "Task"
 msgstr "Tarefa"
 
-#: main.c:106
+#: src/main.c:93
 msgid "Name"
 msgstr "Nome do arquivo"
 
-#: main.c:130
+#: src/main.c:111
 msgid "Size"
 msgstr "Tamanho"
 
-#: main.c:153
+#: src/main.c:132
 msgid "Modification Time"
 msgstr "Data de modificação"
 
-#: main.c:287
+#: src/main.c:269
 msgid "🔎 Analyze"
 msgstr "🔎 Analisar"
 
-#: main.c:288
+#: src/main.c:270
 msgid "Edit Ignore Rules"
 msgstr "Editar Regras de Ignorados"
 
-#: main.c:292
+#: src/main.c:273
 msgid "Check which files need to be copied or updated"
 msgstr "Verificar quais arquivos precisam ser copiados ou atualizados"
 
-#: main.c:294
+#: src/main.c:275
 msgid "Edit the list of filename patterns to ignore"
 msgstr "Editar a lista de padrões de nomes de arquivo para ignorar"
 
-#: main.c:296
+#: src/main.c:277
 msgid "⏹️ Stop"
 msgstr "⏹️ Parar"
 
-#: main.c:298
+#: src/main.c:278
 msgid "Cancel the current task"
 msgstr "Cancelar a tarefa atual"
 
-#: main.c:300
+#: src/main.c:280
 msgid "⏩ Apply Changes"
 msgstr "⏩ Aplicar Mudanças"
 
-#: main.c:331
+#: src/main.c:310
 msgid "Protect same-drive sync"
 msgstr "Impedir cópia no mesmo disco"
 
-#: main.c:333
+#: src/main.c:311
 msgid "Remove ignored items"
 msgstr "Excluir itens ignorados"
 
-#: main.c:334
+#: src/main.c:312
 msgid "Sync 100%"
 msgstr "Sincronia 100%"
 
-#: main.c:338
+#: src/main.c:315
 msgid "Prevent copying if original and backup are on the same disk"
 msgstr "Evitar cópia se o original e o backup estiverem no mesmo dispositivo"
 
-#: main.c:341
+#: src/main.c:317
 msgid "Remove files from backup if they were added to the ignore list"
 msgstr "Exclui do backup arquivos que você marcou para serem ignorados"
 
-#: main.c:344
+#: src/main.c:319
 msgid "Delete files in backup that do not exist in the original"
 msgstr "Deletar arquivos do backup que não existem no original"
 
-#: main.c:348
+#: src/main.c:322
 msgid "Executable used for comparing files"
 msgstr "Programa usado para comparar arquivos"
 
-#: main.c:351
+#: src/main.c:325
 msgid "Terminal emulator used to launch the diff tool"
 msgstr "Emulator de terminal usado para executar o programa de comparação"
 
-#: main.c:353
+#: src/main.c:327
 msgid "Defaults"
 msgstr "Padrão"
 
-#: main.c:354
+#: src/main.c:328
 msgid "Restore original settings"
 msgstr "Restaurar configurações originais"
 
-#: main.c:368
+#: src/main.c:342
 msgid "Diff Tool:"
 msgstr "Ferramenta de comparação"
 
-#: main.c:372
+#: src/main.c:346
 msgid "Terminal:"
 msgstr "Terminal:"
 
-#: main.c:382
-msgid "Preview analysis progress"
-msgstr "Progresso da análise da prévia"
-
-#: main.c:387
+#: src/main.c:357 src/work.c:361
 msgid "Analyzing changes"
 msgstr "Analisando mudanças"
 
-#: main.c:417
+#: src/main.c:388
 msgid "Folder containing your original files"
 msgstr "Pasta que contém seus arquivos originais"
 
-#: main.c:419 main.c:437
+#: src/main.c:390 src/main.c:406
 msgid "Select Folder"
 msgstr "Selecionar Pasta"
 
-#: main.c:429
+#: src/main.c:399
 msgid "Invert Original and Backup"
 msgstr "Inverter original e backup"
 
-#: main.c:435
+#: src/main.c:404
 msgid "Folder where the backup will be stored"
 msgstr "Pasta onde o backup será guardado"
 
-#: main.c:450
+#: src/main.c:418
 msgid "Search files..."
 msgstr "Procurar arquivos..."
 
-#: main.c:455
+#: src/main.c:424
 msgid "🔍"
 msgstr "🔍"
 
-#: main.c:550
+#: src/main.c:518
 msgid "Show New Files"
 msgstr "Mostrar arquivos novos"
 
-#: main.c:551
+#: src/main.c:519
 msgid "Show links"
 msgstr "Mostrar links"
 
-#: main.c:552
+#: src/main.c:520
 msgid "Show Updates"
 msgstr "Mostrar arquivos atualizados"
 
-#: main.c:553
+#: src/main.c:521
 msgid "Show equals"
 msgstr "Mostrar iguais"
 
-#: main.c:554
+#: src/main.c:522
 msgid "Show Deletions"
 msgstr "Mostrar exclusões"
 
-#: main.c:555
+#: src/main.c:523
 msgid "Show Ignored"
 msgstr "Mostrar ignorados"
 
-#: main.c:583
+#: src/main.c:551
 msgid "✅ Everything ready"
 msgstr "✅ Tudo pronto"
 
-#: on.c:73
+#: src/on.c:79
 msgid "Action blocked: Background task is running.\n"
 msgstr "Ação bloqueada: Há uma tarefa executando em segundo plano.\n"
 
-#: on.c:201
-#, fuzzy
-msgid "📋 Copy Whole Log"
-msgstr "📋 Copiar caminho relativo"
-
-#: on.c:203
-#, fuzzy
-msgid "📝 Copy Line"
-msgstr "📍 Copiar esta linha"
-
-#: on.c:293
+#: src/on.c:190
 #, fuzzy, c-format
 msgid ""
 "Warning: 'Sync 100%%' (delete-after) is enabled. Files in the backup folder "
@@ -201,129 +187,139 @@ msgid ""
 msgstr ""
 "Atenção: 'Sincronia 100%%' (delete-after) está ativada. Arquivos na pasta de "
 "backup que não existem na pasta original serão EXCLUÍDOS PERMANENTEMENTE."
-"Além disso, arquivos que são mais novos no backup serão sobreescritos."
+" Além disso, arquivos que são mais novos no backup serão sobreescritos."
 
-#: on.c:406
+#: src/on.c:320
 #, c-format
 msgid "Sync %s -> %s?"
 msgstr "Sincronizar %s -> %s?"
 
-#: on.c:598 update.c:694
+#: src/on.c:562
+msgid "Ignore Rules"
+msgstr "Regras de Ignorados"
+
+#: src/on.c:639
+msgid "Src"
+msgstr "Original"
+
+#: src/on.c:673
+msgid "Dst"
+msgstr "Backup"
+
+#: src/on_log.c:95
+#, fuzzy
+msgid "📝 Copy Line"
+msgstr "📍 Copiar esta linha"
+
+#: src/on_log.c:96
+#, fuzzy
+msgid "📋 Copy Whole Log"
+msgstr "📋 Copiar caminho relativo"
+
+#: src/on_menu.c:78
+#, fuzzy, c-format
+msgid "Error opening %s: %s.\n"
+msgstr "Error abrindo pasta %s: %s\n"
+
+#: src/on_menu.c:84
+#, fuzzy, c-format
+msgid "Error closing %s: %s.\n"
+msgstr "Error abrindo pasta %s: %s\n"
+
+#: src/on_menu.c:221
 #, c-format
+msgid "Launching %s...\n"
+msgstr "Executando %s...\n"
+
+#: src/on_menu.c:269
+#, fuzzy, c-format
+msgid "Error resolving full path of %s: %s.\n"
+msgstr "Error renomeando %s to %s: %s\n"
+
+#: src/on_menu.c:348
+#, c-format
+msgid "Permanently delete %d item(s)?"
+msgstr "Excluir permanentemente %d arquivo(s)?"
+
+#: src/on_path.c:176
+#, c-format
+msgid "Error renaming %s to %s: %s\n"
+msgstr "Error renomeando %s to %s: %s\n"
+
+#: src/on_path.c:180
+#, c-format
+msgid "Renamed: %s -> %s\n"
+msgstr "Renomeado: %s -> %s\n"
+
+#: src/on_tree.c:161
+#, c-format
+msgid "by extension (*%s)"
+msgstr "pela extensão (*%s)"
+
+#: src/on_tree.c:170
+#, c-format
+msgid "📁 Dir (/%s/)"
+msgstr "📁 Pasta (/%s/)"
+
+#: src/on_tree.c:179
+#, fuzzy, c-format
+msgid "This folder only (/%s)"
+msgstr "Somente esse arquivo (/%s)"
+
+#: src/on_tree.c:181
+#, c-format
+msgid "This file only (/%s)"
+msgstr "Somente esse arquivo (/%s)"
+
+#: src/on_tree.c:189
+#, c-format
+msgid "This filename on any folder (*/%s)"
+msgstr "Esse nome de arquivo em qualquer pasta (*/%s)"
+
+#: src/on_tree.c:423
+msgid "pattern"
+msgstr "padrão"
+
+#: src/update.c:616
+#, fuzzy, c-format
 msgid ""
-"Selected files: %lld\n"
+"Selected files: %d\n"
 "Total Transfer Size: 📦 %s"
 msgstr ""
 "Arquivos selecionados: %lld\n"
 "Tamanho total a copiar: 📦 %s"
 
-#: on.c:643
-msgid "Ignore Rules"
-msgstr "Regras de Ignorados"
-
-#: on.c:713
-msgid "Src"
-msgstr "Original"
-
-#: on.c:748
-msgid "Dst"
-msgstr "Backup"
-
-#: on.c:1013
-#, c-format
-msgid "by extension (*%s)"
-msgstr "pela extensão (*%s)"
-
-#: on.c:1023
-#, c-format
-msgid "📁 Dir (/%s/)"
-msgstr "📁 Pasta (/%s/)"
-
-#: on.c:1033
-#, fuzzy, c-format
-msgid "This folder only (/%s)"
-msgstr "Somente esse arquivo (/%s)"
-
-#: on.c:1035
-#, c-format
-msgid "This file only (/%s)"
-msgstr "Somente esse arquivo (/%s)"
-
-#: on.c:1044
-#, c-format
-msgid "This filename on any folder (*/%s)"
-msgstr "Esse nome de arquivo em qualquer pasta (*/%s)"
-
-#: on.c:1266
-msgid "pattern"
-msgstr "padrão"
-
-#: on.c:1450
-#, c-format
-msgid "Error renaming %s to %s: %s\n"
-msgstr "Error renomeando %s to %s: %s\n"
-
-#: on.c:1455
-#, c-format
-msgid "Renamed: %s -> %s\n"
-msgstr "Renomeado: %s -> %s\n"
-
-#: on_menu.c:87
-#, fuzzy, c-format
-msgid "Error opening %s: %s.\n"
-msgstr "Error abrindo pasta %s: %s\n"
-
-#: on_menu.c:234
-#, c-format
-msgid "Launching %s...\n"
-msgstr "Executando %s...\n"
-
-#: on_menu.c:283
-#, fuzzy, c-format
-msgid "Error resolving full path of %s: %s.\n"
-msgstr "Error renomeando %s to %s: %s\n"
-
-#: on_menu.c:360
-#, c-format
-msgid "Permanently delete %d item(s)?"
-msgstr "Excluir permanentemente %d arquivo(s)?"
-
-#: update.c:131
-#, fuzzy, c-format
-msgid "Removing %s entirely from list...\n"
-msgstr "Removendo %s da lista...\n"
-
-#: update.c:150
-#, c-format
-msgid "Updated %s state (missing on side %d)\n"
-msgstr "Atualizou %s (faltando no lado %d)\n"
-
-#: work.c:197
+#: src/work.c:77
 #, fuzzy, c-format
 msgid "Error walking directory %s: %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
-#: work.c:234
+#: src/work.c:113
 msgid "Error: file path is too long:\n"
 msgstr "Erro: caminho do arquivo é muito longo:\n"
 
-#: work.c:236 work.c:245 work.c:253 work.c:269
+#: src/work.c:115 src/work.c:128 src/work.c:136 src/work.c:152
 msgid "Please fix your file system.\n"
 msgstr "Por favor conserte o seu sistema de arquivos.\n"
 
-#: work.c:243
+#: src/work.c:126
 msgid "Error: there is a space in the start of the fileneme:\n"
 msgstr "Erro: há espaço em braco no começo do nome do arquivo:\n"
 
-#: work.c:251
+#: src/work.c:134
 msgid "Error: there is space in the end of the fileneme:\n"
 msgstr "Erro: há espaço em braco no final do nome do arquivo:\n"
 
-#: work.c:267
+#: src/work.c:150
 msgid "Error: filename contains problematic characters/patterns:\n"
 msgstr "Erro: nome de arquivo contém caracteres/padrões problemáticos\n"
 
-#: work.c:490
+#: src/work.c:362
+#, fuzzy
+msgid "Traversing file systems for differences..."
+msgstr "Por favor conserte o seu sistema de arquivos.\n"
+
+#: src/work.c:387
 msgid ""
 "Safety stop: Original and backup are on the same storage device.\n"
 "Check if the backup device is connected.\n"
@@ -336,219 +332,315 @@ msgstr ""
 "Para forçar o backup em pasta do mesmo dispositivo, desmarcar opção "
 "\"Impedir cópia no mesmo disco\".\n"
 
-#: work.c:512
+#: src/work.c:409
 #, fuzzy
 msgid "Traversing file systems...\n"
 msgstr "Por favor conserte o seu sistema de arquivos.\n"
 
-#: work.c:530 work.c:911 work.c:1051
+#: src/work.c:425 src/work_rsync.c:462 src/work_rsync.c:612
 msgid "Stop requested.\n"
 msgstr "Parada solicitada.\n"
 
-#: work.c:534
+#: src/work.c:429
 msgid "File system traversal finished.\n"
 msgstr "Buscar no sistema de arquivos concluída.\n"
 
-#: work.c:537
+#: src/work.c:432
 #, c-format
 msgid "Found %lld files to analyse...\n"
 msgstr "%lld arquivos encontrados para analisar...\n"
 
-#: work.c:688
+#: src/work_rsync.c:149
+#, fuzzy
+msgid "Verifying checksums"
+msgstr "Verificando cópias com checksum...\n"
+
+#: src/work_rsync.c:150
+msgid "Performing verification of the new files..."
+msgstr "Realizando verificação dos arquivos copiados..."
+
+#: src/work_rsync.c:152
+msgid "Syncing files"
+msgstr "Sincronizando arquivos"
+
+#: src/work_rsync.c:153
+msgid "Transferring data and updating metadata..."
+msgstr "Transferindo dados e atualizando metadados..."
+
+#: src/work_rsync.c:193
 #, fuzzy
 msgid "Running sync...\n"
 msgstr "Executando %s...\n"
 
-#: work.c:864
+#: src/work_rsync.c:410
 #, fuzzy, c-format
-msgid "Error waiting for child: %s.\n"
+msgid "Error waiting for child process: %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
-#: work.c:865
-msgid "Killing the child with SIGKILL..."
+#: src/work_rsync.c:411
+#, fuzzy
+msgid "Killing the child process with SIGKILL..."
 msgstr "Matando o processo filho com SIGKILL..."
 
-#: cecup.h:165 cecup.h:176
+#: src/cecup.h:175 src/cecup.h:186
 msgid "Copy to backup"
 msgstr "Copiar para o backup"
 
-#: cecup.h:166 cecup.h:177
+#: src/cecup.h:176 src/cecup.h:187
 msgid "Create hardlink in backup"
 msgstr "Criar link no backup"
 
-#: cecup.h:167 cecup.h:178
+#: src/cecup.h:177 src/cecup.h:188
 msgid "Create symlink in backup"
 msgstr "Criar atalho no backup"
 
-#: cecup.h:168
+#: src/cecup.h:178
 msgid "Update file in backup"
 msgstr "Atualizar arquivo no backup"
 
-#: cecup.h:169 cecup.h:180 cecup.h:191 cecup.h:202
+#: src/cecup.h:179 src/cecup.h:190 src/cecup.h:201 src/cecup.h:212
 msgid "Already identical"
 msgstr "Já está igual"
 
-#: cecup.h:170 cecup.h:181
+#: src/cecup.h:180 src/cecup.h:191
 msgid "Not found in original"
 msgstr "Não encontrado na pasta original"
 
-#: cecup.h:172 cecup.h:183 cecup.h:194 cecup.h:205
+#: src/cecup.h:182 src/cecup.h:193 src/cecup.h:204 src/cecup.h:215
 msgid "Skip"
 msgstr "Pular"
 
-#: cecup.h:179
+#: src/cecup.h:189
 #, fuzzy
 msgid "Update folder in backup"
 msgstr "Atualizar arquivo no backup"
 
-#: cecup.h:187 cecup.h:198
+#: src/cecup.h:197 src/cecup.h:208
 msgid "Copy from original"
 msgstr "Copiar do original"
 
-#: cecup.h:188 cecup.h:199
+#: src/cecup.h:198 src/cecup.h:209
 msgid "Create hardlink according to original"
 msgstr "Criar link conforme original"
 
-#: cecup.h:189 cecup.h:200
+#: src/cecup.h:199 src/cecup.h:210
 msgid "Create symlink according to original"
 msgstr "Criar atalho conforme original"
 
-#: cecup.h:190 cecup.h:201
+#: src/cecup.h:200 src/cecup.h:211
 msgid "Update from original"
 msgstr "Atualizar conforme arquivo da pasta original"
 
-#: cecup.h:193 cecup.h:204
+#: src/cecup.h:203 src/cecup.h:214
 msgid "Remove from backup"
 msgstr "Excluir do backup"
 
-#: cecup.h:209
-msgid "Files have the same size and modification time"
-msgstr "Arquivos tem o mesmo tamanho e data de modificação"
+#: src/cecup.h:219
+msgid "Files are equal"
+msgstr "Arquivos são iguais"
 
-#: cecup.h:210 cecup.h:226
+#: src/cecup.h:220 src/cecup.h:239
 msgid "Matches an ignore pattern"
 msgstr "Corresponde a uma padrão a ignorar"
 
-#: cecup.h:211
+#: src/cecup.h:221
 msgid "File does not exist in the original folder"
 msgstr "Arquivo não existe na pasta original"
 
-#: cecup.h:212
+#: src/cecup.h:222
 msgid "New file found in the original folder"
 msgstr "Novo arquivo encontrado na pasta original"
 
-#: cecup.h:213
+#: src/cecup.h:223
 msgid "Hardlinked file in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
 
-#: cecup.h:214 cecup.h:230
+#: src/cecup.h:224 src/cecup.h:243
+msgid "Backup item is not a regular file"
+msgstr "Arquivo do backup não é um arquivo normal"
+
+#: src/cecup.h:225 src/cecup.h:244
+msgid "Backup item is missing link target"
+msgstr "O item do backup não tem o destino do link"
+
+#: src/cecup.h:226 src/cecup.h:245
+msgid "Link targets do not match"
+msgstr "Destinos dos links não são os mesmos"
+
+#: src/cecup.h:227 src/cecup.h:246
 msgid "Symlink in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
 
-#: cecup.h:215
+#: src/cecup.h:228
 msgid "File sizes differ"
 msgstr "Tamanho dos arquivos difere"
 
-#: cecup.h:216
+#: src/cecup.h:229
 msgid "File in the source is newer than backup"
 msgstr "Arquivo na pasta original é mais novo que no backup"
 
-#: cecup.h:217
+#: src/cecup.h:230
 msgid "File in the source is older than backup"
 msgstr "Arquivo na pasta original é mais velho que no backup"
 
-#: cecup.h:218 cecup.h:234
+#: src/cecup.h:231 src/cecup.h:250
 msgid "Metadata change times differ"
 msgstr "Datas de alteração dos metadados diferem"
 
-#: cecup.h:219 cecup.h:235
+#: src/cecup.h:232 src/cecup.h:251
 msgid "Owners differ"
 msgstr "Dono dos arquivos diferem"
 
-#: cecup.h:220 cecup.h:236
+#: src/cecup.h:233 src/cecup.h:252
 msgid "Groups differ"
 msgstr "Grupo dos arquivos diferem"
 
-#: cecup.h:221 cecup.h:237
+#: src/cecup.h:234 src/cecup.h:253
 msgid "Permissions differ"
 msgstr "Permissões diferem"
 
-#: cecup.h:225
-#, fuzzy
-msgid "Folders have the same size and modification time"
-msgstr "Arquivos tem o mesmo tamanho e data de modificação"
+#: src/cecup.h:238
+msgid "Folders are equal"
+msgstr "Pastas são iguais"
 
-#: cecup.h:227
+#: src/cecup.h:240
 #, fuzzy
 msgid "Folder does not exist in the original folder"
 msgstr "Arquivo não existe na pasta original"
 
-#: cecup.h:228
+#: src/cecup.h:241
 #, fuzzy
 msgid "New folder found in the original folder"
 msgstr "Novo arquivo encontrado na pasta original"
 
-#: cecup.h:229
+#: src/cecup.h:242
 #, fuzzy
 msgid "Hardlinked folder in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
 
-#: cecup.h:231
+#: src/cecup.h:247
 #, fuzzy
 msgid "Folder sizes differ"
 msgstr "Tamanho dos arquivos difere"
 
-#: cecup.h:232
+#: src/cecup.h:248
 msgid "Folder in the source is newer than backup"
 msgstr "Arquivo na pasta original é mais novo que no backup"
 
-#: cecup.h:233
+#: src/cecup.h:249
 msgid "Folder in the source is older than backup"
 msgstr "Arquivo na pasta original é mais velho que no backup"
 
-#: on.h:17
+#: src/cecup.h:569
+msgid ""
+"Welcome to cecup!\n"
+"\n"
+msgstr "Cecup!\n"
+
+#: src/cecup.h:570
+msgid "Features:\n"
+msgstr "Recursos:\n"
+
+#: src/cecup.h:571
+msgid "• Analyze: Preview changes before applying them.\n"
+msgstr "• Analisar: Ver mudanças antes de aplicá-las.\n"
+
+#: src/cecup.h:572
+msgid ""
+"• Filters: View files by state (New, Linked, Updated, Equal, Deleted, "
+"Ignored).\n"
+msgstr ""
+"• Filtros: Ver arquivos por situação (Novos, links, atualizados, iguais,"
+" excluídos, ignorados).\n"
+
+#: src/cecup.h:573
+msgid "• Ignore Rules: Specify file patterns to exclude.\n"
+msgstr "• Regras de ignorados: Especificar padrões de nome de arquivo para ignorar.\n"
+
+#: src/cecup.h:574
+msgid "• Diff Tool: Compare file contents using your preferred diff tool.\n"
+msgstr "• Comparação: Compare o conteúdo dos arquivos"
+" usando alguma ferramenta externa.\n"
+
+#: src/cecup.h:575
+msgid "• Safety: Protect against accidental same-drive synchronization.\n"
+msgstr "• Seguraça: Proteger contra backup acidental no mesmo disco.\n"
+
+#: src/cecup.h:576
+#, c-format
+msgid ""
+"• 100%% Sync: Optionally delete files from the destination that don't exist "
+"in the source and also overwrite files that are newer on the destination\n"
+msgstr ""
+"• Sincronia 100%%: opcionalmente, deletar arquivos do backup que não existem"
+" na origem e também sobreescrever arquivos do backup que são mais novos"
+" do que na origem\n"
+
+#: src/cecup.h:579
+msgid ""
+"• Remove ignored files: Optionally delete files from the destination that "
+"don't exist in the source."
+msgstr ""
+"• Excluir arquivos ignorados: Opcionalmente excluir arquivos do destino que"
+" não existem na origem."
+
+#: src/on.h:7
 msgid "📄 Open File"
 msgstr "📄 Abrir arquivo"
 
-#: on.h:18
+#: src/on.h:8
 msgid "📂 Open Folder"
 msgstr "📂 Abrir Pasta"
 
-#: on.h:19
+#: src/on.h:9
 msgid "📍 Copy Full Path"
 msgstr "📍 Copiar caminho completo"
 
-#: on.h:20
+#: src/on.h:10
 msgid "📋 Copy Relative Path"
 msgstr "📋 Copiar caminho relativo"
 
-#: on.h:21
+#: src/on.h:11
 msgid "⏯️ Apply"
 msgstr "⏯️ Aplicar"
 
-#: on.h:22
+#: src/on.h:12
 msgid "🔍 Diff"
 msgstr "🔍 Comparar"
 
-#: on.h:23
+#: src/on.h:13
 msgid "✏️ Rename"
 msgstr "✏️ Renomear"
 
-#: on.h:24
+#: src/on.h:14
 msgid "🗑️ Delete"
 msgstr "🗑️ Excluir"
 
-#: on.h:25
+#: src/on.h:15
 msgid "💤 Ignore..."
 msgstr "💤 Ignorar..."
+
+#~ msgid "Preview analysis progress"
+#~ msgstr "Progresso da análise da prévia"
+
+#, fuzzy, c-format
+#~ msgid "Removing %s entirely from list...\n"
+#~ msgstr "Removendo %s da lista...\n"
+
+#, c-format
+#~ msgid "Updated %s state (missing on side %d)\n"
+#~ msgstr "Atualizou %s (faltando no lado %d)\n"
+
+#~ msgid "Files have the same size and modification time"
+#~ msgstr "Arquivos tem o mesmo tamanho e data de modificação"
+
+#, fuzzy
+#~ msgid "Folders have the same size and modification time"
+#~ msgstr "Arquivos tem o mesmo tamanho e data de modificação"
 
 #, fuzzy, c-format
 #~ msgid "Fixed: %s -> %s\n"
 #~ msgstr "Renomeado: %s -> %s\n"
-
-#, fuzzy
-#~ msgid "Verifying and syncing with checksum...\n"
-#~ msgstr "Verificando cópias com checksum...\n"
 
 #, fuzzy
 #~ msgid "Modification times differ"
