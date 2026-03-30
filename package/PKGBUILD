@@ -1,13 +1,13 @@
 # Maintainer: Lucas Mior <lucas.bmior@gmail.com>
 
 pkgname=cecup-git
-pkgver=r2441.64b3ebb
+pkgver=r2445.387637d
 pkgrel=1
 pkgdesc="A backup tool inspired by FreeFileSync and rsync"
 arch=('x86_64')
 url="https://github.com/lucas-mior/cecup"
 license=('MIT')
-depends=('gtk3' 'rsync')
+depends=('gtk4' 'rsync')
 makedepends=('git' 'gcc' 'pkg-config')
 provides=("${pkgname%-git}")
 conflicts=("${pkgname%-git}")
