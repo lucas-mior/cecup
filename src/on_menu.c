@@ -113,6 +113,9 @@ on_menu_apply(GtkWidget *widget, void *data) {
         memset64(thread_data, 0, SIZEOF(*thread_data));
         thread_data->tasks = tasks;
         g_thread_new("bulk_sync", work_rsync, thread_data);
+        // TODO: Memory Leak. `g_thread_new` returns a `GThread *` that must be explicitly unref'ed
+        // using `g_thread_unref()` if you are not going to `g_thread_join()` it. Otherwise, the
+        // GLib thread tracking structure leaks.
     } else {
         free_task_list(tasks);
     }
@@ -315,6 +318,7 @@ on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
         memset64(thread_data, 0, SIZEOF(*thread_data));
         thread_data->tasks = tasks;
         g_thread_new("work_bulk_sync", work_rsync, thread_data);
+        // TODO: Memory Leak. Missing `g_thread_unref()` on the returned thread pointer.
     } else {
         free_task_list(tasks);
     }
@@ -398,6 +402,10 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 _exit(1);
             }
         default:
+            // TODO: Zombie Process Creation. The parent iterates through the loop and `fork()`s
+            // children but never calls `wait()` or `waitpid()`. Because this loops `tasks->count`
+            // times, it will leave a trail of zombie processes until the application exits unless
+            // you have a global SIGCHLD handler managing reaps elsewhere.
             break;
         }
     }

@@ -66,7 +66,7 @@ typedef uint64_t uint64;
 #define NOEXCEPT
 #define RAPIDHASH_CONSTEXPR static const
 #if !defined(RAPIDHASH_INLINE)
-#if defined(__GNUC__) 
+#if defined(__GNUC__)
 #define RAPIDHASH_INLINE static inline __attribute__((always_inline))
 #else
 #define RAPIDHASH_INLINE static inline

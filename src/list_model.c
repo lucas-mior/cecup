@@ -218,7 +218,7 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
                 self->proxies[i] = self->proxies[i + 1];
             }
         }
-        
+
         if (cecup.rows_visible_len - 1 < self->proxies_capacity) {
             self->proxies[cecup.rows_visible_len - 1] = NULL;
         }

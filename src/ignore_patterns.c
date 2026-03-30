@@ -48,7 +48,12 @@ ignore_patterns_load(void) {
         free(pattern->str, pattern->len + 1);
     }
 
+    // TODO: Critical bug. `cecup.ignore_count` is not reset to 0 here. If the `fopen` directly
+    // below fails, the function returns but leaves `cecup.ignore_count` at its old value, creating
+    // an array of dangling/freed pointers that will cause a use-after-free or double-free crash
+    // later. Set `cecup.ignore_count = 0;` before the fopen call.
     count = 0;
+    cecup.ignore_count = 0;
 
     if ((file = fopen(cecup.ignore_path, "r")) == NULL) {
         LOG_ERROR("Error opening %s: %s.\n", cecup.ignore_path, strerror(errno));
@@ -95,7 +100,7 @@ ignore_patterns_load(void) {
         pattern = &cecup.ignore_patterns[count];
         pattern->str = xstrdup(line_buffer);
         pattern->len = line_len;
-        
+
         pattern->dir_only = false;
         pattern->has_slash = false;
 
@@ -231,7 +236,7 @@ ignore_patterns_match(char *path, int32 path_len,
 #if TESTING_ignore_patterns
 #include "assert.c"
 
-#include "aux.c"   
+#include "aux.c"
 #include "update.c"
 #include "work.c"
 
@@ -279,7 +284,7 @@ main(void) {
     pattern = ignore_patterns_match("build", 5, true, patterns, 1);
     /* Note: .str was modified to "build" by the init logic */
     ASSERT_EQUAL(pattern->str, "build");
-    
+
     pattern = ignore_patterns_match("build", 5, false, patterns, 1);
     ASSERT_NULL(pattern);
     free(patterns[0].str, patterns[0].len + 1);
@@ -309,7 +314,7 @@ main(void) {
     test_pattern_init(&patterns[2], "*.o");
     pattern = ignore_patterns_match("src/main.o", 10, false, patterns, 3);
     ASSERT_EQUAL(pattern->str, "*.o");
-    
+
     free(patterns[0].str, patterns[0].len + 1);
     free(patterns[1].str, patterns[1].len + 1);
     free(patterns[2].str, patterns[2].len + 1);

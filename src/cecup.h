@@ -382,7 +382,7 @@ static struct {
     GtkWidget *select_visible_button;
     bool delete_ignored;
     bool delete_after;
-    
+
     GtkWidget *filter_new;
     GtkWidget *filter_hard;
     GtkWidget *filter_update;

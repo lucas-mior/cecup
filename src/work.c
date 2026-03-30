@@ -754,7 +754,7 @@ main(void) {
     }
 
     memset64(&cecup, 0, SIZEOF(cecup));
-    
+
     cecup.arena = arena_create(SIZEMB(64));
     g_mutex_init(&cecup.arena_mutex);
 
@@ -855,7 +855,7 @@ main(void) {
         free(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
         free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     }
-    
+
     arena_destroy(cecup.arena);
     g_mutex_clear(&cecup.arena_mutex);
 
