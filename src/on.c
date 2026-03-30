@@ -443,17 +443,11 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     }
 
     if (parent_path) {
-        int64 count_selected;
-        int64 total_size_bytes;
-        bool filter_new;
-        bool filter_hard;
-        bool filter_update;
-
-        count_selected = 0;
-        total_size_bytes = 0;
-        filter_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
-        filter_hard = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
-        filter_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
+        int32 count_selected = 0;
+        int64 total_size_bytes = 0;
+        bool filter_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
+        bool filter_hard = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
+        bool filter_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
 
         parent_path_len = strlen32(parent_path);
         is_root = aux_is_root(parent_path);
@@ -528,8 +522,8 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 
             bytes_pretty(pretty_size, total_size_bytes);
             SNPRINTF(stats_text,
-                     _("Selected files: %lld\nTotal Transfer Size: 📦 %s"),
-                     (llong)count_selected, pretty_size);
+                     _("Selected files: %d\nTotal Transfer Size: 📦 %s"),
+                     count_selected, pretty_size);
             gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
         }
     }
