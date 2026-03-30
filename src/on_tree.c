@@ -66,24 +66,6 @@ on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y
 
     switch (button) {
     case GDK_BUTTON_PRIMARY:
-        if (n_press == 2) {
-            GtkWidget *child;
-            void *col_pointer = NULL;
-
-            if ((child = gtk_widget_pick(widget, x, y, GTK_PICK_DEFAULT))) {
-                while (child
-                       && (col_pointer
-                           = g_object_get_data(G_OBJECT(child), "cecup-col")) == NULL) {
-                    child = gtk_widget_get_parent(child);
-                }
-            }
-
-            if (col_pointer && GPOINTER_TO_INT(col_pointer) == COLUMN_PATH) {
-                break;
-            }
-
-            execute_menu_item(widget, &tree_menu_items[0]);
-        }
         break;
     case GDK_BUTTON_SECONDARY: {
         GMenu *menu;
