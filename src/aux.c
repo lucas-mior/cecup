@@ -151,7 +151,6 @@ traversal_push(Traversal *traversal, struct stat *stat,
                char *path, int32 path_len,
                char *link_target, int32 link_target_len,
                char *matched_pattern, int32 matched_pattern_len) {
-    struct stat stat_copy = *stat;
     int32 idx;
 
     if (traversal->nfiles >= traversal->ncapacity) {
@@ -169,25 +168,25 @@ traversal_push(Traversal *traversal, struct stat *stat,
                                           old_capacity, traversal->ncapacity,
                                           SIZEOF(*(traversal->link_targets)));
         traversal->patterns = realloc(traversal->patterns,
-                                        old_capacity, traversal->ncapacity,
-                                        SIZEOF(*(traversal->patterns)));
+                                      old_capacity, traversal->ncapacity,
+                                      SIZEOF(*(traversal->patterns)));
 
         traversal->paths_lens = realloc(traversal->paths_lens,
-                                          old_capacity, traversal->ncapacity,
-                                          SIZEOF(*(traversal->paths_lens)));
+                                        old_capacity, traversal->ncapacity,
+                                        SIZEOF(*(traversal->paths_lens)));
         traversal->link_targets_lens = realloc(traversal->link_targets_lens,
-                                                 old_capacity, traversal->ncapacity,
-                                                 SIZEOF(*(traversal->link_targets_lens)));
+                                               old_capacity, traversal->ncapacity,
+                                               SIZEOF(*(traversal->link_targets_lens)));
         traversal->patterns_lens = realloc(traversal->patterns_lens,
-                                             old_capacity, traversal->ncapacity,
-                                             SIZEOF(*(traversal->patterns_lens)));
+                                           old_capacity, traversal->ncapacity,
+                                           SIZEOF(*(traversal->patterns_lens)));
         traversal->nlinks = realloc(traversal->nlinks,
-                                      old_capacity, traversal->ncapacity,
-                                      SIZEOF(*(traversal->nlinks)));
+                                    old_capacity, traversal->ncapacity,
+                                    SIZEOF(*(traversal->nlinks)));
 
         traversal->row_ids = realloc(traversal->row_ids,
-                                       old_capacity, traversal->ncapacity,
-                                       SIZEOF(*(traversal->row_ids)));
+                                     old_capacity, traversal->ncapacity,
+                                     SIZEOF(*(traversal->row_ids)));
 
         for (int32 i = old_capacity; i < traversal->ncapacity; i += 1) {
             traversal->row_ids[i] = -1;
@@ -197,9 +196,10 @@ traversal_push(Traversal *traversal, struct stat *stat,
     idx = traversal->nfiles;
     traversal->nfiles += 1;
 
-    memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
     if (stat) {
-        memcpy64(&traversal->stats[idx], &stat_copy, SIZEOF(struct stat));
+        memcpy64(&traversal->stats[idx], stat, SIZEOF(struct stat));
+    } else {
+        memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
     }
 
     traversal->paths[idx] = path;
