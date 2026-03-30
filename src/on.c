@@ -178,9 +178,11 @@ on_preview_setting_toggled(GtkCheckButton *b, void *data) {
 
 static void
 on_delete_after_toggled(GtkCheckButton *b, void *data) {
+    bool active;
+
     (void)data;
 
-    if (gtk_check_button_get_active(b)) {
+    if ((active = gtk_check_button_get_active(b))) {
         GtkWidget *dialog;
 
         dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
@@ -197,19 +199,25 @@ on_delete_after_toggled(GtkCheckButton *b, void *data) {
         invalidate_preview();
     }
 
+    cecup.delete_after = active;
     save_config();
     return;
 }
 
 static void
 on_delete_ignored_toggled(GtkCheckButton *b, void *data) {
+    bool active;
+
     (void)data;
-    if (gtk_check_button_get_active(b)) {
-        g_signal_handlers_block_by_func(cecup.delete_after, on_delete_after_toggled, NULL);
+
+    if ((active = gtk_check_button_get_active(b))) {
+        g_signal_handlers_block_by_func(cecup.delete_after_button, on_delete_after_toggled, NULL);
         gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after), TRUE);
-        g_signal_handlers_unblock_by_func(cecup.delete_after, on_delete_after_toggled, NULL);
+        g_signal_handlers_unblock_by_func(cecup.delete_after_button, on_delete_after_toggled, NULL);
         invalidate_preview();
     }
+
+    cecup.delete_ignored = active;
     save_config();
     return;
 }
@@ -226,8 +234,8 @@ on_reset_clicked(GtkWidget *b, void *data) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore), TRUE);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.check_fs), FALSE);
-    gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_ignored), FALSE);
-    gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after), FALSE);
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_ignored_button), FALSE);
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after_button), FALSE);
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "unidiff.bash");
     gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "xterm");

@@ -140,11 +140,9 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
     int64 buf_output_pos = 0;
     pid_t child_pid;
     struct pollfd pipes[2];
-    bool delete_after;
     int32 nfiles_checksummed = 0;
     struct timespec time_stop = {0};
-
-    delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
+    bool delete_after = cecup.delete_after;
 
     if (checksum) {
         update_progress_state(_("Verifying checksums"),

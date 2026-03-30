@@ -285,9 +285,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_end(cecup.ignore_button, PADDING_BUTTON);
 
     {
-        GtkWidget *spacer;
+        GtkWidget *spacer = gtk_label_new("");
 
-        spacer = gtk_label_new("");
         gtk_widget_set_hexpand(spacer, TRUE);
         gtk_box_append(GTK_BOX(button_hbox), spacer);
     }
@@ -308,14 +307,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     cecup.check_fs = gtk_check_button_new_with_label(_("Protect same-drive sync"));
-    cecup.delete_ignored = gtk_check_button_new_with_label(_("Remove ignored items"));
-    cecup.delete_after = gtk_check_button_new_with_label(_("Sync 100%"));
+    cecup.delete_ignored_button = gtk_check_button_new_with_label(_("Remove ignored items"));
+    cecup.delete_after_button = gtk_check_button_new_with_label(_("Sync 100%"));
 
     gtk_widget_set_tooltip_text(cecup.check_fs,
                                 _("Prevent copying if original and backup are on the same disk"));
-    gtk_widget_set_tooltip_text(cecup.delete_ignored,
+    gtk_widget_set_tooltip_text(cecup.delete_ignored_button,
                                 _("Remove files from backup if they were added to the ignore list"));
-    gtk_widget_set_tooltip_text(cecup.delete_after,
+    gtk_widget_set_tooltip_text(cecup.delete_after_button,
                                 _("Delete files in backup that do not exist in the original"));
 
     cecup.diff_entry = gtk_entry_new();
@@ -331,13 +330,13 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_start(cecup.check_fs, PADDING_BUTTON);
     gtk_widget_set_margin_end(cecup.check_fs, PADDING_BUTTON);
 
-    gtk_box_append(GTK_BOX(options_hbox), cecup.delete_ignored);
-    gtk_widget_set_margin_start(cecup.delete_ignored, PADDING_BUTTON);
-    gtk_widget_set_margin_end(cecup.delete_ignored, PADDING_BUTTON);
+    gtk_box_append(GTK_BOX(options_hbox), cecup.delete_ignored_button);
+    gtk_widget_set_margin_start(cecup.delete_ignored_button, PADDING_BUTTON);
+    gtk_widget_set_margin_end(cecup.delete_ignored_button, PADDING_BUTTON);
 
-    gtk_box_append(GTK_BOX(options_hbox), cecup.delete_after);
-    gtk_widget_set_margin_start(cecup.delete_after, PADDING_BUTTON);
-    gtk_widget_set_margin_end(cecup.delete_after, PADDING_BUTTON);
+    gtk_box_append(GTK_BOX(options_hbox), cecup.delete_after_button);
+    gtk_widget_set_margin_start(cecup.delete_after_button, PADDING_BUTTON);
+    gtk_widget_set_margin_end(cecup.delete_after_button, PADDING_BUTTON);
 
     gtk_box_append(GTK_BOX(options_hbox), gtk_label_new(_("Diff Tool:")));
     gtk_box_append(GTK_BOX(options_hbox), cecup.diff_entry);
@@ -619,12 +618,18 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                                         g_key_file_get_boolean(key, "Options", "check_fs", NULL));
         }
         if (g_key_file_has_key(key, "Options", "delete_ignored", NULL)) {
-            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_ignored),
-                                        g_key_file_get_boolean(key, "Options", "delete_ignored", NULL));
+            bool val;
+
+            val = g_key_file_get_boolean(key, "Options", "delete_ignored", NULL);
+            cecup.delete_ignored = val;
+            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_ignored_button), val);
         }
         if (g_key_file_has_key(key, "Options", "delete_after", NULL)) {
-            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after),
-                                        g_key_file_get_boolean(key, "Options", "delete_after", NULL));
+            bool val;
+
+            val = g_key_file_get_boolean(key, "Options", "delete_after", NULL);
+            cecup.delete_after = val;
+            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after_button), val);
         }
 
         g_key_file_free(key);
@@ -652,8 +657,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     g_signal_connect(cecup.term_entry, "changed", G_CALLBACK(on_config_changed), NULL);
 
     g_signal_connect(cecup.check_fs, "toggled", G_CALLBACK(on_preview_setting_toggled), NULL);
-    g_signal_connect(cecup.delete_ignored, "toggled", G_CALLBACK(on_delete_ignored_toggled), NULL);
-    g_signal_connect(cecup.delete_after, "toggled", G_CALLBACK(on_delete_after_toggled), NULL);
+    g_signal_connect(cecup.delete_ignored_button, "toggled", G_CALLBACK(on_delete_ignored_toggled), NULL);
+    g_signal_connect(cecup.delete_after_button, "toggled", G_CALLBACK(on_delete_after_toggled), NULL);
 
     cecup_get_dirs();
 

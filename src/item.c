@@ -188,19 +188,10 @@ item_link_target_len_side(int32 row_id, int32 side) {
 static void
 item_get_actions_reasons(int32 row_id,
                          enum Action *action_src, enum Action *action_dst, enum Reason *reason) {
-    int32 src_idx;
-    int32 dst_idx;
-    bool delete_ignored;
-    bool delete_after;
-
-    src_idx = cecup.rows_src[row_id];
-    dst_idx = cecup.rows_dst[row_id];
-    // TODO: Querying GTK widgets (like gtk_check_button_get_active) heavily during sorting
-    // operations (via cecup_item_compare) causes massive overhead and will tank performance on
-    // large lists. Consider caching the state of `delete_ignored` and `delete_after` inside the
-    // global `cecup` struct ahead of the UI updates.
-    delete_ignored = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_ignored));
-    delete_after = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.delete_after));
+    int32 src_idx = cecup.rows_src[row_id];
+    int32 dst_idx = cecup.rows_dst[row_id];
+    bool delete_ignored = cecup.delete_ignored;
+    bool delete_after = cecup.delete_after;
 
     *reason = 0;
 
