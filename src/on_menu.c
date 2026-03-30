@@ -296,12 +296,9 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     }
     *write_pointer = '\0';
     gdk_clipboard_set_text(clipboard, buffer);
-    free_task_list(tasks);
 
-    // TODO: Depending on GTK's clipboard implementation, `gdk_clipboard_set_text` might not copy
-    // the string immediately. Freeing `buffer` right after setting it might lead to undefined
-    // behavior or garbled clipboard data. Verify ownership semantics.
     free(buffer, buffer_size);
+    free_task_list(tasks);
     free_message(message);
     return;
 }
