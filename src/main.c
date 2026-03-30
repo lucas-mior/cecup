@@ -211,7 +211,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
             "columnview cell { padding: 0px; }",
             "paned > separator { min-width: 10px; min-height: 10px; }",
             "scrollbar.vertical slider { min-width: 12px; }",
-            "scrollbar.horizontal slider { min-height: 12px; }",
+            "scrollbar.horizontal slider { min-height: 8px; }",
             "progressbar text { font-size: 11pt; font-weight: bold; }"
         };
         GtkCssProvider *css_provider;
