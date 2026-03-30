@@ -754,7 +754,6 @@ main(int32 argc, char **argv) {
     cecup.rows_len = 0;
     cecup.rows_capacity = 256;
 
-    /* These replace the old cecup.rows allocation */
     cecup.rows_src = xmalloc(cecup.rows_capacity*SIZEOF(int32));
     cecup.rows_dst = xmalloc(cecup.rows_capacity*SIZEOF(int32));
     cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(int32));
