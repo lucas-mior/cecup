@@ -529,6 +529,39 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 }
 
 static void
+on_unselect_all_clicked(GtkWidget *b, void *data) {
+    (void)b;
+    (void)data;
+
+    for (int32 i = 0; i < cecup.rows_len; i += 1) {
+        cecup.rows_selected[i] = 0;
+    }
+
+    update_list_from_rows();
+    update_visible_checkboxes(cecup.tree[L], L);
+    update_visible_checkboxes(cecup.tree[R], R);
+    return;
+}
+
+static void
+on_select_all_visible_clicked(GtkWidget *b, void *data) {
+    (void)b;
+    (void)data;
+
+    for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
+        int32 row_id;
+
+        row_id = cecup.rows_visible[i];
+        cecup.rows_selected[row_id] = 1;
+    }
+
+    update_list_from_rows();
+    update_visible_checkboxes(cecup.tree[L], L);
+    update_visible_checkboxes(cecup.tree[R], R);
+    return;
+}
+
+static void
 on_ignore_response(GtkDialog *dialog, int32 response_id, void *data) {
     GtkTextBuffer *buffer;
 

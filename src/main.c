@@ -428,6 +428,13 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     }
     gtk_widget_set_hexpand(cecup.search_entry, TRUE);
     gtk_box_append(GTK_BOX(search_hbox), cecup.search_entry);
+
+    cecup.select_visible_button = gtk_button_new_with_label(_("Select all visible"));
+    gtk_box_append(GTK_BOX(search_hbox), cecup.select_visible_button);
+
+    cecup.unselect_button = gtk_button_new_with_label(_("Unselect all"));
+    gtk_box_append(GTK_BOX(search_hbox), cecup.unselect_button);
+
     gtk_box_append(GTK_BOX(main_vbox), search_hbox);
 
     v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
@@ -486,7 +493,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     {
         GtkGesture *log_gesture = gtk_gesture_click_new();
-
         gtk_widget_add_controller(cecup.log_view, GTK_EVENT_CONTROLLER(log_gesture));
         gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(log_gesture),
                                                    GTK_PHASE_CAPTURE);
@@ -644,6 +650,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     g_signal_connect(cecup.stop_button,      "clicked", G_CALLBACK(on_stop_clicked),    NULL);
     g_signal_connect(cecup.sync_button,      "clicked", G_CALLBACK(on_sync_clicked),    NULL);
     g_signal_connect(cecup.ignore_button,    "clicked", G_CALLBACK(on_ignore_clicked),  NULL);
+    g_signal_connect(cecup.unselect_button,  "clicked", G_CALLBACK(on_unselect_all_clicked), NULL);
+    g_signal_connect(cecup.select_visible_button, "clicked", G_CALLBACK(on_select_all_visible_clicked), NULL);
     g_signal_connect(reset_button,           "clicked", G_CALLBACK(on_reset_clicked),   NULL);
 
     g_signal_connect(cecup.search_entry, "changed", G_CALLBACK(on_search_changed), NULL);
@@ -666,12 +674,12 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
 
-    if (true) {
+    if (is_first_run) {
         GtkWidget *dialog;
 
         dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
                                         GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
-                                        cecup_welcome_text);
+                                        "%s", _(cecup_welcome_text));
 
         g_signal_connect(dialog, "response", G_CALLBACK(gtk_window_destroy), NULL);
         gtk_widget_show(dialog);

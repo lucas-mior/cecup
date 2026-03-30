@@ -383,6 +383,8 @@ static struct {
     GtkWidget *check_fs;
     GtkWidget *delete_ignored_button;
     GtkWidget *delete_after_button;
+    GtkWidget *unselect_button;
+    GtkWidget *select_visible_button;
     bool delete_ignored;
     bool delete_after;
     
