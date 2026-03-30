@@ -24,7 +24,6 @@
 #include "cecup.h"
 #include "util.c"
 #include "on.c"
-#include "on_menu.c"
 #include "columns.c"
 
 #define SPACING_BOX 5
