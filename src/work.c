@@ -118,7 +118,11 @@ work_traverse_fs(Traversal *traversal) {
         }
 
         if (name_len > 0) {
-            if (isspace(d_name[0])) {
+            // TODO: Undefined behavior risk. `isspace()` expects an `int` representable as an
+            // `unsigned char` or `EOF`. Passing a potentially negative `char` (like a non-ASCII
+            // UTF-8 byte) causes UB on systems where `char` is signed. Cast to `(unsigned char)`
+            // first.
+            if (isspace((uchar)d_name[0])) {
                 LOG_ERROR(_("Error: there is a space in the start of the fileneme:\n"));
                 LOG_ERROR("'%s'\n", ent->fts_path);
                 LOG_ERROR(_("Please fix your file system.\n"));
@@ -126,7 +130,7 @@ work_traverse_fs(Traversal *traversal) {
                 break;
             }
 
-            if (isspace(d_name[name_len - 1])) {
+            if (isspace((uchar)d_name[name_len - 1])) {
                 LOG_ERROR(_("Error: there is space in the end of the fileneme:\n"));
                 LOG_ERROR("'%s'\n", ent->fts_path);
                 LOG_ERROR(_("Please fix your file system.\n"));
@@ -199,7 +203,11 @@ work_traverse_fs(Traversal *traversal) {
             char target[MAX_PATH_LENGTH];
             int64 target_len;
 
-            if ((target_len = readlink(ent->fts_path, target, SIZEOF(target))) < 0) {
+            // TODO: Buffer overflow risk. `readlink` does not append a null terminator. If the link
+            // target is exactly `MAX_PATH_LENGTH` bytes long, `target_len` will equal
+            // `MAX_PATH_LENGTH`. The subsequent `target[target_len] = '\0'` will write one byte
+            // past the end of the `target` array. Use `SIZEOF(target) - 1` instead.
+            if ((target_len = readlink(ent->fts_path, target, SIZEOF(target) - 1)) < 0) {
                 LOG_ERROR("Error in readlink(%s): %s.\n", ent->fts_path, strerror(errno));
             } else {
                 target[target_len] = '\0';

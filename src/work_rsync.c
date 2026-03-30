@@ -273,9 +273,6 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
             pipes[0].fd = -1;
             goto read_error_pipe;
         }
-        if (pipes[0].revents & POLLHUP) {
-            pipes[0].fd = -1;
-        }
         if (!(pipes[0].revents & POLLIN)) {
             goto read_error_pipe;
         }
@@ -285,6 +282,9 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
         if (r <= 0) {
             if (r < 0) {
                 LOG_ERROR("Error reading stdout pipe: %s.\n", strerror(errno));
+                pipes[0].fd = -1;
+            }
+            if (pipes[0].revents & POLLHUP) {
                 pipes[0].fd = -1;
             }
             goto read_error_pipe;
@@ -387,9 +387,6 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
             pipes[1].fd = -1;
             continue;
         }
-        if (pipes[1].revents & POLLHUP) {
-            pipes[1].fd = -1;
-        }
         if (!(pipes[1].revents & POLLIN)) {
             continue;
         }
@@ -398,6 +395,9 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
         if (r <= 0) {
             if (r < 0) {
                 LOG_ERROR("Error reading stderr pipe: %s.\n", strerror(errno));
+                pipes[1].fd = -1;
+            }
+            if (pipes[1].revents & POLLHUP) {
                 pipes[1].fd = -1;
             }
             continue;
@@ -446,7 +446,7 @@ work_rsync(void *user_data) {
         Task *task = tasks->items[i];
         char full_path[MAX_PATH_LENGTH];
         pid_t child_rm;
-        int child_status;
+        int child_status = 0;
         bool removed = false;
         int32 term_timeout;
 
@@ -493,6 +493,10 @@ work_rsync(void *user_data) {
             term_timeout = 0;
             cecup.child_pid = child_rm;
 
+            // TODO: Uninitialized variable access. If `waitpid` returns -1 (e.g., due to an error
+            // or if the child was already reaped), the loop skips and `child_status` remains
+            // uninitialized. `WIFEXITED(child_status)` would then read garbage memory. `waitpid`'s
+            // return value should be explicitly checked before evaluating the exit status.
             while (waitpid(child_rm, &child_status, WNOHANG) == 0) {
                 if (cecup.stop_working) {
                     term_timeout += 1;
@@ -501,7 +505,7 @@ work_rsync(void *user_data) {
                         term_timeout = 0;
                     }
                 }
-                usleep(100 * 1000);
+                usleep(100*1000);
             }
 
             if (WIFEXITED(child_status)) {
