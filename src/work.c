@@ -759,7 +759,15 @@ main(void) {
     }
 
     memset64(&cecup, 0, SIZEOF(cecup));
+    
+    cecup.arena = arena_create(SIZEMB(64));
     g_mutex_init(&cecup.arena_mutex);
+
+    cecup.rows_capacity = INITIAL_CAPACITY;
+    cecup.rows_src = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows_src)));
+    cecup.rows_dst = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows_dst)));
+    cecup.rows_selected = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows_selected)));
+    cecup.rows_visible = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows_visible)));
 
     pattern.str = "ignored_file.txt";
     pattern.len = strlen32(pattern.str);
@@ -775,15 +783,11 @@ main(void) {
     cecup.dst_base = dst_dir;
     cecup.dst_base_len = strlen32(dst_dir);
 
-    cecup.traversal_src.arena = arena_create(1024*1024);
-    cecup.traversal_src.map = hash_create_fs_map(1024);
-    cecup.traversal_src.inode_map = hash_create_inode_map(1024);
+    traversal_allocate(&cecup.traversal_src);
     cecup.traversal_src.base_path = src_dir;
     cecup.traversal_src.base_path_len = strlen32(src_dir);
 
-    cecup.traversal_dst.arena = arena_create(1024*1024);
-    cecup.traversal_dst.map = hash_create_fs_map(1024);
-    cecup.traversal_dst.inode_map = hash_create_inode_map(1024);
+    traversal_allocate(&cecup.traversal_dst);
     cecup.traversal_dst.base_path = dst_dir;
     cecup.traversal_dst.base_path_len = strlen32(dst_dir);
 
@@ -847,11 +851,8 @@ main(void) {
         ASSERT((reason & entry->expected_reason_mask) == entry->expected_reason_mask);
     }
 
-    traversal_clean(&cecup.traversal_src);
-    arena_destroy(cecup.traversal_src.arena);
-
-    traversal_clean(&cecup.traversal_dst);
-    arena_destroy(cecup.traversal_dst.arena);
+    traversal_free(&cecup.traversal_src);
+    traversal_free(&cecup.traversal_dst);
 
     if (cecup.rows_capacity > 0) {
         free(cecup.rows_src, cecup.rows_capacity*SIZEOF(*(cecup.rows_src)));
@@ -860,6 +861,7 @@ main(void) {
         free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     }
     
+    arena_destroy(cecup.arena);
     g_mutex_clear(&cecup.arena_mutex);
 
     {

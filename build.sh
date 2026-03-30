@@ -14,20 +14,6 @@ export XDG_DATA_DIRS=""
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
 
-if [[ "${1:-}" != "--wrapped" ]]; then
-    # \x0a       = Literal Newline
-
-    pattern='/^/ {
-        s/ (-[A-Za-z])/  \\\x0a    \1/g;
-        s/^\+/+/;
-    }'
-
-    "$0" --wrapped "$@" 2> >(sed -Eu "$pattern" >&2)
-    exit $?
-fi
-
-shift
-
 # export LC_ALL=C
 
 dir=$(dirname "$(readlink -f "$0")")
@@ -283,17 +269,19 @@ case "$target" in
     exit
     ;;
 "test")
-    for src in src/*.c; do
+    find . -iname "*.c" | while read src; do
         trace_off
-        if [ -n "$2" ] && [ $src != "src/$2" ]; then
+        name=$(basename "$src")
+
+        if [ -n "$2" ] && [ "$name" != "$2" ]; then
             continue
         fi
-        if [ "$src" = "src/$main" ]; then
+        if [ "$name" = "$main" ]; then
             continue
         fi
+        name=$(echo "$name" | sed 's/\.c//')
+
         printf "\nTesting ${RED}${src}${RES} ...\n"
-        name="$(echo "$src" | sed 's/\.c//g')"
-        name="$(echo "$name" | sed 's|src/||g')"
 
         flags="$(awk '/\/\/ flags:/ { $1=$2=""; print $0 }' "$src")"
         if [ $src = "src/windows_functions.c" ]; then
