@@ -52,8 +52,7 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
             gtk_text_iter_forward_to_line_end(&text_end);
         }
     } else {
-        // TODO: Formatting bug. There is a stray newline inside the parentheses: (which = %s\n)\n
-        error("%s called with wrong argument (which = %s\n)\n", __func__, which);
+        error("%s called with wrong argument (which = %s)\n", __func__, which);
         fatal(EXIT_FAILURE);
     }
 
