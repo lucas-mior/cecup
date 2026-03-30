@@ -127,7 +127,8 @@ work_check_itemize_line(char *buf_output) {
 }
 
 static bool
-work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_ptr) {
+work_rsync_run(char *files_from_filename, int32 nfiles_total,
+               bool checksum, MessageBatch **batch_ptr) {
     char *rsync_args[64];
     char buf_error[MAX_PATH_LENGTH*2];
     char buf_output[MAX_PATH_LENGTH*2];
@@ -331,7 +332,7 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
                 if (checksum) {
                     nfiles_checksummed += 1;
                     update_progress_bar(MSG_PROGRESS,
-                                        (double)nfiles_checksummed / (double)cecup.ntransfers);
+                                        (double)nfiles_checksummed / (double)nfiles_total);
                 }
 
                 while (*path == ' ') {
@@ -426,6 +427,7 @@ work_rsync(void *user_data) {
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
     int files_from_fd;
     MessageBatch *batch = NULL;
+    int32 nfiles_total;
 
     if (tasks == NULL) {
         if (cecup.ntransfers <= 0) {
@@ -435,9 +437,12 @@ work_rsync(void *user_data) {
             return NULL;
         } else {
             has_transfers = true;
+            nfiles_total = cecup.ntransfers;
         }
         tasks = xmalloc(sizeof(*tasks));
         memset64(tasks, 0, sizeof(*tasks));
+    } else {
+        nfiles_total = tasks->count;
     }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
@@ -602,12 +607,12 @@ work_rsync(void *user_data) {
     XCLOSE(&files_from_fd);
 
     do {
-        if (work_rsync_run(files_from_filename, false, &batch)) {
+        if (work_rsync_run(files_from_filename, nfiles_total, false, &batch)) {
             if (cecup.stop_working) {
                 LOG_ERROR(_("Stop requested.\n"));
                 break;
             }
-            work_rsync_run(files_from_filename, true, &batch);
+            work_rsync_run(files_from_filename, nfiles_total, true, &batch);
         }
     } while (0);
     if (!DEBUGGING) {

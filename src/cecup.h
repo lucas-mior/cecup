@@ -550,7 +550,7 @@ static void work_cleanup(void);
 static void __attribute__((noreturn)) work_preview_cancel_and_reset(void);
 static void * work_preview(void *user_data);
 static char * work_check_itemize_line(char *buf_output);
-static bool work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_ptr);
+static bool work_rsync_run(char *files_from_filename, int32 nfiles_total, bool checksum, MessageBatch **batch_ptr);
 static void * work_rsync(void *user_data);
 
 static gboolean update_ui_handler(void *data);
