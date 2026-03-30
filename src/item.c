@@ -233,6 +233,11 @@ item_get_actions_reasons(int32 row_id,
         char *pattern_src = cecup.traversal_src.patterns[src_idx];
         struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
+        // TODO: Inconsistency. Here `is_hardlink` is determined by checking if
+        // `link_targets[src_idx]` is non-null. However, in the block below (when both src and dst
+        // exist), `is_hardlink` is evaluated by checking `cecup.traversal_src.nlinks[src_idx] > 1`.
+        // Ensure you apply the same logic for determining hardlinks across both scopes to avoid
+        // edge-case mismatches.
         bool is_hardlink = S_ISREG(stat_src->st_mode) && cecup.traversal_src.link_targets[src_idx];
 
         if (pattern_src) {

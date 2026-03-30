@@ -380,7 +380,10 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
             for (uint32 i = 0; i < REASON_BIT_COUNT; i += 1) {
                 char *base_msg;
 
-                if (!(reason & (1 << i))) {
+                // TODO: Undefined Behavior Risk. If `REASON_BIT_COUNT` ever expands to 32 or
+                // greater, `1 << i` will cause undefined behavior because `1` defaults to a signed
+                // 32-bit int. Cast it explicitly like `(1ULL << i)` or `(1U << i)`.
+                if (!(reason & (1u << i))) {
                     continue;
                 }
 
