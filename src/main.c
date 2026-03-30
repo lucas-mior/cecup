@@ -759,10 +759,10 @@ main(int32 argc, char **argv) {
     cecup.rows_len = 0;
     cecup.rows_capacity = INITIAL_CAPACITY;
 
-    cecup.rows_src = xmalloc(cecup.rows_capacity*SIZEOF(int32));
-    cecup.rows_dst = xmalloc(cecup.rows_capacity*SIZEOF(int32));
-    cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(int32));
-    cecup.rows_selected = xmalloc(cecup.rows_capacity*SIZEOF(uint8));
+    cecup.rows_src = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_src)));
+    cecup.rows_dst = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_src)));
+    cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
+    cecup.rows_selected = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_selected)));
 
     cecup.transfer_set = hash_create_transfer_set(INITIAL_CAPACITY);
 
