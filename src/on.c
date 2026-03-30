@@ -297,7 +297,6 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
-    /* qsort64(cecup.transfers, cecup.ntransfers, sizeof(*(cecup.transfers)), transfers_compare); */
     // TODO: Same as above: unref the returned GThread pointer to avoid leaking thread handles.
     thread = g_thread_new("work_rsync", work_rsync, thread_data);
     g_thread_unref(thread);
