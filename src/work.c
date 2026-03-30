@@ -285,36 +285,17 @@ work_traverse_fs_thread(void *user_data) {
 
 static void
 work_traverse_clean(Traversal *traversal) {
-    int32 capacity;
-
-    capacity = traversal->ncapacity;
-
-    free(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
-    free(traversal->patterns, capacity*SIZEOF(*(traversal->patterns)));
-    free(traversal->link_targets, capacity*SIZEOF(*(traversal->link_targets)));
-    free(traversal->paths, capacity*SIZEOF(*(traversal->paths)));
-
-    free(traversal->paths_lens, capacity*SIZEOF(*(traversal->paths_lens)));
-    free(traversal->link_targets_lens, capacity*SIZEOF(*(traversal->link_targets_lens)));
-    free(traversal->patterns_lens, capacity*SIZEOF(*(traversal->patterns_lens)));
-    free(traversal->nlinks, capacity*SIZEOF(*(traversal->nlinks)));
-    free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
 
     arena_reset(traversal->arena);
     hash_zero_fs_map(traversal->map);
     hash_zero_inode_map(traversal->inode_map);
 
-    {
-        Arena *arena_save = traversal->arena;
-        struct Hash_fs_map *map_save = traversal->map;
-        struct Hash_inode_map *inode_map_save = traversal->inode_map;
+    traversal->base_path = NULL;
+    traversal->base_path_len = 0;
+    traversal->file_count = 0;
 
-        memset64(traversal, 0, SIZEOF(*traversal));
+    traversal->nfiles = 0;
 
-        traversal->arena = arena_save;
-        traversal->map = map_save;
-        traversal->inode_map = inode_map_save;
-    }
     return;
 }
 

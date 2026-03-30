@@ -82,6 +82,54 @@ protect_interface_from_user(bool state) {
     return;
 }
 
+static void
+traversal_free(Traversal *traversal) {
+    int32 capacity = traversal->ncapacity;
+
+    arena_destroy(traversal->arena);
+
+    hash_destroy_fs_map(traversal->map);
+    hash_destroy_inode_map(traversal->inode_map);
+
+    free(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
+    free(traversal->patterns, capacity*SIZEOF(*(traversal->patterns)));
+    free(traversal->link_targets, capacity*SIZEOF(*(traversal->link_targets)));
+    free(traversal->paths, capacity*SIZEOF(*(traversal->paths)));
+
+    free(traversal->paths_lens, capacity*SIZEOF(*(traversal->paths_lens)));
+    free(traversal->link_targets_lens, capacity*SIZEOF(*(traversal->link_targets_lens)));
+    free(traversal->patterns_lens, capacity*SIZEOF(*(traversal->patterns_lens)));
+    free(traversal->nlinks, capacity*SIZEOF(*(traversal->nlinks)));
+    free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
+
+    return;
+}
+
+static void
+traversal_allocate(Traversal *traversal) {
+    int32 capacity = INITIAL_CAPACITY;
+
+    traversal->arena = arena_create(SIZEMB(64));
+
+    traversal->map = hash_create_fs_map(INITIAL_CAPACITY);
+    traversal->inode_map = hash_create_inode_map(INITIAL_CAPACITY);
+
+    traversal->stats = xmalloc(capacity*SIZEOF(*(traversal->stats)));
+    traversal->patterns = xmalloc(capacity*SIZEOF(*(traversal->patterns)));
+    traversal->link_targets = xmalloc(capacity*SIZEOF(*(traversal->link_targets)));
+    traversal->paths = xmalloc(capacity*SIZEOF(*(traversal->paths)));
+
+    traversal->paths_lens = xmalloc(capacity*SIZEOF(*(traversal->paths_lens)));
+    traversal->link_targets_lens = xmalloc(capacity*SIZEOF(*(traversal->link_targets_lens)));
+    traversal->patterns_lens = xmalloc(capacity*SIZEOF(*(traversal->patterns_lens)));
+    traversal->nlinks = xmalloc(capacity*SIZEOF(*(traversal->nlinks)));
+    traversal->row_ids = xmalloc(capacity*SIZEOF(*(traversal->row_ids)));
+
+    traversal->ncapacity = capacity;
+    traversal->nfiles = 0;
+    return;
+}
+
 static int32
 traversal_push(Traversal *traversal, struct stat *stat,
                char *path, int32 path_len,
@@ -91,19 +139,10 @@ traversal_push(Traversal *traversal, struct stat *stat,
     int32 idx;
 
     if (traversal->nfiles >= traversal->ncapacity) {
-        int64 lens_type_size;
         int32 old_capacity = traversal->ncapacity;
+        traversal->ncapacity *= 2;
 
-        lens_type_size = SIZEOF(*(traversal->paths_lens));
-        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)), SIZEOF(*(traversal->link_targets_lens)));
-        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)), SIZEOF(*(traversal->patterns_lens)));
-        ASSERT_EQUAL(SIZEOF(*(traversal->paths_lens)), SIZEOF(*(traversal->nlinks)));
-
-        if (traversal->ncapacity == 0) {
-            traversal->ncapacity = 1024;
-        } else {
-            traversal->ncapacity *= 2;
-        }
+        PRINTLN(traversal->ncapacity);
 
         traversal->stats = xrealloc2(traversal->stats,
                                      old_capacity, traversal->ncapacity,
@@ -111,26 +150,26 @@ traversal_push(Traversal *traversal, struct stat *stat,
 
         traversal->paths = xrealloc2(traversal->paths,
                                      old_capacity, traversal->ncapacity,
-                                     SIZEOF(char *));
+                                     SIZEOF(*(traversal->paths)));
         traversal->link_targets = xrealloc2(traversal->link_targets,
                                             old_capacity, traversal->ncapacity,
-                                            SIZEOF(char *));
+                                            SIZEOF(*(traversal->link_targets)));
         traversal->patterns = xrealloc2(traversal->patterns,
                                         old_capacity, traversal->ncapacity,
-                                        SIZEOF(char *));
+                                        SIZEOF(*(traversal->patterns)));
 
         traversal->paths_lens = xrealloc2(traversal->paths_lens,
                                           old_capacity, traversal->ncapacity,
-                                          lens_type_size);
+                                          SIZEOF(*(traversal->paths_lens)));
         traversal->link_targets_lens = xrealloc2(traversal->link_targets_lens,
                                                  old_capacity, traversal->ncapacity,
-                                                 lens_type_size);
+                                                 SIZEOF(*(traversal->link_targets_lens)));
         traversal->patterns_lens = xrealloc2(traversal->patterns_lens,
                                              old_capacity, traversal->ncapacity,
-                                             lens_type_size);
+                                             SIZEOF(*(traversal->patterns_lens)));
         traversal->nlinks = xrealloc2(traversal->nlinks,
                                       old_capacity, traversal->ncapacity,
-                                      lens_type_size);
+                                      SIZEOF(*(traversal->nlinks)));
 
         traversal->row_ids = xrealloc2(traversal->row_ids,
                                        old_capacity, traversal->ncapacity,

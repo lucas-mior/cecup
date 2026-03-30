@@ -37,8 +37,6 @@
 #define FILL_TRUE true
 #define EXPAND_TRUE true
 
-#define INITIAL_CAPACITY 1024
-
 static void
 free_text_info(void *data) {
     free(data, SIZEOF(TextInfo));
@@ -752,8 +750,6 @@ main(int32 argc, char **argv) {
     memset64(&cecup, 0, SIZEOF(cecup));
 
     cecup.arena = arena_create(SIZEMB(64));
-    cecup.traversal_src.arena = arena_create(SIZEMB(64));
-    cecup.traversal_dst.arena = arena_create(SIZEMB(64));
     g_mutex_init(&cecup.arena_mutex);
 
     cecup.rows_len = 0;
@@ -770,10 +766,8 @@ main(int32 argc, char **argv) {
     cecup.transfers_lens = xmalloc(cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
     cecup.transfer_set = hash_create_transfer_set(INITIAL_CAPACITY);
 
-    cecup.traversal_src.map = hash_create_fs_map(INITIAL_CAPACITY);
-    cecup.traversal_dst.map = hash_create_fs_map(INITIAL_CAPACITY);
-    cecup.traversal_src.inode_map = hash_create_inode_map(INITIAL_CAPACITY);
-    cecup.traversal_dst.inode_map = hash_create_inode_map(INITIAL_CAPACITY);
+    traversal_allocate(&cecup.traversal_src);
+    traversal_allocate(&cecup.traversal_dst);
 
     cecup.ignore_patterns = NULL;
     cecup.ignore_capacity = 0;
@@ -853,15 +847,10 @@ main(int32 argc, char **argv) {
     free(cecup.src_base, cecup.src_base_len + 1);
     free(cecup.dst_base, cecup.dst_base_len + 1);
 
-    hash_destroy_fs_map(cecup.traversal_src.map);
-    hash_destroy_fs_map(cecup.traversal_dst.map);
-
-    hash_destroy_inode_map(cecup.traversal_src.inode_map);
-    hash_destroy_inode_map(cecup.traversal_dst.inode_map);
-
-    arena_destroy(cecup.traversal_src.arena);
-    arena_destroy(cecup.traversal_dst.arena);
     arena_destroy(cecup.arena);
+
+    traversal_free(&cecup.traversal_src);
+    traversal_free(&cecup.traversal_dst);
 
     g_mutex_clear(&cecup.arena_mutex);
 
