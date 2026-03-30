@@ -39,7 +39,7 @@ item_path_get(int32 row_id) {
     } else if (dst_idx >= 0) {
         return cecup.traversal_dst.paths[dst_idx];
     } else {
-        error2("Error: src_path and dst_path are NULL.\n");
+        error("Error: src_path and dst_path are NULL.\n");
         fatal(EXIT_FAILURE);
     }
 }
