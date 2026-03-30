@@ -271,6 +271,9 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
             pipes[0].fd = -1;
             goto read_error_pipe;
         }
+        if (pipes[0].revents & POLLHUP) {
+            pipes[0].fd = -1;
+        }
         if (!(pipes[0].revents & POLLIN)) {
             goto read_error_pipe;
         }
@@ -280,9 +283,6 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
         if (r <= 0) {
             if (r < 0) {
                 LOG_ERROR("Error reading stdout pipe: %s.\n", strerror(errno));
-                pipes[0].fd = -1;
-            }
-            if (pipes[0].revents & POLLHUP) {
                 pipes[0].fd = -1;
             }
             goto read_error_pipe;
@@ -385,6 +385,9 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
             pipes[1].fd = -1;
             continue;
         }
+        if (pipes[0].revents & POLLHUP) {
+            pipes[0].fd = -1;
+        }
         if (!(pipes[1].revents & POLLIN)) {
             continue;
         }
@@ -393,9 +396,6 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
         if (r <= 0) {
             if (r < 0) {
                 LOG_ERROR("Error reading stderr pipe: %s.\n", strerror(errno));
-                pipes[1].fd = -1;
-            }
-            if (pipes[1].revents & POLLHUP) {
                 pipes[1].fd = -1;
             }
             continue;
