@@ -420,10 +420,10 @@ work_preview(void *user_data) {
             if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) {
                 int32 old_capacity = cecup.transfers_capacity;
                 cecup.transfers_capacity *= 2;
-                cecup.transfers = xrealloc2(cecup.transfers,
+                cecup.transfers = realloc(cecup.transfers,
                                             old_capacity, cecup.transfers_capacity,
                                             SIZEOF(*cecup.transfers));
-                cecup.transfers_lens = xrealloc2(cecup.transfers_lens,
+                cecup.transfers_lens = realloc(cecup.transfers_lens,
                                                  old_capacity, cecup.transfers_capacity,
                                                  SIZEOF(*cecup.transfers_lens));
             }

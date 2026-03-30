@@ -152,7 +152,7 @@ cecup_list_model_get_item(GListModel *list, guint position) {
             self->proxies_capacity = pos + 256;
         }
 
-        self->proxies = xrealloc2(self->proxies,
+        self->proxies = realloc(self->proxies,
                                   old_capacity, self->proxies_capacity,
                                   SIZEOF(CecupItemProxy *));
 
@@ -291,18 +291,18 @@ item_add(int32 src_idx, int32 dst_idx) {
             cecup.rows_capacity *= 2;
         }
 
-        cecup.rows_src = xrealloc2(cecup.rows_src,
-                                   old_capacity, cecup.rows_capacity,
-                                   SIZEOF(*(cecup.rows_src)));
-        cecup.rows_dst = xrealloc2(cecup.rows_dst,
-                                   old_capacity, cecup.rows_capacity,
-                                   SIZEOF(*(cecup.rows_dst)));
-        cecup.rows_selected = xrealloc2(cecup.rows_selected,
-                                        old_capacity, cecup.rows_capacity,
-                                        SIZEOF(uint8));
-        cecup.rows_visible = xrealloc2(cecup.rows_visible,
-                                       old_capacity, cecup.rows_capacity,
-                                       SIZEOF(*(cecup.rows_visible)));
+        cecup.rows_src = realloc(cecup.rows_src,
+                                 old_capacity, cecup.rows_capacity,
+                                 SIZEOF(*(cecup.rows_src)));
+        cecup.rows_dst = realloc(cecup.rows_dst,
+                                 old_capacity, cecup.rows_capacity,
+                                 SIZEOF(*(cecup.rows_dst)));
+        cecup.rows_selected = realloc(cecup.rows_selected,
+                                      old_capacity, cecup.rows_capacity,
+                                      SIZEOF(uint8));
+        cecup.rows_visible = realloc(cecup.rows_visible,
+                                     old_capacity, cecup.rows_capacity,
+                                     SIZEOF(*(cecup.rows_visible)));
     }
 
     index = cecup.rows_len;
