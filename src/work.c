@@ -325,11 +325,12 @@ work_cleanup(void) {
     work_traverse_clean(&cecup.traversal_src);
     work_traverse_clean(&cecup.traversal_dst);
 
-    free(cecup.transfers, cecup.transfers_capacity*SIZEOF(*cecup.transfers));
+    if (DEBUGGING) {
+        memset64(cecup.transfers,      0, cecup.transfers_capacity*SIZEOF(*cecup.transfers));
+        memset64(cecup.transfers_lens, 0, cecup.transfers_capacity*SIZEOF(*cecup.transfers_lens));
+    }
     hash_zero_transfer_set(cecup.transfer_set);
-    cecup.transfers = NULL;
     cecup.ntransfers = 0;
-    cecup.transfers_capacity = 0;
 
     cecup.rows_len = 0;
 
@@ -457,13 +458,7 @@ work_preview(void *user_data) {
             && (action_src != ACTION_EQUAL) && (action_src != ACTION_IGNORE)) {
             if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) {
                 int32 old_capacity = cecup.transfers_capacity;
-
-                if (old_capacity <= 0) {
-                    cecup.transfers_capacity = 256;
-                } else {
-                    cecup.transfers_capacity *= 2;
-                }
-
+                cecup.transfers_capacity *= 2;
                 cecup.transfers = xrealloc2(cecup.transfers,
                                             old_capacity, cecup.transfers_capacity,
                                             SIZEOF(*cecup.transfers));

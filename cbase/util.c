@@ -625,6 +625,10 @@ xrealloc(void *old, int64 size) {
 INLINE void *
 xrealloc2(void *old, int64 old_len, int64 new_len, int64 obj_size) {
     int64 size = new_len*obj_size;
+    if (DEBUGGING) {
+        error("Reallocating %p %lld to %lld objects of %lld size each.\n",
+              old, (llong)old_len, (llong)new_len, (llong)obj_size);
+    }
     (void)old_len;
     return xrealloc(old, size);
 }

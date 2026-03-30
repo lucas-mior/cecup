@@ -764,6 +764,10 @@ main(int32 argc, char **argv) {
     cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     cecup.rows_selected = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_selected)));
 
+    cecup.ntransfers = 0;
+    cecup.transfers_capacity = INITIAL_CAPACITY;
+    cecup.transfers = xmalloc(cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
+    cecup.transfers_lens = xmalloc(cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
     cecup.transfer_set = hash_create_transfer_set(INITIAL_CAPACITY);
 
     cecup.traversal_src.map = hash_create_fs_map(INITIAL_CAPACITY);
