@@ -616,10 +616,23 @@ update_list_from_rows(void) {
             break;
         }
 
-        if (is_visible) {
-            cecup.rows_visible[cecup.rows_visible_len] = row_id;
-            cecup.rows_visible_len += 1;
+        if (!is_visible) {
+            continue;
         }
+
+        if (cecup.search_query_len > 0) {
+            char *path = item_path_get(row_id);
+            if (path == NULL) {
+                continue;
+            }
+
+            if (strstr(path, cecup.search_query) == NULL) {
+                continue;
+            }
+        }
+
+        cecup.rows_visible[cecup.rows_visible_len] = row_id;
+        cecup.rows_visible_len += 1;
     }
 
     SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
