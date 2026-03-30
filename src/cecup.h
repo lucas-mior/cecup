@@ -156,8 +156,8 @@ typedef struct Traversal {
 } Traversal;
 
 typedef struct TextInfo {
-    int8 side;
     enum ColumnType type;
+    int8 side;
 } TextInfo;
 
 static char *action_emojis[] = {
@@ -282,6 +282,8 @@ typedef struct Message {
     enum MsgType type;
     enum Action action;
 
+    double fraction;
+
     char *text;
     char *src_path;
     char *dst_path;
@@ -298,8 +300,6 @@ typedef struct Message {
     int32 new_path_len;
 
     int8 side;
-    double fraction;
-
     bool preview_clean;
 } Message;
 
@@ -432,6 +432,7 @@ static struct {
     int32 *transfers_lens;
     int32 ntransfers;
     int32 transfers_capacity;
+
     bool preview_dirty;
 } cecup;
 
