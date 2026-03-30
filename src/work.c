@@ -185,6 +185,10 @@ work_traverse_fs(Traversal *traversal) {
             path = xarena_push(traversal->arena, path_len + is_dir + 1);
             memcpy64(path, path_tmp, path_len + 1);
 
+            // TODO: Logic Bug. `path[path_len]` evaluates the null terminator, which will always be
+            // true (since it's `\0`, not `/`). This can cause double-slashes if the path already
+            // ended in a slash. It should evaluate the last actual character of the string:
+            // `path[path_len - 1] != '/'`.
             if (is_dir && (path[path_len] != '/')) {
                 path_len += 1;
                 path[path_len - 1] = '/';

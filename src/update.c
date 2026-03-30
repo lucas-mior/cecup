@@ -717,6 +717,11 @@ update_ui_process_message(Message *message) {
             }
         }
 
+        // TODO: Logic Bug. If `!buffer_ends_in_lf` is true (meaning the previous log didn't end
+        // with a newline), this block deletes the entire line before inserting the new message.
+        // This will completely break piecewise logging (e.g., `LOG("Loading... "); LOG("Done\n");`)
+        // by erasing the first part. You should likely remove the `|| !buffer_ends_in_lf`
+        // condition.
         if (is_cr || !buffer_ends_in_lf) {
             start_line = end;
             gtk_text_iter_set_line_offset(&start_line, 0);
