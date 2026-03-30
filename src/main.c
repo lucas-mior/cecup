@@ -757,7 +757,7 @@ main(int32 argc, char **argv) {
     g_mutex_init(&cecup.arena_mutex);
 
     cecup.rows_len = 0;
-    cecup.rows_capacity = 256;
+    cecup.rows_capacity = INITIAL_CAPACITY;
 
     cecup.rows_src = xmalloc(cecup.rows_capacity*SIZEOF(int32));
     cecup.rows_dst = xmalloc(cecup.rows_capacity*SIZEOF(int32));
