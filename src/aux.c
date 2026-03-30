@@ -270,14 +270,12 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         }
 
         item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
+        filepath = item_path_side(row_id, side);
+        path_len = item_path_len_side(row_id, side);
 
         if (side == L) {
-            filepath = item_path_side(row_id, L);
-            path_len = item_path_len_side(row_id, L);
             action = action_src;
         } else {
-            filepath = item_path_side(row_id, R);
-            path_len = item_path_len_side(row_id, R);
             action = action_dst;
         }
 
