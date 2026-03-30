@@ -489,18 +489,12 @@ update_list_from_rows(void) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
     current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
-    show_new
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
-    show_link
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
-    show_update
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
-    show_equal
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_equal));
-    show_delete
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
-    show_ignore
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
+    show_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
+    show_link = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
+    show_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
+    show_equal = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_equal));
+    show_delete = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
+    show_ignore = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
     cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
