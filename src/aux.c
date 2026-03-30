@@ -367,23 +367,23 @@ cecup_get_dirs(void) {
     save_config();
 
     if (strlen32(tmp_src) <= 0) {
-        LOG_ERROR("Error: Invalid source directory.\n");
+        LOG_ERROR(_("Error: Invalid source directory.\n"));
         cecup_reset_dir(L);
         return;
     }
     if (strlen32(tmp_dst) <= 0) {
-        LOG_ERROR("Error: Invalid source directory.\n");
+        LOG_ERROR(_("Error: Invalid destination directory.\n"));
         cecup_reset_dir(R);
         return;
     }
 
     if (realpath(tmp_src, full_src) == NULL) {
-        LOG_ERROR("Error getting full path of %s: %s.\n", tmp_src, strerror(errno));
+        LOG_ERROR(_("Error getting full path of %s: %s.\n"), tmp_src, strerror(errno));
         cecup_reset_dir(L);
         return;
     }
     if (realpath(tmp_dst, full_dst) == NULL) {
-        LOG_ERROR("Error getting full path of %s: %s.\n", tmp_dst, strerror(errno));
+        LOG_ERROR(_("Error getting full path of %s: %s.\n"), tmp_dst, strerror(errno));
         cecup_reset_dir(R);
         return;
     }
