@@ -22,6 +22,12 @@
 #include "cecup.h"
 #include "update.c"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_work_rsync 1
+#elif !defined(TESTING_work_rsync)
+#define TESTING_work_rsync 0
+#endif
+
 static void
 work_batch_flush(MessageBatch **batch_ptr) {
     MessageBatch *batch;

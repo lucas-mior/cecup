@@ -25,6 +25,12 @@
 #include "cecup.h"
 #include "on.h"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_on_tree 1
+#elif !defined(TESTING_on_tree)
+#define TESTING_on_tree 0
+#endif
+
 static void
 on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y, void *data) {
     GtkWidget *widget;

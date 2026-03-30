@@ -168,8 +168,8 @@ on_search_changed(GtkEditable *editable, void *data) {
 }
 
 static void
-on_preview_setting_toggled(GtkCheckButton *b, void *data) {
-    (void)b;
+on_preview_setting_toggled(GtkCheckButton *button, void *data) {
+    (void)button;
     (void)data;
     save_config();
     invalidate_preview();
@@ -177,12 +177,12 @@ on_preview_setting_toggled(GtkCheckButton *b, void *data) {
 }
 
 static void
-on_delete_after_toggled(GtkCheckButton *b, void *data) {
+on_delete_after_toggled(GtkCheckButton *button, void *data) {
     bool active;
 
     (void)data;
 
-    if ((active = gtk_check_button_get_active(b))) {
+    if ((active = gtk_check_button_get_active(button))) {
         GtkWidget *dialog;
 
         dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
@@ -205,12 +205,12 @@ on_delete_after_toggled(GtkCheckButton *b, void *data) {
 }
 
 static void
-on_delete_ignored_toggled(GtkCheckButton *b, void *data) {
+on_delete_ignored_toggled(GtkCheckButton *button, void *data) {
     bool active;
 
     (void)data;
 
-    if ((active = gtk_check_button_get_active(b))) {
+    if ((active = gtk_check_button_get_active(button))) {
         g_signal_handlers_block_by_func(cecup.delete_after_button, on_delete_after_toggled, NULL);
         gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after), TRUE);
         g_signal_handlers_unblock_by_func(cecup.delete_after_button, on_delete_after_toggled, NULL);
@@ -223,8 +223,8 @@ on_delete_ignored_toggled(GtkCheckButton *b, void *data) {
 }
 
 static void
-on_reset_clicked(GtkWidget *b, void *data) {
-    (void)b;
+on_reset_clicked(GtkWidget *button, void *data) {
+    (void)button;
     (void)data;
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_new), TRUE);
@@ -245,13 +245,13 @@ on_reset_clicked(GtkWidget *b, void *data) {
 }
 
 static void
-on_preview_clicked(GtkWidget *b, void *data) {
+on_preview_clicked(GtkWidget *button, void *data) {
     ThreadData *thread_data;
     Message *message;
     GThread *thread;
 
     (void)data;
-    (void)b;
+    (void)button;
 
     cecup_get_dirs();
 
@@ -300,13 +300,13 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
 }
 
 static void
-on_sync_clicked(GtkWidget *b, void *data) {
+on_sync_clicked(GtkWidget *button, void *data) {
     char *path_src;
     char *path_dst;
     GtkWidget *dialog;
 
     (void)data;
-    (void)b;
+    (void)button;
     path_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
     path_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R]));
 
@@ -319,10 +319,10 @@ on_sync_clicked(GtkWidget *b, void *data) {
 }
 
 static void
-on_stop_clicked(GtkWidget *b, void *data) {
+on_stop_clicked(GtkWidget *button, void *data) {
     int32 pid_to_kill;
 
-    (void)b;
+    (void)button;
     (void)data;
 
     pid_to_kill = cecup.child_pid;
@@ -334,9 +334,9 @@ on_stop_clicked(GtkWidget *b, void *data) {
 }
 
 static void
-on_filter_toggled(GtkToggleButton *b, void *data) {
+on_filter_toggled(GtkToggleButton *button, void *data) {
     (void)data;
-    (void)b;
+    (void)button;
     update_list_from_rows();
     save_config();
     return;
@@ -524,8 +524,8 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 }
 
 static void
-on_unselect_all_clicked(GtkWidget *b, void *data) {
-    (void)b;
+on_unselect_all_clicked(GtkWidget *button, void *data) {
+    (void)button;
     (void)data;
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
@@ -539,8 +539,8 @@ on_unselect_all_clicked(GtkWidget *b, void *data) {
 }
 
 static void
-on_select_all_visible_clicked(GtkWidget *b, void *data) {
-    (void)b;
+on_select_all_visible_clicked(GtkWidget *button, void *data) {
+    (void)button;
     (void)data;
 
     for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
@@ -577,7 +577,7 @@ on_ignore_response(GtkDialog *dialog, int32 response_id, void *data) {
 }
 
 static void
-on_ignore_clicked(GtkWidget *b, void *data) {
+on_ignore_clicked(GtkWidget *button, void *data) {
     GtkWidget *dialog;
     GtkWidget *scroll;
     GtkWidget *view;
@@ -585,7 +585,7 @@ on_ignore_clicked(GtkWidget *b, void *data) {
     char *text;
 
     (void)data;
-    (void)b;
+    (void)button;
     dialog = gtk_dialog_new_with_buttons(
         _("Ignore Rules"), GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL,
         "_Save", GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
@@ -610,13 +610,13 @@ on_ignore_clicked(GtkWidget *b, void *data) {
 }
 
 static void
-on_invert_clicked(GtkWidget *b, void *data) {
+on_invert_clicked(GtkWidget *button, void *data) {
     char path_src[MAX_PATH_LENGTH];
     char path_dst[MAX_PATH_LENGTH];
     char *entry_text;
     int32 entry_len;
 
-    (void)b;
+    (void)button;
     (void)data;
 
     entry_text = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
@@ -658,11 +658,11 @@ on_browse_response_src(GtkDialog *dialog, int32 response_id, void *data) {
 }
 
 static void
-on_browse_src(GtkWidget *b, void *data) {
+on_browse_src(GtkWidget *button, void *data) {
     GtkWidget *dialog;
 
     (void)data;
-    (void)b;
+    (void)button;
     dialog = gtk_file_chooser_dialog_new(
         _("Src"), GTK_WINDOW(cecup.gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel",
@@ -692,11 +692,11 @@ on_browse_response_dst(GtkDialog *dialog, int32 response_id, void *data) {
 }
 
 static void
-on_browse_dst(GtkWidget *b, void *data) {
+on_browse_dst(GtkWidget *button, void *data) {
     GtkWidget *dialog;
 
     (void)data;
-    (void)b;
+    (void)button;
     dialog = gtk_file_chooser_dialog_new(
         _("Dst"), GTK_WINDOW(cecup.gtk_window),
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel",

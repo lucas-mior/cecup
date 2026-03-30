@@ -23,6 +23,12 @@
 #include "util.c"
 #include "cecup.h"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_on_log 1
+#elif !defined(TESTING_on_log)
+#define TESTING_on_log 0
+#endif
+
 static void
 on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     char *which = data;
