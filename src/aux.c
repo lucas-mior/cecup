@@ -257,8 +257,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         char *filepath;
         int32 path_len;
         enum Action action;
-        enum Action action_src;
-        enum Action action_dst;
+        enum Action actions[2];
         enum Reason reason;
         char *link_target;
         int32 link_target_len;
@@ -269,15 +268,10 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
             continue;
         }
 
-        item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
+        item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
         filepath = item_path_side(row_id, side);
         path_len = item_path_len_side(row_id, side);
-
-        if (side == L) {
-            action = action_src;
-        } else {
-            action = action_dst;
-        }
+        action = actions[side];
 
         if (filepath == NULL) {
             continue;
