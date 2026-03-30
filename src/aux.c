@@ -83,29 +83,6 @@ protect_interface_from_user(bool state) {
 }
 
 static void
-traversal_free(Traversal *traversal) {
-    int32 capacity = traversal->ncapacity;
-
-    arena_destroy(traversal->arena);
-
-    hash_destroy_fs_map(traversal->map);
-    hash_destroy_inode_map(traversal->inode_map);
-
-    free(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
-    free(traversal->patterns, capacity*SIZEOF(*(traversal->patterns)));
-    free(traversal->link_targets, capacity*SIZEOF(*(traversal->link_targets)));
-    free(traversal->paths, capacity*SIZEOF(*(traversal->paths)));
-
-    free(traversal->paths_lens, capacity*SIZEOF(*(traversal->paths_lens)));
-    free(traversal->link_targets_lens, capacity*SIZEOF(*(traversal->link_targets_lens)));
-    free(traversal->patterns_lens, capacity*SIZEOF(*(traversal->patterns_lens)));
-    free(traversal->nlinks, capacity*SIZEOF(*(traversal->nlinks)));
-    free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
-
-    return;
-}
-
-static void
 traversal_allocate(Traversal *traversal) {
     int32 capacity = INITIAL_CAPACITY;
 
@@ -142,6 +119,29 @@ traversal_clean(Traversal *traversal) {
     traversal->file_count = 0;
 
     traversal->nfiles = 0;
+
+    return;
+}
+
+static void
+traversal_free(Traversal *traversal) {
+    int32 capacity = traversal->ncapacity;
+
+    arena_destroy(traversal->arena);
+
+    hash_destroy_fs_map(traversal->map);
+    hash_destroy_inode_map(traversal->inode_map);
+
+    free(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
+    free(traversal->patterns, capacity*SIZEOF(*(traversal->patterns)));
+    free(traversal->link_targets, capacity*SIZEOF(*(traversal->link_targets)));
+    free(traversal->paths, capacity*SIZEOF(*(traversal->paths)));
+
+    free(traversal->paths_lens, capacity*SIZEOF(*(traversal->paths_lens)));
+    free(traversal->link_targets_lens, capacity*SIZEOF(*(traversal->link_targets_lens)));
+    free(traversal->patterns_lens, capacity*SIZEOF(*(traversal->patterns_lens)));
+    free(traversal->nlinks, capacity*SIZEOF(*(traversal->nlinks)));
+    free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
 
     return;
 }
