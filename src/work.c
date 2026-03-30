@@ -192,6 +192,24 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
+        matched_pattern = NULL;
+        matched_pattern_len = 0;
+        {
+            IgnorePattern *pattern;
+
+            pattern = ignore_patterns_match(path, path_len, is_dir,
+                                            cecup.ignore_patterns, cecup.ignore_count);
+            if (pattern) {
+                matched_pattern = pattern->str;
+                matched_pattern_len = pattern->len;
+                if (is_dir) {
+                    if (fts_set(fts_handle, ent, FTS_SKIP) < 0) {
+                        error("Error in fts_set(FTS_SKIP): %s.\n", strerror(errno));
+                    }
+                }
+            }
+        }
+
         link_target = NULL;
         link_target_len = 0;
 
@@ -228,24 +246,6 @@ work_traverse_fs(Traversal *traversal) {
                 traversal->nlinks[first_idx] += 1;
             } else {
                 hash_insert_inode_map(traversal->inode_map, inode_str, n, traversal->nfiles);
-            }
-        }
-
-        matched_pattern = NULL;
-        matched_pattern_len = 0;
-        {
-            IgnorePattern *pattern;
-
-            pattern = ignore_patterns_match(path, path_len, is_dir,
-                                            cecup.ignore_patterns, cecup.ignore_count);
-            if (pattern) {
-                matched_pattern = pattern->str;
-                matched_pattern_len = pattern->len;
-                if (is_dir) {
-                    if (fts_set(fts_handle, ent, FTS_SKIP) < 0) {
-                        error("Error in fts_set(FTS_SKIP): %s.\n", strerror(errno));
-                    }
-                }
             }
         }
 
