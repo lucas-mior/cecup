@@ -684,4 +684,12 @@ aux_functions_sink(void) {
 }
 #endif
 
+#if TESTING_aux
+#include "update.c"
+
+int main(void) {
+    return 0;
+}
+#endif
+
 #endif /* AUX_C */

@@ -122,4 +122,14 @@ on_log_button_press(GtkGestureClick *gesture, int32 npress, double x, double y, 
     return;
 }
 
+#if TESTING_on_log
+#include "on.c"
+
+int
+main(void) {
+    return 0;
+}
+
+#endif
+
 #endif /* ON_LOG_C */

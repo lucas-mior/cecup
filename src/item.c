@@ -498,4 +498,11 @@ cecup_item_compare(const void *a, const void *b) {
     return (int32)result;
 }
 
+#if TESTING_item
+int
+main(void) {
+    return 0;
+}
+#endif
+
 #endif /* ITEM_C */

@@ -459,4 +459,14 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     return FALSE;
 }
 
+#if TESTING_on_tree
+#include "on.c"
+
+int
+main(void) {
+    return 0;
+}
+
+#endif
+
 #endif /* ON_TREE */

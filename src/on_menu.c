@@ -416,6 +416,7 @@ on_menu_functions_sink(void) {
 /* #endif */
 
 #if TESTING_on_menu
+#include "work.c"
 
 int
 main(void) {
