@@ -385,8 +385,8 @@ work_rsync_run(char *files_from_filename, bool checksum, MessageBatch **batch_pt
             pipes[1].fd = -1;
             continue;
         }
-        if (pipes[0].revents & POLLHUP) {
-            pipes[0].fd = -1;
+        if (pipes[1].revents & POLLHUP) {
+            pipes[1].fd = -1;
         }
         if (!(pipes[1].revents & POLLIN)) {
             continue;
