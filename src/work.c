@@ -135,11 +135,11 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        for (int32 i = 0; i < LENGTH(problems); i += 1) {
+        for (int32 i = 0; i < LENGTH(filename_problems); i += 1) {
             char *problem;
             int64 problem_len;
 
-            problem = problems[i];
+            problem = filename_problems[i];
             problem_len = strlen32(problem);
 
             if (memmem64(d_name, name_len, problem, problem_len)) {

@@ -517,7 +517,7 @@ enum RsyncCharAttribute {
 #define RSYNC_HARDLINK " => "
 #define RSYNC_SYMLINK " -> "
 
-static char *problems[] = {
+static char *filename_problems[] = {
     "\n",
     /* "\\", */
     /* "\"", */
