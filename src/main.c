@@ -186,7 +186,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     GtkWidget *search_hbox;
     GtkWidget *options_hbox;
     GtkWidget *reset_button;
-    GtkWidget *v_paned;
+    GtkWidget *v_paned_outer;
+    GtkWidget *v_paned_inner;
+    GtkWidget *footer_vbox;
     GtkWidget *paned;
 
     GtkWidget *vbox[2];
@@ -437,11 +439,16 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_box_append(GTK_BOX(main_vbox), search_hbox);
 
-    v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
-    gtk_widget_set_vexpand(v_paned, TRUE);
-    gtk_box_append(GTK_BOX(main_vbox), v_paned);
+    v_paned_outer = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
+    gtk_widget_set_vexpand(v_paned_outer, TRUE);
+    gtk_box_append(GTK_BOX(main_vbox), v_paned_outer);
+
+    v_paned_inner = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
+    gtk_paned_set_start_child(GTK_PANED(v_paned_outer), v_paned_inner);
+
     paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
-    gtk_paned_set_start_child(GTK_PANED(v_paned), paned);
+    gtk_widget_set_vexpand(paned, TRUE);
+    gtk_paned_set_start_child(GTK_PANED(v_paned_inner), paned);
 
     vbox[L] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[L] = gtk_scrolled_window_new();
@@ -480,37 +487,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
     g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
 
-    {
-        GtkWidget *log_scroll = gtk_scrolled_window_new();
-        gtk_widget_set_size_request(log_scroll, -1, 30);
-        cecup.log_view = gtk_text_view_new();
-        gtk_text_view_set_editable(GTK_TEXT_VIEW(cecup.log_view), FALSE);
-        gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(cecup.log_view), GTK_WRAP_WORD_CHAR);
-        cecup.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(cecup.log_view));
-        gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(log_scroll), cecup.log_view);
-        gtk_paned_set_end_child(GTK_PANED(v_paned), log_scroll);
-    }
-
-    {
-        GtkGesture *log_gesture = gtk_gesture_click_new();
-        gtk_widget_add_controller(cecup.log_view, GTK_EVENT_CONTROLLER(log_gesture));
-        gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(log_gesture),
-                                                   GTK_PHASE_CAPTURE);
-        gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(log_gesture), 0);
-        g_signal_connect(log_gesture, "pressed", G_CALLBACK(on_log_button_press), NULL);
-    }
-
-    {
-        GActionMap *action_map = G_ACTION_MAP(cecup.application);
-        GSimpleAction *action_copy_all = g_simple_action_new("copy_all", NULL);
-        GSimpleAction *action_copy_line = g_simple_action_new("copy_line", G_VARIANT_TYPE_INT32);
-
-        g_action_map_add_action(action_map, G_ACTION(action_copy_all));
-        g_action_map_add_action(action_map, G_ACTION(action_copy_line));
-
-        g_signal_connect(action_copy_all, "activate", G_CALLBACK(on_log_copy), "all");
-        g_signal_connect(action_copy_line, "activate", G_CALLBACK(on_log_copy), "line");
-    }
+    footer_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, SPACING_BOX);
+    gtk_paned_set_end_child(GTK_PANED(v_paned_inner), footer_vbox);
 
     filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     gtk_widget_set_halign(filter_hbox, GTK_ALIGN_CENTER);
@@ -552,12 +530,51 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_start(cecup.filter_ignore, PADDING_FILTER_BUTTON);
     gtk_widget_set_margin_end(cecup.filter_ignore, PADDING_FILTER_BUTTON);
 
-    gtk_box_append(GTK_BOX(main_vbox), filter_hbox);
+    gtk_box_append(GTK_BOX(footer_vbox), filter_hbox);
 
     cecup.stats_label = gtk_label_new(_("✅ Everything ready"));
-    gtk_box_append(GTK_BOX(main_vbox), cecup.stats_label);
+    gtk_box_append(GTK_BOX(footer_vbox), cecup.stats_label);
     gtk_widget_set_margin_top(cecup.stats_label, 5);
     gtk_widget_set_margin_bottom(cecup.stats_label, 5);
+
+    gtk_paned_set_resize_end_child(GTK_PANED(v_paned_inner), FALSE);
+    gtk_paned_set_shrink_end_child(GTK_PANED(v_paned_inner), FALSE);
+
+    {
+        GtkWidget *log_scroll = gtk_scrolled_window_new();
+
+        gtk_widget_set_size_request(log_scroll, -1, 100);
+
+        cecup.log_view = gtk_text_view_new();
+        gtk_text_view_set_editable(GTK_TEXT_VIEW(cecup.log_view), FALSE);
+        gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(cecup.log_view), GTK_WRAP_WORD_CHAR);
+        cecup.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(cecup.log_view));
+        gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(log_scroll), cecup.log_view);
+
+        gtk_paned_set_end_child(GTK_PANED(v_paned_outer), log_scroll);
+    }
+
+    {
+        GtkGesture *log_gesture = gtk_gesture_click_new();
+
+        gtk_widget_add_controller(cecup.log_view, GTK_EVENT_CONTROLLER(log_gesture));
+        gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(log_gesture),
+                                                   GTK_PHASE_CAPTURE);
+        gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(log_gesture), 0);
+        g_signal_connect(log_gesture, "pressed", G_CALLBACK(on_log_button_press), NULL);
+    }
+
+    {
+        GActionMap *action_map = G_ACTION_MAP(cecup.application);
+        GSimpleAction *action_copy_all = g_simple_action_new("copy_all", NULL);
+        GSimpleAction *action_copy_line = g_simple_action_new("copy_line", G_VARIANT_TYPE_INT32);
+
+        g_action_map_add_action(action_map, G_ACTION(action_copy_all));
+        g_action_map_add_action(action_map, G_ACTION(action_copy_line));
+
+        g_signal_connect(action_copy_all, "activate", G_CALLBACK(on_log_copy), "all");
+        g_signal_connect(action_copy_line, "activate", G_CALLBACK(on_log_copy), "line");
+    }
 
     cecup.src_entry_id = g_signal_connect(cecup.dir_entry[L], "activate",
                                           G_CALLBACK(on_config_changed), NULL);
