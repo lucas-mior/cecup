@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
 # shellcheck disable=SC2086
 
@@ -18,7 +18,7 @@ alias trace_off='{ set +x; } 2>/dev/null'
 
 dir=$(dirname "$(readlink -f "$0")")
 cbase="cbase"
-CPPFLAGS="$CPPFLAGS -I "$dir/$cbase""
+CPPFLAGS="$CPPFLAGS -I $dir/$cbase"
 
 cd "$dir" || exit
 program=$(basename "$(readlink -f "$dir")")
@@ -76,6 +76,23 @@ fi
 
 option_remove() {
     echo "$1" | sed "s/$2//g"
+}
+
+compile_with_chibicc () {
+    args="$*"
+    while ! problem=$(chibicc $args 2>&1); do
+        trace_off
+        if [ "$CC" = "chibicc" ] \
+            && echo "$problem" | grep -q "unknown argument:"; then
+            arg=$(echo "$problem" | awk '{print $NF}')
+            echo "Removing argument $arg..."
+            args=$(option_remove "$args" "$arg")
+        else
+            printf "\nproblem=\n$problem\n"
+            break
+        fi
+        trace_on
+    done
 }
 
 case "$target" in
@@ -150,6 +167,7 @@ case "$target" in
 esac
 
 if [ "$target" = "cross" ]; then
+    cross="$2"
     CC="zig cc"
     CFLAGS="$CFLAGS -target $cross"
     CFLAGS=$(option_remove "$CFLAGS" "-D_GNU_SOURCE")
@@ -253,13 +271,13 @@ case "$target" in
     exit
     ;;
 "uninstall")
-    rm -vf  "${DESTDIR}${PREFIX}/bin/${program}"
-    rm -vf  "${DESTDIR}${PREFIX}/man/man1/${program}.1"
+    rm -vf  "${DESTDIR}${PREFIX}/bin/${program:?}"
+    rm -vf  "${DESTDIR}${PREFIX}/man/man1/${program:?}.1"
     for lang in $LANGS; do
         rm -vf "${DESTDIR}${PREFIX}/share/locale/$lang/LC_MESSAGES/$program.mo"
     done
-    rm -rvf "$DESTDIR/etc/$program/"
-    rm -vf  "$DESTDIR/usr/share/applications/$program.desktop"
+    rm -rvf "$DESTDIR/etc/${program:?}/"
+    rm -vf  "$DESTDIR/usr/share/applications/${program:?}.desktop"
     exit
     ;;
 "assembly")
@@ -269,7 +287,7 @@ case "$target" in
     exit
     ;;
 "test")
-    find . -iname "*.c" | while read src; do
+    find . -iname "*.c" | while read -r src; do
         trace_off
         name=$(basename "$src")
 
