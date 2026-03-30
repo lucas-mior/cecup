@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-30 20:12-0300\n"
+"POT-Creation-Date: 2026-03-30 20:19-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -642,57 +642,34 @@ msgid "Folder in the source is older than backup"
 msgstr "Arquivo na pasta original é mais velho que no backup"
 
 #: src/cecup.h:569
+#, c-format
 msgid ""
 "Welcome to cecup!\n"
 "\n"
-msgstr "Cecup!\n"
-
-#: src/cecup.h:570
-msgid "Features:\n"
-msgstr "Recursos:\n"
-
-#: src/cecup.h:571
-msgid "• Analyze: Preview changes before applying them.\n"
-msgstr "• Analisar: Ver mudanças antes de aplicá-las.\n"
-
-#: src/cecup.h:572
-msgid ""
+"Features:\n"
+"• Analyze: Preview changes before applying them.\n"
 "• Filters: View files by state (New, Linked, Updated, Equal, Deleted, "
 "Ignored).\n"
-msgstr ""
-"• Filtros: Ver arquivos por situação (Novos, links, atualizados, iguais, "
-"excluídos, ignorados).\n"
-
-#: src/cecup.h:573
-msgid "• Ignore Rules: Specify file patterns to exclude.\n"
-msgstr ""
-"• Regras de ignorados: Especificar padrões de nome de arquivo para ignorar.\n"
-
-#: src/cecup.h:574
-msgid "• Diff Tool: Compare file contents using your preferred diff tool.\n"
-msgstr ""
-"• Comparação: Compare o conteúdo dos arquivos usando alguma ferramenta "
-"externa.\n"
-
-#: src/cecup.h:575
-msgid "• Safety: Protect against accidental same-drive synchronization.\n"
-msgstr "• Seguraça: Proteger contra backup acidental no mesmo disco.\n"
-
-#: src/cecup.h:576
-#, c-format
-msgid ""
+"• Ignore Rules: Specify file patterns to exclude.\n"
+"• Diff Tool: Compare file contents using your preferred diff tool.\n"
+"• Safety: Protect against accidental same-drive synchronization.\n"
 "• 100%% Sync: Optionally delete files from the destination that don't exist "
 "in the source and also overwrite files that are newer on the destination\n"
-msgstr ""
-"• Sincronia 100%%: opcionalmente, deletar arquivos do backup que não existem "
-"na origem e também sobreescrever arquivos do backup que são mais novos do "
-"que na origem\n"
-
-#: src/cecup.h:579
-msgid ""
 "• Remove ignored files: Optionally delete files from the destination that "
 "don't exist in the source."
 msgstr ""
+"Bem-vindo ao cecup!\n"
+"\n"
+"Recursos:\n"
+"• Analisar: Ver mudanças antes de aplicá-las.\n"
+"• Filtros: Ver arquivos por situação (Novos, links, atualizados, iguais, "
+"excluídos, ignorados).\n"
+"• Regras de ignorados: Especificar padrões de nome de arquivo para ignorar.\n"
+"• Comparação: Compare o conteúdo dos arquivos usando alguma ferramenta externa.\n"
+"• Segurança: Proteger contra backup acidental no mesmo disco.\n"
+"• Sincronia 100%%: opcionalmente, deletar arquivos do backup que não existem "
+"na origem e também sobreescrever arquivos do backup que são mais novos do que "
+"na origem\n"
 "• Excluir arquivos ignorados: Opcionalmente excluir arquivos do destino que "
 "não existem na origem."
 
