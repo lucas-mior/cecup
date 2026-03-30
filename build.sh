@@ -75,6 +75,7 @@ CFLAGS="$CFLAGS -Wno-float-equal"
 CFLAGS="$CFLAGS -Wno-cast-qual"
 CFLAGS="$CFLAGS -Wno-deprecated-declarations"
 CFLAGS="$CFLAGS -Wno-unknown-pragmas"
+CFLAGS="$CFLAGS -Wno-format-security"
 
 LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk4) -lpthread"
 LDFLAGS="$LDFLAGS -lm"
