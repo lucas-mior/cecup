@@ -290,10 +290,6 @@ work_cleanup(void) {
     traversal_clean(&cecup.traversal_src);
     traversal_clean(&cecup.traversal_dst);
 
-    if (DEBUGGING) {
-        memset64(cecup.transfers,      0, cecup.transfers_capacity*SIZEOF(*cecup.transfers));
-        memset64(cecup.transfers_lens, 0, cecup.transfers_capacity*SIZEOF(*cecup.transfers_lens));
-    }
     hash_zero_transfer_set(cecup.transfer_set);
     cecup.ntransfers = 0;
 
