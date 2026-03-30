@@ -243,7 +243,12 @@ work_traverse_fs(Traversal *traversal) {
                     traversal->link_targets[first_idx] = path;
                     traversal->link_targets_lens[first_idx] = (int16)path_len;
                 }
-                traversal->nlinks[first_idx] += 1;
+                if (!matched_pattern) {
+                    // dont count ignored files,
+                    // because the destination might not have them,
+                    // which would cause a mismatch in the number of links later
+                    traversal->nlinks[first_idx] += 1;
+                }
             } else {
                 hash_insert_inode_map(traversal->inode_map, inode_str, n, traversal->nfiles);
             }
