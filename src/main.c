@@ -711,7 +711,10 @@ main(int32 argc, char **argv) {
 
     program = argv[0];
 
-    setenv("GTK_IM_MODULE", "gtk-im-context-simple", true);
+    if (setenv("GTK_IM_MODULE", "gtk-im-context-simple", true) < 0) {
+        error("Error in setenv: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    }
 
     {
         char *locale_devel;
