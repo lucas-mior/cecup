@@ -362,6 +362,7 @@ static struct {
 
     GtkWidget *invert_button;
     GtkWidget *dir_entry[2];
+    GtkWidget *browse_button[2];
     ulong src_entry_id;
     ulong dst_entry_id;
     char *src_base;
@@ -420,8 +421,6 @@ static struct {
     GMutex arena_mutex;
 
     pid_t child_pid;
-    // TODO: using volatile so that the compiler know it can change between reads
-    //       what is the right way to do it?
     volatile bool stop_working;
 
     IgnorePattern *ignore_patterns;

@@ -191,7 +191,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     GtkWidget *vbox[2];
     GtkWidget *entry_hbox[2];
-    GtkWidget *browse[2];
     GtkWidget *scroll[2];
     GtkWidget *tree[2];
     GtkWidget *progress_vbox;
@@ -388,11 +387,11 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     cecup.dir_entry[L] = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.dir_entry[L], _("Folder containing your original files"));
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), src_path_buffer);
-    browse[L] = gtk_button_new_with_label(_("Select Folder"));
+    cecup.browse_button[L] = gtk_button_new_with_label(_("Select Folder"));
 
     gtk_widget_set_hexpand(cecup.dir_entry[L], TRUE);
     gtk_box_append(GTK_BOX(entry_hbox[L]), cecup.dir_entry[L]);
-    gtk_box_append(GTK_BOX(entry_hbox[L]), browse[L]);
+    gtk_box_append(GTK_BOX(entry_hbox[L]), cecup.browse_button[L]);
     gtk_widget_set_hexpand(entry_hbox[L], TRUE);
     gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[L]);
 
@@ -404,11 +403,11 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     cecup.dir_entry[R] = gtk_entry_new();
     gtk_widget_set_tooltip_text(cecup.dir_entry[R], _("Folder where the backup will be stored"));
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), dst_path_buffer);
-    browse[R] = gtk_button_new_with_label(_("Select Folder"));
+    cecup.browse_button[R] = gtk_button_new_with_label(_("Select Folder"));
 
     gtk_widget_set_hexpand(cecup.dir_entry[R], TRUE);
     gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.dir_entry[R]);
-    gtk_box_append(GTK_BOX(entry_hbox[R]), browse[R]);
+    gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.browse_button[R]);
     gtk_widget_set_hexpand(entry_hbox[R], TRUE);
     gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[R]);
 
@@ -631,14 +630,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         g_key_file_free(key);
     } while (0);
 
-    g_signal_connect(browse[L],            "clicked", G_CALLBACK(on_browse_src), NULL);
-    g_signal_connect(browse[R],            "clicked", G_CALLBACK(on_browse_dst), NULL);
-    g_signal_connect(cecup.invert_button,  "clicked", G_CALLBACK(on_invert_clicked), NULL);
-    g_signal_connect(cecup.preview_button, "clicked", G_CALLBACK(on_preview_clicked), NULL);
-    g_signal_connect(cecup.stop_button,    "clicked", G_CALLBACK(on_stop_clicked), NULL);
-    g_signal_connect(cecup.sync_button,    "clicked", G_CALLBACK(on_sync_clicked), NULL);
-    g_signal_connect(cecup.ignore_button,  "clicked", G_CALLBACK(on_ignore_clicked), NULL);
-    g_signal_connect(reset_button,         "clicked", G_CALLBACK(on_reset_clicked), NULL);
+    g_signal_connect(cecup.browse_button[L], "clicked", G_CALLBACK(on_browse_src),      NULL);
+    g_signal_connect(cecup.browse_button[R], "clicked", G_CALLBACK(on_browse_dst),      NULL);
+    g_signal_connect(cecup.invert_button,    "clicked", G_CALLBACK(on_invert_clicked),  NULL);
+    g_signal_connect(cecup.preview_button,   "clicked", G_CALLBACK(on_preview_clicked), NULL);
+    g_signal_connect(cecup.stop_button,      "clicked", G_CALLBACK(on_stop_clicked),    NULL);
+    g_signal_connect(cecup.sync_button,      "clicked", G_CALLBACK(on_sync_clicked),    NULL);
+    g_signal_connect(cecup.ignore_button,    "clicked", G_CALLBACK(on_ignore_clicked),  NULL);
+    g_signal_connect(reset_button,           "clicked", G_CALLBACK(on_reset_clicked),   NULL);
 
     g_signal_connect(cecup.search_entry, "changed", G_CALLBACK(on_search_changed), NULL);
 

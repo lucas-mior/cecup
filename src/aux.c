@@ -61,6 +61,14 @@ protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.invert_button, !state);
     gtk_widget_set_sensitive(cecup.stop_button, state);
 
+    gtk_widget_set_sensitive(cecup.delete_after, !state);
+    gtk_widget_set_sensitive(cecup.check_fs, !state);
+    gtk_widget_set_sensitive(cecup.delete_ignored, !state);
+    gtk_widget_set_sensitive(cecup.diff_entry, !state);
+    gtk_widget_set_sensitive(cecup.term_entry, !state);
+    gtk_widget_set_sensitive(cecup.browse_button[L], !state);
+    gtk_widget_set_sensitive(cecup.browse_button[R], !state);
+
     if (state) {
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
     } else if (cecup.preview_dirty) {
