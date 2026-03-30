@@ -37,6 +37,8 @@
 #define FILL_TRUE true
 #define EXPAND_TRUE true
 
+#define INITIAL_CAPACITY 1024
+
 static void
 free_text_info(void *data) {
     free(data, SIZEOF(TextInfo));
@@ -762,12 +764,12 @@ main(int32 argc, char **argv) {
     cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(int32));
     cecup.rows_selected = xmalloc(cecup.rows_capacity*SIZEOF(uint8));
 
-    cecup.transfer_set = hash_create_transfer_set(1024);
+    cecup.transfer_set = hash_create_transfer_set(INITIAL_CAPACITY);
 
-    cecup.traversal_src.map = hash_create_fs_map(1024);
-    cecup.traversal_dst.map = hash_create_fs_map(1024);
-    cecup.traversal_src.inode_map = hash_create_inode_map(1024);
-    cecup.traversal_dst.inode_map = hash_create_inode_map(1024);
+    cecup.traversal_src.map = hash_create_fs_map(INITIAL_CAPACITY);
+    cecup.traversal_dst.map = hash_create_fs_map(INITIAL_CAPACITY);
+    cecup.traversal_src.inode_map = hash_create_inode_map(INITIAL_CAPACITY);
+    cecup.traversal_dst.inode_map = hash_create_inode_map(INITIAL_CAPACITY);
 
     cecup.ignore_patterns = NULL;
     cecup.ignore_capacity = 0;
