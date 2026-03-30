@@ -298,7 +298,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         // consuming the oversized line.
         if (r <= 0) {
             if (r < 0) {
-                LOG_ERROR("Error reading stdout pipe: %s.\n", strerror(errno));
+                LOG_ERROR(_("Error reading stdout pipe: %s.\n"), strerror(errno));
                 pipes[0].fd = -1;
             }
             goto read_error_pipe;
@@ -411,7 +411,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
         if (r <= 0) {
             if (r < 0) {
-                LOG_ERROR("Error reading stderr pipe: %s.\n", strerror(errno));
+                LOG_ERROR(_("Error reading stderr pipe: %s.\n"), strerror(errno));
                 pipes[1].fd = -1;
             }
             continue;
@@ -446,7 +446,7 @@ work_rsync(void *user_data) {
 
     if (tasks == NULL) {
         if (cecup.ntransfers <= 0) {
-            LOG_ERROR("There are no operations to make.\n");
+            LOG_ERROR(_("There are no operations to make.\n"));
             work_finalize(false);
             free(thread_data, SIZEOF(*thread_data));
             return NULL;
@@ -553,7 +553,7 @@ work_rsync(void *user_data) {
     // successful batch deletion. You should differentiate between having no valid tasks at all and
     // simply having no tasks that require rsync to run.
     if (!has_transfers) {
-        LOG_ERROR("No transfers to make.\n");
+        LOG_ERROR(_("No transfers to make.\n"));
         work_batch_flush(&batch);
         work_finalize(false);
         free_task_list(tasks);
