@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-30 19:56-0300\n"
+"POT-Creation-Date: 2026-03-30 20:12-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -22,7 +22,7 @@ msgstr ""
 msgid "Click Analysis first"
 msgstr "Clique em \"Analisar\" primeiro"
 
-#: src/aux.c:79 src/main.c:281
+#: src/aux.c:79 src/main.c:280
 msgid "Start copying and updating all files"
 msgstr "Iniciar a cópia e atualização de todos os arquivos"
 
@@ -54,8 +54,7 @@ msgstr "Aviso: padrão de exclusão avançado detectado: '%s'.\n"
 #: src/ignore_patterns.c:79 src/ignore_patterns.c:85 src/ignore_patterns.c:91
 msgid ""
 "cecup currently only supports basic patterns (directories and asterisks).\n"
-msgstr ""
-"cecup suporta somente padrões básicos (pastas e asteriscos).\n"
+msgstr "cecup suporta somente padrões básicos (pastas e asteriscos).\n"
 
 #: src/ignore_patterns.c:80 src/ignore_patterns.c:86 src/ignore_patterns.c:92
 msgid "This pattern will be interpreted literally.\n"
@@ -76,159 +75,159 @@ msgstr "Aviso: barra invertida '%s' detectada.\n"
 msgid "Error closing %s: %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
-#: src/main.c:74
+#: src/main.c:73
 msgid "Task"
 msgstr "Tarefa"
 
-#: src/main.c:91
+#: src/main.c:90
 msgid "Name"
 msgstr "Nome do arquivo"
 
-#: src/main.c:109
+#: src/main.c:108
 msgid "Size"
 msgstr "Tamanho"
 
-#: src/main.c:130
+#: src/main.c:129
 msgid "Modification Time"
 msgstr "Data de modificação"
 
-#: src/main.c:269
+#: src/main.c:268
 msgid "🔎 Analyze"
 msgstr "🔎 Analisar"
 
-#: src/main.c:270
+#: src/main.c:269
 msgid "Edit Ignore Rules"
 msgstr "Editar Regras de Ignorados"
 
-#: src/main.c:273
+#: src/main.c:272
 msgid "Check which files need to be copied or updated"
 msgstr "Verificar quais arquivos precisam ser copiados ou atualizados"
 
-#: src/main.c:275
+#: src/main.c:274
 msgid "Edit the list of filename patterns to ignore"
 msgstr "Editar a lista de padrões de nomes de arquivo para ignorar"
 
-#: src/main.c:277
+#: src/main.c:276
 msgid "⏹️ Stop"
 msgstr "⏹️ Parar"
 
-#: src/main.c:278
+#: src/main.c:277
 msgid "Cancel the current task"
 msgstr "Cancelar a tarefa atual"
 
-#: src/main.c:280
+#: src/main.c:279
 msgid "⏩ Apply Changes"
 msgstr "⏩ Aplicar Mudanças"
 
-#: src/main.c:310
+#: src/main.c:309
 msgid "Protect same-drive sync"
 msgstr "Impedir cópia no mesmo disco"
 
-#: src/main.c:311
+#: src/main.c:310
 msgid "Remove ignored items"
 msgstr "Excluir itens ignorados"
 
-#: src/main.c:312
+#: src/main.c:311
 msgid "Sync 100%"
 msgstr "Sincronia 100%"
 
-#: src/main.c:315
+#: src/main.c:314
 msgid "Prevent copying if original and backup are on the same disk"
 msgstr "Evitar cópia se o original e o backup estiverem no mesmo dispositivo"
 
-#: src/main.c:317
+#: src/main.c:316
 msgid "Remove files from backup if they were added to the ignore list"
 msgstr "Exclui do backup arquivos que você marcou para serem ignorados"
 
-#: src/main.c:319
+#: src/main.c:318
 msgid "Delete files in backup that do not exist in the original"
 msgstr "Deletar arquivos do backup que não existem no original"
 
-#: src/main.c:322
+#: src/main.c:321
 msgid "Executable used for comparing files"
 msgstr "Programa usado para comparar arquivos"
 
-#: src/main.c:325
+#: src/main.c:324
 msgid "Terminal emulator used to launch the diff tool"
 msgstr "Emulator de terminal usado para executar o programa de comparação"
 
-#: src/main.c:327
+#: src/main.c:326
 msgid "Defaults"
 msgstr "Padrão"
 
-#: src/main.c:328
+#: src/main.c:327
 msgid "Restore original settings"
 msgstr "Restaurar configurações originais"
 
-#: src/main.c:342
+#: src/main.c:341
 msgid "Diff Tool:"
 msgstr "Ferramenta de comparação"
 
-#: src/main.c:346
+#: src/main.c:345
 msgid "Terminal:"
 msgstr "Terminal:"
 
-#: src/main.c:357 src/work.c:323
+#: src/main.c:356 src/work.c:323
 msgid "Analyzing changes"
 msgstr "Analisando mudanças"
 
-#: src/main.c:388
+#: src/main.c:387
 msgid "Folder containing your original files"
 msgstr "Pasta que contém seus arquivos originais"
 
-#: src/main.c:390 src/main.c:406
+#: src/main.c:389 src/main.c:405
 msgid "Select Folder"
 msgstr "Selecionar Pasta"
 
-#: src/main.c:399
+#: src/main.c:398
 msgid "Invert Original and Backup"
 msgstr "Inverter original e backup"
 
-#: src/main.c:404
+#: src/main.c:403
 msgid "Folder where the backup will be stored"
 msgstr "Pasta onde o backup será guardado"
 
-#: src/main.c:418
+#: src/main.c:417
 msgid "Search files..."
 msgstr "Procurar arquivos..."
 
-#: src/main.c:424
+#: src/main.c:423
 msgid "🔍"
 msgstr "🔍"
 
-#: src/main.c:432
+#: src/main.c:431
 msgid "Select all visible"
 msgstr "Selecionar todos visíveis"
 
-#: src/main.c:435
+#: src/main.c:434
 msgid "Unselect all"
 msgstr "Desselecionar todos"
 
-#: src/main.c:504
+#: src/main.c:503
 msgid "Show New Files"
 msgstr "Mostrar arquivos novos"
 
-#: src/main.c:505
+#: src/main.c:504
 msgid "Show links"
 msgstr "Mostrar links"
 
-#: src/main.c:506
+#: src/main.c:505
 msgid "Show Updates"
 msgstr "Mostrar arquivos atualizados"
 
-#: src/main.c:507
+#: src/main.c:506
 msgid "Show equals"
 msgstr "Mostrar iguais"
 
-#: src/main.c:508
+#: src/main.c:507
 msgid "Show Deletions"
 msgstr "Mostrar exclusões"
 
-#: src/main.c:509
+#: src/main.c:508
 msgid "Show Ignored"
 msgstr "Mostrar ignorados"
 
-#: src/main.c:537
+#: src/main.c:536
 msgid "✅ Everything ready"
 msgstr "✅ Tudo pronto"
 
@@ -726,9 +725,11 @@ msgid "📋 Copy Relative Path"
 msgstr "📋 Copiar caminho relativo"
 
 #: src/on.h:10
-msgid "copy path of this file (relative to original/backup directory path)"
-msgstr "copiar caminho completo desse arquivo (relativo ao caminho da pasta"
-" original/backup)"
+#, fuzzy
+msgid "copy path of this file (relative to original/backup folder path)"
+msgstr ""
+"copiar caminho completo desse arquivo (relativo ao caminho da pasta original/"
+"backup)"
 
 #: src/on.h:11
 msgid "⏯️ Apply"

@@ -690,12 +690,12 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
 
-    if (is_first_run) {
+    if (true) {
         GtkWidget *dialog;
 
         dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
                                         GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
-                                        "%s", _(cecup_welcome_text));
+                                        "%s", cecup_welcome_text);
 
         g_signal_connect(dialog, "response", G_CALLBACK(gtk_window_destroy), NULL);
         gtk_widget_show(dialog);
