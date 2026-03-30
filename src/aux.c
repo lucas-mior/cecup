@@ -158,8 +158,6 @@ traversal_push(Traversal *traversal, struct stat *stat,
         int32 old_capacity = traversal->ncapacity;
         traversal->ncapacity *= 2;
 
-        PRINTLN(traversal->ncapacity);
-
         traversal->stats = xrealloc2(traversal->stats,
                                      old_capacity, traversal->ncapacity,
                                      SIZEOF(*(traversal->stats)));
