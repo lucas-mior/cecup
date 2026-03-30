@@ -314,8 +314,14 @@ work_traverse_clean(Traversal *traversal) {
 
     {
         Arena *arena_save = traversal->arena;
+        struct Hash_fs_map *map_save = traversal->map;
+        struct Hash_inode_map *inode_map_save = traversal->inode_map;
+
         memset64(traversal, 0, SIZEOF(*traversal));
+
         traversal->arena = arena_save;
+        traversal->map = map_save;
+        traversal->inode_map = inode_map_save;
     }
     return;
 }
