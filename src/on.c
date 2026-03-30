@@ -265,9 +265,6 @@ on_preview_clicked(GtkWidget *b, void *data) {
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
-    // TODO: g_thread_new returns a GThread pointer holding a reference to the thread. If you don't
-    // call g_thread_unref() on it, the thread structure leaks memory. Add g_thread_unref(thread)
-    // immediately if you intend to run it detached.
     thread = g_thread_new("work_preview", work_preview, thread_data);
     g_thread_unref(thread);
     return;
@@ -297,7 +294,6 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
-    // TODO: Same as above: unref the returned GThread pointer to avoid leaking thread handles.
     thread = g_thread_new("work_rsync", work_rsync, thread_data);
     g_thread_unref(thread);
     return;
