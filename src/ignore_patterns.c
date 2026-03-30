@@ -56,7 +56,7 @@ ignore_patterns_load(void) {
     cecup.ignore_count = 0;
 
     if ((file = fopen(cecup.ignore_path, "r")) == NULL) {
-        LOG_ERROR("Error opening %s: %s.\n", cecup.ignore_path, strerror(errno));
+        LOG_ERROR(_("Error opening %s: %s.\n"), cecup.ignore_path, strerror(errno));
         return;
     }
 
@@ -75,21 +75,21 @@ ignore_patterns_load(void) {
 
         if (memchr64(line_buffer, '[', line_len)
              && memchr64(line_buffer, ']', line_len)) {
-            LOG_ERROR("Warning: advanced exclusion pattern '%s' detected.\n", line_buffer);
-            LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
-            LOG_ERROR("This pattern will be interpreted literally.\n");
+            LOG_ERROR(_("Warning: advanced exclusion pattern '%s' detected.\n"), line_buffer);
+            LOG_ERROR(_("cecup currently only supports basic patterns (directories and asterisks).\n"));
+            LOG_ERROR(_("This pattern will be interpreted literally.\n"));
         }
 
         if (memchr64(line_buffer, '?', line_len)) {
-            LOG_ERROR("Warning: exclusion pattern '%s' detected.\n", line_buffer);
-            LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
-            LOG_ERROR("This pattern will be interpreted literally.\n");
+            LOG_ERROR(_("Warning: exclusion pattern '%s' detected.\n"), line_buffer);
+            LOG_ERROR(_("cecup currently only supports basic patterns (directories and asterisks).\n"));
+            LOG_ERROR(_("This pattern will be interpreted literally.\n"));
         }
 
         if (memchr64(line_buffer, '\\', line_len)) {
-            LOG_ERROR("Warning: backslash '%s' detected.\n", line_buffer);
-            LOG_ERROR("cecup currently only supports basic patterns (directories and asterisks).\n");
-            LOG_ERROR("This pattern will be interpreted literally.\n");
+            LOG_ERROR(_("Warning: backslash '%s' detected.\n"), line_buffer);
+            LOG_ERROR(_("cecup currently only supports basic patterns (directories and asterisks).\n"));
+            LOG_ERROR(_("This pattern will be interpreted literally.\n"));
         }
 
         if (count >= *capacity) {
@@ -124,7 +124,7 @@ ignore_patterns_load(void) {
     cecup.ignore_count = count;
 
     if (fclose(file)) {
-        LOG_ERROR("Error closing %s: %s.\n", cecup.ignore_path, strerror(errno));
+        LOG_ERROR(_("Error closing %s: %s.\n"), cecup.ignore_path, strerror(errno));
     }
     return;
 }
