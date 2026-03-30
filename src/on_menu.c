@@ -401,9 +401,6 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 _exit(1);
             }
         default:
-            // TODO: The parent process forks a new child but never waits for it
-            // (e.g., via // `waitpid` or `g_child_watch_add`).
-            // This will result in zombie processes accumulating until the main application exits.
             break;
         }
     }
