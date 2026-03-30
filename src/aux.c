@@ -155,12 +155,13 @@ traversal_push(Traversal *traversal, struct stat *stat,
     traversal->link_targets_lens[idx] = (int16)link_target_len;
     traversal->patterns[idx] = matched_pattern;
     traversal->patterns_lens[idx] = (int16)matched_pattern_len;
+    traversal->row_ids[idx] = -1;
+
     // TODO: Hardcoding traversal->nlinks[idx] to 1 effectively overrides the actual filesystem link
     // count from `stat->st_nlink`. This will cause the `is_hardlink = (nlinks > 1)` checks
     // elsewhere to silently fail. Consider initializing this via the `stat` struct if it's
     // available.
     traversal->nlinks[idx] = 1;
-    traversal->row_ids[idx] = -1;
 
     if (traversal->map) {
         hash_insert_fs_map(traversal->map, path, path_len, idx);
