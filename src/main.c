@@ -49,16 +49,14 @@ main_setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupCol
     int8 side = (int8)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
     if (g_action_map_lookup_action(action_map, "tree_dispatch") == NULL) {
-        GSimpleAction *dispatch;
-        GSimpleAction *ignore;
+        GSimpleAction *dispatch = g_simple_action_new("tree_dispatch", G_VARIANT_TYPE_INT32);
+        GSimpleAction *ignore = g_simple_action_new("ignore", G_VARIANT_TYPE_STRING);
 
-        dispatch = g_simple_action_new("tree_dispatch", G_VARIANT_TYPE_INT32);
-        g_signal_connect(dispatch, "activate", G_CALLBACK(on_menu_dispatch), NULL);
         g_action_map_add_action(action_map, G_ACTION(dispatch));
-
-        ignore = g_simple_action_new("ignore", G_VARIANT_TYPE_STRING);
-        g_signal_connect(ignore, "activate", G_CALLBACK(on_menu_ignore_action), NULL);
         g_action_map_add_action(action_map, G_ACTION(ignore));
+
+        g_signal_connect(dispatch, "activate", G_CALLBACK(on_menu_dispatch),      NULL);
+        g_signal_connect(ignore,   "activate", G_CALLBACK(on_menu_ignore_action), NULL);
     }
 
     {
