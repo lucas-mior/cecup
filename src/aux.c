@@ -348,11 +348,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
 static void
 cecup_reset_dir(int32 side) {
-    if (side == L) {
-        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), "./");
-    } else {
-        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), "./");
-    }
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[side]), "./");
     invalidate_preview();
     return;
 }
