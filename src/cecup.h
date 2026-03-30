@@ -575,7 +575,7 @@ N_("• Diff Tool: Compare file contents using your preferred diff tool.\n")
 N_("• Safety: Protect against accidental same-drive synchronization.\n")
 N_("• 100%% Sync:"
    " Optionally delete files from the destination that don't exist in the source"
-   " and also overwrite files that are newer on the destination")
+   " and also overwrite files that are newer on the destination\n")
 N_("• Remove ignored files: Optionally delete files from the destination that don't exist in the source.")
 ;
 
