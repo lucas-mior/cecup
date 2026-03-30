@@ -852,5 +852,5 @@ main(int32 argc, char **argv) {
     arena_destroy(cecup.arena);
     g_mutex_clear(&cecup.arena_mutex);
 
-    return status;
+    exit(status);
 }
