@@ -537,6 +537,11 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_paned_set_resize_end_child(GTK_PANED(v_paned_inner), FALSE);
     gtk_paned_set_shrink_end_child(GTK_PANED(v_paned_inner), FALSE);
+    gtk_paned_set_resize_start_child(GTK_PANED(v_paned_inner), TRUE);
+    gtk_paned_set_shrink_start_child(GTK_PANED(v_paned_inner), TRUE);
+
+    gtk_widget_set_name(v_paned_inner, "v_paned_inner");
+    gtk_widget_set_name(v_paned_outer, "v_paned_outer");
 
     {
         GtkWidget *log_scroll = gtk_scrolled_window_new();
