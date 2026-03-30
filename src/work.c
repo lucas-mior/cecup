@@ -74,7 +74,8 @@ work_traverse_fs(Traversal *traversal) {
 
     if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
         if (cecup.stop_working == false) {
-            error(_("Error walking directory %s: %s.\n"), traversal->base_path, strerror(errno));
+            LOG_ERROR(_("Error walking directory %s: %s.\n"),
+                      traversal->base_path, strerror(errno));
         }
         return 0;
     }
@@ -119,7 +120,7 @@ work_traverse_fs(Traversal *traversal) {
 
         if (name_len > 0) {
             if (isspace((uchar)d_name[0])) {
-                LOG_ERROR(_("Error: there is a space in the start of the fileneme:\n"));
+                LOG_ERROR(_("Error: there is a space in the start of the filename:\n"));
                 LOG_ERROR("'%s'\n", ent->fts_path);
                 LOG_ERROR(_("Please fix your file system.\n"));
                 cecup.stop_working = true;
@@ -127,7 +128,7 @@ work_traverse_fs(Traversal *traversal) {
             }
 
             if (isspace((uchar)d_name[name_len - 1])) {
-                LOG_ERROR(_("Error: there is space in the end of the fileneme:\n"));
+                LOG_ERROR(_("Error: there is space in the end of the filename:\n"));
                 LOG_ERROR("'%s'\n", ent->fts_path);
                 LOG_ERROR(_("Please fix your file system.\n"));
                 cecup.stop_working = true;
@@ -153,8 +154,8 @@ work_traverse_fs(Traversal *traversal) {
 
         if (ent->fts_info != FTS_D) {
             if (file_count >= MAXOF(file_count_return)) {
-                LOG_ERROR("More than %lld files found.\n", MAXOF(file_count_return));
-                LOG_ERROR("Please work in smaller subdirs.\n");
+                LOG_ERROR(_("More than %lld files found.\n"), MAXOF(file_count_return));
+                LOG_ERROR(_("Please work in smaller subdirs.\n"));
                 cecup.stop_working = true;
             }
             file_count += 1;
@@ -185,11 +186,7 @@ work_traverse_fs(Traversal *traversal) {
             path = xarena_push(traversal->arena, path_len + is_dir + 1);
             memcpy64(path, path_tmp, path_len + 1);
 
-            // TODO: Logic Bug. `path[path_len]` evaluates the null terminator, which will always be
-            // true (since it's `\0`, not `/`). This can cause double-slashes if the path already
-            // ended in a slash. It should evaluate the last actual character of the string:
-            // `path[path_len - 1] != '/'`.
-            if (is_dir && (path[path_len] != '/')) {
+            if (is_dir && (path[path_len - 1] != '/')) {
                 path_len += 1;
                 path[path_len - 1] = '/';
                 path[path_len] = '\0';
@@ -207,6 +204,7 @@ work_traverse_fs(Traversal *traversal) {
                 if (is_dir) {
                     if (fts_set(fts_handle, ent, FTS_SKIP) < 0) {
                         error("Error in fts_set(FTS_SKIP): %s.\n", strerror(errno));
+                        fatal(EXIT_FAILURE);
                     }
                 }
             }
@@ -217,7 +215,7 @@ work_traverse_fs(Traversal *traversal) {
             int64 target_len;
 
             if ((target_len = readlink(ent->fts_path, target, SIZEOF(target) - 1)) < 0) {
-                LOG_ERROR("Error in readlink(%s): %s.\n", ent->fts_path, strerror(errno));
+                LOG_ERROR(_("Error in readlink(%s): %s.\n"), ent->fts_path, strerror(errno));
             } else {
                 target[target_len] = '\0';
                 link_target = xarena_push(traversal->arena, target_len + 1);
@@ -260,7 +258,7 @@ work_traverse_fs(Traversal *traversal) {
     }
 
     if (fts_close(fts_handle) < 0) {
-        LOG_ERROR("Error in fts_close: %s.\n", strerror(errno));
+        LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
     }
 
     for (int32 i = 0; i < traversal->nfiles; i += 1) {
@@ -333,12 +331,12 @@ work_preview(void *user_data) {
         struct stat stat_dst;
 
         if (stat(cecup.src_base, &stat_src) < 0) {
-            LOG_ERROR("Error getting directory info from %s: %s.\n",
+            LOG_ERROR(_("Error getting directory info from %s: %s.\n"),
                       cecup.src_base, strerror(errno));
             work_preview_cancel_and_reset();
         }
         if (stat(cecup.dst_base, &stat_dst) < 0) {
-            LOG_ERROR("Error getting directory info from %s: %s.\n",
+            LOG_ERROR(_("Error getting directory info from %s: %s.\n"),
                       cecup.dst_base, strerror(errno));
             work_preview_cancel_and_reset();
         }
