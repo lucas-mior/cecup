@@ -450,6 +450,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     vbox[L] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[L] = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_overlay_scrolling(GTK_SCROLLED_WINDOW(scroll[L]), FALSE);
     {
         GtkSelectionModel *selection_model;
         GListModel *list_model = g_object_ref(cecup.store);
@@ -466,6 +467,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     vbox[R] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     scroll[R] = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_overlay_scrolling(GTK_SCROLLED_WINDOW(scroll[R]), FALSE);
     {
         GtkSelectionModel *selection_model;
         GListModel *list_model = g_object_ref(cecup.store);
@@ -540,6 +542,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     {
         GtkWidget *log_scroll = gtk_scrolled_window_new();
 
+        gtk_scrolled_window_set_overlay_scrolling(GTK_SCROLLED_WINDOW(log_scroll), FALSE);
         gtk_widget_set_size_request(log_scroll, -1, 100);
 
         cecup.log_view = gtk_text_view_new();
