@@ -820,12 +820,10 @@ main(int32 argc, char **argv) {
                 _exit(EXIT_FAILURE);
             }
             default:
-            {
                 if (waitpid(child_cp, NULL, 0) < 0) {
                     error("Error waiting for cp: %s.\n", strerror(errno));
                 }
                 break;
-            }
             }
         }
 
