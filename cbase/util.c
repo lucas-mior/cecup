@@ -682,7 +682,9 @@ free_debug(char *file, int32 line, void *pointer, int64 size) {
 INLINE void
 free2(void *pointer, int64 size) {
     (void)size;
-    free(pointer);
+    if (pointer) {
+        free(pointer);
+    }
 }
 
 #if DEBUGGING_MEMORY
