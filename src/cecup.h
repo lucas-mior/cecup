@@ -567,7 +567,7 @@ static void execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item);
 
 static char *cecup_welcome_text = N_(
     "Welcome to cecup!\n\n"
-    "Features:\n"
+    "Available features:\n"
     "• Analyze: Preview changes before applying them.\n"
     "• Filters: View files by state (New, Linked, Updated, Equal, Deleted, Ignored).\n"
     "• Ignore Rules: Specify file patterns to exclude.\n"
