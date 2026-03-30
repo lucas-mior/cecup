@@ -472,8 +472,6 @@ update_list_from_rows(void) {
     int32 current_store_count = 0;
 
     int64 total_size_bytes = 0;
-    char pretty_size[16];
-    char stats_text[256];
     char button_label[64];
 
     struct timespec t0;
@@ -594,10 +592,14 @@ update_list_from_rows(void) {
     SNPRINTF(button_label, "%s %d", EMOJI_IGNORE, count_ignore);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
 
-    bytes_pretty(pretty_size, total_size_bytes);
-    SNPRINTF(stats_text,
-             _("Selected files: %d\nTotal Transfer Size: 📦 %s"), count_selected, pretty_size);
-    gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
+    {
+        char pretty_size[16];
+        char stats_text[256];
+        bytes_pretty(pretty_size, total_size_bytes);
+        SNPRINTF(stats_text,
+                 _("Selected files: %d\nTotal Transfer Size: 📦 %s"), count_selected, pretty_size);
+        gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
+    }
 
     if (cecup.rows_visible_len > 0) {
         qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(int32), cecup_item_compare);
