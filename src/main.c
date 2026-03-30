@@ -760,7 +760,7 @@ main(int32 argc, char **argv) {
     cecup.rows_capacity = INITIAL_CAPACITY;
 
     cecup.rows_src = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_src)));
-    cecup.rows_dst = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_src)));
+    cecup.rows_dst = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_dst)));
     cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     cecup.rows_selected = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_selected)));
 
