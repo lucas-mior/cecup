@@ -610,11 +610,21 @@ update_list_from_rows(void) {
 static void
 update_stats_text(int32 count_selected, int64 total_size_bytes) {
     char pretty_size[16];
-    char stats_text[256];
+    char stats_text[512];
+
     bytes_pretty(pretty_size, total_size_bytes);
-    SNPRINTF(stats_text,
-             _("Selected files: %d\nTotal Transfer Size: 📦 %s"), count_selected, pretty_size);
-    gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
+
+    if (count_selected > 0) {
+        SNPRINTF(stats_text,
+                 _("<span foreground='red'>Selected files: %d</span>\nTotal Transfer Size: 📦 %s"),
+                 count_selected, pretty_size);
+    } else {
+        SNPRINTF(stats_text,
+                 _("Selected files: %d\nTotal Transfer Size: 📦 %s"),
+                 count_selected, pretty_size);
+    }
+
+    gtk_label_set_markup(GTK_LABEL(cecup.stats_label), stats_text);
     return;
 }
 
