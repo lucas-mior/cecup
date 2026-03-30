@@ -107,15 +107,15 @@ on_menu_apply(GtkWidget *widget, void *data) {
 
     if (tasks->count > 0) {
         ThreadData *thread_data;
+        GThread *thread;
 
         protect_interface_from_user(true);
         thread_data = xmalloc(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
         thread_data->tasks = tasks;
-        g_thread_new("bulk_sync", work_rsync, thread_data);
-        // TODO: Memory Leak. `g_thread_new` returns a `GThread *` that must be explicitly unref'ed
-        // using `g_thread_unref()` if you are not going to `g_thread_join()` it. Otherwise, the
-        // GLib thread tracking structure leaks.
+
+        thread = g_thread_new("bulk_sync", work_rsync, thread_data);
+        g_object_unref(thread);
     } else {
         free_task_list(tasks);
     }
@@ -312,13 +312,14 @@ on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
 
     if (response_id == GTK_RESPONSE_YES) {
         ThreadData *thread_data;
+        GThread *thread;
 
         protect_interface_from_user(true);
         thread_data = xmalloc(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
         thread_data->tasks = tasks;
-        g_thread_new("work_bulk_sync", work_rsync, thread_data);
-        // TODO: Memory Leak. Missing `g_thread_unref()` on the returned thread pointer.
+        thread = g_thread_new("work_bulk_sync", work_rsync, thread_data);
+        g_object_unref(thread);
     } else {
         free_task_list(tasks);
     }
