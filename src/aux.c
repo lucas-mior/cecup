@@ -321,8 +321,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
         if (side == L) {
             traversal = &cecup.traversal_src;
-        }
-        else {
+        } else {
             traversal = &cecup.traversal_dst;
         }
 
