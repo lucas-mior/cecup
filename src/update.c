@@ -40,6 +40,7 @@
 #define UI_INTERVAL_MS 100
 
 static void update_list_from_rows(void);
+static void update_stats_text(int32 count_selected, int64 total_size_bytes);
 
 static bool
 update_row_remove(Message *message) {
@@ -592,14 +593,7 @@ update_list_from_rows(void) {
     SNPRINTF(button_label, "%s %d", EMOJI_IGNORE, count_ignore);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
 
-    {
-        char pretty_size[16];
-        char stats_text[256];
-        bytes_pretty(pretty_size, total_size_bytes);
-        SNPRINTF(stats_text,
-                 _("Selected files: %d\nTotal Transfer Size: 📦 %s"), count_selected, pretty_size);
-        gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
-    }
+    update_stats_text(count_selected, total_size_bytes);
 
     if (cecup.rows_visible_len > 0) {
         qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(int32), cecup_item_compare);
@@ -610,6 +604,17 @@ update_list_from_rows(void) {
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
     PRINT_TIMINGS(cecup.rows_visible_len, t0, t1);
+    return;
+}
+
+static void
+update_stats_text(int32 count_selected, int64 total_size_bytes) {
+    char pretty_size[16];
+    char stats_text[256];
+    bytes_pretty(pretty_size, total_size_bytes);
+    SNPRINTF(stats_text,
+             _("Selected files: %d\nTotal Transfer Size: 📦 %s"), count_selected, pretty_size);
+    gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
     return;
 }
 

@@ -516,16 +516,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
             }
         }
 
-        {
-            char pretty_size[16];
-            char stats_text[256];
-
-            bytes_pretty(pretty_size, total_size_bytes);
-            SNPRINTF(stats_text,
-                     _("Selected files: %d\nTotal Transfer Size: 📦 %s"),
-                     count_selected, pretty_size);
-            gtk_label_set_text(GTK_LABEL(cecup.stats_label), stats_text);
-        }
+        update_stats_text(count_selected, total_size_bytes);
     }
 
     g_list_model_items_changed(cecup.store, 0,
