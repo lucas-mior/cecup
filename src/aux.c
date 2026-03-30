@@ -230,9 +230,8 @@ free_task_list(TaskList *tasks) {
     }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
-        Task *task;
+        Task *task = tasks->items[i];
 
-        task = tasks->items[i];
         free(task->path, task->path_len + 1);
         free(task->link_target, task->link_target_len + 1);
         free(task, SIZEOF(*task));
