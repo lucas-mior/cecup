@@ -119,7 +119,6 @@ on_path_edited(GtkEditable *editable, void *data) {
     char *base_path;
     char old_full[MAX_PATH_LENGTH];
     char *relative_old;
-    char relative_new[MAX_PATH_LENGTH];
     int32 new_length;
     char *new_text;
 
@@ -158,6 +157,7 @@ on_path_edited(GtkEditable *editable, void *data) {
 
     if (new_length > 0) {
         char new_full[MAX_PATH_LENGTH];
+        char relative_new[MAX_PATH_LENGTH];
         int32 old_length;
         int32 new_full_length;
         Message *message;
