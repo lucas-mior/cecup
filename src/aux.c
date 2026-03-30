@@ -130,6 +130,22 @@ traversal_allocate(Traversal *traversal) {
     return;
 }
 
+static void
+traversal_clean(Traversal *traversal) {
+
+    arena_reset(traversal->arena);
+    hash_zero_fs_map(traversal->map);
+    hash_zero_inode_map(traversal->inode_map);
+
+    traversal->base_path = NULL;
+    traversal->base_path_len = 0;
+    traversal->file_count = 0;
+
+    traversal->nfiles = 0;
+
+    return;
+}
+
 static int32
 traversal_push(Traversal *traversal, struct stat *stat,
                char *path, int32 path_len,

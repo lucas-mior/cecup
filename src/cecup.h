@@ -544,7 +544,7 @@ static void work_batch_push(MessageBatch **batch_ptr, Message *message);
 static void work_finalize(bool preview_clean);
 static int32 work_traverse_fs(Traversal *traversal);
 static void *work_traverse_fs_thread(void *user_data);
-static void work_traverse_clean(Traversal *traversal);
+static void traversal_clean(Traversal *traversal);
 static void work_cleanup(void);
 static void __attribute__((noreturn)) work_preview_cancel_and_reset(void);
 static void *work_preview(void *user_data);

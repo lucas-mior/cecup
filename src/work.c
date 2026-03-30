@@ -284,27 +284,11 @@ work_traverse_fs_thread(void *user_data) {
 }
 
 static void
-work_traverse_clean(Traversal *traversal) {
-
-    arena_reset(traversal->arena);
-    hash_zero_fs_map(traversal->map);
-    hash_zero_inode_map(traversal->inode_map);
-
-    traversal->base_path = NULL;
-    traversal->base_path_len = 0;
-    traversal->file_count = 0;
-
-    traversal->nfiles = 0;
-
-    return;
-}
-
-static void
 work_cleanup(void) {
     g_mutex_lock(&cecup.arena_mutex);
 
-    work_traverse_clean(&cecup.traversal_src);
-    work_traverse_clean(&cecup.traversal_dst);
+    traversal_clean(&cecup.traversal_src);
+    traversal_clean(&cecup.traversal_dst);
 
     if (DEBUGGING) {
         memset64(cecup.transfers,      0, cecup.transfers_capacity*SIZEOF(*cecup.transfers));
@@ -862,10 +846,10 @@ main(void) {
         ASSERT((reason & entry->expected_reason_mask) == entry->expected_reason_mask);
     }
 
-    work_traverse_clean(&cecup.traversal_src);
+    traversal_clean(&cecup.traversal_src);
     arena_destroy(cecup.traversal_src.arena);
 
-    work_traverse_clean(&cecup.traversal_dst);
+    traversal_clean(&cecup.traversal_dst);
     arena_destroy(cecup.traversal_dst.arena);
 
     if (cecup.rows_capacity > 0) {
