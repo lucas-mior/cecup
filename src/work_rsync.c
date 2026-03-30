@@ -449,7 +449,8 @@ work_rsync(void *user_data) {
         Task *task = tasks->items[i];
         char full_path[MAX_PATH_LENGTH];
         pid_t child_rm;
-        int child_status = 0;
+        int child_status;
+        int waited;
         bool removed = false;
         int32 term_timeout;
 
@@ -496,11 +497,7 @@ work_rsync(void *user_data) {
             term_timeout = 0;
             cecup.child_pid = child_rm;
 
-            // TODO: Uninitialized variable access. If `waitpid` returns -1 (e.g., due to an error
-            // or if the child was already reaped), the loop skips and `child_status` remains
-            // uninitialized. `WIFEXITED(child_status)` would then read garbage memory. `waitpid`'s
-            // return value should be explicitly checked before evaluating the exit status.
-            while (waitpid(child_rm, &child_status, WNOHANG) == 0) {
+            while ((waited = waitpid(child_rm, &child_status, WNOHANG)) == 0) {
                 if (cecup.stop_working) {
                     term_timeout += 1;
                     if (term_timeout > 50) {
@@ -511,7 +508,7 @@ work_rsync(void *user_data) {
                 usleep(100*1000);
             }
 
-            if (WIFEXITED(child_status)) {
+            if ((waited > 0) && WIFEXITED(child_status)) {
                 removed = !WEXITSTATUS(child_status);
             }
             cecup.child_pid = 0;
