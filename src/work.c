@@ -381,12 +381,10 @@ work_preview(void *user_data) {
     }
 
     if (check_different_fs && same_fs) {
-        LOG_ERROR(
-            _("Safety stop: Original and backup are on the same storage "
-              "device.\n"
-              "Check if the backup device is connected.\n"
-              "To force backup on a folder in the same device, uncheck"
-              " option \"Protect same drive sync\".\n"));
+        LOG_ERROR(_("Safety stop: Original and backup are on the same storage device.\n"
+                    "Check if the backup device is connected.\n"
+                    "To force backup on a folder in the same device, uncheck"
+                    " option \"Protect same drive sync\".\n"));
 
         work_preview_cancel_and_reset();
     }
