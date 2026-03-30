@@ -567,7 +567,7 @@ update_list_from_rows(void) {
                 continue;
             }
 
-            if (strstr(path, cecup.search_query) == NULL) {
+            if (strcasestr(path, cecup.search_query) == NULL) {
                 continue;
             }
         }
