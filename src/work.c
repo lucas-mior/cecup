@@ -86,10 +86,10 @@ work_traverse_fs(Traversal *traversal) {
         char *path;
         int32 path_len;
         int32 is_dir;
-        char *link_target;
-        int32 link_target_len;
-        char *matched_pattern;
-        int32 matched_pattern_len;
+        char *link_target = NULL;
+        int32 link_target_len = 0;
+        char *matched_pattern = NULL;
+        int32 matched_pattern_len = 0;
 
         if (cecup.stop_working) {
             break;
@@ -192,8 +192,6 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        matched_pattern = NULL;
-        matched_pattern_len = 0;
         {
             IgnorePattern *pattern;
 
@@ -209,9 +207,6 @@ work_traverse_fs(Traversal *traversal) {
                 }
             }
         }
-
-        link_target = NULL;
-        link_target_len = 0;
 
         if ((ent->fts_info == FTS_SL) || (ent->fts_info == FTS_SLNONE)) {
             char target[MAX_PATH_LENGTH];

@@ -20,6 +20,12 @@
 
 #include "cecup.h"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_item 1
+#elif !defined(TESTING_item)
+#define TESTING_item 0
+#endif
+
 static char *
 item_path_get(int32 row_id) {
     int32 src_idx;
