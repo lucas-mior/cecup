@@ -497,9 +497,9 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
                                 char *which_traversal, char *which_rows) {
     for (int32 idx = 0; idx < traversal->nfiles; idx += 1) {
         int32 row_id;
-        int32 *lookup_ptr;
         char *path;
         int32 path_len;
+        int32 *lookup_ptr;
 
         row_id = traversal->row_ids[idx];
         path = traversal->paths[idx];
