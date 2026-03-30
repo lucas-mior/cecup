@@ -847,9 +847,16 @@ main(int32 argc, char **argv) {
     free(cecup.src_base, cecup.src_base_len + 1);
     free(cecup.dst_base, cecup.dst_base_len + 1);
 
+    hash_destroy_fs_map(cecup.traversal_src.map);
+    hash_destroy_fs_map(cecup.traversal_dst.map);
+
+    hash_destroy_inode_map(cecup.traversal_src.inode_map);
+    hash_destroy_inode_map(cecup.traversal_dst.inode_map);
+
     arena_destroy(cecup.traversal_src.arena);
     arena_destroy(cecup.traversal_dst.arena);
     arena_destroy(cecup.arena);
+
     g_mutex_clear(&cecup.arena_mutex);
 
     exit(status);
