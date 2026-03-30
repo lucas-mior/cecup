@@ -248,7 +248,6 @@ static void
 on_preview_clicked(GtkWidget *button, void *data) {
     ThreadData *thread_data;
     Message *message;
-    GThread *thread;
 
     (void)data;
     (void)button;
@@ -265,8 +264,7 @@ on_preview_clicked(GtkWidget *button, void *data) {
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
-    thread = g_thread_new("work_preview", work_preview, thread_data);
-    g_thread_unref(thread);
+    g_thread_new("work_preview", work_preview, thread_data);
     return;
 }
 
@@ -280,7 +278,6 @@ transfers_compare(const void *transfer1, const void *transfer2) {
 static void
 on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     ThreadData *thread_data;
-    GThread *thread;
 
     (void)data;
     gtk_window_destroy(GTK_WINDOW(dialog));
@@ -294,8 +291,7 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
-    thread = g_thread_new("work_rsync", work_rsync, thread_data);
-    g_thread_unref(thread);
+    g_thread_new("work_rsync", work_rsync, thread_data);
     return;
 }
 
