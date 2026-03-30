@@ -452,6 +452,7 @@ typedef struct CecupMenuItem {
     GdkModifierType mask;
     void (*callback)(GtkWidget *, void *);
     char *variant;
+    char *tooltip;
 } CecupMenuItem;
 
 #pragma clang diagnostic push
