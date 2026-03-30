@@ -296,7 +296,6 @@ work_traverse_clean(Traversal *traversal) {
     int32 capacity;
 
     capacity = traversal->ncapacity;
-    arena_reset(traversal->arena);
 
     free(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
     free(traversal->patterns, capacity*SIZEOF(*(traversal->patterns)));
@@ -309,6 +308,7 @@ work_traverse_clean(Traversal *traversal) {
     free(traversal->nlinks, capacity*SIZEOF(*(traversal->nlinks)));
     free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
 
+    arena_reset(traversal->arena);
     hash_zero_fs_map(traversal->map);
     hash_zero_inode_map(traversal->inode_map);
 
