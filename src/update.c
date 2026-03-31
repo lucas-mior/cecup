@@ -44,16 +44,11 @@ static void update_stats_text(int32 count_selected, int64 total_size_bytes);
 
 static bool
 update_row_remove(Message *message) {
-    char *pattern;
-    int32 pattern_len;
-    int32 side;
-    bool changed;
+    char *pattern = message->src_path;
+    int32 pattern_len = message->path_len;
+    int32 side = message->side;
+    bool changed = false;
     Traversal *traversal;
-
-    pattern = message->src_path;
-    pattern_len = message->path_len;
-    side = message->side;
-    changed = false;
 
     if (side == L) {
         traversal = &cecup.traversal_src;
