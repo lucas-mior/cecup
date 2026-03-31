@@ -312,6 +312,7 @@ case "$target" in
             continue
         fi
         name=$(echo "$name" | sed 's/\.c//')
+        test_exe="/tmp/${name}_test"
 
         printf "\nTesting ${RED}${src}${RES} ...\n"
 
@@ -324,11 +325,11 @@ case "$target" in
             cmdline=$(option_remove "$cmdline" "-D_GNU_SOURCE")
             cmdline="$cmdline -target x86_64-windows-gnu"
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1"
-            cmdline="$cmdline $flags -o /tmp/${name}_test $src"
+            cmdline="$cmdline $flags -o $test_exe $src"
         else
             cmdline="$CC $CPPFLAGS $CFLAGS"
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 $LDFLAGS"
-            cmdline="$cmdline $flags -o /tmp/${name}_test $src"
+            cmdline="$cmdline $flags -o $test_exe $src"
         fi
 
         trace_on
@@ -341,7 +342,7 @@ case "$target" in
             fi
         else
             if $cmdline; then
-                /tmp/$name.c.exe || gdb /tmp/$name.c.exe -ex run
+                $test_exe || gdb $test_exe -ex run
             else
                 exit
             fi
