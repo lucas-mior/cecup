@@ -702,12 +702,30 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
 
-    if (true) {
-        GtkWidget *dialog;
+    if (is_first_run || DEBUGGING) {
+        GtkWidget *dialog = gtk_dialog_new_with_buttons(_("Welcome to cecup"), GTK_WINDOW(cecup.gtk_window),
+                                                        GTK_DIALOG_MODAL,
+                                                        _("_OK"), GTK_RESPONSE_OK,
+                                                        NULL);
+        GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+        GtkWidget *scroll = gtk_scrolled_window_new();
+        GtkWidget *label = gtk_label_new(_(cecup_welcome_text));
 
-        dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
-                                        GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
-                                        "%s", _(cecup_welcome_text));
+        gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 480);
+
+        gtk_widget_set_vexpand(scroll, TRUE);
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+
+        gtk_label_set_wrap(GTK_LABEL(label), TRUE);
+        gtk_label_set_xalign(GTK_LABEL(label), 0.0);
+        gtk_label_set_yalign(GTK_LABEL(label), 0.0);
+        gtk_widget_set_margin_start(label, 15);
+        gtk_widget_set_margin_end(label, 15);
+        gtk_widget_set_margin_top(label, 15);
+        gtk_widget_set_margin_bottom(label, 15);
+
+        gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), label);
+        gtk_box_append(GTK_BOX(content_area), scroll);
 
         g_signal_connect(dialog, "response", G_CALLBACK(gtk_window_destroy), NULL);
         gtk_widget_show(dialog);
