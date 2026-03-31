@@ -275,7 +275,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     cecup.stop_button = gtk_button_new_with_label(_("⏹️ Stop"));
     gtk_widget_set_tooltip_text(cecup.stop_button, _("Cancel the current task"));
+
     cecup.preview_dirty = true;
+
     cecup.sync_button = gtk_button_new_with_label(_("⏩ Apply Changes"));
     gtk_widget_set_tooltip_text(cecup.sync_button, _("Start copying and updating all files"));
     gtk_widget_set_sensitive(cecup.stop_button, FALSE);
@@ -384,9 +386,11 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     entry_hbox[L] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     cecup.dir_entry[L] = gtk_entry_new();
-    gtk_widget_set_tooltip_text(cecup.dir_entry[L], _("Folder containing your original files"));
+    gtk_widget_set_tooltip_text(cecup.dir_entry[L], _("Folder containing original files"));
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), src_path_buffer);
     cecup.browse_button[L] = gtk_button_new_with_label(_("Select Folder"));
+    gtk_widget_set_tooltip_text(cecup.browse_button[L],
+                                _("Open browser to select the folder containing original files"));
 
     gtk_widget_set_hexpand(cecup.dir_entry[L], TRUE);
     gtk_box_append(GTK_BOX(entry_hbox[L]), cecup.dir_entry[L]);
@@ -403,6 +407,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_tooltip_text(cecup.dir_entry[R], _("Folder where the backup will be stored"));
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), dst_path_buffer);
     cecup.browse_button[R] = gtk_button_new_with_label(_("Select Folder"));
+    gtk_widget_set_tooltip_text(cecup.browse_button[R],
+                                _("Open browser to select the folder where the backup will be stored"));
 
     gtk_widget_set_hexpand(cecup.dir_entry[R], TRUE);
     gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.dir_entry[R]);
@@ -429,9 +435,13 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(search_hbox), cecup.search_entry);
 
     cecup.select_visible_button = gtk_button_new_with_label(_("Select all visible"));
+    gtk_widget_set_tooltip_text(cecup.select_visible_button,
+                                _("Select all files which currently are on the list below"));
     gtk_box_append(GTK_BOX(search_hbox), cecup.select_visible_button);
 
     cecup.unselect_button = gtk_button_new_with_label(_("Unselect all"));
+    gtk_widget_set_tooltip_text(cecup.select_visible_button,
+                                _("Unselect all files which are currently selected"));
     gtk_box_append(GTK_BOX(search_hbox), cecup.unselect_button);
 
     gtk_box_append(GTK_BOX(main_vbox), search_hbox);
