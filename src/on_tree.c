@@ -298,7 +298,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         if ((row_id_ptr = g_object_get_data(G_OBJECT(child), "cecup-row-id"))) {
             void *col_data;
 
-            row_id = GPOINTER_TO_INT(row_id_ptr);
+            row_id = GPOINTER_TO_INT(row_id_ptr) - 1;
             col_data = g_object_get_data(G_OBJECT(child), "cecup-col");
             column_type = (enum ColumnType)GPOINTER_TO_INT(col_data);
             break;

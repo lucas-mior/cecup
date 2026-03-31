@@ -63,7 +63,7 @@ column_bind_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, 
     gtk_check_button_set_active(GTK_CHECK_BUTTON(check), (bool)cecup.rows_selected[row_id]);
     g_signal_handlers_unblock_by_func(check, on_cell_toggled, data);
 
-    g_object_set_data(G_OBJECT(check), "cecup-row-id", GINT_TO_POINTER(row_id));
+    g_object_set_data(G_OBJECT(check), "cecup-row-id", GINT_TO_POINTER(row_id + 1));
     g_object_set_data(G_OBJECT(check), "cecup-pos", GUINT_TO_POINTER(position + 1));
     return;
 }
@@ -122,7 +122,7 @@ column_bind_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, vo
     classes[1] = NULL;
     gtk_widget_set_css_classes(label, (const char **)classes);
 
-    g_object_set_data(G_OBJECT(label), "cecup-row-id", GINT_TO_POINTER(row_id));
+    g_object_set_data(G_OBJECT(label), "cecup-row-id", GINT_TO_POINTER(row_id + 1));
     g_object_set_data(G_OBJECT(label), "cecup-pos", GUINT_TO_POINTER(position + 1));
     g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(COLUMN_ACTION));
 
@@ -202,7 +202,7 @@ column_bind_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
     classes[1] = NULL;
     gtk_widget_set_css_classes(editable, (const char **)classes);
 
-    g_object_set_data(G_OBJECT(editable), "cecup-row-id", GINT_TO_POINTER(row_id));
+    g_object_set_data(G_OBJECT(editable), "cecup-row-id", GINT_TO_POINTER(row_id + 1));
     g_object_set_data(G_OBJECT(editable), "cecup-col", GINT_TO_POINTER(COLUMN_PATH));
     g_object_set_data(G_OBJECT(editable), "cecup-pos", GUINT_TO_POINTER(position + 1));
 
@@ -284,7 +284,7 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
     classes[1] = NULL;
     gtk_widget_set_css_classes(label, (const char **)classes);
 
-    g_object_set_data(G_OBJECT(label), "cecup-row-id", GINT_TO_POINTER(row_id));
+    g_object_set_data(G_OBJECT(label), "cecup-row-id", GINT_TO_POINTER(row_id + 1));
     g_object_set_data(G_OBJECT(label), "cecup-pos", GUINT_TO_POINTER(position + 1));
     g_object_set_data(G_OBJECT(label), "cecup-col", GINT_TO_POINTER(text_info->type));
 
