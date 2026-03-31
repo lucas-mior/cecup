@@ -708,13 +708,13 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                                                         _("_OK"), GTK_RESPONSE_OK,
                                                         NULL);
         GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-        GtkWidget *scroll = gtk_scrolled_window_new();
+        GtkWidget *scroll_welcome = gtk_scrolled_window_new();
         GtkWidget *label = gtk_label_new(NULL);
 
         gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 480);
 
-        gtk_widget_set_vexpand(scroll, TRUE);
-        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+        gtk_widget_set_vexpand(scroll_welcome, TRUE);
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll_welcome), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 
         gtk_label_set_markup(GTK_LABEL(label), _(cecup_welcome_text));
         gtk_label_set_wrap(GTK_LABEL(label), TRUE);
@@ -725,8 +725,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         gtk_widget_set_margin_top(label, 15);
         gtk_widget_set_margin_bottom(label, 15);
 
-        gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), label);
-        gtk_box_append(GTK_BOX(content_area), scroll);
+        gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll_welcome), label);
+        gtk_box_append(GTK_BOX(content_area), scroll_welcome);
 
         g_signal_connect(dialog, "response", G_CALLBACK(gtk_window_destroy), NULL);
         gtk_widget_show(dialog);
