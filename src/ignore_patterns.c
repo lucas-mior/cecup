@@ -48,10 +48,6 @@ ignore_patterns_load(void) {
         free(pattern->str, pattern->len + 1);
     }
 
-    // TODO: Critical bug. `cecup.ignore_count` is not reset to 0 here. If the `fopen` directly
-    // below fails, the function returns but leaves `cecup.ignore_count` at its old value, creating
-    // an array of dangling/freed pointers that will cause a use-after-free or double-free crash
-    // later. Set `cecup.ignore_count = 0;` before the fopen call.
     count = 0;
     cecup.ignore_count = 0;
 
