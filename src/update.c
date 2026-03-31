@@ -261,7 +261,8 @@ update_row_transfer(Message *message) {
                 if ((first_idx_ptr = hash_lookup_inode_map(traversal_dst->inode_map, inode_str, n))) {
                     traversal_dst->nlinks[*first_idx_ptr] += 1;
                 } else {
-                    hash_insert_inode_map(traversal_dst->inode_map, inode_str, n, cecup.rows_dst[row_id]);
+                    hash_insert_inode_map(traversal_dst->inode_map,
+                                          inode_str, n, cecup.rows_dst[row_id]);
                     traversal_dst->nlinks[cecup.rows_dst[row_id]] = 1;
                 }
             } else {
