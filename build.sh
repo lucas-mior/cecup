@@ -86,12 +86,20 @@ option_remove() {
 }
 
 generate_welcome_h() {
-    if [ -f "README.md" ]; then
-        echo "Generating src/welcome.h from README.md..."
-        echo "static char *cecup_welcome_text = N_(" > src/welcome.h
-        awk '/^# cecup/{next} /^!\[/{next} {gsub(/"/, "\\\""); print "\"" $0 "\\n\""}' README.md >> src/welcome.h
-        echo ");" >> src/welcome.h
-    fi
+    echo "Generating src/welcome.h from README.md..."
+    echo "static char *cecup_welcome_text = N_(" > src/welcome.h
+    awk '
+    /^# cecup/ {
+        next
+    }
+    /^!\[/ {
+        next
+    }
+    {
+        gsub(/"/, "\\\"");
+        print "\"" $0 "\\n\""
+    }' README.md >> src/welcome.h
+    echo ");" >> src/welcome.h
 }
 
 compile_with_chibicc () {
@@ -101,11 +109,11 @@ compile_with_chibicc () {
         sleep 0.4
         if echo "$problem" | grep -q "unknown argument:"; then
             arg=$(echo "$problem" | awk '{print $NF}')
-            echo "\nRemoving argument $arg..."
+            printf "\nRemoving argument $arg...\n"
             args=$(option_remove "$args" "$arg")
         elif echo "$problem" | grep -q "unknown file extension:"; then
             arg=$(echo "$problem" | awk '{print $NF}')
-            echo "\nRemoving argument $arg..."
+            printf "\nRemoving argument $arg...\n"
             args=$(option_remove "$args" "$arg")
         else
             printf "\n\nError compiling with chibicc:\n\n${problem}\n\n"
