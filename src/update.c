@@ -448,6 +448,99 @@ update_row_rename(Message *message) {
     return changed;
 }
 
+static bool
+update_row_ignore(Message *message) {
+    (void)message;
+
+    invalidate_preview();
+    ignore_patterns_load();
+
+    for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
+        char *path = item_path_get(row_id);
+        int32 path_len = item_path_len_get(row_id);
+        bool is_dir = false;
+        IgnorePattern *match;
+
+        if (path_len > 0) {
+            if (path[path_len - 1] == '/') {
+                is_dir = true;
+            }
+        }
+
+        match = ignore_patterns_match(path, path_len, is_dir,
+                                      cecup.ignore_patterns, cecup.ignore_count);
+
+        if (cecup.rows_src[row_id] >= 0) {
+            int32 idx_src = cecup.rows_src[row_id];
+            bool was_ignored = (cecup.traversal_src.patterns[idx_src] != NULL);
+            bool is_ignored = match;
+
+            if (was_ignored != is_ignored) {
+                if (cecup.traversal_src.stats[idx_src].st_nlink > 1) {
+                    char inode_str[32];
+                    int32 n;
+                    int32 *first_idx_ptr;
+
+                    n = ITOA(inode_str, (long)cecup.traversal_src.stats[idx_src].st_ino);
+                    if ((first_idx_ptr = hash_lookup_inode_map(cecup.traversal_src.inode_map,
+                                                               inode_str, n))) {
+                        if (is_ignored) {
+                            cecup.traversal_src.nlinks[*first_idx_ptr] -= 1;
+                        } else {
+                            cecup.traversal_src.nlinks[*first_idx_ptr] += 1;
+                        }
+                    }
+                }
+            }
+
+            if (match) {
+                cecup.traversal_src.patterns[idx_src] = match->str;
+                cecup.traversal_src.patterns_lens[idx_src] = (int16)match->len;
+            } else {
+                cecup.traversal_src.patterns[idx_src] = NULL;
+                cecup.traversal_src.patterns_lens[idx_src] = 0;
+            }
+        }
+
+        if (cecup.rows_dst[row_id] >= 0) {
+            int32 idx_dst = cecup.rows_dst[row_id];
+            bool was_ignored = cecup.traversal_dst.patterns[idx_dst];
+            bool is_ignored = match;
+
+            if (was_ignored != is_ignored) {
+                if (cecup.traversal_dst.stats[idx_dst].st_nlink > 1) {
+                    char inode_str[32];
+                    int32 n;
+                    int32 *first_idx_ptr;
+
+                    n = ITOA(inode_str, (long)cecup.traversal_dst.stats[idx_dst].st_ino);
+                    if ((first_idx_ptr = hash_lookup_inode_map(cecup.traversal_dst.inode_map,
+                                                               inode_str, n))) {
+                        if (is_ignored) {
+                            cecup.traversal_dst.nlinks[*first_idx_ptr] -= 1;
+                        } else {
+                            cecup.traversal_dst.nlinks[*first_idx_ptr] += 1;
+                        }
+                    }
+                }
+            }
+
+            if (match) {
+                cecup.traversal_dst.patterns[idx_dst] = match->str;
+                cecup.traversal_dst.patterns_lens[idx_dst] = (int16)match->len;
+            } else {
+                cecup.traversal_dst.patterns[idx_dst] = NULL;
+                cecup.traversal_dst.patterns_lens[idx_dst] = 0;
+            }
+        }
+    }
+
+    traversal_patch_nlinks(&cecup.traversal_src);
+    traversal_patch_nlinks(&cecup.traversal_dst);
+
+    return true;
+}
+
 static void
 update_list_from_rows(void) {
     int32 count_new = 0;
@@ -609,99 +702,6 @@ update_stats_text(int32 count_selected, int64 total_size_bytes) {
 
     gtk_label_set_markup(GTK_LABEL(cecup.stats_label), stats_text);
     return;
-}
-
-static bool
-update_row_ignore(Message *message) {
-    (void)message;
-
-    invalidate_preview();
-    ignore_patterns_load();
-
-    for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
-        char *path = item_path_get(row_id);
-        int32 path_len = item_path_len_get(row_id);
-        bool is_dir = false;
-        IgnorePattern *match;
-
-        if (path_len > 0) {
-            if (path[path_len - 1] == '/') {
-                is_dir = true;
-            }
-        }
-
-        match = ignore_patterns_match(path, path_len, is_dir,
-                                      cecup.ignore_patterns, cecup.ignore_count);
-
-        if (cecup.rows_src[row_id] >= 0) {
-            int32 idx_src = cecup.rows_src[row_id];
-            bool was_ignored = (cecup.traversal_src.patterns[idx_src] != NULL);
-            bool is_ignored = match;
-
-            if (was_ignored != is_ignored) {
-                if (cecup.traversal_src.stats[idx_src].st_nlink > 1) {
-                    char inode_str[32];
-                    int32 n;
-                    int32 *first_idx_ptr;
-
-                    n = ITOA(inode_str, (long)cecup.traversal_src.stats[idx_src].st_ino);
-                    if ((first_idx_ptr = hash_lookup_inode_map(cecup.traversal_src.inode_map,
-                                                               inode_str, n))) {
-                        if (is_ignored) {
-                            cecup.traversal_src.nlinks[*first_idx_ptr] -= 1;
-                        } else {
-                            cecup.traversal_src.nlinks[*first_idx_ptr] += 1;
-                        }
-                    }
-                }
-            }
-
-            if (match) {
-                cecup.traversal_src.patterns[idx_src] = match->str;
-                cecup.traversal_src.patterns_lens[idx_src] = (int16)match->len;
-            } else {
-                cecup.traversal_src.patterns[idx_src] = NULL;
-                cecup.traversal_src.patterns_lens[idx_src] = 0;
-            }
-        }
-
-        if (cecup.rows_dst[row_id] >= 0) {
-            int32 idx_dst = cecup.rows_dst[row_id];
-            bool was_ignored = cecup.traversal_dst.patterns[idx_dst];
-            bool is_ignored = match;
-
-            if (was_ignored != is_ignored) {
-                if (cecup.traversal_dst.stats[idx_dst].st_nlink > 1) {
-                    char inode_str[32];
-                    int32 n;
-                    int32 *first_idx_ptr;
-
-                    n = ITOA(inode_str, (long)cecup.traversal_dst.stats[idx_dst].st_ino);
-                    if ((first_idx_ptr = hash_lookup_inode_map(cecup.traversal_dst.inode_map,
-                                                               inode_str, n))) {
-                        if (is_ignored) {
-                            cecup.traversal_dst.nlinks[*first_idx_ptr] -= 1;
-                        } else {
-                            cecup.traversal_dst.nlinks[*first_idx_ptr] += 1;
-                        }
-                    }
-                }
-            }
-
-            if (match) {
-                cecup.traversal_dst.patterns[idx_dst] = match->str;
-                cecup.traversal_dst.patterns_lens[idx_dst] = (int16)match->len;
-            } else {
-                cecup.traversal_dst.patterns[idx_dst] = NULL;
-                cecup.traversal_dst.patterns_lens[idx_dst] = 0;
-            }
-        }
-    }
-
-    traversal_patch_nlinks(&cecup.traversal_src);
-    traversal_patch_nlinks(&cecup.traversal_dst);
-
-    return true;
 }
 
 static bool
