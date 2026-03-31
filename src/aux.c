@@ -220,7 +220,7 @@ traversal_push(Traversal *traversal, struct stat *stat,
 static void
 traversal_patch_nlinks(Traversal *traversal) {
     for (int32 i = 0; i < traversal->nfiles; i += 1) {
-        if (S_ISREG(traversal->stats[i].st_mode) && (traversal->stats[i].st_nlink > 1)) {
+        if (traversal->stats[i].st_nlink > 1) {
             char inode_str[64];
             int32 *first_idx_ptr;
             int32 n;
@@ -566,32 +566,30 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
                 }
             }
 
-            if (S_ISREG(traversal->stats[idx].st_mode)) {
-                if (traversal->nlinks[idx] <= 0) {
-                    error("Consistency error:"
-                          "nlinks should equal or greater than 1, but %s->nlinks[%d] = %d\n",
-                          which_traversal, idx, traversal->nlinks[idx]);
-                    fatal(EXIT_FAILURE);
-                }
-                if ((ulong)traversal->nlinks[idx] > traversal->stats[idx].st_nlink) {
-                    error("Consistency error:"
-                          "%s index %d (path %s) has nlinks (%d) > st_nlink (%d).\n",
-                          which_traversal, idx, path, traversal->nlinks[idx], (int32)traversal->stats[idx].st_nlink);
-                    fatal(EXIT_FAILURE);
-                }
+            if (traversal->nlinks[idx] <= 0) {
+                error("Consistency error:"
+                      "nlinks should equal or greater than 1, but %s->nlinks[%d] = %d\n",
+                      which_traversal, idx, traversal->nlinks[idx]);
+                fatal(EXIT_FAILURE);
+            }
+            if ((ulong)traversal->nlinks[idx] > traversal->stats[idx].st_nlink) {
+                error("Consistency error:"
+                      "%s index %d (path %s) has nlinks (%d) > st_nlink (%d).\n",
+                      which_traversal, idx, path, traversal->nlinks[idx], (int32)traversal->stats[idx].st_nlink);
+                fatal(EXIT_FAILURE);
+            }
 
-                if (traversal->stats[idx].st_nlink > 1) {
-                    char inode_str[64];
-                    int32 n;
-                    int32 *first_idx_ptr;
+            if (traversal->stats[idx].st_nlink > 1) {
+                char inode_str[64];
+                int32 n;
+                int32 *first_idx_ptr;
 
-                    n = ITOA(inode_str, (long)traversal->stats[idx].st_ino);
-                    if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n))) {
-                        if (traversal->nlinks[idx] != traversal->nlinks[*first_idx_ptr]) {
-                            error("Consistency error: %s index %d (path %s) has mismatched nlinks %d != %d.\n",
-                                  which_traversal, idx, path, traversal->nlinks[idx], traversal->nlinks[*first_idx_ptr]);
-                            fatal(EXIT_FAILURE);
-                        }
+                n = ITOA(inode_str, (long)traversal->stats[idx].st_ino);
+                if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n))) {
+                    if (traversal->nlinks[idx] != traversal->nlinks[*first_idx_ptr]) {
+                        error("Consistency error: %s index %d (path %s) has mismatched nlinks %d != %d.\n",
+                              which_traversal, idx, path, traversal->nlinks[idx], traversal->nlinks[*first_idx_ptr]);
+                        fatal(EXIT_FAILURE);
                     }
                 }
             }

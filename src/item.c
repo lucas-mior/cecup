@@ -349,11 +349,7 @@ item_get_actions_reasons(int32 row_id,
             }
 
             if (is_hardlink) {
-                if (!S_ISREG(stat_dst->st_mode)) {
-                    equal = false;
-                    *reason |= REASON_HARDLINK_NOT_REGULAR;
-                    attributes_differ = true;
-                } else if (target_dst == NULL) {
+                if (target_dst == NULL) {
                     equal = false;
                     attributes_differ = true;
                     *reason |= REASON_HARDLINK_MISSING_LINK;
