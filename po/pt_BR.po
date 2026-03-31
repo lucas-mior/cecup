@@ -724,7 +724,6 @@ msgid "Add ignore pattern for this file"
 msgstr "Adicionar padrão de ignorados para este arquivo"
 
 #: src/welcome.h:2
-#, fuzzy
 msgid ""
 "GUI backup tool inspired by FreeFileSync and Rsync\n"
 "\n"
