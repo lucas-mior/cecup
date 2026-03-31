@@ -91,16 +91,17 @@ compile_with_chibicc () {
         sleep 0.4
         if echo "$problem" | grep -q "unknown argument:"; then
             arg=$(echo "$problem" | awk '{print $NF}')
-            echo "Removing argument $arg..."
+            echo "\nRemoving argument $arg..."
             args=$(option_remove "$args" "$arg")
         elif echo "$problem" | grep -q "unknown file extension:"; then
             arg=$(echo "$problem" | awk '{print $NF}')
-            echo "Removing argument $arg..."
+            echo "\nRemoving argument $arg..."
             args=$(option_remove "$args" "$arg")
         else
             printf "\n\nError compiling with chibicc:\n\n${problem}\n\n"
             return 1
         fi
+        printf "\n"
         trace_on
     done
     return 0
