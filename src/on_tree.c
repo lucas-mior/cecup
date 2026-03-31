@@ -389,7 +389,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 }
 
                 if (rb_pos > 0) {
-                    rb_pos += snprintf2(reason_buf + rb_pos, SIZEOF(reason_buf) - rb_pos, ", ");
+                    rb_pos += snprintf2(reason_buf + rb_pos, SIZEOF(reason_buf) - rb_pos, "\n");
                 }
 
                 if (is_dir) {
@@ -416,11 +416,14 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 else {
                     notation = RSYNC_SYMLINK;
                 }
-                SNPRINTF(tip_buffer, "%s%s%s: %s", filepath, notation, link_target, reason_buf);
+                SNPRINTF(tip_buffer,
+                         "%s%s%s:\n%s", filepath, notation, link_target, reason_buf);
             } else if (ignore_pattern) {
-                SNPRINTF(tip_buffer, "%s: %s (" N_("pattern") ": %s)", filepath, reason_buf, ignore_pattern);
+                SNPRINTF(tip_buffer,
+                         "%s:\n%s (" N_("pattern") ": %s)", filepath, reason_buf, ignore_pattern);
             } else {
-                SNPRINTF(tip_buffer, "%s: %s", filepath, reason_buf);
+                SNPRINTF(tip_buffer,
+                         "%s:\n%s", filepath, reason_buf);
             }
             tip_text = tip_buffer;
             break;
