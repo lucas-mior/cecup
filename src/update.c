@@ -299,21 +299,13 @@ static bool
 update_row_rename(Message *message) {
     Traversal *traversal;
     Traversal *other_traversal;
-    char *old_path;
-    char *new_path;
-    int32 old_path_len;
-    int32 new_path_len;
-    int32 side;
-    bool is_dir;
-    bool changed;
-
-    old_path = message->old_path;
-    new_path = message->new_path;
-    old_path_len = message->old_path_len;
-    new_path_len = message->new_path_len;
-    side = message->side;
-    is_dir = (old_path[old_path_len - 1] == '/');
-    changed = false;
+    char *old_path = message->old_path;
+    char *new_path = message->new_path;
+    int32 old_path_len = message->old_path_len;
+    int32 new_path_len = message->new_path_len;
+    int32 side = message->side;
+    bool is_dir = (old_path[old_path_len - 1] == '/');
+    bool changed = false;
 
     if (side == L) {
         traversal = &cecup.traversal_src;
