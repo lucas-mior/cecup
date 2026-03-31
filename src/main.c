@@ -38,6 +38,8 @@
 #define FILL_TRUE true
 #define EXPAND_TRUE true
 
+static bool is_first_run = false;
+
 static void
 free_text_info(void *data) {
     free(data, SIZEOF(TextInfo));
@@ -202,7 +204,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     char src_path_buffer[MAX_PATH_LENGTH];
     char dst_path_buffer[MAX_PATH_LENGTH];
-    bool is_first_run = false;
 
     (void)user_data;
 
@@ -603,7 +604,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
         key = g_key_file_new();
         if (!g_key_file_load_from_file(key, cecup.config_path, G_KEY_FILE_NONE, NULL)) {
-            is_first_run = true;
             g_key_file_free(key);
             break;
         }
@@ -827,6 +827,7 @@ main(int32 argc, char **argv) {
             pid_t child_cp;
 
             g_mkdir_with_parents(config_base, 0755);
+            is_first_run = true;
 
             switch (child_cp = fork()) {
             case -1:
