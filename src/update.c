@@ -125,14 +125,9 @@ update_row_remove(Message *message) {
         for (int32 i = 0; i < cecup.rows_len;) {
             int32 row_id = i;
             char *path = item_path_get(row_id);
-            bool match = false;
             int32 *idx_ptr;
 
-            if (BEGINS_WITH(path, path_removed, path_removed_len)) {
-                match = true;
-            }
-
-            if (!match) {
+            if (!BEGINS_WITH(path, path_removed, path_removed_len)) {
                 i += 1;
                 continue;
             }
