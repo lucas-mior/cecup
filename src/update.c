@@ -171,21 +171,21 @@ update_row_remove(Message *message) {
             if ((cecup.rows_src[row_id] == -1)
                 && (cecup.rows_dst[row_id] == -1)) {
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
-                    int32 s_idx;
-                    int32 d_idx;
+                    int32 idx_src;
+                    int32 idx_dst;
 
                     cecup.rows_src[j] = cecup.rows_src[j + 1];
                     cecup.rows_dst[j] = cecup.rows_dst[j + 1];
                     cecup.rows_selected[j] = cecup.rows_selected[j + 1];
 
-                    s_idx = cecup.rows_src[j];
-                    d_idx = cecup.rows_dst[j];
+                    idx_src = cecup.rows_src[j];
+                    idx_dst = cecup.rows_dst[j];
 
-                    if (s_idx >= 0) {
-                        cecup.traversal_src.row_ids[s_idx] = j;
+                    if (idx_src >= 0) {
+                        cecup.traversal_src.row_ids[idx_src] = j;
                     }
-                    if (d_idx >= 0) {
-                        cecup.traversal_dst.row_ids[d_idx] = j;
+                    if (idx_dst >= 0) {
+                        cecup.traversal_dst.row_ids[idx_dst] = j;
                     }
                 }
                 cecup.rows_len -= 1;
@@ -221,9 +221,9 @@ update_row_transfer(Message *message) {
 
     if ((idx_ptr
          = hash_lookup_fs_map(traversal_src->map, path_transfered, path_transfered_len))) {
-        int32 s_idx;
-        s_idx = *idx_ptr;
-        row_id = traversal_src->row_ids[s_idx];
+        int32 idx_src;
+        idx_src = *idx_ptr;
+        row_id = traversal_src->row_ids[idx_src];
 
         if (row_id >= 0) {
             if (cecup.rows_dst[row_id] < 0) {
@@ -233,20 +233,20 @@ update_row_transfer(Message *message) {
                     cecup.rows_dst[row_id] = *lookup;
                 } else {
                     cecup.rows_dst[row_id] = traversal_push(
-                        traversal_dst, &traversal_src->stats[s_idx],
-                        traversal_src->paths[s_idx],
-                        traversal_src->paths_lens[s_idx],
-                        traversal_src->link_targets[s_idx],
-                        traversal_src->link_targets_lens[s_idx],
-                        traversal_src->patterns[s_idx],
-                        traversal_src->patterns_lens[s_idx]);
+                        traversal_dst, &traversal_src->stats[idx_src],
+                        traversal_src->paths[idx_src],
+                        traversal_src->paths_lens[idx_src],
+                        traversal_src->link_targets[idx_src],
+                        traversal_src->link_targets_lens[idx_src],
+                        traversal_src->patterns[idx_src],
+                        traversal_src->patterns_lens[idx_src]);
 
-                    if (traversal_src->stats[s_idx].st_nlink > 1) {
+                    if (traversal_src->stats[idx_src].st_nlink > 1) {
                         char inode_str[32];
                         int32 n;
                         int32 *first_idx_ptr;
 
-                        n = ITOA(inode_str, (long)traversal_src->stats[s_idx].st_ino);
+                        n = ITOA(inode_str, (long)traversal_src->stats[idx_src].st_ino);
                         if ((first_idx_ptr = hash_lookup_inode_map(traversal_dst->inode_map, inode_str, n))) {
                             traversal_dst->nlinks[*first_idx_ptr] += 1;
                         } else {
@@ -260,7 +260,7 @@ update_row_transfer(Message *message) {
                 traversal_dst->row_ids[cecup.rows_dst[row_id]] = row_id;
             } else {
                 memcpy64(&traversal_dst->stats[cecup.rows_dst[row_id]],
-                         &traversal_src->stats[s_idx], SIZEOF(struct stat));
+                         &traversal_src->stats[idx_src], SIZEOF(struct stat));
             }
             changed = true;
         }
@@ -390,21 +390,21 @@ update_row_rename(Message *message) {
                 i += 1;
             } else {
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
-                    int32 s_idx;
-                    int32 d_idx;
+                    int32 idx_src;
+                    int32 idx_dst;
 
                     cecup.rows_src[j] = cecup.rows_src[j + 1];
                     cecup.rows_dst[j] = cecup.rows_dst[j + 1];
                     cecup.rows_selected[j] = cecup.rows_selected[j + 1];
 
-                    s_idx = cecup.rows_src[j];
-                    d_idx = cecup.rows_dst[j];
+                    idx_src = cecup.rows_src[j];
+                    idx_dst = cecup.rows_dst[j];
 
-                    if (s_idx >= 0) {
-                        cecup.traversal_src.row_ids[s_idx] = j;
+                    if (idx_src >= 0) {
+                        cecup.traversal_src.row_ids[idx_src] = j;
                     }
-                    if (d_idx >= 0) {
-                        cecup.traversal_dst.row_ids[d_idx] = j;
+                    if (idx_dst >= 0) {
+                        cecup.traversal_dst.row_ids[idx_dst] = j;
                     }
                 }
                 cecup.rows_len -= 1;
