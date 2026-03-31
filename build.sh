@@ -86,20 +86,10 @@ option_remove() {
 }
 
 generate_welcome_h() {
-    echo "Generating src/welcome.h from README.md..."
-    echo "static char *cecup_welcome_text = N_(" > src/welcome.h
-    awk '
-    /^# cecup/ {
-        next
-    }
-    /^!\[/ {
-        next
-    }
-    {
-        gsub(/"/, "\\\"");
-        print "\"" $0 "\\n\""
-    }' README.md >> src/welcome.h
-    echo ");" >> src/welcome.h
+    if [ -f "README.md" ]; then
+        echo "Generating src/welcome.h from README.md..."
+        python3 build_welcome.py README.md src/welcome.h
+    fi
 }
 
 compile_with_chibicc () {

@@ -709,13 +709,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                                                         NULL);
         GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
         GtkWidget *scroll = gtk_scrolled_window_new();
-        GtkWidget *label = gtk_label_new(_(cecup_welcome_text));
+        GtkWidget *label = gtk_label_new(NULL);
 
         gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 480);
 
         gtk_widget_set_vexpand(scroll, TRUE);
         gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 
+        gtk_label_set_markup(GTK_LABEL(label), _(cecup_welcome_text));
         gtk_label_set_wrap(GTK_LABEL(label), TRUE);
         gtk_label_set_xalign(GTK_LABEL(label), 0.0);
         gtk_label_set_yalign(GTK_LABEL(label), 0.0);
