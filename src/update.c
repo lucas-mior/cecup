@@ -213,7 +213,6 @@ update_row_transfer(Message *message) {
     int32 path_transfered_len = message->path_len;
     bool changed = false;
     int32 *idx_ptr;
-    int32 row_id;
 
     if (path_transfered == NULL || path_transfered_len == 0) {
         return false;
@@ -221,9 +220,8 @@ update_row_transfer(Message *message) {
 
     if ((idx_ptr
          = hash_lookup_fs_map(traversal_src->map, path_transfered, path_transfered_len))) {
-        int32 idx_src;
-        idx_src = *idx_ptr;
-        row_id = traversal_src->row_ids[idx_src];
+        int32 idx_src = *idx_ptr;
+        int32 row_id = traversal_src->row_ids[idx_src];
 
         if (row_id >= 0) {
             if (cecup.rows_dst[row_id] < 0) {
