@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-31 15:58-0300\n"
+"POT-Creation-Date: 2026-03-31 16:13-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -22,7 +22,7 @@ msgstr ""
 msgid "Click Analysis first"
 msgstr "Clique em \"Analisar\" primeiro"
 
-#: src/aux.c:79 src/main.c:280
+#: src/aux.c:79 src/main.c:282
 msgid "Start copying and updating all files"
 msgstr "Iniciar a cópia e atualização de todos os arquivos"
 
@@ -43,7 +43,6 @@ msgid "Error opening %s: %s.\n"
 msgstr "Erro ao abrir %s: %s.\n"
 
 #: src/ignore_patterns.c:78
-#, c-format
 msgid "Warning: advanced exclusion pattern '%s' detected.\n"
 msgstr "Aviso: padrão de exclusão avançado detectado: '%s'.\n"
 
@@ -57,12 +56,10 @@ msgid "This pattern will be interpreted literally.\n"
 msgstr "Esse padrão será interpretado literalmente.\n"
 
 #: src/ignore_patterns.c:84
-#, c-format
 msgid "Warning: exclusion pattern '%s' detected.\n"
 msgstr "Aviso: padrão de exclusão '%s' detectado.\n"
 
 #: src/ignore_patterns.c:90
-#, c-format
 msgid "Warning: backslash '%s' detected.\n"
 msgstr "Aviso: barra invertida '%s' detectada.\n"
 
@@ -110,119 +107,136 @@ msgstr "⏹️ Parar"
 msgid "Cancel the current task"
 msgstr "Cancelar a tarefa atual"
 
-#: src/main.c:279
+#: src/main.c:281
 msgid "⏩ Apply Changes"
 msgstr "⏩ Aplicar mudanças"
 
-#: src/main.c:309
+#: src/main.c:311
 msgid "Protect same-drive sync"
 msgstr "Impedir cópia no mesmo disco"
 
-#: src/main.c:310
+#: src/main.c:312
 msgid "Remove ignored items"
 msgstr "Excluir itens ignorados"
 
-#: src/main.c:311
+#: src/main.c:313
 msgid "Sync 100%"
 msgstr "Sincronia 100%"
 
-#: src/main.c:314
+#: src/main.c:316
 msgid "Prevent copying if original and backup are on the same disk"
 msgstr "Evitar a cópia se a origem e o backup estiverem no mesmo disco"
 
-#: src/main.c:316
-msgid "Remove files from backup if they were added to the ignore list"
-msgstr "Excluir arquivos do backup se eles foram adicionados à lista de ignorados"
-
 #: src/main.c:318
+msgid "Remove files from backup if they were added to the ignore list"
+msgstr ""
+"Excluir arquivos do backup se eles foram adicionados à lista de ignorados"
+
+#: src/main.c:320
 msgid "Delete files in backup that do not exist in the original"
 msgstr "Excluir do backup os arquivos que não existem na origem"
 
-#: src/main.c:321
+#: src/main.c:323
 msgid "Executable used for comparing files"
 msgstr "Executável usado para comparar os arquivos"
 
-#: src/main.c:324
+#: src/main.c:326
 msgid "Terminal emulator used to launch the diff tool"
 msgstr "Emulador de terminal usado para executar a ferramenta de comparação"
 
-#: src/main.c:326
+#: src/main.c:328
 msgid "Defaults"
 msgstr "Padrões"
 
-#: src/main.c:327
+#: src/main.c:329
 msgid "Restore original settings"
 msgstr "Restaurar configurações originais"
 
-#: src/main.c:341
+#: src/main.c:343
 msgid "Diff Tool:"
 msgstr "Ferramenta de comparação:"
 
-#: src/main.c:345
+#: src/main.c:347
 msgid "Terminal:"
 msgstr "Terminal:"
 
-#: src/main.c:356 src/work.c:323
+#: src/main.c:358 src/work.c:323
 msgid "Analyzing changes"
 msgstr "Analisando mudanças"
 
-#: src/main.c:387
-msgid "Folder containing your original files"
+#: src/main.c:389
+msgid "Folder containing original files"
 msgstr "Pasta contendo seus arquivos de origem"
 
-#: src/main.c:389 src/main.c:405
+#: src/main.c:391 src/main.c:409
 msgid "Select Folder"
 msgstr "Selecionar pasta"
 
-#: src/main.c:398
+#: src/main.c:393
+msgid "Open browser to select the folder containing original files"
+msgstr "Pasta contendo seus arquivos de origem"
+
+#: src/main.c:402
 msgid "Invert Original and Backup"
 msgstr "Inverter origem e backup"
 
-#: src/main.c:403
+#: src/main.c:407
 msgid "Folder where the backup will be stored"
 msgstr "Pasta onde o backup será armazenado"
 
-#: src/main.c:417
+#: src/main.c:411
+msgid "Open browser to select the folder where the backup will be stored"
+msgstr "Pasta onde o backup será armazenado"
+
+#: src/main.c:423
 msgid "Search files..."
 msgstr "Pesquisar arquivos..."
 
-#: src/main.c:423
+#: src/main.c:429
 msgid "🔍"
 msgstr "🔍"
 
-#: src/main.c:431
+#: src/main.c:437
 msgid "Select all visible"
 msgstr "Selecionar todos visíveis"
 
-#: src/main.c:434
+#: src/main.c:439
+msgid "Select all files which currently are on the list below"
+msgstr "Selecionar todos arquivos que atualmente estão na lista abaixo"
+
+#: src/main.c:442
 msgid "Unselect all"
 msgstr "Desmarcar todos"
 
-#: src/main.c:503
+#: src/main.c:444
+msgid "Unselect all files which are currently selected"
+msgstr "Desselecionar todos os arquivos que estão selecionados"
+
+#: src/main.c:513
 msgid "Show New Files"
 msgstr "Mostrar arquivos novos"
 
-#: src/main.c:504
+#: src/main.c:514
 msgid "Show links"
 msgstr "Mostrar links"
 
-#: src/main.c:505
+#: src/main.c:515
 msgid "Show Updates"
 msgstr "Mostrar atualizações"
 
-#: src/main.c:506
+#: src/main.c:516
 msgid "Show equals"
 msgstr "Mostrar iguais"
 
-#: src/main.c:507
+#: src/main.c:517
 msgid "Show Deletions"
 msgstr "Mostrar exclusões"
 
-#: src/main.c:508
+#: src/main.c:518
 msgid "Show Ignored"
 msgstr "Mostrar ignorados"
 
-#: src/main.c:536
+#: src/main.c:546
 msgid "✅ Everything ready"
 msgstr "✅ Tudo pronto"
 
@@ -373,8 +387,8 @@ msgid "Error in fts_close: %s.\n"
 msgstr "Erro em fts_close: %s.\n"
 
 #: src/work.c:324
-msgid "Traversing file systems for differences...\n"
-msgstr "Percorrendo os sistemas de arquivos em busca de diferenças...\n"
+msgid "Traversing file systems for differences..."
+msgstr "Percorrendo os sistemas de arquivos em busca de diferenças..."
 
 #: src/work.c:334 src/work.c:339
 msgid "Error getting directory info from %s: %s.\n"
@@ -617,11 +631,12 @@ msgstr ""
 "\n"
 "Recursos disponíveis:\n"
 "• Analisar: Veja uma prévia das mudanças antes de aplicá-las.\n"
-"• Filtros: Visualize os arquivos por situação (Novos, Links, Atualizados, Iguais, "
-"Excluídos, Ignorados).\n"
-"• Regras de Ignorados: Especifique padrões de nomes de arquivo para excluir.\n"
-"• Comparação (Diff): Compare o conteúdo dos arquivos usando sua ferramenta de "
-"diff externa preferida.\n"
+"• Filtros: Visualize os arquivos por situação (Novos, Links, Atualizados, "
+"Iguais, Excluídos, Ignorados).\n"
+"• Regras de Ignorados: Especifique padrões de nomes de arquivo para "
+"excluir.\n"
+"• Comparação (Diff): Compare o conteúdo dos arquivos usando sua ferramenta "
+"de diff externa preferida.\n"
 "• Segurança: Proteção contra sincronização acidental no mesmo disco.\n"
 "• Sincronia 100%%: Opcionalmente, exclua do destino os arquivos que não "
 "existem na origem e sobrescreva os arquivos no destino que são mais "
@@ -659,8 +674,7 @@ msgstr "📋 Copiar caminho relativo"
 
 #: src/on.h:10
 msgid "copy path of this file (relative to original/backup folder path)"
-msgstr ""
-"copiar o caminho deste arquivo (relativo à pasta de origem/backup)"
+msgstr "copiar o caminho deste arquivo (relativo à pasta de origem/backup)"
 
 #: src/on.h:11
 msgid "⏯️ Apply"
