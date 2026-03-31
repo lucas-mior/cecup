@@ -587,7 +587,8 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
                 n = ITOA(inode_str, (long)traversal->stats[idx].st_ino);
                 if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n))) {
                     if (traversal->nlinks[idx] != traversal->nlinks[*first_idx_ptr]) {
-                        error("Consistency error: %s index %d (path %s) has mismatched nlinks %d != %d.\n",
+                        error("Consistency error:"
+                              "%s index %d (path %s) has mismatched nlinks %d != %d.\n",
                               which_traversal, idx, path, traversal->nlinks[idx], traversal->nlinks[*first_idx_ptr]);
                         fatal(EXIT_FAILURE);
                     }
