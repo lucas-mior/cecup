@@ -20,7 +20,7 @@ previewing and confirming:
 - which files are meant to be ignored
 - which files are links to other files
 
-FreeFileSync does have a similar interface (while also supporting 2 way backup),
-however it does not support hard links. Rsync does support everything
-imaginable, but it has no GUI for this use case, while also being too
+FreeFileSync does have a similar interface, while also supporting 2 way backup,
+which cecup doesn't.  However it does not support hard links. Rsync does support
+everything imaginable, but it has no GUI for this use case, while also being too
 overwhelming for the average user.
