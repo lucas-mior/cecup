@@ -18,7 +18,7 @@ alias trace_off='{ set +x; } 2>/dev/null'
 
 dir=$(dirname "$(readlink -f "$0")")
 cbase="cbase"
-CPPFLAGS="$CPPFLAGS -I $dir/$cbase"
+CPPFLAGS="$CPPFLAGS -I$dir/$cbase"
 
 cd "$dir" || exit
 program=$(basename "$(readlink -f "$dir")")
@@ -233,7 +233,11 @@ case "$target" in
 
     ctags --kinds-C=+l+d cbase/*.c src/*.h src/*.c  2> /dev/null || true
     vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
-    $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
+    if [ "$CC" = "chibicc" ]; then
+        compile_with_chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
+    else
+        $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
+    fi
 
     if [ $target = "debug" ]; then
         # G_DEBUG=fatal_warnings \
