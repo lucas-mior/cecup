@@ -345,7 +345,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(options_hbox), gtk_label_new(_("Diff Tool:")));
     gtk_box_append(GTK_BOX(options_hbox), cecup.diff_entry);
 
-    gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "unidiff.bash");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "diff");
     gtk_box_append(GTK_BOX(options_hbox), gtk_label_new(_("Terminal:")));
     gtk_box_append(GTK_BOX(options_hbox), cecup.term_entry);
     gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "xterm");
