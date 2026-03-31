@@ -338,7 +338,6 @@ msgid "pattern"
 msgstr "padrão"
 
 #: src/update.c:619
-#, fuzzy, c-format
 msgid ""
 "<span foreground='red'>Selected files: %d</span>\n"
 "Total Transfer Size: 📦 %s"
@@ -347,16 +346,12 @@ msgstr ""
 "Tamanho total a copiar: 📦 %s"
 
 #: src/update.c:625
-#, fuzzy, c-format
 msgid ""
-"Selected files: %d\n"
-"Total Transfer Size: 📦 %s"
+"Selected files: %d\nTotal Transfer Size: 📦 %s"
 msgstr ""
-"Arquivos selecionados: %d\n"
-"Tamanho total a copiar: 📦 %s"
+"Arquivos selecionados: %d\nTamanho total a copiar: 📦 %s"
 
 #: src/work.c:77
-#, fuzzy, c-format
 msgid "Error walking directory %s: %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
@@ -369,12 +364,10 @@ msgid "Please fix your file system.\n"
 msgstr "Por favor conserte o seu sistema de arquivos.\n"
 
 #: src/work.c:123
-#, fuzzy
 msgid "Error: there is a space in the start of the filename:\n"
 msgstr "Erro: há espaço em braco no começo do nome do arquivo:\n"
 
 #: src/work.c:131
-#, fuzzy
 msgid "Error: there is space in the end of the filename:\n"
 msgstr "Erro: há espaço em braco no final do nome do arquivo:\n"
 
@@ -383,7 +376,6 @@ msgid "Error: filename contains problematic characters/patterns:\n"
 msgstr "Erro: nome de arquivo contém caracteres/padrões problemáticos\n"
 
 #: src/work.c:157
-#, fuzzy, c-format
 msgid "More than %lld files found.\n"
 msgstr "%lld arquivos encontrados para analisar...\n"
 
@@ -392,22 +384,18 @@ msgid "Please work in smaller subdirs.\n"
 msgstr "Por favor trabalhe em subpastas menores.\n"
 
 #: src/work.c:218
-#, fuzzy, c-format
 msgid "Error in readlink(%s): %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
 #: src/work.c:261
-#, fuzzy, c-format
 msgid "Error in fts_close: %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
 #: src/work.c:324
-#, fuzzy
-msgid "Traversing file systems for differences..."
+msgid "Traversing file systems for differences...\n"
 msgstr "Por favor conserte o seu sistema de arquivos.\n"
 
 #: src/work.c:334 src/work.c:339
-#, fuzzy, c-format
 msgid "Error getting directory info from %s: %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
@@ -425,7 +413,6 @@ msgstr ""
 "\"Impedir cópia no mesmo disco\".\n"
 
 #: src/work.c:364
-#, fuzzy
 msgid "Traversing file systems...\n"
 msgstr "Por favor conserte o seu sistema de arquivos.\n"
 
@@ -438,13 +425,11 @@ msgid "File system traversal finished.\n"
 msgstr "Buscar no sistema de arquivos concluída.\n"
 
 #: src/work.c:387
-#, c-format
 msgid "Found %lld files to analyse...\n"
 msgstr "%lld arquivos encontrados para analisar...\n"
 
 #: src/work_rsync.c:155
-#, fuzzy
-msgid "Verifying checksums"
+msgid "Verifying checksums...\n"
 msgstr "Verificando cópias com checksum...\n"
 
 #: src/work_rsync.c:156
@@ -460,27 +445,22 @@ msgid "Transferring data and updating metadata..."
 msgstr "Transferindo dados e atualizando metadados..."
 
 #: src/work_rsync.c:199
-#, fuzzy
 msgid "Running sync...\n"
 msgstr "Executando %s...\n"
 
 #: src/work_rsync.c:301
-#, fuzzy, c-format
 msgid "Error reading stdout pipe: %s.\n"
 msgstr "Error renomeando %s to %s: %s\n"
 
 #: src/work_rsync.c:414
-#, fuzzy, c-format
 msgid "Error reading stderr pipe: %s.\n"
 msgstr "Error renomeando %s to %s: %s\n"
 
 #: src/work_rsync.c:425
-#, fuzzy, c-format
 msgid "Error waiting for child process: %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
 #: src/work_rsync.c:426
-#, fuzzy
 msgid "Killing the child process with SIGKILL..."
 msgstr "Matando o processo filho com SIGKILL..."
 
@@ -521,7 +501,6 @@ msgid "Skip"
 msgstr "Pular"
 
 #: src/cecup.h:191
-#, fuzzy
 msgid "Update folder in backup"
 msgstr "Atualizar arquivo no backup"
 
@@ -614,22 +593,18 @@ msgid "Folders are equal"
 msgstr "Pastas são iguais"
 
 #: src/cecup.h:242
-#, fuzzy
 msgid "Folder does not exist in the original folder"
 msgstr "Arquivo não existe na pasta original"
 
 #: src/cecup.h:243
-#, fuzzy
 msgid "New folder found in the original folder"
 msgstr "Novo arquivo encontrado na pasta original"
 
 #: src/cecup.h:244
-#, fuzzy
 msgid "Hardlinked folder in the original folder"
 msgstr "Arquivo vinculado (link) na origem"
 
 #: src/cecup.h:249
-#, fuzzy
 msgid "Folder sizes differ"
 msgstr "Tamanho dos arquivos difere"
 
@@ -642,7 +617,6 @@ msgid "Folder in the source is older than backup"
 msgstr "Arquivo na pasta original é mais velho que no backup"
 
 #: src/cecup.h:569
-#, c-format
 msgid ""
 "Welcome to cecup!\n"
 "\n"
@@ -703,7 +677,6 @@ msgid "📋 Copy Relative Path"
 msgstr "📋 Copiar caminho relativo"
 
 #: src/on.h:10
-#, fuzzy
 msgid "copy path of this file (relative to original/backup folder path)"
 msgstr ""
 "copiar caminho completo desse arquivo (relativo ao caminho da pasta original/"
