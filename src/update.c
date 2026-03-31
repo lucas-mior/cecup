@@ -622,7 +622,8 @@ update_stats_text(int32 count_selected, int64 total_size_bytes) {
                  count_selected, pretty_size);
     } else {
         SNPRINTF(stats_text,
-                 _("Selected files: %d\nTotal Transfer Size: 📦 %s"),
+                 _("Selected files: %d\n"
+                   "Total Transfer Size: 📦 %s"),
                  count_selected, pretty_size);
     }
 

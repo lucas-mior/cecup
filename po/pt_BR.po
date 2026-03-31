@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-31 15:48-0300\n"
+"POT-Creation-Date: 2026-03-31 15:58-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -71,7 +71,6 @@ msgid "Warning: backslash '%s' detected.\n"
 msgstr "Aviso: barra invertida '%s' detectada.\n"
 
 #: src/ignore_patterns.c:127 src/on_menu.c:84
-#, fuzzy, c-format
 msgid "Error closing %s: %s.\n"
 msgstr "Error abrindo pasta %s: %s\n"
 
@@ -236,7 +235,6 @@ msgid "Action blocked: Background task is running.\n"
 msgstr "Ação bloqueada: Há uma tarefa executando em segundo plano.\n"
 
 #: src/on.c:190
-#, fuzzy, c-format
 msgid ""
 "Warning: 'Sync 100%%' (delete-after) is enabled. Files in the backup folder "
 "that do not exist in the source folder will be PERMANENTLY DELETED. Also, "
@@ -247,7 +245,6 @@ msgstr ""
 "Além disso, arquivos que são mais novos no backup serão sobreescritos."
 
 #: src/on.c:311
-#, c-format
 msgid "Sync %s -> %s?"
 msgstr "Sincronizar %s -> %s?"
 
@@ -256,12 +253,10 @@ msgid "Ignore Rules"
 msgstr "Regras de Ignorados"
 
 #: src/on.c:620
-#, fuzzy
 msgid "Error: source directory path is too long.\n"
 msgstr "Erro: caminho do arquivo é muito longo:\n"
 
 #: src/on.c:627
-#, fuzzy
 msgid "Error: destination directory path is too long.\n"
 msgstr "Erro: caminho do arquivo é muito longo:\n"
 
@@ -274,62 +269,50 @@ msgid "Dst"
 msgstr "Backup"
 
 #: src/on_log.c:101
-#, fuzzy
 msgid "📝 Copy Line"
 msgstr "📍 Copiar esta linha"
 
 #: src/on_log.c:102
-#, fuzzy
 msgid "📋 Copy Whole Log"
 msgstr "📋 Copiar caminho relativo"
 
 #: src/on_menu.c:222
-#, c-format
 msgid "Launching %s...\n"
 msgstr "Executando %s...\n"
 
 #: src/on_menu.c:270
-#, fuzzy, c-format
 msgid "Error resolving full path of %s: %s.\n"
 msgstr "Error renomeando %s to %s: %s\n"
 
 #: src/on_menu.c:347
-#, c-format
 msgid "Permanently delete %d item(s)?"
 msgstr "Excluir permanentemente %d arquivo(s)?"
 
 #: src/on_path.c:177
-#, c-format
 msgid "Error renaming %s to %s: %s\n"
 msgstr "Error renomeando %s to %s: %s\n"
 
 #: src/on_path.c:181
-#, c-format
 msgid "Renamed: %s -> %s\n"
 msgstr "Renomeado: %s -> %s\n"
 
 #: src/on_tree.c:165
-#, c-format
 msgid "by extension (*%s)"
 msgstr "pela extensão (*%s)"
 
 #: src/on_tree.c:174
-#, c-format
 msgid "📁 Dir (/%s/)"
 msgstr "📁 Pasta (/%s/)"
 
 #: src/on_tree.c:183
-#, fuzzy, c-format
 msgid "This folder only (/%s)"
 msgstr "Somente esse arquivo (/%s)"
 
 #: src/on_tree.c:185
-#, c-format
 msgid "This file only (/%s)"
 msgstr "Somente esse arquivo (/%s)"
 
 #: src/on_tree.c:193
-#, c-format
 msgid "This filename on any folder (*/%s)"
 msgstr "Esse nome de arquivo em qualquer pasta (*/%s)"
 
@@ -347,9 +330,11 @@ msgstr ""
 
 #: src/update.c:625
 msgid ""
-"Selected files: %d\nTotal Transfer Size: 📦 %s"
+"Selected files: %d\n"
+"Total Transfer Size: 📦 %s"
 msgstr ""
-"Arquivos selecionados: %d\nTamanho total a copiar: 📦 %s"
+"Arquivos selecionados: %d\n"
+"Tamanho total a copiar: 📦 %s"
 
 #: src/work.c:77
 msgid "Error walking directory %s: %s.\n"
@@ -429,8 +414,8 @@ msgid "Found %lld files to analyse...\n"
 msgstr "%lld arquivos encontrados para analisar...\n"
 
 #: src/work_rsync.c:155
-msgid "Verifying checksums...\n"
-msgstr "Verificando cópias com checksum...\n"
+msgid "Verifying checksums"
+msgstr "Verificando cópias com checksum"
 
 #: src/work_rsync.c:156
 msgid "Performing verification of the new files..."
@@ -721,65 +706,3 @@ msgstr "💤 Ignorar..."
 #: src/on.h:15
 msgid "Add ignore pattern for this file"
 msgstr "Adicionar padrão para ignorar esse arquivo"
-
-#~ msgid "Preview analysis progress"
-#~ msgstr "Progresso da análise da prévia"
-
-#, fuzzy, c-format
-#~ msgid "Removing %s entirely from list...\n"
-#~ msgstr "Removendo %s da lista...\n"
-
-#, c-format
-#~ msgid "Updated %s state (missing on side %d)\n"
-#~ msgstr "Atualizou %s (faltando no lado %d)\n"
-
-#~ msgid "Files have the same size and modification time"
-#~ msgstr "Arquivos tem o mesmo tamanho e data de modificação"
-
-#, fuzzy
-#~ msgid "Folders have the same size and modification time"
-#~ msgstr "Arquivos tem o mesmo tamanho e data de modificação"
-
-#, fuzzy, c-format
-#~ msgid "Fixed: %s -> %s\n"
-#~ msgstr "Renomeado: %s -> %s\n"
-
-#, fuzzy
-#~ msgid "Modification times differ"
-#~ msgstr "Datas de modificação diferem"
-
-#~ msgid "🛠️ Rename problematic files"
-#~ msgstr "🛠️ Corrigir nomes problemáticos"
-
-#~ msgid "Rename problematic filenames, the ones containing:\n"
-#~ msgstr "Renomear nomes de arquivo problemáticos, aqueles que contém:\n"
-
-#~ msgid "Warning: Problematic file names will not be renamed.\n"
-#~ msgstr "Aviso: Nomes de arquivo problemáticos não serão renomeados.\n"
-
-#~ msgid "This is only a problem if you have problematic filenames.\n"
-#~ msgstr "Isso só é um problema se você tem nomes de arquivo problemáticos.\n"
-
-#~ msgid "Problematic filenames are the ones that contain the strings:\n"
-#~ msgstr "Nomes de arquivo problemáticos são aqueles que contém:\n"
-
-#~ msgid "Checking for problematic names...\n"
-#~ msgstr "Procurando nomes de arquivo problemáticos...\n"
-
-#~ msgid "Name correction finished.\n"
-#~ msgstr "Correção de nomes finalizada.\n"
-
-#~ msgid "Checking for problematic names and counting files...\n"
-#~ msgstr "Procurando nomes de arquivo problemáticos e contando arquivos...\n"
-
-#~ msgid "Analysis complete. Review the list and click Apply.\n"
-#~ msgstr "Análise completa. Verifique a lista e clique em \"aplicar\".\n"
-
-#~ msgid "The original file is newer"
-#~ msgstr "O arquivo original é mais recente"
-
-#~ msgid "by extension"
-#~ msgstr "pela extensão"
-
-#~ msgid "📁 Dir"
-#~ msgstr "📁 Pasta"
