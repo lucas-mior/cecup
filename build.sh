@@ -87,7 +87,6 @@ compile_with_chibicc () {
     args="$*"
     trace_off
     while ! problem=$(chibicc $args 2>&1); do
-        echo "$problem"
         trace_off
         sleep 1
         if echo "$problem" | grep -q "unknown argument:"; then
@@ -99,6 +98,7 @@ compile_with_chibicc () {
             echo "Removing argument $arg..."
             args=$(option_remove "$args" "$arg")
         else
+            printf "\n\nError compiling with chibicc:\n\n${problem}\n\n"
             break
         fi
         trace_on
