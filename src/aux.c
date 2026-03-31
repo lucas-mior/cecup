@@ -210,13 +210,6 @@ traversal_push(Traversal *traversal, struct stat *stat,
     traversal->patterns_lens[idx] = (int16)matched_pattern_len;
     traversal->row_ids[idx] = -1;
 
-    // TODO: Semantic Issue. You hardcode `traversal->nlinks[idx] = 1;` here, ignoring the actual
-    // link count from the `stat` struct. This causes the `nlinks > 1` checks elsewhere (like in
-    // `check_consistent_traversal_rows` and `item_get_actions_reasons`) to silently fail,
-    // effectively breaking hardlink detection logic. You should initialize this using
-    // `stat->st_nlink` if `stat` is not NULL.
-    /* traversal->nlinks[idx] = 1; */
-
     if (traversal->map) {
         hash_insert_fs_map(traversal->map, path, path_len, idx);
     }
