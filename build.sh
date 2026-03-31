@@ -14,6 +14,7 @@ if [ -n "$BASH_VERSION" ]; then
     shopt -s expand_aliases
 fi
 
+# gtk might not work correctly if you have stuff here
 export XDG_DATA_DIRS=""
 
 alias trace_on='set -x'
