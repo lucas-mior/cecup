@@ -1,6 +1,8 @@
 # cecup
 GUI backup tool inspired by FreeFileSync and Rsync
 
+![cecup demo](cecup.gif)
+
 ## Logic
 This tool is made to facilitate the correct and intuitive backup of a file
 system. A correct backup must be, in general, a 1 to 1 copy from the source.
@@ -22,10 +24,3 @@ FreeFileSync does have a similar interface (while also supporting 2 way backup),
 however it does not support hard links. Rsync does support everything
 imaginable, but it has no GUI for this use case, while also being too
 overwhelming for the average user.
-
-## TODO
-- Hard links:
-  add data structure to the inode map to track all names to each inode.
-  then we will be able to correctly know if a hardlink is missing on the
-  destination or not. Currently it uses the number of links as a heuristic,
-  which will not work if some name is on another directory.
