@@ -114,15 +114,6 @@ traversal_clean(Traversal *traversal) {
     hash_zero_fs_map(traversal->map);
     hash_zero_inode_map(traversal->inode_map);
 
-    memset64(traversal->stats,0, traversal->ncapacity*SIZEOF(*(traversal->stats)));
-    memset64(traversal->paths, 0, traversal->ncapacity*SIZEOF(*(traversal->paths)));
-    memset64(traversal->link_targets, 0, traversal->ncapacity*SIZEOF(*(traversal->link_targets)));
-    memset64(traversal->patterns, 0, traversal->ncapacity*SIZEOF(*(traversal->patterns)));
-    memset64(traversal->paths_lens, 0, traversal->ncapacity*SIZEOF(*(traversal->paths_lens)));
-    memset64(traversal->link_targets_lens, 0, traversal->ncapacity*SIZEOF(*(traversal->link_targets_lens)));
-    memset64(traversal->patterns_lens, 0, traversal->ncapacity*SIZEOF(*(traversal->patterns_lens)));
-    memset64(traversal->nlinks, 0, traversal->ncapacity*SIZEOF(*(traversal->nlinks)));
-
     traversal->base_path = NULL;
     traversal->base_path_len = 0;
     traversal->file_count = 0;
