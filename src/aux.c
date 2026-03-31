@@ -215,7 +215,7 @@ traversal_push(Traversal *traversal, struct stat *stat,
     // `check_consistent_traversal_rows` and `item_get_actions_reasons`) to silently fail,
     // effectively breaking hardlink detection logic. You should initialize this using
     // `stat->st_nlink` if `stat` is not NULL.
-    traversal->nlinks[idx] = 1;
+    /* traversal->nlinks[idx] = 1; */
 
     if (traversal->map) {
         hash_insert_fs_map(traversal->map, path, path_len, idx);

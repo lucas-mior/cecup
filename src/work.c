@@ -224,6 +224,7 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
+        traversal->nlinks[traversal->nfiles] = 1;
         if ((ent->fts_info == FTS_F) && (ent->fts_statp->st_nlink > 1)) {
             char inode_str[32];
             int32 n;

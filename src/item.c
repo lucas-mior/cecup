@@ -364,7 +364,10 @@ item_get_actions_reasons(int32 row_id,
                         ) {
                     equal = false;
                     attributes_differ = true;
+                    PRINT(nlinks_src); PRINTLN(nlinks_dst);
                     *reason |= REASON_HARDLINK_NOT_MATCH;
+                } else {
+                    PRINT(nlinks_src); PRINTLN(nlinks_dst);
                 }
             }
 
