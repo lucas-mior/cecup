@@ -661,14 +661,10 @@ update_row_ignore(Message *message) {
     ignore_patterns_load();
 
     for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
-        char *path;
-        int32 path_len;
-        bool is_dir;
+        char *path = item_path_get(row_id);
+        int32 path_len = item_path_len_get(row_id);
+        bool is_dir = false;
         IgnorePattern *match;
-
-        path = item_path_get(row_id);
-        path_len = item_path_len_get(row_id);
-        is_dir = false;
 
         if (path_len > 0) {
             if (path[path_len - 1] == '/') {
