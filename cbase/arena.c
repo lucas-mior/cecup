@@ -18,31 +18,7 @@
 #if !defined(ARENA_C)
 #define ARENA_C
 
-#if defined(__linux__)
-#define OS_LINUX 1
-#define OS_MAC 0
-#define OS_BSD 0
-#define OS_WINDOWS 0
-#elif defined(__APPLE__) && defined(__MACH__)
-#define OS_LINUX 0
-#define OS_MAC 1
-#define OS_BSD 0
-#define OS_WINDOWS 0
-#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-#define OS_LINUX 0
-#define OS_MAC 0
-#define OS_BSD 1
-#define OS_WINDOWS 0
-#elif defined(_WIN32) || defined(_WIN64)
-#define OS_LINUX 0
-#define OS_MAC 0
-#define OS_BSD 0
-#define OS_WINDOWS 1
-#else
-#error "Unsupported OS.\n"
-#endif
-
-#define OS_UNIX (OS_LINUX || OS_MAC || OS_BSD)
+#include "util.c"
 
 #if defined(__GNUC__)
 #define COMPILER_GCC 1
@@ -550,7 +526,9 @@ memset64(void *buffer, int value, int64 size) {
 }
 #endif
 
+#if !defined(LENGTH)
 #define LENGTH(X) ((int64)(sizeof(X) / sizeof(*X)))
+#endif
 
 int
 main(void) {
