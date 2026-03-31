@@ -227,7 +227,8 @@ update_row_transfer(Message *message) {
             if (cecup.rows_dst[row_id] < 0) {
                 int32 *lookup;
 
-                if ((lookup = hash_lookup_fs_map(traversal_dst->map, path_transfered, path_transfered_len))) {
+                if ((lookup = hash_lookup_fs_map(traversal_dst->map,
+                                                 path_transfered, path_transfered_len))) {
                     cecup.rows_dst[row_id] = *lookup;
                 } else {
                     cecup.rows_dst[row_id] = traversal_push(
