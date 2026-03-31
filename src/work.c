@@ -226,12 +226,12 @@ work_traverse_fs(Traversal *traversal) {
 
         traversal->nlinks[traversal->nfiles] = 1;
         if ((ent->fts_info == FTS_F) && (ent->fts_statp->st_nlink > 1)) {
-            char inode_str[32];
-            int32 n;
+            char inode[32];
+            int32 inode_len;
             int32 *first_idx_ptr;
 
-            n = ITOA(inode_str, (long)ent->fts_statp->st_ino);
-            if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n))) {
+            inode_len = ITOA(inode, (long)ent->fts_statp->st_ino);
+            if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
                 int32 first_idx = *first_idx_ptr;
 
                 link_target = traversal->paths[first_idx];
@@ -248,7 +248,7 @@ work_traverse_fs(Traversal *traversal) {
                     traversal->nlinks[first_idx] += 1;
                 }
             } else {
-                hash_insert_inode_map(traversal->inode_map, inode_str, n, traversal->nfiles);
+                hash_insert_inode_map(traversal->inode_map, inode, inode_len, traversal->nfiles);
             }
         }
 
