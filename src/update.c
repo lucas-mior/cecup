@@ -685,7 +685,7 @@ update_row_ignore(Message *message) {
 
         if (cecup.rows_dst[row_id] >= 0) {
             int32 idx_dst = cecup.rows_dst[row_id];
-            bool was_ignored = (cecup.traversal_dst.patterns[idx_dst] != NULL);
+            bool was_ignored = cecup.traversal_dst.patterns[idx_dst];
             bool is_ignored = match;
 
             if (was_ignored != is_ignored) {
