@@ -26,6 +26,8 @@
 #include "on.c"
 #include "columns.c"
 
+#include "welcome.h"
+
 #define SPACING_BOX 5
 #define PADDING_BUTTON 5
 #define PADDING_FILTER_BUTTON 2
@@ -700,7 +702,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
 
-    if (is_first_run) {
+    if (true) {
         GtkWidget *dialog;
 
         dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),

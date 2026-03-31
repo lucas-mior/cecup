@@ -85,6 +85,15 @@ option_remove() {
     echo "$1" | sed -E "s| *$2 +| |g"
 }
 
+generate_welcome_h() {
+    if [ -f "README.md" ]; then
+        echo "Generating src/welcome.h from README.md..."
+        echo "static char *cecup_welcome_text = N_(" > src/welcome.h
+        awk '/^# cecup/{next} /^!\[/{next} {gsub(/"/, "\\\""); print "\"" $0 "\\n\""}' README.md >> src/welcome.h
+        echo ");" >> src/welcome.h
+    fi
+}
+
 compile_with_chibicc () {
     args="$*"
     while ! problem=$(chibicc $args 2>&1); do
@@ -145,6 +154,7 @@ case "$target" in
     CFLAGS="$CFLAGS $GNUSOURCE -Werror"
     ;;
 "po")
+    generate_welcome_h
     mkdir -p po
 
     xgettext \
@@ -222,11 +232,13 @@ fi
 
 case "$target" in
 "fast_feedback")
+    generate_welcome_h
     trace_on
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && LC_ALL=C "$exe"
     trace_off
     ;;
 "build"|"debug"|"run"|"release"|"valgrind"|"callgrind"|"perf"|"profile")
+    generate_welcome_h
     trace_on
 
     if [ ! -d "po" ]; then
@@ -283,12 +295,14 @@ case "$target" in
     exit
     ;;
 "assembly")
+    generate_welcome_h
     trace_on
     $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "src/$main"
     trace_off
     exit
     ;;
 "test")
+    generate_welcome_h
     find . -iname "*.c" | sort | while read -r src; do
         trace_off
         name=$(basename "$src")

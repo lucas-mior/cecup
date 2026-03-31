@@ -565,16 +565,4 @@ static void on_menu_delete(GtkWidget *m, void *data);
 static void on_popover_closed(GtkWidget *popover, void *data);
 static void execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item);
 
-static char *cecup_welcome_text = N_(
-    "Welcome to cecup!\n\n"
-    "Available features:\n"
-    "• Analyze: Preview changes before applying them.\n"
-    "• Filters: View files by state (New, Linked, Updated, Equal, Deleted, Ignored).\n"
-    "• Ignore Rules: Specify file patterns to exclude.\n"
-    "• Diff Tool: Compare file contents using your preferred diff tool.\n"
-    "• Safety: Protect against accidental same-drive synchronization.\n"
-    "• 100%% Sync: Optionally delete files from the destination that don't exist in the source and also overwrite files that are newer on the destination\n"
-    "• Remove ignored files: Optionally delete files from the destination that don't exist in the source."
-);
-
 #endif /* CECUP_H */
