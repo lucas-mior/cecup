@@ -49,7 +49,7 @@ overwhelming for the average user.
     + you must choose an external diff tool and terminal
   * Rename
   * Delete
-  * Ignore. This opens a submenu with 4 ways to ignore a file
+  * Ignore. This opens a submenu with 4 ways to ignore a file:
     + by extension (if any)
     + by its folder
     + by its complete path (matches only this file)
