@@ -260,6 +260,8 @@ on_preview_clicked(GtkWidget *button, void *data) {
     memset64(message, 0, SIZEOF(*message));
     message->type = MSG_CLEAR_TREES;
     update_ui_handler(message);
+    // TODO: make state consistent here by also clearing the Traversal,
+    //       instead of doing it on the separate thread
 
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
