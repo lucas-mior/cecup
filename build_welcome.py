@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import sys
 import re
 
@@ -12,7 +11,9 @@ def escape_pango(text):
 
 
 def process_markdown(lines):
-    out = []
+    blocks = []
+    current_block = []
+
     for line in lines:
         line = line.rstrip('\n')
 
@@ -20,34 +21,77 @@ def process_markdown(lines):
         if line.startswith('# cecup') or line.startswith('!['):
             continue
 
-        line = escape_pango(line)
+        if line.strip() == '':
+            # Empty line means the end of a block
+            if current_block:
+                blocks.append(current_block)
+                current_block = []
+            blocks.append(['']) # Represent an empty line block to preserve \n
+        elif re.match(r'^\s*[-*+]\s+', line):
+            # A list marker starts a new block
+            if current_block:
+                blocks.append(current_block)
+            current_block = [line]
+        elif line.startswith('#'):
+            # A heading is its own isolated block
+            if current_block:
+                blocks.append(current_block)
+                current_block = []
+            blocks.append([line])
+        else:
+            # Standard continuation line
+            current_block.append(line)
 
-        # Headings (Fixed: removed literal \n from the f-strings)
-        if line.startswith('## '):
-            line = line.replace('## ', '', 1)
-            line = f'<b><big>{line}</big></b>'
-        elif line.startswith('# '):
-            line = line.replace('# ', '', 1)
-            line = f'<b><big><big>{line}</big></big></b>'
+    # Don't forget the last block
+    if current_block:
+        blocks.append(current_block)
+
+    # Step 2: Format and merge blocks
+    out = []
+    for block in blocks:
+        if not block:
+            continue
+
+        if block == ['']:
+            out.append('"\\n"')
+            continue
+
+        # Merge block lines into a single line.
+        # Keeps the first line's indentation, but strips trailing/leading spaces
+        # from the wrapped lines so words don't have multiple spaces between them.
+        if len(block) > 1:
+            merged = block[0].rstrip() + " " + " ".join(l.strip() for l in block[1:])
+        else:
+            merged = block[0]
+
+        merged = escape_pango(merged)
+
+        # Headings
+        if merged.startswith('## '):
+            merged = merged.replace('## ', '', 1)
+            merged = f'<b><big>{merged}</big></b>'
+        elif merged.startswith('# '):
+            merged = merged.replace('# ', '', 1)
+            merged = f'<b><big><big>{merged}</big></big></b>'
 
         # Lists
-        line = re.sub(r'^(\s*)[-*]\s+', r'\1• ', line)
-        line = re.sub(r'^(\s*)\+\s+', r'\1◦ ', line)
+        merged = re.sub(r'^(\s*)[-*]\s+', r'\1• ', merged)
+        merged = re.sub(r'^(\s*)\+\s+', r'\1◦ ', merged)
 
         # Bold and Italic
-        line = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', line)
-        line = re.sub(r'\*(.+?)\*', r'<i>\1</i>', line)
-        line = re.sub(r'_(.+?)_', r'<i>\1</i>', line)
+        merged = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', merged)
+        merged = re.sub(r'\*(.+?)\*', r'<i>\1</i>', merged)
+        merged = re.sub(r'_(.+?)_', r'<i>\1</i>', merged)
 
         # Inline code
-        line = re.sub(r'`(.+?)`', r'<tt>\1</tt>', line)
+        merged = re.sub(r'`(.+?)`', r'<tt>\1</tt>', merged)
 
         # Escape quotes for C string
-        line = line.replace('"', '\\"')
+        merged = merged.replace('"', '\\"')
 
-        out.append(f'"{line}\\n"')
+        out.append(f'"{merged}\\n"')
+
     return out
-
 
 def main():
     if len(sys.argv) < 3:
@@ -70,7 +114,6 @@ def main():
     except Exception as e:
         print(f"Error processing markdown: {e}")
         sys.exit(1)
-
 
 if __name__ == '__main__':
     main()
