@@ -672,8 +672,8 @@ update_row_ignore(Message *message) {
             }
         }
 
-        match = ignore_patterns_match(
-            path, path_len, is_dir, cecup.ignore_patterns, cecup.ignore_count);
+        match = ignore_patterns_match(path, path_len, is_dir,
+                                      cecup.ignore_patterns, cecup.ignore_count);
 
         if (cecup.rows_src[row_id] >= 0) {
             int32 idx_src = cecup.rows_src[row_id];
