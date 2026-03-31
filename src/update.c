@@ -616,7 +616,9 @@ update_stats_text(int32 count_selected, int64 total_size_bytes) {
 
     if (count_selected > 0) {
         SNPRINTF(stats_text,
-                 _("<span foreground='red'>Selected files: %d</span>\nTotal Transfer Size: 📦 %s"),
+                 _("<span foreground='red'>"
+                   "Selected files: %d"
+                   "</span>\nTotal Transfer Size: 📦 %s"),
                  count_selected, pretty_size);
     } else {
         SNPRINTF(stats_text,

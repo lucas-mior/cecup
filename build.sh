@@ -20,7 +20,7 @@ export XDG_DATA_DIRS=""
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
 
-export LC_ALL=C
+# export LC_ALL=C
 
 dir=$(dirname "$(readlink -f "$0")")
 cbase="cbase"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-30 20:19-0300\n"
+"POT-Creation-Date: 2026-03-31 15:48-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -246,30 +246,30 @@ msgstr ""
 "backup que não existem na pasta original serão EXCLUÍDOS PERMANENTEMENTE. "
 "Além disso, arquivos que são mais novos no backup serão sobreescritos."
 
-#: src/on.c:315
+#: src/on.c:311
 #, c-format
 msgid "Sync %s -> %s?"
 msgstr "Sincronizar %s -> %s?"
 
-#: src/on.c:590
+#: src/on.c:586
 msgid "Ignore Rules"
 msgstr "Regras de Ignorados"
 
-#: src/on.c:624
+#: src/on.c:620
 #, fuzzy
 msgid "Error: source directory path is too long.\n"
 msgstr "Erro: caminho do arquivo é muito longo:\n"
 
-#: src/on.c:631
+#: src/on.c:627
 #, fuzzy
 msgid "Error: destination directory path is too long.\n"
 msgstr "Erro: caminho do arquivo é muito longo:\n"
 
-#: src/on.c:667
+#: src/on.c:663
 msgid "Src"
 msgstr "Original"
 
-#: src/on.c:701
+#: src/on.c:697
 msgid "Dst"
 msgstr "Backup"
 
@@ -283,17 +283,17 @@ msgstr "📍 Copiar esta linha"
 msgid "📋 Copy Whole Log"
 msgstr "📋 Copiar caminho relativo"
 
-#: src/on_menu.c:224
+#: src/on_menu.c:222
 #, c-format
 msgid "Launching %s...\n"
 msgstr "Executando %s...\n"
 
-#: src/on_menu.c:272
+#: src/on_menu.c:270
 #, fuzzy, c-format
 msgid "Error resolving full path of %s: %s.\n"
 msgstr "Error renomeando %s to %s: %s\n"
 
-#: src/on_menu.c:349
+#: src/on_menu.c:347
 #, c-format
 msgid "Permanently delete %d item(s)?"
 msgstr "Excluir permanentemente %d arquivo(s)?"
@@ -333,7 +333,7 @@ msgstr "Somente esse arquivo (/%s)"
 msgid "This filename on any folder (*/%s)"
 msgstr "Esse nome de arquivo em qualquer pasta (*/%s)"
 
-#: src/on_tree.c:424
+#: src/on_tree.c:421
 msgid "pattern"
 msgstr "padrão"
 
@@ -343,16 +343,16 @@ msgid ""
 "<span foreground='red'>Selected files: %d</span>\n"
 "Total Transfer Size: 📦 %s"
 msgstr ""
-"Arquivos selecionados: %lld\n"
+"<span foreground='red'>Arquivos selecionados: %d</span>\n"
 "Tamanho total a copiar: 📦 %s"
 
-#: src/update.c:623
+#: src/update.c:625
 #, fuzzy, c-format
 msgid ""
 "Selected files: %d\n"
 "Total Transfer Size: 📦 %s"
 msgstr ""
-"Arquivos selecionados: %lld\n"
+"Arquivos selecionados: %d\n"
 "Tamanho total a copiar: 📦 %s"
 
 #: src/work.c:77
@@ -665,11 +665,12 @@ msgstr ""
 "• Filtros: Ver arquivos por situação (Novos, links, atualizados, iguais, "
 "excluídos, ignorados).\n"
 "• Regras de ignorados: Especificar padrões de nome de arquivo para ignorar.\n"
-"• Comparação: Compare o conteúdo dos arquivos usando alguma ferramenta externa.\n"
+"• Comparação: Compare o conteúdo dos arquivos usando alguma ferramenta "
+"externa.\n"
 "• Segurança: Proteger contra backup acidental no mesmo disco.\n"
 "• Sincronia 100%%: opcionalmente, deletar arquivos do backup que não existem "
-"na origem e também sobreescrever arquivos do backup que são mais novos do que "
-"na origem\n"
+"na origem e também sobreescrever arquivos do backup que são mais novos do "
+"que na origem\n"
 "• Excluir arquivos ignorados: Opcionalmente excluir arquivos do destino que "
 "não existem na origem."
 
