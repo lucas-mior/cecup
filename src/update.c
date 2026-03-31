@@ -697,7 +697,8 @@ update_row_ignore(Message *message) {
                     int32 *first_idx_ptr;
 
                     n = ITOA(inode_str, (long)cecup.traversal_src.stats[s_idx].st_ino);
-                    if ((first_idx_ptr = hash_lookup_inode_map(cecup.traversal_src.inode_map, inode_str, n))) {
+                    if ((first_idx_ptr = hash_lookup_inode_map(cecup.traversal_src.inode_map,
+                                                               inode_str, n))) {
                         if (is_ignored) {
                             cecup.traversal_src.nlinks[*first_idx_ptr] -= 1;
                         } else {
