@@ -212,6 +212,9 @@ update_row_remove(Message *message) {
 
 static bool
 update_row_transfer(Message *message) {
+    Traversal *traversal_src = &cecup.traversal_src;
+    Traversal *traversal_dst = &cecup.traversal_dst;
+
     char *pattern;
     int32 pattern_len;
     bool changed;
@@ -227,11 +230,6 @@ update_row_transfer(Message *message) {
     {
         int32 *idx_ptr;
         int32 row_id;
-        Traversal *traversal_src;
-        Traversal *traversal_dst;
-
-        traversal_src = &cecup.traversal_src;
-        traversal_dst = &cecup.traversal_dst;
 
         if ((idx_ptr
              = hash_lookup_fs_map(traversal_src->map, pattern, pattern_len))) {
@@ -264,6 +262,9 @@ update_row_transfer(Message *message) {
             }
         }
     }
+
+    traversal_patch_nlinks(traversal_src);
+    traversal_patch_nlinks(traversal_dst);
 
     if (DEBUGGING) {
         check_consistent_state();
@@ -449,6 +450,9 @@ update_row_rename(Message *message) {
             break;
         }
     }
+
+    traversal_patch_nlinks(traversal);
+    traversal_patch_nlinks(other_traversal);
 
     if (DEBUGGING) {
         check_consistent_state();

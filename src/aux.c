@@ -218,6 +218,23 @@ traversal_push(Traversal *traversal, struct stat *stat,
 }
 
 static void
+traversal_patch_nlinks(Traversal *traversal) {
+    for (int32 i = 0; i < traversal->nfiles; i += 1) {
+        if (S_ISREG(traversal->stats[i].st_mode) && (traversal->stats[i].st_nlink > 1)) {
+            char inode_str[64];
+            int32 *first_idx_ptr;
+            int32 n;
+
+            n = ITOA(inode_str, (long)traversal->stats[i].st_ino);
+            if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode_str, n))) {
+                traversal->nlinks[i] = traversal->nlinks[*first_idx_ptr];
+            }
+        }
+    }
+    return;
+}
+
+static void
 free_task_list(TaskList *tasks) {
     if (tasks == NULL) {
         return;
