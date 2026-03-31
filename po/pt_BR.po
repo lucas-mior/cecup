@@ -174,7 +174,7 @@ msgstr "Selecionar pasta"
 
 #: src/main.c:393
 msgid "Open browser to select the folder containing original files"
-msgstr "Pasta contendo seus arquivos de origem"
+msgstr "Abrir explorador de arquivos para selecionar pasta contendo seus arquivos de origem"
 
 #: src/main.c:402
 msgid "Invert Original and Backup"
@@ -186,7 +186,7 @@ msgstr "Pasta onde o backup será armazenado"
 
 #: src/main.c:411
 msgid "Open browser to select the folder where the backup will be stored"
-msgstr "Pasta onde o backup será armazenado"
+msgstr "Abrir explorador de arquivos para selecionar pasta onde o backup será feito"
 
 #: src/main.c:423
 msgid "Search files..."
