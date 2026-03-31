@@ -4,6 +4,11 @@
 
 set -e
 
+error () {
+    >&2 printf "$@"
+    return
+}
+
 if [ -n "$BASH_VERSION" ]; then
     # shellcheck disable=SC3044
     shopt -s expand_aliases
@@ -75,20 +80,25 @@ if echo "$OS" | grep -q "Linux"; then
 fi
 
 option_remove() {
-    echo "$1" | sed "s/$2//g"
+    echo "$1" | sed -E "s| *$2 +| |g"
 }
 
 compile_with_chibicc () {
     args="$*"
+    trace_off
     while ! problem=$(chibicc $args 2>&1); do
+        echo "$problem"
         trace_off
-        if [ "$CC" = "chibicc" ] \
-            && echo "$problem" | grep -q "unknown argument:"; then
+        sleep 1
+        if echo "$problem" | grep -q "unknown argument:"; then
+            arg=$(echo "$problem" | awk '{print $NF}')
+            echo "Removing argument $arg..."
+            args=$(option_remove "$args" "$arg")
+        elif echo "$problem" | grep -q "unknown file extension:"; then
             arg=$(echo "$problem" | awk '{print $NF}')
             echo "Removing argument $arg..."
             args=$(option_remove "$args" "$arg")
         else
-            printf "\nproblem=\n$problem\n"
             break
         fi
         trace_on
@@ -314,18 +324,27 @@ case "$target" in
             cmdline=$(option_remove "$cmdline" "-D_GNU_SOURCE")
             cmdline="$cmdline -target x86_64-windows-gnu"
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1"
-            cmdline="$cmdline $flags -o /tmp/$name.c.exe $src"
+            cmdline="$cmdline $flags -o /tmp/${name}_test $src"
         else
             cmdline="$CC $CPPFLAGS $CFLAGS"
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 $LDFLAGS"
-            cmdline="$cmdline $flags -o /tmp/$name.c.exe $src"
+            cmdline="$cmdline $flags -o /tmp/${name}_test $src"
         fi
 
         trace_on
-        if $cmdline; then
-            /tmp/$name.c.exe || gdb /tmp/$name.c.exe -ex run
+        if [ "$CC" = "chibicc" ]; then
+            cmdline_no_cc=$(option_remove "$cmdline" "$CC")
+            if compile_with_chibicc "$cmdline_no_cc"; then
+                /tmp/${name}_test
+            else
+                exit 1
+            fi
         else
-            exit
+            if $cmdline; then
+                /tmp/$name.c.exe || gdb /tmp/$name.c.exe -ex run
+            else
+                exit
+            fi
         fi
         trace_off
     done
