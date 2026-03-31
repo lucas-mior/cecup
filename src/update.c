@@ -324,8 +324,8 @@ update_row_rename(Message *message) {
     }
 
     for (int32 i = 0; i < cecup.rows_len;) {
-        int32 row_id;
-        char *path_old;
+        int32 row_id = i;
+        char *path_old = item_path_side(row_id, side);
         char *path_new;
         int32 idx;
         int32 other_idx;
@@ -334,11 +334,7 @@ update_row_rename(Message *message) {
         int32 suffix_len;
         int32 merge_row_id;
         IgnorePattern *p_match;
-        bool is_match;
-
-        row_id = i;
-        path_old = item_path_side(row_id, side);
-        is_match = false;
+        bool is_match = false;
 
         if (path_old) {
             if (is_dir) {
