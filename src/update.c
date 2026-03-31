@@ -65,7 +65,8 @@ update_row_remove(Message *message) {
         int32 row_id;
         int32 *side_ptr;
 
-        if ((idx_ptr = hash_lookup_fs_map(traversal->map, path_removed, path_removed_len)) == NULL) {
+        if ((idx_ptr = hash_lookup_fs_map(traversal->map,
+                                          path_removed, path_removed_len)) == NULL) {
             return false;
         }
 
