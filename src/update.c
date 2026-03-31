@@ -45,7 +45,7 @@ static void update_stats_text(int32 count_selected, int64 total_size_bytes);
 static bool
 update_row_remove(Message *message) {
     char *path_removed = message->src_path;
-    int32 pattern_len = message->path_len;
+    int32 path_removed_len = message->path_len;
     int32 side = message->side;
     bool changed = false;
     Traversal *traversal;
@@ -56,16 +56,16 @@ update_row_remove(Message *message) {
         traversal = &cecup.traversal_dst;
     }
 
-    if (path_removed == NULL || pattern_len == 0) {
+    if (path_removed == NULL || path_removed_len == 0) {
         return false;
     }
 
-    if (path_removed[pattern_len - 1] != '/') {
+    if (path_removed[path_removed_len - 1] != '/') {
         int32 *idx_ptr;
         int32 row_id;
         int32 *side_ptr;
 
-        if ((idx_ptr = hash_lookup_fs_map(traversal->map, path_removed, pattern_len)) == NULL) {
+        if ((idx_ptr = hash_lookup_fs_map(traversal->map, path_removed, path_removed_len)) == NULL) {
             return false;
         }
 
@@ -132,7 +132,7 @@ update_row_remove(Message *message) {
             path = item_path_get(row_id);
             match = false;
 
-            if (BEGINS_WITH(path, path_removed, pattern_len)) {
+            if (BEGINS_WITH(path, path_removed, path_removed_len)) {
                 match = true;
             }
 
