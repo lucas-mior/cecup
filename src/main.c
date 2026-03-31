@@ -690,7 +690,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
 
-    if (true) {
+    if (is_first_run) {
         GtkWidget *dialog;
 
         dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),

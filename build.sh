@@ -19,7 +19,7 @@ export XDG_DATA_DIRS=""
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
 
-# export LC_ALL=C
+export LC_ALL=C
 
 dir=$(dirname "$(readlink -f "$0")")
 cbase="cbase"
@@ -41,6 +41,7 @@ if ! grep -q "$target" ./targets; then
 fi
 
 printf "\n${script} ${RED}${1} ${2}$RES\n"
+
 PREFIX="${PREFIX:-/usr/local}"
 DESTDIR="${DESTDIR:-/}"
 
@@ -55,7 +56,7 @@ CPPFLAGS="$CPPFLAGS -DLOCALEDIR=$PREFIX/share/locale"
 CFLAGS="$CFLAGS -std=c11"
 CFLAGS="$CFLAGS -Wfatal-errors"
 CFLAGS="$CFLAGS -Wextra -Wall"
-# CFLAGS="$CFLAGS -Werror"
+CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-format-pedantic"
 CFLAGS="$CFLAGS -Wno-unknown-warning-option"
 CFLAGS="$CFLAGS -Wno-gnu-union-cast"
@@ -85,7 +86,6 @@ option_remove() {
 
 compile_with_chibicc () {
     args="$*"
-    trace_off
     while ! problem=$(chibicc $args 2>&1); do
         trace_off
         sleep 0.4
@@ -117,11 +117,6 @@ case "$target" in
     CFLAGS="$CFLAGS -g -O2 -flto"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     exe="bin/${program}_perf"
-    ;;
-"profile")
-    CFLAGS="$CFLAGS -g -Og -flto"
-    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DPROFILE=1 -Wno-declaration-after-statement"
-    exe="bin/${program}_profile"
     ;;
 "valgrind") 
     CFLAGS="$CFLAGS -g -O0 -ftree-vectorize"
@@ -286,16 +281,6 @@ case "$target" in
     trace_off
     exit
     ;;
-"uninstall")
-    rm -vf  "${DESTDIR}${PREFIX}/bin/${program:?}"
-    rm -vf  "${DESTDIR}${PREFIX}/man/man1/${program:?}.1"
-    for lang in $LANGS; do
-        rm -vf "${DESTDIR}${PREFIX}/share/locale/$lang/LC_MESSAGES/$program.mo"
-    done
-    rm -rvf "$DESTDIR/etc/${program:?}/"
-    rm -vf  "$DESTDIR/usr/share/applications/${program:?}.desktop"
-    exit
-    ;;
 "assembly")
     trace_on
     $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "src/$main"
@@ -351,6 +336,16 @@ case "$target" in
         fi
         trace_off
     done
+    exit
+    ;;
+"uninstall")
+    rm -vf  "${DESTDIR}${PREFIX}/bin/${program:?}"
+    rm -vf  "${DESTDIR}${PREFIX}/man/man1/${program:?}.1"
+    for lang in $LANGS; do
+        rm -vf "${DESTDIR}${PREFIX}/share/locale/$lang/LC_MESSAGES/$program.mo"
+    done
+    rm -rvf "$DESTDIR/etc/${program:?}/"
+    rm -vf  "$DESTDIR/usr/share/applications/${program:?}.desktop"
     exit
     ;;
 esac
