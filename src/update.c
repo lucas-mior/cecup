@@ -201,10 +201,6 @@ update_row_remove(Message *message) {
 
     traversal_patch_nlinks(traversal);
 
-    if (DEBUGGING) {
-        check_consistent_state();
-    }
-
     if (changed) {
         invalidate_preview();
     }
@@ -283,10 +279,6 @@ update_row_transfer(Message *message) {
 
     traversal_patch_nlinks(traversal_src);
     traversal_patch_nlinks(traversal_dst);
-
-    if (DEBUGGING) {
-        check_consistent_state();
-    }
 
     if (changed) {
         invalidate_preview();
@@ -459,10 +451,6 @@ update_row_rename(Message *message) {
 
     traversal_patch_nlinks(traversal);
     traversal_patch_nlinks(other_traversal);
-
-    if (DEBUGGING) {
-        check_consistent_state();
-    }
 
     if (changed) {
         invalidate_preview();
@@ -915,6 +903,10 @@ update_ui_handler(void *data) {
 
     if (needs_update) {
         update_list_from_rows();
+    }
+
+    if (DEBUGGING) {
+        check_consistent_state();
     }
 
     return G_SOURCE_REMOVE;
