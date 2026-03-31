@@ -937,6 +937,10 @@ itoa2(char *str, int32 size, llong num) {
         str[j] = str[i - j - 1];
         str[i - j - 1] = temp;
     }
+
+    // this is here because of gcc -fanalyzer
+    assert(i < 22);
+
     return i;
 }
 
