@@ -26,6 +26,8 @@ everything imaginable, but it has no GUI for this use case, while also being too
 overwhelming for the average user.
 
 ## Features
+- Search files and optionally select them
+  * useful if you want to backup only parts of the source.
 - Choose if you want a (potentially dangerous) perfect copy:
   this not only copies the new files and updates, but also:
   * Deletes files of the backup that are missing on the source
