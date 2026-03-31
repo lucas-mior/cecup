@@ -209,15 +209,11 @@ update_row_transfer(Message *message) {
     Traversal *traversal_src = &cecup.traversal_src;
     Traversal *traversal_dst = &cecup.traversal_dst;
 
-    char *path_transfered;
-    int32 path_transfered_len;
-    bool changed;
+    char *path_transfered = message->src_path;
+    int32 path_transfered_len = message->path_len;
+    bool changed = false;
     int32 *idx_ptr;
     int32 row_id;
-
-    path_transfered = message->src_path;
-    path_transfered_len = message->path_len;
-    changed = false;
 
     if (path_transfered == NULL || path_transfered_len == 0) {
         return false;
