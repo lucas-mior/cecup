@@ -682,21 +682,17 @@ update_row_ignore(Message *message) {
             path, path_len, is_dir, cecup.ignore_patterns, cecup.ignore_count);
 
         if (cecup.rows_src[row_id] >= 0) {
-            int32 s_idx;
-            bool was_ignored;
-            bool is_ignored;
-
-            s_idx = cecup.rows_src[row_id];
-            was_ignored = (cecup.traversal_src.patterns[s_idx] != NULL);
-            is_ignored = (match != NULL);
+            int32 idx_src = cecup.rows_src[row_id];
+            bool was_ignored = (cecup.traversal_src.patterns[idx_src] != NULL);
+            bool is_ignored = match;
 
             if (was_ignored != is_ignored) {
-                if (cecup.traversal_src.stats[s_idx].st_nlink > 1) {
+                if (cecup.traversal_src.stats[idx_src].st_nlink > 1) {
                     char inode_str[32];
                     int32 n;
                     int32 *first_idx_ptr;
 
-                    n = ITOA(inode_str, (long)cecup.traversal_src.stats[s_idx].st_ino);
+                    n = ITOA(inode_str, (long)cecup.traversal_src.stats[idx_src].st_ino);
                     if ((first_idx_ptr = hash_lookup_inode_map(cecup.traversal_src.inode_map,
                                                                inode_str, n))) {
                         if (is_ignored) {
@@ -709,11 +705,11 @@ update_row_ignore(Message *message) {
             }
 
             if (match) {
-                cecup.traversal_src.patterns[s_idx] = match->str;
-                cecup.traversal_src.patterns_lens[s_idx] = (int16)match->len;
+                cecup.traversal_src.patterns[idx_src] = match->str;
+                cecup.traversal_src.patterns_lens[idx_src] = (int16)match->len;
             } else {
-                cecup.traversal_src.patterns[s_idx] = NULL;
-                cecup.traversal_src.patterns_lens[s_idx] = 0;
+                cecup.traversal_src.patterns[idx_src] = NULL;
+                cecup.traversal_src.patterns_lens[idx_src] = 0;
             }
         }
 
