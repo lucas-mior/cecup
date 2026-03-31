@@ -233,12 +233,7 @@ item_get_actions_reasons(int32 row_id,
         char *pattern_src = cecup.traversal_src.patterns[src_idx];
         struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
-        // TODO: Inconsistency. Here `is_hardlink` is determined by checking if
-        // `link_targets[src_idx]` is non-null. However, in the block below (when both src and dst
-        // exist), `is_hardlink` is evaluated by checking `cecup.traversal_src.nlinks[src_idx] > 1`.
-        // Ensure you apply the same logic for determining hardlinks across both scopes to avoid
-        // edge-case mismatches.
-        bool is_hardlink = S_ISREG(stat_src->st_mode) && cecup.traversal_src.link_targets[src_idx];
+        bool is_hardlink = cecup.traversal_src.nlinks[src_idx] > 1;
 
         if (pattern_src) {
             *action_src = ACTION_IGNORE;
@@ -266,33 +261,19 @@ item_get_actions_reasons(int32 row_id,
     }
 
     {
-        struct stat *stat_src;
-        struct stat *stat_dst;
-        char *pattern_src;
-        char *path_src;
-        char *target_src;
-        char *target_dst;
-        int32 nlinks_src;
-        int32 nlinks_dst;
-        bool is_symlink;
-        bool is_hardlink;
-        bool is_dir;
-        bool equal;
-        bool attributes_differ;
-
-        pattern_src = cecup.traversal_src.patterns[src_idx];
-        stat_src = &cecup.traversal_src.stats[src_idx];
-        stat_dst = &cecup.traversal_dst.stats[dst_idx];
-        path_src = cecup.traversal_src.paths[src_idx];
-        target_src = cecup.traversal_src.link_targets[src_idx];
-        target_dst = cecup.traversal_dst.link_targets[dst_idx];
-        nlinks_src = cecup.traversal_src.nlinks[src_idx];
-        nlinks_dst = cecup.traversal_dst.nlinks[dst_idx];
-        is_symlink = S_ISLNK(stat_src->st_mode);
-        is_hardlink = cecup.traversal_src.nlinks[src_idx] > 1;
-        is_dir = S_ISDIR(stat_src->st_mode);
-        equal = false;
-        attributes_differ = false;
+        struct stat *stat_src = &cecup.traversal_src.stats[src_idx];
+        struct stat *stat_dst = &cecup.traversal_dst.stats[dst_idx];
+        char *pattern_src = cecup.traversal_src.patterns[src_idx];
+        char *path_src = cecup.traversal_src.paths[src_idx];
+        char *target_src = cecup.traversal_src.link_targets[src_idx];
+        char *target_dst = cecup.traversal_dst.link_targets[dst_idx];
+        int32 nlinks_src = cecup.traversal_src.nlinks[src_idx];
+        int32 nlinks_dst = cecup.traversal_dst.nlinks[dst_idx];
+        bool is_symlink = S_ISLNK(stat_src->st_mode);
+        bool is_hardlink = cecup.traversal_src.nlinks[src_idx] > 1;
+        bool is_dir = S_ISDIR(stat_src->st_mode);
+        bool equal = false;
+        bool attributes_differ = false;
 
         if (pattern_src) {
             *action_src = ACTION_IGNORE;

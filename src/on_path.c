@@ -71,7 +71,7 @@ on_path_editing_started(GtkEditable *editable, void *data) {
         return;
     }
 
-    row_id = GPOINTER_TO_INT(row_id_ptr);
+    row_id = GPOINTER_TO_INT(row_id_ptr) - 1;
     relative = item_path_side(row_id, side);
 
     if (relative) {
@@ -132,7 +132,7 @@ on_path_edited(GtkEditable *editable, void *data) {
         return;
     }
 
-    row_id = GPOINTER_TO_INT(row_id_ptr);
+    row_id = GPOINTER_TO_INT(row_id_ptr) - 1;
     new_text = (char *)gtk_editable_get_text(editable);
 
     if (side == L) {

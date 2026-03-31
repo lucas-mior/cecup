@@ -383,7 +383,7 @@ update_visible_checkboxes(GtkWidget *widget, int8 side) {
         if ((row_id_ptr = g_object_get_data(G_OBJECT(widget), "cecup-row-id"))) {
             int32 row_id;
 
-            row_id = GPOINTER_TO_INT(row_id_ptr);
+            row_id = GPOINTER_TO_INT(row_id_ptr) - 1;
             g_signal_handlers_block_by_func(widget, on_cell_toggled, GINT_TO_POINTER(side));
             gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), (bool)cecup.rows_selected[row_id]);
             g_signal_handlers_unblock_by_func(widget, on_cell_toggled, GINT_TO_POINTER(side));
@@ -419,7 +419,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         return;
     }
 
-    row_id_toggled = GPOINTER_TO_INT(row_id_ptr);
+    row_id_toggled = GPOINTER_TO_INT(row_id_ptr) - 1;
     is_active = gtk_check_button_get_active(renderer);
     if ((bool)cecup.rows_selected[row_id_toggled] == is_active) {
         return;
