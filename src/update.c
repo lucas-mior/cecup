@@ -105,21 +105,21 @@ update_row_remove(Message *message) {
 
         if ((cecup.rows_src[row_id] == -1) && (cecup.rows_dst[row_id] == -1)) {
             for (int32 j = row_id; j < (cecup.rows_len - 1); j += 1) {
-                int32 s_idx;
-                int32 d_idx;
+                int32 idx_src;
+                int32 idx_dst;
 
                 cecup.rows_src[j] = cecup.rows_src[j + 1];
                 cecup.rows_dst[j] = cecup.rows_dst[j + 1];
                 cecup.rows_selected[j] = cecup.rows_selected[j + 1];
 
-                s_idx = cecup.rows_src[j];
-                d_idx = cecup.rows_dst[j];
+                idx_src = cecup.rows_src[j];
+                idx_dst = cecup.rows_dst[j];
 
-                if (s_idx >= 0) {
-                    cecup.traversal_src.row_ids[s_idx] = j;
+                if (idx_src >= 0) {
+                    cecup.traversal_src.row_ids[idx_src] = j;
                 }
-                if (d_idx >= 0) {
-                    cecup.traversal_dst.row_ids[d_idx] = j;
+                if (idx_dst >= 0) {
+                    cecup.traversal_dst.row_ids[idx_dst] = j;
                 }
             }
             cecup.rows_len -= 1;
@@ -155,8 +155,7 @@ update_row_remove(Message *message) {
                 int32 idx;
 
                 idx = *idx_ptr;
-                if (traversal->inode_map
-                    && S_ISREG(traversal->stats[idx].st_mode)) {
+                if (traversal->inode_map && S_ISREG(traversal->stats[idx].st_mode)) {
                     if (traversal->stats[idx].st_nlink > 1) {
                         char inode_str[32];
                         int32 n;
