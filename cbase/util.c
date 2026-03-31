@@ -562,12 +562,19 @@ util_nthreads(void) {
 
 #define MEM_FREED 0xDC
 #define MEM_MALLOCED_UNINITIALIZED 0xCD
+#define MEM_DONT_READ 0xBD
 
 #if !defined(DEBUGGING_MEMORY)
 #define DEBUGGING_MEMORY DEBUGGING
 #else
 #define DEBUGGING_MEMORY 0
 #endif
+
+INLINE void
+dont_read(void *pointer, int64 size) {
+    memset64(pointer, MEM_DONT_READ, size);
+    return;
+}
 
 INLINE void *
 xmalloc(int64 size) {

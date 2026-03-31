@@ -114,6 +114,17 @@ traversal_clean(Traversal *traversal) {
     hash_zero_fs_map(traversal->map);
     hash_zero_inode_map(traversal->inode_map);
 
+    if (DEBUGGING) {
+        dont_read(traversal->stats, traversal->ncapacity*SIZEOF(*(traversal->stats)));
+        dont_read(traversal->paths, traversal->ncapacity*SIZEOF(*(traversal->paths)));
+        dont_read(traversal->link_targets, traversal->ncapacity*SIZEOF(*(traversal->link_targets)));
+        dont_read(traversal->patterns, traversal->ncapacity*SIZEOF(*(traversal->patterns)));
+        dont_read(traversal->paths_lens, traversal->ncapacity*SIZEOF(*(traversal->paths_lens)));
+        dont_read(traversal->link_targets_lens, traversal->ncapacity*SIZEOF(*(traversal->link_targets_lens)));
+        dont_read(traversal->patterns_lens, traversal->ncapacity*SIZEOF(*(traversal->patterns_lens)));
+        dont_read(traversal->nlinks, traversal->ncapacity*SIZEOF(*(traversal->nlinks)));
+    }
+
     traversal->base_path = NULL;
     traversal->base_path_len = 0;
     traversal->file_count = 0;
