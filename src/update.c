@@ -244,14 +244,13 @@ update_row_transfer(Message *message) {
                                          path_transfered, path_transfered_len))) {
             cecup.rows_dst[row_id] = *lookup;
         } else {
-            cecup.rows_dst[row_id] = traversal_push(
-                traversal_dst, &traversal_src->stats[idx_src],
-                traversal_src->paths[idx_src],
-                traversal_src->paths_lens[idx_src],
-                traversal_src->link_targets[idx_src],
-                traversal_src->link_targets_lens[idx_src],
-                traversal_src->patterns[idx_src],
-                traversal_src->patterns_lens[idx_src]);
+            cecup.rows_dst[row_id] = traversal_push(traversal_dst, &traversal_src->stats[idx_src],
+                                                    traversal_src->paths[idx_src],
+                                                    traversal_src->paths_lens[idx_src],
+                                                    traversal_src->link_targets[idx_src],
+                                                    traversal_src->link_targets_lens[idx_src],
+                                                    traversal_src->patterns[idx_src],
+                                                    traversal_src->patterns_lens[idx_src]);
 
             if (traversal_src->stats[idx_src].st_nlink > 1) {
                 char inode_str[32];
