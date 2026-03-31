@@ -212,7 +212,6 @@ update_row_transfer(Message *message) {
 
     char *path_transfered = message->src_path;
     int32 path_transfered_len = message->path_len;
-    bool changed = false;
     int32 *idx_ptr;
     int32 idx_src;
     int32 row_id;
@@ -276,7 +275,6 @@ update_row_transfer(Message *message) {
         memcpy64(&traversal_dst->stats[cecup.rows_dst[row_id]],
                  &traversal_src->stats[idx_src], SIZEOF(struct stat));
     }
-    changed = true;
 
     traversal_patch_nlinks(traversal_src);
     traversal_patch_nlinks(traversal_dst);
@@ -285,11 +283,8 @@ update_row_transfer(Message *message) {
         check_consistent_state();
     }
 
-    if (changed) {
-        invalidate_preview();
-    }
-
-    return changed;
+    invalidate_preview();
+    return true;
 }
 
 static bool
