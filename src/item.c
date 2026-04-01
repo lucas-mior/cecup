@@ -393,27 +393,6 @@ item_get_actions_reasons(int32 row_id,
     return;
 }
 
-static int32
-cecup_item_compare(const void *a, const void *b) {
-    int32 item_a;
-    int32 item_b;
-    int64 result;
-    char *path_a;
-    char *path_b;
-    int64 size_a;
-    int64 size_b;
-    int64 mtime_a;
-    int64 mtime_b;
-    enum Action src_act_a;
-    enum Action dst_act_a;
-    enum Action src_act_b;
-    enum Action dst_act_b;
-    enum Reason reason_a;
-    enum Reason reason_b;
-
-    item_a = *(int32 *)a;
-    item_b = *(int32 *)b;
-
 #define COMPARE(A, B) \
     do { \
         if (A > B) { \
@@ -425,62 +404,23 @@ cecup_item_compare(const void *a, const void *b) {
         } \
     } while (0)
 
-    switch (cecup.sort_col) {
-    case COL_SRC_PATH:
-        path_a = item_path_side(item_a, L);
-        path_b = item_path_side(item_b, L);
-        if (path_a == NULL && path_b == NULL) {
-            result = 0;
-        } else if (path_a == NULL) {
-            result = -1;
-        } else if (path_b == NULL) {
-            result = 1;
-        } else {
-            result = strcmp(path_a, path_b);
-        }
-        break;
-    case COL_DST_PATH:
-        path_a = item_path_side(item_a, R);
-        path_b = item_path_side(item_b, R);
-        if (path_a == NULL && path_b == NULL) {
-            result = 0;
-        } else if (path_a == NULL) {
-            result = -1;
-        } else if (path_b == NULL) {
-            result = 1;
-        } else {
-            result = strcmp(path_a, path_b);
-        }
-        break;
-    case COL_SIZE_RAW:
-        size_a = item_size_side(item_a, L);
-        size_b = item_size_side(item_b, L);
-        COMPARE(size_a, size_b);
-        break;
-    case COL_MTIME_RAW:
-        mtime_a = item_mtime_side(item_a, L);
-        mtime_b = item_mtime_side(item_b, L);
-        COMPARE(mtime_a, mtime_b);
-        break;
-    case COL_DST_ACTION:
-        item_get_actions_reasons(item_a, &src_act_a, &dst_act_a, &reason_a);
-        item_get_actions_reasons(item_b, &src_act_b, &dst_act_b, &reason_b);
-        COMPARE(dst_act_a, dst_act_b);
-        break;
-    case COL_MTIME_TEXT:
-    case COL_ROW_ID:
-    case COL_SELECTED:
-    case COL_SIZE_TEXT:
-    case COL_SRC_ACTION:
-    case NUM_COLS:
-    default:
-        item_get_actions_reasons(item_a, &src_act_a, &dst_act_a, &reason_a);
-        item_get_actions_reasons(item_b, &src_act_b, &dst_act_b, &reason_b);
-        COMPARE(src_act_a, src_act_b);
-        break;
-    }
+static int32
+cecup_item_compare_src_path(const void *a, const void *b) {
+    int32 item_a = *(int32 *)a;
+    int32 item_b = *(int32 *)b;
+    int64 result = 0;
+    char *path_a = item_path_side(item_a, L);
+    char *path_b = item_path_side(item_b, L);
 
-#undef COMPARE
+    if (path_a == NULL && path_b == NULL) {
+        result = 0;
+    } else if (path_a == NULL) {
+        result = -1;
+    } else if (path_b == NULL) {
+        result = 1;
+    } else {
+        result = strcmp(path_a, path_b);
+    }
 
     if (cecup.sort_order == GTK_SORT_DESCENDING) {
         result *= -1;
@@ -489,18 +429,129 @@ cecup_item_compare(const void *a, const void *b) {
     return (int32)result;
 }
 
+static int32
+cecup_item_compare_dst_path(const void *a, const void *b) {
+    int32 item_a = *(int32 *)a;
+    int32 item_b = *(int32 *)b;
+    int64 result = 0;
+    char *path_a = item_path_side(item_a, R);
+    char *path_b = item_path_side(item_b, R);
+
+    if (path_a == NULL && path_b == NULL) {
+        result = 0;
+    } else if (path_a == NULL) {
+        result = -1;
+    } else if (path_b == NULL) {
+        result = 1;
+    } else {
+        result = strcmp(path_a, path_b);
+    }
+
+    if (cecup.sort_order == GTK_SORT_DESCENDING) {
+        result *= -1;
+    }
+
+    return (int32)result;
+}
+
+static int32
+cecup_item_compare_size_raw(const void *a, const void *b) {
+    int32 item_a = *(int32 *)a;
+    int32 item_b = *(int32 *)b;
+    int64 result = 0;
+    int64 size_a = item_size_side(item_a, L);
+    int64 size_b = item_size_side(item_b, L);
+
+    COMPARE(size_a, size_b);
+
+    if (cecup.sort_order == GTK_SORT_DESCENDING) {
+        result *= -1;
+    }
+
+    return (int32)result;
+}
+
+static int32
+cecup_item_compare_mtime_raw(const void *a, const void *b) {
+    int32 item_a = *(int32 *)a;
+    int32 item_b = *(int32 *)b;
+    int64 result = 0;
+    int64 mtime_a = item_mtime_side(item_a, L);
+    int64 mtime_b = item_mtime_side(item_b, L);
+
+    COMPARE(mtime_a, mtime_b);
+
+    if (cecup.sort_order == GTK_SORT_DESCENDING) {
+        result *= -1;
+    }
+
+    return (int32)result;
+}
+
+static int32
+cecup_item_compare_dst_action(const void *a, const void *b) {
+    int32 item_a = *(int32 *)a;
+    int32 item_b = *(int32 *)b;
+    int64 result = 0;
+    enum Action src_act_a;
+    enum Action dst_act_a;
+    enum Action src_act_b;
+    enum Action dst_act_b;
+    enum Reason reason_a;
+    enum Reason reason_b;
+
+    item_get_actions_reasons(item_a, &src_act_a, &dst_act_a, &reason_a);
+    item_get_actions_reasons(item_b, &src_act_b, &dst_act_b, &reason_b);
+
+    COMPARE(dst_act_a, dst_act_b);
+
+    if (cecup.sort_order == GTK_SORT_DESCENDING) {
+        result *= -1;
+    }
+
+    return (int32)result;
+}
+
+static int32
+cecup_item_compare_src_action(const void *a, const void *b) {
+    int32 item_a = *(int32 *)a;
+    int32 item_b = *(int32 *)b;
+    int64 result = 0;
+    enum Action src_act_a;
+    enum Action dst_act_a;
+    enum Action src_act_b;
+    enum Action dst_act_b;
+    enum Reason reason_a;
+    enum Reason reason_b;
+
+    item_get_actions_reasons(item_a, &src_act_a, &dst_act_a, &reason_a);
+    item_get_actions_reasons(item_b, &src_act_b, &dst_act_b, &reason_b);
+
+    COMPARE(src_act_a, src_act_b);
+
+    if (cecup.sort_order == GTK_SORT_DESCENDING) {
+        result *= -1;
+    }
+
+    return (int32)result;
+}
+
+#undef COMPARE
+
 typedef int (*CompareFunction)(const void *a, const void *b);
 
 static CompareFunction compare_item_functions[] = {
-    [COL_SRC_ACTION] = cecup_item_compare,
-    [COL_DST_ACTION] = cecup_item_compare,
-    [COL_SRC_PATH]   = cecup_item_compare,
-    [COL_DST_PATH]   = cecup_item_compare,
-    [COL_SIZE_TEXT]  = cecup_item_compare,
-    [COL_SIZE_RAW]   = cecup_item_compare,
-    [COL_MTIME_TEXT] = cecup_item_compare,
-    [COL_MTIME_RAW]  = cecup_item_compare,
-    [COL_ROW_ID]     = cecup_item_compare,
+    [COL_SELECTED]   = cecup_item_compare_src_action,
+    [COL_SRC_ACTION] = cecup_item_compare_src_action,
+    [COL_DST_ACTION] = cecup_item_compare_dst_action,
+    [COL_SRC_PATH]   = cecup_item_compare_src_path,
+    [COL_DST_PATH]   = cecup_item_compare_dst_path,
+    [COL_SIZE_TEXT]  = cecup_item_compare_src_action,
+    [COL_SIZE_RAW]   = cecup_item_compare_size_raw,
+    [COL_MTIME_TEXT] = cecup_item_compare_src_action,
+    [COL_MTIME_RAW]  = cecup_item_compare_mtime_raw,
+    [COL_ROW_ID]     = cecup_item_compare_src_action,
+    [NUM_COLS]       = cecup_item_compare_src_action,
 };
 
 #if TESTING && (0 == TESTING_item)
