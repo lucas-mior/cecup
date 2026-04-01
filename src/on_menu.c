@@ -44,19 +44,24 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     (void)action;
     (void)data;
 
-    tree = g_object_get_data(G_OBJECT(cecup.application), "active_tree");
-    message = g_object_steal_data(G_OBJECT(cecup.application), "active_message");
+    if ((tree = g_object_get_data(G_OBJECT(cecup.application), "active_tree")) == NULL) {
+        error("Error in %s: Can't get \"active_tree\" from the application widget.\n", __func__);
+    }
+    if ((message = g_object_steal_data(G_OBJECT(cecup.application), "active_message")) == NULL) {
+        error("Error in %s: Can't get \"active_message\" from the application widget.\n", __func__);
+    }
 
-    if (tree && message) {
-        if (menu_item->callback) {
-            if (menu_item->variant) {
-                g_object_set_data_full(G_OBJECT(tree), "variant", menu_item->variant, NULL);
-            }
-            menu_item->callback(tree, message);
-        } else {
-            free_message(message);
+    if ((tree == NULL) || (message == NULL)) {
+        free_message(message);
+        return;
+    }
+
+    if (menu_item->callback) {
+        if (menu_item->variant) {
+            g_object_set_data_full(G_OBJECT(tree), "variant", menu_item->variant, NULL);
         }
-    } else if (message) {
+        menu_item->callback(tree, message);
+    } else {
         free_message(message);
     }
 
