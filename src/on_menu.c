@@ -243,6 +243,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     int32 remaining_capacity;
     char *base_path;
     GdkClipboard *clipboard;
+    bool absolute;
 
     buffer_size = SIZEMB(8);
     buffer = xmalloc(buffer_size);
@@ -252,6 +253,17 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     remaining_capacity = buffer_size - 1;
     if ((variant = g_object_get_data(G_OBJECT(widget), "variant")) == NULL) {
         error("Error in %s: \"variant\" not passed to widget.\n", __func__);
+        fatal(EXIT_FAILURE);
+    }
+
+    if (!strcmp(variant, "absolute")) {
+        absolute = true;
+    } else if (!strcmp(variant, "relative")) {
+        absolute = false;
+    } else {
+        error("Error in %s:"
+              "\"variant\" must be \"absolute\" or \"relative\", but \"%s\" was passed.\n",
+              __func__, variant);
         fatal(EXIT_FAILURE);
     }
 
@@ -268,7 +280,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
         char path_full[PATH_MAX];
         char *path;
 
-        if (!strcmp(variant, "absolute")) {
+        if (absolute) {
             char path_relative[MAX_PATH_LENGTH];
 
             SNPRINTF(path_relative, "%s/%s", base_path, task->path);
