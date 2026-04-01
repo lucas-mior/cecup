@@ -25,6 +25,7 @@ alias trace_off='{ set +x; } 2>/dev/null'
 dir=$(dirname "$(readlink -f "$0")")
 cbase="cbase"
 CPPFLAGS="$CPPFLAGS -I$dir/$cbase"
+CPPFLAGS="$CPPFLAGS -I."
 
 cd "$dir" || exit
 program=$(basename "$(readlink -f "$dir")")
@@ -68,6 +69,7 @@ CFLAGS="$CFLAGS -Wno-cast-qual"
 CFLAGS="$CFLAGS -Wno-deprecated-declarations"
 CFLAGS="$CFLAGS -Wno-unknown-pragmas"
 CFLAGS="$CFLAGS -Wno-format-security"
+CFLAGS="$CFLAGS -Wno-unused-function"
 
 LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk4) -lpthread"
 LDFLAGS="$LDFLAGS -lm"

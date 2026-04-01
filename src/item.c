@@ -397,7 +397,7 @@ item_get_actions_reasons(int32 row_id,
         } \
     } while (0)
 
-static int32
+INLINE int32
 cecup_item_compare_src_path(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
@@ -528,6 +528,18 @@ cecup_item_compare_src_action(const void *a, const void *b) {
 #undef COMPARE
 
 typedef int (*CompareFunction)(const void *a, const void *b);
+
+/* #define i_key keytype  - [required] (or use i_type, see below) */
+/* #define i_less(xp, yp) - optional less function. default: *xp < *yp */
+/* #define i_cmp(xp, yp)  - alternative 3-way comparison. c_default_cmp(xp, yp) */
+/* #define T name         - optional, defines {name}_sort(), else {i_key}s_sort(). */
+/* #define T name, key    - alternative one-liner to define both i_type and i_key. */
+
+#define i_key int32
+#define i_cmp(a,b) cecup_item_compare_src_path(a,b)
+#define T compare_path_stc
+
+#include "stc/sort.h"
 
 static CompareFunction compare_item_functions[] = {
     [COL_SELECTED]   = cecup_item_compare_src_action,
