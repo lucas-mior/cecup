@@ -89,7 +89,7 @@ work_traverse_fs(Traversal *traversal) {
         int32 old_full_len;
         char *path;
         int32 path_len;
-        int32 is_dir;
+        int32 is_dir = false;
         char *link_target = NULL;
         int32 link_target_len = 0;
         char *matched_pattern = NULL;
@@ -97,6 +97,42 @@ work_traverse_fs(Traversal *traversal) {
 
         if (cecup.stop_working) {
             break;
+        }
+
+        /* fts */
+        switch (ent->fts_info) {
+        case FTS_D:
+            is_dir = true;
+            break;
+        case FTS_DC:
+            continue;
+        case FTS_DEFAULT:
+            continue;
+        case FTS_DOT:
+            continue;
+        case FTS_DP:
+            continue;
+        case FTS_ERR:
+            LOG_ERROR(_("Error while traversing file system: %s.\n"), strerror(ent->fts_errno));
+            continue;
+        case FTS_DNR:
+            LOG_ERROR(_("Directory '%s' is unreadable.\n"), ent->fts_path);
+            continue;
+        case FTS_NS:
+            LOG_ERROR(_("Failed to get file information for %s: %s.\n"),
+                      ent->fts_path, strerror(ent->fts_errno));
+        case FTS_F:
+            break;
+        case FTS_INIT:
+            continue;
+        case FTS_NSOK:
+            continue;
+        case FTS_SL:
+            break;
+        case FTS_SLNONE:
+            continue;
+        case FTS_W:
+            continue;
         }
 
         if (ent->fts_info == FTS_DP || ent->fts_info == FTS_DOT) {
@@ -168,8 +204,6 @@ work_traverse_fs(Traversal *traversal) {
             break;
         }
 
-        is_dir = (ent->fts_info == FTS_D);
-
         {
             char *path_tmp;
 
@@ -228,7 +262,7 @@ work_traverse_fs(Traversal *traversal) {
         }
 
         traversal->nlinks[traversal->nfiles] = 1;
-        if ((ent->fts_info == FTS_F) && (ent->fts_statp->st_nlink > 1)) {
+        if (ent->fts_statp->st_nlink > 1) {
             char inode[32];
             int32 inode_len;
             int32 *first_idx_ptr;
