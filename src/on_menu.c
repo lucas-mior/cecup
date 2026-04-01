@@ -385,6 +385,9 @@ on_menu_diff(GtkWidget *widget, void *data) {
             error("Error forking: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         case 0:
+            if (setsid() < 0) {
+                error("Error in setsid: %s.\n", strerror(errno));
+            }
             path_src = xmalloc(size_src);
             path_dst = xmalloc(size_dst);
 
@@ -403,10 +406,6 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 _exit(EXIT_FAILURE);
             }
         default:
-            // TODO: Zombie Process Creation. The parent iterates through the loop and `fork()`s
-            // children but never calls `wait()` or `waitpid()`. Because this loops `tasks->count`
-            // times, it will leave a trail of zombie processes until the application exits unless
-            // you have a global SIGCHLD handler managing reaps elsewhere.
             break;
         }
     }
