@@ -416,6 +416,7 @@ on_menu_diff(GtkWidget *widget, void *data) {
 /* #if 0 == TESTING_on_menu */
 static inline void
 on_menu_functions_sink(void) {
+    (void)on_menu_functions_sink;
     (void)on_menu_ignore_action;
     (void)on_menu_dispatch;
 }

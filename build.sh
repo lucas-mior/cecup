@@ -224,7 +224,7 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-double-promotion"
 
     # to avoid using -Wno-unused-function
-    CFLAGS="$CFLAGS -Wunneeded-internal-declaration"
+    CFLAGS="$CFLAGS -Wno-unneeded-internal-declaration"
 
     # only for the LSP. It does not understand unity builds
     CFLAGS="$CFLAGS -Wno-undefined-internal"

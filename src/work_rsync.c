@@ -644,9 +644,10 @@ work_rsync(void *user_data) {
     return NULL;
 }
 
-#if 0 == TESTING_work
+#if 0 == TESTING_work_rsync
 static inline void
 work_rsync_functions_sink(void) {
+    (void)work_rsync_functions_sink;
     (void)work_rsync;
     (void)work_rsync_run;
 }
@@ -657,6 +658,8 @@ work_rsync_functions_sink(void) {
 
 int
 main(void) {
+    (void)work_rsync;
+    (void)work_rsync_run;
     return 0;
 }
 

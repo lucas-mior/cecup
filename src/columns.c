@@ -294,6 +294,7 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
 #if TESTING_columns
 static inline void
 columns_functions_sink(void) {
+    (void)columns_functions_sink;
     (void)column_text_setup;
     (void)column_text_bind;
     (void)column_bind_path;

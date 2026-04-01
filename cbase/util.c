@@ -2510,9 +2510,13 @@ main(int argc, char **argv) {
 #endif
     (void)util_command_launch;
 
+    (void)dont_read;
+
     (void)malloc_debug;
     (void)realloc_debug;
     (void)free_debug;
+    (void)xrealloc4;
+    (void)free2;
 
     (void)xmmap_commit;
     (void)xkill;
@@ -2526,6 +2530,9 @@ main(int argc, char **argv) {
     (void)xpthread_mutex_destroy;
     (void)xpthread_create;
     (void)xpthread_join;
+
+    (void)fwrite64;
+    (void)fread64;
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
     PRINT_TIMINGS(1, t0, t1);

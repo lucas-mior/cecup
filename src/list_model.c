@@ -331,6 +331,7 @@ item_add(int32 src_idx, int32 dst_idx) {
 
 static inline void
 list_model_functions_sink(void) {
+    (void)list_model_functions_sink;
     (void)cecup_list_model_new;
     (void)cecup_list_model_update;
     (void)cecup_list_model_row_removed;
