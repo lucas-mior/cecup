@@ -68,17 +68,12 @@ static char *
 item_path_side(int32 row_id, int32 side) {
     int32 idx;
 
-    if (side == L) {
-        idx = cecup.rows[L][row_id];
-        if (idx >= 0) {
-            return cecup.traversal[L].paths[idx];
-        }
+    if ((idx = cecup.rows[side][row_id]) >= 0) {
+        return cecup.traversal[side].paths[idx];
     } else {
-        idx = cecup.rows[R][row_id];
-        if (idx >= 0) {
-            return cecup.traversal[R].paths[idx];
-        }
+        return NULL;
     }
+
     return NULL;
 }
 
