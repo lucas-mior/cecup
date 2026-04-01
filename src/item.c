@@ -34,8 +34,8 @@ item_path_get(int32 row_id) {
     int32 src_idx;
     int32 dst_idx;
 
-    src_idx = cecup.rows_src[row_id];
-    dst_idx = cecup.rows_dst[row_id];
+    src_idx = cecup.rows[L][row_id];
+    dst_idx = cecup.rows[R][row_id];
 
     if (src_idx >= 0) {
         return cecup.traversal_src.paths[src_idx];
@@ -52,8 +52,8 @@ item_path_len_get(int32 row_id) {
     int32 src_idx;
     int32 dst_idx;
 
-    src_idx = cecup.rows_src[row_id];
-    dst_idx = cecup.rows_dst[row_id];
+    src_idx = cecup.rows[L][row_id];
+    dst_idx = cecup.rows[R][row_id];
 
     if (src_idx >= 0) {
         return cecup.traversal_src.paths_lens[src_idx];
@@ -69,12 +69,12 @@ item_path_side(int32 row_id, int32 side) {
     int32 idx;
 
     if (side == L) {
-        idx = cecup.rows_src[row_id];
+        idx = cecup.rows[L][row_id];
         if (idx >= 0) {
             return cecup.traversal_src.paths[idx];
         }
     } else {
-        idx = cecup.rows_dst[row_id];
+        idx = cecup.rows[R][row_id];
         if (idx >= 0) {
             return cecup.traversal_dst.paths[idx];
         }
@@ -87,14 +87,14 @@ item_size_side(int32 row_id, int32 side) {
     int32 idx;
 
     if (side == L) {
-        idx = cecup.rows_src[row_id];
+        idx = cecup.rows[L][row_id];
         if (idx >= 0) {
             if (!S_ISDIR(cecup.traversal_src.stats[idx].st_mode)) {
                 return cecup.traversal_src.stats[idx].st_size;
             }
         }
     } else {
-        idx = cecup.rows_dst[row_id];
+        idx = cecup.rows[R][row_id];
         if (idx >= 0) {
             if (!S_ISDIR(cecup.traversal_dst.stats[idx].st_mode)) {
                 return cecup.traversal_dst.stats[idx].st_size;
@@ -109,12 +109,12 @@ item_mtime_side(int32 row_id, int32 side) {
     int32 idx;
 
     if (side == L) {
-        idx = cecup.rows_src[row_id];
+        idx = cecup.rows[L][row_id];
         if (idx >= 0) {
             return cecup.traversal_src.stats[idx].st_mtime;
         }
     } else {
-        idx = cecup.rows_dst[row_id];
+        idx = cecup.rows[R][row_id];
         if (idx >= 0) {
             return cecup.traversal_dst.stats[idx].st_mtime;
         }
@@ -127,12 +127,12 @@ item_ignore_pattern_side(int32 row_id, int32 side) {
     int32 idx;
 
     if (side == L) {
-        idx = cecup.rows_src[row_id];
+        idx = cecup.rows[L][row_id];
         if (idx >= 0) {
             return cecup.traversal_src.patterns[idx];
         }
     } else {
-        idx = cecup.rows_dst[row_id];
+        idx = cecup.rows[R][row_id];
         if (idx >= 0) {
             return cecup.traversal_dst.patterns[idx];
         }
@@ -145,12 +145,12 @@ item_path_len_side(int32 row_id, int32 side) {
     int32 idx;
 
     if (side == L) {
-        idx = cecup.rows_src[row_id];
+        idx = cecup.rows[L][row_id];
         if (idx >= 0) {
             return (int32)cecup.traversal_src.paths_lens[idx];
         }
     } else {
-        idx = cecup.rows_dst[row_id];
+        idx = cecup.rows[R][row_id];
         if (idx >= 0) {
             return (int32)cecup.traversal_dst.paths_lens[idx];
         }
@@ -163,12 +163,12 @@ item_link_target_side(int32 row_id, int32 side) {
     int32 idx;
 
     if (side == L) {
-        idx = cecup.rows_src[row_id];
+        idx = cecup.rows[L][row_id];
         if (idx >= 0) {
             return cecup.traversal_src.link_targets[idx];
         }
     } else {
-        idx = cecup.rows_dst[row_id];
+        idx = cecup.rows[R][row_id];
         if (idx >= 0) {
             return cecup.traversal_dst.link_targets[idx];
         }
@@ -181,12 +181,12 @@ item_link_target_len_side(int32 row_id, int32 side) {
     int32 idx;
 
     if (side == L) {
-        idx = cecup.rows_src[row_id];
+        idx = cecup.rows[L][row_id];
         if (idx >= 0) {
             return (int32)cecup.traversal_src.link_targets_lens[idx];
         }
     } else {
-        idx = cecup.rows_dst[row_id];
+        idx = cecup.rows[R][row_id];
         if (idx >= 0) {
             return (int32)cecup.traversal_dst.link_targets_lens[idx];
         }
@@ -197,8 +197,8 @@ item_link_target_len_side(int32 row_id, int32 side) {
 static void
 item_get_actions_reasons(int32 row_id,
                          enum Action *action_src, enum Action *action_dst, enum Reason *reason) {
-    int32 src_idx = cecup.rows_src[row_id];
-    int32 dst_idx = cecup.rows_dst[row_id];
+    int32 src_idx = cecup.rows[L][row_id];
+    int32 dst_idx = cecup.rows[R][row_id];
     bool delete_ignored = cecup.delete_ignored;
     bool delete_after = cecup.delete_after;
 

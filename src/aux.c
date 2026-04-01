@@ -684,8 +684,8 @@ check_consistent_state(void) {
     g_mutex_lock(&cecup.arena_mutex);
 
     for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
-        int32 src_idx = cecup.rows_src[row_id];
-        int32 dst_idx = cecup.rows_dst[row_id];
+        int32 src_idx = cecup.rows[L][row_id];
+        int32 dst_idx = cecup.rows[R][row_id];
 
         if ((src_idx == -1) && (dst_idx == -1)) {
             error("Consistency error: Row %d has no index for either side.\n", row_id);
@@ -723,8 +723,8 @@ check_consistent_state(void) {
         }
     }
 
-    CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal_src, cecup.rows_src);
-    CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal_dst, cecup.rows_dst);
+    CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal_src, cecup.rows[L]);
+    CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal_dst, cecup.rows[R]);
 
     g_mutex_unlock(&cecup.arena_mutex);
     return;

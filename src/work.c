@@ -787,8 +787,8 @@ main(void) {
     g_mutex_init(&cecup.arena_mutex);
 
     cecup.rows_capacity = INITIAL_CAPACITY;
-    cecup.rows_src = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows_src)));
-    cecup.rows_dst = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows_dst)));
+    cecup.rows[L] = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows[L])));
+    cecup.rows[R] = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows[R])));
     cecup.rows_selected = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows_selected)));
     cecup.rows_visible = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows_visible)));
 
@@ -878,8 +878,8 @@ main(void) {
     traversal_free(&cecup.traversal_dst);
 
     if (cecup.rows_capacity > 0) {
-        free(cecup.rows_src, cecup.rows_capacity*SIZEOF(*(cecup.rows_src)));
-        free(cecup.rows_dst, cecup.rows_capacity*SIZEOF(*(cecup.rows_dst)));
+        free(cecup.rows[L], cecup.rows_capacity*SIZEOF(*(cecup.rows[L])));
+        free(cecup.rows[R], cecup.rows_capacity*SIZEOF(*(cecup.rows[R])));
         free(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
         free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     }

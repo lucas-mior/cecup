@@ -380,12 +380,12 @@ item_add(int32 src_idx, int32 dst_idx) {
             cecup.rows_capacity *= 2;
         }
 
-        cecup.rows_src = realloc(cecup.rows_src,
+        cecup.rows[L] = realloc(cecup.rows[L],
                                  old_capacity, cecup.rows_capacity,
-                                 SIZEOF(*(cecup.rows_src)));
-        cecup.rows_dst = realloc(cecup.rows_dst,
+                                 SIZEOF(*(cecup.rows[L])));
+        cecup.rows[R] = realloc(cecup.rows[R],
                                  old_capacity, cecup.rows_capacity,
-                                 SIZEOF(*(cecup.rows_dst)));
+                                 SIZEOF(*(cecup.rows[R])));
         cecup.rows_selected = realloc(cecup.rows_selected,
                                       old_capacity, cecup.rows_capacity,
                                       SIZEOF(uint8));
@@ -396,8 +396,8 @@ item_add(int32 src_idx, int32 dst_idx) {
 
     index = cecup.rows_len;
 
-    cecup.rows_src[index] = src_idx;
-    cecup.rows_dst[index] = dst_idx;
+    cecup.rows[L][index] = src_idx;
+    cecup.rows[R][index] = dst_idx;
     cecup.rows_selected[index] = 0;
     cecup.rows_len += 1;
 
