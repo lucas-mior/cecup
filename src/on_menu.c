@@ -317,6 +317,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
             memcpy64(buf_pointer, path, path_len);
             buf_pointer += path_len;
             space -= path_len;
+
             *buf_pointer = '\n';
             buf_pointer += 1;
             space -= 1;
@@ -359,7 +360,6 @@ static void
 on_menu_delete(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
-    int32 count;
 
     (void)widget;
 
@@ -372,10 +372,9 @@ on_menu_delete(GtkWidget *widget, void *data) {
             tasks->items[i]->action = ACTION_DELETE;
         }
 
-        count = tasks->count;
         dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
                                         GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
-                                        _("Permanently delete %d item(s)?"), count);
+                                        _("Permanently delete %d item(s)?"), tasks->count);
 
         g_signal_connect(dialog, "response", G_CALLBACK(on_delete_response), tasks);
         gtk_widget_show(dialog);
