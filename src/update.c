@@ -708,7 +708,6 @@ update_list_from_rows(void) {
                 compare_item_functions[cecup.sort_col]);
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &t1_sort);
-
         PRINT_TIMINGS(cecup.rows_visible_len, t0_sort, t1_sort, "sorting");
     }
 
