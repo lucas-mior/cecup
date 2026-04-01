@@ -747,7 +747,7 @@ update_list_from_rows(void) {
         PRINT_TIMINGS(cecup.rows_visible_len, t0_sort, t1_sort, "sorting");
     }
 
-    free(entries, cecup.rows_len * SIZEOF(*entries));
+    free(entries, cecup.rows_len*SIZEOF(*entries));
 
     {
         struct timespec t0;
