@@ -71,6 +71,8 @@ struct _CecupListModel {
     GObject parent_instance;
     CecupItemProxy **proxies;
     int32 proxies_capacity;
+    int32 reported_count;
+    guint idle_id;
 };
 
 static GType cecup_list_model_get_item_type(GListModel *list);
@@ -86,6 +88,8 @@ static void
 cecup_list_model_init(CecupListModel *self) {
     self->proxies = NULL;
     self->proxies_capacity = 0;
+    self->reported_count = 0;
+    self->idle_id = 0;
     return;
 }
 
@@ -94,6 +98,12 @@ cecup_list_model_finalize(GObject *object) {
     CecupListModel *self;
 
     self = CECUP_LIST_MODEL(object);
+
+    if (self->idle_id != 0) {
+        g_source_remove(self->idle_id);
+        self->idle_id = 0;
+    }
+
     if (self->proxies) {
         for (int32 i = 0; i < self->proxies_capacity; i += 1) {
             if (self->proxies[i]) {
@@ -129,8 +139,11 @@ cecup_list_model_get_item_type(GListModel *list) {
 
 static guint
 cecup_list_model_get_n_items(GListModel *list) {
-    (void)list;
-    return (guint)cecup.rows_visible_len;
+    CecupListModel *self;
+
+    self = CECUP_LIST_MODEL(list);
+
+    return (guint)self->reported_count;
 }
 
 static gpointer
@@ -142,7 +155,7 @@ cecup_list_model_get_item(GListModel *list, guint position) {
     self = CECUP_LIST_MODEL(list);
     pos = (int32)position;
 
-    if ((pos < 0) || (pos >= cecup.rows_visible_len)) {
+    if ((pos < 0) || (pos >= self->reported_count)) {
         return NULL;
     }
 
@@ -189,8 +202,42 @@ cecup_list_model_list_model_init(GListModelInterface *iface) {
     return;
 }
 
+static gboolean
+cecup_list_model_update_chunk(gpointer user_data) {
+    CecupListModel *self;
+    int32 chunk_size;
+    int32 remaining;
+
+    self = CECUP_LIST_MODEL(user_data);
+    chunk_size = 50000;
+    remaining = cecup.rows_visible_len - self->reported_count;
+
+    if (remaining <= 0) {
+        self->idle_id = 0;
+        return G_SOURCE_REMOVE;
+    }
+
+    if (chunk_size > remaining) {
+        chunk_size = remaining;
+    }
+
+    self->reported_count += chunk_size;
+    g_list_model_items_changed(G_LIST_MODEL(self), (guint)(self->reported_count - chunk_size), 0, (guint)chunk_size);
+
+    return G_SOURCE_CONTINUE;
+}
+
 static void
 cecup_list_model_update(CecupListModel *self, int32 old_count, int32 new_count) {
+    int32 old_reported;
+
+    (void)new_count;
+
+    if (self->idle_id != 0) {
+        g_source_remove(self->idle_id);
+        self->idle_id = 0;
+    }
+
     if (self->proxies) {
         for (int32 i = 0; i < self->proxies_capacity; i += 1) {
             if (self->proxies[i]) {
@@ -200,26 +247,41 @@ cecup_list_model_update(CecupListModel *self, int32 old_count, int32 new_count) 
         }
     }
 
-    g_list_model_items_changed(G_LIST_MODEL(self), 0, (guint)old_count, (guint)new_count);
+    old_reported = self->reported_count;
+    self->reported_count = 0;
+
+    if (old_reported > 0) {
+        g_list_model_items_changed(G_LIST_MODEL(self), 0, (guint)old_reported, 0);
+    } else if (old_count > 0) {
+        g_list_model_items_changed(G_LIST_MODEL(self), 0, (guint)old_count, 0);
+    }
+
+    if (cecup.rows_visible_len > 0) {
+        self->idle_id = g_idle_add(cecup_list_model_update_chunk, self);
+    }
+
     return;
 }
 
 static void
 cecup_list_model_row_removed(CecupListModel *self, int32 index) {
+    int32 items_to_move;
+
     if (index < 0 || index >= cecup.rows_visible_len) {
         return;
     }
 
     if (self->proxies) {
+        int32 proxies_to_move;
+
         if (index < self->proxies_capacity && self->proxies[index]) {
             g_object_unref(self->proxies[index]);
             self->proxies[index] = NULL;
         }
 
-        for (int32 i = index; i < (cecup.rows_visible_len - 1); i += 1) {
-            if (i + 1 < self->proxies_capacity) {
-                self->proxies[i] = self->proxies[i + 1];
-            }
+        proxies_to_move = MIN(cecup.rows_visible_len, self->proxies_capacity) - 1 - index;
+        if (proxies_to_move > 0) {
+            memmove64(&self->proxies[index], &self->proxies[index + 1], proxies_to_move * SIZEOF(CecupItemProxy *));
         }
 
         if (cecup.rows_visible_len - 1 < self->proxies_capacity) {
@@ -227,45 +289,61 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
         }
     }
 
-    for (int32 i = index; i < (cecup.rows_visible_len - 1); i += 1) {
-        cecup.rows_visible[i] = cecup.rows_visible[i + 1];
+    items_to_move = cecup.rows_visible_len - 1 - index;
+    if (items_to_move > 0) {
+        memmove64(&cecup.rows_visible[index], &cecup.rows_visible[index + 1], items_to_move * SIZEOF(int32));
     }
     cecup.rows_visible_len -= 1;
 
-    g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 0);
+    if (index < self->reported_count) {
+        self->reported_count -= 1;
+        g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 0);
+    }
+
     return;
 }
 
 static void
 cecup_list_model_row_added(CecupListModel *self, int32 row_index, int32 position) {
+    int32 rows_to_move;
+
     if (position < 0 || position > cecup.rows_visible_len) {
         position = cecup.rows_visible_len;
     }
 
     if (self->proxies) {
         int32 limit;
+        int32 proxies_to_move;
 
         limit = MIN(cecup.rows_visible_len, self->proxies_capacity - 1);
 
-        // TODO: Memory Leak. When `limit` equals `self->proxies_capacity - 1`, the proxy reference
-        // at `self->proxies[limit]` is overwritten by the loop below without being unreferenced.
-        // This will silently leak a GObject. You should call `g_object_unref(self->proxies[limit])`
-        // if it is not NULL before shifting elements.
-        for (int32 i = limit; i > position; i -= 1) {
-            self->proxies[i] = self->proxies[i - 1];
+        if (self->proxies[limit]) {
+            g_object_unref(self->proxies[limit]);
+            self->proxies[limit] = NULL;
         }
+
+        proxies_to_move = limit - position;
+        if (proxies_to_move > 0) {
+            memmove64(&self->proxies[position + 1], &self->proxies[position], proxies_to_move * SIZEOF(CecupItemProxy *));
+        }
+
         if (position < self->proxies_capacity) {
             self->proxies[position] = NULL;
         }
     }
 
-    for (int32 i = cecup.rows_visible_len; i > position; i -= 1) {
-        cecup.rows_visible[i] = cecup.rows_visible[i - 1];
+    rows_to_move = cecup.rows_visible_len - position;
+    if (rows_to_move > 0) {
+        memmove64(&cecup.rows_visible[position + 1], &cecup.rows_visible[position], rows_to_move * SIZEOF(int32));
     }
     cecup.rows_visible[position] = row_index;
     cecup.rows_visible_len += 1;
 
-    g_list_model_items_changed(G_LIST_MODEL(self), (guint)position, 0, 1);
+    if (position <= self->reported_count) {
+        self->reported_count += 1;
+        g_list_model_items_changed(G_LIST_MODEL(self), (guint)position, 0, 1);
+    }
+
     return;
 }
 
@@ -280,7 +358,10 @@ cecup_list_model_row_changed(CecupListModel *self, int32 index) {
         self->proxies[index] = NULL;
     }
 
-    g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 1);
+    if (index < self->reported_count) {
+        g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 1);
+    }
+
     return;
 }
 
