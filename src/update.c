@@ -84,7 +84,7 @@ update_row_remove(Message *message) {
             side_ptr = &cecup.rows[R][row_id];
         }
 
-        if (S_ISREG(traversal->stats[*idx_ptr].st_mode) 
+        if (S_ISREG(traversal->stats[*idx_ptr].st_mode)
                 && (traversal->stats[*idx_ptr].st_nlink > 1)) {
             char inode[32];
             int32 inode_len;
