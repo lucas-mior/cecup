@@ -36,8 +36,6 @@
 
 static void
 on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
-    int32 index = g_variant_get_int32(parameter);
-    CecupMenuItem *menu_item = &tree_menu_items[index];
     GtkWidget *tree;
     Message *message;
 
@@ -56,13 +54,18 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
         return;
     }
 
-    if (menu_item->callback) {
-        if (menu_item->variant) {
-            g_object_set_data_full(G_OBJECT(tree), "variant", menu_item->variant, NULL);
+    {
+        int32 index = g_variant_get_int32(parameter);
+        CecupMenuItem *menu_item = &tree_menu_items[index];
+
+        if (menu_item->callback) {
+            if (menu_item->variant) {
+                g_object_set_data_full(G_OBJECT(tree), "variant", menu_item->variant, NULL);
+            }
+            menu_item->callback(tree, message);
+        } else {
+            free_message(message);
         }
-        menu_item->callback(tree, message);
-    } else {
-        free_message(message);
     }
 
     return;
