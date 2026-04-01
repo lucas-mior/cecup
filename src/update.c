@@ -574,13 +574,13 @@ update_row_ignore(Message *message) {
 static void
 update_list_from_rows(void) {
     int32 count_new = 0;
-    int32 count_hard = 0;
+    int32 count_link = 0;
     int32 count_update = 0;
     int32 count_equal = 0;
     int32 count_delete = 0;
     int32 count_ignore = 0;
     int32 count_selected = 0;
-    int32 current_store_count = 0;
+    int32 current_store_count;
 
     int64 total_size_bytes = 0;
     char button_label[64];
@@ -627,7 +627,7 @@ update_list_from_rows(void) {
             break;
         case ACTION_HARDLINK:
         case ACTION_SYMLINK:
-            count_hard += 1;
+            count_link += 1;
             total_size_bytes += sz;
             is_visible = show_link;
             break;
@@ -683,7 +683,7 @@ update_list_from_rows(void) {
     SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_new), button_label);
 
-    SNPRINTF(button_label, "%s/%s %d", EMOJI_LINK, EMOJI_SYMLINK, count_hard);
+    SNPRINTF(button_label, "%s/%s %d", EMOJI_LINK, EMOJI_SYMLINK, count_link);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_hard), button_label);
 
     SNPRINTF(button_label, "%s %d", EMOJI_UPDATE, count_update);
