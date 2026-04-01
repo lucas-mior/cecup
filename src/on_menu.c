@@ -357,7 +357,6 @@ static void
 on_menu_delete(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
-    GtkWidget *dialog;
     int32 count;
 
     (void)widget;
@@ -365,14 +364,16 @@ on_menu_delete(GtkWidget *widget, void *data) {
     tasks = get_target_tasks(message->side, message->src_path, ACTION_DELETE);
 
     if (tasks->count > 0) {
+        GtkWidget *dialog;
+
         for (int32 i = 0; i < tasks->count; i += 1) {
             tasks->items[i]->action = ACTION_DELETE;
         }
 
         count = tasks->count;
-        dialog = gtk_message_dialog_new(
-            GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
-            GTK_BUTTONS_YES_NO, _("Permanently delete %d item(s)?"), count);
+        dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
+                                        GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO,
+                                        _("Permanently delete %d item(s)?"), count);
 
         g_signal_connect(dialog, "response", G_CALLBACK(on_delete_response), tasks);
         gtk_widget_show(dialog);
