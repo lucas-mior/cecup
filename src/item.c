@@ -489,6 +489,20 @@ cecup_item_compare(const void *a, const void *b) {
     return (int32)result;
 }
 
+typedef int (*CompareFunction)(const void *a, const void *b);
+
+static CompareFunction compare_item_functions[] = {
+    [COL_SRC_ACTION] = cecup_item_compare,
+    [COL_DST_ACTION] = cecup_item_compare,
+    [COL_SRC_PATH]   = cecup_item_compare,
+    [COL_DST_PATH]   = cecup_item_compare,
+    [COL_SIZE_TEXT]  = cecup_item_compare,
+    [COL_SIZE_RAW]   = cecup_item_compare,
+    [COL_MTIME_TEXT] = cecup_item_compare,
+    [COL_MTIME_RAW]  = cecup_item_compare,
+    [COL_ROW_ID]     = cecup_item_compare,
+};
+
 #if TESTING && (0 == TESTING_item)
 static inline void
 item_functions_sink(void) {

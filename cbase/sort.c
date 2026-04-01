@@ -237,8 +237,6 @@ sort_functions_sink(void) {
     (void)sort_heapify;
     (void)sort_merge_subsorted;
     (void)sort;
-    (void)compare_int;
-    (void)test_sorting;
     return;
 }
 #endif
