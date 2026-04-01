@@ -244,7 +244,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     char *base_path;
     GdkClipboard *clipboard;
 
-    buffer_size = SIZEMB(2);
+    buffer_size = SIZEMB(8);
     buffer = xmalloc(buffer_size);
     write_pointer = buffer;
 
@@ -281,21 +281,16 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
             path_len = task->path_len;
         }
 
-        // TODO: If `remaining_capacity` is less than `path_len`, this item is silently dropped.
-        // Consider dynamically reallocating the buffer to fit all selected paths to prevent data
-        // loss.
-        if (i > 0) {
-            if (remaining_capacity > 0) {
-                *write_pointer = '\n';
-                write_pointer += 1;
-                remaining_capacity -= 1;
-            }
-        }
-
-        if (remaining_capacity >= path_len) {
+        if (remaining_capacity > (path_len + 1)) {
             memcpy64(write_pointer, path, path_len);
             write_pointer += path_len;
             remaining_capacity -= path_len;
+            *write_pointer = '\n';
+            write_pointer += 1;
+            remaining_capacity -= 1;
+        } else {
+            LOG_ERROR("Error adding paths to clipboard. Too many paths.\n");
+            break;
         }
     }
     *write_pointer = '\0';
