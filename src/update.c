@@ -84,7 +84,8 @@ update_row_remove(Message *message) {
             side_ptr = &cecup.rows_dst[row_id];
         }
 
-        if (traversal->stats[*idx_ptr].st_nlink > 1) {
+        if (S_ISREG(traversal->stats[*idx_ptr].st_mode) 
+                && (traversal->stats[*idx_ptr].st_nlink > 1)) {
             char inode[32];
             int32 inode_len;
             int32 *first_idx_ptr;
@@ -146,7 +147,8 @@ update_row_remove(Message *message) {
             if (*idx_ptr >= 0) {
                 int32 idx = *idx_ptr;
 
-                if (traversal->stats[idx].st_nlink > 1) {
+                if (S_ISREG(traversal->stats[idx].st_mode)
+                        && (traversal->stats[idx].st_nlink > 1)) {
                     char inode[32];
                     int32 inode_len;
                     int32 *first_idx_ptr;
@@ -255,7 +257,8 @@ update_row_transfer(Message *message) {
                                                     traversal_src->patterns[idx_src],
                                                     traversal_src->patterns_lens[idx_src]);
 
-            if (traversal_src->stats[idx_src].st_nlink > 1) {
+            if (S_ISREG(traversal_src->stats[idx_src].st_mode)
+                    && (traversal_src->stats[idx_src].st_nlink > 1)) {
                 char inode[32];
                 int32 inode_len;
                 int32 *first_idx_ptr;
@@ -469,6 +472,8 @@ update_row_rename(Message *message) {
 
 static bool
 update_row_ignore(Message *message) {
+    Traversal *traversal_src = &cecup.traversal_src;
+    Traversal *traversal_dst = &cecup.traversal_dst;
     (void)message;
 
     invalidate_preview();
@@ -491,65 +496,67 @@ update_row_ignore(Message *message) {
 
         if (cecup.rows_src[row_id] >= 0) {
             int32 idx_src = cecup.rows_src[row_id];
-            bool was_ignored = (cecup.traversal_src.patterns[idx_src] != NULL);
+            bool was_ignored = (traversal_src->patterns[idx_src] != NULL);
             bool is_ignored = match;
 
             if (was_ignored != is_ignored) {
-                if (cecup.traversal_src.stats[idx_src].st_nlink > 1) {
+                if (S_ISREG(traversal_src->stats[idx_src].st_mode)
+                        && (traversal_src->stats[idx_src].st_nlink > 1)) {
                     char inode[32];
                     int32 inode_len;
                     int32 *first_idx_ptr;
 
-                    inode_len = ITOA(inode, (long)cecup.traversal_src.stats[idx_src].st_ino);
-                    if ((first_idx_ptr = hash_lookup_inode_map(cecup.traversal_src.inode_map,
+                    inode_len = ITOA(inode, (long)traversal_src->stats[idx_src].st_ino);
+                    if ((first_idx_ptr = hash_lookup_inode_map(traversal_src->inode_map,
                                                                inode, inode_len))) {
                         if (is_ignored) {
-                            cecup.traversal_src.nlinks[*first_idx_ptr] -= 1;
+                            traversal_src->nlinks[*first_idx_ptr] -= 1;
                         } else {
-                            cecup.traversal_src.nlinks[*first_idx_ptr] += 1;
+                            traversal_src->nlinks[*first_idx_ptr] += 1;
                         }
                     }
                 }
             }
 
             if (match) {
-                cecup.traversal_src.patterns[idx_src] = match->str;
-                cecup.traversal_src.patterns_lens[idx_src] = (int16)match->len;
+                traversal_src->patterns[idx_src] = match->str;
+                traversal_src->patterns_lens[idx_src] = (int16)match->len;
             } else {
-                cecup.traversal_src.patterns[idx_src] = NULL;
-                cecup.traversal_src.patterns_lens[idx_src] = 0;
+                traversal_src->patterns[idx_src] = NULL;
+                traversal_src->patterns_lens[idx_src] = 0;
             }
         }
 
         if (cecup.rows_dst[row_id] >= 0) {
             int32 idx_dst = cecup.rows_dst[row_id];
-            bool was_ignored = cecup.traversal_dst.patterns[idx_dst];
+            bool was_ignored = traversal_dst->patterns[idx_dst];
             bool is_ignored = match;
 
             if (was_ignored != is_ignored) {
-                if (cecup.traversal_dst.stats[idx_dst].st_nlink > 1) {
+                if (S_ISREG(traversal_dst->stats[idx_dst].st_mode)
+                        && (traversal_dst->stats[idx_dst].st_nlink > 1)) {
                     char inode[32];
                     int32 inode_len;
                     int32 *first_idx_ptr;
 
-                    inode_len = ITOA(inode, (long)cecup.traversal_dst.stats[idx_dst].st_ino);
-                    if ((first_idx_ptr = hash_lookup_inode_map(cecup.traversal_dst.inode_map,
+                    inode_len = ITOA(inode, (long)traversal_dst->stats[idx_dst].st_ino);
+                    if ((first_idx_ptr = hash_lookup_inode_map(traversal_dst->inode_map,
                                                                inode, inode_len))) {
                         if (is_ignored) {
-                            cecup.traversal_dst.nlinks[*first_idx_ptr] -= 1;
+                            traversal_dst->nlinks[*first_idx_ptr] -= 1;
                         } else {
-                            cecup.traversal_dst.nlinks[*first_idx_ptr] += 1;
+                            traversal_dst->nlinks[*first_idx_ptr] += 1;
                         }
                     }
                 }
             }
 
             if (match) {
-                cecup.traversal_dst.patterns[idx_dst] = match->str;
-                cecup.traversal_dst.patterns_lens[idx_dst] = (int16)match->len;
+                traversal_dst->patterns[idx_dst] = match->str;
+                traversal_dst->patterns_lens[idx_dst] = (int16)match->len;
             } else {
-                cecup.traversal_dst.patterns[idx_dst] = NULL;
-                cecup.traversal_dst.patterns_lens[idx_dst] = 0;
+                traversal_dst->patterns[idx_dst] = NULL;
+                traversal_dst->patterns_lens[idx_dst] = 0;
             }
         }
     }

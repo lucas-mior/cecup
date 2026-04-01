@@ -239,7 +239,8 @@ traversal_push(Traversal *traversal, struct stat *stat,
 static void
 traversal_patch_nlinks(Traversal *traversal) {
     for (int32 i = 0; i < traversal->nfiles; i += 1) {
-        if (traversal->stats[i].st_nlink > 1) {
+        if (S_ISREG(traversal->stats[i].st_mode)
+                && (traversal->stats[i].st_nlink > 1)) {
             char inode[32];
             int32 inode_len;
             int32 *first_idx_ptr;
@@ -598,7 +599,8 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
                 fatal(EXIT_FAILURE);
             }
 
-            if (traversal->stats[idx].st_nlink > 1) {
+            if (S_ISREG(traversal->stats[idx].st_mode)
+                    && (traversal->stats[idx].st_nlink > 1)) {
                 char inode[32];
                 int32 inode_len;
                 int32 *first_idx_ptr;
