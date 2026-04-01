@@ -133,6 +133,8 @@ work_traverse_fs(Traversal *traversal) {
             continue;
         case FTS_W:
             continue;
+        default:
+            continue;
         }
 
         if (ent->fts_info == FTS_DP || ent->fts_info == FTS_DOT) {
