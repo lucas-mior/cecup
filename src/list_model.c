@@ -413,7 +413,7 @@ item_add(int32 src_idx, int32 dst_idx) {
     return index;
 }
 
-#if TESTING && (0 == TESTING_list_model)
+#if (0 == TESTING_list_model) && TESTING
 static inline void
 list_model_functions_sink(void) {
     (void)list_model_functions_sink;

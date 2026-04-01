@@ -989,7 +989,7 @@ update_progress_state(char *text, char *tooltip) {
     return;
 }
 
-#if TESTING && (0 == TESTING_update)
+#if (0 == TESTING_update) && TESTING
 static inline void
 update_functions_sink(void) {
     (void)update_functions_sink;

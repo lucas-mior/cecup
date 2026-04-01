@@ -232,7 +232,7 @@ ignore_patterns_match(char *path, int32 path_len,
     return NULL;
 }
 
-#if TESTING && (0 == TESTING_ignore_patterns)
+#if (0 == TESTING_ignore_patterns) && TESTING
 static inline void
 ignore_patterns_functions_sink(void) {
     (void)ignore_patterns_functions_sink;

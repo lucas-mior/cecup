@@ -138,7 +138,7 @@ on_log_button_press(GtkGestureClick *gesture, int32 npress, double x, double y, 
     return;
 }
 
-#if TESTING && (0 == TESTING_on_log)
+#if (0 == TESTING_on_log) && TESTING
 static inline void
 on_log_functions_sink(void) {
     (void)on_log_functions_sink;

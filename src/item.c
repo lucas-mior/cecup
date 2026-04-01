@@ -554,7 +554,7 @@ static CompareFunction compare_item_functions[] = {
     [NUM_COLS]       = cecup_item_compare_src_action,
 };
 
-#if TESTING && (0 == TESTING_item)
+#if (0 == TESTING_item) && TESTING
 static inline void
 item_functions_sink(void) {
     (void)item_functions_sink;

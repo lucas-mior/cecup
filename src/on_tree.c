@@ -471,7 +471,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     return FALSE;
 }
 
-#if TESTING && (0 == TESTING_on_tree)
+#if (0 == TESTING_on_tree) && TESTING
 static inline void
 on_tree_functions_sink(void) {
     (void)on_tree_functions_sink;

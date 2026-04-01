@@ -225,7 +225,7 @@ on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
     return;
 }
 
-#if TESTING && (0 == TESTING_on_path)
+#if (0 == TESTING_on_path) && TESTING
 static inline void
 on_path_functions_sink(void) {
     (void)on_path_functions_sink;
