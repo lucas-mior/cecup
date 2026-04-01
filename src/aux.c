@@ -351,9 +351,9 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         task->side = side;
 
         if (side == L) {
-            traversal = &cecup.traversal_src;
+            traversal = &cecup.traversal[L];
         } else {
-            traversal = &cecup.traversal_dst;
+            traversal = &cecup.traversal[R];
         }
 
         if ((idx_ptr = hash_lookup_fs_map(traversal->map, clicked_path, task->path_len))) {
@@ -693,38 +693,38 @@ check_consistent_state(void) {
         }
 
         if (src_idx >= 0) {
-            if (src_idx >= cecup.traversal_src.nfiles) {
+            if (src_idx >= cecup.traversal[L].nfiles) {
                 error("Consistency error: Row %d points to invalid src_idx %d.\n", row_id, src_idx);
                 fatal(EXIT_FAILURE);
             }
-            if (cecup.traversal_src.row_ids[src_idx] != row_id) {
+            if (cecup.traversal[L].row_ids[src_idx] != row_id) {
                 error("Consistency error:"
                       " rows_src["RED"%d"RESET"] -> src_idx="GREEN"%d"RESET","
                       " but src.row_ids["GREEN"%d"RESET"] -> row_id="RED"%d"RESET".\n",
                       row_id, src_idx,
-                      src_idx, cecup.traversal_src.row_ids[src_idx]);
+                      src_idx, cecup.traversal[L].row_ids[src_idx]);
                 fatal(EXIT_FAILURE);
             }
         }
 
         if (dst_idx >= 0) {
-            if (dst_idx >= cecup.traversal_dst.nfiles) {
+            if (dst_idx >= cecup.traversal[R].nfiles) {
                 error("Consistency error: Row %d points to invalid dst_idx %d.\n", row_id, dst_idx);
                 fatal(EXIT_FAILURE);
             }
-            if (cecup.traversal_dst.row_ids[dst_idx] != row_id) {
+            if (cecup.traversal[R].row_ids[dst_idx] != row_id) {
                 error("Consistency error:"
                       " rows_dst["RED"%d"RESET"] -> dst_idx="GREEN"%d"RESET","
                       " but dst.row_ids["GREEN"%d"RESET"] -> row_id="RED"%d"RESET".\n",
                       row_id, dst_idx,
-                      dst_idx, cecup.traversal_dst.row_ids[dst_idx]);
+                      dst_idx, cecup.traversal[R].row_ids[dst_idx]);
                 fatal(EXIT_FAILURE);
             }
         }
     }
 
-    CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal_src, cecup.rows[L]);
-    CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal_dst, cecup.rows[R]);
+    CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal[L], cecup.rows[L]);
+    CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal[R], cecup.rows[R]);
 
     g_mutex_unlock(&cecup.arena_mutex);
     return;

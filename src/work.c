@@ -306,8 +306,8 @@ static void
 work_cleanup(void) {
     g_mutex_lock(&cecup.arena_mutex);
 
-    traversal_clean(&cecup.traversal_src);
-    traversal_clean(&cecup.traversal_dst);
+    traversal_clean(&cecup.traversal[L]);
+    traversal_clean(&cecup.traversal[R]);
 
     hash_zero_transfer_set(cecup.transfer_set);
     cecup.ntransfers = 0;
@@ -372,25 +372,25 @@ work_preview(void *user_data) {
 
     ignore_patterns_load();
 
-    cecup.traversal_src.base_path = cecup.src_base;
-    cecup.traversal_src.base_path_len = cecup.src_base_len;
+    cecup.traversal[L].base_path = cecup.src_base;
+    cecup.traversal[L].base_path_len = cecup.src_base_len;
 
-    cecup.traversal_dst.base_path = cecup.dst_base;
-    cecup.traversal_dst.base_path_len = cecup.dst_base_len;
+    cecup.traversal[R].base_path = cecup.dst_base;
+    cecup.traversal[R].base_path_len = cecup.dst_base_len;
 
     LOG(_("Traversing file systems...\n"));
     if (!same_fs) {
         GThread *t1;
         GThread *t2;
 
-        t2 = g_thread_new("traversal_dst", work_traverse_fs_thread, &cecup.traversal_dst);
-        t1 = g_thread_new("traversal_src", work_traverse_fs_thread, &cecup.traversal_src);
+        t2 = g_thread_new("traversal_dst", work_traverse_fs_thread, &cecup.traversal[R]);
+        t1 = g_thread_new("traversal_src", work_traverse_fs_thread, &cecup.traversal[L]);
 
         g_thread_join(t1);
         g_thread_join(t2);
     } else {
-        work_traverse_fs_thread(&cecup.traversal_src);
-        work_traverse_fs_thread(&cecup.traversal_dst);
+        work_traverse_fs_thread(&cecup.traversal[L]);
+        work_traverse_fs_thread(&cecup.traversal[R]);
     }
 
     if (cecup.stop_working) {
@@ -400,11 +400,11 @@ work_preview(void *user_data) {
 
     LOG(_("File system traversal finished.\n"));
 
-    nfiles_total = cecup.traversal_src.file_count + cecup.traversal_dst.file_count;
+    nfiles_total = cecup.traversal[L].file_count + cecup.traversal[R].file_count;
     LOG(_("Found %lld files to analyse...\n"), (llong)nfiles_total);
 
-    for (uint32 i = 0; i < cecup.traversal_src.map->capacity; i += 1) {
-        Bucket_fs_map *bucket_src = &(cecup.traversal_src.map->array[i]);
+    for (uint32 i = 0; i < cecup.traversal[L].map->capacity; i += 1) {
+        Bucket_fs_map *bucket_src = &(cecup.traversal[L].map->array[i]);
         int32 src_idx;
         int32 *dst_idx_ptr;
         int32 dst_idx;
@@ -421,11 +421,11 @@ work_preview(void *user_data) {
         }
 
         src_idx = bucket_src->value;
-        link_target_src = cecup.traversal_src.link_targets[src_idx];
-        link_target_src_len = cecup.traversal_src.link_targets_lens[src_idx];
-        path_len = cecup.traversal_src.paths_lens[src_idx];
+        link_target_src = cecup.traversal[L].link_targets[src_idx];
+        link_target_src_len = cecup.traversal[L].link_targets_lens[src_idx];
+        path_len = cecup.traversal[L].paths_lens[src_idx];
 
-        if ((dst_idx_ptr = hash_lookup_fs_map(cecup.traversal_dst.map, bucket_src->key, path_len))) {
+        if ((dst_idx_ptr = hash_lookup_fs_map(cecup.traversal[R].map, bucket_src->key, path_len))) {
             dst_idx = *dst_idx_ptr;
         } else {
             dst_idx = -1;
@@ -468,8 +468,8 @@ work_preview(void *user_data) {
         }
     }
 
-    for (uint32 i = 0; i < cecup.traversal_dst.map->capacity; i += 1) {
-        Bucket_fs_map *bucket_dst = &(cecup.traversal_dst.map->array[i]);
+    for (uint32 i = 0; i < cecup.traversal[R].map->capacity; i += 1) {
+        Bucket_fs_map *bucket_dst = &(cecup.traversal[R].map->array[i]);
         int32 dst_idx;
         int32 path_len;
 
@@ -478,9 +478,9 @@ work_preview(void *user_data) {
         }
 
         dst_idx = bucket_dst->value;
-        path_len = cecup.traversal_dst.paths_lens[dst_idx];
+        path_len = cecup.traversal[R].paths_lens[dst_idx];
 
-        if (hash_lookup_fs_map(cecup.traversal_src.map, bucket_dst->key, path_len) == NULL) {
+        if (hash_lookup_fs_map(cecup.traversal[L].map, bucket_dst->key, path_len) == NULL) {
             item_add(-1, dst_idx);
         }
 
@@ -806,16 +806,16 @@ main(void) {
     cecup.dst_base = dst_dir;
     cecup.dst_base_len = strlen32(dst_dir);
 
-    traversal_allocate(&cecup.traversal_src);
-    cecup.traversal_src.base_path = src_dir;
-    cecup.traversal_src.base_path_len = strlen32(src_dir);
+    traversal_allocate(&cecup.traversal[L]);
+    cecup.traversal[L].base_path = src_dir;
+    cecup.traversal[L].base_path_len = strlen32(src_dir);
 
-    traversal_allocate(&cecup.traversal_dst);
-    cecup.traversal_dst.base_path = dst_dir;
-    cecup.traversal_dst.base_path_len = strlen32(dst_dir);
+    traversal_allocate(&cecup.traversal[R]);
+    cecup.traversal[R].base_path = dst_dir;
+    cecup.traversal[R].base_path_len = strlen32(dst_dir);
 
-    work_traverse_fs(&cecup.traversal_src);
-    work_traverse_fs(&cecup.traversal_dst);
+    work_traverse_fs(&cecup.traversal[L]);
+    work_traverse_fs(&cecup.traversal[R]);
 
     for (int32 i = 0; i < LENGTH(test_entries); i += 1) {
         TestEntry *entry;
@@ -841,15 +841,15 @@ main(void) {
             expected_path[name_len] = '\0';
         }
 
-        for (int32 j = 0; j < cecup.traversal_src.nfiles; j += 1) {
-            if (strcmp(cecup.traversal_src.paths[j], expected_path) == 0) {
+        for (int32 j = 0; j < cecup.traversal[L].nfiles; j += 1) {
+            if (strcmp(cecup.traversal[L].paths[j], expected_path) == 0) {
                 src_idx = j;
                 break;
             }
         }
 
-        for (int32 j = 0; j < cecup.traversal_dst.nfiles; j += 1) {
-            if (strcmp(cecup.traversal_dst.paths[j], expected_path) == 0) {
+        for (int32 j = 0; j < cecup.traversal[R].nfiles; j += 1) {
+            if (strcmp(cecup.traversal[R].paths[j], expected_path) == 0) {
                 dst_idx = j;
                 break;
             }
@@ -874,8 +874,8 @@ main(void) {
         ASSERT((reason & entry->expected_reason_mask) == entry->expected_reason_mask);
     }
 
-    traversal_free(&cecup.traversal_src);
-    traversal_free(&cecup.traversal_dst);
+    traversal_free(&cecup.traversal[L]);
+    traversal_free(&cecup.traversal[R]);
 
     if (cecup.rows_capacity > 0) {
         free(cecup.rows[L], cecup.rows_capacity*SIZEOF(*(cecup.rows[L])));

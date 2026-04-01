@@ -795,8 +795,8 @@ main(int32 argc, char **argv) {
     cecup.transfers_lens = xmalloc(cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
     cecup.transfer_set = hash_create_transfer_set(INITIAL_CAPACITY);
 
-    traversal_allocate(&cecup.traversal_src);
-    traversal_allocate(&cecup.traversal_dst);
+    traversal_allocate(&cecup.traversal[L]);
+    traversal_allocate(&cecup.traversal[R]);
 
     cecup.ignore_patterns = NULL;
     cecup.ignore_capacity = 0;
@@ -883,8 +883,8 @@ main(int32 argc, char **argv) {
 
     arena_destroy(cecup.arena);
 
-    traversal_free(&cecup.traversal_src);
-    traversal_free(&cecup.traversal_dst);
+    traversal_free(&cecup.traversal[L]);
+    traversal_free(&cecup.traversal[R]);
 
     g_mutex_clear(&cecup.arena_mutex);
 

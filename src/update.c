@@ -54,9 +54,9 @@ update_row_remove(Message *message) {
     Traversal *traversal;
 
     if (side == L) {
-        traversal = &cecup.traversal_src;
+        traversal = &cecup.traversal[L];
     } else {
-        traversal = &cecup.traversal_dst;
+        traversal = &cecup.traversal[R];
     }
 
     if (path_removed == NULL || path_removed_len == 0) {
@@ -118,10 +118,10 @@ update_row_remove(Message *message) {
                 idx_dst = cecup.rows[R][j];
 
                 if (idx_src >= 0) {
-                    cecup.traversal_src.row_ids[idx_src] = j;
+                    cecup.traversal[L].row_ids[idx_src] = j;
                 }
                 if (idx_dst >= 0) {
-                    cecup.traversal_dst.row_ids[idx_dst] = j;
+                    cecup.traversal[R].row_ids[idx_dst] = j;
                 }
             }
             cecup.rows_len -= 1;
@@ -184,10 +184,10 @@ update_row_remove(Message *message) {
                     idx_dst = cecup.rows[R][j];
 
                     if (idx_src >= 0) {
-                        cecup.traversal_src.row_ids[idx_src] = j;
+                        cecup.traversal[L].row_ids[idx_src] = j;
                     }
                     if (idx_dst >= 0) {
-                        cecup.traversal_dst.row_ids[idx_dst] = j;
+                        cecup.traversal[R].row_ids[idx_dst] = j;
                     }
                 }
                 cecup.rows_len -= 1;
@@ -212,8 +212,8 @@ update_row_remove(Message *message) {
 
 static bool
 update_row_transfer(Message *message) {
-    Traversal *traversal_src = &cecup.traversal_src;
-    Traversal *traversal_dst = &cecup.traversal_dst;
+    Traversal *traversal_src = &cecup.traversal[L];
+    Traversal *traversal_dst = &cecup.traversal[R];
 
     char *path_transfered = message->src_path;
     int32 path_transfered_len = message->path_len;
@@ -306,11 +306,11 @@ update_row_rename(Message *message) {
     bool changed = false;
 
     if (side == L) {
-        traversal = &cecup.traversal_src;
-        other_traversal = &cecup.traversal_dst;
+        traversal = &cecup.traversal[L];
+        other_traversal = &cecup.traversal[R];
     } else {
-        traversal = &cecup.traversal_dst;
-        other_traversal = &cecup.traversal_src;
+        traversal = &cecup.traversal[R];
+        other_traversal = &cecup.traversal[L];
     }
 
     for (int32 i = 0; i < cecup.rows_len;) {
@@ -419,10 +419,10 @@ update_row_rename(Message *message) {
                     idx_dst = cecup.rows[R][j];
 
                     if (idx_src >= 0) {
-                        cecup.traversal_src.row_ids[idx_src] = j;
+                        cecup.traversal[L].row_ids[idx_src] = j;
                     }
                     if (idx_dst >= 0) {
-                        cecup.traversal_dst.row_ids[idx_dst] = j;
+                        cecup.traversal[R].row_ids[idx_dst] = j;
                     }
                 }
                 cecup.rows_len -= 1;
@@ -432,12 +432,12 @@ update_row_rename(Message *message) {
                 if (side == L) {
                     cecup.rows[L][row_id] = n_idx;
                     cecup.rows[R][row_id] = -1;
-                    cecup.traversal_src.row_ids[n_idx] = row_id;
+                    cecup.traversal[L].row_ids[n_idx] = row_id;
                     item_add(-1, other_idx);
                 } else {
                     cecup.rows[R][row_id] = n_idx;
                     cecup.rows[L][row_id] = -1;
-                    cecup.traversal_dst.row_ids[n_idx] = row_id;
+                    cecup.traversal[R].row_ids[n_idx] = row_id;
                     item_add(other_idx, -1);
                 }
             } else {
@@ -472,8 +472,8 @@ update_row_rename(Message *message) {
 
 static bool
 update_row_ignore(Message *message) {
-    Traversal *traversal_src = &cecup.traversal_src;
-    Traversal *traversal_dst = &cecup.traversal_dst;
+    Traversal *traversal_src = &cecup.traversal[L];
+    Traversal *traversal_dst = &cecup.traversal[R];
     (void)message;
 
     invalidate_preview();
@@ -561,8 +561,8 @@ update_row_ignore(Message *message) {
         }
     }
 
-    traversal_patch_nlinks(&cecup.traversal_src);
-    traversal_patch_nlinks(&cecup.traversal_dst);
+    traversal_patch_nlinks(&cecup.traversal[L]);
+    traversal_patch_nlinks(&cecup.traversal[R]);
 
     if (DEBUGGING) {
         check_consistent_state();
@@ -875,11 +875,11 @@ update_ui_process_message(Message *message) {
 
         current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
-        for (int32 i = 0; i < cecup.traversal_src.nfiles; i += 1) {
-            cecup.traversal_src.row_ids[i] = -1;
+        for (int32 i = 0; i < cecup.traversal[L].nfiles; i += 1) {
+            cecup.traversal[L].row_ids[i] = -1;
         }
-        for (int32 i = 0; i < cecup.traversal_dst.nfiles; i += 1) {
-            cecup.traversal_dst.row_ids[i] = -1;
+        for (int32 i = 0; i < cecup.traversal[R].nfiles; i += 1) {
+            cecup.traversal[R].row_ids[i] = -1;
         }
 
         cecup.rows_len = 0;

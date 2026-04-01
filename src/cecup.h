@@ -425,8 +425,7 @@ static struct {
     int32 ignore_count;
     int32 ignore_capacity;
 
-    Traversal traversal_src;
-    Traversal traversal_dst;
+    Traversal traversal[2];
 
     struct Hash_transfer_set *transfer_set;
     char **transfers;
