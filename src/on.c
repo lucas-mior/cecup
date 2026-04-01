@@ -861,7 +861,6 @@ on_functions_sink(void) {
 #if TESTING_on
 int
 main(void) {
-    (void)on_functions_sink;
     (void)on_window_destroy;
     (void)on_tree_tooltip;
     (void)on_tree_button_press;

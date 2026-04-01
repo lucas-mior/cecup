@@ -431,6 +431,8 @@ on_menu_functions_sink(void) {
 
 int
 main(void) {
+    (void)on_menu_ignore_action;
+    (void)on_menu_dispatch;
     exit(EXIT_SUCCESS);
 }
 

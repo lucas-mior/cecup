@@ -314,6 +314,14 @@ columns_functions_sink(void) {
 
 int
 main(void) {
+    (void)column_text_setup;
+    (void)column_text_bind;
+    (void)column_bind_path;
+    (void)column_setup_path;
+    (void)column_setup_action;
+    (void)column_bind_action;
+    (void)column_setup_checkbox;
+    (void)column_bind_checkbox;
     exit(EXIT_SUCCESS);
 }
 

@@ -728,7 +728,7 @@ check_consistent_state(void) {
     return;
 }
 
-#if TESTING && (0 == TESTING_update)
+#if TESTING && (0 == TESTING_aux)
 static inline void
 aux_functions_sink(void) {
     (void)cecup_get_dirs;

@@ -353,6 +353,12 @@ list_model_functions_sink(void) {
 
 int
 main(void) {
+    (void)cecup_list_model_new;
+    (void)cecup_list_model_update;
+    (void)cecup_list_model_row_removed;
+    (void)cecup_list_model_row_changed;
+    (void)cecup_item_proxy_get_index;
+    (void)cecup_list_model_row_added;
     exit(EXIT_SUCCESS);
 }
 #endif
