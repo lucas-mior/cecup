@@ -604,7 +604,7 @@ update_list_from_rows(void) {
         enum Action src_act;
         enum Action dst_act;
         enum Reason reason;
-        int64 sz;
+        int64 size;
         bool is_visible = false;
 
         row_id = i;
@@ -614,26 +614,26 @@ update_list_from_rows(void) {
 
         item_get_actions_reasons(row_id, &src_act, &dst_act, &reason);
 
-        sz = item_size_side(row_id, L);
-        if (sz < 0) {
-            sz = 0;
+        size = item_size_side(row_id, L);
+        if (size < 0) {
+            size = 0;
         }
 
         switch (src_act) {
         case ACTION_NEW:
             count_new += 1;
-            total_size_bytes += sz;
+            total_size_bytes += size;
             is_visible = show_new;
             break;
         case ACTION_HARDLINK:
         case ACTION_SYMLINK:
             count_link += 1;
-            total_size_bytes += sz;
+            total_size_bytes += size;
             is_visible = show_link;
             break;
         case ACTION_UPDATE:
             count_update += 1;
-            total_size_bytes += sz;
+            total_size_bytes += size;
             is_visible = show_update;
             break;
         case ACTION_EQUAL:
