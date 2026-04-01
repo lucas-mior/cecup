@@ -676,9 +676,7 @@ update_list_from_rows(void) {
         }
 
         {
-            int32 v_idx;
-
-            v_idx = cecup.rows_visible_len;
+            int32 v_idx = cecup.rows_visible_len;
             entries[v_idx].row_id = row_id;
 
             switch (cecup.sort_col) {
