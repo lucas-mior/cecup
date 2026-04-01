@@ -874,6 +874,10 @@ main(int32 argc, char **argv) {
     free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     free(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
 
+    free(cecup.transfers, cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
+    free(cecup.transfers_lens, cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
+    hash_destroy_transfer_set(cecup.transfer_set);
+
     free(cecup.src_base, cecup.src_base_len + 1);
     free(cecup.dst_base, cecup.dst_base_len + 1);
 
