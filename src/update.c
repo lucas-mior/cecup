@@ -701,6 +701,10 @@ update_list_from_rows(void) {
             case COL_DST_ACTION:
                 entries[v_idx].key.i64 = (int64)dst_act;
                 break;
+            case COL_MTIME_TEXT:
+            case COL_SIZE_TEXT:
+            case COL_ROW_ID:
+            case NUM_COLS:
             default:
                 entries[v_idx].key.i64 = 0;
                 break;
