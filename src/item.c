@@ -29,6 +29,14 @@
 #define TESTING 0
 #endif
 
+typedef struct SortEntry {
+    int32 row_id;
+    union {
+        int64 i64;
+        char *ptr;
+    } key;
+} SortEntry;
+
 static char *
 item_path_get(int32 row_id) {
     int32 src_idx;
@@ -352,12 +360,12 @@ item_get_actions_reasons(int32 row_id,
     } while (0)
 
 INLINE int32
-cecup_item_compare_src_path(const void *a, const void *b) {
-    int32 item_a = *(int32 *)a;
-    int32 item_b = *(int32 *)b;
+cecup_item_compare_string_key(const void *a, const void *b) {
+    SortEntry *entry_a = (SortEntry *)a;
+    SortEntry *entry_b = (SortEntry *)b;
     int32 result = 0;
-    char *path_a = item_path_side(item_a, L);
-    char *path_b = item_path_side(item_b, L);
+    char *path_a = entry_a->key.ptr;
+    char *path_b = entry_b->key.ptr;
 
     if (path_a == NULL) {
         result = -1;
@@ -375,163 +383,48 @@ cecup_item_compare_src_path(const void *a, const void *b) {
 }
 
 INLINE int32
-cecup_item_compare_dst_path(const void *a, const void *b) {
-    int32 item_a = *(int32 *)a;
-    int32 item_b = *(int32 *)b;
+cecup_item_compare_int_key(const void *a, const void *b) {
+    SortEntry *entry_a = (SortEntry *)a;
+    SortEntry *entry_b = (SortEntry *)b;
     int32 result = 0;
-    char *path_a = item_path_side(item_a, R);
-    char *path_b = item_path_side(item_b, R);
+    int64 key_a = entry_a->key.i64;
+    int64 key_b = entry_b->key.i64;
 
-    if (path_a == NULL) {
-        result = -1;
-    } else if (path_b == NULL) {
-        result = 1;
-    } else {
-        result = strcmp(path_a, path_b);
-    }
+    COMPARE(key_a, key_b);
 
     if (cecup.sort_order == GTK_SORT_DESCENDING) {
         result *= -1;
     }
 
     return result;
-}
-
-INLINE int32
-cecup_item_compare_size_raw(const void *a, const void *b) {
-    int32 item_a = *(int32 *)a;
-    int32 item_b = *(int32 *)b;
-    int32 result = 0;
-    int64 size_a = item_size_side(item_a, L);
-    int64 size_b = item_size_side(item_b, L);
-
-    COMPARE(size_a, size_b);
-
-    if (cecup.sort_order == GTK_SORT_DESCENDING) {
-        result *= -1;
-    }
-
-    return (int32)result;
-}
-
-INLINE int32
-cecup_item_compare_mtime_raw(const void *a, const void *b) {
-    int32 item_a = *(int32 *)a;
-    int32 item_b = *(int32 *)b;
-    int32 result = 0;
-    int64 mtime_a = item_mtime_side(item_a, L);
-    int64 mtime_b = item_mtime_side(item_b, L);
-
-    COMPARE(mtime_a, mtime_b);
-
-    if (cecup.sort_order == GTK_SORT_DESCENDING) {
-        result *= -1;
-    }
-
-    return (int32)result;
-}
-
-INLINE int32
-cecup_item_compare_dst_action(const void *a, const void *b) {
-    int32 item_a = *(int32 *)a;
-    int32 item_b = *(int32 *)b;
-    int32 result = 0;
-    enum Action src_act_a;
-    enum Action dst_act_a;
-    enum Action src_act_b;
-    enum Action dst_act_b;
-    enum Reason reason_a;
-    enum Reason reason_b;
-
-    item_get_actions_reasons(item_a, &src_act_a, &dst_act_a, &reason_a);
-    item_get_actions_reasons(item_b, &src_act_b, &dst_act_b, &reason_b);
-
-    COMPARE(dst_act_a, dst_act_b);
-
-    if (cecup.sort_order == GTK_SORT_DESCENDING) {
-        result *= -1;
-    }
-
-    return (int32)result;
-}
-
-INLINE int32
-cecup_item_compare_src_action(const void *a, const void *b) {
-    int32 item_a = *(int32 *)a;
-    int32 item_b = *(int32 *)b;
-    int32 result = 0;
-    enum Action src_act_a;
-    enum Action dst_act_a;
-    enum Action src_act_b;
-    enum Action dst_act_b;
-    enum Reason reason_a;
-    enum Reason reason_b;
-
-    item_get_actions_reasons(item_a, &src_act_a, &dst_act_a, &reason_a);
-    item_get_actions_reasons(item_b, &src_act_b, &dst_act_b, &reason_b);
-
-    COMPARE(src_act_a, src_act_b);
-
-    if (cecup.sort_order == GTK_SORT_DESCENDING) {
-        result *= -1;
-    }
-
-    return (int32)result;
 }
 
 #undef COMPARE
 
-/* typedef int (*CompareFunction)(const void *a, const void *b); */
-typedef void(*SortFunction)(int *a, int64);
+typedef void(*SortFunction)(SortEntry *a, int64);
 
-/* #define i_key keytype  - [required] (or use i_type, see below) */
-/* #define i_less(xp, yp) - optional less function. default: *xp < *yp */
-/* #define i_cmp(xp, yp)  - alternative 3-way comparison. c_default_cmp(xp, yp) */
-/* #define T name         - optional, defines {name}_sort(), else {i_key}s_sort(). */
-/* #define T name, key    - alternative one-liner to define both i_type and i_key. */
-
-#define i_key int32
-#define i_cmp(a,b) cecup_item_compare_src_path(a,b)
-#define T compare_src_path
+#define i_key SortEntry
+#define i_cmp(a,b) cecup_item_compare_string_key(a,b)
+#define T compare_string_sort
 #include "stc/sort.h"
 
-#define i_key int32
-#define i_cmp(a,b) cecup_item_compare_dst_path(a,b)
-#define T compare_dst_path
-#include "stc/sort.h"
-
-#define i_key int32
-#define i_cmp(a,b) cecup_item_compare_src_action(a,b)
-#define T compare_src_action
-#include "stc/sort.h"
-
-#define i_key int32
-#define i_cmp(a,b) cecup_item_compare_dst_action(a,b)
-#define T compare_dst_action
-#include "stc/sort.h"
-
-#define i_key int32
-#define i_cmp(a,b) cecup_item_compare_size_raw(a,b)
-#define T compare_size_raw
-#include "stc/sort.h"
-
-#define i_key int32
-#define i_cmp(a,b) cecup_item_compare_mtime_raw(a,b)
-#define T compare_mtime_raw
+#define i_key SortEntry
+#define i_cmp(a,b) cecup_item_compare_int_key(a,b)
+#define T compare_int_sort
 #include "stc/sort.h"
 
 static SortFunction compare_item_functions[] = {
-    [COL_SELECTED]   = compare_src_action_sort,
-    [COL_SRC_ACTION] = compare_src_action_sort,
-    [COL_DST_ACTION] = compare_dst_action_sort,
-    [COL_SRC_PATH]   = compare_src_path_sort,
-    [COL_DST_PATH]   = compare_dst_path_sort,
-    [COL_SIZE_TEXT]  = compare_src_action_sort,
-    [COL_SIZE_RAW]   = compare_size_raw_sort,
-    [COL_MTIME_TEXT] = compare_src_action_sort,
-    [COL_MTIME_RAW]  = compare_mtime_raw_sort,
-    [COL_ROW_ID]     = compare_src_action_sort,
-    [NUM_COLS]       = compare_src_action_sort,
+    [COL_SELECTED]   = compare_int_sort_sort,
+    [COL_SRC_ACTION] = compare_int_sort_sort,
+    [COL_DST_ACTION] = compare_int_sort_sort,
+    [COL_SRC_PATH]   = compare_string_sort_sort,
+    [COL_DST_PATH]   = compare_string_sort_sort,
+    [COL_SIZE_TEXT]  = compare_int_sort_sort,
+    [COL_SIZE_RAW]   = compare_int_sort_sort,
+    [COL_MTIME_TEXT] = compare_int_sort_sort,
+    [COL_MTIME_RAW]  = compare_int_sort_sort,
+    [COL_ROW_ID]     = compare_int_sort_sort,
+    [NUM_COLS]       = compare_int_sort_sort,
 };
 
 #if (0 == TESTING_item) && TESTING
