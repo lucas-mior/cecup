@@ -250,7 +250,10 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
 
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
     remaining_capacity = buffer_size - 1;
-    variant = g_object_get_data(G_OBJECT(widget), "variant");
+    if ((variant = g_object_get_data(G_OBJECT(widget), "variant")) == NULL) {
+        error("Error in %s: \"variant\" not passed to widget.\n", __func__);
+        fatal(EXIT_FAILURE);
+    }
 
     if (message->side == L) {
         base_path = cecup.src_base;
@@ -265,7 +268,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
         char path_full[PATH_MAX];
         char *path;
 
-        if (variant && !strcmp(variant, "absolute")) {
+        if (!strcmp(variant, "absolute")) {
             char path_relative[MAX_PATH_LENGTH];
 
             SNPRINTF(path_relative, "%s/%s", base_path, task->path);
