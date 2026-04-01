@@ -181,17 +181,25 @@ on_menu_rename(GtkWidget *tree, void *data) {
     return;
 }
 
+static char *
+get_variant(GtkWidget *widget, const char *function) {
+    char *variant;
+
+    if ((variant = g_object_get_data(G_OBJECT(widget), "variant")) == NULL) {
+        error("Error in %s: \"variant\" not passed to widget.\n", function);
+        fatal(EXIT_FAILURE);
+    }
+
+    return variant;
+}
+
 static void
 on_menu_open_item(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
     char *variant;
 
-    if (widget) {
-        variant = g_object_get_data(G_OBJECT(widget), "variant");
-    } else {
-        variant = NULL;
-    }
+    variant = get_variant(widget, "variant");
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
     for (int32 i = 0; i < tasks->count; i += 1) {
@@ -207,11 +215,9 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         }
         n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
 
-        if (variant) {
-            if (strcmp(variant, "folder") == 0) {
-                int32 path_len = n;
-                dirname2(full_path, full_path, &path_len);
-            }
+        if (strcmp(variant, "folder") == 0) {
+            int32 path_len = n;
+            dirname2(full_path, full_path, &path_len);
         }
 
         {
@@ -251,10 +257,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
 
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
     remaining_capacity = buffer_size - 1;
-    if ((variant = g_object_get_data(G_OBJECT(widget), "variant")) == NULL) {
-        error("Error in %s: \"variant\" not passed to widget.\n", __func__);
-        fatal(EXIT_FAILURE);
-    }
+    variant = get_variant(widget, __func__);
 
     if (!strcmp(variant, "absolute")) {
         absolute = true;
