@@ -403,7 +403,7 @@ static int32
 cecup_item_compare_src_path(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
-    int64 result = 0;
+    int32 result = 0;
     char *path_a = item_path_side(item_a, L);
     char *path_b = item_path_side(item_b, L);
 
@@ -419,14 +419,14 @@ cecup_item_compare_src_path(const void *a, const void *b) {
         result *= -1;
     }
 
-    return (int32)result;
+    return result;
 }
 
 static int32
 cecup_item_compare_dst_path(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
-    int64 result = 0;
+    int32 result = 0;
     char *path_a = item_path_side(item_a, R);
     char *path_b = item_path_side(item_b, R);
 
@@ -442,14 +442,14 @@ cecup_item_compare_dst_path(const void *a, const void *b) {
         result *= -1;
     }
 
-    return (int32)result;
+    return result;
 }
 
 static int32
 cecup_item_compare_size_raw(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
-    int64 result = 0;
+    int32 result = 0;
     int64 size_a = item_size_side(item_a, L);
     int64 size_b = item_size_side(item_b, L);
 
@@ -466,7 +466,7 @@ static int32
 cecup_item_compare_mtime_raw(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
-    int64 result = 0;
+    int32 result = 0;
     int64 mtime_a = item_mtime_side(item_a, L);
     int64 mtime_b = item_mtime_side(item_b, L);
 
@@ -483,7 +483,7 @@ static int32
 cecup_item_compare_dst_action(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
-    int64 result = 0;
+    int32 result = 0;
     enum Action src_act_a;
     enum Action dst_act_a;
     enum Action src_act_b;
@@ -507,7 +507,7 @@ static int32
 cecup_item_compare_src_action(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
-    int64 result = 0;
+    int32 result = 0;
     enum Action src_act_a;
     enum Action dst_act_a;
     enum Action src_act_b;
