@@ -713,8 +713,8 @@ update_list_from_rows(void) {
     {
         struct timespec t0;
         struct timespec t1;
-
         clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
+
         cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
                                 (int32)current_store_count, cecup.rows_visible_len);
 
