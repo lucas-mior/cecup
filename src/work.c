@@ -121,6 +121,7 @@ work_traverse_fs(Traversal *traversal) {
         case FTS_NS:
             LOG_ERROR(_("Failed to get file information for %s: %s.\n"),
                       ent->fts_path, strerror(ent->fts_errno));
+            continue;
         case FTS_F:
             break;
         case FTS_INIT:
@@ -134,16 +135,6 @@ work_traverse_fs(Traversal *traversal) {
         case FTS_W:
             continue;
         default:
-            continue;
-        }
-
-        if (ent->fts_info == FTS_DP || ent->fts_info == FTS_DOT) {
-            continue;
-        }
-
-        if (ent->fts_info == FTS_ERR
-            || ent->fts_info == FTS_NS
-            || ent->fts_info == FTS_DNR) {
             continue;
         }
 
