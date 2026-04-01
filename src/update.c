@@ -595,14 +595,14 @@ update_list_from_rows(void) {
     bool show_delete = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
     bool show_ignore = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
-    SortEntry *entries;
+    SortEntry *sort_entries;
 
     current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
     cecup.rows_visible_len = 0;
 
-    entries = xmalloc(cecup.rows_len*SIZEOF(*entries));
+    sort_entries = xmalloc(cecup.rows_len*SIZEOF(*sort_entries));
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         int32 row_id;
@@ -677,34 +677,34 @@ update_list_from_rows(void) {
 
         {
             int32 v_idx = cecup.rows_visible_len;
-            entries[v_idx].row_id = row_id;
+            sort_entries[v_idx].row_id = row_id;
 
             switch (cecup.sort_col) {
             case COL_SRC_PATH:
-                entries[v_idx].key.ptr = item_path_side(row_id, L);
+                sort_entries[v_idx].key.ptr = item_path_side(row_id, L);
                 break;
             case COL_DST_PATH:
-                entries[v_idx].key.ptr = item_path_side(row_id, R);
+                sort_entries[v_idx].key.ptr = item_path_side(row_id, R);
                 break;
             case COL_SIZE_RAW:
-                entries[v_idx].key.i64 = size;
+                sort_entries[v_idx].key.i64 = size;
                 break;
             case COL_MTIME_RAW:
-                entries[v_idx].key.i64 = item_mtime_side(row_id, L);
+                sort_entries[v_idx].key.i64 = item_mtime_side(row_id, L);
                 break;
             case COL_SRC_ACTION:
             case COL_SELECTED:
-                entries[v_idx].key.i64 = (int64)src_act;
+                sort_entries[v_idx].key.i64 = (int64)src_act;
                 break;
             case COL_DST_ACTION:
-                entries[v_idx].key.i64 = (int64)dst_act;
+                sort_entries[v_idx].key.i64 = (int64)dst_act;
                 break;
             case COL_MTIME_TEXT:
             case COL_SIZE_TEXT:
             case COL_ROW_ID:
             case NUM_COLS:
             default:
-                entries[v_idx].key.i64 = 0;
+                sort_entries[v_idx].key.i64 = 0;
                 break;
             }
 
@@ -739,17 +739,17 @@ update_list_from_rows(void) {
         struct timespec t1_sort;
         clock_gettime(CLOCK_MONOTONIC_RAW, &t0_sort);
 
-        compare_item_functions[cecup.sort_col](entries, (int64)cecup.rows_visible_len);
+        compare_item_functions[cecup.sort_col](sort_entries, (int64)cecup.rows_visible_len);
 
         for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-            cecup.rows_visible[k] = entries[k].row_id;
+            cecup.rows_visible[k] = sort_entries[k].row_id;
         }
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &t1_sort);
         PRINT_TIMINGS(cecup.rows_visible_len, t0_sort, t1_sort, "sorting");
     }
 
-    free(entries, cecup.rows_len*SIZEOF(*entries));
+    free(sort_entries, cecup.rows_len*SIZEOF(*sort_entries));
 
     {
         struct timespec t0;
