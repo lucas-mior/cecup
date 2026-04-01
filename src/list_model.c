@@ -28,6 +28,9 @@
 #elif !defined(TESTING_list_model)
 #define TESTING_list_model 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 struct _CecupItemProxy {
     GObject parent_instance;
@@ -329,6 +332,7 @@ item_add(int32 src_idx, int32 dst_idx) {
     return index;
 }
 
+#if TESTING && (0 == TESTING_list_model)
 static inline void
 list_model_functions_sink(void) {
     (void)list_model_functions_sink;
@@ -340,6 +344,7 @@ list_model_functions_sink(void) {
     (void)cecup_list_model_row_added;
     return;
 }
+#endif
 
 #if TESTING_list_model
 

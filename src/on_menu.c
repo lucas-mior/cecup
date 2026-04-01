@@ -30,6 +30,9 @@
 #elif !defined(TESTING_on_menu)
 #define TESTING_on_menu 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 static void
 on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
@@ -413,14 +416,14 @@ on_menu_diff(GtkWidget *widget, void *data) {
     return;
 }
 
-/* #if 0 == TESTING_on_menu */
+#if TESTING && (0 == TESTING_on_menu)
 static inline void
 on_menu_functions_sink(void) {
     (void)on_menu_functions_sink;
     (void)on_menu_ignore_action;
     (void)on_menu_dispatch;
 }
-/* #endif */
+#endif
 
 #if TESTING_on_menu
 #include "work.c"

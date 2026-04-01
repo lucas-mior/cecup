@@ -30,6 +30,9 @@
 #elif !defined(TESTING_on_path)
 #define TESTING_on_path 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 typedef struct SelectionData {
     GtkEditable *editable;
@@ -222,9 +225,10 @@ on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
     return;
 }
 
-#if 0 == TESTING_on_path
+#if TESTING && (0 == TESTING_on_path)
 static inline void
 on_path_functions_sink(void) {
+    (void)on_path_functions_sink;
     (void)on_path_editing_notify;
     return;
 }

@@ -36,6 +36,9 @@
 #elif !defined(TESTING_update)
 #define TESTING_update 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 #define UI_INTERVAL_MS 100
 
@@ -966,9 +969,10 @@ update_progress_state(char *text, char *tooltip) {
     return;
 }
 
-#if 0 == TESTING_update
+#if TESTING && (0 == TESTING_update)
 static inline void
 update_functions_sink(void) {
+    (void)update_functions_sink;
     (void)update_progress_bar;
     (void)cecup_get_dirs;
     (void)get_target_tasks;

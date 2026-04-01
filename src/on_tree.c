@@ -30,6 +30,9 @@
 #elif !defined(TESTING_on_tree)
 #define TESTING_on_tree 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 static void
 on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y, void *data) {
@@ -467,6 +470,14 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     }
     return FALSE;
 }
+
+#if TESTING && (0 == TESTING_on_tree)
+static inline void
+on_tree_functions_sink(void) {
+    (void)on_tree_functions_sink;
+    return;
+}
+#endif
 
 #if TESTING_on_tree
 #include "on.c"

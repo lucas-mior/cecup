@@ -26,6 +26,9 @@
 #elif !defined(TESTING_ignore_patterns)
 #define TESTING_ignore_patterns 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 static void
 ignore_patterns_load(void) {
@@ -228,6 +231,14 @@ ignore_patterns_match(char *path, int32 path_len,
 
     return NULL;
 }
+
+#if TESTING && (0 == TESTING_ignore_patterns)
+static inline void
+ignore_patterns_functions_sink(void) {
+    (void)ignore_patterns_functions_sink;
+    return;
+}
+#endif
 
 #if TESTING_ignore_patterns
 #include "assert.c"

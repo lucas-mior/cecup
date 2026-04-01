@@ -25,6 +25,9 @@
 #elif !defined(TESTING_item)
 #define TESTING_item 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 static char *
 item_path_get(int32 row_id) {
@@ -486,9 +489,10 @@ cecup_item_compare(const void *a, const void *b) {
     return (int32)result;
 }
 
-#if 0 == TESTING_item
+#if TESTING && (0 == TESTING_item)
 static inline void
 item_functions_sink(void) {
+    (void)item_functions_sink;
     (void)item_ignore_pattern_side;
 }
 #endif

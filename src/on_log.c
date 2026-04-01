@@ -29,6 +29,9 @@
 #elif !defined(TESTING_on_log)
 #define TESTING_on_log 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 static void
 on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
@@ -134,6 +137,13 @@ on_log_button_press(GtkGestureClick *gesture, int32 npress, double x, double y, 
 
     return;
 }
+
+#if TESTING && (0 == TESTING_on_log)
+static inline void
+on_log_functions_sink(void) {
+    (void)on_log_functions_sink;
+}
+#endif
 
 #if TESTING_on_log
 #include "on.c"

@@ -326,11 +326,11 @@ case "$target" in
             cmdline="zig cc $CPPFLAGS $CFLAGS"
             cmdline=$(option_remove "$cmdline" "-D_GNU_SOURCE")
             cmdline="$cmdline -target x86_64-windows-gnu"
-            cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 -DTESTING"
+            cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 -DTESTING=1"
             cmdline="$cmdline $flags -o $test_exe $src"
         else
             cmdline="$CC $CPPFLAGS $CFLAGS"
-            cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 -DTESTING $LDFLAGS"
+            cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 -DTESTING=1 $LDFLAGS"
             cmdline="$cmdline $flags -o $test_exe $src"
         fi
 

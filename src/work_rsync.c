@@ -27,6 +27,9 @@
 #elif !defined(TESTING_work_rsync)
 #define TESTING_work_rsync 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 static void
 work_batch_flush(MessageBatch **batch_ptr) {

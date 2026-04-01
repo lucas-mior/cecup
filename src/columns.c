@@ -28,6 +28,9 @@
 #elif !defined(TESTING_columns)
 #define TESTING_columns 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 static void
 column_setup_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
@@ -291,7 +294,7 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
     return;
 }
 
-#if TESTING_columns
+#if TESTING && (0 == TESTING_columns)
 static inline void
 columns_functions_sink(void) {
     (void)columns_functions_sink;
@@ -305,6 +308,9 @@ columns_functions_sink(void) {
     (void)column_bind_checkbox;
     return;
 }
+#endif
+
+#if TESTING_columns
 
 int
 main(void) {

@@ -28,6 +28,9 @@
 #elif !defined(TESTING_aux)
 #define TESTING_aux 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 static bool
 aux_is_root(char *path) {
@@ -725,7 +728,7 @@ check_consistent_state(void) {
     return;
 }
 
-#if 0 == TESTING_aux
+#if TESTING && (0 == TESTING_update)
 static inline void
 aux_functions_sink(void) {
     (void)cecup_get_dirs;

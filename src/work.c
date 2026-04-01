@@ -41,6 +41,9 @@
 #elif !defined(TESTING_work)
 #define TESTING_work 0
 #endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
 
 static void
 work_finalize(bool preview_clean) {
