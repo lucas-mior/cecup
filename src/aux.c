@@ -553,7 +553,6 @@ free_message(void *data) {
         } else if (message->dst_path) {
             free(message->dst_path, message->path_len + 1);
         }
-        free(message->link_target, message->link_target_len + 1);
         free(message->old_path, message->old_path_len + 1);
         free(message->new_path, message->new_path_len + 1);
 
