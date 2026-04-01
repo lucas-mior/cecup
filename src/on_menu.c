@@ -257,18 +257,18 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     char *variant;
     char *buffer;
     int32 buffer_size;
-    char *write_pointer;
-    int32 remaining_capacity;
+    char *buf_pointer;
+    int32 space;
     char *base_path;
     GdkClipboard *clipboard;
     bool absolute;
 
     buffer_size = SIZEMB(8);
     buffer = xmalloc(buffer_size);
-    write_pointer = buffer;
+    buf_pointer = buffer;
 
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
-    remaining_capacity = buffer_size - 1;
+    space = buffer_size - 1;
     variant = get_variant(widget, __func__);
 
     if (!strcmp(variant, "absolute")) {
@@ -311,19 +311,19 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
             path_len = task->path_len;
         }
 
-        if (remaining_capacity > (path_len + 1)) {
-            memcpy64(write_pointer, path, path_len);
-            write_pointer += path_len;
-            remaining_capacity -= path_len;
-            *write_pointer = '\n';
-            write_pointer += 1;
-            remaining_capacity -= 1;
+        if (space > (path_len + 1)) {
+            memcpy64(buf_pointer, path, path_len);
+            buf_pointer += path_len;
+            space -= path_len;
+            *buf_pointer = '\n';
+            buf_pointer += 1;
+            space -= 1;
         } else {
             LOG_ERROR("Error adding paths to clipboard. Too many paths.\n");
             break;
         }
     }
-    *write_pointer = '\0';
+    *buf_pointer = '\0';
     gdk_clipboard_set_text(clipboard, buffer);
 
     free(buffer, buffer_size);
