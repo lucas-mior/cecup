@@ -96,10 +96,6 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
         memset64(message, 0, SIZEOF(*message));
 
         message->type = MSG_IGNORE_PATTERN;
-        message->text_len = strlen32(pattern);
-        message->text = xmalloc(message->text_len + 1);
-        memcpy64(message->text, pattern, message->text_len + 1);
-
         g_idle_add(update_ui_handler, message);
     }
     return;
