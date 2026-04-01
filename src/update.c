@@ -704,7 +704,7 @@ update_list_from_rows(void) {
         /* qsort64(cecup.rows_visible, */
         /*         cecup.rows_visible_len, SIZEOF(int32), */
         /*         compare_item_functions[cecup.sort_col]); */
-        compare_path_stc_sort(cecup.rows_visible, cecup.rows_visible_len);
+        compare_item_functions[cecup.sort_col](cecup.rows_visible, cecup.rows_visible_len);
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &t1_sort);
         PRINT_TIMINGS(cecup.rows_visible_len, t0_sort, t1_sort, "sorting");

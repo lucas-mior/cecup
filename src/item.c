@@ -420,7 +420,7 @@ cecup_item_compare_src_path(const void *a, const void *b) {
     return result;
 }
 
-static int32
+INLINE int32
 cecup_item_compare_dst_path(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
@@ -443,7 +443,7 @@ cecup_item_compare_dst_path(const void *a, const void *b) {
     return result;
 }
 
-static int32
+INLINE int32
 cecup_item_compare_size_raw(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
@@ -460,7 +460,7 @@ cecup_item_compare_size_raw(const void *a, const void *b) {
     return (int32)result;
 }
 
-static int32
+INLINE int32
 cecup_item_compare_mtime_raw(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
@@ -477,7 +477,7 @@ cecup_item_compare_mtime_raw(const void *a, const void *b) {
     return (int32)result;
 }
 
-static int32
+INLINE int32
 cecup_item_compare_dst_action(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
@@ -501,7 +501,7 @@ cecup_item_compare_dst_action(const void *a, const void *b) {
     return (int32)result;
 }
 
-static int32
+INLINE int32
 cecup_item_compare_src_action(const void *a, const void *b) {
     int32 item_a = *(int32 *)a;
     int32 item_b = *(int32 *)b;
@@ -527,7 +527,8 @@ cecup_item_compare_src_action(const void *a, const void *b) {
 
 #undef COMPARE
 
-typedef int (*CompareFunction)(const void *a, const void *b);
+/* typedef int (*CompareFunction)(const void *a, const void *b); */
+typedef void(*SortFunction)(int *a, int64);
 
 /* #define i_key keytype  - [required] (or use i_type, see below) */
 /* #define i_less(xp, yp) - optional less function. default: *xp < *yp */
@@ -537,22 +538,46 @@ typedef int (*CompareFunction)(const void *a, const void *b);
 
 #define i_key int32
 #define i_cmp(a,b) cecup_item_compare_src_path(a,b)
-#define T compare_path_stc
-
+#define T compare_src_path
 #include "stc/sort.h"
 
-static CompareFunction compare_item_functions[] = {
-    [COL_SELECTED]   = cecup_item_compare_src_action,
-    [COL_SRC_ACTION] = cecup_item_compare_src_action,
-    [COL_DST_ACTION] = cecup_item_compare_dst_action,
-    [COL_SRC_PATH]   = cecup_item_compare_src_path,
-    [COL_DST_PATH]   = cecup_item_compare_dst_path,
-    [COL_SIZE_TEXT]  = cecup_item_compare_src_action,
-    [COL_SIZE_RAW]   = cecup_item_compare_size_raw,
-    [COL_MTIME_TEXT] = cecup_item_compare_src_action,
-    [COL_MTIME_RAW]  = cecup_item_compare_mtime_raw,
-    [COL_ROW_ID]     = cecup_item_compare_src_action,
-    [NUM_COLS]       = cecup_item_compare_src_action,
+#define i_key int32
+#define i_cmp(a,b) cecup_item_compare_dst_path(a,b)
+#define T compare_dst_path
+#include "stc/sort.h"
+
+#define i_key int32
+#define i_cmp(a,b) cecup_item_compare_src_action(a,b)
+#define T compare_src_action
+#include "stc/sort.h"
+
+#define i_key int32
+#define i_cmp(a,b) cecup_item_compare_dst_action(a,b)
+#define T compare_dst_action
+#include "stc/sort.h"
+
+#define i_key int32
+#define i_cmp(a,b) cecup_item_compare_size_raw(a,b)
+#define T compare_size_raw
+#include "stc/sort.h"
+
+#define i_key int32
+#define i_cmp(a,b) cecup_item_compare_mtime_raw(a,b)
+#define T compare_mtime_raw
+#include "stc/sort.h"
+
+static SortFunction compare_item_functions[] = {
+    [COL_SELECTED]   = compare_src_action_sort,
+    [COL_SRC_ACTION] = compare_src_action_sort,
+    [COL_DST_ACTION] = compare_dst_action_sort,
+    [COL_SRC_PATH]   = compare_src_path_sort,
+    [COL_DST_PATH]   = compare_dst_path_sort,
+    [COL_SIZE_TEXT]  = compare_src_action_sort,
+    [COL_SIZE_RAW]   = compare_size_raw_sort,
+    [COL_MTIME_TEXT] = compare_src_action_sort,
+    [COL_MTIME_RAW]  = compare_mtime_raw_sort,
+    [COL_ROW_ID]     = compare_src_action_sort,
+    [NUM_COLS]       = compare_src_action_sort,
 };
 
 #if (0 == TESTING_item) && TESTING
