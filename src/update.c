@@ -692,7 +692,15 @@ update_list_from_rows(void) {
     update_stats_text(count_selected, total_size_bytes);
 
     if (cecup.rows_visible_len > 0) {
+        struct timespec t0_sort;
+        struct timespec t1_sort;
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t0_sort);
+
         qsort64(cecup.rows_visible, cecup.rows_visible_len, SIZEOF(int32), cecup_item_compare);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t1_sort);
+
+        PRINT_TIMINGS(cecup.rows_visible_len, t0_sort, t1_sort, "sorting");
     }
 
     cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
