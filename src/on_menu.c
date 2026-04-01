@@ -198,9 +198,21 @@ on_menu_open_item(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
     char *variant;
+    bool folder;
 
     variant = get_variant(widget, "variant");
     tasks = get_target_tasks(message->side, message->src_path, message->action);
+
+    if (!strcmp(variant, "folder")) {
+        folder = true;
+    } else if (!strcmp(variant, "file")) {
+        folder = false;
+    } else {
+        error("Error in %s:"
+              "\"variant\" must be \"folder\" or \"file\", but \"%s\" was passed.\n",
+              __func__, variant);
+        fatal(EXIT_FAILURE);
+    }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
@@ -215,7 +227,7 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         }
         n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
 
-        if (strcmp(variant, "folder") == 0) {
+        if (folder) {
             int32 path_len = n;
             dirname2(full_path, full_path, &path_len);
         }
