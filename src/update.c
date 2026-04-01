@@ -665,10 +665,6 @@ update_list_from_rows(void) {
 
         if (cecup.search_query_len > 0) {
             char *path = item_path_get(row_id);
-            if (path == NULL) {
-                continue;
-            }
-
             if (strcasestr(path, cecup.search_query) == NULL) {
                 continue;
             }
