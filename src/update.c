@@ -585,8 +585,8 @@ update_list_from_rows(void) {
     int64 total_size_bytes = 0;
     char button_label[64];
 
-    struct timespec t0;
-    struct timespec t1;
+    struct timespec t0_rows_loop;
+    struct timespec t1_rows_loop;
 
     bool show_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
     bool show_link = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
@@ -595,9 +595,9 @@ update_list_from_rows(void) {
     bool show_delete = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
     bool show_ignore = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
     current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
     cecup.rows_visible_len = 0;
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         int32 row_id;
@@ -677,6 +677,8 @@ update_list_from_rows(void) {
         cecup.rows_visible[cecup.rows_visible_len] = row_id;
         cecup.rows_visible_len += 1;
     }
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t1_rows_loop);
+    PRINT_TIMINGS(cecup.rows_len, t0_rows_loop, t1_rows_loop, "rows loop");
 
     SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_new), button_label);
@@ -711,11 +713,17 @@ update_list_from_rows(void) {
         PRINT_TIMINGS(cecup.rows_visible_len, t0_sort, t1_sort, "sorting");
     }
 
-    cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
-                            (int32)current_store_count, cecup.rows_visible_len);
+    {
+        struct timespec t0;
+        struct timespec t1;
 
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
-    PRINT_TIMINGS(cecup.rows_visible_len, t0, t1);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
+        cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
+                                (int32)current_store_count, cecup.rows_visible_len);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
+        PRINT_TIMINGS(cecup.rows_visible_len, t0, t1, "cecup_list_model_update");
+    }
     return;
 }
 
