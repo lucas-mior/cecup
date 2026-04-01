@@ -222,8 +222,20 @@ on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
     return;
 }
 
+#if 0 == TESTING_on_path
+static inline void
+on_path_functions_sink(void) {
+    (void)on_path_editing_notify;
+    return;
+}
+#endif
+
 #if TESTING_on_path
+
+#include "work.c"
+
 int main(void) {
+    (void)on_path_editing_notify;
     return 0;
 }
 #endif

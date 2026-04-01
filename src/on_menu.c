@@ -423,6 +423,7 @@ on_menu_functions_sink(void) {
 
 #if TESTING_on_menu
 #include "work.c"
+#include "on.c"
 
 int
 main(void) {

@@ -981,6 +981,7 @@ update_functions_sink(void) {
 #if TESTING_update
 #include <assert.h>
 #include <string.h>
+#include "work.c"
 
 int
 main(void) {

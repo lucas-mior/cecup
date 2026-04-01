@@ -539,8 +539,6 @@ static char *filename_problems[] = {
     RSYNC_SHOW_PRE_DIR,
 };
 
-static void work_batch_flush(MessageBatch **batch_ptr);
-static void work_batch_push(MessageBatch **batch_ptr, Message *message);
 static void work_finalize(bool preview_clean);
 static int32 work_traverse_fs(Traversal *traversal);
 static void *work_traverse_fs_thread(void *user_data);
@@ -554,15 +552,5 @@ static bool work_rsync_run(char *files_from_filename, int32 nfiles_total,
 static void *work_rsync(void *user_data);
 
 static gboolean update_ui_handler(void *data);
-
-static void on_menu_open_item(GtkWidget *m, void *data);
-static void on_menu_copy_path(GtkWidget *m, void *data);
-static void on_menu_apply(GtkWidget *m, void *data);
-static void on_menu_diff(GtkWidget *m, void *data);
-static void on_menu_rename(GtkWidget *m, void *data);
-static void on_menu_delete(GtkWidget *m, void *data);
-
-static void on_popover_closed(GtkWidget *popover, void *data);
-static void execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item);
 
 #endif /* CECUP_H */

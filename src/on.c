@@ -270,13 +270,6 @@ on_preview_clicked(GtkWidget *button, void *data) {
     return;
 }
 
-static int
-transfers_compare(const void *transfer1, const void *transfer2) {
-    const char *t1 = transfer1;
-    const char *t2 = transfer2;
-    return strcmp(t1, t2);
-}
-
 static void
 on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     ThreadData *thread_data;
@@ -855,6 +848,8 @@ on_functions_sink(void) {
     (void)on_log_copy;
     (void)on_path_editing_notify;
     (void)on_path_click_pressed;
+    (void)on_select_all_visible_clicked;
+    (void)on_unselect_all_clicked;
 }
 /* #endif */
 

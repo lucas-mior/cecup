@@ -469,6 +469,15 @@ work_preview(void *user_data) {
     return NULL;
 }
 
+#if 0 == TESTING_work
+static inline void
+work_functions_sink(void) {
+    (void)work_cleanup;
+    (void)work_finalize;
+    (void)work_preview;
+}
+#endif
+
 #if TESTING_work
 
 #include <string.h>

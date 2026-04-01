@@ -336,10 +336,15 @@ list_model_functions_sink(void) {
     (void)cecup_list_model_row_removed;
     (void)cecup_list_model_row_changed;
     (void)cecup_item_proxy_get_index;
+    (void)cecup_list_model_row_added;
     return;
 }
 
 #if TESTING_list_model
+
+#include "update.c"
+#include "work.c"
+
 int
 main(void) {
     exit(EXIT_SUCCESS);

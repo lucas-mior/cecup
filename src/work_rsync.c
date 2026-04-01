@@ -644,6 +644,14 @@ work_rsync(void *user_data) {
     return NULL;
 }
 
+#if 0 == TESTING_work
+static inline void
+work_rsync_functions_sink(void) {
+    (void)work_rsync;
+    (void)work_rsync_run;
+}
+#endif
+
 #if TESTING_work_rsync
 #include "work.c"
 

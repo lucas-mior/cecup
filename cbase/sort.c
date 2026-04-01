@@ -230,6 +230,19 @@ sort(FileList *old) {
 }
 #endif
 
+#if 0 == TESTING_sort
+static inline void
+sort_functions_sink(void) {
+    (void)sort_shuffle;
+    (void)sort_heapify;
+    (void)sort_merge_subsorted;
+    (void)sort;
+    (void)compare_int;
+    (void)test_sorting;
+    return;
+}
+#endif
+
 #if TESTING_sort
 
 #define MAXI 10000
@@ -268,6 +281,8 @@ test_sorting(int32 n, int32 p) {
     for (int32 i = 0; i < n; i += 1) {
         array[i] = rand() % MAXI;
     }
+
+    sort_shuffle(array, n, sizeof(*array));
 
     {
         int32 offset = 0;

@@ -736,14 +736,20 @@ aux_functions_sink(void) {
     (void)traversal_push;
     (void)protect_interface_from_user;
     (void)invalidate_preview;
+    (void)traversal_free;
+    (void)traversal_allocate;
     return;
 }
 #endif
 
 #if TESTING_aux
 #include "update.c"
+#include "work.c"
+#include "on.c"
 
 int main(void) {
+    (void)traversal_free;
+    (void)traversal_allocate;
     return 0;
 }
 #endif

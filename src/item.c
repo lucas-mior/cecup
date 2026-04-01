@@ -486,7 +486,20 @@ cecup_item_compare(const void *a, const void *b) {
     return (int32)result;
 }
 
+#if 0 == TESTING_item
+static inline void
+item_functions_sink(void) {
+    (void)item_ignore_pattern_side;
+}
+#endif
+
 #if TESTING_item
+
+#include "list_model.c"
+#include "update.c"
+#include "work.c"
+#include "on.c"
+
 int
 main(void) {
     return 0;

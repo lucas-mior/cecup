@@ -235,6 +235,7 @@ ignore_patterns_match(char *path, int32 path_len,
 #include "aux.c"
 #include "update.c"
 #include "work.c"
+#include "on.c"
 
 static void
 test_pattern_init(IgnorePattern *p, char *raw) {

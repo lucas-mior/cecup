@@ -57,12 +57,11 @@ CPPFLAGS="$CPPFLAGS -DLOCALEDIR=$PREFIX/share/locale"
 CFLAGS="$CFLAGS -std=c11"
 CFLAGS="$CFLAGS -Wfatal-errors"
 CFLAGS="$CFLAGS -Wall -Wextra"
-# CFLAGS="$CFLAGS -Werror"
+CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-format-pedantic"
 CFLAGS="$CFLAGS -Wno-unknown-warning-option"
 CFLAGS="$CFLAGS -Wno-gnu-union-cast"
 CFLAGS="$CFLAGS -Wno-unused-macros"
-CFLAGS="$CFLAGS -Wno-unused-function"
 CFLAGS="$CFLAGS -Wno-constant-logical-operand"
 CFLAGS="$CFLAGS -Wno-float-equal"
 CFLAGS="$CFLAGS -Wno-cast-qual"
@@ -223,6 +222,9 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-assign-enum"
     CFLAGS="$CFLAGS -Wno-used-but-marked-unused"
     CFLAGS="$CFLAGS -Wno-double-promotion"
+
+    # to avoid using -Wno-unused-function
+    CFLAGS="$CFLAGS -Wunneeded-internal-declaration"
 
     # only for the LSP. It does not understand unity builds
     CFLAGS="$CFLAGS -Wno-undefined-internal"
