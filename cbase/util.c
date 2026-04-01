@@ -1971,12 +1971,12 @@ dirname2(char *buffer, char *path, int32 *path_len) {
 
 static void
 print_timings(char *file, int32 line, const char *func,
-              int64 n, struct timespec t0, struct timespec t1) {
+              int64 nitems, struct timespec t0, struct timespec t1) {
     llong seconds = t1.tv_sec - t0.tv_sec;
     llong nanos = t1.tv_nsec - t0.tv_nsec;
 
     double total_seconds = (double)seconds + (double)nanos / 1.0e9;
-    double micros_per = 1e6*(total_seconds / (double)n);
+    double micros_per = 1e6*(total_seconds / (double)nitems);
 
     printf("\ntime elapsed %s:%d:%s\n", file, line, func);
     printf("%gs = %gus per item.\n\n", total_seconds, micros_per);
