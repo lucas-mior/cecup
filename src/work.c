@@ -184,13 +184,11 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        if (ent->fts_info != FTS_D) {
-            if (file_count >= MAXOF(file_count_return)) {
-                LOG_ERROR(_("More than %lld files found.\n"), MAXOF(file_count_return));
-                LOG_ERROR(_("Please work in smaller subdirs.\n"));
-                cecup.stop_working = true;
-            }
-            file_count += 1;
+        file_count += 1;
+        if (file_count >= MAXOF(file_count_return)) {
+            LOG_ERROR(_("More than %lld files found.\n"), MAXOF(file_count_return));
+            LOG_ERROR(_("Please work in smaller subdirs.\n"));
+            cecup.stop_working = true;
         }
 
         if (cecup.stop_working) {
