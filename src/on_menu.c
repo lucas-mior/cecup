@@ -71,7 +71,7 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
 static void
 on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     char *pattern;
-    FILE *fp;
+    FILE *ignore_file;
     Message *message;
 
     (void)action;
@@ -82,13 +82,13 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
         fatal(EXIT_FAILURE);
     }
 
-    if ((fp = fopen(cecup.ignore_path, "a")) == NULL) {
+    if ((ignore_file = fopen(cecup.ignore_path, "a")) == NULL) {
         LOG_ERROR(_("Error opening %s: %s.\n"), cecup.ignore_path, strerror(errno));
         return;
     }
 
-    fprintf(fp, "\n%s", pattern);
-    if (fclose(fp)) {
+    fprintf(ignore_file, "\n%s", pattern);
+    if (fclose(ignore_file)) {
         LOG_ERROR(_("Error closing %s: %s.\n"), cecup.ignore_path, strerror(errno));
     }
 
