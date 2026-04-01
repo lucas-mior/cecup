@@ -595,14 +595,18 @@ update_list_from_rows(void) {
     bool show_delete = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
     bool show_ignore = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
-    SortEntry *sort_entries;
+    static SortEntry *sort_entries = NULL;
+    static int32 sort_entries_capacity = 0;
 
     current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
     cecup.rows_visible_len = 0;
 
-    sort_entries = xmalloc(cecup.rows_len*SIZEOF(*sort_entries));
+    sort_entries = realloc(sort_entries,
+                           sort_entries_capacity, cecup.rows_len,
+                           SIZEOF(*sort_entries));
+    sort_entries_capacity = cecup.rows_len;
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         int32 row_id;
@@ -748,8 +752,6 @@ update_list_from_rows(void) {
         clock_gettime(CLOCK_MONOTONIC_RAW, &t1_sort);
         PRINT_TIMINGS(cecup.rows_visible_len, t0_sort, t1_sort, "sorting");
     }
-
-    free(sort_entries, cecup.rows_len*SIZEOF(*sort_entries));
 
     {
         struct timespec t0;
