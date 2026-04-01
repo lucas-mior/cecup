@@ -70,14 +70,14 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
 
 static void
 on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
-    char *pattern = (char *)g_variant_get_string(parameter, NULL);
+    char *pattern;
     FILE *fp;
     Message *message;
 
     (void)action;
     (void)data;
 
-    if (pattern == NULL) {
+    if ((pattern = (char *)g_variant_get_string(parameter, NULL)) == NULL) {
         error("Ignore pattern is NULL.\n");
         fatal(EXIT_FAILURE);
     }
