@@ -169,6 +169,9 @@ work_match_pattern(char *pattern, char *str, int32 str_len, bool restrict_slash)
     return false;
 }
 
+static bool ignore_pattern_match_single(IgnorePattern *pattern,
+                                        char *path, int32 path_len, bool is_dir);
+
 static IgnorePattern *
 ignore_patterns_match(char *path, int32 path_len,
                       bool is_dir, IgnorePattern *patterns, int32 count) {
@@ -179,57 +182,66 @@ ignore_patterns_match(char *path, int32 path_len,
     for (int32 i = 0; i < count; i += 1) {
         IgnorePattern *pattern = &patterns[i];
 
-        if (pattern->dir_only && !is_dir) {
-            continue;
-        }
-
-        if (pattern->has_slash) {
-            if (work_match_pattern(pattern->match_str, path, path_len, true)) {
-                return pattern;
-            } else {
-                for (int32 j = 0; j < path_len; j += 1) {
-                    if (path[j] == '/') {
-                        if (work_match_pattern(pattern->match_str, path, j, true)) {
-                            return pattern;
-                        }
-                    }
-                }
-            }
-        } else {
-            char *comp = path;
-            char *next;
-            int32 remaining = path_len;
-
-            while (remaining > 0) {
-                while (remaining > 0 && *comp == '/') {
-                    comp += 1;
-                    remaining -= 1;
-                }
-
-                if (remaining <= 0) {
-                    break;
-                }
-
-                if ((next = memchr64(comp, '/', remaining))) {
-                    int32 comp_len = (int32)(next - comp);
-
-                    if (work_match_pattern(pattern->match_str, comp, comp_len, false)) {
-                        return pattern;
-                    }
-
-                    remaining -= (comp_len + 1);
-                    comp = next + 1;
-                } else {
-                    if (work_match_pattern(pattern->match_str, comp, remaining, false)) {
-                        return pattern;
-                    }
-                    remaining = 0;
-                }
-            }
+        if (ignore_pattern_match_single(pattern, path, path_len, is_dir)) {
+            return pattern;
         }
     }
 
     return NULL;
+}
+
+static bool
+ignore_pattern_match_single(IgnorePattern *pattern, char *path, int32 path_len, bool is_dir) {
+    if (pattern->dir_only && !is_dir) {
+        return false;
+    }
+
+    if (pattern->has_slash) {
+        if (work_match_pattern(pattern->match_str, path, path_len, true)) {
+            return true;
+        } else {
+            for (int32 j = 0; j < path_len; j += 1) {
+                if (path[j] == '/') {
+                    if (work_match_pattern(pattern->match_str, path, j, true)) {
+                        return true;
+                    }
+                }
+            }
+        }
+    } else {
+        char *comp = path;
+        char *next;
+        int32 remaining = path_len;
+
+        while (remaining > 0) {
+            while (remaining > 0 && *comp == '/') {
+                comp += 1;
+                remaining -= 1;
+            }
+
+            if (remaining <= 0) {
+                break;
+            }
+
+            if ((next = memchr64(comp, '/', remaining))) {
+                int32 comp_len = (int32)(next - comp);
+
+                if (work_match_pattern(pattern->match_str, comp, comp_len, false)) {
+                    return true;
+                }
+
+                remaining -= (comp_len + 1);
+                comp = next + 1;
+            } else {
+                if (work_match_pattern(pattern->match_str, comp, remaining, false)) {
+                    return true;
+                }
+                remaining = 0;
+            }
+        }
+    }
+
+    return false;
 }
 
 #if (0 == TESTING_ignore_patterns) && TESTING

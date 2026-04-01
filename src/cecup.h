@@ -290,14 +290,12 @@ typedef struct Message {
     char *src_path;
     char *dst_path;
     char *link_target;
-    char *ignore_pattern;
     char *old_path;
     char *new_path;
 
     int32 text_len;
     int32 path_len;
     int32 link_target_len;
-    int32 ignore_pattern_len;
     int32 old_path_len;
     int32 new_path_len;
 

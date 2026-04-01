@@ -554,7 +554,6 @@ free_message(void *data) {
             free(message->dst_path, message->path_len + 1);
         }
         free(message->link_target, message->link_target_len + 1);
-        free(message->ignore_pattern, message->ignore_pattern_len + 1);
         free(message->old_path, message->old_path_len + 1);
         free(message->new_path, message->new_path_len + 1);
 
