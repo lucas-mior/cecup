@@ -148,12 +148,9 @@ on_menu_rename(GtkWidget *tree, void *data) {
     current = tree;
 
     while (current != NULL) {
-        void *col_ptr;
-        void *pos_ptr;
+        void *col_ptr = g_object_get_data(G_OBJECT(current), "cecup-col");
+        void *pos_ptr = g_object_get_data(G_OBJECT(current), "cecup-pos");
         GtkWidget *next_child;
-
-        col_ptr = g_object_get_data(G_OBJECT(current), "cecup-col");
-        pos_ptr = g_object_get_data(G_OBJECT(current), "cecup-pos");
 
         if (col_ptr && (GPOINTER_TO_INT(col_ptr) == COLUMN_PATH)) {
             if (pos_ptr && ((GPOINTER_TO_UINT(pos_ptr) - 1) == pos)) {
