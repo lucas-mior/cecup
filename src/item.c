@@ -412,9 +412,7 @@ cecup_item_compare_src_path(const void *a, const void *b) {
     char *path_a = item_path_side(item_a, L);
     char *path_b = item_path_side(item_b, L);
 
-    if (path_a == NULL && path_b == NULL) {
-        result = 0;
-    } else if (path_a == NULL) {
+    if (path_a == NULL) {
         result = -1;
     } else if (path_b == NULL) {
         result = 1;
@@ -437,9 +435,7 @@ cecup_item_compare_dst_path(const void *a, const void *b) {
     char *path_a = item_path_side(item_a, R);
     char *path_b = item_path_side(item_b, R);
 
-    if (path_a == NULL && path_b == NULL) {
-        result = 0;
-    } else if (path_a == NULL) {
+    if (path_a == NULL) {
         result = -1;
     } else if (path_b == NULL) {
         result = 1;
