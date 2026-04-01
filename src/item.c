@@ -64,7 +64,7 @@ item_path_len_get(int32 row_id) {
     return 0;
 }
 
-static char *
+INLINE char *
 item_path_side(int32 row_id, int32 side) {
     int32 idx;
 
@@ -73,8 +73,6 @@ item_path_side(int32 row_id, int32 side) {
     } else {
         return NULL;
     }
-
-    return NULL;
 }
 
 static int64
