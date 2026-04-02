@@ -236,12 +236,12 @@ update_row_transfer(Message *message) {
             cecup.rows[R][row_id] = *lookup;
         } else {
             cecup.rows[R][row_id] = traversal_push(traversal_dst, &traversal_src->stats[idx_src],
-                                                    traversal_src->paths[idx_src],
-                                                    traversal_src->paths_lens[idx_src],
-                                                    traversal_src->link_targets[idx_src],
-                                                    traversal_src->link_targets_lens[idx_src],
-                                                    traversal_src->patterns[idx_src],
-                                                    traversal_src->patterns_lens[idx_src]);
+                                                   traversal_src->paths[idx_src],
+                                                   traversal_src->paths_lens[idx_src],
+                                                   traversal_src->link_targets[idx_src],
+                                                   traversal_src->link_targets_lens[idx_src],
+                                                   traversal_src->patterns[idx_src],
+                                                   traversal_src->patterns_lens[idx_src]);
 
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
