@@ -631,7 +631,8 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
                     if (traversal->nlinks[idx] != traversal->nlinks[*first_idx_ptr]) {
                         error("Consistency error:"
                               "%s index %d (path %s) has mismatched nlinks %d != %d.\n",
-                              which_traversal, idx, path, traversal->nlinks[idx], traversal->nlinks[*first_idx_ptr]);
+                              which_traversal, idx, path,
+                              traversal->nlinks[idx], traversal->nlinks[*first_idx_ptr]);
                         fatal(EXIT_FAILURE);
                     }
                 }
