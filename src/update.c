@@ -205,13 +205,15 @@ update_row_transfer(Message *message) {
             cecup.rows[R][row_id] = *lookup;
         } else {
             int32 stat_attempts = 0;
+            char full_path[MAX_PATH_LENGTH];
             struct stat stat;
 
-            while (lstat(path_transfered, &stat) < 0) {
-                usleep(50*1000);
+            SNPRINTF(full_path, "%s/%s", cecup.dst_base, path_transfered);
+            while (lstat(full_path, &stat) < 0) {
+                usleep(100*1000);
                 stat_attempts += 1;
-                if (stat_attempts >= 10) {
-                    error("Error in stat('%s'): %s.\n", path_transfered, strerror(errno));
+                if (stat_attempts >= 20) {
+                    error("Error in stat('%s'): %s.\n", full_path, strerror(errno));
                     fatal(EXIT_FAILURE);
                 }
             }
