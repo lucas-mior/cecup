@@ -481,8 +481,10 @@ update_row_ignore(Message *message) {
             }
         }
 
-        update_ignored_helper(L, row_id, match);
-        update_ignored_helper(R, row_id, match);
+        if (match) {
+            update_ignored_helper(L, row_id, match);
+            update_ignored_helper(R, row_id, match);
+        }
     }
 
     return true;
