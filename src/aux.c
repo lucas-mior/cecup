@@ -571,13 +571,17 @@ free_message(void *data) {
 
     if ((message = data)) {
         free(message->text, message->text_len + 1);
-        // TODO: Memory Leak. The `else if` block means that if both `src_path` and `dst_path` are
-        // ever populated in the same `Message` instance, `dst_path` will be silently skipped and
-        // its memory will leak. You should split these into two separate `if` statements.
-        if (message->src_path) {
+        if (message->dst_path != message->src_path) {
+            // in this case,
+            // dst_path might be NULL or a different allocation than src_path
             free(message->src_path, message->src_path_len + 1);
-        } else if (message->dst_path) {
             free(message->dst_path, message->dst_path_len + 1);
+        } else {
+            // in this case,
+            // either both are NULL (which free() simply ignores)
+            // or only src_path is allocated.
+            // dst_path might be the same pointer to the src_path allocation, or be NULL.
+            free(message->src_path, message->src_path_len + 1);
         }
 
         free(message, SIZEOF(*message));
