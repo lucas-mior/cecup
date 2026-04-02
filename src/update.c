@@ -226,6 +226,7 @@ update_row_transfer(Message *message) {
 
     if (cecup.rows[R][row_id] < 0) {
         int32 *lookup;
+        int32 idx_dst;
 
         if ((lookup = hash_lookup_fs_map(traversal_dst->map,
                                          path_transfered, path_transfered_len))) {
@@ -239,6 +240,7 @@ update_row_transfer(Message *message) {
                                                    traversal_src->patterns[idx_src],
                                                    traversal_src->patterns_lens[idx_src],
                                                    traversal_src->nlinks[idx_src]);
+            idx_dst = cecup.rows[R][row_id];
 
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
@@ -251,12 +253,11 @@ update_row_transfer(Message *message) {
                                                            inode, inode_len))) {
                     traversal_dst->nlinks[*first_idx_ptr] += 1;
                 } else {
-                    hash_insert_inode_map(traversal_dst->inode_map,
-                                          inode, inode_len, cecup.rows[R][row_id]);
-                    traversal_dst->nlinks[cecup.rows[R][row_id]] = 1;
+                    hash_insert_inode_map(traversal_dst->inode_map, inode, inode_len, idx_dst);
+                    traversal_dst->nlinks[idx_dst] = 1;
                 }
             } else {
-                traversal_dst->nlinks[cecup.rows[R][row_id]] = 1;
+                traversal_dst->nlinks[idx_dst] = 1;
             }
         }
         traversal_dst->row_ids[cecup.rows[R][row_id]] = row_id;
