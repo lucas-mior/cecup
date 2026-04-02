@@ -203,9 +203,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     GtkWidget *progress_vbox;
     GtkWidget *paths_hbox;
 
-    GtkAdjustment *l_adj;
-    GtkAdjustment *r_adj;
-
     char src_path_buffer[MAX_PATH_LENGTH];
     char dst_path_buffer[MAX_PATH_LENGTH];
 
@@ -529,10 +526,13 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_vexpand(scroll[R], TRUE);
     gtk_paned_set_end_child(GTK_PANED(paned_trees), vbox[R]);
 
-    l_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[L]));
-    r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[R]));
-    g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
-    g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
+    {
+        GtkAdjustment *l_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[L]));
+        GtkAdjustment *r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[R]));
+
+        g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
+        g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
+    }
 
     NEW_WITH_NAME(footer_vbox, gtk_box_new, GTK_ORIENTATION_VERTICAL, SPACING_BOX);
     gtk_widget_set_margin_top(footer_vbox, SPACING_BOX);
