@@ -898,6 +898,9 @@ update_ui_process_message(Message *message) {
         cecup.rows_len = 0;
         cecup.rows_visible_len = 0;
 
+        traversal_clean(&cecup.traversal[L]);
+        traversal_clean(&cecup.traversal[R]);
+
         cecup_list_model_update(CECUP_LIST_MODEL(cecup.store), current_store_count, 0);
 
         g_mutex_unlock(&cecup.arena_mutex);
