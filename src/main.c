@@ -321,10 +321,18 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_box_append(GTK_BOX(header_vbox), button_hbox);
 
-    options_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
-    cecup.check_fs = gtk_check_button_new_with_label(_("Protect same-drive sync"));
-    cecup.delete_ignored_button = gtk_check_button_new_with_label(_("Remove ignored items"));
-    cecup.delete_after_button = gtk_check_button_new_with_label(_("Sync 100%"));
+    NEW_WITH_NAME(options_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
+
+    NEW_WITH_NAME(cecup.check_fs, gtk_check_button_new);
+    NEW_WITH_NAME(cecup.delete_ignored_button, gtk_check_button_new);
+    NEW_WITH_NAME(cecup.delete_after_button, gtk_check_button_new);
+
+    gtk_check_button_set_label(GTK_CHECK_BUTTON(cecup.check_fs),
+                               _("Protect same-drive sync"));
+    gtk_check_button_set_label(GTK_CHECK_BUTTON(cecup.delete_ignored_button),
+                               _("Remove ignored items"));
+    gtk_check_button_set_label(GTK_CHECK_BUTTON(cecup.delete_after_button),
+                               _("Sync 100%"));
 
     gtk_widget_set_tooltip_text(cecup.check_fs,
                                 _("Prevent copying if original and backup are on the same disk"));
