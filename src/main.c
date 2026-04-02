@@ -200,7 +200,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     GtkWidget *vbox[2];
     GtkWidget *entry_hbox[2];
     GtkWidget *scroll[2];
-    GtkWidget *tree[2];
     GtkWidget *progress_vbox;
     GtkWidget *paths_hbox;
 
@@ -502,13 +501,12 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         GtkSelectionModel *selection_model;
         GListModel *list_model = g_object_ref(cecup.store);
         selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(list_model));
-        NEW_WITH_NAME(tree[L], gtk_column_view_new, selection_model);
+        NEW_WITH_NAME(cecup.tree[L], gtk_column_view_new, selection_model);
     }
 
-    cecup.tree[L] = tree[L];
-    g_object_set_data(G_OBJECT(tree[L]), "side", GINT_TO_POINTER(L));
-    main_setup_tree_columns(tree[L], COL_SRC_ACTION, COL_SRC_PATH);
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[L]), tree[L]);
+    g_object_set_data(G_OBJECT(cecup.tree[L]), "side", GINT_TO_POINTER(L));
+    main_setup_tree_columns(cecup.tree[L], COL_SRC_ACTION, COL_SRC_PATH);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[L]), cecup.tree[L]);
     gtk_box_append(GTK_BOX(vbox[L]), scroll[L]);
     gtk_widget_set_vexpand(scroll[L], TRUE);
     gtk_paned_set_start_child(GTK_PANED(paned_trees), vbox[L]);
@@ -521,13 +519,12 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         GtkSelectionModel *selection_model;
         GListModel *list_model = g_object_ref(cecup.store);
         selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(list_model));
-        NEW_WITH_NAME(tree[R], gtk_column_view_new, selection_model);
+        NEW_WITH_NAME(cecup.tree[R], gtk_column_view_new, selection_model);
     }
 
-    cecup.tree[R] = tree[R];
-    g_object_set_data(G_OBJECT(tree[R]), "side", GINT_TO_POINTER(R));
-    main_setup_tree_columns(tree[R], COL_DST_ACTION, COL_DST_PATH);
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[R]), tree[R]);
+    g_object_set_data(G_OBJECT(cecup.tree[R]), "side", GINT_TO_POINTER(R));
+    main_setup_tree_columns(cecup.tree[R], COL_DST_ACTION, COL_DST_PATH);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[R]), cecup.tree[R]);
     gtk_box_append(GTK_BOX(vbox[R]), scroll[R]);
     gtk_widget_set_vexpand(scroll[R], TRUE);
     gtk_paned_set_end_child(GTK_PANED(paned_trees), vbox[R]);
