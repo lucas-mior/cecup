@@ -405,13 +405,10 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
-        char *path_src;
-        char *path_dst;
-        int64 size_dst;
-        int64 size_src;
-
-        size_src = strlen32(cecup.src_base) + strlen32(task->path) + 2;
-        size_dst = strlen32(cecup.dst_base) + strlen32(task->path) + 2;
+        int32 size_src = strlen32(cecup.src_base) + strlen32(task->path) + 2;
+        int32 size_dst = strlen32(cecup.dst_base) + strlen32(task->path) + 2;
+        char *path_src = xmalloc(size_src);
+        char *path_dst = xmalloc(size_dst);
 
         switch (fork()) {
         case -1:
@@ -421,12 +418,6 @@ on_menu_diff(GtkWidget *widget, void *data) {
             if (setsid() < 0) {
                 error("Error in setsid: %s.\n", strerror(errno));
             }
-            // TODO: Concurrency / Deadlock Risk. Calling `malloc` (via `xmalloc`) and other
-            // non-async-signal-safe functions after `fork()` in a multi-threaded GTK application
-            // can easily cause a deadlock if another thread was holding the allocator's lock during
-            // the fork.
-            path_src = xmalloc(size_src);
-            path_dst = xmalloc(size_dst);
 
             snprintf2(path_src, size_src, "%s/%s", cecup.src_base, task->path);
             snprintf2(path_dst, size_dst, "%s/%s", cecup.dst_base, task->path);
@@ -443,6 +434,8 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 _exit(EXIT_FAILURE);
             }
         default:
+            free(path_src, size_src);
+            free(path_dst, size_dst);
             break;
         }
     }
