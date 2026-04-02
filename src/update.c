@@ -90,7 +90,6 @@ update_row_remove(Message *message) {
 
         hash_remove_fs_map(traversal->map,
                            traversal->paths[*idx_ptr], traversal->paths_lens[*idx_ptr]);
-        memset64(&traversal->stats[*idx_ptr], 0, SIZEOF(struct stat));
         traversal->row_ids[*idx_ptr] = -1;
         cecup.rows[side][row_id] = -1;
 
