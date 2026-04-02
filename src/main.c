@@ -483,26 +483,28 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_box_append(GTK_BOX(main_vbox), search_hbox);
 
-    v_paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
+    NEW_WITH_NAME(v_paned, gtk_paned_new, GTK_ORIENTATION_VERTICAL);
     gtk_widget_set_vexpand(v_paned, TRUE);
     gtk_box_append(GTK_BOX(main_vbox), v_paned);
 
-    top_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    NEW_WITH_NAME(top_vbox, gtk_box_new, GTK_ORIENTATION_VERTICAL, 0);
     gtk_paned_set_start_child(GTK_PANED(v_paned), top_vbox);
 
-    paned_trees = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    NEW_WITH_NAME(paned_trees, gtk_paned_new, GTK_ORIENTATION_HORIZONTAL);
     gtk_widget_set_vexpand(paned_trees, TRUE);
     gtk_box_append(GTK_BOX(top_vbox), paned_trees);
 
-    vbox[L] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    scroll[L] = gtk_scrolled_window_new();
+    NEW_WITH_NAME(vbox[L], gtk_box_new, GTK_ORIENTATION_VERTICAL, 5);
+    NEW_WITH_NAME(scroll[L], gtk_scrolled_window_new);
     gtk_scrolled_window_set_overlay_scrolling(GTK_SCROLLED_WINDOW(scroll[L]), FALSE);
+
     {
         GtkSelectionModel *selection_model;
         GListModel *list_model = g_object_ref(cecup.store);
         selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(list_model));
-        tree[L] = gtk_column_view_new(selection_model);
+        NEW_WITH_NAME(tree[L], gtk_column_view_new, selection_model);
     }
+
     cecup.tree[L] = tree[L];
     g_object_set_data(G_OBJECT(tree[L]), "side", GINT_TO_POINTER(L));
     main_setup_tree_columns(tree[L], COL_SRC_ACTION, COL_SRC_PATH);
