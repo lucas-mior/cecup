@@ -51,13 +51,7 @@ update_row_remove(Message *message) {
     int32 path_removed_len = message->src_path_len;
     int32 side = message->side;
     bool changed = false;
-    Traversal *traversal;
-
-    if (side == L) {
-        traversal = &cecup.traversal[L];
-    } else {
-        traversal = &cecup.traversal[R];
-    }
+    Traversal *traversal = &cecup.traversal[side];
 
     if (path_removed == NULL || path_removed_len == 0) {
         return false;
