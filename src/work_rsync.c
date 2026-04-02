@@ -392,11 +392,8 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                 int64 progress;
 
                 if (!checksum && (percentage = memmem64(buf_output + 1, line_len - 1, "% ", 2))) {
-                    // TODO: Buffer Underread Risk. If the string prefix is purely digits before the
-                    // "% " (e.g. "100% "), this loop will blindly decrement `percentage` past the
-                    // start of `buf_output`, creating an out-of-bounds read. You should add a
-                    // boundary check like `percentage > buf_output`.
-                    while (isdigit(*(percentage - 1))) {
+                    while (((percentage - 1) > buf_output)
+                            && isdigit(*(percentage - 1))) {
                         percentage -= 1;
                     }
                     if (*(percentage - 1) == ' ') {
