@@ -90,8 +90,7 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
     path_len = item_path_len_side(row_id, side);
 
     if (filepath || (menu_item->callback == on_menu_rename)) {
-        enum Action action_src;
-        enum Action action_dst;
+        enum Action actions[2];
         enum Reason reason;
 
         Message *message;
@@ -105,13 +104,9 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
             memcpy64(message->src_path, filepath, path_len + 1);
         }
 
-        item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
+        item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
 
-        if (side == L) {
-            message->action = action_src;
-        } else {
-            message->action = action_dst;
-        }
+        message->action = actions[side];
         message->side = side;
 
         if (menu_item->variant) {
