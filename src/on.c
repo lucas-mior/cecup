@@ -83,6 +83,9 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
         return;
     }
 
+    // TODO: Buffer Over-read Risk. `pos` is not validated against `cecup.rows_visible_len`. If the
+    // list model state is out of sync or `pos` exceeds the bounds of `cecup.rows_visible`,
+    // accessing `cecup.rows_visible[pos]` will read out-of-bounds memory.
     row_id = cecup.rows_visible[pos];
     filepath = item_path_side(row_id, side);
     path_len = item_path_len_side(row_id, side);
@@ -205,6 +208,10 @@ on_delete_ignored_toggled(GtkCheckButton *button, void *data) {
 
     if ((active = gtk_check_button_get_active(button))) {
         g_signal_handlers_block_by_func(cecup.delete_after_button, on_delete_after_toggled, NULL);
+        // TODO: Segmentation Fault Risk / Invalid Type Cast. You are casting `cecup.delete_after`,
+        // which is a `bool` variable, to a `GtkCheckButton*`. This will cause an immediate crash
+        // when GTK attempts to dereference the boolean value (`0` or `1`) as a pointer. You should
+        // use `cecup.delete_after_button` here instead.
         gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after), TRUE);
         g_signal_handlers_unblock_by_func(cecup.delete_after_button, on_delete_after_toggled, NULL);
         invalidate_preview();
@@ -409,6 +416,10 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         return;
     }
 
+    // TODO: Out-of-bounds Read/Write. `row_id_toggled` is extracted from the widget's data and
+    // decremented. There is no bounds check to guarantee `0 <= row_id_toggled < cecup.rows_len`
+    // before accessing `cecup.rows_selected[row_id_toggled]`. If the widget data is stale or
+    // corrupted, this will write to unmapped memory.
     row_id_toggled = GPOINTER_TO_INT(row_id_ptr) - 1;
     is_active = gtk_check_button_get_active(renderer);
     if ((bool)cecup.rows_selected[row_id_toggled] == is_active) {

@@ -86,6 +86,10 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
 
 static char *
 work_check_itemize_line(char *buf_output) {
+    // TODO: Buffer Overread Risk. If the string `buf_output` is shorter than the length of
+    // `RSYNC_ITEMIZE_PLACEHOLDERS`, these array accesses (`buf_output[0]`, `buf_output[1]`,
+    // `buf_output[i]`) will read past the null terminator, potentially resulting in reading
+    // uninitialized memory.
     switch (buf_output[0]) {
     case RSYNC_CHAR0_ACTION_SEND:
     case RSYNC_CHAR0_ACTION_RECEIVE:
@@ -389,6 +393,10 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                 int64 progress;
 
                 if (!checksum && (percentage = memmem64(buf_output + 1, line_len - 1, "% ", 2))) {
+                    // TODO: Buffer Underread Risk. If the string prefix is purely digits before the
+                    // "% " (e.g. "100% "), this loop will blindly decrement `percentage` past the
+                    // start of `buf_output`, creating an out-of-bounds read. You should add a
+                    // boundary check like `percentage > buf_output`.
                     while (isdigit(*(percentage - 1))) {
                         percentage -= 1;
                     }
@@ -526,6 +534,12 @@ work_rsync(void *user_data) {
                 if (cecup.stop_working) {
                     term_timeout += 1;
                     if (term_timeout > 50) {
+                        // TODO: Logic Bug / Undefined Behavior. The child process that runs `rm`
+                        // does not call `setpgid()`, meaning it remains in the parent's process
+                        // group. Calling `xkill(-child_rm, SIGKILL)` will attempt to kill the
+                        // process group whose ID is `child_rm`, which is highly likely not to exist
+                        // (causing the kill to fail) or, rarely, could match an unrelated process
+                        // group and kill it erroneously.
                         xkill(-child_rm, SIGKILL);
                         term_timeout = 0;
                     }

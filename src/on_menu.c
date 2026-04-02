@@ -55,6 +55,9 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     }
 
     {
+        // TODO: Unhandled Null Pointer / Out-of-bounds Read. If `parameter` is NULL,
+        // `g_variant_get_int32` will trigger an assertion and crash. Additionally, there is no
+        // bounds check to ensure `index` is within `0` and `LENGTH(tree_menu_items) - 1`.
         int32 index = g_variant_get_int32(parameter);
         CecupMenuItem *menu_item = &tree_menu_items[index];
 
@@ -79,6 +82,9 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     (void)action;
     (void)data;
 
+    // TODO: Unhandled Null Pointer / Type Safety. If `parameter` is NULL or not a string variant,
+    // `g_variant_get_string` will fail an internal assertion and crash before returning NULL. You
+    // should verify `parameter` is a valid string.
     if ((pattern = (char *)g_variant_get_string(parameter, NULL)) == NULL) {
         error("Ignore pattern is NULL.\n");
         fatal(EXIT_FAILURE);
@@ -415,6 +421,10 @@ on_menu_diff(GtkWidget *widget, void *data) {
             if (setsid() < 0) {
                 error("Error in setsid: %s.\n", strerror(errno));
             }
+            // TODO: Concurrency / Deadlock Risk. Calling `malloc` (via `xmalloc`) and other
+            // non-async-signal-safe functions after `fork()` in a multi-threaded GTK application
+            // can easily cause a deadlock if another thread was holding the allocator's lock during
+            // the fork.
             path_src = xmalloc(size_src);
             path_dst = xmalloc(size_dst);
 
@@ -428,6 +438,10 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 };
 
                 execvp(diff_command[0], diff_command);
+                // TODO: Null Pointer Dereference / Out of bounds read. `diff_command` ends with a
+                // NULL pointer. If `LENGTH(diff_command)` includes this NULL element,
+                // `STRING_FROM_ARRAY` may attempt to read from a NULL pointer when formatting the
+                // output.
                 STRING_FROM_ARRAY(cmd, " ", diff_command, LENGTH(diff_command));
                 error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
                 _exit(EXIT_FAILURE);

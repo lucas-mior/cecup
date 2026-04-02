@@ -250,11 +250,22 @@ update_row_transfer(Message *message) {
                 int32 first_idx;
 
                 inode_len = ITOA(inode, (long)traversal_src->stats[idx_src].st_ino);
+                // TODO: Logic Bug. You are looking up the SOURCE inode
+                // (`traversal_src->stats[idx_src].st_ino`) inside the DESTINATION inode map
+                // (`traversal_dst->inode_map`). Inodes are only unique per-device. If the
+                // destination filesystem has a file with the same inode number as this source file,
+                // they will collide in this map, causing the application to falsely link them
+                // together.
                 if ((first_idx_ptr = hash_lookup_inode_map(traversal_dst->inode_map,
                                                            inode, inode_len))) {
                     first_idx = *first_idx_ptr;
 
                     if (traversal_dst->link_targets[first_idx] == NULL) {
+                        // TODO: Use-After-Free Risk. `path_transfered` points to
+                        // `message->src_path`. `message->src_path` is dynamically allocated and
+                        // will be freed at the end of `update_ui_process_message` by
+                        // `free_message(message)`. Assigning it here leaves a dangling pointer in
+                        // `traversal_dst`. You should copy it to the persistent arena instead.
                         traversal_dst->link_targets[first_idx] = path_transfered;
                         traversal_dst->link_targets_lens[first_idx] = (int16)path_transfered_len;
                     }
@@ -560,6 +571,8 @@ update_list_from_rows(void) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
     cecup.rows_visible_len = 0;
 
+    // TODO: Bug. You are passing 4 arguments to `realloc`. The standard C library `realloc` only
+    // takes 2 arguments. You likely meant to use your custom `xrealloc` macro here.
     sort_entries = realloc(sort_entries,
                            sort_entries_capacity, cecup.rows_len,
                            SIZEOF(*sort_entries));

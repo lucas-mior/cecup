@@ -177,6 +177,9 @@ cecup_list_model_get_item(GListModel *list, guint position) {
         }
     }
 
+    // TODO: Out-of-bounds Read Risk. If `pos` is greater than or equal to `cecup.rows_visible_len`,
+    // accessing `cecup.rows_visible[pos]` will read out of bounds. This could happen if
+    // `self->reported_count` gets out of sync with `cecup.rows_visible_len`.
     row_id = cecup.rows_visible[pos];
     if (self->proxies[pos]) {
         /*
@@ -222,7 +225,8 @@ cecup_list_model_update_chunk(gpointer user_data) {
     }
 
     self->reported_count += chunk_size;
-    g_list_model_items_changed(G_LIST_MODEL(self), (guint)(self->reported_count - chunk_size), 0, (guint)chunk_size);
+    g_list_model_items_changed(G_LIST_MODEL(self),
+                               (guint)(self->reported_count - chunk_size), 0, (guint)chunk_size);
 
     return G_SOURCE_CONTINUE;
 }

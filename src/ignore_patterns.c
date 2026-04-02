@@ -103,6 +103,9 @@ ignore_patterns_load(void) {
         pattern->dir_only = false;
         pattern->has_slash = false;
 
+        // TODO: Buffer Underread / Out-of-bounds Read. If `line_len` is 0 (which can happen if the
+        // line was only a newline and it was stripped above), `line_len - 1` evaluates to -1. This
+        // leads to an out-of-bounds read at `pattern->str[-1]`.
         if (pattern->str[line_len - 1] == '/') {
             pattern->dir_only = true;
             pattern->str[line_len - 1] = '\0';

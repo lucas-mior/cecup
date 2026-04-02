@@ -48,6 +48,9 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
     if (strcmp(which, "all") == 0) {
         gtk_text_buffer_get_bounds(cecup.log_buffer, &text_start, &text_end);
     } else if (strcmp(which, "line") == 0) {
+        // TODO: Unhandled Null Pointer. If `parameter` is NULL, `g_variant_get_int32` will cause a
+        // crash (segfault or assertion failure). You should check `if (parameter != NULL)` before
+        // calling it.
         line_num = g_variant_get_int32(parameter);
         gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &text_start, line_num);
         text_end = text_start;

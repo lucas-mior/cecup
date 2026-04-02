@@ -358,6 +358,9 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 }
 
                 if (is_dir) {
+                    // TODO: Out-of-bounds Read. The safety check above only verifies `i >=
+                    // LENGTH(reason_strings_file)`. If `reason_strings_dir` has fewer elements than
+                    // `reason_strings_file`, this array access may read out-of-bounds.
                     base_msg = _(reason_strings_dir[i]);
                 } else {
                     base_msg = _(reason_strings_file[i]);

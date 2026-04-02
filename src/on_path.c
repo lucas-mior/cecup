@@ -92,6 +92,9 @@ on_path_editing_started(GtkEditable *editable, void *data) {
             if (last_dot != name) {
                 end_pos = (int32)(last_dot - relative);
             }
+        // TODO: Buffer Underread / Out-of-bounds Read. If `path_len` is 0 (e.g. `relative` is an
+        // empty string), `path_len - 1` evaluates to -1, which leads to an out-of-bounds memory
+        // read on `relative`.
         } else if (relative[path_len - 1] == '/') {
             end_pos = path_len - 1;
         }
@@ -176,6 +179,9 @@ on_path_edited(GtkEditable *editable, void *data) {
 
         LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
 
+        // TODO: Buffer Underread / Out-of-bounds Read. If `old_length` is 0, `old_length - 1`
+        // evaluates to -1, which results in reading before the beginning of the `relative_old`
+        // buffer.
         if ((relative_old[old_length - 1] == '/')
             && (relative_new[new_length - 1] != '/')) {
             relative_new[new_length] = '/';
@@ -214,8 +220,13 @@ on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
     is_editing = gtk_editable_label_get_editing(GTK_EDITABLE_LABEL(object));
 
     if (is_editing) {
+        // TODO: Memory Leak. Calling `g_object_ref(object)` increments the reference count, but
+        // `on_path_editing_started` does not drop the reference. This leads to leaking the object
+        // every time editing begins.
         on_path_editing_started(GTK_EDITABLE(g_object_ref(object)), data);
     } else {
+        // TODO: Memory Leak. Similar to the branch above, `on_path_edited` does not unref the
+        // object. This leads to leaking the object every time editing finishes.
         on_path_edited(GTK_EDITABLE(g_object_ref(object)), data);
     }
 

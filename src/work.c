@@ -147,6 +147,9 @@ work_traverse_fs(Traversal *traversal) {
             LOG_ERROR(_("Error: file path is too long:\n"));
             LOG_ERROR("%s\n", ent->fts_path);
             LOG_ERROR(_("Please fix your file system.\n"));
+            // TODO: Data Race. Writing to the shared boolean `cecup.stop_working` concurrently from
+            // multiple traversal threads (`t1` and `t2`) without synchronization or atomics causes
+            // a data race, which is undefined behavior in standard C.
             cecup.stop_working = true;
             break;
         }
@@ -440,7 +443,16 @@ work_preview(void *user_data) {
             && (action_src != ACTION_EQUAL) && (action_src != ACTION_IGNORE)) {
             if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) {
                 int32 old_capacity = cecup.transfers_capacity;
+                // TODO: Logic Bug / Heap Overflow Risk. If `cecup.transfers_capacity` is 0 (e.g.,
+                // on the first run), `0 *= 2` leaves it at 0. The array will have 0 capacity, and
+                // assigning to `cecup.transfers[cecup.ntransfers]` below will cause a heap buffer
+                // overflow. You should ensure a minimum initial capacity, like `if
+                // (cecup.transfers_capacity == 0) cecup.transfers_capacity = INITIAL_CAPACITY; else
+                // cecup.transfers_capacity *= 2;`.
                 cecup.transfers_capacity *= 2;
+                // TODO: Bug. You are passing 4 arguments to `realloc`. The standard C library
+                // `realloc` only takes 2 arguments. You likely meant to use your custom `xrealloc`
+                // macro here.
                 cecup.transfers = realloc(cecup.transfers,
                                             old_capacity, cecup.transfers_capacity,
                                             SIZEOF(*cecup.transfers));
