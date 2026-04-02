@@ -61,25 +61,27 @@ update_row_remove(Message *message) {
     if (path_removed[path_removed_len - 1] != '/') {
         int32 *idx_ptr;
         int32 row_id;
+        int32 idx;
 
         if ((idx_ptr = hash_lookup_fs_map(traversal->map,
                                           path_removed, path_removed_len)) == NULL) {
             return false;
         }
+        idx = *idx_ptr;
 
-        if ((row_id = traversal->row_ids[*idx_ptr]) < 0) {
+        if ((row_id = traversal->row_ids[idx]) < 0) {
             return false;
         }
 
         changed = true;
 
-        if (S_ISREG(traversal->stats[*idx_ptr].st_mode)
-                && (traversal->stats[*idx_ptr].st_nlink > 1)) {
+        if (S_ISREG(traversal->stats[idx].st_mode)
+                && (traversal->stats[idx].st_nlink > 1)) {
             char inode[32];
             int32 inode_len;
             int32 *first_idx_ptr;
 
-            inode_len = ITOA(inode, (long)traversal->stats[*idx_ptr].st_ino);
+            inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
             if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
                 traversal->nlinks[*first_idx_ptr] -= 1;
                 if (traversal->nlinks[*first_idx_ptr] <= 0) {
@@ -89,8 +91,8 @@ update_row_remove(Message *message) {
         }
 
         hash_remove_fs_map(traversal->map,
-                           traversal->paths[*idx_ptr], traversal->paths_lens[*idx_ptr]);
-        traversal->row_ids[*idx_ptr] = -1;
+                           traversal->paths[idx], traversal->paths_lens[idx]);
+        traversal->row_ids[idx] = -1;
         cecup.rows[side][row_id] = -1;
 
         if ((cecup.rows[L][row_id] == -1) && (cecup.rows[R][row_id] == -1)) {
