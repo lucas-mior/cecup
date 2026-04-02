@@ -66,7 +66,7 @@ protect_interface_from_user(bool state) {
 
     gtk_widget_set_sensitive(cecup.delete_after_button, !state);
     gtk_widget_set_sensitive(cecup.delete_ignored_button, !state);
-    gtk_widget_set_sensitive(cecup.check_fs, !state);
+    gtk_widget_set_sensitive(cecup.check_fs_button, !state);
     gtk_widget_set_sensitive(cecup.diff_entry, !state);
     gtk_widget_set_sensitive(cecup.term_entry, !state);
     gtk_widget_set_sensitive(cecup.browse_button[L], !state);
@@ -488,7 +488,7 @@ save_config(void) {
     config_bool_set(key, "Filters", "delete", cecup.filter_delete);
     config_bool_set(key, "Filters", "ignore", cecup.filter_ignore);
 
-    config_bool_set(key, "Options", "check_fs",       cecup.check_fs);
+    config_bool_set(key, "Options", "check_fs",       cecup.check_fs_button);
     config_bool_set(key, "Options", "delete_after",   cecup.delete_after_button);
     config_bool_set(key, "Options", "delete_ignored", cecup.delete_ignored_button);
 
