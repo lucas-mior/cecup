@@ -448,10 +448,11 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_hexpand(entry_hbox[R], TRUE);
     gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[R]);
 
-    search_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
+    NEW_WITH_NAME(search_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
+    NEW_WITH_NAME(cecup.search_entry, gtk_entry_new);
+
     gtk_widget_set_margin_start(search_hbox, 10);
     gtk_widget_set_margin_end(search_hbox, 10);
-    cecup.search_entry = gtk_entry_new();
     gtk_entry_set_placeholder_text(GTK_ENTRY(cecup.search_entry), _("Search files..."));
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
                                       GTK_ENTRY_ICON_PRIMARY, "system-search-symbolic");
@@ -466,14 +467,18 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_hexpand(cecup.search_entry, TRUE);
     gtk_box_append(GTK_BOX(search_hbox), cecup.search_entry);
 
-    cecup.select_visible_button = gtk_button_new_with_label(_("Select all visible"));
+    NEW_WITH_NAME(cecup.select_visible_button, gtk_button_new);
+    NEW_WITH_NAME(cecup.unselect_button, gtk_button_new);
+
+    gtk_button_set_label(GTK_BUTTON(cecup.select_visible_button), _("Select all visible"));
+    gtk_button_set_label(GTK_BUTTON(cecup.unselect_button),       _("Unselect all"));
+
     gtk_widget_set_tooltip_text(cecup.select_visible_button,
                                 _("Select all files which currently are on the list below"));
-    gtk_box_append(GTK_BOX(search_hbox), cecup.select_visible_button);
-
-    cecup.unselect_button = gtk_button_new_with_label(_("Unselect all"));
     gtk_widget_set_tooltip_text(cecup.select_visible_button,
                                 _("Unselect all files which are currently selected"));
+
+    gtk_box_append(GTK_BOX(search_hbox), cecup.select_visible_button);
     gtk_box_append(GTK_BOX(search_hbox), cecup.unselect_button);
 
     gtk_box_append(GTK_BOX(main_vbox), search_hbox);
