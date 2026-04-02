@@ -361,15 +361,9 @@ cecup_item_compare_string_key(const void *a, const void *b) {
     char *path_a = entry_a->key.ptr;
     char *path_b = entry_b->key.ptr;
 
-    if (path_a && path_b) {
-        result = strcmp(path_a, path_b);
-    } else if (path_a) {
-        result = path_a[0];
-    } else if (path_b) {
-        result = -path_b[0];
-    } else {
-        result = 0;
-    }
+    /* this assumes that paths are set to = "" if they are NULL from the list
+     * see update_rows_from_list() */
+    result = strcmp(path_a, path_b);
 
     if (cecup.sort_order == GTK_SORT_DESCENDING) {
         result *= -1;

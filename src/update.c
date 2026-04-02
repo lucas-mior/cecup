@@ -639,13 +639,22 @@ update_list_from_rows(void) {
         {
             int32 v_idx = cecup.rows_visible_len;
             sort_entries[v_idx].row_id = row_id;
+            char *path;
 
             switch (cecup.sort_col) {
             case COL_SRC_PATH:
-                sort_entries[v_idx].key.ptr = item_path_side(row_id, L);
+                if ((path = item_path_side(row_id, L))) {
+                    sort_entries[v_idx].key.ptr = path;
+                } else {
+                    sort_entries[v_idx].key.ptr = "";
+                }
                 break;
             case COL_DST_PATH:
-                sort_entries[v_idx].key.ptr = item_path_side(row_id, R);
+                if ((path = item_path_side(row_id, R))) {
+                    sort_entries[v_idx].key.ptr = path;
+                } else {
+                    sort_entries[v_idx].key.ptr = "";
+                }
                 break;
             case COL_SIZE_RAW:
                 sort_entries[v_idx].key.i64 = size;
