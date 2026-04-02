@@ -38,9 +38,10 @@
 #define FILL_TRUE true
 #define EXPAND_TRUE true
 
-#define NEW_WITH_NAME(VARIABLE, FUNCTION, ...) \
+#define NEW_WITH_NAME(VARIABLE, FUNCTION, ...) do { \
     VARIABLE = FUNCTION(__VA_ARGS__); \
-    gtk_widget_set_name(VARIABLE, #VARIABLE);
+    gtk_widget_set_name(VARIABLE, #VARIABLE); \
+} while (0)
 
 static bool is_first_run = false;
 
@@ -254,7 +255,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         g_object_unref(css_provider);
     }
 
-    cecup.gtk_window = gtk_application_window_new(application);
+    NEW_WITH_NAME(cecup.gtk_window, gtk_application_window_new, application);
     gtk_window_set_title(GTK_WINDOW(cecup.gtk_window), "cecup");
     gtk_window_set_default_size(GTK_WINDOW(cecup.gtk_window), 1100, 800);
 
