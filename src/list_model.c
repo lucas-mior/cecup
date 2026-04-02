@@ -169,8 +169,8 @@ cecup_list_model_get_item(GListModel *list, guint position) {
         }
 
         self->proxies = realloc(self->proxies,
-                                  old_capacity, self->proxies_capacity,
-                                  SIZEOF(CecupItemProxy *));
+                                old_capacity, self->proxies_capacity,
+                                SIZEOF(CecupItemProxy *));
 
         for (int32 i = old_capacity; i < self->proxies_capacity; i += 1) {
             self->proxies[i] = NULL;
