@@ -418,31 +418,31 @@ cecup_get_dirs(void) {
         return;
     }
 
-    /* if (!strcmp(full_src, full_dst)) { */
-    /*     LOG_ERROR(_("Error: source and backup are the same directory\n")); */
-    /*     cecup_reset_dir(R); */
-    /*     return; */
-    /* } */
+    if (!strcmp(full_src, full_dst)) {
+        LOG_ERROR(_("Error: source and backup are the same directory\n"));
+        cecup_reset_dir(R);
+        return;
+    }
 
-    /* { */
-    /*     int32 len_src = strlen32(full_src); */
-    /*     int32 len_dst = strlen32(full_dst); */
+    {
+        int32 len_src = strlen32(full_src);
+        int32 len_dst = strlen32(full_dst);
 
-    /*     if ((len_src > len_dst) && !memcmp64(full_src, full_dst, len_dst)) { */
-    /*         if ((len_dst == 1 && full_dst[0] == '/') || (full_src[len_dst] == '/')) { */
-    /*             LOG_ERROR(_("Error: source directory is contained in the destination directory\n")); */
-    /*             cecup_reset_dir(L); */
-    /*             return; */
-    /*         } */
-    /*     } */
-    /*     if ((len_dst > len_src) && !memcmp64(full_dst, full_src, len_src)) { */
-    /*         if ((len_src == 1 && full_src[0] == '/') || (full_dst[len_src] == '/')) { */
-    /*             LOG_ERROR(_("Error: destination directory is contained in the source directory\n")); */
-    /*             cecup_reset_dir(R); */
-    /*             return; */
-    /*         } */
-    /*     } */
-    /* } */
+        if ((len_src > len_dst) && !memcmp64(full_src, full_dst, len_dst)) {
+            if ((len_dst == 1 && full_dst[0] == '/') || (full_src[len_dst] == '/')) {
+                LOG_ERROR(_("Error: source directory is contained in the destination directory\n"));
+                cecup_reset_dir(L);
+                return;
+            }
+        }
+        if ((len_dst > len_src) && !memcmp64(full_dst, full_src, len_src)) {
+            if ((len_src == 1 && full_src[0] == '/') || (full_dst[len_src] == '/')) {
+                LOG_ERROR(_("Error: destination directory is contained in the source directory\n"));
+                cecup_reset_dir(R);
+                return;
+            }
+        }
+    }
 
     if (cecup.src_base) {
         free(cecup.src_base, cecup.src_base_len + 1);
