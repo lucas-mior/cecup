@@ -289,13 +289,10 @@ typedef struct Message {
     char *text;
     char *src_path;
     char *dst_path;
-    char *old_path;
-    char *new_path;
 
     int32 text_len;
-    int32 path_len;
-    int32 old_path_len;
-    int32 new_path_len;
+    int32 src_path_len;
+    int32 dst_path_len;
 
     int8 side;
     bool preview_clean;

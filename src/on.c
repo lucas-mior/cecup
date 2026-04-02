@@ -100,7 +100,7 @@ execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
         memset64(message, 0, SIZEOF(*message));
 
         if (filepath) {
-            message->path_len = path_len;
+            message->src_path_len = path_len;
             message->src_path = xmalloc(path_len + 1);
             memcpy64(message->src_path, filepath, path_len + 1);
         }

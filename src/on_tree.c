@@ -117,9 +117,9 @@ on_tree_button_press(GtkGestureClick *gesture, int32 n_press, double x, double y
         message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
         if (filepath) {
-            message->path_len = item_path_len_side(row_id, side);
-            message->src_path = xmalloc(message->path_len + 1);
-            memcpy64(message->src_path, filepath, message->path_len + 1);
+            message->src_path_len = item_path_len_side(row_id, side);
+            message->src_path = xmalloc(message->src_path_len + 1);
+            memcpy64(message->src_path, filepath, message->src_path_len + 1);
         }
         message->side = side;
 

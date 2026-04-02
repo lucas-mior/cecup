@@ -378,7 +378,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                     memset64(msg_update, 0, SIZEOF(*msg_update));
 
                     msg_update->type = MSG_ROW_TRANSFER;
-                    msg_update->path_len = path_len;
+                    msg_update->src_path_len = path_len;
                     msg_update->src_path = xmalloc(path_len + 1);
                     memcpy64(msg_update->src_path, path, path_len + 1);
 
@@ -546,9 +546,9 @@ work_rsync(void *user_data) {
 
             message->type = MSG_ROW_REMOVE;
             message->side = task->side;
-            message->path_len = task->path_len;
-            message->src_path = xmalloc(message->path_len + 1);
-            memcpy64(message->src_path, task->path, message->path_len + 1);
+            message->src_path_len = task->path_len;
+            message->src_path = xmalloc(message->src_path_len + 1);
+            memcpy64(message->src_path, task->path, message->src_path_len + 1);
 
             work_batch_push(&batch, message);
 

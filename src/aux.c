@@ -549,12 +549,10 @@ free_message(void *data) {
     if ((message = data)) {
         free(message->text, message->text_len + 1);
         if (message->src_path) {
-            free(message->src_path, message->path_len + 1);
+            free(message->src_path, message->src_path_len + 1);
         } else if (message->dst_path) {
-            free(message->dst_path, message->path_len + 1);
+            free(message->dst_path, message->dst_path_len + 1);
         }
-        free(message->old_path, message->old_path_len + 1);
-        free(message->new_path, message->new_path_len + 1);
 
         free(message, SIZEOF(*message));
     }

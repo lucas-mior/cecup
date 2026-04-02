@@ -48,7 +48,7 @@ static void update_stats_text(int32 count_selected, int64 total_size_bytes);
 static bool
 update_row_remove(Message *message) {
     char *path_removed = message->src_path;
-    int32 path_removed_len = message->path_len;
+    int32 path_removed_len = message->src_path_len;
     int32 side = message->side;
     bool changed = false;
     Traversal *traversal;
@@ -216,7 +216,7 @@ update_row_transfer(Message *message) {
     Traversal *traversal_dst = &cecup.traversal[R];
 
     char *path_transfered = message->src_path;
-    int32 path_transfered_len = message->path_len;
+    int32 path_transfered_len = message->src_path_len;
     int32 *idx_ptr;
     int32 idx_src;
     int32 row_id;
@@ -297,10 +297,10 @@ static bool
 update_row_rename(Message *message) {
     Traversal *traversal;
     Traversal *other_traversal;
-    char *old_path = message->old_path;
-    char *new_path = message->new_path;
-    int32 old_path_len = message->old_path_len;
-    int32 new_path_len = message->new_path_len;
+    char *old_path = message->src_path;
+    char *new_path = message->dst_path;
+    int32 old_path_len = message->src_path_len;
+    int32 new_path_len = message->dst_path_len;
     int32 side = message->side;
     bool is_dir = (old_path[old_path_len - 1] == '/');
     bool changed = false;
@@ -1031,9 +1031,9 @@ update_progress_state(char *text, char *tooltip) {
     }
 
     if (tooltip) {
-        message->path_len = strlen32(tooltip);
-        message->src_path = xmalloc(message->path_len + 1);
-        memcpy64(message->src_path, tooltip, message->path_len + 1);
+        message->src_path_len = strlen32(tooltip);
+        message->src_path = xmalloc(message->src_path_len + 1);
+        memcpy64(message->src_path, tooltip, message->src_path_len + 1);
     }
 
     g_idle_add(update_ui_handler, message);
