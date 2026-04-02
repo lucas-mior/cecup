@@ -241,7 +241,8 @@ update_row_transfer(Message *message) {
                                                    traversal_src->link_targets[idx_src],
                                                    traversal_src->link_targets_lens[idx_src],
                                                    traversal_src->patterns[idx_src],
-                                                   traversal_src->patterns_lens[idx_src]);
+                                                   traversal_src->patterns_lens[idx_src],
+                                                   traversal_src->nlinks[idx_src]);
 
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
@@ -355,7 +356,8 @@ update_row_rename(Message *message) {
                                    path_new, new_path_len + suffix_len,
                                    traversal->link_targets[idx],
                                    traversal->link_targets_lens[idx],
-                                   p_match_str, p_match_len);
+                                   p_match_str, p_match_len,
+                                   traversal->nlinks[idx]);
         }
 
         merge_row_id = -1;

@@ -172,7 +172,8 @@ static int32
 traversal_push(Traversal *traversal, struct stat *stat,
                char *path, int32 path_len,
                char *link_target, int32 link_target_len,
-               char *matched_pattern, int32 matched_pattern_len) {
+               char *matched_pattern, int32 matched_pattern_len,
+               int32 nlinks) {
     struct stat stat_copy = *stat;
     int32 idx;
 
@@ -228,6 +229,7 @@ traversal_push(Traversal *traversal, struct stat *stat,
     traversal->patterns[idx] = matched_pattern;
     traversal->patterns_lens[idx] = (int16)matched_pattern_len;
     traversal->row_ids[idx] = -1;
+    traversal->nlinks[idx] = nlinks;
 
     if (traversal->map) {
         hash_insert_fs_map(traversal->map, path, path_len, idx);

@@ -94,6 +94,7 @@ work_traverse_fs(Traversal *traversal) {
         int32 link_target_len = 0;
         char *matched_pattern = NULL;
         int32 matched_pattern_len = 0;
+        int32 nlinks;
 
         if (cecup.stop_working) {
             break;
@@ -252,7 +253,7 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        traversal->nlinks[traversal->nfiles] = 1;
+        nlinks = 1;
         if ((ent->fts_info == FTS_F) && (ent->fts_statp->st_nlink > 1)) {
             char inode[32];
             int32 inode_len;
@@ -283,7 +284,8 @@ work_traverse_fs(Traversal *traversal) {
         traversal_push(traversal, ent->fts_statp,
                        path, path_len,
                        link_target, link_target_len,
-                       matched_pattern, matched_pattern_len);
+                       matched_pattern, matched_pattern_len,
+                       nlinks);
     }
 
     if (fts_close(fts_handle) < 0) {
