@@ -54,7 +54,8 @@ update_row_remove(Message *message) {
     Traversal *traversal = &cecup.traversal[side];
 
     if (path_removed == NULL || path_removed_len == 0) {
-        return false;
+        error("Error: invalid arguments passed to %s.\n", __func__);
+        fatal(EXIT_FAILURE);
     }
 
     if (path_removed[path_removed_len - 1] != '/') {
