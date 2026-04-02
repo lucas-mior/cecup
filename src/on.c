@@ -418,6 +418,11 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     // before accessing `cecup.rows_selected[row_id_toggled]`. If the widget data is stale or
     // corrupted, this will write to unmapped memory.
     row_id_toggled = GPOINTER_TO_INT(row_id_ptr) - 1;
+    if ((row_id_toggled < 0) || (row_id_toggled >= cecup.rows_len)) {
+        error("Error in %s: Invalid row_id=%d passed via \"cecup-row-id\" object data.\n",
+              __func__, row_id_toggled);
+        return;
+    }
     is_active = gtk_check_button_get_active(renderer);
     if ((bool)cecup.rows_selected[row_id_toggled] == is_active) {
         return;
