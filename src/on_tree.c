@@ -357,20 +357,10 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         case COLUMN_ACTION:
         {
             char *msg;
-            if (side == L) {
-                if (is_dir) {
-                    msg = _(src_action_strings_dir[action]);
-                }
-                else {
-                    msg = _(src_action_strings_file[action]);
-                }
+            if (is_dir) {
+                msg = _(action_strings_dir[side][action]);
             } else {
-                if (is_dir) {
-                    msg = _(dst_action_strings_dir[action]);
-                }
-                else {
-                    msg = _(dst_action_strings_file[action]);
-                }
+                msg = _(action_strings_file[side][action]);
             }
 
             tip_text = msg;

@@ -215,6 +215,16 @@ static char *dst_action_strings_dir[] = {
     [ACTION_IGNORE]   = N_("Skip"),
 };
 
+static char **action_strings_dir[2] = {
+    [L] = src_action_strings_dir,
+    [R] = dst_action_strings_dir,
+};
+
+static char **action_strings_file[2] = {
+    [L] = src_action_strings_file,
+    [R] = dst_action_strings_file,
+};
+
 static char *reason_strings_file[] = {
     [REASON_EQUAL_BIT_IDX]                 = N_("Files are equal"),
     [REASON_IGNORED_BIT_IDX]               = N_("Matches an ignore pattern"),
