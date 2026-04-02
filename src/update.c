@@ -232,15 +232,27 @@ update_row_transfer(Message *message) {
                                          path_transfered, path_transfered_len))) {
             cecup.rows[R][row_id] = *lookup;
         } else {
-            cecup.rows[R][row_id] = traversal_push(traversal_dst, &traversal_src->stats[idx_src],
-                                                   traversal_src->paths[idx_src],
-                                                   traversal_src->paths_lens[idx_src],
-                                                   traversal_src->link_targets[idx_src],
-                                                   traversal_src->link_targets_lens[idx_src],
-                                                   traversal_src->patterns[idx_src],
-                                                   traversal_src->patterns_lens[idx_src],
-                                                   traversal_src->nlinks[idx_src]);
-            idx_dst = cecup.rows[R][row_id];
+            int32 stat_attempts = 0;
+            struct stat stat;
+
+            while (lstat(path_transfered, &stat) < 0) {
+                usleep(50*1000);
+                stat_attempts += 1;
+                if (stat_attempts >= 10) {
+                    error("Error in stat('%s'): %s.\n", path_transfered, strerror(errno));
+                    fatal(EXIT_FAILURE);
+                }
+            }
+
+            idx_dst = traversal_push(traversal_dst, &stat,
+                                     traversal_src->paths[idx_src],
+                                     traversal_src->paths_lens[idx_src],
+                                     traversal_src->link_targets[idx_src],
+                                     traversal_src->link_targets_lens[idx_src],
+                                     traversal_src->patterns[idx_src],
+                                     traversal_src->patterns_lens[idx_src],
+                                     traversal_src->nlinks[idx_src]);
+            cecup.rows[R][row_id] = idx_dst;
 
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
@@ -249,25 +261,14 @@ update_row_transfer(Message *message) {
                 int32 *first_idx_ptr;
                 int32 first_idx;
 
-                inode_len = ITOA(inode, (long)traversal_src->stats[idx_src].st_ino);
-                // TODO: Logic Bug. You are looking up the SOURCE inode
-                // (`traversal_src->stats[idx_src].st_ino`) inside the DESTINATION inode map
-                // (`traversal_dst->inode_map`). Inodes are only unique per-device. If the
-                // destination filesystem has a file with the same inode number as this source file,
-                // they will collide in this map, causing the application to falsely link them
-                // together.
+                inode_len = ITOA(inode, (long)traversal_dst->stats[idx_dst].st_ino);
                 if ((first_idx_ptr = hash_lookup_inode_map(traversal_dst->inode_map,
                                                            inode, inode_len))) {
                     first_idx = *first_idx_ptr;
 
                     if (traversal_dst->link_targets[first_idx] == NULL) {
-                        // TODO: Use-After-Free Risk. `path_transfered` points to
-                        // `message->src_path`. `message->src_path` is dynamically allocated and
-                        // will be freed at the end of `update_ui_process_message` by
-                        // `free_message(message)`. Assigning it here leaves a dangling pointer in
-                        // `traversal_dst`. You should copy it to the persistent arena instead.
-                        traversal_dst->link_targets[first_idx] = path_transfered;
-                        traversal_dst->link_targets_lens[first_idx] = (int16)path_transfered_len;
+                        traversal_dst->link_targets[first_idx] = traversal_src->paths[idx_src];
+                        traversal_dst->link_targets_lens[first_idx] = traversal_src->paths_lens[idx_src];
                     }
                     traversal_dst->nlinks[first_idx] += 1;
 
