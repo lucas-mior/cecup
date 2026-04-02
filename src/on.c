@@ -83,9 +83,11 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
         return;
     }
 
-    // TODO: Buffer Over-read Risk. `pos` is not validated against `cecup.rows_visible_len`. If the
-    // list model state is out of sync or `pos` exceeds the bounds of `cecup.rows_visible`,
-    // accessing `cecup.rows_visible[pos]` will read out-of-bounds memory.
+    if (pos >= (uint32)cecup.rows_visible_len) {
+        error("Error in %s: list position returned by gtk is out of range for cecup.rows array.\n",
+              __func__);
+        return;
+    }
     row_id = cecup.rows_visible[pos];
     filepath = item_path_side(row_id, side);
     path_len = item_path_len_side(row_id, side);
