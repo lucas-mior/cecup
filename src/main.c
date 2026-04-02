@@ -38,6 +38,10 @@
 #define FILL_TRUE true
 #define EXPAND_TRUE true
 
+#define NEW_WITH_NAME(VARIABLE, FUNCTION, ...) \
+    VARIABLE = FUNCTION(__VA_ARGS__); \
+    gtk_widget_set_name(VARIABLE, #VARIABLE);
+
 static bool is_first_run = false;
 
 static void
