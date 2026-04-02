@@ -94,10 +94,9 @@ column_bind_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, vo
     CecupItemProxy *proxy;
     int32 row_id;
     int32 side;
-    enum Action action_src;
-    enum Action action_dst;
-    enum Reason reason;
     enum Action action;
+    enum Action actions[2];
+    enum Reason reason;
     char class_name[32];
     char *classes[2];
     uint32 position;
@@ -110,13 +109,8 @@ column_bind_action(GtkSignalListItemFactory *factory, GtkListItem *list_item, vo
     side = GPOINTER_TO_INT(data);
     position = gtk_list_item_get_position(list_item);
 
-    item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
-
-    if (side == L) {
-        action = action_src;
-    } else {
-        action = action_dst;
-    }
+    item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
+    action = actions[side];
 
     gtk_label_set_text(GTK_LABEL(label), action_emojis[action]);
 
