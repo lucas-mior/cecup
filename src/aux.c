@@ -734,7 +734,6 @@ aux_functions_sink(void) {
     (void)get_target_tasks;
     (void)free_task_list;
     (void)free_message;
-    (void)cecup_item_compare;
     (void)traversal_push;
     (void)protect_interface_from_user;
     (void)invalidate_preview;
