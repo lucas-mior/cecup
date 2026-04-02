@@ -39,11 +39,8 @@ typedef struct SortEntry {
 
 static char *
 item_path_get(int32 row_id) {
-    int32 src_idx;
-    int32 dst_idx;
-
-    src_idx = cecup.rows[L][row_id];
-    dst_idx = cecup.rows[R][row_id];
+    int32 src_idx = cecup.rows[L][row_id];
+    int32 dst_idx = cecup.rows[R][row_id];
 
     if (src_idx >= 0) {
         return cecup.traversal[L].paths[src_idx];
