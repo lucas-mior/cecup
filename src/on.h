@@ -25,4 +25,16 @@ static CecupMenuItem tree_menu_items[] = {
 {N_("💤 Ignore..."),          0,          0,                                 NULL,              NULL,        N_("Add ignore pattern for this file")},
 };
 
+static char *
+get_variant(GtkWidget *widget, const char *function) {
+    char *variant;
+
+    if ((variant = g_object_get_data(G_OBJECT(widget), "variant")) == NULL) {
+        error("Error in %s: \"variant\" not passed to widget.\n", function);
+        fatal(EXIT_FAILURE);
+    }
+
+    return variant;
+}
+
 #endif /* ON_H */

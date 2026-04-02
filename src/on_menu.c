@@ -195,18 +195,6 @@ on_menu_rename(GtkWidget *tree, void *data) {
     return;
 }
 
-static char *
-get_variant(GtkWidget *widget, const char *function) {
-    char *variant;
-
-    if ((variant = g_object_get_data(G_OBJECT(widget), "variant")) == NULL) {
-        error("Error in %s: \"variant\" not passed to widget.\n", function);
-        fatal(EXIT_FAILURE);
-    }
-
-    return variant;
-}
-
 static void
 on_menu_open_item(GtkWidget *widget, void *data) {
     Message *message = data;
