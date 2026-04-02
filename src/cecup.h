@@ -41,8 +41,6 @@
 
 #define INITIAL_CAPACITY 1024
 
-#define MESSAGES_BUF_SIZE 256
-
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME Action
 #define ENUM_PREFIX_ ACTION_
