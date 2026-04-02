@@ -577,6 +577,8 @@ update_list_from_rows(void) {
                            SIZEOF(*sort_entries));
     sort_entries_capacity = cecup.rows_len;
 
+    FILE *save_list = fopen("filelist.txt", "w");
+
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         int32 row_id;
         enum Action src_act;
@@ -648,6 +650,8 @@ update_list_from_rows(void) {
             }
         }
 
+        fprintf(save_list, "%s\n", item_path_get(row_id));
+
         {
             int32 v_idx = cecup.rows_visible_len;
             sort_entries[v_idx].row_id = row_id;
@@ -684,6 +688,7 @@ update_list_from_rows(void) {
             cecup.rows_visible_len += 1;
         }
     }
+    fclose(save_list);
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_rows_loop);
     PRINT_TIMINGS(cecup.rows_len, t0_rows_loop, t1_rows_loop, "rows loop");
 
@@ -712,8 +717,10 @@ update_list_from_rows(void) {
         struct timespec t1_sort;
         clock_gettime(CLOCK_MONOTONIC_RAW, &t0_sort);
 
-        sort_item_functions[cecup.sort_col](sort_entries, (int64)cecup.rows_visible_len);
-        /* qsort64(sort_entries, cecup.rows_visible_len, sizeof(*sort_entries), compare_item_functions[cecup.sort_col]); */
+        /* sort_item_functions[cecup.sort_col](sort_entries, (int64)cecup.rows_visible_len); */
+        qsort64(sort_entries,
+                cecup.rows_visible_len, sizeof(*sort_entries),
+                compare_item_functions[cecup.sort_col]);
 
         for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
             cecup.rows_visible[k] = sort_entries[k].row_id;
