@@ -513,15 +513,17 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_vexpand(scroll[L], TRUE);
     gtk_paned_set_start_child(GTK_PANED(paned_trees), vbox[L]);
 
-    vbox[R] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    scroll[R] = gtk_scrolled_window_new();
+    NEW_WITH_NAME(vbox[R], gtk_box_new, GTK_ORIENTATION_VERTICAL, 5);
+    NEW_WITH_NAME(scroll[R], gtk_scrolled_window_new);
     gtk_scrolled_window_set_overlay_scrolling(GTK_SCROLLED_WINDOW(scroll[R]), FALSE);
+
     {
         GtkSelectionModel *selection_model;
         GListModel *list_model = g_object_ref(cecup.store);
         selection_model = GTK_SELECTION_MODEL(gtk_single_selection_new(list_model));
-        tree[R] = gtk_column_view_new(selection_model);
+        NEW_WITH_NAME(tree[R], gtk_column_view_new, selection_model);
     }
+
     cecup.tree[R] = tree[R];
     g_object_set_data(G_OBJECT(tree[R]), "side", GINT_TO_POINTER(R));
     main_setup_tree_columns(tree[R], COL_DST_ACTION, COL_DST_PATH);
