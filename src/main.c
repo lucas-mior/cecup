@@ -899,11 +899,12 @@ main(int32 argc, char **argv) {
                 _exit(EXIT_FAILURE);
             }
             default:
-                // TODO: Unhandled EINTR. If `waitpid` is interrupted by a signal, it will return -1
-                // and set `errno` to EINTR. This should be wrapped in a loop `while (waitpid(...) <
-                // 0 && errno == EINTR);` to properly reap the child process.
-                if (waitpid(child_cp, NULL, 0) < 0) {
+                while (waitpid(child_cp, NULL, 0) < 0) {
+                    if (errno == EINTR) {
+                        continue;
+                    }
                     error("Error waiting for cp: %s.\n", strerror(errno));
+                    break;
                 }
                 break;
             }
