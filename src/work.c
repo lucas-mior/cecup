@@ -671,19 +671,19 @@ main(void) {
     (void)work_rsync;
     (void)work_preview;
 
-    parsed = work_check_itemize_line(buf1);
+    parsed = work_check_itemize_line(buf1, strlen32(buf1));
     ASSERT(parsed);
     ASSERT_EQUAL(parsed, "some/file.txt");
 
-    parsed = work_check_itemize_line(buf2);
+    parsed = work_check_itemize_line(buf2, strlen32(buf2));
     ASSERT(parsed);
     ASSERT_EQUAL(parsed, "some/dir/");
 
-    parsed = work_check_itemize_line(buf3);
+    parsed = work_check_itemize_line(buf3, strlen32(buf3));
     ASSERT(parsed);
     ASSERT_EQUAL(parsed, "some/file.txt");
 
-    parsed = work_check_itemize_line(buf4);
+    parsed = work_check_itemize_line(buf4, strlen32(buf4));
     ASSERT_NULL(parsed);
 
     ASSERT(mkdtemp(temp_dir));

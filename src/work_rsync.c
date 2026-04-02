@@ -85,11 +85,10 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
 }
 
 static char *
-work_check_itemize_line(char *buf_output) {
-    // TODO: Buffer Overread Risk. If the string `buf_output` is shorter than the length of
-    // `RSYNC_ITEMIZE_PLACEHOLDERS`, these array accesses (`buf_output[0]`, `buf_output[1]`,
-    // `buf_output[i]`) will read past the null terminator, potentially resulting in reading
-    // uninitialized memory.
+work_check_itemize_line(char *buf_output, int32 line_len) {
+    if (line_len <= strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)) {
+        return NULL;
+    }
     switch (buf_output[0]) {
     case RSYNC_CHAR0_ACTION_SEND:
     case RSYNC_CHAR0_ACTION_RECEIVE:
@@ -354,7 +353,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                 LOG("%s%c", buf_output, end);
             }
 
-            if ((path = work_check_itemize_line(buf_output))) {
+            if ((path = work_check_itemize_line(buf_output, line_len))) {
                 int32 path_len;
                 char *sep;
 
