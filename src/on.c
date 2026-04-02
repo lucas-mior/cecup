@@ -92,10 +92,7 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
     if (filepath || (menu_item->callback == on_menu_rename)) {
         enum Action actions[2];
         enum Reason reason;
-
-        Message *message;
-
-        message = xmalloc(SIZEOF(*message));
+        Message *message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         if (filepath) {
