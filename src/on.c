@@ -209,13 +209,7 @@ on_delete_ignored_toggled(GtkCheckButton *button, void *data) {
     (void)data;
 
     if ((active = gtk_check_button_get_active(button))) {
-        g_signal_handlers_block_by_func(cecup.delete_after_button, on_delete_after_toggled, NULL);
-        // TODO: Segmentation Fault Risk / Invalid Type Cast. You are casting `cecup.delete_after`,
-        // which is a `bool` variable, to a `GtkCheckButton*`. This will cause an immediate crash
-        // when GTK attempts to dereference the boolean value (`0` or `1`) as a pointer. You should
-        // use `cecup.delete_after_button` here instead.
-        gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after), TRUE);
-        g_signal_handlers_unblock_by_func(cecup.delete_after_button, on_delete_after_toggled, NULL);
+        gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after_button), TRUE);
         invalidate_preview();
     }
 
