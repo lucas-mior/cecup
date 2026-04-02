@@ -72,11 +72,7 @@ update_row_remove(Message *message) {
         }
 
         changed = true;
-        if (side == L) {
-            side_ptr = &cecup.rows[L][row_id];
-        } else {
-            side_ptr = &cecup.rows[R][row_id];
-        }
+        side_ptr = &cecup.rows[side][row_id];
 
         if (S_ISREG(traversal->stats[*idx_ptr].st_mode)
                 && (traversal->stats[*idx_ptr].st_nlink > 1)) {
