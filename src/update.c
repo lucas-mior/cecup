@@ -462,9 +462,8 @@ update_row_ignore(Message *message) {
 
         match = NULL;
         if (cecup.ignore_count > 0) {
-            IgnorePattern *added_pattern;
+            IgnorePattern *added_pattern = &cecup.ignore_patterns[cecup.ignore_count - 1];
 
-            added_pattern = &cecup.ignore_patterns[cecup.ignore_count - 1];
             if (ignore_pattern_match_single(added_pattern, path, path_len, is_dir)) {
                 match = added_pattern;
             }
