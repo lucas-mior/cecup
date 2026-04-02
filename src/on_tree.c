@@ -106,13 +106,8 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
         is_busy = gtk_widget_get_sensitive(cecup.stop_button);
         row_id = cecup.rows_visible[pos];
 
-        if (side == L) {
-            filepath = item_path_side(row_id, L);
-            other_path = item_path_side(row_id, R);
-        } else {
-            filepath = item_path_side(row_id, R);
-            other_path = item_path_side(row_id, L);
-        }
+        filepath = item_path_side(row_id, side);
+        other_path = item_path_side(row_id, !side);
 
         message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
