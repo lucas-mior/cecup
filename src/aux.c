@@ -256,6 +256,26 @@ traversal_patch_nlinks(Traversal *traversal) {
 }
 
 static void
+traversal_unlink(Traversal *traversal, int32 idx) {
+    if (S_ISREG(traversal->stats[idx].st_mode)
+            && (traversal->stats[idx].st_nlink > 1)) {
+        char inode[32];
+        int32 inode_len;
+        int32 *first_idx_ptr;
+
+        inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
+        if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map,
+                                                   inode, inode_len))) {
+            traversal->nlinks[*first_idx_ptr] -= 1;
+            if (traversal->nlinks[*first_idx_ptr] <= 0) {
+                hash_remove_inode_map(traversal->inode_map, inode, inode_len);
+            }
+        }
+    }
+    return;
+}
+
+static void
 free_task_list(TaskList *tasks) {
     if (tasks == NULL) {
         return;
