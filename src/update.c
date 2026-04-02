@@ -400,11 +400,7 @@ update_row_rename(Message *message) {
             traversal->row_ids[n_idx] = merge_row_id;
 
             if (other_idx >= 0) {
-                if (side == L) {
-                    cecup.rows[L][row_id] = -1;
-                } else {
-                    cecup.rows[R][row_id] = -1;
-                }
+                cecup.rows[side][row_id] = -1;
                 i += 1;
             } else {
                 for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
