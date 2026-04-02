@@ -283,8 +283,6 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     int32 side;
     char *tip_text;
     char tip_buffer[MAX_PATH_LENGTH*2];
-    char reason_buf[1024];
-    int32 rb_pos;
     char text_buf[64] = "";
 
     (void)k;
@@ -368,8 +366,10 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         }
         case COLUMN_PATH:
         {
-            rb_pos = 0;
+            int32 rb_pos = 0;
+            char reason_buf[1024];
             reason_buf[0] = '\0';
+
             for (uint32 i = 0; i < REASON_BIT_COUNT; i += 1) {
                 char *base_msg;
 
