@@ -264,8 +264,7 @@ traversal_unlink(Traversal *traversal, int32 idx) {
         int32 *first_idx_ptr;
 
         inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
-        if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map,
-                                                   inode, inode_len))) {
+        if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
             traversal->nlinks[*first_idx_ptr] -= 1;
             if (traversal->nlinks[*first_idx_ptr] <= 0) {
                 hash_remove_inode_map(traversal->inode_map, inode, inode_len);
