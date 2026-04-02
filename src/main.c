@@ -741,6 +741,9 @@ main(int32 argc, char **argv) {
 
     program = argv[0];
 
+    ASSERT_EQUAL(!L, R);
+    ASSERT_EQUAL(!R, L);
+
     if (setenv("GTK_IM_MODULE", "gtk-im-context-simple", true) < 0) {
         error("Error in setenv: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
