@@ -350,11 +350,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         task->action = clicked_action;
         task->side = side;
 
-        if (side == L) {
-            traversal = &cecup.traversal[L];
-        } else {
-            traversal = &cecup.traversal[R];
-        }
+        traversal = &cecup.traversal[side];
 
         if ((idx_ptr = hash_lookup_fs_map(traversal->map, clicked_path, task->path_len))) {
             int32 idx;
