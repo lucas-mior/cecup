@@ -261,20 +261,22 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     g_signal_connect(cecup.gtk_window, "destroy", G_CALLBACK(on_window_destroy), NULL);
 
-    main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, SPACING_BOX);
+    NEW_WITH_NAME(main_vbox, gtk_box_new, GTK_ORIENTATION_VERTICAL, SPACING_BOX);
     gtk_window_set_child(GTK_WINDOW(cecup.gtk_window), main_vbox);
 
-    header_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, SPACING_BOX);
+    NEW_WITH_NAME(header_vbox, gtk_box_new, GTK_ORIENTATION_VERTICAL, SPACING_BOX);
     gtk_widget_set_margin_start(header_vbox, SPACING_BOX);
     gtk_widget_set_margin_end(header_vbox, SPACING_BOX);
     gtk_widget_set_margin_top(header_vbox, SPACING_BOX);
     gtk_widget_set_margin_bottom(header_vbox, SPACING_BOX);
     gtk_box_append(GTK_BOX(main_vbox), header_vbox);
 
-    button_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
+    NEW_WITH_NAME(button_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
 
-    cecup.preview_button = gtk_button_new_with_label(_("🔎 Analyze"));
-    cecup.ignore_button = gtk_button_new_with_label(_("Edit Ignore Rules"));
+    NEW_WITH_NAME(cecup.preview_button, gtk_button_new);
+    NEW_WITH_NAME(cecup.ignore_button, gtk_button_new);
+    gtk_button_set_label(GTK_BUTTON(cecup.preview_button), _("🔎 Analyze"));
+    gtk_button_set_label(GTK_BUTTON(cecup.ignore_button), _("Edit Ignore Rules"));
 
     gtk_widget_set_tooltip_text(cecup.preview_button,
                                 _("Check which files need to be copied or updated"));
