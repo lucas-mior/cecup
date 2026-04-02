@@ -275,21 +275,25 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     NEW_WITH_NAME(cecup.preview_button, gtk_button_new);
     NEW_WITH_NAME(cecup.ignore_button, gtk_button_new);
+    NEW_WITH_NAME(cecup.stop_button, gtk_button_new);
+    NEW_WITH_NAME(cecup.sync_button, gtk_button_new);
+
     gtk_button_set_label(GTK_BUTTON(cecup.preview_button), _("🔎 Analyze"));
-    gtk_button_set_label(GTK_BUTTON(cecup.ignore_button), _("Edit Ignore Rules"));
+    gtk_button_set_label(GTK_BUTTON(cecup.ignore_button),  _("Edit Ignore Rules"));
+    gtk_button_set_label(GTK_BUTTON(cecup.stop_button),    _("⏹️ Stop"));
+    gtk_button_set_label(GTK_BUTTON(cecup.sync_button),    _("⏩ Apply Changes"));
 
     gtk_widget_set_tooltip_text(cecup.preview_button,
                                 _("Check which files need to be copied or updated"));
     gtk_widget_set_tooltip_text(cecup.ignore_button,
                                 _("Edit the list of filename patterns to ignore"));
-
-    cecup.stop_button = gtk_button_new_with_label(_("⏹️ Stop"));
-    gtk_widget_set_tooltip_text(cecup.stop_button, _("Cancel the current task"));
+    gtk_widget_set_tooltip_text(cecup.stop_button,
+                                _("Cancel the current task"));
+    gtk_widget_set_tooltip_text(cecup.sync_button,
+                                _("Start copying and updating all files"));
 
     cecup.preview_dirty = true;
 
-    cecup.sync_button = gtk_button_new_with_label(_("⏩ Apply Changes"));
-    gtk_widget_set_tooltip_text(cecup.sync_button, _("Start copying and updating all files"));
     gtk_widget_set_sensitive(cecup.stop_button, FALSE);
 
     gtk_box_append(GTK_BOX(button_hbox), cecup.ignore_button);
