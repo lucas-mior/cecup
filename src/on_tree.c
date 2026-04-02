@@ -324,19 +324,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
 
         action = actions[side];
-        filepath = item_path_side(row_id, side);
 
-        if (filepath == NULL) {
-            if (side == L) {
-                filepath = item_path_side(row_id, R);
-            } else {
-                filepath = item_path_side(row_id, L);
-            }
-        }
-
-        if (filepath == NULL) {
-            filepath = "";
-        }
+        filepath = item_path_get(row_id);
 
         path_len = strlen32(filepath);
         if (path_len > 0 && filepath[path_len - 1] == '/') {
