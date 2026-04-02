@@ -136,10 +136,7 @@ traversal_clean(Traversal *traversal) {
                   traversal->ncapacity*SIZEOF(*(traversal->nlinks)));
     }
 
-    traversal->base_path = NULL;
-    traversal->base_path_len = 0;
     traversal->file_count = 0;
-
     traversal->nfiles = 0;
 
     return;
