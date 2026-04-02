@@ -387,8 +387,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
 
                 if (is_dir) {
                     base_msg = _(reason_strings_dir[i]);
-                }
-                else {
+                } else {
                     base_msg = _(reason_strings_file[i]);
                 }
 
@@ -405,8 +404,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
 
                 if ((reason & REASON_HARDLINK)) {
                     notation = RSYNC_HARDLINK;
-                }
-                else {
+                } else {
                     notation = RSYNC_SYMLINK;
                 }
                 SNPRINTF(tip_buffer,
