@@ -437,11 +437,7 @@ update_row_rename(Message *message) {
                     item_add(other_idx, -1);
                 }
             } else {
-                if (side == L) {
-                    cecup.rows[L][row_id] = n_idx;
-                } else {
-                    cecup.rows[R][row_id] = n_idx;
-                }
+                cecup.rows[side][row_id] = n_idx;
                 traversal->row_ids[n_idx] = row_id;
             }
             i += 1;
