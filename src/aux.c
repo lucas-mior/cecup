@@ -750,6 +750,8 @@ check_consistent_state(void) {
     CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal[R], cecup.rows[R]);
 
     g_mutex_unlock(&cecup.arena_mutex);
+
+    error("State is consistent...\n");
     return;
 }
 
