@@ -36,6 +36,9 @@
 #define L 0
 #define R 1
 
+_Static_assert((!L) == R, "!L must be R");
+_Static_assert((!R) == L, "!R must be L");
+
 #define MAX_PATH_LENGTH 2048
 #define MAX_NAME_LENGTH 256
 
