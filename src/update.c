@@ -417,37 +417,26 @@ static void
 update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match) {
     Traversal *traversal = &cecup.traversal[side];
 
+    // this function only works for ADDED ignored patterns, not REMOVED
+    ASSERT(match);
+
     if (cecup.rows[side][row_id] >= 0) {
         int32 idx = cecup.rows[side][row_id];
-        bool was_ignored = (traversal->patterns[idx] != NULL);
-        bool is_ignored = match;
 
-        if (was_ignored != is_ignored) {
-            if (S_ISREG(traversal->stats[idx].st_mode)
-                    && (traversal->stats[idx].st_nlink > 1)) {
-                char inode[32];
-                int32 inode_len;
-                int32 *first_idx_ptr;
+        if (S_ISREG(traversal->stats[idx].st_mode)
+                && (traversal->stats[idx].st_nlink > 1)) {
+            char inode[32];
+            int32 inode_len;
+            int32 *first_idx_ptr;
 
-                inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
-                if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map,
-                                                           inode, inode_len))) {
-                    if (is_ignored) {
-                        traversal->nlinks[*first_idx_ptr] -= 1;
-                    } else {
-                        traversal->nlinks[*first_idx_ptr] += 1;
-                    }
-                }
+            inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
+            if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
+                traversal->nlinks[*first_idx_ptr] -= 1;
             }
         }
 
-        if (match) {
-            traversal->patterns[idx] = match->str;
-            traversal->patterns_lens[idx] = (int16)match->len;
-        } else {
-            traversal->patterns[idx] = NULL;
-            traversal->patterns_lens[idx] = 0;
-        }
+        traversal->patterns[idx] = match->str;
+        traversal->patterns_lens[idx] = (int16)match->len;
     }
     return;
 }
