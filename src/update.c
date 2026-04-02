@@ -638,8 +638,8 @@ update_list_from_rows(void) {
 
         {
             int32 v_idx = cecup.rows_visible_len;
-            sort_entries[v_idx].row_id = row_id;
             char *path;
+            sort_entries[v_idx].row_id = row_id;
 
             switch (cecup.sort_col) {
             case COL_SRC_PATH:
