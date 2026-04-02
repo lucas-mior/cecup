@@ -138,12 +138,12 @@ on_path_edited(GtkEditable *editable, void *data) {
     row_id = GPOINTER_TO_INT(row_id_ptr) - 1;
     new_text = (char *)gtk_editable_get_text(editable);
 
+    relative_old = item_path_side(row_id, side);
+
     if (side == L) {
         base_path = cecup.src_base;
-        relative_old = item_path_side(row_id, L);
     } else {
         base_path = cecup.dst_base;
-        relative_old = item_path_side(row_id, R);
     }
 
     if (relative_old == NULL) {
