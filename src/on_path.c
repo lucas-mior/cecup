@@ -84,17 +84,16 @@ on_path_editing_started(GtkEditable *editable, void *data) {
         end_pos = path_len;
 
         name = basename2(relative, &path_len, &name_len);
-        last_dot = strrchr(name, '.');
+        last_dot = memrchr64(name, '.', name_len);
 
         start_pos = path_len - name_len;
+
+        ASSERT_MORE(path_len, 0);
 
         if (last_dot) {
             if (last_dot != name) {
                 end_pos = (int32)(last_dot - relative);
             }
-        // TODO: Buffer Underread / Out-of-bounds Read. If `path_len` is 0 (e.g. `relative` is an
-        // empty string), `path_len - 1` evaluates to -1, which leads to an out-of-bounds memory
-        // read on `relative`.
         } else if (relative[path_len - 1] == '/') {
             end_pos = path_len - 1;
         }
