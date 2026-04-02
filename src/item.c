@@ -360,12 +360,14 @@ cecup_item_compare_string_key(const void *a, const void *b) {
     int32 result = 0;
     char *path_a = entry_a->key.ptr;
     char *path_b = entry_b->key.ptr;
-    NCALLS(100000);
+    NCALLS(200000);
 
-    if (path_a == NULL) {
-        result = -1;
+    if ((path_a == NULL) && (path_b == NULL)) {
+        result = 0;
     } else if (path_b == NULL) {
-        result = 1;
+        result = path_a[0];
+    } else if (path_a == NULL) {
+        result = path_b[0];
     } else {
         result = strcmp(path_a, path_b);
     }
