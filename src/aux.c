@@ -616,7 +616,8 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
             if ((ulong)traversal->nlinks[idx] > traversal->stats[idx].st_nlink) {
                 error("Consistency error:"
                       "%s index %d (path %s) has nlinks (%d) > st_nlink (%d).\n",
-                      which_traversal, idx, path, traversal->nlinks[idx], (int32)traversal->stats[idx].st_nlink);
+                      which_traversal, idx, path,
+                      traversal->nlinks[idx], (int32)traversal->stats[idx].st_nlink);
                 fatal(EXIT_FAILURE);
             }
 
