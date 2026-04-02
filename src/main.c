@@ -341,9 +341,11 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_tooltip_text(cecup.delete_after_button,
                                 _("Delete files in backup that do not exist in the original"));
 
-    cecup.diff_entry = gtk_entry_new();
-    gtk_widget_set_tooltip_text(cecup.diff_entry, _("Executable used for comparing files"));
-    cecup.term_entry = gtk_entry_new();
+    NEW_WITH_NAME(cecup.diff_entry, gtk_entry_new);
+    NEW_WITH_NAME(cecup.term_entry, gtk_entry_new);
+
+    gtk_widget_set_tooltip_text(cecup.diff_entry,
+                                _("Executable used for comparing files"));
     gtk_widget_set_tooltip_text(cecup.term_entry,
                                 _("Terminal emulator used to launch the diff tool"));
 
