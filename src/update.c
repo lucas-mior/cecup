@@ -204,7 +204,9 @@ update_row_transfer(Message *message) {
         stat_attempts += 1;
         if (stat_attempts >= 20) {
             error("Error in stat('%s'): %s.\n", full_path, strerror(errno));
-            fatal(EXIT_FAILURE);
+            if (DEBUGGING) {
+                fatal(EXIT_FAILURE);
+            }
         }
     }
 
