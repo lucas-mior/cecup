@@ -138,11 +138,7 @@ update_row_remove(Message *message) {
             }
 
             changed = true;
-            if (side == L) {
-                idx_ptr = &cecup.rows[L][row_id];
-            } else {
-                idx_ptr = &cecup.rows[R][row_id];
-            }
+            idx_ptr = &cecup.rows[side][row_id];
 
             if (*idx_ptr >= 0) {
                 int32 idx = *idx_ptr;
