@@ -166,6 +166,7 @@ on_path_edited(GtkEditable *editable, void *data) {
         int32 new_full_length;
 
         old_length = strlen32(relative_old);
+        ASSERT_MORE(old_length, 0);
 
         memcpy64(relative_new, new_text, new_length + 1);
         normalize(relative_new, &new_length);
@@ -179,9 +180,6 @@ on_path_edited(GtkEditable *editable, void *data) {
 
         LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
 
-        // TODO: Buffer Underread / Out-of-bounds Read. If `old_length` is 0, `old_length - 1`
-        // evaluates to -1, which results in reading before the beginning of the `relative_old`
-        // buffer.
         if ((relative_old[old_length - 1] == '/')
             && (relative_new[new_length - 1] != '/')) {
             relative_new[new_length] = '/';
