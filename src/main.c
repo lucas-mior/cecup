@@ -426,7 +426,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_hexpand(entry_hbox[L], TRUE);
     gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[L]);
 
-    cecup.invert_button = gtk_button_new_with_label("<--->");
+    NEW_WITH_NAME(cecup.invert_button, gtk_button_new);
+    gtk_button_set_label(GTK_BUTTON(cecup.invert_button), "<--->");
     gtk_widget_set_tooltip_text(cecup.invert_button, _("Invert Original and Backup"));
     gtk_box_append(GTK_BOX(paths_hbox), cecup.invert_button);
 
