@@ -396,6 +396,7 @@ cecup_item_compare_int_key(const void *a, const void *b) {
 #undef COMPARE
 
 typedef void(*SortFunction)(SortEntry *a, int64);
+typedef int(*CompareFunction)(const void *a, const void *b);
 
 #define i_key SortEntry
 #define i_cmp(a,b) cecup_item_compare_string_key(a,b)
@@ -407,7 +408,7 @@ typedef void(*SortFunction)(SortEntry *a, int64);
 #define T compare_int
 #include "stc/sort.h"
 
-static SortFunction compare_item_functions[] = {
+static SortFunction sort_item_functions[] = {
     [COL_SELECTED]   = compare_int_sort,
     [COL_SRC_ACTION] = compare_int_sort,
     [COL_DST_ACTION] = compare_int_sort,
@@ -419,6 +420,20 @@ static SortFunction compare_item_functions[] = {
     [COL_MTIME_RAW]  = compare_int_sort,
     [COL_ROW_ID]     = compare_int_sort,
     [NUM_COLS]       = compare_int_sort,
+};
+
+static CompareFunction compare_item_functions[] = {
+    [COL_SELECTED]   = cecup_item_compare_string_key,
+    [COL_SRC_ACTION] = cecup_item_compare_int_key,
+    [COL_DST_ACTION] = cecup_item_compare_int_key,
+    [COL_SRC_PATH]   = cecup_item_compare_string_key,
+    [COL_DST_PATH]   = cecup_item_compare_string_key,
+    [COL_SIZE_TEXT]  = cecup_item_compare_int_key,
+    [COL_SIZE_RAW]   = cecup_item_compare_int_key,
+    [COL_MTIME_TEXT] = cecup_item_compare_int_key,
+    [COL_MTIME_RAW]  = cecup_item_compare_int_key,
+    [COL_ROW_ID]     = cecup_item_compare_int_key,
+    [NUM_COLS]       = cecup_item_compare_int_key,
 };
 
 #if (0 == TESTING_item) && TESTING
