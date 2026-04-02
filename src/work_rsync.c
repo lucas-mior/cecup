@@ -148,7 +148,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     int32 pipe_stdout[2];
     int32 rsync_args_len = 0;
     int64 buf_output_pos = 0;
-    pid_t child_pid;
+    pid_t child_rsync;
     struct pollfd pipes[2];
     int32 nfiles_checksummed = 0;
     struct timespec time_stop = {0};
@@ -207,7 +207,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     xpipe(pipe_stdout);
     xpipe(pipe_stderr);
 
-    switch (child_pid = fork()) {
+    switch (child_rsync = fork()) {
     case -1:
         error("Error forking: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
@@ -231,7 +231,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
         _exit(EXIT_FAILURE);
     default:
-        cecup.child_pid = child_pid;
+        cecup.child_pid = child_rsync;
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
         break;
@@ -272,7 +272,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                 time_diff = (int64)(time_now.tv_sec - time_stop.tv_sec);
 
                 if (time_diff > 5) {
-                    xkill(-child_pid, SIGKILL);
+                    xkill(-child_rsync, SIGKILL);
                     time_stop.tv_sec = time_now.tv_sec;
                 }
             }
@@ -431,10 +431,10 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
-    if (waitpid(child_pid, NULL, 0) < 0) {
+    if (waitpid(child_rsync, NULL, 0) < 0) {
         LOG_ERROR(_("Error waiting for child process: %s.\n"), strerror(errno));
         LOG_ERROR(_("Killing the child process with SIGKILL..."));
-        xkill(-child_pid, SIGKILL);
+        xkill(-child_rsync, SIGKILL);
         return false;
     }
 
