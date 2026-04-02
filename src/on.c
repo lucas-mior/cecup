@@ -39,9 +39,7 @@
 
 static gboolean
 unparent_popover_idle(void *data) {
-    GtkWidget *widget;
-
-    widget = data;
+    GtkWidget *widget = data;
     gtk_widget_unparent(widget);
     return G_SOURCE_REMOVE;
 }

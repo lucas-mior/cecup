@@ -128,11 +128,6 @@ on_log_button_press(GtkGestureClick *gesture, int32 npress, double x, double y, 
     gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
     g_signal_connect(popover, "closed", G_CALLBACK(on_popover_closed), NULL);
 
-    // TODO: Critical Memory Leak Risk. You are creating a new popover every right-click and
-    // assigning it to the widget tree.
-    // Ensure that 'on_popover_closed' calls `gtk_widget_unparent(popover)`.
-    // If it doesn't, you will stack hidden popover widgets infinitely in memory every time the user
-    // right-clicks the log view.
     gtk_popover_popup(GTK_POPOVER(popover));
 
     return;
