@@ -62,9 +62,6 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
     char *filepath;
     int8 side;
     int32 path_len;
-    enum Action action_src;
-    enum Action action_dst;
-    enum Reason reason;
 
     if (menu_item == NULL) {
         return;
@@ -93,6 +90,10 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
     path_len = item_path_len_side(row_id, side);
 
     if (filepath || (menu_item->callback == on_menu_rename)) {
+        enum Action action_src;
+        enum Action action_dst;
+        enum Reason reason;
+
         Message *message;
 
         message = xmalloc(SIZEOF(*message));
