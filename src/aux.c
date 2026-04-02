@@ -400,7 +400,7 @@ cecup_reset_dir(int32 side) {
     return;
 }
 
-static void
+static bool
 cecup_get_dirs(void) {
     char full_src[PATH_MAX];
     char full_dst[PATH_MAX];
@@ -415,29 +415,29 @@ cecup_get_dirs(void) {
     if (strlen32(tmp_src) <= 0) {
         LOG_ERROR(_("Error: Invalid source directory.\n"));
         cecup_reset_dir(L);
-        return;
+        return false;
     }
     if (strlen32(tmp_dst) <= 0) {
         LOG_ERROR(_("Error: Invalid destination directory.\n"));
         cecup_reset_dir(R);
-        return;
+        return false;
     }
 
     if (realpath(tmp_src, full_src) == NULL) {
         LOG_ERROR(_("Error getting full path of %s: %s.\n"), tmp_src, strerror(errno));
         cecup_reset_dir(L);
-        return;
+        return false;
     }
     if (realpath(tmp_dst, full_dst) == NULL) {
         LOG_ERROR(_("Error getting full path of %s: %s.\n"), tmp_dst, strerror(errno));
         cecup_reset_dir(R);
-        return;
+        return false;
     }
 
     if (!strcmp(full_src, full_dst)) {
         LOG_ERROR(_("Error: source and backup are the same directory\n"));
         cecup_reset_dir(R);
-        return;
+        return false;
     }
 
     {
@@ -448,14 +448,14 @@ cecup_get_dirs(void) {
             if ((len_dst == 1 && full_dst[0] == '/') || (full_src[len_dst] == '/')) {
                 LOG_ERROR(_("Error: source directory is contained in the destination directory\n"));
                 cecup_reset_dir(L);
-                return;
+                return false;
             }
         }
         if ((len_dst > len_src) && !memcmp64(full_dst, full_src, len_src)) {
             if ((len_src == 1 && full_src[0] == '/') || (full_dst[len_src] == '/')) {
                 LOG_ERROR(_("Error: destination directory is contained in the source directory\n"));
                 cecup_reset_dir(R);
-                return;
+                return false;
             }
         }
     }
@@ -492,7 +492,7 @@ cecup_get_dirs(void) {
 
     invalidate_preview();
 
-    return;
+    return true;
 }
 
 static void

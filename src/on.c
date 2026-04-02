@@ -239,7 +239,10 @@ on_preview_clicked(GtkWidget *button, void *data) {
     (void)data;
     (void)button;
 
-    cecup_get_dirs();
+    if (!cecup_get_dirs()) {
+        LOG_ERROR(_("Invalid paths. Aborting preview...\n"));
+        return;
+    }
 
     protect_interface_from_user(true);
 
