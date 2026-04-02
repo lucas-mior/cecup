@@ -357,18 +357,18 @@ INLINE int32
 cecup_item_compare_string_key(const void *a, const void *b) {
     SortEntry *entry_a = (SortEntry *)a;
     SortEntry *entry_b = (SortEntry *)b;
-    int32 result = 0;
+    int32 result;
     char *path_a = entry_a->key.ptr;
     char *path_b = entry_b->key.ptr;
 
     if (path_a && path_b) {
         result = strcmp(path_a, path_b);
-    } else if ((path_b == NULL) && (path_a == NULL)) {
-        result = 0;
-    } else if (path_a == NULL) {
-        result = path_b[0];
-    } else if (path_b == NULL) {
+    } else if (path_a) {
         result = path_a[0];
+    } else if (path_b) {
+        result = path_b[0];
+    } else {
+        result = 0;
     }
 
     if (cecup.sort_order == GTK_SORT_DESCENDING) {
