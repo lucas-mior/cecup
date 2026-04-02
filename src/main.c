@@ -431,13 +431,16 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_tooltip_text(cecup.invert_button, _("Invert Original and Backup"));
     gtk_box_append(GTK_BOX(paths_hbox), cecup.invert_button);
 
-    entry_hbox[R] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    cecup.dir_entry[R] = gtk_entry_new();
-    gtk_widget_set_tooltip_text(cecup.dir_entry[R], _("Folder where the backup will be stored"));
+    NEW_WITH_NAME(entry_hbox[R], gtk_box_new, GTK_ORIENTATION_HORIZONTAL, 5);
+    NEW_WITH_NAME(cecup.dir_entry[R], gtk_entry_new);
+    NEW_WITH_NAME(cecup.browse_button[R], gtk_button_new);
+
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), dst_path_buffer);
-    cecup.browse_button[R] = gtk_button_new_with_label(_("Select Folder"));
-    gtk_widget_set_tooltip_text(cecup.browse_button[R],
-                                _("Open browser to select the folder where the backup will be stored"));
+
+    gtk_button_set_label(GTK_BUTTON(cecup.browse_button[R]), _("Select Folder"));
+    gtk_widget_set_tooltip_text(cecup.dir_entry[R], _("Folder where the backup will be stored"));
+    gtk_widget_set_tooltip_text(cecup.browse_button[R], _("Open browser to select"
+                                                          " the folder where the backup will be stored"));
 
     gtk_widget_set_hexpand(cecup.dir_entry[R], TRUE);
     gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.dir_entry[R]);
