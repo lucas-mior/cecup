@@ -234,10 +234,9 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
     GtkWidget *label;
     CecupItemProxy *proxy;
     int32 row_id;
-    enum Action action_src;
-    enum Action action_dst;
-    enum Reason reason;
     enum Action action;
+    enum Action actions[2];
+    enum Reason reason;
     int64 size;
     int64 mtime;
     char text_buf[64] = "";
@@ -254,7 +253,7 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
     row_id = cecup_item_proxy_get_index(proxy);
     position = gtk_list_item_get_position(list_item);
 
-    item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
+    item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
 
     size = item_size_side(row_id, text_info->side);
     mtime = item_mtime_side(row_id, text_info->side);
@@ -276,11 +275,7 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
 
     gtk_label_set_text(GTK_LABEL(label), text_buf);
 
-    if (text_info->side == L) {
-        action = action_src;
-    } else {
-        action = action_dst;
-    }
+    action = actions[text_info->side];
 
     SNPRINTF(class_name, "cell-color-%u", action);
     classes[0] = class_name;
