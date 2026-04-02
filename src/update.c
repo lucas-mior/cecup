@@ -717,6 +717,9 @@ update_list_from_rows(void) {
         /*         cecup.rows_visible_len, sizeof(*sort_entries), */
         /*         compare_item_functions[cecup.sort_col]); */
 
+        (void)sort_item_functions;
+        (void)compare_item_functions;
+
         for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
             cecup.rows_visible[k] = sort_entries[k].row_id;
         }
