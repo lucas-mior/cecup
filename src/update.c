@@ -265,9 +265,6 @@ update_row_transfer(Message *message) {
                  &traversal_src->stats[idx_src], SIZEOF(struct stat));
     }
 
-    traversal_patch_nlinks(traversal_src);
-    traversal_patch_nlinks(traversal_dst);
-
     invalidate_preview();
     return true;
 }
@@ -412,9 +409,6 @@ update_row_rename(Message *message) {
         }
     }
 
-    traversal_patch_nlinks(traversal);
-    traversal_patch_nlinks(other_traversal);
-
     if (changed) {
         invalidate_preview();
     }
@@ -519,9 +513,6 @@ update_row_ignore(Message *message) {
             }
         }
     }
-
-    traversal_patch_nlinks(&cecup.traversal[L]);
-    traversal_patch_nlinks(&cecup.traversal[R]);
 
     return true;
 }
@@ -940,6 +931,10 @@ update_ui_handler(void *data) {
 
     if (needs_update) {
         update_list_from_rows();
+
+        traversal_patch_nlinks(&cecup.traversal[L]);
+        traversal_patch_nlinks(&cecup.traversal[R]);
+
         if (DEBUGGING) {
             check_consistent_state();
         }
