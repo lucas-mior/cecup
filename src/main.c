@@ -537,13 +537,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
     g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
 
-    footer_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, SPACING_BOX);
+    NEW_WITH_NAME(footer_vbox, gtk_box_new, GTK_ORIENTATION_VERTICAL, SPACING_BOX);
     gtk_widget_set_margin_top(footer_vbox, SPACING_BOX);
     gtk_widget_set_margin_bottom(footer_vbox, SPACING_BOX);
     gtk_box_append(GTK_BOX(top_vbox), footer_vbox);
 
-    filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
+    NEW_WITH_NAME(filter_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     gtk_widget_set_halign(filter_hbox, GTK_ALIGN_CENTER);
+
     cecup.filter_new = gtk_toggle_button_new_with_label(EMOJI_NEW);
     cecup.filter_hard = gtk_toggle_button_new_with_label(EMOJI_LINK);
     cecup.filter_update = gtk_toggle_button_new_with_label(EMOJI_UPDATE);
@@ -590,12 +591,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_bottom(cecup.stats_label, 5);
 
     {
-        GtkWidget *log_scroll = gtk_scrolled_window_new();
+        GtkWidget *log_scroll;
+
+        NEW_WITH_NAME(log_scroll, gtk_scrolled_window_new);
 
         gtk_scrolled_window_set_overlay_scrolling(GTK_SCROLLED_WINDOW(log_scroll), FALSE);
         gtk_widget_set_size_request(log_scroll, -1, 100);
 
-        cecup.log_view = gtk_text_view_new();
+        NEW_WITH_NAME(cecup.log_view, gtk_text_view_new);
         gtk_text_view_set_editable(GTK_TEXT_VIEW(cecup.log_view), FALSE);
         gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(cecup.log_view), GTK_WRAP_WORD_CHAR);
         cecup.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(cecup.log_view));
