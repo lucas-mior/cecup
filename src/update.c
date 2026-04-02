@@ -123,7 +123,6 @@ update_row_remove(Message *message) {
                 traversal_unlink(traversal, idx);
                 hash_remove_fs_map(traversal->map,
                                    traversal->paths[idx], traversal->paths_lens[idx]);
-                memset64(&traversal->stats[idx], 0, SIZEOF(struct stat));
                 traversal->row_ids[idx] = -1;
                 *idx_ptr = -1;
             }
