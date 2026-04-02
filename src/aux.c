@@ -237,30 +237,40 @@ traversal_push(Traversal *traversal, struct stat *stat,
 
 static void
 traversal_patch_links(Traversal *traversal) {
-    for (int32 i = 0; i < traversal->nfiles; i += 1) {
-        if (S_ISREG(traversal->stats[i].st_mode)
-                && (traversal->stats[i].st_nlink > 1)) {
-            char inode[32];
-            int32 inode_len;
-            int32 *first_idx_ptr;
+    bool patch_again = false;
 
-            inode_len = ITOA(inode, (long)traversal->stats[i].st_ino);
-            if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
-                int32 first_idx = *first_idx_ptr;
+    for (int32 j = 0; j < 2; j += 1) {
+        for (int32 i = 0; i < traversal->nfiles; i += 1) {
+            if (S_ISREG(traversal->stats[i].st_mode)
+                    && (traversal->stats[i].st_nlink > 1)) {
+                char inode[32];
+                int32 inode_len;
+                int32 *first_idx_ptr;
 
-                traversal->nlinks[i] = traversal->nlinks[first_idx];
-                traversal->link_targets[i] = traversal->paths[first_idx];
-                traversal->link_targets_lens[i] = traversal->paths_lens[first_idx];
+                inode_len = ITOA(inode, (long)traversal->stats[i].st_ino);
+                if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map,
+                                                           inode, inode_len))) {
+                    int32 first_idx = *first_idx_ptr;
 
-                if (traversal->link_targets[first_idx] == NULL) {
-                    traversal->link_targets[first_idx] = traversal->paths[i];
-                    traversal->link_targets_lens[first_idx] = traversal->paths_lens[i];
+                    traversal->nlinks[i] = traversal->nlinks[first_idx];
+                    traversal->link_targets[i] = traversal->paths[first_idx];
+                    traversal->link_targets_lens[i] = traversal->paths_lens[first_idx];
+
+                    if (traversal->link_targets[first_idx] == NULL) {
+                        traversal->link_targets[first_idx] = traversal->paths[i];
+                        traversal->link_targets_lens[first_idx] = traversal->paths_lens[i];
+                    }
+                } else {
+                    hash_insert_inode_map(traversal->inode_map, inode, inode_len, i);
+                    patch_again = true;
                 }
-            } else {
-                hash_insert_inode_map(traversal->inode_map, inode, inode_len, i);
             }
         }
+        if (!patch_again) {
+            break;
+        }
     }
+
     return;
 }
 
