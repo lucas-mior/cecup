@@ -475,9 +475,7 @@ work_rsync(void *user_data) {
         char full_path[MAX_PATH_LENGTH];
         pid_t child_rm;
         int child_status;
-        int waited;
         bool removed = false;
-        int32 term_timeout;
 
         if (task->action != ACTION_DELETE) {
             has_transfers = true;
@@ -519,7 +517,9 @@ work_rsync(void *user_data) {
             _exit(EXIT_FAILURE);
         }
         default:
-            term_timeout = 0;
+        {
+            int waited;
+            int32 term_timeout = 0;
             cecup.child_pid = child_rm;
 
             while ((waited = waitpid(child_rm, &child_status, WNOHANG)) == 0) {
@@ -538,6 +538,7 @@ work_rsync(void *user_data) {
             }
             cecup.child_pid = 0;
             break;
+        }
         }
 
         if (removed) {
