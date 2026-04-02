@@ -349,7 +349,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_tooltip_text(cecup.term_entry,
                                 _("Terminal emulator used to launch the diff tool"));
 
-    reset_button = gtk_button_new_with_label(_("Defaults"));
+    NEW_WITH_NAME(reset_button, gtk_button_new);
+    gtk_button_set_label(GTK_BUTTON(reset_button), _("Defaults"));
     gtk_widget_set_tooltip_text(reset_button, _("Restore original settings"));
 
     gtk_box_append(GTK_BOX(options_hbox), cecup.check_fs_button);
@@ -375,8 +376,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(options_hbox), reset_button);
     gtk_box_append(GTK_BOX(header_vbox), options_hbox);
 
-    progress_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
-    cecup.progress_bar = gtk_progress_bar_new();
+    NEW_WITH_NAME(progress_vbox, gtk_box_new, GTK_ORIENTATION_VERTICAL, 2);
+    NEW_WITH_NAME(cecup.progress_bar, gtk_progress_bar_new);
 
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(cecup.progress_bar), TRUE);
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), _("Analyzing changes"));
@@ -401,20 +402,23 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         SNPRINTF(dst_path_buffer, "%s/b/", cwd);
     }
 
-    paths_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    NEW_WITH_NAME(paths_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_widget_set_margin_start(paths_hbox, 10);
     gtk_widget_set_margin_end(paths_hbox, 10);
     gtk_widget_set_margin_top(paths_hbox, 10);
     gtk_widget_set_margin_bottom(paths_hbox, 10);
     gtk_box_append(GTK_BOX(main_vbox), paths_hbox);
 
-    entry_hbox[L] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    cecup.dir_entry[L] = gtk_entry_new();
-    gtk_widget_set_tooltip_text(cecup.dir_entry[L], _("Folder containing original files"));
+    NEW_WITH_NAME(entry_hbox[L], gtk_box_new, GTK_ORIENTATION_HORIZONTAL, 5);
+    NEW_WITH_NAME(cecup.dir_entry[L], gtk_entry_new);
+    NEW_WITH_NAME(cecup.browse_button[L], gtk_button_new);
+
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), src_path_buffer);
-    cecup.browse_button[L] = gtk_button_new_with_label(_("Select Folder"));
-    gtk_widget_set_tooltip_text(cecup.browse_button[L],
-                                _("Open browser to select the folder containing original files"));
+
+    gtk_button_set_label(GTK_BUTTON(cecup.browse_button[L]), _("Select Folder"));
+    gtk_widget_set_tooltip_text(cecup.dir_entry[L], _("Folder containing original files"));
+    gtk_widget_set_tooltip_text(cecup.browse_button[L], _("Open browser to select"
+                                                          " the folder containing original files"));
 
     gtk_widget_set_hexpand(cecup.dir_entry[L], TRUE);
     gtk_box_append(GTK_BOX(entry_hbox[L]), cecup.dir_entry[L]);
