@@ -180,6 +180,7 @@ cecup_list_model_get_item(GListModel *list, guint position) {
     // TODO: Out-of-bounds Read Risk. If `pos` is greater than or equal to `cecup.rows_visible_len`,
     // accessing `cecup.rows_visible[pos]` will read out of bounds. This could happen if
     // `self->reported_count` gets out of sync with `cecup.rows_visible_len`.
+    ASSERT_LESS(pos, cecup.rows_visible_len);
     row_id = cecup.rows_visible[pos];
     if (self->proxies[pos]) {
         /*
