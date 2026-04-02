@@ -87,9 +87,10 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     (void)action;
     (void)data;
 
-    // TODO: Unhandled Null Pointer / Type Safety. If `parameter` is NULL or not a string variant,
-    // `g_variant_get_string` will fail an internal assertion and crash before returning NULL. You
-    // should verify `parameter` is a valid string.
+    if (parameter == NULL) {
+        error("Error in %s: GVariant *parameter is NULL.\n", __func__);
+        fatal(EXIT_FAILURE);
+    }
     if ((pattern = (char *)g_variant_get_string(parameter, NULL)) == NULL) {
         error("Ignore pattern is NULL.\n");
         fatal(EXIT_FAILURE);
