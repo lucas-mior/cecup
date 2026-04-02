@@ -247,11 +247,21 @@ update_row_transfer(Message *message) {
                 char inode[32];
                 int32 inode_len;
                 int32 *first_idx_ptr;
+                int32 first_idx;
 
                 inode_len = ITOA(inode, (long)traversal_src->stats[idx_src].st_ino);
                 if ((first_idx_ptr = hash_lookup_inode_map(traversal_dst->inode_map,
                                                            inode, inode_len))) {
-                    traversal_dst->nlinks[*first_idx_ptr] += 1;
+                    first_idx = *first_idx_ptr;
+
+                    if (traversal_dst->link_targets[first_idx] == NULL) {
+                        traversal_dst->link_targets[first_idx] = path_transfered;
+                        traversal_dst->link_targets_lens[first_idx] = (int16)path_transfered_len;
+                    }
+                    traversal_dst->nlinks[first_idx] += 1;
+
+                    traversal_dst->link_targets[idx_dst] = traversal_dst->paths[first_idx];
+                    traversal_dst->link_targets_lens[idx_dst] = traversal_dst->paths_lens[first_idx];
                 } else {
                     hash_insert_inode_map(traversal_dst->inode_map, inode, inode_len, idx_dst);
                     traversal_dst->nlinks[idx_dst] = 1;
