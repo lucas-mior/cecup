@@ -533,13 +533,7 @@ work_rsync(void *user_data) {
                 if (cecup.stop_working) {
                     term_timeout += 1;
                     if (term_timeout > 50) {
-                        // TODO: Logic Bug / Undefined Behavior. The child process that runs `rm`
-                        // does not call `setpgid()`, meaning it remains in the parent's process
-                        // group. Calling `xkill(-child_rm, SIGKILL)` will attempt to kill the
-                        // process group whose ID is `child_rm`, which is highly likely not to exist
-                        // (causing the kill to fail) or, rarely, could match an unrelated process
-                        // group and kill it erroneously.
-                        xkill(-child_rm, SIGKILL);
+                        xkill(child_rm, SIGKILL);
                         term_timeout = 0;
                     }
                 }
