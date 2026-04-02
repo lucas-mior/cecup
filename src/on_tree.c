@@ -87,8 +87,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
         Message *message;
         GtkSelectionModel *selection;
         uint32 pos;
-        enum Action action_src;
-        enum Action action_dst;
+        enum Action actions[2];
         enum Reason reason;
 
         if (npress != 1) {
@@ -118,13 +117,8 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
         }
         message->side = side;
 
-        item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
-
-        if (side == L) {
-            message->action = action_src;
-        } else {
-            message->action = action_dst;
-        }
+        item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
+        message->action = actions[side];
 
         g_object_set_data(G_OBJECT(cecup.application), "active_tree", widget);
         g_object_set_data_full(G_OBJECT(cecup.application), "active_message", message, free_message);
