@@ -226,7 +226,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
         for (int32 i = 0; i < LENGTH(base_css); i += 1) {
             int32 n;
-            n = snprintf2(css_buffer + offset, SIZEOF(css_buffer) - offset, "%s\n", base_css[i]);
+            n = snprintf2(css_buffer + offset, SIZEOF(css_buffer) - offset,
+                          "%s\n", base_css[i]);
             offset += n;
         }
 
