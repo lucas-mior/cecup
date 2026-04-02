@@ -291,13 +291,8 @@ update_row_rename(Message *message) {
     bool is_dir = (old_path[old_path_len - 1] == '/');
     bool changed = false;
 
-    if (side == L) {
-        traversal = &cecup.traversal[L];
-        other_traversal = &cecup.traversal[R];
-    } else {
-        traversal = &cecup.traversal[R];
-        other_traversal = &cecup.traversal[L];
-    }
+    traversal = &cecup.traversal[side];
+    other_traversal = &cecup.traversal[!side];
 
     for (int32 i = 0; i < cecup.rows_len;) {
         int32 row_id = i;
