@@ -154,7 +154,7 @@ update_row_remove(Message *message) {
         }
     }
 
-    traversal_patch_nlinks(traversal);
+    traversal_patch_links(traversal);
 
     if (changed) {
         invalidate_preview();
@@ -892,8 +892,8 @@ update_ui_handler(void *data) {
     if (needs_update) {
         update_list_from_rows();
 
-        traversal_patch_nlinks(&cecup.traversal[L]);
-        traversal_patch_nlinks(&cecup.traversal[R]);
+        traversal_patch_links(&cecup.traversal[L]);
+        traversal_patch_links(&cecup.traversal[R]);
 
         if (DEBUGGING) {
             check_consistent_state();

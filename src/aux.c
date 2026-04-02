@@ -236,7 +236,7 @@ traversal_push(Traversal *traversal, struct stat *stat,
 }
 
 static void
-traversal_patch_nlinks(Traversal *traversal) {
+traversal_patch_links(Traversal *traversal) {
     for (int32 i = 0; i < traversal->nfiles; i += 1) {
         if (S_ISREG(traversal->stats[i].st_mode)
                 && (traversal->stats[i].st_nlink > 1)) {

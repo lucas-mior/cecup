@@ -292,7 +292,7 @@ work_traverse_fs(Traversal *traversal) {
         LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
     }
 
-    traversal_patch_nlinks(traversal);
+    traversal_patch_links(traversal);
     file_count_return = (int32)file_count;
     return file_count_return;
 }
