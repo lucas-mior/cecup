@@ -250,6 +250,8 @@ traversal_patch_nlinks(Traversal *traversal) {
             inode_len = ITOA(inode, (long)traversal->stats[i].st_ino);
             if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
                 traversal->nlinks[i] = traversal->nlinks[*first_idx_ptr];
+            } else {
+                hash_insert_inode_map(traversal->inode_map, inode, inode_len, i);
             }
         }
     }
