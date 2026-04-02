@@ -241,8 +241,6 @@ on_reset_clicked(GtkWidget *button, void *data) {
 
 static void
 on_preview_clicked(GtkWidget *button, void *data) {
-    ThreadData *thread_data;
-    Message *message;
 
     (void)data;
     (void)button;
@@ -251,17 +249,21 @@ on_preview_clicked(GtkWidget *button, void *data) {
 
     protect_interface_from_user(true);
 
-    message = xmalloc(SIZEOF(*message));
-    memset64(message, 0, SIZEOF(*message));
-    message->type = MSG_CLEAR_TREES;
-    update_ui_handler(message);
-    // TODO: make state consistent here by also clearing the Traversal,
-    //       instead of doing it on the separate thread
+    {
+        Message *message = xmalloc(SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
 
-    thread_data = xmalloc(SIZEOF(*thread_data));
-    memset64(thread_data, 0, SIZEOF(*thread_data));
+        message->type = MSG_CLEAR_TREES;
+        update_ui_handler(message);
+    }
 
-    g_thread_new("work_preview", work_preview, thread_data);
+    {
+        ThreadData *thread_data = xmalloc(SIZEOF(*thread_data));
+        memset64(thread_data, 0, SIZEOF(*thread_data));
+
+        g_thread_new("work_preview", work_preview, thread_data);
+    }
+
     return;
 }
 
