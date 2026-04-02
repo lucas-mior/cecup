@@ -61,7 +61,6 @@ update_row_remove(Message *message) {
     if (path_removed[path_removed_len - 1] != '/') {
         int32 *idx_ptr;
         int32 row_id;
-        int32 *side_ptr;
 
         if ((idx_ptr = hash_lookup_fs_map(traversal->map,
                                           path_removed, path_removed_len)) == NULL) {
@@ -73,7 +72,6 @@ update_row_remove(Message *message) {
         }
 
         changed = true;
-        side_ptr = &cecup.rows[side][row_id];
 
         if (S_ISREG(traversal->stats[*idx_ptr].st_mode)
                 && (traversal->stats[*idx_ptr].st_nlink > 1)) {
@@ -94,7 +92,7 @@ update_row_remove(Message *message) {
                            traversal->paths[*idx_ptr], traversal->paths_lens[*idx_ptr]);
         memset64(&traversal->stats[*idx_ptr], 0, SIZEOF(struct stat));
         traversal->row_ids[*idx_ptr] = -1;
-        *side_ptr = -1;
+        cecup.rows[side][row_id] = -1;
 
         if ((cecup.rows[L][row_id] == -1) && (cecup.rows[R][row_id] == -1)) {
             for (int32 j = row_id; j < (cecup.rows_len - 1); j += 1) {
