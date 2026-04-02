@@ -47,10 +47,6 @@ on_path_selection_idle(void *data) {
     gtk_editable_select_region(selection_data->editable,
                                selection_data->start_pos, selection_data->end_pos);
 
-    // TODO: Potential Use-After-Free. `selection_data->editable` is part of a GtkListItem that
-    // might be destroyed, recycled, or unmapped before this idle callback runs (e.g., if the user
-    // scrolls quickly). You should `g_object_unref(selection_data->editable)` here and
-    // `g_object_ref(editable)` before queueing the idle task.
     free(selection_data, sizeof(*selection_data));
     return G_SOURCE_REMOVE;
 }
@@ -217,9 +213,9 @@ on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
     is_editing = gtk_editable_label_get_editing(GTK_EDITABLE_LABEL(object));
 
     if (is_editing) {
-        on_path_editing_started(GTK_EDITABLE(object), data);
+        on_path_editing_started(GTK_EDITABLE(g_object_ref(object)), data);
     } else {
-        on_path_edited(GTK_EDITABLE(object), data);
+        on_path_edited(GTK_EDITABLE(g_object_ref(object)), data);
     }
 
     return;
