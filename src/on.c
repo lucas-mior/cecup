@@ -759,11 +759,33 @@ on_path_click_pressed(GtkGestureClick *gesture,
 
 static void
 on_window_destroy(GtkWidget *widget, void *user_data) {
+    pid_t child_pid;
     (void)widget;
     (void)user_data;
 
-    if (cecup.child_pid > 0) {
-        xkill(-cecup.child_pid, SIGTERM);
+    stop_working(true);
+
+    if ((child_pid = cecup.child_pid) > 0) {
+        int32 waited;
+        int32 waited_count = 0;
+
+        xkill(-child_pid, SIGTERM);
+
+        while ((waited = waitpid(child_pid, NULL, 0)) < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            waited_count += 1;
+            if (waited_count >= 10) {
+                break;
+            }
+            error("Error waiting for child: %s.\n", strerror(errno));
+            sleep(1);
+        }
+
+        if ((waited < 0) && (errno != ECHILD)) {
+            xkill(-child_pid, SIGKILL);
+        }
     }
 
     if (cecup.refresh_id != 0) {
