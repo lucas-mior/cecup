@@ -316,21 +316,15 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     if (row_id_ptr) {
         char *filepath;
         enum Action action;
-        enum Action action_src;
-        enum Action action_dst;
+        enum Action actions[2];
         enum Reason reason;
         bool is_dir = false;
         int32 path_len;
 
-        item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
+        item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
 
-        if (side == L) {
-            filepath = item_path_side(row_id, L);
-            action = action_src;
-        } else {
-            filepath = item_path_side(row_id, R);
-            action = action_dst;
-        }
+        action = actions[side];
+        filepath = item_path_side(row_id, side);
 
         if (filepath == NULL) {
             if (side == L) {
