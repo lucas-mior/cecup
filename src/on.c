@@ -204,16 +204,9 @@ on_delete_after_toggled(GtkCheckButton *button, void *data) {
 
 static void
 on_delete_ignored_toggled(GtkCheckButton *button, void *data) {
-    bool active;
-
     (void)data;
 
-    if ((active = gtk_check_button_get_active(button))) {
-        gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after_button), TRUE);
-        invalidate_preview();
-    }
-
-    cecup.delete_ignored = active;
+    cecup.delete_ignored = gtk_check_button_get_active(button);
     save_config();
     return;
 }
