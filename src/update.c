@@ -338,13 +338,8 @@ update_row_rename(Message *message) {
         memcpy64(path_new, new_path, new_path_len);
         memcpy64(path_new + new_path_len, path_old + old_path_len, suffix_len + 1);
 
-        if (side == L) {
-            idx = cecup.rows[L][row_id];
-            other_idx = cecup.rows[R][row_id];
-        } else {
-            idx = cecup.rows[R][row_id];
-            other_idx = cecup.rows[L][row_id];
-        }
+        idx = cecup.rows[side][row_id];
+        other_idx = cecup.rows[!side][row_id];
 
         hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
         traversal->row_ids[idx] = -1;
