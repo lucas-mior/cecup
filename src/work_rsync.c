@@ -150,7 +150,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     int32 pipe_stderr[2];
     int32 pipe_stdout[2];
     int32 rsync_args_len = 0;
-    int64 buf_output_pos = 0;
+    int32 buf_output_pos = 0;
     pid_t child_rsync;
     struct pollfd pipes[2];
     int32 nfiles_checksummed = 0;
@@ -309,9 +309,9 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             char *eol_cr = memchr64(buf_output, '\r', buf_output_pos);
             char *eol;
             char end;
-            int64 line_len;
+            int32 line_len;
             char *path;
-            int64 remaining;
+            int32 remaining;
 
             if (eol_lf && eol_cr) {
                 if ((eol_lf < eol_cr)) {
@@ -337,7 +337,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 
             if (dropping_long_line) {
                 dropping_long_line = false;
-                remaining = buf_output_pos - ((int64)(eol - buf_output) + 1);
+                remaining = buf_output_pos - ((int32)(eol - buf_output) + 1);
                 if (remaining > 0) {
                     memmove64(buf_output, eol + 1, remaining);
                 }
@@ -346,7 +346,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             }
 
             end = *eol;
-            line_len = (int64)(eol - buf_output);
+            line_len = (int32)(eol - buf_output);
             *eol = '\0';
 
             if (!BEGINS_WITH(buf_output, RSYNC_DUPLICATE)) {
