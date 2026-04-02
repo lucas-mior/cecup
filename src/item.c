@@ -366,7 +366,7 @@ cecup_item_compare_string_key(const void *a, const void *b) {
     } else if (path_a) {
         result = path_a[0];
     } else if (path_b) {
-        result = path_b[0];
+        result = -path_b[0];
     } else {
         result = 0;
     }
