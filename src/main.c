@@ -592,7 +592,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_box_append(GTK_BOX(footer_vbox), filter_hbox);
 
-    cecup.stats_label = gtk_label_new(_("✅ Everything ready"));
+    NEW_WITH_NAME(cecup.stats_label, gtk_label_new, "");
+
+    gtk_label_set_label(GTK_LABEL(cecup.stats_label), _("✅ Everything ready"));
     gtk_box_append(GTK_BOX(footer_vbox), cecup.stats_label);
     gtk_widget_set_margin_top(cecup.stats_label, 5);
     gtk_widget_set_margin_bottom(cecup.stats_label, 5);
