@@ -320,8 +320,6 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         enum Action action_dst;
         enum Reason reason;
         bool is_dir = false;
-        char *link_target;
-        char *ignore_pattern;
         int32 path_len;
 
         item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
@@ -366,10 +364,12 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         }
         case COLUMN_PATH:
         {
-            int32 rb_pos = 0;
+            int32 pos = 0;
             char reason_buf[1024];
-            reason_buf[0] = '\0';
+            char *link_target;
+            char *ignore_pattern;
 
+            reason_buf[0] = '\0';
             for (uint32 i = 0; i < REASON_BIT_COUNT; i += 1) {
                 char *base_msg;
 
@@ -381,8 +381,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                     continue;
                 }
 
-                if (rb_pos > 0) {
-                    rb_pos += snprintf2(reason_buf + rb_pos, SIZEOF(reason_buf) - rb_pos, "\n");
+                if (pos > 0) {
+                    pos += snprintf2(reason_buf + pos, SIZEOF(reason_buf) - pos, "\n");
                 }
 
                 if (is_dir) {
@@ -392,7 +392,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 }
 
                 if (base_msg) {
-                    rb_pos += snprintf2(reason_buf + rb_pos, SIZEOF(reason_buf) - rb_pos, "%s", base_msg);
+                    pos += snprintf2(reason_buf + pos, SIZEOF(reason_buf) - pos, "%s", base_msg);
                 }
             }
 
