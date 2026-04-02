@@ -478,7 +478,7 @@ on_tree_key_press(GtkEventControllerKey *controller,
         pressed = gdk_keyval_to_lower(keyval);
 
         if ((pressed == target) && (modifiers == menu_item->mask)) {
-            execute_menu_item(widget, menu_item);
+            execute_menu_item_from_key_press(widget, menu_item);
             handled = TRUE;
             break;
         }

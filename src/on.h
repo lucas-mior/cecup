@@ -4,7 +4,7 @@
 #include "cecup.h"
 
 static void on_popover_closed(GtkWidget *popover, void *data);
-static void execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item);
+static void execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item);
 
 static void on_menu_open_item(GtkWidget *m, void *data);
 static void on_menu_copy_path(GtkWidget *m, void *data);

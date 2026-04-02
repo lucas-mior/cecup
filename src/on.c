@@ -54,7 +54,7 @@ on_popover_closed(GtkWidget *popover, void *data) {
 }
 
 static void
-execute_menu_item(GtkWidget *tree, CecupMenuItem *menu_item) {
+execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
     GtkSelectionModel *selection;
     GtkSingleSelection *single_sel;
     uint32 pos;
