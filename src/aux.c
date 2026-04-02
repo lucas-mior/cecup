@@ -704,6 +704,8 @@ static void
 check_consistent_state(void) {
     g_mutex_lock(&cecup.arena_mutex);
 
+    error("Checking consistent state...\n");
+
     for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
         int32 src_idx = cecup.rows[L][row_id];
         int32 dst_idx = cecup.rows[R][row_id];

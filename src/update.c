@@ -185,10 +185,6 @@ update_row_remove(Message *message) {
 
     traversal_patch_nlinks(traversal);
 
-    if (DEBUGGING) {
-        check_consistent_state();
-    }
-
     if (changed) {
         invalidate_preview();
     }
@@ -271,10 +267,6 @@ update_row_transfer(Message *message) {
 
     traversal_patch_nlinks(traversal_src);
     traversal_patch_nlinks(traversal_dst);
-
-    if (DEBUGGING) {
-        check_consistent_state();
-    }
 
     invalidate_preview();
     return true;
@@ -423,10 +415,6 @@ update_row_rename(Message *message) {
     traversal_patch_nlinks(traversal);
     traversal_patch_nlinks(other_traversal);
 
-    if (DEBUGGING) {
-        check_consistent_state();
-    }
-
     if (changed) {
         invalidate_preview();
     }
@@ -534,10 +522,6 @@ update_row_ignore(Message *message) {
 
     traversal_patch_nlinks(&cecup.traversal[L]);
     traversal_patch_nlinks(&cecup.traversal[R]);
-
-    if (DEBUGGING) {
-        check_consistent_state();
-    }
 
     return true;
 }
@@ -780,6 +764,10 @@ update_ui_process_message(Message *message) {
 
     needs_update = false;
 
+    if (DEBUGGING) {
+        error("%s: %s\n", __func__, MSG_str(message->type));
+    }
+
     switch (message->type) {
     case MSG_LOG:
     case MSG_LOG_CMD:
@@ -952,6 +940,9 @@ update_ui_handler(void *data) {
 
     if (needs_update) {
         update_list_from_rows();
+        if (DEBUGGING) {
+            check_consistent_state();
+        }
     }
 
     return G_SOURCE_REMOVE;
