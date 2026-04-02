@@ -84,8 +84,7 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
         }
     }
 
-    if ((pos = gtk_single_selection_get_selected(single_sel))
-         == GTK_INVALID_LIST_POSITION) {
+    if ((pos = gtk_single_selection_get_selected(single_sel)) == GTK_INVALID_LIST_POSITION) {
         return;
     }
 
