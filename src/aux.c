@@ -414,6 +414,12 @@ cecup_get_dirs(void) {
         return;
     }
 
+    if (!strcmp(full_src, full_dst)) {
+        LOG_ERROR(_("Error: source and backup are the same directory\n"));
+        cecup_reset_dir(R);
+        return;
+    }
+
     if (cecup.src_base) {
         free(cecup.src_base, cecup.src_base_len + 1);
     }
