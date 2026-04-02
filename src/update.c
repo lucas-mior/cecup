@@ -717,10 +717,10 @@ update_list_from_rows(void) {
         struct timespec t1_sort;
         clock_gettime(CLOCK_MONOTONIC_RAW, &t0_sort);
 
-        /* sort_item_functions[cecup.sort_col](sort_entries, (int64)cecup.rows_visible_len); */
-        qsort64(sort_entries,
-                cecup.rows_visible_len, sizeof(*sort_entries),
-                compare_item_functions[cecup.sort_col]);
+        sort_item_functions[cecup.sort_col](sort_entries, (int64)cecup.rows_visible_len);
+        /* qsort64(sort_entries, */
+        /*         cecup.rows_visible_len, sizeof(*sort_entries), */
+        /*         compare_item_functions[cecup.sort_col]); */
 
         for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
             cecup.rows_visible[k] = sort_entries[k].row_id;
