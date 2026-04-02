@@ -161,7 +161,6 @@ on_path_edited(GtkEditable *editable, void *data) {
         char relative_new[MAX_PATH_LENGTH];
         int32 old_length;
         int32 new_full_length;
-        Message *message;
 
         old_length = strlen32(relative_old);
 
@@ -184,22 +183,24 @@ on_path_edited(GtkEditable *editable, void *data) {
             new_length += 1;
         }
 
-        message = xmalloc(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
+        {
+            Message *message = xmalloc(SIZEOF(*message));
+            memset64(message, 0, SIZEOF(*message));
 
-        message->type = MSG_ROW_RENAME;
-        message->side = side;
+            message->type = MSG_ROW_RENAME;
+            message->side = side;
 
-        message->src_path_len = old_length;
-        message->src_path = xmalloc(old_length + 1);
-        memcpy64(message->src_path, relative_old, old_length + 1);
+            message->src_path_len = old_length;
+            message->src_path = xmalloc(old_length + 1);
+            memcpy64(message->src_path, relative_old, old_length + 1);
 
-        message->dst_path_len = new_length;
-        message->dst_path = xmalloc(new_length + 1);
-        memcpy64(message->dst_path, relative_new, new_length + 1);
+            message->dst_path_len = new_length;
+            message->dst_path = xmalloc(new_length + 1);
+            memcpy64(message->dst_path, relative_new, new_length + 1);
 
-        invalidate_preview();
-        g_idle_add(update_ui_handler, message);
+            invalidate_preview();
+            g_idle_add(update_ui_handler, message);
+        }
     }
 
     return;
