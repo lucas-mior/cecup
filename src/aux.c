@@ -246,7 +246,16 @@ traversal_patch_nlinks(Traversal *traversal) {
 
             inode_len = ITOA(inode, (long)traversal->stats[i].st_ino);
             if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
-                traversal->nlinks[i] = traversal->nlinks[*first_idx_ptr];
+                int32 first_idx = *first_idx_ptr;
+
+                traversal->nlinks[i] = traversal->nlinks[first_idx];
+                traversal->link_targets[i] = traversal->paths[first_idx];
+                traversal->link_targets_lens[i] = traversal->paths_lens[first_idx];
+
+                if (traversal->link_targets[first_idx] == NULL) {
+                    traversal->link_targets[first_idx] = traversal->paths[i];
+                    traversal->link_targets_lens[first_idx] = traversal->paths_lens[i];
+                }
             } else {
                 hash_insert_inode_map(traversal->inode_map, inode, inode_len, i);
             }
