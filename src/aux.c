@@ -229,7 +229,7 @@ traversal_push(Traversal *traversal, struct stat *stat,
     traversal->patterns[idx] = matched_pattern;
     traversal->patterns_lens[idx] = (int16)matched_pattern_len;
     traversal->row_ids[idx] = -1;
-    traversal->nlinks[idx] = nlinks;
+    traversal->nlinks[idx] = (int16)nlinks;
 
     if (traversal->map) {
         hash_insert_fs_map(traversal->map, path, path_len, idx);
