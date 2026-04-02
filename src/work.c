@@ -147,10 +147,7 @@ work_traverse_fs(Traversal *traversal) {
             LOG_ERROR(_("Error: file path is too long:\n"));
             LOG_ERROR("%s\n", ent->fts_path);
             LOG_ERROR(_("Please fix your file system.\n"));
-            // TODO: Data Race. Writing to the shared boolean `cecup.stop_working` concurrently from
-            // multiple traversal threads (`t1` and `t2`) without synchronization or atomics causes
-            // a data race, which is undefined behavior in standard C.
-            cecup.stop_working = true;
+            stop_working(true);
             break;
         }
 
@@ -159,7 +156,7 @@ work_traverse_fs(Traversal *traversal) {
                 LOG_ERROR(_("Error: there is a space in the start of the filename:\n"));
                 LOG_ERROR("'%s'\n", ent->fts_path);
                 LOG_ERROR(_("Please fix your file system.\n"));
-                cecup.stop_working = true;
+                stop_working(true);
                 break;
             }
 
@@ -167,7 +164,7 @@ work_traverse_fs(Traversal *traversal) {
                 LOG_ERROR(_("Error: there is space in the end of the filename:\n"));
                 LOG_ERROR("'%s'\n", ent->fts_path);
                 LOG_ERROR(_("Please fix your file system.\n"));
-                cecup.stop_working = true;
+                stop_working(true);
                 break;
             }
         }
@@ -183,7 +180,7 @@ work_traverse_fs(Traversal *traversal) {
                 LOG_ERROR(_("Error: filename contains problematic characters/patterns:\n"));
                 LOG_ERROR("'%s'\n", ent->fts_path);
                 LOG_ERROR(_("Please fix your file system.\n"));
-                cecup.stop_working = true;
+                stop_working(true);
                 break;
             }
         }
@@ -192,7 +189,7 @@ work_traverse_fs(Traversal *traversal) {
         if (file_count >= MAXOF(file_count_return)) {
             LOG_ERROR(_("More than %lld files found.\n"), MAXOF(file_count_return));
             LOG_ERROR(_("Please work in smaller subdirs.\n"));
-            cecup.stop_working = true;
+            stop_working(true);
         }
 
         if (cecup.stop_working) {

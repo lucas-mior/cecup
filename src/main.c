@@ -831,6 +831,7 @@ main(int32 argc, char **argv) {
 
     cecup.arena = arena_create(SIZEMB(64));
     g_mutex_init(&cecup.arena_mutex);
+    g_mutex_init(&cecup.stop_lock);
 
     cecup.rows_len = 0;
     cecup.rows_capacity = INITIAL_CAPACITY;
@@ -915,7 +916,7 @@ main(int32 argc, char **argv) {
     }
 
     cecup.store = G_LIST_MODEL(cecup_list_model_new());
-    cecup.stop_working = false;
+    stop_working(false);
 
     cecup.application = gtk_application_new("com.cecup.app", G_APPLICATION_NON_UNIQUE);
     g_signal_connect(cecup.application, "activate", G_CALLBACK(main_application_run), NULL);
@@ -942,6 +943,7 @@ main(int32 argc, char **argv) {
     traversal_free(&cecup.traversal[R]);
 
     g_mutex_clear(&cecup.arena_mutex);
+    g_mutex_clear(&cecup.stop_lock);
 
     exit(status);
 }

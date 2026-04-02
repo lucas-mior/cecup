@@ -81,7 +81,7 @@ protect_interface_from_user(bool state) {
         gtk_widget_set_sensitive(cecup.sync_button, TRUE);
         gtk_widget_set_tooltip_text(cecup.sync_button, _("Start copying and updating all files"));
     }
-    cecup.stop_working = false;
+    stop_working(false);
     return;
 }
 

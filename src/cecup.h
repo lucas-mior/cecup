@@ -424,6 +424,7 @@ static struct {
 
     pid_t child_pid;
     volatile bool stop_working;
+    GMutex stop_lock;
 
     IgnorePattern *ignore_patterns;
     int32 ignore_count;
@@ -552,6 +553,8 @@ static char *work_check_itemize_line(char *buf_output, int32 line_len);
 static bool work_rsync_run(char *files_from_filename, int32 nfiles_total,
                            bool checksum, MessageBatch **batch_ptr);
 static void *work_rsync(void *user_data);
+
+static void stop_working(bool state);
 
 static gboolean update_ui_handler(void *data);
 
