@@ -173,6 +173,9 @@ update_row_transfer(Message *message) {
     int32 *idx_ptr;
     int32 idx_src;
     int32 row_id;
+    int32 stat_attempts = 0;
+    char full_path[MAX_PATH_LENGTH];
+    struct stat stat;
 
     if (path_transfered == NULL || path_transfered_len == 0) {
         return false;
@@ -195,6 +198,16 @@ update_row_transfer(Message *message) {
         return false;
     }
 
+    SNPRINTF(full_path, "%s/%s", cecup.dst_base, path_transfered);
+    while (lstat(full_path, &stat) < 0) {
+        usleep(100*1000);
+        stat_attempts += 1;
+        if (stat_attempts >= 20) {
+            error("Error in stat('%s'): %s.\n", full_path, strerror(errno));
+            fatal(EXIT_FAILURE);
+        }
+    }
+
     if (cecup.rows[R][row_id] < 0) {
         int32 *lookup;
         int32 idx_dst;
@@ -203,20 +216,6 @@ update_row_transfer(Message *message) {
                                          path_transfered, path_transfered_len))) {
             cecup.rows[R][row_id] = *lookup;
         } else {
-            int32 stat_attempts = 0;
-            char full_path[MAX_PATH_LENGTH];
-            struct stat stat;
-
-            SNPRINTF(full_path, "%s/%s", cecup.dst_base, path_transfered);
-            while (lstat(full_path, &stat) < 0) {
-                usleep(100*1000);
-                stat_attempts += 1;
-                if (stat_attempts >= 20) {
-                    error("Error in stat('%s'): %s.\n", full_path, strerror(errno));
-                    fatal(EXIT_FAILURE);
-                }
-            }
-
             idx_dst = traversal_push(traversal_dst, &stat,
                                      traversal_src->paths[idx_src],
                                      traversal_src->paths_lens[idx_src],
@@ -257,8 +256,7 @@ update_row_transfer(Message *message) {
         }
         traversal_dst->row_ids[cecup.rows[R][row_id]] = row_id;
     } else {
-        memcpy64(&traversal_dst->stats[cecup.rows[R][row_id]],
-                 &traversal_src->stats[idx_src], SIZEOF(struct stat));
+        memcpy64(&traversal_dst->stats[cecup.rows[R][row_id]], &stat, SIZEOF(struct stat));
     }
 
     invalidate_preview();
