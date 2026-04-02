@@ -161,10 +161,9 @@ column_bind_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
     GtkWidget *tree;
     int32 side;
     char *path;
-    enum Action action_src;
-    enum Action action_dst;
-    enum Reason reason;
     enum Action action;
+    enum Action actions[2];
+    enum Reason reason;
     char class_name[32];
     char *classes[2];
     uint32 position;
@@ -186,13 +185,8 @@ column_bind_path(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
         gtk_editable_set_text(GTK_EDITABLE(editable), "");
     }
 
-    item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
-
-    if (side == L) {
-        action = action_src;
-    } else {
-        action = action_dst;
-    }
+    item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
+    action = actions[side];
 
     SNPRINTF(class_name, "cell-color-%u", action);
     classes[0] = class_name;
