@@ -247,7 +247,7 @@ on_menu_open_item(GtkWidget *widget, void *data) {
                 full_path,
                 NULL,
             };
-            STRING_FROM_ARRAY(cmd, " ", command, LENGTH(command));
+            STRING_FROM_ARRAY(cmd, " ", command, LENGTH(command) - 1);
             LOG(_("Launching %s...\n"), cmd);
             util_command_launch(LENGTH(command), command);
         }
@@ -438,11 +438,7 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 };
 
                 execvp(diff_command[0], diff_command);
-                // TODO: Null Pointer Dereference / Out of bounds read. `diff_command` ends with a
-                // NULL pointer. If `LENGTH(diff_command)` includes this NULL element,
-                // `STRING_FROM_ARRAY` may attempt to read from a NULL pointer when formatting the
-                // output.
-                STRING_FROM_ARRAY(cmd, " ", diff_command, LENGTH(diff_command));
+                STRING_FROM_ARRAY(cmd, " ", diff_command, LENGTH(diff_command) - 1);
                 error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
                 _exit(EXIT_FAILURE);
             }

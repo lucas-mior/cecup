@@ -204,7 +204,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     rsync_args[rsync_args_len++] = NULL;
 
     LOG(_("Running sync...\n"));
-    STRING_FROM_ARRAY(cmd, " ", rsync_args, rsync_args_len);
+    STRING_FROM_ARRAY(cmd, " ", rsync_args, rsync_args_len - 1);
     LOG_CMD("%s\n", cmd);
 
     xpipe(pipe_stdout);
@@ -514,7 +514,7 @@ work_rsync(void *user_data) {
                 NULL,
             };
 
-            STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm));
+            STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm) - 1);
 
             execvp(args_rm[0], args_rm);
             error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
