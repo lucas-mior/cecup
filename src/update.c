@@ -388,11 +388,7 @@ update_row_rename(Message *message) {
         }
 
         if (merge_row_id >= 0) {
-            if (side == L) {
-                cecup.rows[L][merge_row_id] = n_idx;
-            } else {
-                cecup.rows[R][merge_row_id] = n_idx;
-            }
+            cecup.rows[side][merge_row_id] = n_idx;
             traversal->row_ids[n_idx] = merge_row_id;
 
             if (other_idx >= 0) {
