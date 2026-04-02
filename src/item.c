@@ -300,20 +300,15 @@ item_get_actions_reasons(int32 row_id,
                 attributes_differ = true;
             }
 
+            ASSERT(path_src);
             if (is_hardlink) {
                 if (target_dst == NULL) {
                     equal = false;
                     attributes_differ = true;
                     *reason |= REASON_HARDLINK_MISSING_LINK;
-                } else if (
-                        // TODO: Null Pointer Dereference Risk. `strcmp(path_src, target_dst)`
-                        // assumes both pointers are non-NULL. If `path_src` is NULL (which should
-                        // not be the case for valid items, but should be checked), `strcmp` will
-                        // crash.
-                        ((target_src == NULL) || strcmp(target_src, target_dst))
-                        && strcmp(path_src, target_dst)
-                        && (nlinks_src != nlinks_dst)
-                        ) {
+                } else if (((target_src == NULL) || strcmp(target_src, target_dst))
+                           && strcmp(path_src, target_dst)
+                           && (nlinks_src != nlinks_dst)) {
                     equal = false;
                     attributes_differ = true;
                     *reason |= REASON_HARDLINK_NOT_MATCH;
