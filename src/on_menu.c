@@ -38,6 +38,8 @@ static void
 on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     GtkWidget *tree;
     Message *message;
+    int32 index = -1;
+    CecupMenuItem *menu_item;
 
     (void)action;
     (void)data;
@@ -48,27 +50,30 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     if ((message = g_object_steal_data(G_OBJECT(cecup.application), "active_message")) == NULL) {
         error("Error in %s: Can't get \"active_message\" from the application widget.\n", __func__);
     }
+    if (parameter == NULL) {
+        error("Error in %s: GVariant *parameter is NULL.\n", __func__);
+    }
+    if (parameter) {
+        index = g_variant_get_int32(parameter);
+        if ((index < 0) || (index >= LENGTH(tree_menu_items))) {
+            error("Error in %s: index out of range for the menu items array.\n", __func__);
+            index = -1;
+        }
+    }
 
-    if ((tree == NULL) || (message == NULL)) {
+    if ((tree == NULL) || (message == NULL) || (parameter == NULL) || (index < 0)) {
         free_message(message);
         return;
     }
 
-    {
-        // TODO: Unhandled Null Pointer / Out-of-bounds Read. If `parameter` is NULL,
-        // `g_variant_get_int32` will trigger an assertion and crash. Additionally, there is no
-        // bounds check to ensure `index` is within `0` and `LENGTH(tree_menu_items) - 1`.
-        int32 index = g_variant_get_int32(parameter);
-        CecupMenuItem *menu_item = &tree_menu_items[index];
-
-        if (menu_item->callback) {
-            if (menu_item->variant) {
-                g_object_set_data_full(G_OBJECT(tree), "variant", menu_item->variant, NULL);
-            }
-            menu_item->callback(tree, message);
-        } else {
-            free_message(message);
+    menu_item = &tree_menu_items[index];
+    if (menu_item->callback) {
+        if (menu_item->variant) {
+            g_object_set_data_full(G_OBJECT(tree), "variant", menu_item->variant, NULL);
         }
+        menu_item->callback(tree, message);
+    } else {
+        free_message(message);
     }
 
     return;
