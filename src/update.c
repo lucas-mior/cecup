@@ -572,8 +572,6 @@ update_list_from_rows(void) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
     cecup.rows_visible_len = 0;
 
-    // TODO: Bug. You are passing 4 arguments to `realloc`. The standard C library `realloc` only
-    // takes 2 arguments. You likely meant to use your custom `xrealloc` macro here.
     sort_entries = realloc(sort_entries,
                            sort_entries_capacity, cecup.rows_len,
                            SIZEOF(*sort_entries));
