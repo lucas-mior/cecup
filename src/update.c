@@ -397,15 +397,13 @@ update_row_rename(Message *message) {
             }
         } else {
             if (other_idx >= 0) {
+                cecup.rows[side][row_id] = n_idx;
+                cecup.rows[!side][row_id] = -1;
+                cecup.traversal[side].row_ids[n_idx] = row_id;
+
                 if (side == L) {
-                    cecup.rows[L][row_id] = n_idx;
-                    cecup.rows[R][row_id] = -1;
-                    cecup.traversal[L].row_ids[n_idx] = row_id;
                     item_add(-1, other_idx);
                 } else {
-                    cecup.rows[R][row_id] = n_idx;
-                    cecup.rows[L][row_id] = -1;
-                    cecup.traversal[R].row_ids[n_idx] = row_id;
                     item_add(other_idx, -1);
                 }
             } else {
