@@ -442,6 +442,51 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     return FALSE;
 }
 
+static gboolean
+on_tree_key_press(GtkEventControllerKey *controller,
+                  uint32 keyval, uint32 keycode, GdkModifierType state,
+                  void *data) {
+    GtkWidget *widget;
+    GtkSelectionModel *selection;
+    uint32 pos;
+    gboolean handled;
+    GdkModifierType modifiers;
+
+    (void)data;
+    (void)keycode;
+    handled = FALSE;
+    widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
+    selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
+
+    pos = gtk_single_selection_get_selected(GTK_SINGLE_SELECTION(selection));
+    if (pos == GTK_INVALID_LIST_POSITION) {
+        return FALSE;
+    }
+
+    modifiers = state & gtk_accelerator_get_default_mod_mask();
+
+    for (int32 i = 0; i < LENGTH(tree_menu_items); i += 1) {
+        CecupMenuItem *menu_item = &tree_menu_items[i];
+        uint32 target;
+        uint32 pressed;
+
+        if (menu_item->keyval == 0) {
+            continue;
+        }
+
+        target = gdk_keyval_to_lower(menu_item->keyval);
+        pressed = gdk_keyval_to_lower(keyval);
+
+        if ((pressed == target) && (modifiers == menu_item->mask)) {
+            execute_menu_item(widget, menu_item);
+            handled = TRUE;
+            break;
+        }
+    }
+
+    return handled;
+}
+
 #if (0 == TESTING_on_tree) && TESTING
 static inline void
 on_tree_functions_sink(void) {
