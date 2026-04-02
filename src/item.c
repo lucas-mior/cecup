@@ -360,6 +360,7 @@ cecup_item_compare_string_key(const void *a, const void *b) {
     int32 result = 0;
     char *path_a = entry_a->key.ptr;
     char *path_b = entry_b->key.ptr;
+    NCALLS(1000);
 
     if (path_a == NULL) {
         result = -1;
