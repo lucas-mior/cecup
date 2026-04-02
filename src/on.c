@@ -418,10 +418,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     in_update = true;
     cecup.rows_selected[row_id_toggled] = (uint8)is_active;
 
-    parent_path = item_path_side(row_id_toggled, side);
-    if (parent_path == NULL) {
-        parent_path = item_path_side(row_id_toggled, (side == L) ? R : L);
-    }
+    parent_path = item_path_get(row_id_toggled);
 
     if (parent_path) {
         int32 count_selected = 0;
