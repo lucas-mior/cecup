@@ -328,7 +328,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             }
 
             if (eol == NULL) {
-                if (buf_output_pos >= (int64)(SIZEOF(buf_output) - 1)) {
+                if (buf_output_pos >= (SIZEOF(buf_output) - 1)) {
                     dropping_long_line = true;
                     buf_output_pos = 0;
                 }
