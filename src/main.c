@@ -545,12 +545,19 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     NEW_WITH_NAME(filter_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     gtk_widget_set_halign(filter_hbox, GTK_ALIGN_CENTER);
 
-    cecup.filter_new = gtk_toggle_button_new_with_label(EMOJI_NEW);
-    cecup.filter_hard = gtk_toggle_button_new_with_label(EMOJI_LINK);
-    cecup.filter_update = gtk_toggle_button_new_with_label(EMOJI_UPDATE);
-    cecup.filter_equal = gtk_toggle_button_new_with_label(EMOJI_EQUAL);
-    cecup.filter_delete = gtk_toggle_button_new_with_label(EMOJI_DELETE);
-    cecup.filter_ignore = gtk_toggle_button_new_with_label(EMOJI_IGNORE);
+    NEW_WITH_NAME(cecup.filter_new, gtk_toggle_button_new);
+    NEW_WITH_NAME(cecup.filter_hard, gtk_toggle_button_new);
+    NEW_WITH_NAME(cecup.filter_update, gtk_toggle_button_new);
+    NEW_WITH_NAME(cecup.filter_equal, gtk_toggle_button_new);
+    NEW_WITH_NAME(cecup.filter_delete, gtk_toggle_button_new);
+    NEW_WITH_NAME(cecup.filter_ignore, gtk_toggle_button_new);
+
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_new),    EMOJI_NEW);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_hard),   EMOJI_LINK);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_update), EMOJI_UPDATE);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_equal),  EMOJI_EQUAL);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), EMOJI_DELETE);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), EMOJI_IGNORE);
 
     gtk_widget_set_tooltip_text(cecup.filter_new, _("Show New Files"));
     gtk_widget_set_tooltip_text(cecup.filter_hard, _("Show links"));
