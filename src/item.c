@@ -363,12 +363,12 @@ cecup_item_compare_string_key(const void *a, const void *b) {
 
     if (path_a && path_b) {
         result = strcmp(path_a, path_b);
-    } else if (path_b == NULL) {
-        result = +1;
-    } else if (path_a == NULL) {
-        result = -1;
-    } else {
+    } else if ((path_b == NULL) && (path_a == NULL)) {
         result = 0;
+    } else if (path_a == NULL) {
+        result = path_b[0];
+    } else if (path_b == NULL) {
+        result = path_a[0];
     }
 
     if (cecup.sort_order == GTK_SORT_DESCENDING) {
