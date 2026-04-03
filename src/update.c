@@ -422,9 +422,7 @@ update_row_rename(Message *message) {
 }
 
 static void
-update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match) {
-    Traversal *traversal = &cecup.traversal[side];
-
+update_ignored_helper(Traversal *traversal, int32 side, int32 row_id, IgnorePattern *match) {
     // this function only works for ADDED ignored patterns, not REMOVED
     ASSERT(match);
 
@@ -488,8 +486,8 @@ update_row_ignore(Message *message) {
         }
 
         if (match) {
-            update_ignored_helper(L, row_id, match);
-            update_ignored_helper(R, row_id, match);
+            update_ignored_helper(&cecup.traversal[L], L, row_id, match);
+            update_ignored_helper(&cecup.traversal[L], R, row_id, match);
         }
     }
 
