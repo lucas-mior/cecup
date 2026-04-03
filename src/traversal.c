@@ -20,6 +20,15 @@
 
 #include "cecup.h"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_tasks 1
+#elif !defined(TESTING_tasks)
+#define TESTING_tasks 0
+#endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
+
 static void
 traversal_allocate(Traversal *traversal) {
     int32 capacity = INITIAL_CAPACITY;
@@ -259,5 +268,26 @@ traversal_unlink(Traversal *traversal, int32 idx) {
     }
     return;
 }
+
+#if (0 == TESTING_traversal) && TESTING
+static inline void
+traversal_functions_sink(void) {
+    (void)traversal_functions_sink;
+    return;
+}
+#endif
+
+#if TESTING_traversal
+#include <assert.h>
+#include <string.h>
+#include "work.c"
+
+int
+main(void) {
+    ASSERT(true);
+    exit(EXIT_SUCCESS);
+}
+
+#endif /* TESTING_tasks */
 
 #endif /* TRAVERSAL_C */

@@ -21,6 +21,15 @@
 #include "cecup.h"
 #include "item.c"
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_tasks 1
+#elif !defined(TESTING_tasks)
+#define TESTING_tasks 0
+#endif
+#if !defined(TESTING)
+#define TESTING 0
+#endif
+
 static void
 task_list_free(TaskList *tasks) {
     if (tasks == NULL) {
@@ -123,5 +132,26 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
     return tasks;
 }
+
+#if (0 == TESTING_tasks) && TESTING
+static inline void
+tasks_functions_sink(void) {
+    (void)tasks_functions_sink;
+    return;
+}
+#endif
+
+#if TESTING_tasks
+#include <assert.h>
+#include <string.h>
+#include "work.c"
+
+int
+main(void) {
+    ASSERT(true);
+    exit(EXIT_SUCCESS);
+}
+
+#endif /* TESTING_tasks */
 
 #endif /* TASKS_C */
