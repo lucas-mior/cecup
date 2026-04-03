@@ -229,6 +229,9 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
         Bucket *new_array = xmmap_commit(&new_size);
         Bucket *old_array = map->array;
         uint32 old_capacity = map->capacity;
+        if (DEBUGGING) {
+            error("Resizing hash table... %u -> %u\n", old_capacity, new_capacity);
+        }
 
         for (uint32 j = 0; j < old_capacity; j += 1) {
             Bucket *iterator = &old_array[j];
@@ -390,6 +393,9 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
         Bucket *new_array = xmmap_commit(&new_size);
         Bucket *old_array = map->array;
         uint32 old_capacity = map->capacity;
+        if (DEBUGGING) {
+            error("Resizing hash table... %u -> %u\n", old_capacity, new_capacity);
+        }
 
         for (uint32 j = 0; j < old_capacity; j += 1) {
             Bucket *iterator = &old_array[j];
@@ -764,8 +770,8 @@ hash_expected_collisions(void *map) {
 #include <assert.h>
 #include "arena.c"
 
-#define NSTRINGS 500
-#define NBYTES ALIGNMENT
+#define NSTRINGS 500000
+#define NBYTES 200*ALIGNMENT
 
 typedef struct String {
     char *s;
