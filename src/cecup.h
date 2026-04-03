@@ -125,10 +125,10 @@ _Static_assert((!R) == L, "!R must be L");
 
 typedef struct HardLink {
     char *name;
-    struct HardLink *next;
-    uint64 aggregate_hash;
     int32 name_len;
     int32 idx;
+    struct HardLink *next;
+    uint64 aggregate_hash;
     int32 count;
 } HardLink;
 

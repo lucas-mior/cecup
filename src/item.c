@@ -157,15 +157,6 @@ hard_links_match(HardLink *a, HardLink *b) {
         return false;
     }
 
-    /* O(N^2) slow-path fallback only runs in the event of a hash collision.
-     * Since the lists are guaranteed to have the same count and no duplicates,
-     * a single directional check is mathematically sufficient. */
-    for (HardLink *test = a; test; test = test->next) {
-        if (!hard_links_contain(test, b)) {
-            return false;
-        }
-    }
-
     return true;
 }
 
