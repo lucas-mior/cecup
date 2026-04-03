@@ -406,11 +406,11 @@ work_preview(void *user_data) {
                 }
                 cecup.transfers_capacity *= 2;
                 cecup.transfers = realloc(cecup.transfers,
-                                            old_capacity, cecup.transfers_capacity,
-                                            SIZEOF(*cecup.transfers));
+                                          old_capacity, cecup.transfers_capacity,
+                                          SIZEOF(*cecup.transfers));
                 cecup.transfers_lens = realloc(cecup.transfers_lens,
-                                                 old_capacity, cecup.transfers_capacity,
-                                                 SIZEOF(*cecup.transfers_lens));
+                                               old_capacity, cecup.transfers_capacity,
+                                               SIZEOF(*cecup.transfers_lens));
             }
 
             if ((action_src == ACTION_HARDLINK) && (hard_links.count > 1)) {
