@@ -316,7 +316,8 @@ item_get_actions_reasons(int32 row_id,
         char *pattern_src = cecup.traversal[L].patterns[src_idx];
         struct stat *stat_src = &cecup.traversal[L].stats[src_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
-        bool is_hardlink = cecup.traversal[L].hard_links[src_idx];
+        HardLink *hard_links = cecup.traversal[L].hard_links[src_idx];
+        bool is_hardlink = hard_links && hard_links->next;
 
         if (pattern_src) {
             *action_src = ACTION_IGNORE;
@@ -353,7 +354,7 @@ item_get_actions_reasons(int32 row_id,
         HardLink *hard_links_src = cecup.traversal[L].hard_links[src_idx];
         HardLink *hard_links_dst = cecup.traversal[R].hard_links[dst_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
-        bool is_hardlink = cecup.traversal[L].hard_links[src_idx];
+        bool is_hardlink = hard_links_src && hard_links_src->next;
         bool is_dir = S_ISDIR(stat_src->st_mode);
         bool equal = false;
         bool attributes_differ = false;
