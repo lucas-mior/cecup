@@ -380,9 +380,13 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 SNPRINTF(tip_buffer,
                          "%s%s%s:\n%s", filepath, RSYNC_SYMLINK, symlink_target, reason_buf);
             } else if (hard_links) {
-                int32 offset;
+                int32 offset = 0;
 
-                offset = snprintf2(tip_buffer, SIZEOF(tip_buffer), "%s:\n%s", filepath, reason_buf);
+                offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
+                                    "%s:\n%s", filepath, reason_buf);
+                offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
+                                    "\nNames for this file:\n");
+
                 for (HardLink *link = hard_links; link; link = link->next) {
                     int32 n;
 
