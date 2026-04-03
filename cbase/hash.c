@@ -323,7 +323,9 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
             }
             break;
         default:
-            if ((iterator->hash == hash) && (iterator->key_len == key_length) && (memcmp64(iterator->key, key, key_length) == 0)) {
+            if ((iterator->hash == hash)
+                    && (iterator->key_len == key_length)
+                    && (memcmp64(iterator->key, key, key_length) == 0)) {
                 return false;
             }
             break;
@@ -477,7 +479,9 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
             }
             break;
         default:
-            if ((iterator->hash == hash) && (iterator->key_len == key_length) && (memcmp64(iterator->key, key, key_length) == 0)) {
+            if ((iterator->hash == hash)
+                    && (iterator->key_len == key_length)
+                    && (memcmp64(iterator->key, key, key_length) == 0)) {
 #if defined(HASH_VALUE_TYPE)
                 iterator->value = value;
                 return true;
@@ -548,7 +552,9 @@ CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
         case HASH_SLOT_DELETED:
             break;
         default:
-            if ((iterator->hash == hash) && (iterator->key_len == key_length) && (memcmp64(iterator->key, key, key_length) == 0)) {
+            if ((iterator->hash == hash)
+                    && (iterator->key_len == key_length)
+                    && (memcmp64(iterator->key, key, key_length) == 0)) {
 #if defined(HASH_VALUE_TYPE)
                 *value_ptr = iterator->value;
                 return true;
@@ -599,7 +605,9 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
         case HASH_SLOT_DELETED:
             break;
         default:
-            if ((iterator->hash == hash) && (iterator->key_len == key_length) && (memcmp64(iterator->key, key, key_length) == 0)) {
+            if ((iterator->hash == hash)
+                    && (iterator->key_len == key_length)
+                    && (memcmp64(iterator->key, key, key_length) == 0)) {
 #if HASH_DUPLICATE_KEYS
                 free(iterator->key, iterator->key_len);
 #endif

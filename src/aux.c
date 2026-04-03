@@ -261,12 +261,13 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
             int32 old_capacity = hard_links.capacity;
             hard_links.capacity *= 2;
             hard_links.names = realloc(hard_links.names,
-                                            old_capacity, hard_links.capacity,
-                                            SIZEOF(*(hard_links.names)));
+                                       old_capacity, hard_links.capacity,
+                                       SIZEOF(*(hard_links.names)));
         }
         hard_links.names[hard_links.count] = path;
         hard_links.count += 1;
 
+        PRINT(hard_links.count); PRINTLN(hard_links.names[hard_links.count-1]);
         hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), hard_links);
     } else {
         hard_links.aggregate_hash = hash_val;
@@ -274,6 +275,8 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         hard_links.capacity = 2;
         hard_links.names = xmalloc(hard_links.capacity*SIZEOF(*hard_links.names));
         hard_links.names[0] = path;
+
+        PRINT(hard_links.count); PRINTLN(hard_links.names[hard_links.count-1]);
 
         hash_insert_inode_map(traversal->inode_map, &inode, sizeof(inode), hard_links);
     }
