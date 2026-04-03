@@ -386,7 +386,6 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
 
                 offset = snprintf2(tip_buffer, SIZEOF(tip_buffer), "%s:\n%s", filepath, reason_buf);
                 for (HardLink *link = hard_links; link; link = link->next) {
-                    PRINTLN(link->name);
                     int32 n;
                     n = snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
                                   "\n%s%s", notation, link->name);
