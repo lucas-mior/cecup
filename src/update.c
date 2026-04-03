@@ -460,10 +460,11 @@ update_row_rename(Message *message) {
     int32 old_path_len = message->src_path_len;
     int32 new_path_len = message->dst_path_len;
     int32 side = message->side;
-    // TODO: Out-of-bounds Read Risk. If `old_path_len` is 0, this will access `old_path[-1]`. You
-    // should verify that `old_path_len > 0` before checking the last character.
-    bool is_dir = (old_path[old_path_len - 1] == '/');
+    bool is_dir;
     bool changed = false;
+
+    ASSERT_MORE(old_path_len, 0);
+    is_dir = (old_path[old_path_len - 1] == '/');
 
     traversal = &cecup.traversal[side];
     other_traversal = &cecup.traversal[!side];
