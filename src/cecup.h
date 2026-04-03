@@ -333,7 +333,6 @@ typedef struct MessageBatch {
 } MessageBatch;
 
 typedef struct Task {
-    enum MsgType type;
     enum Action action;
     int8 side;
 

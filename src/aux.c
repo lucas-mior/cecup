@@ -418,7 +418,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
         if (clicked_action == ACTION_HARDLINK) {
             if (hash_lookup_fs_map(cecup.traversal[side].map, task->path, task->path_len, &idx)) {
-                inode_len = ITOA(inode, cecup.traversal[side].stats[idx].st_ino);
+                inode_len = ITOA(inode, (long)cecup.traversal[side].stats[idx].st_ino);
                 task->inode = xmemdup(inode, inode_len + 1);
                 task->inode_len = inode_len;
             }
