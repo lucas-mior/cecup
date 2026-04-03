@@ -103,7 +103,6 @@ traversal_allocate(Traversal *traversal) {
     traversal->paths_lens = xmalloc(capacity*SIZEOF(*(traversal->paths_lens)));
     traversal->symlink_targets_lens = xmalloc(capacity*SIZEOF(*(traversal->symlink_targets_lens)));
     traversal->patterns_lens = xmalloc(capacity*SIZEOF(*(traversal->patterns_lens)));
-    traversal->nlinks = xmalloc(capacity*SIZEOF(*(traversal->nlinks)));
     traversal->row_ids = xmalloc(capacity*SIZEOF(*(traversal->row_ids)));
 
     traversal->ncapacity = capacity;
@@ -135,8 +134,6 @@ traversal_clean(Traversal *traversal) {
                   traversal->ncapacity*SIZEOF(*(traversal->symlink_targets_lens)));
         dont_read(traversal->patterns_lens,
                   traversal->ncapacity*SIZEOF(*(traversal->patterns_lens)));
-        dont_read(traversal->nlinks,
-                  traversal->ncapacity*SIZEOF(*(traversal->nlinks)));
     }
 
     traversal->file_count = 0;
@@ -163,7 +160,6 @@ traversal_free(Traversal *traversal) {
     free(traversal->paths_lens, capacity*SIZEOF(*(traversal->paths_lens)));
     free(traversal->symlink_targets_lens, capacity*SIZEOF(*(traversal->symlink_targets_lens)));
     free(traversal->patterns_lens, capacity*SIZEOF(*(traversal->patterns_lens)));
-    free(traversal->nlinks, capacity*SIZEOF(*(traversal->nlinks)));
     free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
 
     return;
@@ -174,8 +170,7 @@ traversal_push(Traversal *traversal, struct stat *stat,
                char *path, int32 path_len,
                char *symlink_target, int32 symlink_target_len,
                HardLinkList *first_hard_link,
-               char *matched_pattern, int32 matched_pattern_len,
-               int32 nlinks) {
+               char *matched_pattern, int32 matched_pattern_len) {
     struct stat stat_copy = *stat;
     int32 idx;
 
@@ -209,9 +204,6 @@ traversal_push(Traversal *traversal, struct stat *stat,
         traversal->patterns_lens = realloc(traversal->patterns_lens,
                                            old_capacity, traversal->ncapacity,
                                            SIZEOF(*(traversal->patterns_lens)));
-        traversal->nlinks = realloc(traversal->nlinks,
-                                    old_capacity, traversal->ncapacity,
-                                    SIZEOF(*(traversal->nlinks)));
 
         traversal->row_ids = realloc(traversal->row_ids,
                                      old_capacity, traversal->ncapacity,
@@ -235,7 +227,6 @@ traversal_push(Traversal *traversal, struct stat *stat,
     traversal->patterns[idx] = matched_pattern;
     traversal->patterns_lens[idx] = (int16)matched_pattern_len;
     traversal->row_ids[idx] = -1;
-    traversal->nlinks[idx] = (int16)nlinks;
 
     if (traversal->map) {
         hash_insert_fs_map(traversal->map, path, path_len, idx);
@@ -245,32 +236,13 @@ traversal_push(Traversal *traversal, struct stat *stat,
 }
 
 static void
-traversal_patch_nlinks(Traversal *traversal) {
-    for (int32 i = 0; i < traversal->nfiles; i += 1) {
-        if (S_ISREG(traversal->stats[i].st_mode)
-                && (traversal->stats[i].st_nlink > 1)) {
-            char inode[32];
-            int32 inode_len;
-            HardLinkList **first_link_ptr;
-            HardLinkList *first_link;
-  
-            inode_len = ITOA(inode, (long)traversal->stats[i].st_ino);
-            if ((first_link_ptr = hash_lookup_inode_map(traversal->inode_map,
-                                                       inode, inode_len))) {
-                first_link = *first_link_ptr;
-                traversal->nlinks[i] = traversal->nlinks[first_link->idx];
-            }
-        }
-    }
-    return;
-}
-
-static void
 traversal_unlink(Traversal *traversal, int32 idx) {
     if (S_ISREG(traversal->stats[idx].st_mode)
             && (traversal->stats[idx].st_nlink > 1)) {
         char inode[32];
         int32 inode_len;
+        char *path = traversal->paths[idx];
+        int32 path_len = traversal->paths_lens[idx];
         HardLinkList **first_link_ptr;
         HardLinkList *first_link;
 
@@ -278,9 +250,11 @@ traversal_unlink(Traversal *traversal, int32 idx) {
         if ((first_link_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
             first_link = *first_link_ptr;
 
-            traversal->nlinks[first_link->idx] -= 1;
-            if (traversal->nlinks[first_link->idx] <= 0) {
+            first_link = hard_link_remove(first_link, path, path_len);
+            if (first_link == NULL) {
                 hash_remove_inode_map(traversal->inode_map, inode, inode_len);
+            } else {
+                hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, first_link);
             }
         }
     }
@@ -629,38 +603,6 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
         lookup_ptr = hash_lookup_fs_map(traversal->map, path, path_len);
 
         if (row_id != -1) {
-            if (traversal->nlinks[idx] <= 0) {
-                error("Consistency error:"
-                      "nlinks should equal or greater than 1, but %s->nlinks[%d] = %d\n",
-                      which_traversal, idx, traversal->nlinks[idx]);
-                fatal(EXIT_FAILURE);
-            }
-            if ((ulong)traversal->nlinks[idx] > traversal->stats[idx].st_nlink) {
-                error("Consistency error:"
-                      "%s index %d (path %s) has nlinks (%d) > st_nlink (%d).\n",
-                      which_traversal, idx, path,
-                      traversal->nlinks[idx], (int32)traversal->stats[idx].st_nlink);
-                fatal(EXIT_FAILURE);
-            }
-
-            if (S_ISREG(traversal->stats[idx].st_mode)
-                    && (traversal->stats[idx].st_nlink > 1)) {
-                char inode[32];
-                int32 inode_len;
-                int32 *first_idx_ptr;
-
-                inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
-                if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
-                    if (traversal->nlinks[idx] != traversal->nlinks[*first_idx_ptr]) {
-                        error("Consistency error:"
-                              "%s index %d (path %s) has mismatched nlinks %d != %d.\n",
-                              which_traversal, idx, path,
-                              traversal->nlinks[idx], traversal->nlinks[*first_idx_ptr]);
-                        fatal(EXIT_FAILURE);
-                    }
-                }
-            }
-
             if (row_id >= cecup.rows_len) {
                 error("Consistency error: %s.row_ids[%d] points to invalid row %d.\n",
                       which_traversal, idx, row_id);

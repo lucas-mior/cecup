@@ -95,7 +95,6 @@ work_traverse_fs(Traversal *traversal) {
         int32 link_target_len = 0;
         char *matched_pattern = NULL;
         int32 matched_pattern_len = 0;
-        int32 nlinks;
 
         if (cecup.stop_working) {
             break;
@@ -254,8 +253,9 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
 
-        nlinks = 1;
-        if ((ent->fts_info == FTS_F) && (ent->fts_statp->st_nlink > 1)) {
+        if ((ent->fts_info == FTS_F)
+             && (ent->fts_statp->st_nlink > 1)
+             && !matched_pattern) {
             char inode[32];
             int32 inode_len;
             HardLinkList **first_link_ptr;
@@ -267,19 +267,15 @@ work_traverse_fs(Traversal *traversal) {
 
                 new_link = xarena_push(traversal->arena, SIZEOF(*new_link));
                 new_link->name = path;
+                new_link->name_len = path_len;
                 new_link->idx = traversal->nfiles;
                 new_link->next = NULL;
 
                 hard_link_append(first_link, new_link);
-                if (!matched_pattern) {
-                    // dont count ignored files,
-                    // because the destination might not have them,
-                    // which would cause a mismatch in the number of links later
-                    traversal->nlinks[first_link->idx] += 1;
-                }
             } else {
                 first_link = xarena_push(traversal->arena, SIZEOF(*first_link));
                 first_link->name = path;
+                first_link->name_len = path_len;
                 first_link->idx = traversal->nfiles;
                 first_link->next = NULL;
                 hash_insert_inode_map(traversal->inode_map, inode, inode_len, first_link);
@@ -290,15 +286,13 @@ work_traverse_fs(Traversal *traversal) {
                        path, path_len,
                        link_target, link_target_len,
                        first_link,
-                       matched_pattern, matched_pattern_len,
-                       nlinks);
+                       matched_pattern, matched_pattern_len);
     }
 
     if (fts_close(fts_handle) < 0) {
         LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
     }
 
-    traversal_patch_nlinks(traversal);
     file_count_return = (int32)file_count;
     return file_count_return;
 }

@@ -47,6 +47,33 @@ hard_link_append(HardLinkList *list, HardLinkList *new) {
     return;
 }
 
+static HardLinkList *
+hard_link_remove(HardLinkList *list, char *name, int32 name_len) {
+    HardLinkList *first = list;
+    HardLinkList *before = list;
+
+    ASSERT(list);
+
+    while (list) {
+        if (list->name_len == name_len) {
+            if (!memcmp64(list->name, name, name_len)) {
+                break;
+            }
+        }
+        before = list;
+        list = list->next;
+    }
+
+    ASSERT(list);
+
+    if (before == list) {
+        return list->next;
+    }
+
+    before->next = list->next;
+    return first;
+}
+
 static bool
 hard_links_contain(HardLinkList *test, HardLinkList *b) {
     ASSERT(test);
@@ -277,7 +304,7 @@ item_get_actions_reasons(int32 row_id,
         char *pattern_src = cecup.traversal[L].patterns[src_idx];
         struct stat *stat_src = &cecup.traversal[L].stats[src_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
-        bool is_hardlink = S_ISREG(stat_src->st_mode) && (cecup.traversal[L].nlinks[src_idx] > 1);
+        bool is_hardlink = cecup.traversal[L].hard_links[src_idx];
 
         if (pattern_src) {
             *action_src = ACTION_IGNORE;
@@ -314,7 +341,7 @@ item_get_actions_reasons(int32 row_id,
         HardLinkList *hard_links_src = cecup.traversal[L].hard_links[src_idx];
         HardLinkList *hard_links_dst = cecup.traversal[R].hard_links[dst_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
-        bool is_hardlink = S_ISREG(stat_src->st_mode) && (cecup.traversal[L].nlinks[src_idx] > 1);
+        bool is_hardlink = cecup.traversal[L].hard_links[src_idx];
         bool is_dir = S_ISDIR(stat_src->st_mode);
         bool equal = false;
         bool attributes_differ = false;

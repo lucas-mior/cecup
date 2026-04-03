@@ -222,14 +222,37 @@ update_row_transfer(Message *message) {
                                      NULL, 0,
                                      NULL,
                                      traversal_src->patterns[idx_src],
-                                     traversal_src->patterns_lens[idx_src],
-                                     -1000);
+                                     traversal_src->patterns_lens[idx_src]);
             cecup.rows[R][row_id] = idx_dst;
 
-            traversal_dst->nlinks[idx_dst] = 1;
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
-                ASSERT(false);
+                char inode[32];
+                int32 inode_len;
+                HardLinkList **first_link_ptr;
+                HardLinkList *new_link;
+                HardLinkList *first_link = NULL;
+
+                inode_len = ITOA(inode, (long)traversal_src->stats[idx_src].st_ino);
+                if ((first_link_ptr = hash_lookup_inode_map(traversal_dst->inode_map,
+                                                            inode, inode_len))) {
+                    first_link = *first_link_ptr;
+
+                    new_link = xarena_push(traversal_dst->arena, SIZEOF(*new_link));
+                    new_link->name = traversal_src->paths[idx_src];
+                    new_link->name_len = traversal_src->paths_lens[idx_src];
+                    new_link->idx = idx_dst;
+                    new_link->next = NULL;
+
+                    hard_link_append(first_link, new_link);
+                } else {
+                    first_link = xarena_push(traversal_dst->arena, SIZEOF(*first_link));
+                    first_link->name = traversal_src->paths[idx_src];
+                    first_link->name_len = traversal_src->paths_lens[idx_src];
+                    first_link->idx = idx_dst;
+                    first_link->next = NULL;
+                    hash_insert_inode_map(traversal_dst->inode_map, inode, inode_len, first_link);
+                }
             }
         }
         traversal_dst->row_ids[cecup.rows[R][row_id]] = row_id;
@@ -318,8 +341,7 @@ update_row_rename(Message *message) {
                                    traversal->symlink_targets[idx],
                                    traversal->symlink_targets_lens[idx],
                                    NULL,
-                                   p_match_str, p_match_len,
-                                   traversal->nlinks[idx]);
+                                   p_match_str, p_match_len);
         }
 
         merge_row_id = -1;
@@ -398,16 +420,26 @@ update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match) {
 
     if (cecup.rows[side][row_id] >= 0) {
         int32 idx = cecup.rows[side][row_id];
+        char *path = traversal->paths[idx];
+        int32 path_len = traversal->paths_lens[idx];
 
         if (S_ISREG(traversal->stats[idx].st_mode)
                 && (traversal->stats[idx].st_nlink > 1)) {
             char inode[32];
             int32 inode_len;
-            int32 *first_idx_ptr;
+            HardLinkList **first_link_ptr;
+            HardLinkList *first_link;
 
             inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
-            if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
-                traversal->nlinks[*first_idx_ptr] -= 1;
+            if ((first_link_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
+                first_link = *first_link_ptr;
+
+                first_link = hard_link_remove(first_link, path, path_len);
+                if (first_link == NULL) {
+                    hash_remove_inode_map(traversal->inode_map, inode, inode_len);
+                } else {
+                    hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, first_link);
+                }
             }
         }
 

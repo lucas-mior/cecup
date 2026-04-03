@@ -370,6 +370,172 @@ CAT(hash_insert2_, HASH_TYPE)(struct Map *map, char *key
     );
 }
 
+static bool
+CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
+                                        char *key, int32 key_length,
+                                        uint64 hash, uint32 base_index
+#if defined(HASH_VALUE_TYPE)
+                                        , HASH_VALUE_TYPE value
+#endif
+) {
+    uint32 capacity;
+    uint32 i;
+    uint32 probe;
+    int32 first_tombstone;
+
+    if (HASH_AUTO_RESIZE && (map->occupied*100 >= map->capacity*75)) {
+        uint32 new_capacity = map->capacity*2;
+        uint32 new_bitmask = (new_capacity - 1);
+        int64 new_size = new_capacity*sizeof(Bucket);
+        Bucket *new_array = xmmap_commit(&new_size);
+        Bucket *old_array = map->array;
+        uint32 old_capacity = map->capacity;
+
+        for (uint32 j = 0; j < old_capacity; j += 1) {
+            Bucket *iterator = &old_array[j];
+            uint32 rehash_base = iterator->hash & new_bitmask;
+            uint32 rehash_probe = rehash_base;
+            uint32 rehash_step = 0;
+
+            if ((int64)iterator->key == HASH_SLOT_FREE) {
+                continue;
+            }
+
+            if ((int64)iterator->key == HASH_SLOT_DELETED) {
+                continue;
+            }
+
+            while (rehash_step < new_capacity) {
+                Bucket *target = &new_array[rehash_probe];
+
+                if (target->key == (char *)HASH_SLOT_FREE) {
+                    target->key = iterator->key;
+                    target->hash = iterator->hash;
+#if defined(HASH_VALUE_TYPE)
+                    target->value = iterator->value;
+#endif
+                    break;
+                }
+
+                rehash_step += 1;
+                rehash_probe = (uint32)(rehash_base
+                                + ((uint64)rehash_step
+                                   + (uint64)rehash_step*rehash_step) / 2) & new_bitmask;
+            }
+        }
+
+        xmunmap(old_array, map->size);
+        map->array = new_array;
+        map->capacity = new_capacity;
+        map->bitmask = new_bitmask;
+        map->size = new_size;
+        map->occupied = map->length;
+
+        base_index = hash & map->bitmask;
+    }
+
+    capacity = map->capacity;
+    i = 0;
+    probe = base_index;
+    first_tombstone = -1;
+
+    while (i < capacity) {
+        Bucket *iterator = &map->array[probe];
+
+        switch ((int64)iterator->key) {
+        case HASH_SLOT_FREE: {
+            Bucket *target;
+            if (first_tombstone >= 0) {
+                target = &map->array[first_tombstone];
+            } else {
+                target = iterator;
+                map->occupied += 1;
+            }
+
+#if HASH_DUPLICATE_KEYS
+            target->key = xmemdup(key, key_length + 1);
+#else
+            target->key = key;
+#endif
+            target->key_len = key_length;
+            target->hash = hash;
+#if defined(HASH_VALUE_TYPE)
+            target->value = value;
+#endif
+            map->length += 1;
+            return true;
+        }
+        case HASH_SLOT_DELETED:
+            if (first_tombstone < 0) {
+                first_tombstone = (int32)probe;
+            }
+            break;
+        default:
+            if ((iterator->hash == hash) && (strcmp(iterator->key, key) == 0)) {
+#if defined(HASH_VALUE_TYPE)
+                iterator->value = value;
+                return true;
+#else
+                return false;
+#endif
+            }
+            break;
+        }
+
+        i += 1;
+        probe = (uint32)(base_index + ((uint64)i + (uint64)i*i) / 2) & map->bitmask;
+    }
+
+    if (first_tombstone >= 0) {
+        Bucket *target = &map->array[first_tombstone];
+#if HASH_DUPLICATE_KEYS
+        target->key = xmemdup(key, key_length + 1);
+#else
+        target->key = key;
+#endif
+        target->key_len = key_length;
+        target->hash = hash;
+#if defined(HASH_VALUE_TYPE)
+        target->value = value;
+#endif
+        map->length += 1;
+        return true;
+    }
+
+    return false;
+}
+
+static bool
+CAT(hash_overwrite_, HASH_TYPE)(struct Map *map, char *key,
+                               int32 key_length
+#if defined(HASH_VALUE_TYPE)
+                               , HASH_VALUE_TYPE value
+#endif
+) {
+    uint64 hash = hash_function(key, key_length);
+    uint32 index = hash_normal(map, hash);
+    return CAT(hash_overwrite_pre_calc_, HASH_TYPE)(map, key, key_length,
+                                                    hash, index
+#if defined(HASH_VALUE_TYPE)
+                                                    , value
+#endif
+    );
+}
+
+static bool
+CAT(hash_overwrite2_, HASH_TYPE)(struct Map *map, char *key
+#if defined(HASH_VALUE_TYPE)
+                                , HASH_VALUE_TYPE value
+#endif
+) {
+    int32 key_length = strlen32(key);
+    return CAT(hash_overwrite_, HASH_TYPE)(map, key, key_length
+#if defined(HASH_VALUE_TYPE)
+                                         , value
+#endif
+    );
+}
+
 #if defined(HASH_VALUE_TYPE)
 static HASH_VALUE_TYPE *
 #else
