@@ -246,7 +246,7 @@ traversal_symlink_get(Traversal *traversal, char *path, char **symlink_target) {
 static void
 traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
     int64 inode;
-    HardLinks first_hard_link;
+    HardLinks hard_links;
     uint64 hash_val;
 
     HERE;
@@ -254,28 +254,28 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
     hash_val = rapidhash(path, (size_t)path_len);
     inode = (int64)stat.st_ino;
 
-    if ((hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &first_hard_link))) {
-        first_hard_link.aggregate_hash ^= hash_val;
+    if ((hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &hard_links))) {
+        hard_links.aggregate_hash ^= hash_val;
 
-        if (first_hard_link.count >= first_hard_link.capacity) {
-            int32 old_capacity = first_hard_link.capacity;
-            first_hard_link.capacity *= 2;
-            first_hard_link.names = realloc(first_hard_link.names,
-                                            old_capacity, first_hard_link.capacity,
-                                            SIZEOF(*(first_hard_link.names)));
+        if (hard_links.count >= hard_links.capacity) {
+            int32 old_capacity = hard_links.capacity;
+            hard_links.capacity *= 2;
+            hard_links.names = realloc(hard_links.names,
+                                            old_capacity, hard_links.capacity,
+                                            SIZEOF(*(hard_links.names)));
         }
-        first_hard_link.names[first_hard_link.count] = path;
-        first_hard_link.count += 1;
+        hard_links.names[hard_links.count] = path;
+        hard_links.count += 1;
 
-        hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), first_hard_link);
+        hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), hard_links);
     } else {
-        first_hard_link.aggregate_hash = hash_val;
-        first_hard_link.count = 1;
-        first_hard_link.capacity = 2;
-        first_hard_link.names = xmalloc(first_hard_link.capacity*SIZEOF(*first_hard_link.names));
-        first_hard_link.names[0] = path;
+        hard_links.aggregate_hash = hash_val;
+        hard_links.count = 1;
+        hard_links.capacity = 2;
+        hard_links.names = xmalloc(hard_links.capacity*SIZEOF(*hard_links.names));
+        hard_links.names[0] = path;
 
-        hash_insert_inode_map(traversal->inode_map, &inode, sizeof(inode), first_hard_link);
+        hash_insert_inode_map(traversal->inode_map, &inode, sizeof(inode), hard_links);
     }
 
     return;
@@ -288,18 +288,18 @@ traversal_unlink(Traversal *traversal, int32 idx) {
         int64 inode;
         char *path = traversal->paths[idx];
         int32 path_len = traversal->paths_lens[idx];
-        HardLinks first_hard_link;
+        HardLinks hard_links;
         uint64 hash_val;
 
         inode = (int64)traversal->stats[idx].st_ino;
-        if ((hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &first_hard_link))) {
+        if ((hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &hard_links))) {
             int32 found_idx = -1;
 
             hash_val = rapidhash(path, (size_t)path_len);
 
-            for (int32 i = 0; i < first_hard_link.count; i += 1) {
-                if (strlen32(first_hard_link.names[i]) == path_len) {
-                    if (memcmp64(first_hard_link.names[i], path, path_len) == 0) {
+            for (int32 i = 0; i < hard_links.count; i += 1) {
+                if (strlen32(hard_links.names[i]) == path_len) {
+                    if (memcmp64(hard_links.names[i], path, path_len) == 0) {
                         found_idx = i;
                         break;
                     }
@@ -307,16 +307,16 @@ traversal_unlink(Traversal *traversal, int32 idx) {
             }
 
             if (found_idx >= 0) {
-                for (int32 i = found_idx; i < (first_hard_link.count - 1); i += 1) {
-                    first_hard_link.names[i] = first_hard_link.names[i + 1];
+                for (int32 i = found_idx; i < (hard_links.count - 1); i += 1) {
+                    hard_links.names[i] = hard_links.names[i + 1];
                 }
-                first_hard_link.count -= 1;
-                first_hard_link.aggregate_hash ^= hash_val;
+                hard_links.count -= 1;
+                hard_links.aggregate_hash ^= hash_val;
 
-                if (first_hard_link.count == 0) {
+                if (hard_links.count == 0) {
                     hash_remove_inode_map(traversal->inode_map, &inode, sizeof(inode));
                 } else {
-                    hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), first_hard_link);
+                    hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), hard_links);
                 }
             }
         }
