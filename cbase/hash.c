@@ -990,7 +990,8 @@ hash_expected_collisions(void *map) {
 
 #endif /* HASH_H2 */
 
-#if TESTING_hash && defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#if TESTING_hash && !defined(TESTING_hash_started)
+#define TESTING_hash_started
 
 #if !OS_UNIX
 #error "hash.c tests only work on unix systems"
@@ -1145,4 +1146,4 @@ main(void) {
     exit(EXIT_SUCCESS);
 }
 
-#endif /* TESTING_hash */
+#endif /* TESTING_hash && !defined(TESTING_hash_started) */
