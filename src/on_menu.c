@@ -394,10 +394,31 @@ on_menu_diff(GtkWidget *widget, void *data) {
     TaskList *tasks;
     char *diff_tool;
     char *term_cmd;
+    char *term_arguments[64];
+    char *diff_arguments[64];
+    char *token;
+    int32 term_argument_count = 0;
+    int32 diff_argument_count = 0;
 
     (void)widget;
     diff_tool = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry));
     term_cmd = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry));
+
+    token = strtok(term_cmd, " ");
+    while (token != NULL && term_argument_count < LENGTH(term_arguments)) {
+        term_arguments[term_argument_count] = token;
+        term_argument_count += 1;
+        token = strtok(NULL, " ");
+    }
+    term_arguments[term_argument_count] = NULL;
+
+    token = strtok(diff_tool, " ");
+    while (token != NULL && diff_argument_count < LENGTH(diff_arguments)) {
+        diff_arguments[diff_argument_count] = token;
+        diff_argument_count += 1;
+        token = strtok(NULL, " ");
+    }
+    diff_arguments[diff_argument_count] = NULL;
 
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
@@ -422,15 +443,30 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
             {
                 char cmd[MAX_PATH_LENGTH*2];
-                // TODO: If `term_cmd` or `diff_tool` contains spaces (e.g., user entered "diff -u" or "xterm -hold"), 
-                //       `execvp` will fail because it treats the entire string as the executable name. 
-                //       You need to parse/tokenize the string into an array of arguments before passing to `execvp`.
-                char *diff_command[] = {
-                    term_cmd, "-e", diff_tool, path_dst, path_src, NULL,
-                };
+                char *combined_arguments[128];
+                int32 k = 0;
 
-                execvp(diff_command[0], diff_command);
-                STRING_FROM_ARRAY(cmd, " ", diff_command, LENGTH(diff_command) - 1);
+                for (int32 j = 0; j < term_argument_count; j += 1) {
+                    combined_arguments[k] = term_arguments[j];
+                    k += 1;
+                }
+
+                combined_arguments[k] = "-e";
+                k += 1;
+
+                for (int32 j = 0; j < diff_argument_count; j += 1) {
+                    combined_arguments[k] = diff_arguments[j];
+                    k += 1;
+                }
+
+                combined_arguments[k] = path_dst;
+                k += 1;
+                combined_arguments[k] = path_src;
+                k += 1;
+                combined_arguments[k] = NULL;
+
+                execvp(combined_arguments[0], combined_arguments);
+                STRING_FROM_ARRAY(cmd, " ", combined_arguments, k);
                 error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
                 _exit(EXIT_FAILURE);
             }
