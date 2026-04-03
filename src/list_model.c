@@ -168,6 +168,7 @@ cecup_list_model_get_item(GListModel *list, guint position) {
             self->proxies_capacity = pos + 256;
         }
 
+        // TODO: According to your preferences, use xrealloc instead of standard realloc here.
         self->proxies = realloc(self->proxies,
                                 old_capacity, self->proxies_capacity,
                                 SIZEOF(CecupItemProxy *));
@@ -386,6 +387,7 @@ item_add(int32 src_idx, int32 dst_idx) {
             cecup.rows_capacity *= 2;
         }
 
+        // TODO: According to your preferences, use xrealloc instead of standard realloc for these arrays.
         cecup.rows[L] = realloc(cecup.rows[L],
                                  old_capacity, cecup.rows_capacity,
                                  SIZEOF(*(cecup.rows[L])));
