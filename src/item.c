@@ -142,7 +142,13 @@ hard_links_contain(HardLink *test, HardLink *b) {
 
 static int32
 count_hardlinks(HardLink *list) {
-    int32 count = 1;
+    int32 count;
+
+    if (list == NULL) {
+        return 0;
+    }
+
+    count = 1;
     while (list->next) {
         count += 1;
         list = list->next;
