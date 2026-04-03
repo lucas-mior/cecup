@@ -97,12 +97,7 @@ typedef uint64_t uint64;
 #define CAT(a, b) CAT_(a, b)
 #endif
 
-struct CommonBucket {
-    uint64 hash;
-    void *key;
-    int32 key_len;
-    int32 value;
-};
+struct CommonBucket;
 
 struct CommonMap {
     int64 size;
