@@ -380,6 +380,9 @@ update_row_transfer(Message *message) {
 
     if ((path_transfered == NULL) || (path_transfered_len == 0)) {
         error("Error: invalid arguments passed to %s.\n", __func__);
+        if (DEBUGGING) {
+            fatal(EXIT_FAILURE);
+        }
         return false;
     }
 
