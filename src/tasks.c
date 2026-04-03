@@ -19,6 +19,7 @@
 #define TASKS_C
 
 #include "cecup.h"
+#include "item.c"
 
 static void
 task_list_free(TaskList *tasks) {
