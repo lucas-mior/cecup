@@ -54,7 +54,7 @@ hard_link_replace_node(HardLinks *list,
     list->aggregate_hash ^= new_hash;
 
     for (int32 i = 0; i < list->count; i += 1) {
-        if (strlen32(list->names[i]) == old_path_len) {
+        if (list->names_lens[i] == old_path_len) {
             if (memcmp64(list->names[i], old_path, old_path_len) == 0) {
                 list->names[i] = new_path;
                 break;
@@ -75,7 +75,7 @@ hard_link_remove(HardLinks *list, char *name, int32 name_len) {
     hash_val = rapidhash(name, (size_t)name_len);
 
     for (int32 i = 0; i < list->count; i += 1) {
-        if (strlen32(list->names[i]) == name_len) {
+        if (list->names_lens[i] == name_len) {
             if (memcmp64(list->names[i], name, name_len) == 0) {
                 found_idx = i;
                 break;
@@ -96,32 +96,6 @@ hard_link_remove(HardLinks *list, char *name, int32 name_len) {
     }
 
     return list;
-}
-
-static bool
-hard_links_contain(HardLinks *test, HardLinks *b) {
-    int32 test_len;
-
-    ASSERT(test);
-    ASSERT(b);
-
-    if (test->count == 0) {
-        return false;
-    }
-
-    test_len = strlen32(test->names[0]);
-
-    for (int32 i = 0; i < b->count; i += 1) {
-        int32 len_b = strlen32(b->names[i]);
-
-        if (test_len == len_b) {
-            if (!memcmp64(test->names[0], b->names[i], test_len)) {
-                return true;
-            }
-        }
-    }
-
-    return false;
 }
 
 static int32
@@ -149,34 +123,12 @@ hard_links_match(HardLinks *src, HardLinks *dst) {
     return true;
 }
 
-static HardLinks *
-hard_links_copy(HardLinks *original) {
-    HardLinks *copy;
-
-    ASSERT(original);
-
-    copy = xmalloc(SIZEOF(*copy));
-    copy->aggregate_hash = original->aggregate_hash;
-    copy->count = original->count;
-    copy->capacity = original->capacity;
-    copy->names = xmalloc(copy->capacity * SIZEOF(*copy->names));
-
-    for (int32 i = 0; i < original->count; i += 1) {
-        int32 len = strlen32(original->names[i]);
-        copy->names[i] = xmalloc(len + 1);
-        memcpy64(copy->names[i], original->names[i], len + 1);
-    }
-
-    return copy;
-}
-
 static void
 hard_link_copy_free(HardLinks *copy) {
     ASSERT(copy);
 
     for (int32 i = 0; i < copy->count; i += 1) {
-        int32 len = strlen32(copy->names[i]);
-        free(copy->names[i], len + 1);
+        free(copy->names[i], copy->names_lens[i] + 1);
     }
 
     free(copy->names, copy->capacity * SIZEOF(*copy->names));

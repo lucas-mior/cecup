@@ -129,6 +129,7 @@ typedef struct HardLinks {
     int32 count;
     int32 capacity;
     char **names;
+    int32 *names_lens;
  } HardLinks;
 
 #define HASH_KEY_TYPE int64

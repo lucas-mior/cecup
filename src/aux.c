@@ -263,8 +263,12 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
             hard_links.names = realloc(hard_links.names,
                                        old_capacity, hard_links.capacity,
                                        SIZEOF(*(hard_links.names)));
+            hard_links.names_lens = realloc(hard_links.names_lens,
+                                            old_capacity, hard_links.capacity,
+                                            SIZEOF(*(hard_links.names_lens)));
         }
         hard_links.names[hard_links.count] = path;
+        hard_links.names_lens[hard_links.count] = path_len;
         hard_links.count += 1;
 
         PRINT(hard_links.count); PRINTLN(hard_links.names[hard_links.count-1]);
@@ -274,7 +278,9 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         hard_links.count = 1;
         hard_links.capacity = 2;
         hard_links.names = xmalloc(hard_links.capacity*SIZEOF(*hard_links.names));
+        hard_links.names_lens = xmalloc(hard_links.capacity*SIZEOF(*hard_links.names_lens));
         hard_links.names[0] = path;
+        hard_links.names_lens[0] = path_len;
 
         PRINT(hard_links.count); PRINTLN(hard_links.names[hard_links.count-1]);
 
