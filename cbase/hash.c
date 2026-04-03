@@ -235,18 +235,18 @@ static bool
 CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
                                       HASH_KEY_TYPE *key,
                                       uint64 hash, uint32 base_index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                       , HASH_VALUE_TYPE value
-#endif
+  #endif
 ) {
 #else
 static bool
 CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
                                       HASH_KEY_TYPE *key, int32 key_length,
                                       uint64 hash, uint32 base_index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                       , HASH_VALUE_TYPE value
-#endif
+  #endif
 ) {
 #endif
     uint32 capacity;
@@ -298,9 +298,9 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
                     memcpy64(&target->key, &iterator->key, sizeof(HASH_KEY_TYPE));
                     target->slot_state = HASH_SLOT_USED;
                     target->hash = iterator->hash;
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                     target->value = iterator->value;
-#endif
+  #endif
                     break;
                 }
 #else
@@ -308,9 +308,9 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
                     target->key = iterator->key;
                     target->key_len = iterator->key_len;
                     target->hash = iterator->hash;
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                     target->value = iterator->value;
-#endif
+  #endif
                     break;
                 }
 #endif
@@ -370,9 +370,9 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
             target->key_len = key_length;
             target->hash = hash;
 #endif
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
             target->value = value;
-#endif
+  #endif
             map->length += 1;
             return true;
         }
@@ -418,9 +418,9 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
         target->hash = hash;
 #endif
 
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
         target->value = value;
-#endif
+  #endif
         map->length += 1;
         return true;
     }
@@ -431,33 +431,33 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
 #if HASH_KEY_BY_VALUE
 static bool
 CAT(hash_insert_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                              , HASH_VALUE_TYPE value
-#endif
+  #endif
 ) {
     uint64 hash = hash_function(key, sizeof(HASH_KEY_TYPE));
     uint32 index = hash_normal(map, hash);
     return CAT(hash_insert_pre_calc_, HASH_TYPE)(map, key, hash, index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                                  , value
-#endif
+  #endif
     );
 }
 #else
 static bool
 CAT(hash_insert_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key,
                              int32 key_length
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                              , HASH_VALUE_TYPE value
-#endif
+  #endif
 ) {
     uint64 hash = hash_function(key, key_length);
     uint32 index = hash_normal(map, hash);
     return CAT(hash_insert_pre_calc_, HASH_TYPE)(map, key, key_length,
                                                  hash, index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                                  , value
-#endif
+  #endif
     );
 }
 #endif
@@ -467,18 +467,18 @@ static bool
 CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
                                          HASH_KEY_TYPE *key,
                                          uint64 hash, uint32 base_index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                          , HASH_VALUE_TYPE value
-#endif
+  #endif
 ) {
 #else
 static bool
 CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
                                          HASH_KEY_TYPE *key, int32 key_length,
                                          uint64 hash, uint32 base_index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                          , HASH_VALUE_TYPE value
-#endif
+  #endif
 ) {
 #endif
     uint32 capacity;
@@ -535,9 +535,9 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
                     target->key_len = iterator->key_len;
                     target->hash = iterator->hash;
 #endif
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                     target->value = iterator->value;
-#endif
+  #endif
                     break;
                 }
 
@@ -660,33 +660,33 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
 #if HASH_KEY_BY_VALUE
 static bool
 CAT(hash_overwrite_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                 , HASH_VALUE_TYPE value
-#endif
+  #endif
 ) {
     uint64 hash = hash_function(key, sizeof(HASH_KEY_TYPE));
     uint32 index = hash_normal(map, hash);
     return CAT(hash_overwrite_pre_calc_, HASH_TYPE)(map, key, hash, index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                                     , value
-#endif
+  #endif
     );
 }
 #else
 static bool
 CAT(hash_overwrite_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key,
                                 int32 key_length
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                 , HASH_VALUE_TYPE value
-#endif
+  #endif
 ) {
     uint64 hash = hash_function(key, key_length);
     uint32 index = hash_normal(map, hash);
     return CAT(hash_overwrite_pre_calc_, HASH_TYPE)(map, key, key_length,
                                                     hash, index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                                     , value
-#endif
+  #endif
     );
 }
 #endif
@@ -695,17 +695,17 @@ CAT(hash_overwrite_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key,
 static bool
 CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
                                       HASH_KEY_TYPE *key, uint64 hash, uint32 base_index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                       , HASH_VALUE_TYPE *value_ptr
-#endif
+  #endif
 ) {
 #else
 static bool
 CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
                                       HASH_KEY_TYPE *key, int32 key_length, uint64 hash, uint32 base_index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                       , HASH_VALUE_TYPE *value_ptr
-#endif
+  #endif
 ) {
 #endif
     uint32 capacity = map->capacity;
@@ -752,31 +752,31 @@ CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
 #if HASH_KEY_BY_VALUE
 static bool
 CAT(hash_lookup_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                              , HASH_VALUE_TYPE *value_ptr
-#endif
+  #endif
 ) {
     uint64 hash = hash_function(key, sizeof(HASH_KEY_TYPE));
     uint32 index = hash_normal(map, hash);
     return CAT(hash_lookup_pre_calc_, HASH_TYPE)(map, key, hash, index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                                  , value_ptr
-#endif
+  #endif
     );
 }
 #else
 static bool
 CAT(hash_lookup_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key, int32 key_length
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                              , HASH_VALUE_TYPE *value_ptr
-#endif
+  #endif
 ) {
     uint64 hash = hash_function(key, key_length);
     uint32 index = hash_normal(map, hash);
     return CAT(hash_lookup_pre_calc_, HASH_TYPE)(map, key, key_length, hash, index
-#if defined(HASH_VALUE_TYPE)
+  #if defined(HASH_VALUE_TYPE)
                                                  , value_ptr
-#endif
+  #endif
     );
 }
 #endif
