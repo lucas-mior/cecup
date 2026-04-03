@@ -499,9 +499,9 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                     size = 0;
                 }
 
-                if ((action_src == ACTION_NEW && filter_new) ||
-                    ((action_src == ACTION_HARDLINK || action_src == ACTION_SYMLINK) && filter_hard) ||
-                    (action_src == ACTION_UPDATE && filter_update)) {
+                if ((action_src == ACTION_NEW && filter_new)
+                    || (filter_hard && (action_src == ACTION_HARDLINK || action_src == ACTION_SYMLINK))
+                    || (action_src == ACTION_UPDATE && filter_update)) {
                     total_size_bytes += size;
                 }
             }
