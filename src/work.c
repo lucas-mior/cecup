@@ -91,8 +91,8 @@ work_traverse_fs(Traversal *traversal) {
         int32 path_len;
         int32 is_dir = false;
         HardLink *first_link = NULL;
-        char *link_target = NULL;
-        int32 link_target_len = 0;
+        char *symlink_target = NULL;
+        int32 symlink_target_len = 0;
         char *matched_pattern = NULL;
         int32 matched_pattern_len = 0;
 
@@ -240,7 +240,7 @@ work_traverse_fs(Traversal *traversal) {
         }
 
         if ((ent->fts_info == FTS_SL) || (ent->fts_info == FTS_SLNONE)) {
-            link_target_len = traversal_symlink_get(traversal, ent->fts_path, &link_target);
+            symlink_target_len = traversal_symlink_get(traversal, ent->fts_path, &symlink_target);
         }
 
         if ((ent->fts_info == FTS_F)
@@ -251,7 +251,7 @@ work_traverse_fs(Traversal *traversal) {
 
         traversal_push(traversal, ent->fts_statp,
                        path, path_len,
-                       link_target, link_target_len,
+                       symlink_target, symlink_target_len,
                        first_link,
                        matched_pattern, matched_pattern_len);
     }
