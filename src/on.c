@@ -406,7 +406,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     static bool in_update = false;
     int32 count_selected = 0;
     int64 total_size_bytes = 0;
-    bool is_root;
+    bool parent_is_root;
 
     if (in_update) {
         return;
@@ -435,7 +435,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 
     parent_path = item_path_get(row_id_toggled);
     parent_path_len = item_path_len_get(row_id_toggled);
-    is_root = aux_is_root(parent_path);
+    parent_is_root = aux_is_root(parent_path);
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         int32 row_id = i;
@@ -443,7 +443,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         int32 path_len = item_path_len_get(row_id);
 
         if (cecup.rows_selected[row_id_toggled]) {
-            if (is_root) {
+            if (parent_is_root) {
                 cecup.rows_selected[row_id] = true;
             } else if (parent_path[parent_path_len - 1] == '/') {
                 if (BEGINS_WITH(path, parent_path, parent_path_len)) {
@@ -451,7 +451,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                 }
             }
         } else {
-            if (is_root) {
+            if (parent_is_root) {
                 cecup.rows_selected[row_id] = false;
             } else {
                 if (parent_path[parent_path_len - 1] == '/') {
@@ -462,7 +462,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                 if (aux_is_root(path)) {
                     cecup.rows_selected[row_id] = false;
                 } else if (path_len < parent_path_len && path[path_len - 1] == '/') {
-                    if (strncmp32(parent_path, path, path_len) == 0) {
+                    if (BEGINS_WITH(parent_path, path, path_len)) {
                         cecup.rows_selected[row_id] = false;
                     }
                 }
