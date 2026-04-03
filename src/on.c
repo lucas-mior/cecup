@@ -399,14 +399,14 @@ static void
 on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     int32 row_id_toggled;
     void *row_id_ptr;
-    char *parent_path;
-    int32 parent_path_len;
+    char *toggled_path;
+    int32 toggled_path_len;
     bool is_active;
     int8 side;
     static bool in_update = false;
     int32 count_selected = 0;
     int64 total_size_bytes = 0;
-    bool parent_is_root;
+    bool toggled_is_root;
 
     if (in_update) {
         return;
@@ -433,9 +433,9 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     in_update = true;
     cecup.rows_selected[row_id_toggled] = is_active;
 
-    parent_path = item_path_get(row_id_toggled);
-    parent_path_len = item_path_len_get(row_id_toggled);
-    parent_is_root = aux_is_root(parent_path);
+    toggled_path = item_path_get(row_id_toggled);
+    toggled_path_len = item_path_len_get(row_id_toggled);
+    toggled_is_root = aux_is_root(toggled_path);
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         int32 row_id = i;
@@ -443,26 +443,26 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         int32 path_len = item_path_len_get(row_id);
 
         if (cecup.rows_selected[row_id_toggled]) {
-            if (parent_is_root) {
+            if (toggled_is_root) {
                 cecup.rows_selected[row_id] = true;
-            } else if (parent_path[parent_path_len - 1] == '/') {
-                if (BEGINS_WITH(path, parent_path, parent_path_len)) {
+            } else if (toggled_path[toggled_path_len - 1] == '/') {
+                if (BEGINS_WITH(path, toggled_path, toggled_path_len)) {
                     cecup.rows_selected[row_id] = true;
                 }
             }
         } else {
-            if (parent_is_root) {
+            if (toggled_is_root) {
                 cecup.rows_selected[row_id] = false;
             } else {
-                if (parent_path[parent_path_len - 1] == '/') {
-                    if (BEGINS_WITH(path, parent_path, parent_path_len)) {
+                if (toggled_path[toggled_path_len - 1] == '/') {
+                    if (BEGINS_WITH(path, toggled_path, toggled_path_len)) {
                         cecup.rows_selected[row_id] = false;
                     }
                 }
                 if (aux_is_root(path)) {
                     cecup.rows_selected[row_id] = false;
                 } else if (path[path_len - 1] == '/') {
-                    if (BEGINS_WITH(parent_path, path, path_len)) {
+                    if (BEGINS_WITH(toggled_path, path, path_len)) {
                         cecup.rows_selected[row_id] = false;
                     }
                 }
