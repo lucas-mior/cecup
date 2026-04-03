@@ -47,6 +47,14 @@ aux_is_root(char *path) {
 }
 
 static void
+stop_working(bool state) {
+    g_mutex_lock(&cecup.stop_lock);
+    cecup.stop_working = state;
+    g_mutex_unlock(&cecup.stop_lock);
+    return;
+}
+
+static void
 aux_invalidate_preview(void) {
     cecup.preview_dirty = true;
     if (!gtk_widget_get_sensitive(cecup.stop_button)) {
@@ -445,11 +453,8 @@ aux_functions_sink(void) {
     (void)get_target_tasks;
     (void)task_list_free;
     (void)free_message;
-    (void)traversal_push;
     (void)aux_protect_interface_from_user;
     (void)aux_invalidate_preview;
-    (void)traversal_free;
-    (void)traversal_allocate;
     return;
 }
 #endif

@@ -23,6 +23,7 @@
 #include "cecup.h"
 #include "util.c"
 #include "on.h"
+#include "aux.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_on_menu 1

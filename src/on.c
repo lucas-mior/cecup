@@ -304,14 +304,6 @@ on_sync_clicked(GtkWidget *button, void *data) {
 }
 
 static void
-stop_working(bool state) {
-    g_mutex_lock(&cecup.stop_lock);
-    cecup.stop_working = state;
-    g_mutex_unlock(&cecup.stop_lock);
-    return;
-}
-
-static void
 on_stop_clicked(GtkWidget *button, void *data) {
     int32 pid_to_kill;
 

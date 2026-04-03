@@ -21,9 +21,9 @@
 #include "cecup.h"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
-#define TESTING_tasks 1
-#elif !defined(TESTING_tasks)
-#define TESTING_tasks 0
+#define TESTING_traversal 1
+#elif !defined(TESTING_traversal)
+#define TESTING_traversal 0
 #endif
 #if !defined(TESTING)
 #define TESTING 0

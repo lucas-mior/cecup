@@ -22,6 +22,8 @@
 #include "util.c"
 #include "cecup.h"
 #include "on.h"
+#include "item.c"
+#include "aux.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_on_tree 1

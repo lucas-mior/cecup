@@ -317,6 +317,9 @@ case "$target" in
         if [ "$name" = "$main" ]; then
             continue
         fi
+        if echo "$src" | grep -q "stc/"; then
+            continue
+        fi
         name=$(echo "$name" | sed 's/\.c//')
         test_exe="/tmp/${name}_test"
 
@@ -338,15 +341,16 @@ case "$target" in
             cmdline="$cmdline $flags -o $test_exe $src"
         fi
 
-        trace_on
         if [ "$CC" = "chibicc" ]; then
             cmdline_no_cc=$(option_remove "$cmdline" "$CC")
+            trace_on
             if compile_with_chibicc "$cmdline_no_cc"; then
                 /tmp/${name}_test
             else
                 exit 1
             fi
         else
+            trace_on
             if $cmdline; then
                 $test_exe || gdb $test_exe -ex run
             else
