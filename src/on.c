@@ -426,12 +426,12 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     }
 
     is_active = gtk_check_button_get_active(renderer);
-    if ((bool)cecup.rows_selected[row_id_toggled] == is_active) {
+    if (cecup.rows_selected[row_id_toggled] == is_active) {
         return;
     }
 
     in_update = true;
-    cecup.rows_selected[row_id_toggled] = (uint8)is_active;
+    cecup.rows_selected[row_id_toggled] = is_active;
 
     parent_path = item_path_get(row_id_toggled);
     parent_path_len = item_path_len_get(row_id_toggled);
@@ -444,26 +444,26 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 
         if (cecup.rows_selected[row_id_toggled]) {
             if (is_root) {
-                cecup.rows_selected[row_id] = 1;
+                cecup.rows_selected[row_id] = true;
             } else if (parent_path_len > 0 && parent_path[parent_path_len - 1] == '/') {
                 if (path_len >= parent_path_len && !strncmp32(path, parent_path, parent_path_len)) {
-                    cecup.rows_selected[row_id] = 1;
+                    cecup.rows_selected[row_id] = true;
                 }
             }
         } else {
             if (is_root) {
-                cecup.rows_selected[row_id] = 0;
+                cecup.rows_selected[row_id] = false;
             } else {
                 if (parent_path_len > 0 && parent_path[parent_path_len - 1] == '/') {
                     if (path_len >= parent_path_len && !strncmp32(path, parent_path, parent_path_len)) {
-                        cecup.rows_selected[row_id] = 0;
+                        cecup.rows_selected[row_id] = false;
                     }
                 }
                 if (aux_is_root(path)) {
-                    cecup.rows_selected[row_id] = 0;
+                    cecup.rows_selected[row_id] = false;
                 } else if (path_len < parent_path_len && path[path_len - 1] == '/') {
                     if (strncmp32(parent_path, path, path_len) == 0) {
-                        cecup.rows_selected[row_id] = 0;
+                        cecup.rows_selected[row_id] = false;
                     }
                 }
             }
@@ -508,7 +508,7 @@ on_unselect_all_clicked(GtkWidget *button, void *data) {
     (void)data;
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        cecup.rows_selected[i] = 0;
+        cecup.rows_selected[i] = false;
     }
 
     update_list_from_rows();
@@ -526,7 +526,7 @@ on_select_all_visible_clicked(GtkWidget *button, void *data) {
         int32 row_id;
 
         row_id = cecup.rows_visible[i];
-        cecup.rows_selected[row_id] = 1;
+        cecup.rows_selected[row_id] = true;
     }
 
     update_list_from_rows();

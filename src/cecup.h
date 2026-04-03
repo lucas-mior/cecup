@@ -422,7 +422,7 @@ static struct {
     GtkWidget *progress_bar;
 
     int32 *rows[2];
-    uint8 *rows_selected;
+    bool *rows_selected;
     int32 rows_len;
     int32 rows_capacity;
 

@@ -404,7 +404,7 @@ item_add(int32 src_idx, int32 dst_idx) {
 
     cecup.rows[L][index] = src_idx;
     cecup.rows[R][index] = dst_idx;
-    cecup.rows_selected[index] = 0;
+    cecup.rows_selected[index] = false;
     cecup.rows_len += 1;
 
     if (src_idx >= 0) {
