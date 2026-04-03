@@ -415,11 +415,12 @@ work_preview(void *user_data) {
                                                  SIZEOF(*cecup.transfers_lens));
             }
 
-            if (action_src == ACTION_HARDLINK && hard_links.count) {
+            if ((action_src == ACTION_HARDLINK) && (hard_links.count > 1)) {
                 for (int32 j = 0; j < hard_links.count; j += 1) {
-                    if (hash_insert_transfer_set(cecup.transfer_set, hard_links.names[j], strlen32(hard_links.names[j]))) {
+                    if (hash_insert_transfer_set(cecup.transfer_set,
+                                                 hard_links.names[j], hard_links.names_lens[j])) {
                         cecup.transfers[cecup.ntransfers] = hard_links.names[j];
-                        cecup.transfers_lens[cecup.ntransfers] = strlen32(hard_links.names[j]);
+                        cecup.transfers_lens[cecup.ntransfers] = hard_links.names_lens[j];
                         cecup.ntransfers += 1;
                     }
                 }
