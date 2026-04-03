@@ -781,6 +781,7 @@ xmunmap(void *p, int64 size) {
     if (munmap(p, (size_t)size) < 0) {
         error("Error in munmap(%p, %lld): %s.\n", p, (llong)size,
               strerror(errno));
+        fatal(EXIT_FAILURE);
     }
     return;
 }
