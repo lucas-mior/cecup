@@ -96,15 +96,6 @@ hard_link_remove(HardLinks *list, char *name, int32 name_len) {
     return list;
 }
 
-static int32
-count_hardlinks(HardLinks *list) {
-    if (list == NULL) {
-        return 0;
-    }
-
-    return list->count;
-}
-
 static bool
 hard_links_match(HardLinks *src, HardLinks *dst) {
     ASSERT(src);

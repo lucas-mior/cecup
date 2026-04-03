@@ -379,15 +379,14 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
             if (symlink_target) {
                 SNPRINTF(tip_buffer,
                          "%s\n%s%s:\n%s", filepath, RSYNC_SYMLINK, symlink_target, reason_buf);
-            } else if (hard_links.count) {
+            } else if (hard_links.count > 0) {
                 int32 offset = 0;
-                int32 nlinks = count_hardlinks(&hard_links);
                 int32 nlinks_printed = 0;
 
                 offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
                                     "%s:\n%s", filepath, reason_buf);
                 offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
-                                    _("\nThere are %d Names for this file:\n"), nlinks);
+                                    _("\nThere are %d Names for this file:\n"), hard_links.count);
 
                 for (int32 j = 0; j < hard_links.count; j += 1) {
                     int32 n;
@@ -402,7 +401,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
 
                     nlinks_printed += 1;
                 }
-                if (nlinks_printed < nlinks) {
+                if (nlinks_printed < hard_links.count) {
                     snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset, "\n...");
                 }
             } else if (ignore_pattern) {
