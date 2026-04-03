@@ -425,6 +425,12 @@ update_row_transfer(Message *message) {
             char *path = traversal_src->paths[idx_src];
             int32 path_len = traversal_src->paths_lens[idx_src];
             HardLinkList *first_link = NULL;
+            char *link_target = NULL;
+            int32 link_target_len = 0;
+
+            if ((S_ISLNK(stat.st_mode))) {
+                link_target_len = traversal_symlink_get(traversal_dst, full_path, &link_target);
+            }
 
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
@@ -433,7 +439,7 @@ update_row_transfer(Message *message) {
 
             traversal_push(traversal_dst, &stat,
                            path, path_len,
-                           NULL, 0,
+                           link_target, link_target_len,
                            first_link,
                            traversal_src->patterns[idx_src],
                            traversal_src->patterns_lens[idx_src]);
