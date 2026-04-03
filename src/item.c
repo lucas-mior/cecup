@@ -387,8 +387,14 @@ item_get_actions_reasons(int32 row_id,
                 if (symlink_target_src && symlink_target_dst) {
                     if (strcmp(symlink_target_src, symlink_target_dst) == 0) {
                         equal = true;
+                    } else {
+                        *reason |= REASON_SYMLINK_NOT_MATCH;
                     }
+                } else {
+                    *reason |= REASON_SYMLINK_NO_TARGET;
                 }
+            } else {
+                *reason |= REASON_SYMLINK_NOT;
             }
         } else {
             if (is_hardlink) {

@@ -72,6 +72,9 @@ _Static_assert((!R) == L, "!R must be L");
     X(PERM)             \
     X(HARDLINK)         \
     X(SYMLINK)          \
+    X(SYMLINK_NOT)       \
+    X(SYMLINK_NO_TARGET) \
+    X(SYMLINK_NOT_MATCH) \
     X(HARDLINK_NOT_REGULAR) \
     X(HARDLINK_MISSING_LINK) \
     X(HARDLINK_NOT_MATCH) \
@@ -244,6 +247,9 @@ static char *reason_strings_file[] = {
     [REASON_HARDLINK_MISSING_LINK_BIT_IDX] = N_("Backup item is missing link target"),
     [REASON_HARDLINK_NOT_MATCH_BIT_IDX]    = N_("Link targets do not match"),
     [REASON_SYMLINK_BIT_IDX]               = N_("Symlink in the original folder"),
+    [REASON_SYMLINK_NO_TARGET_BIT_IDX]     = N_("Could not resolve link to check"),
+    [REASON_SYMLINK_NOT_BIT_IDX]           = N_("Destination is not a symlink"),
+    [REASON_SYMLINK_NOT_MATCH_BIT_IDX]     = N_("Symbolic link targets do not match"),
     [REASON_SIZE_BIT_IDX]                  = N_("File sizes differ"),
     [REASON_MTIME_NEWER_BIT_IDX]           = N_("File in the source is newer than backup"),
     [REASON_MTIME_OLDER_BIT_IDX]           = N_("File in the source is older than backup"),
@@ -263,6 +269,9 @@ static char *reason_strings_dir[] = {
     [REASON_HARDLINK_MISSING_LINK_BIT_IDX] = N_("Backup item is missing link target"),
     [REASON_HARDLINK_NOT_MATCH_BIT_IDX]    = N_("Link targets do not match"),
     [REASON_SYMLINK_BIT_IDX]               = N_("Symlink in the original folder"),
+    [REASON_SYMLINK_NO_TARGET_BIT_IDX]     = N_("Could not resolve link to check"),
+    [REASON_SYMLINK_NOT_BIT_IDX]           = N_("Destination is not a symlink"),
+    [REASON_SYMLINK_NOT_MATCH_BIT_IDX]     = N_("Symbolic link targets do not match"),
     [REASON_SIZE_BIT_IDX]                  = N_("Folder sizes differ"),
     [REASON_MTIME_NEWER_BIT_IDX]           = N_("Folder in the source is newer than backup"),
     [REASON_MTIME_OLDER_BIT_IDX]           = N_("Folder in the source is older than backup"),
