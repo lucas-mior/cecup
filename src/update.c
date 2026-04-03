@@ -428,29 +428,7 @@ update_ignored_helper(Traversal *traversal, int32 side, int32 row_id, IgnorePatt
 
     if (cecup.rows[side][row_id] >= 0) {
         int32 idx = cecup.rows[side][row_id];
-        char *path = traversal->paths[idx];
-        int32 path_len = traversal->paths_lens[idx];
-
-        if (S_ISREG(traversal->stats[idx].st_mode)
-                && (traversal->stats[idx].st_nlink > 1)) {
-            char inode[32];
-            int32 inode_len;
-            HardLinkList **first_link_ptr;
-            HardLinkList *first_link;
-
-            inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
-            if ((first_link_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
-                first_link = *first_link_ptr;
-
-                first_link = hard_link_remove(first_link, path, path_len);
-                if (first_link == NULL) {
-                    hash_remove_inode_map(traversal->inode_map, inode, inode_len);
-                } else {
-                    hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, first_link);
-                }
-            }
-        }
-
+        traversal_unlink(traversal, idx);
         traversal->patterns[idx] = match->str;
         traversal->patterns_lens[idx] = (int16)match->len;
     }
