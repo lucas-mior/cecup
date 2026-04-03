@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-02 23:51-0300\n"
+"POT-Creation-Date: 2026-04-02 23:58-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -27,6 +27,7 @@ msgid "Start copying and updating all files"
 msgstr "Iniciar a cópia e atualização de todos os arquivos"
 
 #: src/aux.c:244
+#, c-format
 msgid "Error in readlink(%s): %s.\n"
 msgstr "Erro em readlink(%s): %s.\n"
 
@@ -39,6 +40,7 @@ msgid "Error: Invalid destination directory.\n"
 msgstr "Erro: Pasta de destino inválida.\n"
 
 #: src/aux.c:454 src/aux.c:459
+#, c-format
 msgid "Error getting full path of %s: %s.\n"
 msgstr "Erro ao obter o caminho completo de %s: %s.\n"
 
@@ -55,10 +57,12 @@ msgid "Error: destination directory is contained in the source directory\n"
 msgstr "Erro: a pasta de backup está condita na pasta de origem\n"
 
 #: src/ignore_patterns.c:58 src/on_menu.c:100
+#, c-format
 msgid "Error opening %s: %s.\n"
 msgstr "Erro ao tentar abrir %s: %s.\n"
 
 #: src/ignore_patterns.c:77
+#, c-format
 msgid "Warning: advanced exclusion pattern '%s' detected.\n"
 msgstr "Aviso: padrão de exclusão avançado detectado: '%s'.\n"
 
@@ -72,14 +76,17 @@ msgid "This pattern will be interpreted literally.\n"
 msgstr "Esse padrão será interpretado literalmente.\n"
 
 #: src/ignore_patterns.c:83
+#, c-format
 msgid "Warning: exclusion pattern '%s' detected.\n"
 msgstr "Aviso: padrão de exclusão '%s' detectado.\n"
 
 #: src/ignore_patterns.c:89
+#, c-format
 msgid "Warning: backslash '%s' detected.\n"
 msgstr "Aviso: barra invertida '%s' detectada.\n"
 
 #: src/ignore_patterns.c:126 src/on_menu.c:106
+#, c-format
 msgid "Error closing %s: %s.\n"
 msgstr "Erro ao fechar %s: %s.\n"
 
@@ -272,6 +279,7 @@ msgid "Action blocked: Background task is running.\n"
 msgstr "Ação bloqueada: Há uma tarefa sendo executada em segundo plano.\n"
 
 #: src/on.c:188
+#, c-format
 msgid ""
 "Warning: 'Sync 100%%' (delete-after) is enabled. Files in the backup folder "
 "that do not exist in the source folder will be PERMANENTLY DELETED. Also, "
@@ -286,6 +294,7 @@ msgid "Invalid paths. Aborting preview...\n"
 msgstr "Caminhos inválidos. Abortando...\n"
 
 #: src/on.c:300
+#, c-format
 msgid "Sync %s -> %s?"
 msgstr "Sincronizar %s -> %s?"
 
@@ -318,42 +327,52 @@ msgid "📋 Copy Whole Log"
 msgstr "📋 Copiar log inteiro"
 
 #: src/on_menu.c:245
+#, c-format
 msgid "Launching %s...\n"
 msgstr "Executando %s...\n"
 
 #: src/on_menu.c:305
+#, c-format
 msgid "Error resolving full path of %s: %s.\n"
 msgstr "Erro ao resolver o caminho completo de %s: %s.\n"
 
 #: src/on_menu.c:377
+#, c-format
 msgid "Permanently delete %d item(s)?"
 msgstr "Excluir permanentemente %d item(ns)?"
 
 #: src/on_path.c:176
+#, c-format
 msgid "Error renaming %s to %s: %s\n"
 msgstr "Erro ao renomear %s para %s: %s\n"
 
 #: src/on_path.c:180
+#, c-format
 msgid "Renamed: %s -> %s\n"
 msgstr "Renomeado: %s -> %s\n"
 
 #: src/on_tree.c:157
+#, c-format
 msgid "by extension (*%s)"
 msgstr "por extensão (*%s)"
 
 #: src/on_tree.c:166
+#, c-format
 msgid "📁 Dir (/%s/)"
 msgstr "📁 Pasta (/%s/)"
 
 #: src/on_tree.c:175
+#, c-format
 msgid "This folder only (/%s)"
 msgstr "Somente esta pasta (/%s)"
 
 #: src/on_tree.c:177
+#, c-format
 msgid "This file only (/%s)"
 msgstr "Somente este arquivo (/%s)"
 
 #: src/on_tree.c:185
+#, c-format
 msgid "This filename on any folder (*/%s)"
 msgstr "Este nome de arquivo em qualquer pasta (*/%s)"
 
@@ -362,6 +381,7 @@ msgid "pattern"
 msgstr "padrão"
 
 #: src/update.c:884
+#, c-format
 msgid ""
 "<span foreground='red'>Selected files: %d</span>\n"
 "Total Transfer Size: 📦 %s"
@@ -370,6 +390,7 @@ msgstr ""
 "Tamanho total da transferência: 📦 %s"
 
 #: src/update.c:890
+#, c-format
 msgid ""
 "Selected files: %d\n"
 "Total Transfer Size: 📦 %s"
@@ -378,18 +399,22 @@ msgstr ""
 "Tamanho total da transferência: 📦 %s"
 
 #: src/work.c:80
+#, c-format
 msgid "Error walking directory %s: %s.\n"
 msgstr "Erro ao percorrer o pasta %s: %s.\n"
 
 #: src/work.c:117
+#, c-format
 msgid "Error while traversing file system: %s.\n"
 msgstr "Erro ao percorrer sistemas de arquivos: %s.\n"
 
 #: src/work.c:120
+#, c-format
 msgid "Directory '%s' is unreadable.\n"
 msgstr "Pasta '%s' não pode ser lida.\n"
 
 #: src/work.c:123
+#, c-format
 msgid "Failed to get file information for %s: %s.\n"
 msgstr "Falha ao requisitar informações do arquivo %s: %s.\n"
 
@@ -414,6 +439,7 @@ msgid "Error: filename contains problematic characters/patterns:\n"
 msgstr "Erro: o nome do arquivo contém caracteres/padrões problemáticos:\n"
 
 #: src/work.c:190
+#, c-format
 msgid "More than %lld files found.\n"
 msgstr "Mais de %lld arquivos encontrados.\n"
 
@@ -422,6 +448,7 @@ msgid "Please work in smaller subdirs.\n"
 msgstr "Por favor, trabalhe em subpastas menores.\n"
 
 #: src/work.c:260
+#, c-format
 msgid "Error in fts_close: %s.\n"
 msgstr "Erro em fts_close: %s.\n"
 
@@ -430,6 +457,7 @@ msgid "Traversing file systems for differences..."
 msgstr "Percorrendo os sistemas de arquivos em busca de diferenças..."
 
 #: src/work.c:320 src/work.c:325
+#, c-format
 msgid "Error getting directory info from %s: %s.\n"
 msgstr "Erro ao obter informações do pasta de %s: %s.\n"
 
@@ -459,6 +487,7 @@ msgid "File system traversal finished.\n"
 msgstr "Busca no sistema de arquivos concluída.\n"
 
 #: src/work.c:373
+#, c-format
 msgid "Found %lld files to analyse...\n"
 msgstr "Encontrados %lld arquivos para analisar...\n"
 
@@ -483,14 +512,17 @@ msgid "Running sync...\n"
 msgstr "Executando sincronização...\n"
 
 #: src/work_rsync.c:300
-msgid "Error reading output from program: %s.\n"
-msgstr "Erro ao tentar ler saída do programa: %s.\n"
+#, fuzzy, c-format
+msgid "Error reading stdout pipe: %s.\n"
+msgstr "Erro ao renomear %s para %s: %s\n"
 
 #: src/work_rsync.c:428
-msgid "Error reading errors from program: %s.\n"
+#, fuzzy, c-format
+msgid "Error reading stderr pipe: %s.\n"
 msgstr "Erro ao tentar ler erros do programa: %s.\n"
 
 #: src/work_rsync.c:439
+#, c-format
 msgid "Error waiting for child process: %s.\n"
 msgstr "Erro ao aguardar processo filho: %s.\n"
 
@@ -848,3 +880,6 @@ msgstr ""
 "    ◦ pela sua pasta\n"
 "    ◦ pelo seu caminho completo (corresponde apenas a este arquivo)\n"
 "    ◦ pelo seu nome (corresponde a qualquer arquivo com o mesmo nome base)\n"
+
+#~ msgid "Error reading output from program: %s.\n"
+#~ msgstr "Erro ao tentar ler saída do programa: %s.\n"
