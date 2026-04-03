@@ -106,9 +106,6 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         int32 idx;
 
         count = 1;
-        // TODO: In the first branch, xrealloc is used. If it fails, xrealloc typically aborts based
-        // on your util.c conventions. If it doesn't abort, 'tasks' could be leaked if it returns
-        // NULL. Be sure your 'xrealloc' implementation correctly handles potential failures.
         tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count));
         tasks->count = count;
 
@@ -129,8 +126,6 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         task->side = side;
         tasks->items[0] = task;
     } else {
-        // TODO: Similar to the above, ensure xrealloc handles failures correctly to prevent leaking
-        // the initial 'tasks' allocation if shrinking fails.
         tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count));
         tasks->count = count;
     }
