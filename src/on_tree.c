@@ -378,7 +378,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
 
             if (symlink_target) {
                 SNPRINTF(tip_buffer,
-                         "%s%s%s:\n%s", filepath, RSYNC_SYMLINK, symlink_target, reason_buf);
+                         "%s\n%s%s:\n%s", filepath, RSYNC_SYMLINK, symlink_target, reason_buf);
             } else if (hard_links) {
                 int32 offset = 0;
                 int32 nlinks = count_hardlinks(hard_links);
