@@ -236,20 +236,20 @@ traversal_push(Traversal *traversal, struct stat *stat,
 }
 
 static int32
-traversal_symlink_get(Traversal *traversal, char *path, char **link_target) {
+traversal_symlink_get(Traversal *traversal, char *path, char **symlink_target) {
     char buffer[MAX_PATH_LENGTH];
-    int64 link_target_len;
+    int64 symlink_target_len;
 
-    if ((link_target_len = readlink(path, buffer, SIZEOF(buffer) - 1)) < 0) {
+    if ((symlink_target_len = readlink(path, buffer, SIZEOF(buffer) - 1)) < 0) {
         LOG_ERROR(_("Error in readlink(%s): %s.\n"), path, strerror(errno));
-        *link_target = NULL;
+        *symlink_target = NULL;
         return 0;
     } else {
-        buffer[link_target_len] = '\0';
-        *link_target = xarena_push(traversal->arena, link_target_len + 1);
-        memcpy64(*link_target, buffer, link_target_len + 1);
+        buffer[symlink_target_len] = '\0';
+        *symlink_target = xarena_push(traversal->arena, symlink_target_len + 1);
+        memcpy64(*symlink_target, buffer, symlink_target_len + 1);
     }
-    return (int32)link_target_len;
+    return (int32)symlink_target_len;
 }
 
 static HardLink *
