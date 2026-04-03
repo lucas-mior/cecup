@@ -216,9 +216,11 @@ update_row_transfer(Message *message) {
                                          path_transfered, path_transfered_len))) {
             cecup.rows[R][row_id] = *lookup;
         } else {
+            char *path = traversal_src->paths[idx_src];
+            int32 path_len = traversal_src->paths_lens[idx_src];
+
             idx_dst = traversal_push(traversal_dst, &stat,
-                                     traversal_src->paths[idx_src],
-                                     traversal_src->paths_lens[idx_src],
+                                     path, path_len,
                                      NULL, 0,
                                      NULL,
                                      traversal_src->patterns[idx_src],
@@ -239,16 +241,16 @@ update_row_transfer(Message *message) {
                     first_link = *first_link_ptr;
 
                     new_link = xarena_push(traversal_dst->arena, SIZEOF(*new_link));
-                    new_link->name = traversal_src->paths[idx_src];
-                    new_link->name_len = traversal_src->paths_lens[idx_src];
+                    new_link->name = path;
+                    new_link->name_len = path_len;
                     new_link->idx = idx_dst;
                     new_link->next = NULL;
 
                     hard_link_append(first_link, new_link);
                 } else {
                     first_link = xarena_push(traversal_dst->arena, SIZEOF(*first_link));
-                    first_link->name = traversal_src->paths[idx_src];
-                    first_link->name_len = traversal_src->paths_lens[idx_src];
+                    first_link->name = path; 
+                    first_link->name_len = path_len;
                     first_link->idx = idx_dst;
                     first_link->next = NULL;
                     hash_insert_inode_map(traversal_dst->inode_map, inode, inode_len, first_link);
