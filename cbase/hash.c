@@ -47,7 +47,8 @@
 #define HASH_AUTO_RESIZE 1
 #endif
 
-#define HASH_SLOT_FREE   0
+#define HASH_SLOT_USED     1
+#define HASH_SLOT_FREE     0
 #define HASH_SLOT_DELETED -1
 
 #if !defined(GREEN)
@@ -295,7 +296,7 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
 #if HASH_KEY_BY_VALUE
                 if (target->slot_state == HASH_SLOT_FREE) {
                     memcpy64(&target->key, &iterator->key, sizeof(HASH_KEY_TYPE));
-                    target->slot_state = 1;
+                    target->slot_state = HASH_SLOT_USED;
                     target->hash = iterator->hash;
 #if defined(HASH_VALUE_TYPE)
                     target->value = iterator->value;
@@ -358,7 +359,7 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
 
 #if HASH_KEY_BY_VALUE
             memcpy64(&target->key, key, sizeof(HASH_KEY_TYPE));
-            target->slot_state = 1;
+            target->slot_state = HASH_SLOT_USED;
             target->hash = hash;
 #else
 #if HASH_DUPLICATE_KEYS
@@ -404,7 +405,7 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
         Bucket *target = &map->array[first_tombstone];
 #if HASH_KEY_BY_VALUE
         memcpy64(&target->key, key, sizeof(HASH_KEY_TYPE));
-        target->slot_state = 1;
+        target->slot_state = HASH_SLOT_USED;
         target->hash = hash;
 #else
 #if HASH_DUPLICATE_KEYS
@@ -524,7 +525,7 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
 #if HASH_KEY_BY_VALUE
                 if (target->slot_state == HASH_SLOT_FREE) {
                     memcpy64(&target->key, &iterator->key, sizeof(HASH_KEY_TYPE));
-                    target->slot_state = 1;
+                    target->slot_state = HASH_SLOT_USED;
                     target->hash = iterator->hash;
 #else
                 if ((int64)target->key == HASH_SLOT_FREE) {
@@ -582,7 +583,7 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
 
 #if HASH_KEY_BY_VALUE
             memcpy64(&target->key, key, sizeof(HASH_KEY_TYPE));
-            target->slot_state = 1;
+            target->slot_state = HASH_SLOT_USED;
             target->hash = hash;
 #else
 #if HASH_DUPLICATE_KEYS
@@ -631,7 +632,7 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
         Bucket *target = &map->array[first_tombstone];
 #if HASH_KEY_BY_VALUE
         memcpy64(&target->key, key, sizeof(HASH_KEY_TYPE));
-        target->slot_state = 1;
+        target->slot_state = HASH_SLOT_USED;
         target->hash = hash;
 #else
 #if HASH_DUPLICATE_KEYS
