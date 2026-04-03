@@ -468,7 +468,7 @@ update_row_ignore(Message *message) {
         char *path = item_path_get(row_id);
         int32 path_len = item_path_len_get(row_id);
         bool is_dir = false;
-        IgnorePattern *match;
+        IgnorePattern *match = NULL;
 
         if (path_len > 0) {
             if (path[path_len - 1] == '/') {
@@ -476,7 +476,6 @@ update_row_ignore(Message *message) {
             }
         }
 
-        match = NULL;
         if (cecup.ignore_count > 0) {
             IgnorePattern *added_pattern = &cecup.ignore_patterns[cecup.ignore_count - 1];
 
