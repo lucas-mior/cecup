@@ -385,6 +385,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     {
         char cwd[MAX_PATH_LENGTH];
+        // TODO: getcwd might fail and return NULL. It's properly checked here, but if the initial
+        // directory path is highly critical to startup, you might want a fallback strategy or to
+        // notify the user via a GUI dialog rather than a fatal exit.
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
             error("Error getting current working directory: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
@@ -472,7 +475,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_widget_set_tooltip_text(cecup.select_visible_button,
                                 _("Select all files which currently are on the list below"));
-    gtk_widget_set_tooltip_text(cecup.select_visible_button,
+    gtk_widget_set_tooltip_text(cecup.unselect_button,
                                 _("Unselect all files which are currently selected"));
 
     gtk_box_append(GTK_BOX(search_hbox), cecup.select_visible_button);
@@ -887,6 +890,7 @@ main(int32 argc, char **argv) {
                 fatal(EXIT_FAILURE);
             case 0:
             {
+                char cmd[MAX_PATH_LENGTH];
                 char *args_cp[] = {
                     "cp",
                     "-r",
@@ -896,7 +900,10 @@ main(int32 argc, char **argv) {
                 };
 
                 execvp(args_cp[0], args_cp);
-                error("Error executing cp: %s.\n", strerror(errno));
+                STRING_FROM_ARRAY(cmd, " ", args_cp, LENGTH(args_cp) - 1);
+                error("Error executing\n"
+                      "%s"
+                      "to copy configuration files: %s.\n", cmd, strerror(errno));
                 _exit(EXIT_FAILURE);
             }
             default:
