@@ -233,7 +233,7 @@ update_row_transfer(Message *message) {
                 HardLinkList *new_link;
                 HardLinkList *first_link;
 
-                inode_len = ITOA(inode, (long)traversal_dst->stats[idx_src].st_ino);
+                inode_len = ITOA(inode, (long)traversal_dst->stats[idx_dst].st_ino);
                 if ((first_link_ptr = hash_lookup_inode_map(traversal_dst->inode_map,
                                                             inode, inode_len))) {
                     first_link = *first_link_ptr;
