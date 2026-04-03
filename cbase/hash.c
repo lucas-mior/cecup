@@ -362,11 +362,11 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
             target->slot_state = HASH_SLOT_USED;
             target->hash = hash;
 #else
-#if HASH_DUPLICATE_KEYS
+  #if HASH_DUPLICATE_KEYS
             target->key = xmemdup(key, key_length + 1);
-#else
+  #else
             target->key = key;
-#endif
+  #endif
             target->key_len = key_length;
             target->hash = hash;
 #endif
@@ -403,19 +403,21 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
 
     if (first_tombstone >= 0) {
         Bucket *target = &map->array[first_tombstone];
+
 #if HASH_KEY_BY_VALUE
         memcpy64(&target->key, key, sizeof(HASH_KEY_TYPE));
         target->slot_state = HASH_SLOT_USED;
         target->hash = hash;
 #else
-#if HASH_DUPLICATE_KEYS
+  #if HASH_DUPLICATE_KEYS
         target->key = xmemdup(key, key_length + 1);
-#else
+  #else
         target->key = key;
 #endif
         target->key_len = key_length;
         target->hash = hash;
 #endif
+
 #if defined(HASH_VALUE_TYPE)
         target->value = value;
 #endif
@@ -586,9 +588,9 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
             target->slot_state = HASH_SLOT_USED;
             target->hash = hash;
 #else
-#if HASH_DUPLICATE_KEYS
+  #if HASH_DUPLICATE_KEYS
             target->key = xmemdup(key, key_length + 1);
-#else
+  #else
             target->key = key;
 #endif
             target->key_len = key_length;
@@ -630,19 +632,21 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
 
     if (first_tombstone >= 0) {
         Bucket *target = &map->array[first_tombstone];
+
 #if HASH_KEY_BY_VALUE
         memcpy64(&target->key, key, sizeof(HASH_KEY_TYPE));
         target->slot_state = HASH_SLOT_USED;
         target->hash = hash;
 #else
-#if HASH_DUPLICATE_KEYS
+  #if HASH_DUPLICATE_KEYS
         target->key = xmemdup(key, key_length + 1);
-#else
+  #else
         target->key = key;
-#endif
+  #endif
         target->key_len = key_length;
         target->hash = hash;
 #endif
+
 #if defined(HASH_VALUE_TYPE)
         target->value = value;
 #endif
@@ -817,9 +821,9 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
             if ((iterator->hash == hash)
                     && (iterator->key_len == key_length)
                     && (memcmp64(iterator->key, key, key_length) == 0)) {
-#if HASH_DUPLICATE_KEYS
+  #if HASH_DUPLICATE_KEYS
                 free(iterator->key, iterator->key_len);
-#endif
+  #endif
                 iterator->key = (HASH_KEY_TYPE *)(int64)HASH_SLOT_DELETED;
                 map->length -= 1;
                 return true;
