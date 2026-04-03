@@ -413,6 +413,7 @@ update_row_transfer(Message *message) {
             if (DEBUGGING) {
                 fatal(EXIT_FAILURE);
             }
+            return false;
         }
     }
 
