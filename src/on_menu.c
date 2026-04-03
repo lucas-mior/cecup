@@ -301,6 +301,10 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
             char path_relative[MAX_PATH_LENGTH];
 
             SNPRINTF(path_relative, "%s/%s", base_path, task->path);
+
+            // TODO: realpath() will fail if the file does not exist (e.g., broken symlink or deleted file), 
+            //       preventing the user from copying its path. Consider an alternative way to resolve 
+            //       the absolute path without relying on file existence, or fallback to manual path concatenation.
             if (realpath(path_relative, path_full) == NULL) {
                 LOG_ERROR(_("Error resolving full path of %s: %s.\n"),
                           path_relative, strerror(errno));
@@ -418,6 +422,9 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
             {
                 char cmd[MAX_PATH_LENGTH*2];
+                // TODO: If `term_cmd` or `diff_tool` contains spaces (e.g., user entered "diff -u" or "xterm -hold"), 
+                //       `execvp` will fail because it treats the entire string as the executable name. 
+                //       You need to parse/tokenize the string into an array of arguments before passing to `execvp`.
                 char *diff_command[] = {
                     term_cmd, "-e", diff_tool, path_dst, path_src, NULL,
                 };

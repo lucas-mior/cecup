@@ -168,6 +168,10 @@ on_path_edited(GtkEditable *editable, void *data) {
 
         memcpy64(relative_new, new_text, new_length + 1);
         normalize(relative_new, &new_length);
+
+        // TODO: If 'new_text' contains "../", the user might be able to rename the file to a location
+        //       completely outside the backup/source directory boundaries. You should validate that 
+        //       'relative_new' does not escape the base path.
         new_full_length = SNPRINTF(new_full, "%s/%s", base_path, relative_new);
         normalize(new_full, &new_full_length);
 
