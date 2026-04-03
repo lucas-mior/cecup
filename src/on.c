@@ -432,12 +432,12 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     cecup.rows_selected[row_id_toggled] = (uint8)is_active;
 
     parent_path = item_path_get(row_id_toggled);
+    parent_path_len = item_path_len_get(row_id_toggled);
 
     if (parent_path) {
         int32 count_selected = 0;
         int64 total_size_bytes = 0;
 
-        parent_path_len = strlen32(parent_path);
         is_root = aux_is_root(parent_path);
 
         for (int32 i = 0; i < cecup.rows_len; i += 1) {

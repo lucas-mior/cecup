@@ -165,7 +165,7 @@ item_path_get(int32 row_id) {
     } else if (dst_idx >= 0) {
         return cecup.traversal[R].paths[dst_idx];
     } else {
-        error("Error: src_path and dst_path are NULL.\n");
+        error("Error: both source and destination have invalid indices.\n");
         fatal(EXIT_FAILURE);
     }
 }
@@ -180,8 +180,10 @@ item_path_len_get(int32 row_id) {
     }
     if (dst_idx >= 0) {
         return cecup.traversal[R].paths_lens[dst_idx];
+    } else {
+        error("Error: both source and destination have invalid indices.\n");
+        fatal(EXIT_FAILURE);
     }
-    return 0;
 }
 
 INLINE char *
