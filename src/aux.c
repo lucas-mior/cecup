@@ -359,6 +359,9 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         enum Action action;
         enum Action actions[2];
         enum Reason reason;
+        char inode[32];
+        int32 inode_len;
+        int32 idx;
         Task *task;
 
         row_id = i;
@@ -382,6 +385,13 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         task->path = xmalloc(path_len + 1);
         memcpy64(task->path, filepath, path_len + 1);
 
+        if (action == ACTION_HARDLINK) {
+            idx = cecup.rows[side][row_id];
+            inode_len = ITOA(inode, (long)cecup.traversal[side].stats[idx].st_ino);
+            task->inode = xmemdup(inode, inode_len + 1);
+            task->inode_len = inode_len;
+        }
+
         task->action = action;
         task->side = side;
 
@@ -391,6 +401,9 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
     if ((count == 0) && clicked_path) {
         Task *task;
+        char inode[32];
+        int32 inode_len;
+        int32 idx;
 
         count = 1;
         tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count));
@@ -402,6 +415,14 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         task->path_len = strlen32(clicked_path);
         task->path = xmalloc(task->path_len + 1);
         memcpy64(task->path, clicked_path, task->path_len + 1);
+
+        if (clicked_action == ACTION_HARDLINK) {
+            if (hash_lookup_fs_map(cecup.traversal[side].map, task->path, task->path_len, &idx)) {
+                inode_len = ITOA(inode, cecup.traversal[side].stats[idx].st_ino);
+                task->inode = xmemdup(inode, inode_len + 1);
+                task->inode_len = inode_len;
+            }
+        }
 
         task->action = clicked_action;
         task->side = side;

@@ -338,7 +338,10 @@ typedef struct Task {
     int8 side;
 
     char *path;
+    char *inode;
+
     int32 path_len;
+    int32 inode_len;
 } Task;
 
 typedef struct TaskList {

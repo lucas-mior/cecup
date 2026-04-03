@@ -614,7 +614,7 @@ work_rsync(void *user_data) {
 
         if (task->action == ACTION_HARDLINK) {
             if ((hash_lookup_inode_map(traversal->inode_map,
-                                       task->path, task->path_len, &hardlinks))) {
+                                       task->inode, task->inode_len, &hardlinks))) {
                 for (int32 j = 0; j < hardlinks.count; j += 1) {
                     char *link_name = hardlinks.names[j];
                     write_len = strlen32(link_name);
@@ -650,9 +650,9 @@ work_rsync(void *user_data) {
             work_rsync_run(files_from_filename, nfiles_total, true, &batch);
         }
     } while (0);
-    if (!DEBUGGING) {
-        xunlink(files_from_filename);
-    }
+    /* if (!DEBUGGING) { */
+    /*     xunlink(files_from_filename); */
+    /* } */
 
     work_batch_flush(&batch);
     free_task_list(tasks);
