@@ -439,14 +439,14 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         int32 row_id = i;
-        char *path = item_path_get(row_id);
-        int32 path_len = item_path_len_get(row_id);
+        char *other_path = item_path_get(row_id);
+        int32 other_path_len = item_path_len_get(row_id);
 
         if (cecup.rows_selected[row_id_toggled]) {
             if (toggled_is_root) {
                 cecup.rows_selected[row_id] = true;
             } else if (toggled_path[toggled_path_len - 1] == '/') {
-                if (BEGINS_WITH(path, toggled_path, toggled_path_len)) {
+                if (BEGINS_WITH(other_path, toggled_path, toggled_path_len)) {
                     cecup.rows_selected[row_id] = true;
                 }
             }
@@ -455,14 +455,14 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                 cecup.rows_selected[row_id] = false;
             } else {
                 if (toggled_path[toggled_path_len - 1] == '/') {
-                    if (BEGINS_WITH(path, toggled_path, toggled_path_len)) {
+                    if (BEGINS_WITH(other_path, toggled_path, toggled_path_len)) {
                         cecup.rows_selected[row_id] = false;
                     }
                 }
-                if (aux_is_root(path)) {
+                if (aux_is_root(other_path)) {
                     cecup.rows_selected[row_id] = false;
-                } else if (path[path_len - 1] == '/') {
-                    if (BEGINS_WITH(toggled_path, path, path_len)) {
+                } else if (other_path[other_path_len - 1] == '/') {
+                    if (BEGINS_WITH(toggled_path, other_path, other_path_len)) {
                         cecup.rows_selected[row_id] = false;
                     }
                 }
