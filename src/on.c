@@ -448,10 +448,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
             char *path;
 
             row_id = i;
-            path = item_path_side(row_id, side);
-            if (path == NULL) {
-                path = item_path_side(row_id, (side == L) ? R : L);
-            }
+            path = item_path_get(row_id);
 
             if (path != NULL) {
                 int32 path_len;
