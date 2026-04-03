@@ -90,8 +90,8 @@ option_remove() {
 
 generate_welcome_h() {
     if [ -f "README.md" ]; then
-        echo "Generating src/welcome.h from README.md..."
-        python3 build_welcome.py README.md src/welcome.h
+        echo "Generating src/.welcome.h from README.md..."
+        python3 build_welcome.py README.md src/.welcome.h
     fi
 }
 

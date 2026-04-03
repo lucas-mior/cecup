@@ -26,7 +26,7 @@
 #include "on.c"
 #include "columns.c"
 
-#include "welcome.h"
+#include ".welcome.h"
 
 #define SPACING_BOX 5
 #define PADDING_BUTTON 5
