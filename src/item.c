@@ -55,8 +55,7 @@ hard_link_replace_node(HardLinks *list,
         if (list->names_lens[i] == old_path_len) {
             if (memcmp64(list->names[i], old_path, old_path_len) == 0) {
                 list->names[i] = new_path;
-                // TODO: You update the name pointer here, but you forgot to update its
-                // corresponding length. You must also add: `list->names_lens[i] = new_path_len;`
+                list->names_lens[i] = new_path_len;
                 break;
             }
         }

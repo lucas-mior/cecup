@@ -399,11 +399,7 @@ work_preview(void *user_data) {
 
         if (!aux_is_root(bucket_src->key)
             && (action_src != ACTION_EQUAL) && (action_src != ACTION_IGNORE)) {
-            // TODO: Uninitialized memory access. If 'item_hardlink_side' returns false,
-            // 'hard_links.count' will contain garbage data from the stack. This can lead to massive
-            // unintended allocations in the while loop below. Initialize 'HardLinks hard_links =
-            // {0};' before passing it.
-            HardLinks hard_links;
+            HardLinks hard_links = {0};
             item_hardlink_side(row_id, L, &hard_links);
 
             while ((cecup.ntransfers + hard_links.count + 1) >= cecup.transfers_capacity) {

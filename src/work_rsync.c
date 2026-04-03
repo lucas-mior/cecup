@@ -387,14 +387,10 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 
                     work_batch_push(batch_ptr, msg_update);
                 }
-            } else {
+            } else if (line_len > 2) {
                 char *percentage;
                 int64 progress;
 
-                // TODO: Integer underflow risk. If 'line_len' is 0 (meaning 'eol' is exactly at
-                // 'buf_output'), 'line_len - 1' will underflow to a massive positive number,
-                // causing out-of-bounds reads inside memmem64. Add a check to ensure 'line_len > 0'
-                // before evaluating.
                 if (!checksum && (percentage = memmem64(buf_output + 1, line_len - 1, "% ", 2))) {
                     while (((percentage - 1) > buf_output)
                             && isdigit(*(percentage - 1))) {

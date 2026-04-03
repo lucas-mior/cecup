@@ -252,10 +252,6 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
             time_t unix_timestamp;
 
             unix_timestamp = (time_t)mtime + timezone_offset;
-            // TODO: Using gmtime_r along with manual timezone_offset is error-prone. 
-            //       If the offset doesn't properly account for Daylight Saving Time changes 
-            //       at the specific time of the timestamp, the printed time will be off by an hour.
-            //       Using localtime_r is generally safer for local time formatting.
             gmtime_r(&unix_timestamp, &time_information);
             STRFTIME(text_buf, "%Y-%m-%d %H:%M:%S", &time_information);
         }

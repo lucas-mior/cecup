@@ -143,9 +143,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                     bool is_dir = false;
 
                     path_len = item_path_len_side(row_id, side);
-                    // TODO: Buffer overflow risk. If path_len >= MAX_PATH_LENGTH, this memcpy64
-                    // will write out of bounds of the path_copy array. You should verify that
-                    // path_len is strictly less than MAX_PATH_LENGTH before copying.
+                    ASSERT_LESS(path_len, SIZEOF(path_copy));
                     memcpy64(path_copy, filepath, path_len + 1);
 
                     if (path_len > 0 && path_copy[path_len - 1] == '/') {
@@ -356,9 +354,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 if ((i >= LENGTH(reason_strings_file)) || (i >= LENGTH(reason_strings_dir))) {
                     continue;
                 }
-                // TODO: Redundant condition check. You are evaluating reason_strings_file[i] twice.
-                // The second evaluation should probably be reason_strings_dir[i] == NULL.
-                if ((reason_strings_file[i] == NULL) || (reason_strings_file[i] == NULL)) {
+                if ((reason_strings_file[i] == NULL) || (reason_strings_dir[i] == NULL)) {
                     continue;
                 }
 
