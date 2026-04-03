@@ -30,9 +30,9 @@
 #include <errno.h>
 
 #include "cecup.h"
-#include "aux.c"
 #include "util.c"
 #include "update.c"
+#include "traversal.c"
 #include "ignore_patterns.c"
 #include "work_rsync.c"
 
