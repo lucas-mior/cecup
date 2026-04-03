@@ -999,6 +999,15 @@ hash_expected_collisions(void *map) {
 #include <assert.h>
 #include "arena.c"
 
+// Have to add these declarations so that clangd does not complain
+struct Hash_map_by_value;
+struct Hash_map_by_value *hash_create_map_by_value(uint32);
+void hash_destroy_map_by_value(struct Hash_map_by_value *);
+uint32 hash_ndeleted_map_by_value(struct Hash_map_by_value *);
+bool hash_insert_map_by_value(struct Hash_map_by_value *, int64 *, int32);
+bool hash_lookup_map_by_value(struct Hash_map_by_value *, int64 *, int32 *);
+bool *hash_remove_map_by_value(struct Hash_map_by_value *, int64 *);
+
 #define HASH_KEY_TYPE int64
 #define HASH_KEY_BY_VALUE 1
 #define HASH_VALUE_TYPE int32
