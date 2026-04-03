@@ -255,17 +255,17 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
     inode = (int64)stat.st_ino;
 
     if ((hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &first_hard_link))) {
-        first_hard_link.count += 1;
         first_hard_link.aggregate_hash ^= hash_val;
 
-        if (first_hard_link.count > first_hard_link.capacity) {
+        if (first_hard_link.count >= first_hard_link.capacity) {
             int32 old_capacity = first_hard_link.capacity;
             first_hard_link.capacity *= 2;
             first_hard_link.names = realloc(first_hard_link.names,
                                             old_capacity, first_hard_link.capacity,
                                             SIZEOF(*(first_hard_link.names)));
         }
-        first_hard_link.names[first_hard_link.count - 1] = path;
+        first_hard_link.names[first_hard_link.count] = path;
+        first_hard_link.count += 1;
 
         hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), first_hard_link);
     } else {
