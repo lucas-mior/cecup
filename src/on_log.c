@@ -45,14 +45,13 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
 
     (void)action;
 
-    if (parameter == NULL) {
-        error("Error in %s: GVariant *parameter is NULL.\n", __func__);
-        fatal(EXIT_FAILURE);
-    }
-
     if (strcmp(which, "all") == 0) {
         gtk_text_buffer_get_bounds(cecup.log_buffer, &text_start, &text_end);
     } else if (strcmp(which, "line") == 0) {
+        if (parameter == NULL) {
+            error("Error in %s: GVariant *parameter is NULL.\n", __func__);
+            return;
+        }
         line_num = g_variant_get_int32(parameter);
         gtk_text_buffer_get_iter_at_line(cecup.log_buffer, &text_start, line_num);
         text_end = text_start;
