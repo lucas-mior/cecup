@@ -401,7 +401,6 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     void *row_id_ptr;
     char *parent_path;
     int32 parent_path_len;
-    bool is_root;
     bool is_active;
     int8 side;
     static bool in_update = false;
@@ -437,8 +436,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     if (parent_path) {
         int32 count_selected = 0;
         int64 total_size_bytes = 0;
-
-        is_root = aux_is_root(parent_path);
+        bool is_root = aux_is_root(parent_path);
 
         for (int32 i = 0; i < cecup.rows_len; i += 1) {
             int32 row_id;
