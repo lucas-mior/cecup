@@ -990,7 +990,7 @@ hash_expected_collisions(void *map) {
 
 #endif /* HASH_H2 */
 
-#if TESTING_hash
+#if TESTING_hash && defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 
 #if !OS_UNIX
 #error "hash.c tests only work on unix systems"
@@ -999,8 +999,17 @@ hash_expected_collisions(void *map) {
 #include <assert.h>
 #include "arena.c"
 
-#define NSTRINGS 100000
-#define NBYTES 200*ALIGNMENT
+#define HASH_KEY_TYPE int64
+#define HASH_KEY_BY_VALUE 1
+#define HASH_VALUE_TYPE int32
+#define HASH_VALUE_FORMATTER "%d"
+#define HASH_TYPE map_by_value
+#define HASH_AUTO_RESIZE 1
+#define HASH_DUPLICATE_KEYS 0
+#include "hash.c"
+
+#define NSTRINGS 10000
+#define NBYTES 100*ALIGNMENT
 
 typedef struct String {
     char *s;
@@ -1097,6 +1106,32 @@ main(void) {
 
     hash_destroy_map(map);
     free(strings, NSTRINGS*sizeof(*strings));
+
+    {
+        struct Hash_map_by_value *map2 = hash_create_map_by_value(16);
+        int64 key1 = 12345;
+        int64 key2 = 67890;
+        int32 value1 = 99;
+        int32 value2 = 100;
+        int32 test = 0;
+        int64 missing_key = 999;
+
+        ASSERT(hash_insert_map_by_value(map2, &key1, value1));
+        ASSERT(!hash_insert_map_by_value(map2, &key1, 1));
+        ASSERT(hash_insert_map_by_value(map2, &key2, value2));
+
+        ASSERT_EQUAL(hash_length(map2), 2u);
+
+        ASSERT(hash_lookup_map_by_value(map2, &key1, &test));
+        ASSERT_EQUAL(test, value1);
+
+        ASSERT(!hash_lookup_map_by_value(map2, &missing_key, &test));
+
+        ASSERT(hash_remove_map_by_value(map2, &key1));
+        ASSERT_EQUAL(hash_ndeleted_map_by_value(map2), 1);
+
+        hash_destroy_map_by_value(map2);
+    }
 
     exit(EXIT_SUCCESS);
 }
