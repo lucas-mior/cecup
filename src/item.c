@@ -41,10 +41,11 @@ typedef struct SortEntry {
 static void
 hard_link_append(HardLink *list, HardLink *new) {
     ASSERT(list);
-    while (list->next) {
-        list = list->next;
-    }
-    list->next = new;
+    ASSERT(list->last);
+
+    list->last->next = new;
+    list->last = new;
+
     return;
 }
 
@@ -105,12 +106,18 @@ hard_link_remove(HardLink *list, char *name, int32 name_len) {
         if (new_first) {
             new_first->count = first->count - 1;
             new_first->aggregate_hash = first->aggregate_hash ^ hash_val;
+            new_first->last = first->last;
         }
 
         return new_first;
     }
 
     before->next = list->next;
+    
+    if (list == first->last) {
+        first->last = before;
+    }
+    
     first->count -= 1;
     first->aggregate_hash ^= hash_val;
 
@@ -131,6 +138,16 @@ hard_links_contain(HardLink *test, HardLink *b) {
     } while ((b = b->next));
 
     return false;
+}
+
+static int32
+count_hardlinks(HardLink *list) {
+    int32 count = 1;
+    while (list->next) {
+        count += 1;
+        list = list->next;
+    }
+    return count;
 }
 
 static bool
@@ -158,8 +175,10 @@ hard_links_copy(HardLink *original) {
 
     copy = iter = xmemdup(original, sizeof(*original));
     while ((original = original->next)) {
-        copy->next = xmemdup(original, sizeof(*original));
+        iter->next = xmemdup(original, sizeof(*original));
+        iter = iter->next;
     }
+    copy->last = iter;
 
     return copy;
 }

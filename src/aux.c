@@ -286,6 +286,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         first_hard_link->next = NULL;
         first_hard_link->count = 1;
         first_hard_link->aggregate_hash = hash_val;
+        first_hard_link->last = first_hard_link;
 
         hash_insert_inode_map(traversal->inode_map, inode, inode_len, first_hard_link);
     }

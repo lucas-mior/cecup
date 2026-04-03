@@ -130,6 +130,7 @@ typedef struct HardLink {
     struct HardLink *next;
     uint64 aggregate_hash;
     int32 count;
+    struct HardLink *last;
 } HardLink;
 
 #define HASH_VALUE_TYPE HardLink*
