@@ -520,7 +520,9 @@ enum RsyncCharAttribute {
     RSYNC_CHAR_ATTR_XATTR = 'x',
 };
 
+/* 2026/04/03 00:33:08 [1409122] >f+++++++++ test_file.bin */
 #define RSYNC_ITEMIZE_PLACEHOLDERS "YXcstpoguax"
+#define RSYNC_LOG_DATE_PLACEHOLDERS "YYYY/MM/DD HH:MM:SS [0000000]"
 
 #define RSYNC_MESSAGE_DELETING "*deleting   0 "
 

@@ -85,6 +85,37 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
 }
 
 static char *
+work_check_log_date(char *buf_output, int32 line_len) {
+    char *bracket_open;
+    char *bracket_close;
+    int32 left;
+
+    if (line_len <= strlen32(RSYNC_LOG_DATE_PLACEHOLDERS) + 2) {
+        return NULL;
+    }
+
+    if (buf_output[4] != '/') {
+        return NULL;
+    }
+    if (buf_output[7] != '/') {
+        return NULL;
+    }
+    if (buf_output[10] != ' ') {
+        return NULL;
+    }
+
+    if ((bracket_open = memchr64(buf_output + 10, '[', line_len - 10)) == NULL) {
+        return NULL;
+    }
+
+    left = line_len - (int32)(bracket_open - buf_output);
+    if ((bracket_close = memchr64(bracket_open, ']', left)) == NULL) {
+        return NULL;
+    }
+    return bracket_close + 2;
+}
+
+static char *
 work_check_itemize_line(char *buf_output, int32 line_len) {
     if (line_len <= strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)) {
         return NULL;
@@ -186,6 +217,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     rsync_args[rsync_args_len++] = "--progress";
     rsync_args[rsync_args_len++] = "--info=progress2";
     rsync_args[rsync_args_len++] = "--links";
+    rsync_args[rsync_args_len++] = "--bwlimit=1000";
     rsync_args[rsync_args_len++] = "--hard-links";
     if (checksum) {
         rsync_args[rsync_args_len++] = "--checksum";
@@ -194,7 +226,8 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     rsync_args[rsync_args_len++] = "--times";
     rsync_args[rsync_args_len++] = "--owner";
     rsync_args[rsync_args_len++] = "--group";
-    rsync_args[rsync_args_len++] = "--itemize-changes";
+    rsync_args[rsync_args_len++] = "--log-file=/dev/stdout";
+    rsync_args[rsync_args_len++] = "--log-file-format=%i %n%L";
     rsync_args[rsync_args_len++] = "--files-from";
     rsync_args[rsync_args_len++] = files_from_filename;
     rsync_args[rsync_args_len++] = "--iconv=.,.";
@@ -311,6 +344,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             char end;
             int32 line_len;
             char *path;
+            char *itemize;
             int32 remaining;
 
             if (eol_lf && eol_cr) {
@@ -353,7 +387,8 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                 LOG("%s%c", buf_output, end);
             }
 
-            if ((path = work_check_itemize_line(buf_output, line_len))) {
+            if ((itemize = work_check_log_date(buf_output, line_len))
+                 && (path = work_check_itemize_line(itemize, line_len - (itemize - buf_output)))) {
                 int32 path_len;
                 char *sep;
 
