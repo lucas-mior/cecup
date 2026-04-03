@@ -292,6 +292,7 @@ update_row_rename(Message *message) {
         int32 merge_row_id;
         IgnorePattern *p_match;
         bool is_match = false;
+        HardLinkList *hard_links;
 
         if (path_old) {
             if (is_dir) {
@@ -318,6 +319,8 @@ update_row_rename(Message *message) {
         idx = cecup.rows[side][row_id];
         other_idx = cecup.rows[!side][row_id];
 
+        hard_links = traversal->hard_links[idx];
+
         hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
         traversal->row_ids[idx] = -1;
 
@@ -341,8 +344,14 @@ update_row_rename(Message *message) {
                                    path_new, new_path_len + suffix_len,
                                    traversal->symlink_targets[idx],
                                    traversal->symlink_targets_lens[idx],
-                                   NULL,
+                                   hard_links,
                                    p_match_str, p_match_len);
+        }
+
+        if (hard_links != NULL) {
+            hard_link_replace_node(hard_links,
+                                   path_old, sub_len,
+                                   path_new, new_path_len + suffix_len, n_idx);
         }
 
         merge_row_id = -1;

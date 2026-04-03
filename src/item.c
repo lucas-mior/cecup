@@ -47,6 +47,27 @@ hard_link_append(HardLinkList *list, HardLinkList *new) {
     return;
 }
 
+static void
+hard_link_replace_node(HardLinkList *list,
+                       char *old_path, int32 old_path_len,
+                       char *new_path, int32 new_path_len, int32 new_idx) {
+    HardLinkList *current = list;
+
+    while (current != NULL) {
+        if (current->name_len == old_path_len) {
+            if (memcmp64(current->name, old_path, old_path_len) == 0) {
+                current->name = new_path;
+                current->name_len = new_path_len;
+                current->idx = new_idx;
+                break;
+            }
+        }
+        current = current->next;
+    }
+
+    return;
+}
+
 static HardLinkList *
 hard_link_remove(HardLinkList *list, char *name, int32 name_len) {
     HardLinkList *first = list;
