@@ -44,6 +44,209 @@
 
 static void update_list_from_rows(void);
 static void update_stats_text(int32 count_selected, int64 total_size_bytes);
+static bool update_row_remove(Message *message);
+static bool update_row_transfer(Message *message);
+static bool update_row_rename(Message *message);
+static void update_ignored_helper(Traversal *traversal, int32 side, int32 row_id, IgnorePattern *match);
+static bool update_row_ignore(Message *message);
+static void update_list_from_rows(void);
+static void update_stats_text(int32 count_selected, int64 total_size_bytes);
+static bool update_ui_process_message(Message *message);
+static void update_progress_bar(enum MsgType type, double fraction);
+static void update_progress_state(char *text, char *tooltip);
+static inline void update_functions_sink(void);
+
+static gboolean
+update_ui_handler(void *data) {
+    MessageBatch *batch;
+    Message *message;
+    bool needs_update;
+
+    message = data;
+    needs_update = false;
+
+    if (message->type == MSG_BATCH) {
+        batch = data;
+        for (int32 i = 0; i < batch->count; i += 1) {
+            if (update_ui_process_message(batch->messages[i])) {
+                needs_update = true;
+            }
+        }
+        free(batch, SIZEOF(*batch));
+    } else {
+        needs_update = update_ui_process_message(message);
+    }
+
+    if (needs_update) {
+        update_list_from_rows();
+
+        if (DEBUGGING) {
+            check_consistent_state();
+        }
+    }
+
+    return G_SOURCE_REMOVE;
+}
+
+static bool
+update_ui_process_message(Message *message) {
+    GtkTextIter end;
+    GtkTextIter start_line;
+    GtkTextTagTable *table;
+    int32 current_store_count;
+    bool is_cr;
+    bool buffer_ends_in_lf;
+    bool needs_update;
+
+    needs_update = false;
+
+    if (DEBUGGING) {
+        error("%s: %s\n", __func__, MSG_str(message->type));
+    }
+
+    switch (message->type) {
+    case MSG_LOG:
+    case MSG_LOG_CMD:
+    case MSG_LOG_ERROR:
+        is_cr = false;
+
+        if (message->text_len > 0) {
+            if (message->text[message->text_len - 1] == '\r') {
+                is_cr = true;
+                message->text[message->text_len - 1] = '\0';
+            }
+        }
+
+        gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
+
+        buffer_ends_in_lf = true;
+        if (gtk_text_iter_get_offset(&end) > 0) {
+            GtkTextIter last_char;
+
+            last_char = end;
+            gtk_text_iter_backward_char(&last_char);
+            if (gtk_text_iter_get_char(&last_char) != '\n') {
+                buffer_ends_in_lf = false;
+            }
+        }
+
+        if (is_cr || !buffer_ends_in_lf) {
+            start_line = end;
+            gtk_text_iter_set_line_offset(&start_line, 0);
+            gtk_text_buffer_delete(cecup.log_buffer, &start_line, &end);
+            gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
+        }
+
+        table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
+
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wswitch-enum"
+        switch (message->type) {
+        case MSG_LOG_ERROR:
+            if (gtk_text_tag_table_lookup(table, "err_red") == NULL) {
+                gtk_text_buffer_create_tag(cecup.log_buffer, "err_red", "foreground", "red", NULL);
+            }
+            gtk_text_buffer_insert_with_tags_by_name(
+                cecup.log_buffer, &end, message->text, -1, "err_red", NULL);
+            break;
+        case MSG_LOG_CMD:
+            if (gtk_text_tag_table_lookup(table, "err_blue") == NULL) {
+                gtk_text_buffer_create_tag(cecup.log_buffer, "err_blue", "foreground", "blue", NULL);
+            }
+            gtk_text_buffer_insert_with_tags_by_name(
+                cecup.log_buffer, &end, message->text, -1, "err_blue", NULL);
+            break;
+        default:
+            gtk_text_buffer_insert(cecup.log_buffer, &end, message->text, -1);
+            break;
+        }
+        #pragma clang diagnostic pop
+
+        gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
+        gtk_text_buffer_place_cursor(cecup.log_buffer, &end);
+        gtk_text_view_scroll_to_mark(GTK_TEXT_VIEW(cecup.log_view),
+                                     gtk_text_buffer_get_insert(cecup.log_buffer), 0.0,
+                                     FALSE, 0.0, 0.0);
+        break;
+    case MSG_PROGRESS:
+        if (message->fraction >= 0.0) {
+            gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), message->fraction);
+        }
+        if (message->text) {
+            gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), message->text);
+        }
+        if (message->src_path) {
+            gtk_widget_set_tooltip_text(cecup.progress_bar, message->src_path);
+        }
+        break;
+    case MSG_ROW_REMOVE:
+        needs_update = update_row_remove(message);
+        break;
+    case MSG_ROW_RENAME:
+        needs_update = update_row_rename(message);
+        break;
+    case MSG_ROW_TRANSFER:
+        needs_update = update_row_transfer(message);
+        break;
+    case MSG_IGNORE_PATTERN:
+        needs_update = update_row_ignore(message);
+        break;
+    case MSG_ENABLE_BUTTONS:
+        if (cecup.refresh_id != 0) {
+            g_source_remove(cecup.refresh_id);
+            cecup.refresh_id = 0;
+        }
+        update_list_from_rows();
+
+        cecup.preview_dirty = !message->preview_clean;
+        protect_interface_from_user(false);
+
+        if (DEBUGGING) {
+            check_consistent_state();
+        }
+
+        break;
+    case MSG_CLEAR_TREES:
+        if (cecup.refresh_id != 0) {
+            g_source_remove(cecup.refresh_id);
+            cecup.refresh_id = 0;
+        }
+        g_mutex_lock(&cecup.arena_mutex);
+
+        current_store_count = (int32)g_list_model_get_n_items(cecup.store);
+
+        for (int32 i = 0; i < cecup.traversal[L].nfiles; i += 1) {
+            cecup.traversal[L].row_ids[i] = -1;
+        }
+        for (int32 i = 0; i < cecup.traversal[R].nfiles; i += 1) {
+            cecup.traversal[R].row_ids[i] = -1;
+        }
+
+        cecup.rows_len = 0;
+        cecup.rows_visible_len = 0;
+
+        traversal_clean(&cecup.traversal[L]);
+        traversal_clean(&cecup.traversal[R]);
+
+        cecup_list_model_update(CECUP_LIST_MODEL(cecup.store), current_store_count, 0);
+
+        g_mutex_unlock(&cecup.arena_mutex);
+
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), 0.0);
+        gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), "");
+        gtk_widget_set_tooltip_text(cecup.progress_bar, "");
+        break;
+    case MSG_ADD_ROW:
+    case MSG_BATCH:
+    case MSG_LAST:
+    default:
+        LOG("Ignoring %s.\n", MSG_str(message->type));
+        break;
+    }
+
+    free_message(message);
+    return needs_update;
+}
 
 static bool
 update_row_remove(Message *message) {
@@ -680,198 +883,6 @@ update_stats_text(int32 count_selected, int64 total_size_bytes) {
 
     gtk_label_set_markup(GTK_LABEL(cecup.stats_label), stats_text);
     return;
-}
-
-static bool
-update_ui_process_message(Message *message) {
-    GtkTextIter end;
-    GtkTextIter start_line;
-    GtkTextTagTable *table;
-    int32 current_store_count;
-    bool is_cr;
-    bool buffer_ends_in_lf;
-    bool needs_update;
-
-    needs_update = false;
-
-    if (DEBUGGING) {
-        error("%s: %s\n", __func__, MSG_str(message->type));
-    }
-
-    switch (message->type) {
-    case MSG_LOG:
-    case MSG_LOG_CMD:
-    case MSG_LOG_ERROR:
-        is_cr = false;
-
-        if (message->text_len > 0) {
-            if (message->text[message->text_len - 1] == '\r') {
-                is_cr = true;
-                message->text[message->text_len - 1] = '\0';
-            }
-        }
-
-        gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
-
-        buffer_ends_in_lf = true;
-        if (gtk_text_iter_get_offset(&end) > 0) {
-            GtkTextIter last_char;
-
-            last_char = end;
-            gtk_text_iter_backward_char(&last_char);
-            if (gtk_text_iter_get_char(&last_char) != '\n') {
-                buffer_ends_in_lf = false;
-            }
-        }
-
-        if (is_cr || !buffer_ends_in_lf) {
-            start_line = end;
-            gtk_text_iter_set_line_offset(&start_line, 0);
-            gtk_text_buffer_delete(cecup.log_buffer, &start_line, &end);
-            gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
-        }
-
-        table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
-
-        #pragma clang diagnostic push
-        #pragma clang diagnostic ignored "-Wswitch-enum"
-        switch (message->type) {
-        case MSG_LOG_ERROR:
-            if (gtk_text_tag_table_lookup(table, "err_red") == NULL) {
-                gtk_text_buffer_create_tag(cecup.log_buffer, "err_red", "foreground", "red", NULL);
-            }
-            gtk_text_buffer_insert_with_tags_by_name(
-                cecup.log_buffer, &end, message->text, -1, "err_red", NULL);
-            break;
-        case MSG_LOG_CMD:
-            if (gtk_text_tag_table_lookup(table, "err_blue") == NULL) {
-                gtk_text_buffer_create_tag(cecup.log_buffer, "err_blue", "foreground", "blue", NULL);
-            }
-            gtk_text_buffer_insert_with_tags_by_name(
-                cecup.log_buffer, &end, message->text, -1, "err_blue", NULL);
-            break;
-        default:
-            gtk_text_buffer_insert(cecup.log_buffer, &end, message->text, -1);
-            break;
-        }
-        #pragma clang diagnostic pop
-
-        gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
-        gtk_text_buffer_place_cursor(cecup.log_buffer, &end);
-        gtk_text_view_scroll_to_mark(GTK_TEXT_VIEW(cecup.log_view),
-                                     gtk_text_buffer_get_insert(cecup.log_buffer), 0.0,
-                                     FALSE, 0.0, 0.0);
-        break;
-    case MSG_PROGRESS:
-        if (message->fraction >= 0.0) {
-            gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), message->fraction);
-        }
-        if (message->text) {
-            gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), message->text);
-        }
-        if (message->src_path) {
-            gtk_widget_set_tooltip_text(cecup.progress_bar, message->src_path);
-        }
-        break;
-    case MSG_ROW_REMOVE:
-        needs_update = update_row_remove(message);
-        break;
-    case MSG_ROW_RENAME:
-        needs_update = update_row_rename(message);
-        break;
-    case MSG_ROW_TRANSFER:
-        needs_update = update_row_transfer(message);
-        break;
-    case MSG_IGNORE_PATTERN:
-        needs_update = update_row_ignore(message);
-        break;
-    case MSG_ENABLE_BUTTONS:
-        if (cecup.refresh_id != 0) {
-            g_source_remove(cecup.refresh_id);
-            cecup.refresh_id = 0;
-        }
-        update_list_from_rows();
-
-        cecup.preview_dirty = !message->preview_clean;
-        protect_interface_from_user(false);
-
-        if (DEBUGGING) {
-            check_consistent_state();
-        }
-
-        break;
-    case MSG_CLEAR_TREES:
-        if (cecup.refresh_id != 0) {
-            g_source_remove(cecup.refresh_id);
-            cecup.refresh_id = 0;
-        }
-        g_mutex_lock(&cecup.arena_mutex);
-
-        current_store_count = (int32)g_list_model_get_n_items(cecup.store);
-
-        for (int32 i = 0; i < cecup.traversal[L].nfiles; i += 1) {
-            cecup.traversal[L].row_ids[i] = -1;
-        }
-        for (int32 i = 0; i < cecup.traversal[R].nfiles; i += 1) {
-            cecup.traversal[R].row_ids[i] = -1;
-        }
-
-        cecup.rows_len = 0;
-        cecup.rows_visible_len = 0;
-
-        traversal_clean(&cecup.traversal[L]);
-        traversal_clean(&cecup.traversal[R]);
-
-        cecup_list_model_update(CECUP_LIST_MODEL(cecup.store), current_store_count, 0);
-
-        g_mutex_unlock(&cecup.arena_mutex);
-
-        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), 0.0);
-        gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), "");
-        gtk_widget_set_tooltip_text(cecup.progress_bar, "");
-        break;
-    case MSG_ADD_ROW:
-    case MSG_BATCH:
-    case MSG_LAST:
-    default:
-        LOG("Ignoring %s.\n", MSG_str(message->type));
-        break;
-    }
-
-    free_message(message);
-    return needs_update;
-}
-
-static gboolean
-update_ui_handler(void *data) {
-    MessageBatch *batch;
-    Message *message;
-    bool needs_update;
-
-    message = data;
-    needs_update = false;
-
-    if (message->type == MSG_BATCH) {
-        batch = data;
-        for (int32 i = 0; i < batch->count; i += 1) {
-            if (update_ui_process_message(batch->messages[i])) {
-                needs_update = true;
-            }
-        }
-        free(batch, SIZEOF(*batch));
-    } else {
-        needs_update = update_ui_process_message(message);
-    }
-
-    if (needs_update) {
-        update_list_from_rows();
-
-        if (DEBUGGING) {
-            check_consistent_state();
-        }
-    }
-
-    return G_SOURCE_REMOVE;
 }
 
 static void
