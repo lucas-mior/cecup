@@ -494,8 +494,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                 count_selected += 1;
                 item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
-                size = item_size_side(row_id, L);
-                if (size < 0) {
+                if ((size = item_size_side(row_id, L)) < 0) {
                     size = 0;
                 }
 
