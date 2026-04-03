@@ -422,17 +422,17 @@ update_row_transfer(Message *message) {
         } else {
             char *path = traversal_src->paths[idx_src];
             int32 path_len = traversal_src->paths_lens[idx_src];
-            HardLink *first_link = NULL;
+            HardLink *first_hard_link = NULL;
 
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
-                first_link = traversal_add_link(traversal_dst, stat, path, path_len);
+                first_hard_link = traversal_add_link(traversal_dst, stat, path, path_len);
             }
 
             traversal_push(traversal_dst, &stat,
                            path, path_len,
                            symlink_target, symlink_target_len,
-                           first_link,
+                           first_hard_link,
                            traversal_src->patterns[idx_src],
                            traversal_src->patterns_lens[idx_src]);
             cecup.rows[R][row_id] = traversal_dst->nfiles - 1;

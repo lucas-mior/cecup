@@ -90,7 +90,7 @@ work_traverse_fs(Traversal *traversal) {
         char *path;
         int32 path_len;
         int32 is_dir = false;
-        HardLink *first_link = NULL;
+        HardLink *first_hard_link = NULL;
         char *symlink_target = NULL;
         int32 symlink_target_len = 0;
         char *matched_pattern = NULL;
@@ -246,13 +246,13 @@ work_traverse_fs(Traversal *traversal) {
         if ((ent->fts_info == FTS_F)
              && (ent->fts_statp->st_nlink > 1)
              && !matched_pattern) {
-            first_link = traversal_add_link(traversal, *(ent->fts_statp), path, path_len);
+            first_hard_link = traversal_add_link(traversal, *(ent->fts_statp), path, path_len);
         }
 
         traversal_push(traversal, ent->fts_statp,
                        path, path_len,
                        symlink_target, symlink_target_len,
-                       first_link,
+                       first_hard_link,
                        matched_pattern, matched_pattern_len);
     }
 
