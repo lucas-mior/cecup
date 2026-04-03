@@ -22,7 +22,6 @@
 
 #include "cecup.h"
 #include "util.c"
-#include "aux.c"
 #include "on.h"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
@@ -128,7 +127,7 @@ on_menu_apply(GtkWidget *widget, void *data) {
     if (tasks->count > 0) {
         ThreadData *thread_data;
 
-        protect_interface_from_user(true);
+        aux_protect_interface_from_user(true);
         thread_data = xmalloc(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
         thread_data->tasks = tasks;
@@ -342,7 +341,7 @@ on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
     if (response_id == GTK_RESPONSE_YES) {
         ThreadData *thread_data;
 
-        protect_interface_from_user(true);
+        aux_protect_interface_from_user(true);
         thread_data = xmalloc(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
         thread_data->tasks = tasks;

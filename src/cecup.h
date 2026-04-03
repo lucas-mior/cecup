@@ -477,7 +477,7 @@ typedef struct CecupMenuItem {
 static gboolean update_ui_handler(void * user_data);
 static void free_task_list(TaskList *tasks);
 static void save_config(void);
-static void protect_interface_from_user(bool state);
+static void aux_protect_interface_from_user(bool state);
 static void log_internal(char *file, int line,
                          enum MsgType type, char *format, ...);
 static int32 item_add(int32 src_idx, int32 dst_idx);

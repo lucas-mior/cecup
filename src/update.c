@@ -200,7 +200,7 @@ update_ui_process_message(Message *message) {
         update_list_from_rows();
 
         cecup.preview_dirty = !message->preview_clean;
-        protect_interface_from_user(false);
+        aux_protect_interface_from_user(false);
 
         if (DEBUGGING) {
             check_consistent_state();
@@ -356,7 +356,7 @@ update_row_remove(Message *message) {
     }
 
     if (changed) {
-        invalidate_preview();
+        aux_invalidate_preview();
     }
 
     return changed;
@@ -444,7 +444,7 @@ update_row_transfer(Message *message) {
         memcpy64(&traversal_dst->stats[cecup.rows[R][row_id]], &stat, SIZEOF(struct stat));
     }
 
-    invalidate_preview();
+    aux_invalidate_preview();
     return true;
 }
 
@@ -600,7 +600,7 @@ update_row_rename(Message *message) {
     }
 
     if (changed) {
-        invalidate_preview();
+        aux_invalidate_preview();
     }
 
     return changed;
@@ -623,7 +623,7 @@ static bool
 update_row_ignore(Message *message) {
     (void)message;
 
-    invalidate_preview();
+    aux_invalidate_preview();
     ignore_patterns_load();
 
     for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {

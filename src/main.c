@@ -642,9 +642,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                                           G_CALLBACK(on_config_changed), NULL);
 
     g_signal_connect(cecup.dir_entry[L], "changed",
-                     G_CALLBACK(invalidate_preview), NULL);
+                     G_CALLBACK(aux_invalidate_preview), NULL);
     g_signal_connect(cecup.dir_entry[R], "changed",
-                     G_CALLBACK(invalidate_preview), NULL);
+                     G_CALLBACK(aux_invalidate_preview), NULL);
 
     do {
         GKeyFile *key;

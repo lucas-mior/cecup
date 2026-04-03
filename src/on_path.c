@@ -21,7 +21,6 @@
 #include <gtk/gtk.h>
 
 #include "util.c"
-#include "aux.c"
 #include "update.c"
 #include "cecup.h"
 
@@ -201,7 +200,7 @@ on_path_edited(GtkEditable *editable, void *data) {
             message->dst_path = xmalloc(new_length + 1);
             memcpy64(message->dst_path, relative_new, new_length + 1);
 
-            invalidate_preview();
+            aux_invalidate_preview();
             g_idle_add(update_ui_handler, message);
         }
     }

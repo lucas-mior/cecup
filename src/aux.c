@@ -46,7 +46,7 @@ aux_is_root(char *path) {
 }
 
 static void
-invalidate_preview(void) {
+aux_invalidate_preview(void) {
     cecup.preview_dirty = true;
     if (!gtk_widget_get_sensitive(cecup.stop_button)) {
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
@@ -56,7 +56,7 @@ invalidate_preview(void) {
 }
 
 static void
-protect_interface_from_user(bool state) {
+aux_protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.preview_button, !state);
     gtk_widget_set_sensitive(cecup.ignore_button, !state);
     gtk_widget_set_sensitive(cecup.dir_entry[L], !state);
@@ -191,7 +191,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 static void
 cecup_reset_dir(int32 side) {
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[side]), "./");
-    invalidate_preview();
+    aux_invalidate_preview();
     return;
 }
 
@@ -285,7 +285,7 @@ cecup_get_dirs(void) {
     g_signal_handler_unblock(cecup.dir_entry[L], cecup.src_entry_id);
     g_signal_handler_unblock(cecup.dir_entry[R], cecup.dst_entry_id);
 
-    invalidate_preview();
+    aux_invalidate_preview();
 
     return true;
 }
@@ -548,8 +548,8 @@ aux_functions_sink(void) {
     (void)free_task_list;
     (void)free_message;
     (void)traversal_push;
-    (void)protect_interface_from_user;
-    (void)invalidate_preview;
+    (void)aux_protect_interface_from_user;
+    (void)aux_invalidate_preview;
     (void)traversal_free;
     (void)traversal_allocate;
     return;
