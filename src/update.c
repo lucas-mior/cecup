@@ -528,7 +528,7 @@ update_row_rename(Message *message) {
 
         if (S_ISREG(traversal->stats[idx].st_mode) && traversal->stats[idx].st_nlink > 1) {
             int64 inode;
-            HardLink hl_val;
+            HardLinks hl_val;
 
             inode = (int64)traversal->stats[idx].st_ino;
             if (hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &hl_val)) {

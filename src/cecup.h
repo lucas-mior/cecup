@@ -124,15 +124,15 @@ _Static_assert((!R) == L, "!R must be L");
 #define HASH_TYPE fs_map
 #include "hash.c"
 
-typedef struct HardLink {
+typedef struct HardLinks {
     uint64 aggregate_hash;
     int32 count;
     int32 capacity;
     char **names;
- } HardLink;
+ } HardLinks;
 
 #define HASH_KEY_TYPE int64
-#define HASH_VALUE_TYPE HardLink
+#define HASH_VALUE_TYPE HardLinks
 #define HASH_PADDING_TYPE uint32
 #define HASH_DUPLICATE_KEYS 0
 #define HASH_AUTO_RESIZE 1

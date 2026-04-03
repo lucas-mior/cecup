@@ -396,7 +396,7 @@ work_preview(void *user_data) {
 
         if (!aux_is_root(bucket_src->key)
             && (action_src != ACTION_EQUAL) && (action_src != ACTION_IGNORE)) {
-            HardLink *hard_links = item_hardlink_side(row_id, L);
+            HardLinks *hard_links = item_hardlink_side(row_id, L);
             int32 nlinks = count_hardlinks(hard_links);
 
             while ((cecup.ntransfers + nlinks + 1) >= cecup.transfers_capacity) {

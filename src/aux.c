@@ -246,7 +246,7 @@ traversal_symlink_get(Traversal *traversal, char *path, char **symlink_target) {
 static void
 traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
     int64 inode;
-    HardLink first_hard_link;
+    HardLinks first_hard_link;
     uint64 hash_val;
 
     HERE;
@@ -288,7 +288,7 @@ traversal_unlink(Traversal *traversal, int32 idx) {
         int64 inode;
         char *path = traversal->paths[idx];
         int32 path_len = traversal->paths_lens[idx];
-        HardLink first_hard_link;
+        HardLinks first_hard_link;
         uint64 hash_val;
 
         inode = (int64)traversal->stats[idx].st_ino;

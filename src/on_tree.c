@@ -340,7 +340,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
             char reason_buf[1024];
             char *symlink_target;
             char *ignore_pattern;
-            HardLink *hard_links = NULL;
+            HardLinks *hard_links = NULL;
 
             reason_buf[0] = '\0';
             for (uint32 i = 0; i < REASON_BIT_COUNT; i += 1) {

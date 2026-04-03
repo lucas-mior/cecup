@@ -606,7 +606,7 @@ work_rsync(void *user_data) {
         Task *task = tasks->items[i];
         Traversal *traversal = &cecup.traversal[task->side];
         int32 write_len;
-        HardLink hardlinks;
+        HardLinks hardlinks;
 
         if ((task->action == ACTION_EQUAL) || (task->action == ACTION_IGNORE)) {
             continue;

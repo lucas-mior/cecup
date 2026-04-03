@@ -39,7 +39,7 @@ typedef struct SortEntry {
 } SortEntry;
 
 static void
-hard_link_replace_node(HardLink *list,
+hard_link_replace_node(HardLinks *list,
                        char *old_path, int32 old_path_len,
                        char *new_path, int32 new_path_len, int32 new_idx) {
     uint64 old_hash;
@@ -65,8 +65,8 @@ hard_link_replace_node(HardLink *list,
     return;
 }
 
-static HardLink *
-hard_link_remove(HardLink *list, char *name, int32 name_len) {
+static HardLinks *
+hard_link_remove(HardLinks *list, char *name, int32 name_len) {
     uint64 hash_val;
     int32 found_idx = -1;
 
@@ -99,7 +99,7 @@ hard_link_remove(HardLink *list, char *name, int32 name_len) {
 }
 
 static bool
-hard_links_contain(HardLink *test, HardLink *b) {
+hard_links_contain(HardLinks *test, HardLinks *b) {
     int32 test_len;
 
     ASSERT(test);
@@ -125,7 +125,7 @@ hard_links_contain(HardLink *test, HardLink *b) {
 }
 
 static int32
-count_hardlinks(HardLink *list) {
+count_hardlinks(HardLinks *list) {
     if (list == NULL) {
         return 0;
     }
@@ -134,7 +134,7 @@ count_hardlinks(HardLink *list) {
 }
 
 static bool
-hard_links_match(HardLink *a, HardLink *b) {
+hard_links_match(HardLinks *a, HardLinks *b) {
     ASSERT(a);
     ASSERT(b);
 
@@ -149,9 +149,9 @@ hard_links_match(HardLink *a, HardLink *b) {
     return true;
 }
 
-static HardLink *
-hard_links_copy(HardLink *original) {
-    HardLink *copy;
+static HardLinks *
+hard_links_copy(HardLinks *original) {
+    HardLinks *copy;
 
     ASSERT(original);
 
@@ -171,7 +171,7 @@ hard_links_copy(HardLink *original) {
 }
 
 static void
-hard_link_copy_free(HardLink *copy) {
+hard_link_copy_free(HardLinks *copy) {
     ASSERT(copy);
 
     for (int32 i = 0; i < copy->count; i += 1) {
@@ -282,11 +282,11 @@ item_symlink_target_side(int32 row_id, int32 side) {
     }
 }
 
-static HardLink *
+static HardLinks *
 item_hardlink_side(int32 row_id, int32 side) {
     int32 idx;
-    HardLink temp;
-    HardLink *ret = NULL;
+    HardLinks temp;
+    HardLinks *ret = NULL;
     int64 inode;
 
     if ((idx = cecup.rows[side][row_id]) < 0) {
@@ -364,7 +364,7 @@ item_get_actions_reasons(int32 row_id,
         char *pattern_src = cecup.traversal[L].patterns[src_idx];
         struct stat *stat_src = &cecup.traversal[L].stats[src_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
-        HardLink *hard_links = item_hardlink_side(row_id, L);
+        HardLinks *hard_links = item_hardlink_side(row_id, L);
         bool is_hardlink = hard_links && (hard_links->count > 1);
 
         if (pattern_src) {
@@ -399,8 +399,8 @@ item_get_actions_reasons(int32 row_id,
         char *path_src = cecup.traversal[L].paths[src_idx];
         char *symlink_target_src = cecup.traversal[L].symlink_targets[src_idx];
         char *symlink_target_dst = cecup.traversal[R].symlink_targets[dst_idx];
-        HardLink *hard_links_src = item_hardlink_side(row_id, L);
-        HardLink *hard_links_dst = item_hardlink_side(row_id, R);
+        HardLinks *hard_links_src = item_hardlink_side(row_id, L);
+        HardLinks *hard_links_dst = item_hardlink_side(row_id, R);
         bool is_symlink = S_ISLNK(stat_src->st_mode);
         bool is_hardlink = hard_links_src && (hard_links_src->count > 1);
         bool is_dir = S_ISDIR(stat_src->st_mode);
