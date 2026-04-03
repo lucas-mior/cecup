@@ -210,7 +210,6 @@ update_row_transfer(Message *message) {
 
     if (cecup.rows[R][row_id] < 0) {
         int32 *lookup;
-        int32 idx_dst;
 
         if ((lookup = hash_lookup_fs_map(traversal_dst->map,
                                          path_transfered, path_transfered_len))) {
@@ -218,14 +217,7 @@ update_row_transfer(Message *message) {
         } else {
             char *path = traversal_src->paths[idx_src];
             int32 path_len = traversal_src->paths_lens[idx_src];
-
-            idx_dst = traversal_push(traversal_dst, &stat,
-                                     path, path_len,
-                                     NULL, 0,
-                                     NULL,
-                                     traversal_src->patterns[idx_src],
-                                     traversal_src->patterns_lens[idx_src]);
-            cecup.rows[R][row_id] = idx_dst;
+            HardLinkList *first_link = NULL;
 
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
@@ -233,9 +225,8 @@ update_row_transfer(Message *message) {
                 int32 inode_len;
                 HardLinkList **first_link_ptr;
                 HardLinkList *new_link;
-                HardLinkList *first_link;
 
-                inode_len = ITOA(inode, (long)traversal_dst->stats[idx_dst].st_ino);
+                inode_len = ITOA(inode, (long)stat.st_ino);
                 if ((first_link_ptr = hash_lookup_inode_map(traversal_dst->inode_map,
                                                             inode, inode_len))) {
                     first_link = *first_link_ptr;
@@ -243,7 +234,7 @@ update_row_transfer(Message *message) {
                     new_link = xarena_push(traversal_dst->arena, SIZEOF(*new_link));
                     new_link->name = path;
                     new_link->name_len = path_len;
-                    new_link->idx = idx_dst;
+                    new_link->idx = traversal_dst->nfiles;
                     new_link->next = NULL;
 
                     hard_link_append(first_link, new_link);
@@ -251,12 +242,19 @@ update_row_transfer(Message *message) {
                     first_link = xarena_push(traversal_dst->arena, SIZEOF(*first_link));
                     first_link->name = path; 
                     first_link->name_len = path_len;
-                    first_link->idx = idx_dst;
+                    first_link->idx = traversal_dst->nfiles;
                     first_link->next = NULL;
                     hash_insert_inode_map(traversal_dst->inode_map, inode, inode_len, first_link);
                 }
-                traversal_dst->hard_links[idx_dst] = first_link;
             }
+
+            traversal_push(traversal_dst, &stat,
+                           path, path_len,
+                           NULL, 0,
+                           first_link,
+                           traversal_src->patterns[idx_src],
+                           traversal_src->patterns_lens[idx_src]);
+            cecup.rows[R][row_id] = traversal_dst->nfiles - 1;
         }
         traversal_dst->row_ids[cecup.rows[R][row_id]] = row_id;
     } else {
