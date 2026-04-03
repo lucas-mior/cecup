@@ -377,6 +377,8 @@ update_row_transfer(Message *message) {
     int32 stat_attempts = 0;
     char full_path[MAX_PATH_LENGTH];
     struct stat stat;
+    char *link_target = NULL;
+    int32 link_target_len = 0;
 
     if ((path_transfered == NULL) || (path_transfered_len == 0)) {
         error("Error: invalid arguments passed to %s.\n", __func__);
@@ -425,12 +427,6 @@ update_row_transfer(Message *message) {
             char *path = traversal_src->paths[idx_src];
             int32 path_len = traversal_src->paths_lens[idx_src];
             HardLinkList *first_link = NULL;
-            char *link_target = NULL;
-            int32 link_target_len = 0;
-
-            if (S_ISLNK(stat.st_mode)) {
-                link_target_len = traversal_symlink_get(traversal_dst, full_path, &link_target);
-            }
 
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
@@ -447,7 +443,12 @@ update_row_transfer(Message *message) {
         }
         traversal_dst->row_ids[cecup.rows[R][row_id]] = row_id;
     } else {
-        // only update changes from source to destination: only stat changed
+        // only update changes from source to destination: only stat and symlink might have changed
+        if (S_ISLNK(stat.st_mode)) {
+            link_target_len = traversal_symlink_get(traversal_dst, full_path, &link_target);
+            traversal_dst->symlink_targets[cecup.rows[R][row_id]] = link_target;
+            traversal_dst->symlink_targets_lens[cecup.rows[R][row_id]] = (int16)link_target_len;
+        }
         memcpy64(&traversal_dst->stats[cecup.rows[R][row_id]], &stat, SIZEOF(struct stat));
     }
 
