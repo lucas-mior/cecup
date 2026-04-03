@@ -55,6 +55,8 @@ hard_link_replace_node(HardLinks *list,
         if (list->names_lens[i] == old_path_len) {
             if (memcmp64(list->names[i], old_path, old_path_len) == 0) {
                 list->names[i] = new_path;
+                // TODO: You update the name pointer here, but you forgot to update its
+                // corresponding length. You must also add: `list->names_lens[i] = new_path_len;`
                 break;
             }
         }
@@ -84,6 +86,9 @@ hard_link_remove(HardLinks *list, char *name, int32 name_len) {
     if (found_idx >= 0) {
         for (int32 i = found_idx; i < (list->count - 1); i += 1) {
             list->names[i] = list->names[i + 1];
+            // TODO: Just like in `traversal_unlink`, you are shifting the names but forgetting to
+            // shift the parallel lengths array. Add `list->names_lens[i] = list->names_lens[i +
+            // 1];`.
         }
         list->count -= 1;
         list->aggregate_hash ^= hash_val;

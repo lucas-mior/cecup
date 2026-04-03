@@ -254,6 +254,10 @@ traversal_unlink(Traversal *traversal, int32 idx) {
             if (found_idx >= 0) {
                 for (int32 i = found_idx; i < (hard_links.count - 1); i += 1) {
                     hard_links.names[i] = hard_links.names[i + 1];
+                    // TODO: You are shifting `hard_links.names`, but forgetting to shift
+                    // `hard_links.names_lens`. This will cause the lengths array to go out of sync
+                    // with the names array, leading to memory corruption or erroneous string
+                    // processing later.
                 }
                 hard_links.count -= 1;
                 hard_links.aggregate_hash ^= hash_val;

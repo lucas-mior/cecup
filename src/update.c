@@ -399,6 +399,9 @@ update_row_transfer(Message *message) {
     }
 
     SNPRINTF(full_path, "%s/%s", cecup.dst_base, path_transfered);
+    // TODO: Buffer overflow/truncation risk. If `cecup.dst_base` + `path_transfered` exceeds
+    // `MAX_PATH_LENGTH`, `SNPRINTF` will truncate the string. This might cause `lstat` to evaluate
+    // the wrong path or fail silently. You should check if the combined length fits in `full_path`.
     if (lstat(full_path, &stat) < 0) {
         error("Error in stat('%s'): %s.\n", full_path, strerror(errno));
         if (DEBUGGING) {
@@ -457,6 +460,8 @@ update_row_rename(Message *message) {
     int32 old_path_len = message->src_path_len;
     int32 new_path_len = message->dst_path_len;
     int32 side = message->side;
+    // TODO: Out-of-bounds Read Risk. If `old_path_len` is 0, this will access `old_path[-1]`. You
+    // should verify that `old_path_len > 0` before checking the last character.
     bool is_dir = (old_path[old_path_len - 1] == '/');
     bool changed = false;
 
