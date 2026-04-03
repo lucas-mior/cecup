@@ -383,9 +383,8 @@ update_row_transfer(Message *message) {
         return false;
     }
 
-    if ((idx_ptr
-         = hash_lookup_fs_map(traversal_src->map,
-                              path_transfered, path_transfered_len)) == NULL) {
+    if ((idx_ptr = hash_lookup_fs_map(traversal_src->map,
+                                      path_transfered, path_transfered_len)) == NULL) {
         LOG_ERROR("Warning: transfered file does not exist in source.\n");
         if (DEBUGGING) {
             fatal(EXIT_FAILURE);
