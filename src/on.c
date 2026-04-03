@@ -405,6 +405,9 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     bool is_active;
     int8 side;
     static bool in_update = false;
+    bool filter_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
+    bool filter_link = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_link));
+    bool filter_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
 
     if (in_update) {
         return;
@@ -436,9 +439,6 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     if (parent_path) {
         int32 count_selected = 0;
         int64 total_size_bytes = 0;
-        bool filter_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
-        bool filter_link = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_link));
-        bool filter_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
 
         parent_path_len = strlen32(parent_path);
         is_root = aux_is_root(parent_path);
