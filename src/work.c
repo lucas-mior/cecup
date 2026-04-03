@@ -240,17 +240,7 @@ work_traverse_fs(Traversal *traversal) {
         }
 
         if ((ent->fts_info == FTS_SL) || (ent->fts_info == FTS_SLNONE)) {
-            char target[MAX_PATH_LENGTH];
-            int64 target_len;
-
-            if ((target_len = readlink(ent->fts_path, target, SIZEOF(target) - 1)) < 0) {
-                LOG_ERROR(_("Error in readlink(%s): %s.\n"), ent->fts_path, strerror(errno));
-            } else {
-                target[target_len] = '\0';
-                link_target = xarena_push(traversal->arena, target_len + 1);
-                memcpy64(link_target, target, target_len + 1);
-                link_target_len = (int32)target_len;
-            }
+            link_target_len = traversal_symlink_get(traversal, ent->fts_path, &link_target);
         }
 
         if ((ent->fts_info == FTS_F)

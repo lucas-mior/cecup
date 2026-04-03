@@ -235,6 +235,23 @@ traversal_push(Traversal *traversal, struct stat *stat,
     return idx;
 }
 
+static int32
+traversal_symlink_get(Traversal *traversal, char *path, char **link_target) {
+    char buffer[MAX_PATH_LENGTH];
+    int64 link_target_len;
+
+    if ((link_target_len = readlink(path, buffer, SIZEOF(buffer) - 1)) < 0) {
+        LOG_ERROR(_("Error in readlink(%s): %s.\n"), path, strerror(errno));
+        *link_target = NULL;
+        return 0;
+    } else {
+        buffer[link_target_len] = '\0';
+        *link_target = xarena_push(traversal->arena, link_target_len + 1);
+        memcpy64(*link_target, buffer, link_target_len + 1);
+    }
+    return (int32)link_target_len;
+}
+
 static HardLinkList *
 traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
     char inode[32];
