@@ -285,15 +285,13 @@ item_symlink_target_side(int32 row_id, int32 side) {
 static HardLink *
 item_hardlink_side(int32 row_id, int32 side) {
     int32 idx;
-    char inode[32];
-    int32 inode_len;
     HardLink temp;
     HardLink *ret = NULL;
 
     if ((idx = cecup.rows[side][row_id]) >= 0) {
         if (cecup.traversal[side].stats[idx].st_nlink > 1) {
-            inode_len = ITOA(inode, (long)cecup.traversal[side].stats[idx].st_ino);
-            if (hash_lookup_inode_map(cecup.traversal[side].inode_map, inode, inode_len, &temp)) {
+            int64 inode = (int64)cecup.traversal[side].stats[idx].st_ino;
+            if (hash_lookup_inode_map(cecup.traversal[side].inode_map, &inode, sizeof(inode), &temp)) {
                 ret = xarena_push(cecup.traversal[side].arena, SIZEOF(*ret));
                 *ret = temp;
             }

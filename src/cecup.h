@@ -115,6 +115,7 @@ _Static_assert((!R) == L, "!R must be L");
 #define error2(...) fprintf(stderr, __VA_ARGS__)
 #endif
 
+#define HASH_KEY_TYPE char
 #define HASH_VALUE_TYPE int32
 #define HASH_VALUE_FORMATTER "%d"
 #define HASH_PADDING_TYPE uint32
@@ -130,13 +131,15 @@ typedef struct HardLink {
     char **names;
  } HardLink;
 
+#define HASH_KEY_TYPE int64
 #define HASH_VALUE_TYPE HardLink
 #define HASH_PADDING_TYPE uint32
-#define HASH_DUPLICATE_KEYS 1
+#define HASH_DUPLICATE_KEYS 0
 #define HASH_AUTO_RESIZE 1
 #define HASH_TYPE inode_map
 #include "hash.c"
 
+#define HASH_KEY_TYPE char
 #define HASH_DUPLICATE_KEYS 1
 #define HASH_AUTO_RESIZE 1
 #define HASH_TYPE transfer_set
@@ -334,13 +337,12 @@ typedef struct MessageBatch {
 
 typedef struct Task {
     enum Action action;
-    int8 side;
+    int32 path_len;
 
     char *path;
-    char *inode;
+    int64 inode;
 
-    int32 path_len;
-    int32 inode_len;
+    int8 side;
 } Task;
 
 typedef struct TaskList {

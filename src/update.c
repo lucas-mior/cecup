@@ -521,16 +521,15 @@ update_row_rename(Message *message) {
         }
 
         if (S_ISREG(traversal->stats[idx].st_mode) && traversal->stats[idx].st_nlink > 1) {
-            char inode[32];
-            int32 inode_len;
+            int64 inode;
             HardLink hl_val;
 
-            inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
-            if (hash_lookup_inode_map(traversal->inode_map, inode, inode_len, &hl_val)) {
+            inode = (int64)traversal->stats[idx].st_ino;
+            if (hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &hl_val)) {
                 hard_link_replace_node(&hl_val,
                                        path_old, sub_len,
                                        path_new, new_path_len + suffix_len, n_idx);
-                hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, hl_val);
+                hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), hl_val);
             }
         }
 

@@ -245,15 +245,14 @@ traversal_symlink_get(Traversal *traversal, char *path, char **symlink_target) {
 
 static void
 traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
-    char inode[32];
-    int32 inode_len;
+    int64 inode;
     HardLink first_hard_link;
     uint64 hash_val;
 
     hash_val = rapidhash(path, (size_t)path_len);
-    inode_len = ITOA(inode, (long)stat.st_ino);
+    inode = (int64)stat.st_ino;
 
-    if ((hash_lookup_inode_map(traversal->inode_map, inode, inode_len, &first_hard_link))) {
+    if ((hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &first_hard_link))) {
         first_hard_link.count += 1;
         first_hard_link.aggregate_hash ^= hash_val;
 
@@ -266,7 +265,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         }
         first_hard_link.names[first_hard_link.count - 1] = path;
 
-        hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, first_hard_link);
+        hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), first_hard_link);
     } else {
         first_hard_link.aggregate_hash = hash_val;
         first_hard_link.count = 1;
@@ -274,7 +273,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         first_hard_link.names = xarena_push(traversal->arena, first_hard_link.capacity*SIZEOF(*first_hard_link.names));
         first_hard_link.names[0] = path;
 
-        hash_insert_inode_map(traversal->inode_map, inode, inode_len, first_hard_link);
+        hash_insert_inode_map(traversal->inode_map, &inode, sizeof(inode), first_hard_link);
     }
 
     return;
@@ -284,15 +283,14 @@ static void
 traversal_unlink(Traversal *traversal, int32 idx) {
     if (S_ISREG(traversal->stats[idx].st_mode)
             && (traversal->stats[idx].st_nlink > 1)) {
-        char inode[32];
-        int32 inode_len;
+        int64 inode;
         char *path = traversal->paths[idx];
         int32 path_len = traversal->paths_lens[idx];
         HardLink first_hard_link;
         uint64 hash_val;
 
-        inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
-        if ((hash_lookup_inode_map(traversal->inode_map, inode, inode_len, &first_hard_link))) {
+        inode = (int64)traversal->stats[idx].st_ino;
+        if ((hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &first_hard_link))) {
             int32 found_idx = -1;
 
             hash_val = rapidhash(path, (size_t)path_len);
@@ -314,9 +312,9 @@ traversal_unlink(Traversal *traversal, int32 idx) {
                 first_hard_link.aggregate_hash ^= hash_val;
 
                 if (first_hard_link.count == 0) {
-                    hash_remove_inode_map(traversal->inode_map, inode, inode_len);
+                    hash_remove_inode_map(traversal->inode_map, &inode, sizeof(inode));
                 } else {
-                    hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, first_hard_link);
+                    hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), first_hard_link);
                 }
             }
         }
@@ -359,8 +357,6 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         enum Action action;
         enum Action actions[2];
         enum Reason reason;
-        char inode[32];
-        int32 inode_len;
         int32 idx;
         Task *task;
 
@@ -387,9 +383,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
         if (action == ACTION_HARDLINK) {
             idx = cecup.rows[side][row_id];
-            inode_len = ITOA(inode, (long)cecup.traversal[side].stats[idx].st_ino);
-            task->inode = xmemdup(inode, inode_len + 1);
-            task->inode_len = inode_len;
+            task->inode = (int64)cecup.traversal[side].stats[idx].st_ino;
         }
 
         task->action = action;
@@ -401,8 +395,6 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
     if ((count == 0) && clicked_path) {
         Task *task;
-        char inode[32];
-        int32 inode_len;
         int32 idx;
 
         count = 1;
@@ -418,9 +410,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
         if (clicked_action == ACTION_HARDLINK) {
             if (hash_lookup_fs_map(cecup.traversal[side].map, task->path, task->path_len, &idx)) {
-                inode_len = ITOA(inode, (long)cecup.traversal[side].stats[idx].st_ino);
-                task->inode = xmemdup(inode, inode_len + 1);
-                task->inode_len = inode_len;
+                task->inode = (int64)cecup.traversal[side].stats[idx].st_ino;
             }
         }
 
