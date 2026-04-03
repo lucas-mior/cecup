@@ -97,7 +97,6 @@ traversal_allocate(Traversal *traversal) {
     traversal->stats = xmalloc(capacity*SIZEOF(*(traversal->stats)));
     traversal->patterns = xmalloc(capacity*SIZEOF(*(traversal->patterns)));
     traversal->symlink_targets = xmalloc(capacity*SIZEOF(*(traversal->symlink_targets)));
-    traversal->hard_links = xmalloc(capacity*SIZEOF(*(traversal->hard_links)));
     traversal->paths = xmalloc(capacity*SIZEOF(*(traversal->paths)));
 
     traversal->paths_lens = xmalloc(capacity*SIZEOF(*(traversal->paths_lens)));
@@ -124,8 +123,6 @@ traversal_clean(Traversal *traversal) {
                   traversal->ncapacity*SIZEOF(*(traversal->paths)));
         dont_read(traversal->symlink_targets,
                   traversal->ncapacity*SIZEOF(*(traversal->symlink_targets)));
-        dont_read(traversal->hard_links,
-                  traversal->ncapacity*SIZEOF(*(traversal->hard_links)));
         dont_read(traversal->patterns,
                   traversal->ncapacity*SIZEOF(*(traversal->patterns)));
         dont_read(traversal->paths_lens,
@@ -154,7 +151,6 @@ traversal_free(Traversal *traversal) {
     free(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
     free(traversal->patterns, capacity*SIZEOF(*(traversal->patterns)));
     free(traversal->symlink_targets, capacity*SIZEOF(*(traversal->symlink_targets)));
-    free(traversal->hard_links, capacity*SIZEOF(*(traversal->hard_links)));
     free(traversal->paths, capacity*SIZEOF(*(traversal->paths)));
 
     free(traversal->paths_lens, capacity*SIZEOF(*(traversal->paths_lens)));
@@ -169,7 +165,6 @@ static int32
 traversal_push(Traversal *traversal, struct stat *stat,
                char *path, int32 path_len,
                char *symlink_target, int32 symlink_target_len,
-               HardLink *first_hard_link,
                char *matched_pattern, int32 matched_pattern_len) {
     struct stat stat_copy = *stat;
     int32 idx;
@@ -188,9 +183,6 @@ traversal_push(Traversal *traversal, struct stat *stat,
         traversal->symlink_targets = realloc(traversal->symlink_targets,
                                              old_capacity, traversal->ncapacity,
                                              SIZEOF(*(traversal->symlink_targets)));
-        traversal->hard_links = realloc(traversal->hard_links,
-                                        old_capacity, traversal->ncapacity,
-                                        SIZEOF(*(traversal->hard_links)));
         traversal->patterns = realloc(traversal->patterns,
                                       old_capacity, traversal->ncapacity,
                                       SIZEOF(*(traversal->patterns)));
@@ -223,7 +215,6 @@ traversal_push(Traversal *traversal, struct stat *stat,
     traversal->paths_lens[idx] = (int16)path_len;
     traversal->symlink_targets[idx] = symlink_target;
     traversal->symlink_targets_lens[idx] = (int16)symlink_target_len;
-    traversal->hard_links[idx] = first_hard_link;
     traversal->patterns[idx] = matched_pattern;
     traversal->patterns_lens[idx] = (int16)matched_pattern_len;
     traversal->row_ids[idx] = -1;
@@ -252,42 +243,41 @@ traversal_symlink_get(Traversal *traversal, char *path, char **symlink_target) {
     return (int32)symlink_target_len;
 }
 
-static HardLink *
+static void
 traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
     char inode[32];
     int32 inode_len;
-    HardLink *new_link;
-    HardLink *first_hard_link;
+    HardLink first_hard_link;
     uint64 hash_val;
 
     hash_val = rapidhash(path, (size_t)path_len);
     inode_len = ITOA(inode, (long)stat.st_ino);
 
     if ((hash_lookup_inode_map(traversal->inode_map, inode, inode_len, &first_hard_link))) {
-        new_link = xarena_push(traversal->arena, SIZEOF(*new_link));
-        new_link->name = path;
-        new_link->name_len = path_len;
-        new_link->idx = traversal->nfiles;
-        new_link->next = NULL;
+        first_hard_link.count += 1;
+        first_hard_link.aggregate_hash ^= hash_val;
 
-        first_hard_link->count += 1;
-        first_hard_link->aggregate_hash ^= hash_val;
+        if (first_hard_link.count > first_hard_link.capacity) {
+            char **old_names = first_hard_link.names;
+            int32 old_capacity = first_hard_link.capacity;
+            first_hard_link.capacity *= 2;
+            first_hard_link.names = xarena_push(traversal->arena, first_hard_link.capacity*SIZEOF(*first_hard_link.names));
+            memcpy64(first_hard_link.names, old_names, old_capacity * SIZEOF(*first_hard_link.names));
+        }
+        first_hard_link.names[first_hard_link.count - 1] = path;
 
-        hard_link_append(first_hard_link, new_link);
+        hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, first_hard_link);
     } else {
-        first_hard_link = xarena_push(traversal->arena, SIZEOF(*first_hard_link));
-        first_hard_link->name = path;
-        first_hard_link->name_len = path_len;
-        first_hard_link->idx = traversal->nfiles;
-        first_hard_link->next = NULL;
-        first_hard_link->count = 1;
-        first_hard_link->aggregate_hash = hash_val;
-        first_hard_link->last = first_hard_link;
+        first_hard_link.aggregate_hash = hash_val;
+        first_hard_link.count = 1;
+        first_hard_link.capacity = 2;
+        first_hard_link.names = xarena_push(traversal->arena, first_hard_link.capacity*SIZEOF(*first_hard_link.names));
+        first_hard_link.names[0] = path;
 
         hash_insert_inode_map(traversal->inode_map, inode, inode_len, first_hard_link);
     }
 
-    return first_hard_link;
+    return;
 }
 
 static void
@@ -298,16 +288,36 @@ traversal_unlink(Traversal *traversal, int32 idx) {
         int32 inode_len;
         char *path = traversal->paths[idx];
         int32 path_len = traversal->paths_lens[idx];
-        HardLink *first_hard_link;
-        HardLink *new_first_hard_link;
+        HardLink first_hard_link;
+        uint64 hash_val;
 
         inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
         if ((hash_lookup_inode_map(traversal->inode_map, inode, inode_len, &first_hard_link))) {
-            new_first_hard_link = hard_link_remove(first_hard_link, path, path_len);
-            if (first_hard_link == NULL) {
-                hash_remove_inode_map(traversal->inode_map, inode, inode_len);
-            } else if (new_first_hard_link != first_hard_link) {
-                hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, new_first_hard_link);
+            int32 found_idx = -1;
+
+            hash_val = rapidhash(path, (size_t)path_len);
+
+            for (int32 i = 0; i < first_hard_link.count; i += 1) {
+                if (strlen32(first_hard_link.names[i]) == path_len) {
+                    if (memcmp64(first_hard_link.names[i], path, path_len) == 0) {
+                        found_idx = i;
+                        break;
+                    }
+                }
+            }
+
+            if (found_idx >= 0) {
+                for (int32 i = found_idx; i < (first_hard_link.count - 1); i += 1) {
+                    first_hard_link.names[i] = first_hard_link.names[i + 1];
+                }
+                first_hard_link.count -= 1;
+                first_hard_link.aggregate_hash ^= hash_val;
+
+                if (first_hard_link.count == 0) {
+                    hash_remove_inode_map(traversal->inode_map, inode, inode_len);
+                } else {
+                    hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, first_hard_link);
+                }
             }
         }
     }
@@ -349,7 +359,6 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         enum Action action;
         enum Action actions[2];
         enum Reason reason;
-        HardLink *hard_links;
         Task *task;
 
         row_id = i;
@@ -373,10 +382,6 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         task->path = xmalloc(path_len + 1);
         memcpy64(task->path, filepath, path_len + 1);
 
-        if ((hard_links = item_hardlink_side(row_id, side))) {
-            task->hard_links = hard_links_copy(hard_links);
-        }
-
         task->action = action;
         task->side = side;
 
@@ -386,8 +391,6 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
     if ((count == 0) && clicked_path) {
         Task *task;
-        Traversal *traversal;
-        int32 idx;
 
         count = 1;
         tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count));
@@ -402,17 +405,6 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
         task->action = clicked_action;
         task->side = side;
-
-        traversal = &cecup.traversal[side];
-
-        if ((hash_lookup_fs_map(traversal->map, clicked_path, task->path_len, &idx))) {
-            HardLink *hard_links;
-
-            if ((hard_links = traversal->hard_links[idx])) {
-                task->hard_links = hard_links_copy(hard_links);
-            }
-        }
-
         tasks->items[0] = task;
     } else {
         tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count));

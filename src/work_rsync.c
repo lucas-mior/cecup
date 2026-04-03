@@ -604,22 +604,28 @@ work_rsync(void *user_data) {
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
+        Traversal *traversal = &cecup.traversal[task->side];
         int32 write_len;
+        HardLink hardlinks;
 
         if ((task->action == ACTION_EQUAL) || (task->action == ACTION_IGNORE)) {
             continue;
         }
 
         if (task->action == ACTION_HARDLINK) {
-            for (HardLink *link = task->hard_links; link; link = link->next) {
-                write_len = link->name_len;
-                if (write_len > 1) {
-                    if (link->name[write_len - 1] == '/') {
-                        write_len -= 1;
+            if ((hash_lookup_inode_map(traversal->inode_map,
+                                       task->path, task->path_len, &hardlinks))) {
+                for (int32 j = 0; j < hardlinks.count; j += 1) {
+                    char *link_name = hardlinks.names[j];
+                    write_len = strlen32(link_name);
+                    if (write_len > 1) {
+                        if (link_name[write_len - 1] == '/') {
+                            write_len -= 1;
+                        }
                     }
+                    write64(files_from_fd, link_name, write_len);
+                    write64(files_from_fd, "\n", 1);
                 }
-                write64(files_from_fd, link->name, write_len);
-                write64(files_from_fd, "\n", 1);
             }
         }
 

@@ -407,7 +407,6 @@ update_row_transfer(Message *message) {
     }
 
     if (cecup.rows[R][row_id] < 0) {
-        // new file copied from source to destination
         int32 idx;
 
         if ((hash_lookup_fs_map(traversal_dst->map, path_transfered, path_transfered_len, &idx))) {
@@ -415,24 +414,21 @@ update_row_transfer(Message *message) {
         } else {
             char *path = traversal_src->paths[idx_src];
             int32 path_len = traversal_src->paths_lens[idx_src];
-            HardLink *first_hard_link = NULL;
 
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
-                first_hard_link = traversal_add_link(traversal_dst, stat, path, path_len);
+                traversal_add_link(traversal_dst, stat, path, path_len);
             }
 
             traversal_push(traversal_dst, &stat,
                            path, path_len,
                            symlink_target, symlink_target_len,
-                           first_hard_link,
                            traversal_src->patterns[idx_src],
                            traversal_src->patterns_lens[idx_src]);
             cecup.rows[R][row_id] = traversal_dst->nfiles - 1;
         }
         traversal_dst->row_ids[cecup.rows[R][row_id]] = row_id;
     } else {
-        // only update changes from source to destination: only stat and symlink might have changed
         if (S_ISLNK(stat.st_mode)) {
             symlink_target_len = traversal_symlink_get(traversal_dst, full_path, &symlink_target);
             traversal_dst->symlink_targets[cecup.rows[R][row_id]] = symlink_target;
@@ -472,7 +468,6 @@ update_row_rename(Message *message) {
         int32 merge_row_id;
         IgnorePattern *p_match;
         bool is_match = false;
-        HardLink *hard_links;
 
         if (path_old) {
             if (is_dir) {
@@ -499,8 +494,6 @@ update_row_rename(Message *message) {
         idx = cecup.rows[side][row_id];
         other_idx = cecup.rows[!side][row_id];
 
-        hard_links = traversal->hard_links[idx];
-
         hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
         traversal->row_ids[idx] = -1;
 
@@ -524,14 +517,21 @@ update_row_rename(Message *message) {
                                    path_new, new_path_len + suffix_len,
                                    traversal->symlink_targets[idx],
                                    traversal->symlink_targets_lens[idx],
-                                   hard_links,
                                    p_match_str, p_match_len);
         }
 
-        if (hard_links != NULL) {
-            hard_link_replace_node(hard_links,
-                                   path_old, sub_len,
-                                   path_new, new_path_len + suffix_len, n_idx);
+        if (S_ISREG(traversal->stats[idx].st_mode) && traversal->stats[idx].st_nlink > 1) {
+            char inode[32];
+            int32 inode_len;
+            HardLink hl_val;
+
+            inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
+            if (hash_lookup_inode_map(traversal->inode_map, inode, inode_len, &hl_val)) {
+                hard_link_replace_node(&hl_val,
+                                       path_old, sub_len,
+                                       path_new, new_path_len + suffix_len, n_idx);
+                hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, hl_val);
+            }
         }
 
         merge_row_id = -1;
@@ -603,7 +603,6 @@ update_row_rename(Message *message) {
 
 static void
 update_ignored_helper(Traversal *traversal, int32 side, int32 row_id, IgnorePattern *match) {
-    // this function only works for ADDED ignored patterns, not REMOVED
     ASSERT(match);
 
     if (cecup.rows[side][row_id] >= 0) {
@@ -833,9 +832,6 @@ update_list_from_rows(void) {
         clock_gettime(CLOCK_MONOTONIC_RAW, &t0_sort);
 
         sort_item_functions[cecup.sort_col](sort_entries, (int64)cecup.rows_visible_len);
-        /* qsort64(sort_entries, */
-        /*         cecup.rows_visible_len, sizeof(*sort_entries), */
-        /*         compare_item_functions[cecup.sort_col]); */
 
         (void)sort_item_functions;
         (void)compare_item_functions;
