@@ -399,9 +399,6 @@ update_row_transfer(Message *message) {
     }
 
     SNPRINTF(full_path, "%s/%s", cecup.dst_base, path_transfered);
-    // TODO: Buffer overflow/truncation risk. If `cecup.dst_base` + `path_transfered` exceeds
-    // `MAX_PATH_LENGTH`, `SNPRINTF` will truncate the string. This might cause `lstat` to evaluate
-    // the wrong path or fail silently. You should check if the combined length fits in `full_path`.
     if (lstat(full_path, &stat) < 0) {
         error("Error in stat('%s'): %s.\n", full_path, strerror(errno));
         if (DEBUGGING) {

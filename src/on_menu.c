@@ -302,12 +302,11 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
 
             SNPRINTF(path_relative, "%s/%s", base_path, task->path);
 
-            // TODO: realpath() will fail if the file does not exist (e.g., broken symlink or deleted file), 
-            //       preventing the user from copying its path. Consider an alternative way to resolve 
-            //       the absolute path without relying on file existence, or fallback to manual path concatenation.
             if (realpath(path_relative, path_full) == NULL) {
-                LOG_ERROR(_("Error resolving full path of %s: %s.\n"),
+                LOG_ERROR(_("Error resolving full path of %s:"
+                            "%s. Copying relative path instead.\n"),
                           path_relative, strerror(errno));
+                SNPRINTF(path_full, "%s", path_relative);
                 continue;
             }
             path = path_full;
