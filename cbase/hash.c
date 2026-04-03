@@ -159,6 +159,16 @@ struct Map {
     Bucket *array;
 };
 
+#define CHECK_COMMON_MAP(FIELD) \
+    _Static_assert(offsetof(struct Map, FIELD) == offsetof(struct CommonMap, FIELD), \
+                   "CommonMap and new Map must have the same offset for " #FIELD);
+
+CHECK_COMMON_MAP(size);
+CHECK_COMMON_MAP(capacity);
+CHECK_COMMON_MAP(bitmask);
+CHECK_COMMON_MAP(length);
+CHECK_COMMON_MAP(occupied);
+
 static void
 CAT(hash_zero_, HASH_TYPE)(struct Map *map) {
     map->length = 0;
