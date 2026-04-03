@@ -249,6 +249,8 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
     HardLink first_hard_link;
     uint64 hash_val;
 
+    HERE;
+
     hash_val = rapidhash(path, (size_t)path_len);
     inode = (int64)stat.st_ino;
 

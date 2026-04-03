@@ -415,6 +415,12 @@ update_row_transfer(Message *message) {
             char *path = traversal_src->paths[idx_src];
             int32 path_len = traversal_src->paths_lens[idx_src];
 
+            if (S_ISLNK(stat.st_mode)) {
+                symlink_target_len = traversal_symlink_get(traversal_dst,
+                                                           full_path, &symlink_target);
+                traversal_dst->symlink_targets[cecup.rows[R][row_id]] = symlink_target;
+                traversal_dst->symlink_targets_lens[cecup.rows[R][row_id]] = (int16)symlink_target_len;
+            }
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
                 traversal_add_link(traversal_dst, stat, path, path_len);

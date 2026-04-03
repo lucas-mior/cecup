@@ -288,13 +288,15 @@ item_hardlink_side(int32 row_id, int32 side) {
     HardLink temp;
     HardLink *ret = NULL;
 
-    if ((idx = cecup.rows[side][row_id]) >= 0) {
-        if (cecup.traversal[side].stats[idx].st_nlink > 1) {
-            int64 inode = (int64)cecup.traversal[side].stats[idx].st_ino;
-            if (hash_lookup_inode_map(cecup.traversal[side].inode_map, &inode, sizeof(inode), &temp)) {
-                ret = xarena_push(cecup.traversal[side].arena, SIZEOF(*ret));
-                *ret = temp;
-            }
+    if ((idx = cecup.rows[side][row_id]) < 0) {
+        return NULL;
+    }
+
+    if (cecup.traversal[side].stats[idx].st_nlink > 1) {
+        int64 inode = (int64)cecup.traversal[side].stats[idx].st_ino;
+        if (hash_lookup_inode_map(cecup.traversal[side].inode_map, &inode, sizeof(inode), &temp)) {
+            ret = xarena_push(cecup.traversal[side].arena, SIZEOF(*ret));
+            *ret = temp;
         }
     }
 
