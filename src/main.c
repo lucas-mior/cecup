@@ -902,7 +902,7 @@ main(int32 argc, char **argv) {
                 execvp(args_cp[0], args_cp);
                 STRING_FROM_ARRAY(cmd, " ", args_cp, LENGTH(args_cp) - 1);
                 error("Error executing\n"
-                      "%s"
+                      "%s\n"
                       "to copy configuration files: %s.\n", cmd, strerror(errno));
                 _exit(EXIT_FAILURE);
             }
