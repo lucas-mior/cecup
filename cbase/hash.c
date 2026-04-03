@@ -261,7 +261,8 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
         Bucket *old_array = map->array;
         uint32 old_capacity = map->capacity;
         if (DEBUGGING) {
-            error("Resizing hash table... %u -> %u\n", old_capacity, new_capacity);
+            error("Resizing hash table... %u -> %u\n",
+                  old_capacity, new_capacity);
         }
 
         for (uint32 j = 0; j < old_capacity; j += 1) {
@@ -296,17 +297,22 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
                     memcpy64(&target->key, &iterator->key, sizeof(HASH_KEY_TYPE));
                     target->slot_state = 1;
                     target->hash = iterator->hash;
-#else
-                if ((int64)target->key == HASH_SLOT_FREE) {
-                    target->key = iterator->key;
-                    target->key_len = iterator->key_len;
-                    target->hash = iterator->hash;
-#endif
 #if defined(HASH_VALUE_TYPE)
                     target->value = iterator->value;
 #endif
                     break;
                 }
+#else
+                if ((int64)target->key == HASH_SLOT_FREE) {
+                    target->key = iterator->key;
+                    target->key_len = iterator->key_len;
+                    target->hash = iterator->hash;
+#if defined(HASH_VALUE_TYPE)
+                    target->value = iterator->value;
+#endif
+                    break;
+                }
+#endif
 
                 rehash_step += 1;
                 rehash_probe = (uint32)(rehash_base
