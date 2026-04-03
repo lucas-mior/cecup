@@ -288,18 +288,15 @@ item_hardlink_side(int32 row_id, int32 side, HardLinks *hard_links) {
     int64 inode;
 
     if ((idx = cecup.rows[side][row_id]) < 0) {
-        error("idx[%d][%d] = -1\n", side, row_id);
         return false;
     }
 
     if (cecup.traversal[side].stats[idx].st_nlink <= 1) {
-        error("st_nlinks[%d][%d] <= 1\n", side, idx);
         return false;
     }
 
     inode = (int64)cecup.traversal[side].stats[idx].st_ino;
-    if (!hash_lookup_inode_map(cecup.traversal[side].inode_map, &inode, sizeof(inode), hard_links)) {
-        error("no hash link on inode map [%d][%d]\n", side, idx);
+    if (!hash_lookup_inode_map(cecup.traversal[side].inode_map, &inode, hard_links)) {
         return false;
     }
 

@@ -613,8 +613,7 @@ work_rsync(void *user_data) {
         }
 
         if (task->action == ACTION_HARDLINK) {
-            if ((hash_lookup_inode_map(traversal->inode_map,
-                                       &(task->inode), sizeof(task->inode), &hardlinks))) {
+            if ((hash_lookup_inode_map(traversal->inode_map, &(task->inode), &hardlinks))) {
                 for (int32 j = 0; j < hardlinks.count; j += 1) {
                     char *link_name = hardlinks.names[j];
                     write_len = strlen32(link_name);

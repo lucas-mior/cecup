@@ -254,7 +254,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
     hash_val = rapidhash(path, (size_t)path_len);
     inode = (int64)stat.st_ino;
 
-    if ((hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &hard_links))) {
+    if ((hash_lookup_inode_map(traversal->inode_map, &inode, &hard_links))) {
         hard_links.aggregate_hash ^= hash_val;
 
         if (hard_links.count >= hard_links.capacity) {
@@ -268,7 +268,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         hard_links.count += 1;
 
         PRINT(hard_links.count); PRINTLN(hard_links.names[hard_links.count-1]);
-        hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), hard_links);
+        hash_overwrite_inode_map(traversal->inode_map, &inode, hard_links);
     } else {
         hard_links.aggregate_hash = hash_val;
         hard_links.count = 1;
@@ -278,7 +278,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
 
         PRINT(hard_links.count); PRINTLN(hard_links.names[hard_links.count-1]);
 
-        hash_insert_inode_map(traversal->inode_map, &inode, sizeof(inode), hard_links);
+        hash_insert_inode_map(traversal->inode_map, &inode, hard_links);
     }
 
     return;
@@ -295,7 +295,7 @@ traversal_unlink(Traversal *traversal, int32 idx) {
         uint64 hash_val;
 
         inode = (int64)traversal->stats[idx].st_ino;
-        if ((hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &hard_links))) {
+        if ((hash_lookup_inode_map(traversal->inode_map, &inode, &hard_links))) {
             int32 found_idx = -1;
 
             hash_val = rapidhash(path, (size_t)path_len);
@@ -317,9 +317,9 @@ traversal_unlink(Traversal *traversal, int32 idx) {
                 hard_links.aggregate_hash ^= hash_val;
 
                 if (hard_links.count == 0) {
-                    hash_remove_inode_map(traversal->inode_map, &inode, sizeof(inode));
+                    hash_remove_inode_map(traversal->inode_map, &inode);
                 } else {
-                    hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), hard_links);
+                    hash_overwrite_inode_map(traversal->inode_map, &inode, hard_links);
                 }
             }
         }

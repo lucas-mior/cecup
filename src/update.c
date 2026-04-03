@@ -531,11 +531,11 @@ update_row_rename(Message *message) {
             HardLinks hl_val;
 
             inode = (int64)traversal->stats[idx].st_ino;
-            if (hash_lookup_inode_map(traversal->inode_map, &inode, sizeof(inode), &hl_val)) {
+            if (hash_lookup_inode_map(traversal->inode_map, &inode, &hl_val)) {
                 hard_link_replace_node(&hl_val,
                                        path_old, sub_len,
                                        path_new, new_path_len + suffix_len, n_idx);
-                hash_overwrite_inode_map(traversal->inode_map, &inode, sizeof(inode), hl_val);
+                hash_overwrite_inode_map(traversal->inode_map, &inode, hl_val);
             }
         }
 
