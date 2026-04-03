@@ -378,7 +378,7 @@ update_row_transfer(Message *message) {
     char full_path[MAX_PATH_LENGTH];
     struct stat stat;
 
-    if (path_transfered == NULL || path_transfered_len == 0) {
+    if ((path_transfered == NULL) || (path_transfered_len == 0)) {
         error("Error: invalid arguments passed to %s.\n", __func__);
         return false;
     }
