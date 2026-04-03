@@ -405,9 +405,6 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     bool is_active;
     int8 side;
     static bool in_update = false;
-    bool filter_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
-    bool filter_link = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_link));
-    bool filter_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
 
     if (in_update) {
         return;
@@ -495,9 +492,10 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                     size = 0;
                 }
 
-                if ((action_src == ACTION_NEW && filter_new)
-                    || (filter_link && (action_src == ACTION_HARDLINK || action_src == ACTION_SYMLINK))
-                    || (action_src == ACTION_UPDATE && filter_update)) {
+                if ((action_src == ACTION_NEW)
+                    || (action_src == ACTION_HARDLINK)
+                    || (action_src == ACTION_SYMLINK)
+                    || (action_src == ACTION_UPDATE)) {
                     total_size_bytes += size;
                 }
             }
