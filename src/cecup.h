@@ -160,7 +160,6 @@ typedef struct Traversal {
     int16 *paths_lens;
     int16 *symlink_targets_lens;
     int16 *patterns_lens;
-    int16 *nlinks;
 
     int32 *row_ids;
 } Traversal;

@@ -231,9 +231,9 @@ update_row_transfer(Message *message) {
                 int32 inode_len;
                 HardLinkList **first_link_ptr;
                 HardLinkList *new_link;
-                HardLinkList *first_link = NULL;
+                HardLinkList *first_link;
 
-                inode_len = ITOA(inode, (long)traversal_src->stats[idx_src].st_ino);
+                inode_len = ITOA(inode, (long)traversal_dst->stats[idx_src].st_ino);
                 if ((first_link_ptr = hash_lookup_inode_map(traversal_dst->inode_map,
                                                             inode, inode_len))) {
                     first_link = *first_link_ptr;
@@ -253,6 +253,7 @@ update_row_transfer(Message *message) {
                     first_link->next = NULL;
                     hash_insert_inode_map(traversal_dst->inode_map, inode, inode_len, first_link);
                 }
+                traversal_dst->hard_links[idx_dst] = first_link;
             }
         }
         traversal_dst->row_ids[cecup.rows[R][row_id]] = row_id;
