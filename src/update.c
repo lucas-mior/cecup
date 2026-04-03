@@ -415,6 +415,7 @@ update_row_transfer(Message *message) {
     }
 
     if (cecup.rows[R][row_id] < 0) {
+        // new file copied from source to destination
         int32 *lookup;
 
         if ((lookup = hash_lookup_fs_map(traversal_dst->map,
@@ -440,6 +441,7 @@ update_row_transfer(Message *message) {
         }
         traversal_dst->row_ids[cecup.rows[R][row_id]] = row_id;
     } else {
+        // only update changes from source to destination: only stat changed
         memcpy64(&traversal_dst->stats[cecup.rows[R][row_id]], &stat, SIZEOF(struct stat));
     }
 
