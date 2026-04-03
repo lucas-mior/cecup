@@ -90,7 +90,7 @@ work_traverse_fs(Traversal *traversal) {
         char *path;
         int32 path_len;
         int32 is_dir = false;
-        HardLinkList *first_link = NULL;
+        HardLink *first_link = NULL;
         char *link_target = NULL;
         int32 link_target_len = 0;
         char *matched_pattern = NULL;
@@ -377,7 +377,7 @@ work_preview(void *user_data) {
         int32 src_idx;
         int32 *dst_idx_ptr;
         int32 dst_idx;
-        HardLinkList *hard_links;
+        HardLink *hard_links;
         int32 path_len;
         int32 row_id;
         enum Action action_src;
@@ -417,7 +417,7 @@ work_preview(void *user_data) {
                                                  SIZEOF(*cecup.transfers_lens));
             }
             if (action_src == ACTION_HARDLINK) {
-                for (HardLinkList *link = hard_links; link->next; link = link->next) {
+                for (HardLink *link = hard_links; link->next; link = link->next) {
                     if (hash_insert_transfer_set(cecup.transfer_set, link->name, link->name_len)) {
                         cecup.transfers[cecup.ntransfers] = link->name;
                         cecup.transfers_lens[cecup.ntransfers] = link->name_len;

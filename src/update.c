@@ -422,7 +422,7 @@ update_row_transfer(Message *message) {
         } else {
             char *path = traversal_src->paths[idx_src];
             int32 path_len = traversal_src->paths_lens[idx_src];
-            HardLinkList *first_link = NULL;
+            HardLink *first_link = NULL;
 
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
@@ -479,7 +479,7 @@ update_row_rename(Message *message) {
         int32 merge_row_id;
         IgnorePattern *p_match;
         bool is_match = false;
-        HardLinkList *hard_links;
+        HardLink *hard_links;
 
         if (path_old) {
             if (is_dir) {

@@ -169,7 +169,7 @@ static int32
 traversal_push(Traversal *traversal, struct stat *stat,
                char *path, int32 path_len,
                char *symlink_target, int32 symlink_target_len,
-               HardLinkList *first_hard_link,
+               HardLink *first_hard_link,
                char *matched_pattern, int32 matched_pattern_len) {
     struct stat stat_copy = *stat;
     int32 idx;
@@ -252,13 +252,13 @@ traversal_symlink_get(Traversal *traversal, char *path, char **link_target) {
     return (int32)link_target_len;
 }
 
-static HardLinkList *
+static HardLink *
 traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
     char inode[32];
     int32 inode_len;
-    HardLinkList **first_link_ptr;
-    HardLinkList *new_link;
-    HardLinkList *first_link;
+    HardLink **first_link_ptr;
+    HardLink *new_link;
+    HardLink *first_link;
 
     inode_len = ITOA(inode, (long)stat.st_ino);
     if ((first_link_ptr = hash_lookup_inode_map(traversal->inode_map,
@@ -292,9 +292,9 @@ traversal_unlink(Traversal *traversal, int32 idx) {
         int32 inode_len;
         char *path = traversal->paths[idx];
         int32 path_len = traversal->paths_lens[idx];
-        HardLinkList **first_link_ptr;
-        HardLinkList *first_link;
-        HardLinkList *new_first_link;
+        HardLink **first_link_ptr;
+        HardLink *first_link;
+        HardLink *new_first_link;
 
         inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
         if ((first_link_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
@@ -346,7 +346,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         enum Action action;
         enum Action actions[2];
         enum Reason reason;
-        HardLinkList *hard_links;
+        HardLink *hard_links;
         Task *task;
 
         row_id = i;
@@ -404,7 +404,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
         if ((idx_ptr = hash_lookup_fs_map(traversal->map, clicked_path, task->path_len))) {
             int32 idx = *idx_ptr;
-            HardLinkList *hard_links;
+            HardLink *hard_links;
 
             if ((hard_links = traversal->hard_links[idx])) {
                 task->hard_links = hard_links_copy(hard_links);
