@@ -396,6 +396,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                                  "\n%s%s", RSYNC_HARDLINK, link->name);
                     offset += n;
                     if (offset >= (SIZEOF(tip_buffer) - 5)) {
+                        offset -= n;
                         break;
                     }
 
