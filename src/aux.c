@@ -124,10 +124,6 @@ cecup_get_dirs(void) {
         return false;
     }
 
-    // TODO: realpath() handles symlink resolution, but if `tmp_src` or `tmp_dst` 
-    //       points to a path that does not exist, it will return NULL. This means 
-    //       cecup will strictly fail to work with a destination directory that hasn't 
-    //       been created yet, which is a common scenario for a first-time backup run.
     if (realpath(tmp_src, full_src) == NULL) {
         LOG_ERROR(_("Error getting full path of %s: %s.\n"), tmp_src, strerror(errno));
         cecup_reset_dir(L);
