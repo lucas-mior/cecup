@@ -296,6 +296,11 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
         }
     }
 
+    // TODO: Logic Bug. When a row is removed from the master `cecup.rows` arrays, all subsequent
+    // row IDs shift down by 1. However, this function only shifts the `cecup.rows_visible` array to
+    // remove the current item, but fails to decrement the `row_id` of all the remaining visible
+    // items that point to the shifted master rows. This will cause visible items to point to
+    // incorrect entries.
     items_to_move = cecup.rows_visible_len - 1 - index;
     if (items_to_move > 0) {
         memmove64(&cecup.rows_visible[index], &cecup.rows_visible[index + 1], items_to_move * SIZEOF(int32));
@@ -397,6 +402,10 @@ item_add(int32 src_idx, int32 dst_idx) {
         cecup.rows_selected = realloc(cecup.rows_selected,
                                       old_capacity, cecup.rows_capacity,
                                       SIZEOF(uint8));
+        // TODO: Data Race / Thread Safety. `cecup.rows_visible` is reallocated here inside
+        // `cecup.arena_mutex`, but it is accessed by the GTK UI thread in
+        // `cecup_list_model_get_item` without a mutex lock. This could cause a use-after-free or
+        // read from invalid memory if the UI redraws while a reallocation occurs.
         cecup.rows_visible = realloc(cecup.rows_visible,
                                      old_capacity, cecup.rows_capacity,
                                      SIZEOF(*(cecup.rows_visible)));
