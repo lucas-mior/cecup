@@ -256,7 +256,6 @@ static HardLink *
 traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
     char inode[32];
     int32 inode_len;
-    HardLink **first_hard_link_ptr;
     HardLink *new_link;
     HardLink *first_hard_link;
     uint64 hash_val;
@@ -264,10 +263,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
     hash_val = rapidhash(path, (size_t)path_len);
     inode_len = ITOA(inode, (long)stat.st_ino);
 
-    if ((first_hard_link_ptr = hash_lookup_inode_map(traversal->inode_map,
-                                                     inode, inode_len))) {
-        first_hard_link = *first_hard_link_ptr;
-
+    if ((hash_lookup_inode_map(traversal->inode_map, inode, inode_len, &first_hard_link))) {
         new_link = xarena_push(traversal->arena, SIZEOF(*new_link));
         new_link->name = path;
         new_link->name_len = path_len;
@@ -302,14 +298,11 @@ traversal_unlink(Traversal *traversal, int32 idx) {
         int32 inode_len;
         char *path = traversal->paths[idx];
         int32 path_len = traversal->paths_lens[idx];
-        HardLink **first_hard_link_ptr;
         HardLink *first_hard_link;
         HardLink *new_first_hard_link;
 
         inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
-        if ((first_hard_link_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
-            first_hard_link = *first_hard_link_ptr;
-
+        if ((hash_lookup_inode_map(traversal->inode_map, inode, inode_len, &first_hard_link))) {
             new_first_hard_link = hard_link_remove(first_hard_link, path, path_len);
             if (first_hard_link == NULL) {
                 hash_remove_inode_map(traversal->inode_map, inode, inode_len);
@@ -394,7 +387,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
     if ((count == 0) && clicked_path) {
         Task *task;
         Traversal *traversal;
-        int32 *idx_ptr;
+        int32 idx;
 
         count = 1;
         tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count));
@@ -412,8 +405,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
         traversal = &cecup.traversal[side];
 
-        if ((idx_ptr = hash_lookup_fs_map(traversal->map, clicked_path, task->path_len))) {
-            int32 idx = *idx_ptr;
+        if ((hash_lookup_fs_map(traversal->map, clicked_path, task->path_len, &idx))) {
             HardLink *hard_links;
 
             if ((hard_links = traversal->hard_links[idx])) {
@@ -655,12 +647,13 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
         int32 row_id;
         char *path;
         int32 path_len;
-        int32 *lookup_ptr;
+        bool lookup;
+        int32 idx_lookup;
 
         row_id = traversal->row_ids[idx];
         path = traversal->paths[idx];
         path_len = (int32)traversal->paths_lens[idx];
-        lookup_ptr = hash_lookup_fs_map(traversal->map, path, path_len);
+        lookup = hash_lookup_fs_map(traversal->map, path, path_len, &idx_lookup);
 
         if (row_id != -1) {
             if (row_id >= cecup.rows_len) {
@@ -677,20 +670,20 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
                 fatal(EXIT_FAILURE);
             }
 
-            if (lookup_ptr == NULL) {
+            if (!lookup) {
                 error("Consistency error:"
                       " %s index %d (path %s) is mapped to row but missing in hash map.\n",
                       which_traversal, idx, path);
                 fatal(EXIT_FAILURE);
-            } else if (*lookup_ptr != idx) {
+            } else if (idx_lookup != idx) {
                 error("Consistency error:"
                       " %s index %d (path %s) is mapped to row but mismatched in hash map.\n",
                       which_traversal, idx, path);
                 fatal(EXIT_FAILURE);
             }
         } else {
-            if (lookup_ptr) {
-                if (*lookup_ptr == idx) {
+            if (lookup) {
+                if (idx_lookup == idx) {
                     error("Consistency error:"
                           " %s index %d (path %s) has no row but exists in hash.\n",
                           which_traversal, idx, path);

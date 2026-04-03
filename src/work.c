@@ -375,7 +375,6 @@ work_preview(void *user_data) {
     for (uint32 i = 0; i < cecup.traversal[L].map->capacity; i += 1) {
         Bucket_fs_map *bucket_src = &(cecup.traversal[L].map->array[i]);
         int32 src_idx;
-        int32 *dst_idx_ptr;
         int32 dst_idx;
         HardLink *hard_links;
         int32 path_len;
@@ -392,9 +391,7 @@ work_preview(void *user_data) {
         hard_links = cecup.traversal[L].hard_links[src_idx];
         path_len = cecup.traversal[L].paths_lens[src_idx];
 
-        if ((dst_idx_ptr = hash_lookup_fs_map(cecup.traversal[R].map, bucket_src->key, path_len))) {
-            dst_idx = *dst_idx_ptr;
-        } else {
+        if (!(hash_lookup_fs_map(cecup.traversal[R].map, bucket_src->key, path_len, &dst_idx))) {
             dst_idx = -1;
         }
 
@@ -443,6 +440,7 @@ work_preview(void *user_data) {
     for (uint32 i = 0; i < cecup.traversal[R].map->capacity; i += 1) {
         Bucket_fs_map *bucket_dst = &(cecup.traversal[R].map->array[i]);
         int32 dst_idx;
+        int32 src_idx;
         int32 path_len;
 
         if ((int64)bucket_dst->key <= 0) {
@@ -452,7 +450,7 @@ work_preview(void *user_data) {
         dst_idx = bucket_dst->value;
         path_len = cecup.traversal[R].paths_lens[dst_idx];
 
-        if (hash_lookup_fs_map(cecup.traversal[L].map, bucket_dst->key, path_len) == NULL) {
+        if (!hash_lookup_fs_map(cecup.traversal[L].map, bucket_dst->key, path_len, &src_idx)) {
             item_add(-1, dst_idx);
         }
 

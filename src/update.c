@@ -262,15 +262,12 @@ update_row_remove(Message *message) {
     }
 
     if (path_removed[path_removed_len - 1] != '/') {
-        int32 *idx_ptr;
-        int32 row_id;
         int32 idx;
+        int32 row_id;
 
-        if ((idx_ptr = hash_lookup_fs_map(traversal->map,
-                                          path_removed, path_removed_len)) == NULL) {
+        if ((!hash_lookup_fs_map(traversal->map, path_removed, path_removed_len, &idx))) {
             return false;
         }
-        idx = *idx_ptr;
 
         if ((row_id = traversal->row_ids[idx]) < 0) {
             return false;
@@ -371,7 +368,6 @@ update_row_transfer(Message *message) {
 
     char *path_transfered = message->src_path;
     int32 path_transfered_len = message->src_path_len;
-    int32 *idx_ptr;
     int32 idx_src;
     int32 row_id;
     char full_path[MAX_PATH_LENGTH];
@@ -387,8 +383,7 @@ update_row_transfer(Message *message) {
         return false;
     }
 
-    if ((idx_ptr = hash_lookup_fs_map(traversal_src->map,
-                                      path_transfered, path_transfered_len)) == NULL) {
+    if ((!hash_lookup_fs_map(traversal_src->map, path_transfered, path_transfered_len, &idx_src))) {
         LOG_ERROR("Warning: transfered file does not exist in source.\n");
         if (DEBUGGING) {
             fatal(EXIT_FAILURE);
@@ -396,7 +391,6 @@ update_row_transfer(Message *message) {
         return false;
     }
 
-    idx_src = *idx_ptr;
     row_id = traversal_src->row_ids[idx_src];
 
     if (row_id < 0) {
@@ -414,11 +408,10 @@ update_row_transfer(Message *message) {
 
     if (cecup.rows[R][row_id] < 0) {
         // new file copied from source to destination
-        int32 *lookup;
+        int32 idx;
 
-        if ((lookup = hash_lookup_fs_map(traversal_dst->map,
-                                         path_transfered, path_transfered_len))) {
-            cecup.rows[R][row_id] = *lookup;
+        if ((hash_lookup_fs_map(traversal_dst->map, path_transfered, path_transfered_len, &idx))) {
+            cecup.rows[R][row_id] = idx;
         } else {
             char *path = traversal_src->paths[idx_src];
             int32 path_len = traversal_src->paths_lens[idx_src];
@@ -543,10 +536,10 @@ update_row_rename(Message *message) {
 
         merge_row_id = -1;
         {
-            int32 *m_idx_ptr;
-            if ((m_idx_ptr = hash_lookup_fs_map(other_traversal->map,
-                                                path_new, new_path_len + suffix_len))) {
-                merge_row_id = other_traversal->row_ids[*m_idx_ptr];
+            int32 m_idx;
+            if ((hash_lookup_fs_map(other_traversal->map,
+                                    path_new, new_path_len + suffix_len, &m_idx))) {
+                merge_row_id = other_traversal->row_ids[m_idx];
             }
         }
 
