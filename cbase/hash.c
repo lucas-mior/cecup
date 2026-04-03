@@ -1113,7 +1113,7 @@ main(void) {
         int64 key2 = 67890;
         int32 value1 = 99;
         int32 value2 = 100;
-        int32 test = 0;
+        int32 test2 = 0;
         int64 missing_key = 999;
 
         ASSERT(hash_insert_map_by_value(map2, &key1, value1));
@@ -1122,10 +1122,10 @@ main(void) {
 
         ASSERT_EQUAL(hash_length(map2), 2u);
 
-        ASSERT(hash_lookup_map_by_value(map2, &key1, &test));
-        ASSERT_EQUAL(test, value1);
+        ASSERT(hash_lookup_map_by_value(map2, &key1, &test2));
+        ASSERT_EQUAL(test2, value1);
 
-        ASSERT(!hash_lookup_map_by_value(map2, &missing_key, &test));
+        ASSERT(!hash_lookup_map_by_value(map2, &missing_key, &test2));
 
         ASSERT(hash_remove_map_by_value(map2, &key1));
         ASSERT_EQUAL(hash_ndeleted_map_by_value(map2), 1);
