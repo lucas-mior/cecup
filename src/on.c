@@ -445,8 +445,8 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         if (cecup.rows_selected[row_id_toggled]) {
             if (is_root) {
                 cecup.rows_selected[row_id] = true;
-            } else if (parent_path_len > 0 && parent_path[parent_path_len - 1] == '/') {
-                if (path_len >= parent_path_len && !strncmp32(path, parent_path, parent_path_len)) {
+            } else if (parent_path[parent_path_len - 1] == '/') {
+                if (BEGINS_WITH(path, parent_path, parent_path_len)) {
                     cecup.rows_selected[row_id] = true;
                 }
             }
@@ -454,8 +454,8 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
             if (is_root) {
                 cecup.rows_selected[row_id] = false;
             } else {
-                if (parent_path_len > 0 && parent_path[parent_path_len - 1] == '/') {
-                    if (path_len >= parent_path_len && !strncmp32(path, parent_path, parent_path_len)) {
+                if (parent_path[parent_path_len - 1] == '/') {
+                    if (BEGINS_WITH(path, parent_path, parent_path_len)) {
                         cecup.rows_selected[row_id] = false;
                     }
                 }
