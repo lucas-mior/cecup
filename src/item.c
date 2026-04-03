@@ -41,11 +41,9 @@ typedef struct SortEntry {
 static void
 hard_link_replace_node(HardLinks *list,
                        char *old_path, int32 old_path_len,
-                       char *new_path, int32 new_path_len, int32 new_idx) {
+                       char *new_path, int32 new_path_len) {
     uint64 old_hash;
     uint64 new_hash;
-
-    (void)new_idx;
 
     old_hash = rapidhash(old_path, (size_t)old_path_len);
     new_hash = rapidhash(new_path, (size_t)new_path_len);
