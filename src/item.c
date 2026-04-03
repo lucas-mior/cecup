@@ -134,15 +134,15 @@ count_hardlinks(HardLinks *list) {
 }
 
 static bool
-hard_links_match(HardLinks *a, HardLinks *b) {
-    ASSERT(a);
-    ASSERT(b);
+hard_links_match(HardLinks *src, HardLinks *dst) {
+    ASSERT(src);
+    ASSERT(dst);
 
-    if (a->count != b->count) {
+    if (src->count != dst->count) {
         return false;
     }
 
-    if (a->aggregate_hash != b->aggregate_hash) {
+    if (src->aggregate_hash != dst->aggregate_hash) {
         return false;
     }
 
