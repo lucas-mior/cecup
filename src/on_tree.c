@@ -382,6 +382,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
             } else if (hard_links) {
                 int32 offset = 0;
                 int32 nlinks = count_hardlinks(hard_links);
+                int32 nlinks_printed = 0;
 
                 offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
                                     "%s:\n%s", filepath, reason_buf);
@@ -397,8 +398,12 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                     if (offset >= (SIZEOF(tip_buffer) - 5)) {
                         break;
                     }
+
+                    nlinks_printed += 1;
                 }
-                snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset, "\n...");
+                if (nlinks_printed < nlinks) {
+                    snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset, "\n...");
+                }
             } else if (ignore_pattern) {
                 SNPRINTF(tip_buffer,
                          "%s:\n%s (" N_("pattern") ": %s)", filepath, reason_buf, ignore_pattern);
