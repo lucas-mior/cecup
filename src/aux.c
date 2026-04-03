@@ -266,6 +266,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
 
     return first_link;
 }
+
 static void
 traversal_unlink(Traversal *traversal, int32 idx) {
     if (S_ISREG(traversal->stats[idx].st_mode)
