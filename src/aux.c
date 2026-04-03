@@ -245,16 +245,12 @@ traversal_symlink_get(Traversal *traversal, char *path, char **symlink_target) {
 
 static void
 traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
-    int64 inode;
     HardLinks hard_links;
     uint64 hash_val;
 
-    HERE;
-
     hash_val = rapidhash(path, (size_t)path_len);
-    inode = (int64)stat.st_ino;
 
-    if ((hash_lookup_inode_map(traversal->inode_map, &inode, &hard_links))) {
+    if ((hash_lookup_inode_map(traversal->inode_map, &stat.st_ino, &hard_links))) {
         hard_links.aggregate_hash ^= hash_val;
 
         if (hard_links.count >= hard_links.capacity) {
@@ -271,8 +267,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         hard_links.names_lens[hard_links.count] = path_len;
         hard_links.count += 1;
 
-        PRINT(hard_links.count); PRINTLN(hard_links.names[hard_links.count-1]);
-        hash_overwrite_inode_map(traversal->inode_map, &inode, hard_links);
+        hash_overwrite_inode_map(traversal->inode_map, &stat.st_ino, hard_links);
     } else {
         hard_links.aggregate_hash = hash_val;
         hard_links.count = 1;
@@ -282,9 +277,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         hard_links.names[0] = path;
         hard_links.names_lens[0] = path_len;
 
-        PRINT(hard_links.count); PRINTLN(hard_links.names[hard_links.count-1]);
-
-        hash_insert_inode_map(traversal->inode_map, &inode, hard_links);
+        hash_insert_inode_map(traversal->inode_map, &stat.st_ino, hard_links);
     }
 
     return;
@@ -294,14 +287,13 @@ static void
 traversal_unlink(Traversal *traversal, int32 idx) {
     if (S_ISREG(traversal->stats[idx].st_mode)
             && (traversal->stats[idx].st_nlink > 1)) {
-        int64 inode;
         char *path = traversal->paths[idx];
         int32 path_len = traversal->paths_lens[idx];
         HardLinks hard_links;
         uint64 hash_val;
+        ino_t *inode = &traversal->stats[idx].st_ino;
 
-        inode = (int64)traversal->stats[idx].st_ino;
-        if ((hash_lookup_inode_map(traversal->inode_map, &inode, &hard_links))) {
+        if ((hash_lookup_inode_map(traversal->inode_map, inode, &hard_links))) {
             int32 found_idx = -1;
 
             hash_val = rapidhash(path, (size_t)path_len);
@@ -323,9 +315,9 @@ traversal_unlink(Traversal *traversal, int32 idx) {
                 hard_links.aggregate_hash ^= hash_val;
 
                 if (hard_links.count == 0) {
-                    hash_remove_inode_map(traversal->inode_map, &inode);
+                    hash_remove_inode_map(traversal->inode_map, inode);
                 } else {
-                    hash_overwrite_inode_map(traversal->inode_map, &inode, hard_links);
+                    hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);
                 }
             }
         }
@@ -394,7 +386,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
         if (action == ACTION_HARDLINK) {
             idx = cecup.rows[side][row_id];
-            task->inode = (int64)cecup.traversal[side].stats[idx].st_ino;
+            task->inode = cecup.traversal[side].stats[idx].st_ino;
         }
 
         task->action = action;
@@ -421,7 +413,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
         if (clicked_action == ACTION_HARDLINK) {
             if (hash_lookup_fs_map(cecup.traversal[side].map, task->path, task->path_len, &idx)) {
-                task->inode = (int64)cecup.traversal[side].stats[idx].st_ino;
+                task->inode = cecup.traversal[side].stats[idx].st_ino;
             }
         }
 

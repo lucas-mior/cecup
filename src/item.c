@@ -235,7 +235,6 @@ item_symlink_target_side(int32 row_id, int32 side) {
 static bool
 item_hardlink_side(int32 row_id, int32 side, HardLinks *hard_links) {
     int32 idx;
-    int64 inode;
 
     if ((idx = cecup.rows[side][row_id]) < 0) {
         return false;
@@ -245,8 +244,8 @@ item_hardlink_side(int32 row_id, int32 side, HardLinks *hard_links) {
         return false;
     }
 
-    inode = (int64)cecup.traversal[side].stats[idx].st_ino;
-    if (!hash_lookup_inode_map(cecup.traversal[side].inode_map, &inode, hard_links)) {
+    if (!hash_lookup_inode_map(cecup.traversal[side].inode_map,
+                               &cecup.traversal[side].stats[idx].st_ino, hard_links)) {
         return false;
     }
 

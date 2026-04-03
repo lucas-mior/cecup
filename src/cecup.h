@@ -132,7 +132,7 @@ typedef struct HardLinks {
     int32 *names_lens;
  } HardLinks;
 
-#define HASH_KEY_TYPE int64
+#define HASH_KEY_TYPE ino_t
 #define HASH_KEY_BY_VALUE 1
 #define HASH_VALUE_TYPE HardLinks
 #define HASH_PADDING_TYPE uint32
@@ -342,7 +342,7 @@ typedef struct Task {
     int32 path_len;
 
     char *path;
-    int64 inode;
+    ino_t inode;
 
     int8 side;
 } Task;

@@ -527,15 +527,14 @@ update_row_rename(Message *message) {
         }
 
         if (S_ISREG(traversal->stats[idx].st_mode) && traversal->stats[idx].st_nlink > 1) {
-            int64 inode;
             HardLinks hard_links;
+            ino_t *inode = &traversal->stats[idx].st_ino;
 
-            inode = (int64)traversal->stats[idx].st_ino;
-            if (hash_lookup_inode_map(traversal->inode_map, &inode, &hard_links)) {
+            if (hash_lookup_inode_map(traversal->inode_map, inode, &hard_links)) {
                 hard_link_replace_node(&hard_links,
                                        path_old, sub_len,
                                        path_new, new_path_len + suffix_len);
-                hash_overwrite_inode_map(traversal->inode_map, &inode, hard_links);
+                hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);
             }
         }
 
