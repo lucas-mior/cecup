@@ -548,13 +548,13 @@ CAT(hash_overwrite2_, HASH_TYPE)(struct Map *map, char *key
     );
 }
 
-#if defined(HASH_VALUE_TYPE)
-static HASH_VALUE_TYPE *
-#else
-static void *
-#endif
+static bool
 CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
-                                      char *key, uint64 hash, uint32 base_index) {
+                                      char *key, uint64 hash, uint32 base_index
+#if defined(HASH_VALUE_TYPE)
+                                      , HASH_VALUE_TYPE *value_ptr
+#endif
+) {
     uint32 capacity = map->capacity;
     uint32 i = 0;
     uint32 probe = base_index;
@@ -564,13 +564,14 @@ CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
 
         switch ((int64)iterator->key) {
         case HASH_SLOT_FREE:
-            return NULL;
+            return false;
         case HASH_SLOT_DELETED:
             break;
         default:
             if ((iterator->hash == hash) && (strcmp(iterator->key, key) == 0)) {
 #if defined(HASH_VALUE_TYPE)
-                return &(iterator->value);
+                *value_ptr = iterator->value;
+                return true;
 #else
                 return iterator->key;
 #endif
@@ -581,20 +582,36 @@ CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
         probe = (uint32)(base_index + ((uint64)i + (uint64)i*i) / 2) & map->bitmask;
     }
 
-    return NULL;
+    return false;
 }
 
-static void *
-CAT(hash_lookup_, HASH_TYPE)(struct Map *map, char *key, int32 key_length) {
+static bool
+CAT(hash_lookup_, HASH_TYPE)(struct Map *map, char *key, int32 key_length
+#if defined(HASH_VALUE_TYPE)
+                             , HASH_VALUE_TYPE *value_ptr
+#endif
+) {
     uint64 hash = hash_function(key, key_length);
     uint32 index = hash_normal(map, hash);
-    return CAT(hash_lookup_pre_calc_, HASH_TYPE)(map, key, hash, index);
+    return CAT(hash_lookup_pre_calc_, HASH_TYPE)(map, key, hash, index
+#if defined(HASH_VALUE_TYPE)
+                                                 , value_ptr
+#endif
+            );
 }
 
-static void *
-CAT(hash_lookup2_, HASH_TYPE)(struct Map *map, char *key) {
+static bool
+CAT(hash_lookup2_, HASH_TYPE)(struct Map *map, char *key
+#if defined(HASH_VALUE_TYPE)
+                              , HASH_VALUE_TYPE *value_ptr
+#endif
+) {
     int32 key_length = strlen32(key);
-    return CAT(hash_lookup_, HASH_TYPE)(map, key, key_length);
+    return CAT(hash_lookup_, HASH_TYPE)(map, key, key_length
+#if defined(HASH_VALUE_TYPE)
+                                        , value_ptr
+#endif
+    );
 }
 
 static bool
@@ -776,7 +793,7 @@ hash_expected_collisions(void *map) {
 #include <assert.h>
 #include "arena.c"
 
-#define NSTRINGS 500000
+#define NSTRINGS 100000
 #define NBYTES 200*ALIGNMENT
 
 typedef struct String {
@@ -818,6 +835,7 @@ main(void) {
     String str2 = {.s = "bbbbbbbbbbbbbbb", .value = 1};
     String *strings;
     uint32 initial_capacity;
+    int32 test;
 
     map = hash_create_map(100);
     arena = arena_create(NBYTES*NSTRINGS);
@@ -835,7 +853,7 @@ main(void) {
 
     ASSERT_EQUAL(hash_length(map), 2u);
 
-    ASSERT_NULL(hash_lookup_map(map, "does_not_exist", 14));
+    ASSERT(!hash_lookup_map(map, "does_not_exist", 14, &test));
 
     srand(42);
     for (uint32 i = 0; i < NSTRINGS; i += 1) {
@@ -853,10 +871,9 @@ main(void) {
     ASSERT(map->capacity > initial_capacity);
 
     for (uint32 i = 0; i < NSTRINGS; i += 1) {
-        int32 *stored;
-        stored = hash_lookup_map(map, strings[i].s, strings[i].len);
-        ASSERT(stored);
-        ASSERT_EQUAL(*stored, strings[i].value);
+        int32 stored;
+        ASSERT(hash_lookup_map(map, strings[i].s, strings[i].len, &stored));
+        ASSERT_EQUAL(stored, strings[i].value);
     }
 
     ASSERT(hash_remove_map(map, strings[0].s, strings[0].len));

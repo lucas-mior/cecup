@@ -124,14 +124,14 @@ _Static_assert((!R) == L, "!R must be L");
 #include "hash.c"
 
 typedef struct HardLink {
-    char *name;
-    int32 name_len;
-    int32 idx;
     struct HardLink *next;
     uint64 aggregate_hash;
+    char *name;
     int32 count;
+    int32 name_len;
+    int32 idx;
     struct HardLink *last;
-} HardLink;
+ } HardLink;
 
 #define HASH_VALUE_TYPE HardLink*
 #define HASH_PADDING_TYPE uint32
