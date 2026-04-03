@@ -134,7 +134,7 @@ on_menu_apply(GtkWidget *widget, void *data) {
 
         g_thread_new("bulk_sync", work_rsync, thread_data);
     } else {
-        free_task_list(tasks);
+        task_list_free(tasks);
     }
 
     free_message(message);
@@ -246,7 +246,7 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         }
     }
 
-    free_task_list(tasks);
+    task_list_free(tasks);
     free_message(message);
     return;
 }
@@ -329,7 +329,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     gdk_clipboard_set_text(clipboard, buffer);
 
     free(buffer, buffer_size);
-    free_task_list(tasks);
+    task_list_free(tasks);
     free_message(message);
     return;
 }
@@ -348,7 +348,7 @@ on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
 
         g_thread_new("work_bulk_sync", work_rsync, thread_data);
     } else {
-        free_task_list(tasks);
+        task_list_free(tasks);
     }
     gtk_window_destroy(GTK_WINDOW(dialog));
 
@@ -433,7 +433,7 @@ on_menu_diff(GtkWidget *widget, void *data) {
         }
     }
 
-    free_task_list(tasks);
+    task_list_free(tasks);
     free_message(message);
     return;
 }

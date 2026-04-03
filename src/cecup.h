@@ -475,7 +475,7 @@ typedef struct CecupMenuItem {
 #pragma clang diagnostic ignored "-Wunused-function"
 
 static gboolean update_ui_handler(void * user_data);
-static void free_task_list(TaskList *tasks);
+static void task_list_free(TaskList *tasks);
 static void save_config(void);
 static void aux_protect_interface_from_user(bool state);
 static void log_internal(char *file, int line,

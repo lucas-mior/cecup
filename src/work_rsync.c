@@ -488,7 +488,7 @@ work_rsync(void *user_data) {
 
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
-            free_task_list(tasks);
+            task_list_free(tasks);
             work_batch_flush(&batch);
             work_finalize(false);
             free(thread_data, SIZEOF(*thread_data));
@@ -565,7 +565,7 @@ work_rsync(void *user_data) {
         LOG_ERROR(_("No transfers to make.\n"));
         work_batch_flush(&batch);
         work_finalize(false);
-        free_task_list(tasks);
+        task_list_free(tasks);
         free(thread_data, SIZEOF(*thread_data));
         return NULL;
     }
@@ -654,7 +654,7 @@ work_rsync(void *user_data) {
     /* } */
 
     work_batch_flush(&batch);
-    free_task_list(tasks);
+    task_list_free(tasks);
     work_finalize(false);
     free(thread_data, SIZEOF(*thread_data));
     return NULL;

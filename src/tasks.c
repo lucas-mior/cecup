@@ -21,7 +21,7 @@
 #include "cecup.h"
 
 static void
-free_task_list(TaskList *tasks) {
+task_list_free(TaskList *tasks) {
     if (tasks == NULL) {
         return;
     }

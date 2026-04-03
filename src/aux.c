@@ -443,7 +443,7 @@ static inline void
 aux_functions_sink(void) {
     (void)cecup_get_dirs;
     (void)get_target_tasks;
-    (void)free_task_list;
+    (void)task_list_free;
     (void)free_message;
     (void)traversal_push;
     (void)aux_protect_interface_from_user;

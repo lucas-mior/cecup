@@ -950,7 +950,7 @@ update_functions_sink(void) {
     (void)update_progress_bar;
     (void)cecup_get_dirs;
     (void)get_target_tasks;
-    (void)free_task_list;
+    (void)task_list_free;
     (void)free_message;
     return;
 }
@@ -966,7 +966,7 @@ main(void) {
     (void)update_progress_bar;
     (void)cecup_get_dirs;
     (void)get_target_tasks;
-    (void)free_task_list;
+    (void)task_list_free;
     (void)free_message;
     ASSERT(true);
     exit(EXIT_SUCCESS);
