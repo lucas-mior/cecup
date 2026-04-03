@@ -461,7 +461,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                 }
                 if (aux_is_root(path)) {
                     cecup.rows_selected[row_id] = false;
-                } else if (path_len < parent_path_len && path[path_len - 1] == '/') {
+                } else if (path[path_len - 1] == '/') {
                     if (BEGINS_WITH(parent_path, path, path_len)) {
                         cecup.rows_selected[row_id] = false;
                     }
