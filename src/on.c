@@ -437,8 +437,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     toggled_path_len = item_path_len_get(row_id_toggled);
     toggled_is_root = aux_is_root(toggled_path);
 
-    for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        int32 row_id = i;
+    for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
         char *other_path = item_path_get(row_id);
         int32 other_path_len = item_path_len_get(row_id);
 
