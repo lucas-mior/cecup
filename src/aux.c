@@ -259,11 +259,11 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         first_hard_link.aggregate_hash ^= hash_val;
 
         if (first_hard_link.count > first_hard_link.capacity) {
-            char **old_names = first_hard_link.names;
             int32 old_capacity = first_hard_link.capacity;
             first_hard_link.capacity *= 2;
-            first_hard_link.names = xarena_push(traversal->arena, first_hard_link.capacity*SIZEOF(*first_hard_link.names));
-            memcpy64(first_hard_link.names, old_names, old_capacity * SIZEOF(*first_hard_link.names));
+            first_hard_link.names = realloc(first_hard_link.names,
+                                            old_capacity, first_hard_link.capacity,
+                                            SIZEOF(*(first_hard_link.names)));
         }
         first_hard_link.names[first_hard_link.count - 1] = path;
 
@@ -272,7 +272,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         first_hard_link.aggregate_hash = hash_val;
         first_hard_link.count = 1;
         first_hard_link.capacity = 2;
-        first_hard_link.names = xarena_push(traversal->arena, first_hard_link.capacity*SIZEOF(*first_hard_link.names));
+        first_hard_link.names = xmalloc(first_hard_link.capacity*SIZEOF(*first_hard_link.names));
         first_hard_link.names[0] = path;
 
         hash_insert_inode_map(traversal->inode_map, &inode, sizeof(inode), first_hard_link);
