@@ -116,13 +116,13 @@ hard_links_match(HardLink *a, HardLink *b) {
     ASSERT(a);
     ASSERT(b);
 
-    for (HardLink *test = a; test->next; test = test->next) {
+    for (HardLink *test = a; test; test = test->next) {
         if (!hard_links_contain(test, b)) {
             return false;
         }
     }
 
-    for (HardLink *test = b; test->next; test = test->next) {
+    for (HardLink *test = b; test; test = test->next) {
         if (!hard_links_contain(test, a)) {
             return false;
         }

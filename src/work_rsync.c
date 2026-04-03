@@ -611,7 +611,7 @@ work_rsync(void *user_data) {
         }
 
         if (task->action == ACTION_HARDLINK) {
-            for (HardLink *link = task->hard_links; link->next; link = link->next) {
+            for (HardLink *link = task->hard_links; link; link = link->next) {
                 write_len = link->name_len;
                 if (write_len > 1) {
                     if (link->name[write_len - 1] == '/') {

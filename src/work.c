@@ -417,7 +417,7 @@ work_preview(void *user_data) {
                                                  SIZEOF(*cecup.transfers_lens));
             }
             if (action_src == ACTION_HARDLINK) {
-                for (HardLink *link = hard_links; link->next; link = link->next) {
+                for (HardLink *link = hard_links; link; link = link->next) {
                     if (hash_insert_transfer_set(cecup.transfer_set, link->name, link->name_len)) {
                         cecup.transfers[cecup.ntransfers] = link->name;
                         cecup.transfers_lens[cecup.ntransfers] = link->name_len;
