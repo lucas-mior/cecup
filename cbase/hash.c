@@ -384,13 +384,13 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
         default:
 #if HASH_KEY_FIXED_LEN
             if ((iterator->hash == hash)
-                    && (memcmp64(&iterator->key, key, sizeof(HASH_KEY_TYPE)) == 0)) {
+                    && !memcmp64(&iterator->key, key, sizeof(HASH_KEY_TYPE))) {
                 return false;
             }
 #else
             if ((iterator->hash == hash)
                     && (iterator->key_len == key_length)
-                    && (memcmp64(iterator->key, key, key_length) == 0)) {
+                    && !memcmp64(iterator->key, key, key_length)) {
                 return false;
             }
 #endif
@@ -610,11 +610,11 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
         default:
 #if HASH_KEY_FIXED_LEN
             if ((iterator->hash == hash)
-                    && (memcmp64(&iterator->key, key, sizeof(HASH_KEY_TYPE)) == 0)) {
+                    && !memcmp64(&iterator->key, key, sizeof(HASH_KEY_TYPE))) {
 #else
             if ((iterator->hash == hash)
                     && (iterator->key_len == key_length)
-                    && (memcmp64(iterator->key, key, key_length) == 0)) {
+                    && !memcmp64(iterator->key, key, key_length)) {
 #endif
 #if defined(HASH_VALUE_TYPE)
                 iterator->value = value;
@@ -727,11 +727,11 @@ CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
         default:
 #if HASH_KEY_FIXED_LEN
             if ((iterator->hash == hash)
-                    && (memcmp64(&iterator->key, key, sizeof(HASH_KEY_TYPE)) == 0)) {
+                    && !memcmp64(&iterator->key, key, sizeof(HASH_KEY_TYPE))) {
 #else
             if ((iterator->hash == hash)
                     && (iterator->key_len == key_length)
-                    && (memcmp64(iterator->key, key, key_length) == 0)) {
+                    && !memcmp64(iterator->key, key, key_length)) {
 #endif
 #if defined(HASH_VALUE_TYPE)
                 *value_ptr = iterator->value;
@@ -812,7 +812,7 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
         default:
 #if HASH_KEY_FIXED_LEN
             if ((iterator->hash == hash)
-                    && (memcmp64(&iterator->key, key, sizeof(HASH_KEY_TYPE)) == 0)) {
+                    && !memcmp64(&iterator->key, key, sizeof(HASH_KEY_TYPE))) {
                 iterator->slot_state = HASH_SLOT_DELETED;
                 map->length -= 1;
                 return true;
@@ -820,7 +820,7 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
 #else
             if ((iterator->hash == hash)
                     && (iterator->key_len == key_length)
-                    && (memcmp64(iterator->key, key, key_length) == 0)) {
+                    && !memcmp64(iterator->key, key, key_length)) {
   #if HASH_DUPLICATE_KEYS
                 free(iterator->key, iterator->key_len);
   #endif
