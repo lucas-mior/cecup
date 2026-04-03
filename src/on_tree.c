@@ -377,18 +377,18 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
             hard_links = item_hardlink_side(row_id, side);
 
             if (symlink_target) {
-                char *notation = RSYNC_SYMLINK;
                 SNPRINTF(tip_buffer,
-                         "%s%s%s:\n%s", filepath, notation, symlink_target, reason_buf);
+                         "%s%s%s:\n%s", filepath, RSYNC_SYMLINK, symlink_target, reason_buf);
             } else if (hard_links) {
-                char *notation = RSYNC_HARDLINK;
                 int32 offset;
 
                 offset = snprintf2(tip_buffer, SIZEOF(tip_buffer), "%s:\n%s", filepath, reason_buf);
                 for (HardLink *link = hard_links; link; link = link->next) {
                     int32 n;
+
                     n = snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
-                                  "\n%s%s", notation, link->name);
+                                  "\n%s%s", RSYNC_HARDLINK, link->name);
+
                     offset += n;
                 }
             } else if (ignore_pattern) {
