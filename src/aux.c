@@ -261,7 +261,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
     HardLink *first_hard_link;
     uint64 hash_val;
 
-    hash_val = hash_string_fnv1a(path, path_len);
+    hash_val = rapidhash(path, (size_t)path_len);
     inode_len = ITOA(inode, (long)stat.st_ino);
 
     if ((first_hard_link_ptr = hash_lookup_inode_map(traversal->inode_map,

@@ -19,6 +19,7 @@
 #define ITEM_C
 
 #include "cecup.h"
+#include "rapidhash.h"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_item 1
@@ -47,18 +48,6 @@ hard_link_append(HardLink *list, HardLink *new) {
     return;
 }
 
-static uint64
-hash_string_fnv1a(char *str, int32 len) {
-    uint64 hash = 14695981039346656037ULL;
-
-    for (int32 i = 0; i < len; i += 1) {
-        hash ^= (uint64)((uchar)str[i]);
-        hash *= 1099511628211ULL;
-    }
-
-    return hash;
-}
-
 static void
 hard_link_replace_node(HardLink *list,
                        char *old_path, int32 old_path_len,
@@ -67,8 +56,8 @@ hard_link_replace_node(HardLink *list,
     uint64 old_hash;
     uint64 new_hash;
 
-    old_hash = hash_string_fnv1a(old_path, old_path_len);
-    new_hash = hash_string_fnv1a(new_path, new_path_len);
+    old_hash = rapidhash(old_path, (size_t)old_path_len);
+    new_hash = rapidhash(new_path, (size_t)new_path_len);
 
     list->aggregate_hash ^= old_hash;
     list->aggregate_hash ^= new_hash;
@@ -96,7 +85,7 @@ hard_link_remove(HardLink *list, char *name, int32 name_len) {
 
     ASSERT(list);
 
-    hash_val = hash_string_fnv1a(name, name_len);
+    hash_val = rapidhash(name, (size_t)name_len);
 
     while (list) {
         if (list->name_len == name_len) {

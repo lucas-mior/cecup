@@ -33,6 +33,9 @@
  *   - rapidhash source repository: https://github.com/Nicoshev/rapidhash
  */
 
+#if !defined(RAPIDHASH_H)
+#define RAPIDHASH_H
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -379,3 +382,5 @@ RAPIDHASH_INLINE uint64
 rapidhash(const void *key, size_t len) {
     return rapidhash_withSeed(key, len, rapid_seed);
 }
+
+#endif /* RAPIDHASH_H */
