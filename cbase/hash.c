@@ -122,12 +122,12 @@ struct CommonMap {
 #define HASH_KEY_BY_VALUE 0
 #endif
 
-#if !defined(HASH_AUTO_RESIZE)
-#error HASH_AUTO_RESIZE is undefined
-#endif
-
 #if !defined(HASH_DUPLICATE_KEYS)
 #define HASH_DUPLICATE_KEYS 0
+#endif
+
+#if !defined(HASH_AUTO_RESIZE)
+#error HASH_AUTO_RESIZE is undefined
 #endif
 
 #define Bucket CAT(Bucket_, HASH_TYPE)
