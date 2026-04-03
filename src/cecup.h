@@ -120,8 +120,14 @@ _Static_assert((!R) == L, "!R must be L");
 #define HASH_TYPE fs_map
 #include "hash.c"
 
-#define HASH_VALUE_TYPE int32
-#define HASH_VALUE_FORMATTER "%d"
+typedef struct HardLinkList {
+    char *name;
+    struct HardLinkList *next;
+    int32 name_len;
+    int32 idx;
+} HardLinkList;
+
+#define HASH_VALUE_TYPE HardLinkList*
 #define HASH_PADDING_TYPE uint32
 #define HASH_DUPLICATE_KEYS 1
 #define HASH_AUTO_RESIZE 1
@@ -147,11 +153,12 @@ typedef struct Traversal {
 
     struct stat *stats;
     char **paths;
-    char **link_targets;
+    char **symlink_targets;
     char **patterns;
+    HardLinkList **hard_links;
 
     int16 *paths_lens;
-    int16 *link_targets_lens;
+    int16 *symlink_targets_lens;
     int16 *patterns_lens;
     int16 *nlinks;
 
@@ -324,10 +331,9 @@ typedef struct Task {
     int8 side;
 
     char *path;
-    char *link_target;
+    HardLinkList *hard_links;
 
     int32 path_len;
-    int32 link_target_len;
 } Task;
 
 typedef struct TaskList {

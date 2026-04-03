@@ -154,8 +154,6 @@ update_row_remove(Message *message) {
         }
     }
 
-    traversal_patch_links(traversal);
-
     if (changed) {
         invalidate_preview();
     }
@@ -221,8 +219,8 @@ update_row_transfer(Message *message) {
             idx_dst = traversal_push(traversal_dst, &stat,
                                      traversal_src->paths[idx_src],
                                      traversal_src->paths_lens[idx_src],
-                                     traversal_src->link_targets[idx_src],
-                                     traversal_src->link_targets_lens[idx_src],
+                                     NULL, 0,
+                                     NULL,
                                      traversal_src->patterns[idx_src],
                                      traversal_src->patterns_lens[idx_src],
                                      -1000);
@@ -231,25 +229,7 @@ update_row_transfer(Message *message) {
             traversal_dst->nlinks[idx_dst] = 1;
             if (S_ISREG(traversal_src->stats[idx_src].st_mode)
                     && (traversal_src->stats[idx_src].st_nlink > 1)) {
-                char inode[32];
-                int32 inode_len;
-                int32 *first_idx_ptr;
-                int32 first_idx;
-
-                inode_len = ITOA(inode, (long)traversal_dst->stats[idx_dst].st_ino);
-                if ((first_idx_ptr = hash_lookup_inode_map(traversal_dst->inode_map,
-                                                           inode, inode_len))) {
-                    first_idx = *first_idx_ptr;
-
-                    if (traversal_dst->link_targets[first_idx] == NULL) {
-                        traversal_dst->link_targets[first_idx] = traversal_src->paths[idx_src];
-                        traversal_dst->link_targets_lens[first_idx] = traversal_src->paths_lens[idx_src];
-                    }
-                    traversal_dst->nlinks[first_idx] += 1;
-
-                    traversal_dst->link_targets[idx_dst] = traversal_dst->paths[first_idx];
-                    traversal_dst->link_targets_lens[idx_dst] = traversal_dst->paths_lens[first_idx];
-                }
+                ASSERT(false);
             }
         }
         traversal_dst->row_ids[cecup.rows[R][row_id]] = row_id;
@@ -335,8 +315,9 @@ update_row_rename(Message *message) {
 
             n_idx = traversal_push(traversal, &traversal->stats[idx],
                                    path_new, new_path_len + suffix_len,
-                                   traversal->link_targets[idx],
-                                   traversal->link_targets_lens[idx],
+                                   traversal->symlink_targets[idx],
+                                   traversal->symlink_targets_lens[idx],
+                                   NULL,
                                    p_match_str, p_match_len,
                                    traversal->nlinks[idx]);
         }
@@ -891,9 +872,6 @@ update_ui_handler(void *data) {
 
     if (needs_update) {
         update_list_from_rows();
-
-        traversal_patch_links(&cecup.traversal[L]);
-        traversal_patch_links(&cecup.traversal[R]);
 
         if (DEBUGGING) {
             check_consistent_state();

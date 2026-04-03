@@ -37,6 +37,76 @@ typedef struct SortEntry {
     } key;
 } SortEntry;
 
+static void
+hard_link_append(HardLinkList *list, HardLinkList *new) {
+    ASSERT(list);
+    while (list->next) {
+        list = list->next;
+    }
+    list->next = new;
+    return;
+}
+
+static bool
+hard_links_contain(HardLinkList *test, HardLinkList *b) {
+    ASSERT(test);
+    ASSERT(b);
+
+    do {
+        if (test->name_len == b->name_len) {
+            if (!memcmp64(test->name, b->name, test->name_len)) {
+                return true;
+            }
+        }
+    } while ((b = b->next));
+
+    return false;
+}
+
+static bool
+hard_links_match(HardLinkList *a, HardLinkList *b) {
+    ASSERT(a);
+    ASSERT(b);
+
+    for (HardLinkList *test = a; test->next; test = test->next) {
+        if (!hard_links_contain(test, b)) {
+            return false;
+        }
+    }
+
+    for (HardLinkList *test = b; test->next; test = test->next) {
+        if (!hard_links_contain(test, a)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static HardLinkList *
+hard_links_copy(HardLinkList *original) {
+    HardLinkList *copy;
+    HardLinkList *iter;
+
+    ASSERT(original);
+
+    copy = iter = xmemdup(original, sizeof(*original));
+    while ((original = original->next)) {
+        copy->next = xmemdup(original, sizeof(*original));
+    }
+
+    return copy;
+}
+
+static void
+hard_link_copy_free(HardLinkList *copy) {
+    ASSERT(copy);
+    do {
+        free(copy, sizeof(*copy));
+    } while ((copy = copy->next));
+    return;
+}
+
 static char *
 item_path_get(int32 row_id) {
     int32 src_idx = cecup.rows[L][row_id];
@@ -122,22 +192,44 @@ item_path_len_side(int32 row_id, int32 side) {
 }
 
 static char *
-item_link_target_side(int32 row_id, int32 side) {
+item_symlink_target_side(int32 row_id, int32 side) {
     int32 idx;
 
     if ((idx = cecup.rows[side][row_id]) >= 0) {
-        return cecup.traversal[side].link_targets[idx];
+        return cecup.traversal[side].symlink_targets[idx];
+    } else {
+        return NULL;
+    }
+}
+
+static HardLinkList *
+item_hardlink_target_side(int32 row_id, int32 side) {
+    int32 idx;
+
+    if ((idx = cecup.rows[side][row_id]) >= 0) {
+        return cecup.traversal[side].hard_links[idx];
     } else {
         return NULL;
     }
 }
 
 static int32
-item_link_target_len_side(int32 row_id, int32 side) {
+item_symlink_target_len_side(int32 row_id, int32 side) {
     int32 idx;
 
     if ((idx = cecup.rows[side][row_id]) >= 0) {
-        return (int32)cecup.traversal[side].link_targets_lens[idx];
+        return (int32)cecup.traversal[side].symlink_targets_lens[idx];
+    } else {
+        return 0;
+    }
+}
+
+static HardLinkList *
+item_hardlink_target_len_side(int32 row_id, int32 side) {
+    int32 idx;
+
+    if ((idx = cecup.rows[side][row_id]) >= 0) {
+        return cecup.traversal[side].hard_links[idx];
     } else {
         return 0;
     }
@@ -217,10 +309,10 @@ item_get_actions_reasons(int32 row_id,
         struct stat *stat_dst = &cecup.traversal[R].stats[dst_idx];
         char *pattern_src = cecup.traversal[L].patterns[src_idx];
         char *path_src = cecup.traversal[L].paths[src_idx];
-        char *target_src = cecup.traversal[L].link_targets[src_idx];
-        char *target_dst = cecup.traversal[R].link_targets[dst_idx];
-        int32 nlinks_src = cecup.traversal[L].nlinks[src_idx];
-        int32 nlinks_dst = cecup.traversal[R].nlinks[dst_idx];
+        char *symlink_target_src = cecup.traversal[L].symlink_targets[src_idx];
+        char *symlink_target_dst = cecup.traversal[R].symlink_targets[dst_idx];
+        HardLinkList *hard_links_src = cecup.traversal[L].hard_links[src_idx];
+        HardLinkList *hard_links_dst = cecup.traversal[R].hard_links[dst_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
         bool is_hardlink = S_ISREG(stat_src->st_mode) && (cecup.traversal[L].nlinks[src_idx] > 1);
         bool is_dir = S_ISDIR(stat_src->st_mode);
@@ -244,8 +336,8 @@ item_get_actions_reasons(int32 row_id,
             *reason |= REASON_SYMLINK;
 
             if (S_ISLNK(stat_dst->st_mode)) {
-                if (target_src && target_dst) {
-                    if (strcmp(target_src, target_dst) == 0) {
+                if (symlink_target_src && symlink_target_dst) {
+                    if (strcmp(symlink_target_src, symlink_target_dst) == 0) {
                         equal = true;
                     }
                 }
@@ -302,13 +394,11 @@ item_get_actions_reasons(int32 row_id,
 
             ASSERT(path_src);
             if (is_hardlink) {
-                if (target_dst == NULL) {
+                if (hard_links_dst == NULL) {
                     equal = false;
                     attributes_differ = true;
                     *reason |= REASON_HARDLINK_MISSING_LINK;
-                } else if (((target_src == NULL) || strcmp(target_src, target_dst))
-                           && strcmp(path_src, target_dst)
-                           && (nlinks_src != nlinks_dst)) {
+                } else if (!hard_links_match(hard_links_src, hard_links_dst)) {
                     equal = false;
                     attributes_differ = true;
                     *reason |= REASON_HARDLINK_NOT_MATCH;

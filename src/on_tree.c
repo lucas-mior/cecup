@@ -371,7 +371,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 }
             }
 
-            link_target = item_link_target_side(row_id, side);
+            link_target = item_symlink_target_side(row_id, side);
             ignore_pattern = item_ignore_pattern_side(row_id, side);
 
             if (link_target) {

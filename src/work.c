@@ -90,6 +90,7 @@ work_traverse_fs(Traversal *traversal) {
         char *path;
         int32 path_len;
         int32 is_dir = false;
+        HardLinkList *first_link = NULL;
         char *link_target = NULL;
         int32 link_target_len = 0;
         char *matched_pattern = NULL;
@@ -257,33 +258,38 @@ work_traverse_fs(Traversal *traversal) {
         if ((ent->fts_info == FTS_F) && (ent->fts_statp->st_nlink > 1)) {
             char inode[32];
             int32 inode_len;
-            int32 *first_idx_ptr;
+            HardLinkList **first_link_ptr;
+            HardLinkList *new_link;
 
             inode_len = ITOA(inode, (long)ent->fts_statp->st_ino);
-            if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
-                int32 first_idx = *first_idx_ptr;
+            if ((first_link_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
+                first_link = *first_link_ptr;
 
-                link_target = traversal->paths[first_idx];
-                link_target_len = traversal->paths_lens[first_idx];
+                new_link = xarena_push(traversal->arena, SIZEOF(*new_link));
+                new_link->name = path;
+                new_link->idx = traversal->nfiles;
+                new_link->next = NULL;
 
-                if (traversal->link_targets[first_idx] == NULL) {
-                    traversal->link_targets[first_idx] = path;
-                    traversal->link_targets_lens[first_idx] = (int16)path_len;
-                }
+                hard_link_append(first_link, new_link);
                 if (!matched_pattern) {
                     // dont count ignored files,
                     // because the destination might not have them,
                     // which would cause a mismatch in the number of links later
-                    traversal->nlinks[first_idx] += 1;
+                    traversal->nlinks[first_link->idx] += 1;
                 }
             } else {
-                hash_insert_inode_map(traversal->inode_map, inode, inode_len, traversal->nfiles);
+                first_link = xarena_push(traversal->arena, SIZEOF(*first_link));
+                first_link->name = path;
+                first_link->idx = traversal->nfiles;
+                first_link->next = NULL;
+                hash_insert_inode_map(traversal->inode_map, inode, inode_len, first_link);
             }
         }
 
         traversal_push(traversal, ent->fts_statp,
                        path, path_len,
                        link_target, link_target_len,
+                       first_link,
                        matched_pattern, matched_pattern_len,
                        nlinks);
     }
@@ -292,7 +298,7 @@ work_traverse_fs(Traversal *traversal) {
         LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
     }
 
-    traversal_patch_links(traversal);
+    traversal_patch_nlinks(traversal);
     file_count_return = (int32)file_count;
     return file_count_return;
 }
@@ -410,8 +416,7 @@ work_preview(void *user_data) {
         int32 src_idx;
         int32 *dst_idx_ptr;
         int32 dst_idx;
-        char *link_target_src;
-        int32 link_target_src_len;
+        HardLinkList *hard_links;
         int32 path_len;
         int32 row_id;
         enum Action action_src;
@@ -423,8 +428,7 @@ work_preview(void *user_data) {
         }
 
         src_idx = bucket_src->value;
-        link_target_src = cecup.traversal[L].link_targets[src_idx];
-        link_target_src_len = cecup.traversal[L].link_targets_lens[src_idx];
+        hard_links = cecup.traversal[L].hard_links[src_idx];
         path_len = cecup.traversal[L].paths_lens[src_idx];
 
         if ((dst_idx_ptr = hash_lookup_fs_map(cecup.traversal[R].map, bucket_src->key, path_len))) {
@@ -452,11 +456,12 @@ work_preview(void *user_data) {
                                                  SIZEOF(*cecup.transfers_lens));
             }
             if (action_src == ACTION_HARDLINK) {
-                if (hash_insert_transfer_set(cecup.transfer_set,
-                                             link_target_src, link_target_src_len)) {
-                    cecup.transfers[cecup.ntransfers] = link_target_src;
-                    cecup.transfers_lens[cecup.ntransfers] = link_target_src_len;
-                    cecup.ntransfers += 1;
+                for (HardLinkList *link = hard_links; link->next; link = link->next) {
+                    if (hash_insert_transfer_set(cecup.transfer_set, link->name, link->name_len)) {
+                        cecup.transfers[cecup.ntransfers] = link->name;
+                        cecup.transfers_lens[cecup.ntransfers] = link->name_len;
+                        cecup.ntransfers += 1;
+                    }
                 }
             }
             if (hash_insert_transfer_set(cecup.transfer_set, bucket_src->key, path_len)) {

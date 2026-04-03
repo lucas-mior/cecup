@@ -611,14 +611,16 @@ work_rsync(void *user_data) {
         }
 
         if (task->action == ACTION_HARDLINK) {
-            write_len = task->link_target_len;
-            if (write_len > 1) {
-                if (task->link_target[write_len - 1] == '/') {
-                    write_len -= 1;
+            for (HardLinkList *link = task->hard_links; link->next; link = link->next) {
+                write_len = link->name_len;
+                if (write_len > 1) {
+                    if (link->name[write_len - 1] == '/') {
+                        write_len -= 1;
+                    }
                 }
+                write64(files_from_fd, link->name, write_len);
+                write64(files_from_fd, "\n", 1);
             }
-            write64(files_from_fd, task->link_target, write_len);
-            write64(files_from_fd, "\n", 1);
         }
 
         write_len = task->path_len;

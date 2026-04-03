@@ -96,11 +96,12 @@ traversal_allocate(Traversal *traversal) {
 
     traversal->stats = xmalloc(capacity*SIZEOF(*(traversal->stats)));
     traversal->patterns = xmalloc(capacity*SIZEOF(*(traversal->patterns)));
-    traversal->link_targets = xmalloc(capacity*SIZEOF(*(traversal->link_targets)));
+    traversal->symlink_targets = xmalloc(capacity*SIZEOF(*(traversal->symlink_targets)));
+    traversal->hard_links = xmalloc(capacity*SIZEOF(*(traversal->hard_links)));
     traversal->paths = xmalloc(capacity*SIZEOF(*(traversal->paths)));
 
     traversal->paths_lens = xmalloc(capacity*SIZEOF(*(traversal->paths_lens)));
-    traversal->link_targets_lens = xmalloc(capacity*SIZEOF(*(traversal->link_targets_lens)));
+    traversal->symlink_targets_lens = xmalloc(capacity*SIZEOF(*(traversal->symlink_targets_lens)));
     traversal->patterns_lens = xmalloc(capacity*SIZEOF(*(traversal->patterns_lens)));
     traversal->nlinks = xmalloc(capacity*SIZEOF(*(traversal->nlinks)));
     traversal->row_ids = xmalloc(capacity*SIZEOF(*(traversal->row_ids)));
@@ -122,14 +123,16 @@ traversal_clean(Traversal *traversal) {
                   traversal->ncapacity*SIZEOF(*(traversal->stats)));
         dont_read(traversal->paths,
                   traversal->ncapacity*SIZEOF(*(traversal->paths)));
-        dont_read(traversal->link_targets,
-                  traversal->ncapacity*SIZEOF(*(traversal->link_targets)));
+        dont_read(traversal->symlink_targets,
+                  traversal->ncapacity*SIZEOF(*(traversal->symlink_targets)));
+        dont_read(traversal->hard_links,
+                  traversal->ncapacity*SIZEOF(*(traversal->hard_links)));
         dont_read(traversal->patterns,
                   traversal->ncapacity*SIZEOF(*(traversal->patterns)));
         dont_read(traversal->paths_lens,
                   traversal->ncapacity*SIZEOF(*(traversal->paths_lens)));
-        dont_read(traversal->link_targets_lens,
-                  traversal->ncapacity*SIZEOF(*(traversal->link_targets_lens)));
+        dont_read(traversal->symlink_targets_lens,
+                  traversal->ncapacity*SIZEOF(*(traversal->symlink_targets_lens)));
         dont_read(traversal->patterns_lens,
                   traversal->ncapacity*SIZEOF(*(traversal->patterns_lens)));
         dont_read(traversal->nlinks,
@@ -153,11 +156,12 @@ traversal_free(Traversal *traversal) {
 
     free(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
     free(traversal->patterns, capacity*SIZEOF(*(traversal->patterns)));
-    free(traversal->link_targets, capacity*SIZEOF(*(traversal->link_targets)));
+    free(traversal->symlink_targets, capacity*SIZEOF(*(traversal->symlink_targets)));
+    free(traversal->hard_links, capacity*SIZEOF(*(traversal->hard_links)));
     free(traversal->paths, capacity*SIZEOF(*(traversal->paths)));
 
     free(traversal->paths_lens, capacity*SIZEOF(*(traversal->paths_lens)));
-    free(traversal->link_targets_lens, capacity*SIZEOF(*(traversal->link_targets_lens)));
+    free(traversal->symlink_targets_lens, capacity*SIZEOF(*(traversal->symlink_targets_lens)));
     free(traversal->patterns_lens, capacity*SIZEOF(*(traversal->patterns_lens)));
     free(traversal->nlinks, capacity*SIZEOF(*(traversal->nlinks)));
     free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
@@ -168,7 +172,8 @@ traversal_free(Traversal *traversal) {
 static int32
 traversal_push(Traversal *traversal, struct stat *stat,
                char *path, int32 path_len,
-               char *link_target, int32 link_target_len,
+               char *symlink_target, int32 symlink_target_len,
+               HardLinkList *first_hard_link,
                char *matched_pattern, int32 matched_pattern_len,
                int32 nlinks) {
     struct stat stat_copy = *stat;
@@ -185,9 +190,12 @@ traversal_push(Traversal *traversal, struct stat *stat,
         traversal->paths = realloc(traversal->paths,
                                    old_capacity, traversal->ncapacity,
                                    SIZEOF(*(traversal->paths)));
-        traversal->link_targets = realloc(traversal->link_targets,
-                                          old_capacity, traversal->ncapacity,
-                                          SIZEOF(*(traversal->link_targets)));
+        traversal->symlink_targets = realloc(traversal->symlink_targets,
+                                             old_capacity, traversal->ncapacity,
+                                             SIZEOF(*(traversal->symlink_targets)));
+        traversal->hard_links = realloc(traversal->hard_links,
+                                        old_capacity, traversal->ncapacity,
+                                        SIZEOF(*(traversal->hard_links)));
         traversal->patterns = realloc(traversal->patterns,
                                       old_capacity, traversal->ncapacity,
                                       SIZEOF(*(traversal->patterns)));
@@ -195,9 +203,9 @@ traversal_push(Traversal *traversal, struct stat *stat,
         traversal->paths_lens = realloc(traversal->paths_lens,
                                         old_capacity, traversal->ncapacity,
                                         SIZEOF(*(traversal->paths_lens)));
-        traversal->link_targets_lens = realloc(traversal->link_targets_lens,
-                                               old_capacity, traversal->ncapacity,
-                                               SIZEOF(*(traversal->link_targets_lens)));
+        traversal->symlink_targets_lens = realloc(traversal->symlink_targets_lens,
+                                                  old_capacity, traversal->ncapacity,
+                                                  SIZEOF(*(traversal->symlink_targets_lens)));
         traversal->patterns_lens = realloc(traversal->patterns_lens,
                                            old_capacity, traversal->ncapacity,
                                            SIZEOF(*(traversal->patterns_lens)));
@@ -221,8 +229,9 @@ traversal_push(Traversal *traversal, struct stat *stat,
 
     traversal->paths[idx] = path;
     traversal->paths_lens[idx] = (int16)path_len;
-    traversal->link_targets[idx] = link_target;
-    traversal->link_targets_lens[idx] = (int16)link_target_len;
+    traversal->symlink_targets[idx] = symlink_target;
+    traversal->symlink_targets_lens[idx] = (int16)symlink_target_len;
+    traversal->hard_links[idx] = first_hard_link;
     traversal->patterns[idx] = matched_pattern;
     traversal->patterns_lens[idx] = (int16)matched_pattern_len;
     traversal->row_ids[idx] = -1;
@@ -236,41 +245,23 @@ traversal_push(Traversal *traversal, struct stat *stat,
 }
 
 static void
-traversal_patch_links(Traversal *traversal) {
-    bool patch_again = false;
-
-    for (int32 j = 0; j < 2; j += 1) {
-        for (int32 i = 0; i < traversal->nfiles; i += 1) {
-            if (S_ISREG(traversal->stats[i].st_mode)
-                    && (traversal->stats[i].st_nlink > 1)) {
-                char inode[32];
-                int32 inode_len;
-                int32 *first_idx_ptr;
-
-                inode_len = ITOA(inode, (long)traversal->stats[i].st_ino);
-                if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map,
-                                                           inode, inode_len))) {
-                    int32 first_idx = *first_idx_ptr;
-
-                    traversal->nlinks[i] = traversal->nlinks[first_idx];
-                    traversal->link_targets[i] = traversal->paths[first_idx];
-                    traversal->link_targets_lens[i] = traversal->paths_lens[first_idx];
-
-                    if (traversal->link_targets[first_idx] == NULL) {
-                        traversal->link_targets[first_idx] = traversal->paths[i];
-                        traversal->link_targets_lens[first_idx] = traversal->paths_lens[i];
-                    }
-                } else {
-                    hash_insert_inode_map(traversal->inode_map, inode, inode_len, i);
-                    patch_again = true;
-                }
+traversal_patch_nlinks(Traversal *traversal) {
+    for (int32 i = 0; i < traversal->nfiles; i += 1) {
+        if (S_ISREG(traversal->stats[i].st_mode)
+                && (traversal->stats[i].st_nlink > 1)) {
+            char inode[32];
+            int32 inode_len;
+            HardLinkList **first_link_ptr;
+            HardLinkList *first_link;
+  
+            inode_len = ITOA(inode, (long)traversal->stats[i].st_ino);
+            if ((first_link_ptr = hash_lookup_inode_map(traversal->inode_map,
+                                                       inode, inode_len))) {
+                first_link = *first_link_ptr;
+                traversal->nlinks[i] = traversal->nlinks[first_link->idx];
             }
         }
-        if (!patch_again) {
-            break;
-        }
     }
-
     return;
 }
 
@@ -280,12 +271,15 @@ traversal_unlink(Traversal *traversal, int32 idx) {
             && (traversal->stats[idx].st_nlink > 1)) {
         char inode[32];
         int32 inode_len;
-        int32 *first_idx_ptr;
+        HardLinkList **first_link_ptr;
+        HardLinkList *first_link;
 
         inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
-        if ((first_idx_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
-            traversal->nlinks[*first_idx_ptr] -= 1;
-            if (traversal->nlinks[*first_idx_ptr] <= 0) {
+        if ((first_link_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
+            first_link = *first_link_ptr;
+
+            traversal->nlinks[first_link->idx] -= 1;
+            if (traversal->nlinks[first_link->idx] <= 0) {
                 hash_remove_inode_map(traversal->inode_map, inode, inode_len);
             }
         }
@@ -303,7 +297,6 @@ free_task_list(TaskList *tasks) {
         Task *task = tasks->items[i];
 
         free(task->path, task->path_len + 1);
-        free(task->link_target, task->link_target_len + 1);
         free(task, SIZEOF(*task));
     }
 
@@ -329,8 +322,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         enum Action action;
         enum Action actions[2];
         enum Reason reason;
-        char *link_target;
-        int32 link_target_len;
+        HardLinkList *hard_links;
         Task *task;
 
         row_id = i;
@@ -354,13 +346,8 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         task->path = xmalloc(path_len + 1);
         memcpy64(task->path, filepath, path_len + 1);
 
-        link_target = item_link_target_side(row_id, side);
-        link_target_len = item_link_target_len_side(row_id, side);
-
-        if (link_target) {
-            task->link_target_len = link_target_len;
-            task->link_target = xmalloc(task->link_target_len + 1);
-            memcpy64(task->link_target, link_target, task->link_target_len + 1);
+        if ((hard_links = item_hardlink_target_side(row_id, side))) {
+            task->hard_links = hard_links_copy(hard_links);
         }
 
         task->action = action;
@@ -392,14 +379,11 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         traversal = &cecup.traversal[side];
 
         if ((idx_ptr = hash_lookup_fs_map(traversal->map, clicked_path, task->path_len))) {
-            int32 idx;
-            char *link_target;
+            int32 idx = *idx_ptr;
+            HardLinkList *hard_links;
 
-            idx = *idx_ptr;
-            if ((link_target = traversal->link_targets[idx])) {
-                task->link_target_len = traversal->link_targets_lens[idx];
-                task->link_target = xmalloc(task->link_target_len + 1);
-                memcpy64(task->link_target, link_target, task->link_target_len + 1);
+            if ((hard_links = traversal->hard_links[idx])) {
+                task->hard_links = hard_links_copy(hard_links);
             }
         }
 
@@ -645,15 +629,6 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
         lookup_ptr = hash_lookup_fs_map(traversal->map, path, path_len);
 
         if (row_id != -1) {
-            if (traversal->nlinks[idx] > 1) {
-                if (traversal->link_targets[idx] == NULL) {
-                    error("Consistency error:"
-                          " %s index %d (path %s) has nlinks > 1 but target is NULL.\n",
-                          which_traversal, idx, path);
-                    fatal(EXIT_FAILURE);
-                }
-            }
-
             if (traversal->nlinks[idx] <= 0) {
                 error("Consistency error:"
                       "nlinks should equal or greater than 1, but %s->nlinks[%d] = %d\n",
