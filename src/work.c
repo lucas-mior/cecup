@@ -380,6 +380,9 @@ work_preview(void *user_data) {
         enum Action action_dst;
         enum Reason reason;
 
+        // TODO: Unsafe pointer cast. Casting a pointer to an integer and checking if it is <= 0 is
+        // non-portable and dangerous, as valid pointers can have the highest bit set depending on
+        // the architecture. Check for NULL directly: if (bucket_src->key == NULL) {
         if ((int64)bucket_src->key <= 0) {
             continue;
         }
@@ -396,6 +399,10 @@ work_preview(void *user_data) {
 
         if (!aux_is_root(bucket_src->key)
             && (action_src != ACTION_EQUAL) && (action_src != ACTION_IGNORE)) {
+            // TODO: Uninitialized memory access. If 'item_hardlink_side' returns false,
+            // 'hard_links.count' will contain garbage data from the stack. This can lead to massive
+            // unintended allocations in the while loop below. Initialize 'HardLinks hard_links =
+            // {0};' before passing it.
             HardLinks hard_links;
             item_hardlink_side(row_id, L, &hard_links);
 
@@ -444,6 +451,7 @@ work_preview(void *user_data) {
         int32 src_idx;
         int32 path_len;
 
+        // TODO: Unsafe pointer cast. Ensure you evaluate 'if (bucket_dst->key == NULL)' instead.
         if ((int64)bucket_dst->key <= 0) {
             continue;
         }
