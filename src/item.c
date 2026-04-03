@@ -63,7 +63,7 @@ hard_link_replace_node(HardLink *list,
     list->aggregate_hash ^= old_hash;
     list->aggregate_hash ^= new_hash;
 
-    while (current != NULL) {
+    while (current) {
         if (current->name_len == old_path_len) {
             if (memcmp64(current->name, old_path, old_path_len) == 0) {
                 current->name = new_path;
