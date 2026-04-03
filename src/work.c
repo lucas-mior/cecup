@@ -396,8 +396,10 @@ work_preview(void *user_data) {
 
         if (!aux_is_root(bucket_src->key)
             && (action_src != ACTION_EQUAL) && (action_src != ACTION_IGNORE)) {
-            HardLinks *hard_links = item_hardlink_side(row_id, L);
-            int32 nlinks = count_hardlinks(hard_links);
+            HardLinks hard_links;
+            int32 nlinks;
+            item_hardlink_side(row_id, L, &hard_links);
+            nlinks = count_hardlinks(&hard_links);
 
             while ((cecup.ntransfers + nlinks + 1) >= cecup.transfers_capacity) {
                 int32 old_capacity = cecup.transfers_capacity;
@@ -413,11 +415,11 @@ work_preview(void *user_data) {
                                                  SIZEOF(*cecup.transfers_lens));
             }
 
-            if (action_src == ACTION_HARDLINK && hard_links) {
-                for (int32 j = 0; j < hard_links->count; j += 1) {
-                    if (hash_insert_transfer_set(cecup.transfer_set, hard_links->names[j], strlen32(hard_links->names[j]))) {
-                        cecup.transfers[cecup.ntransfers] = hard_links->names[j];
-                        cecup.transfers_lens[cecup.ntransfers] = strlen32(hard_links->names[j]);
+            if (action_src == ACTION_HARDLINK && hard_links.count) {
+                for (int32 j = 0; j < hard_links.count; j += 1) {
+                    if (hash_insert_transfer_set(cecup.transfer_set, hard_links.names[j], strlen32(hard_links.names[j]))) {
+                        cecup.transfers[cecup.ntransfers] = hard_links.names[j];
+                        cecup.transfers_lens[cecup.ntransfers] = strlen32(hard_links.names[j]);
                         cecup.ntransfers += 1;
                     }
                 }

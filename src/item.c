@@ -282,33 +282,28 @@ item_symlink_target_side(int32 row_id, int32 side) {
     }
 }
 
-static HardLinks *
-item_hardlink_side(int32 row_id, int32 side) {
+static bool
+item_hardlink_side(int32 row_id, int32 side, HardLinks *hard_links) {
     int32 idx;
-    HardLinks temp;
-    HardLinks *ret = NULL;
     int64 inode;
 
     if ((idx = cecup.rows[side][row_id]) < 0) {
         error("idx[%d][%d] = -1\n", side, row_id);
-        return NULL;
+        return false;
     }
 
     if (cecup.traversal[side].stats[idx].st_nlink <= 1) {
         error("st_nlinks[%d][%d] <= 1\n", side, idx);
-        return NULL;
+        return false;
     }
 
     inode = (int64)cecup.traversal[side].stats[idx].st_ino;
-    if (!hash_lookup_inode_map(cecup.traversal[side].inode_map, &inode, sizeof(inode), &temp)) {
+    if (!hash_lookup_inode_map(cecup.traversal[side].inode_map, &inode, sizeof(inode), hard_links)) {
         error("no hash link on inode map [%d][%d]\n", side, idx);
-        return NULL;
+        return false;
     }
 
-    ret = xarena_push(cecup.traversal[side].arena, SIZEOF(*ret));
-    *ret = temp;
-
-    return ret;
+    return true;
 }
 
 static int32
@@ -364,8 +359,8 @@ item_get_actions_reasons(int32 row_id,
         char *pattern_src = cecup.traversal[L].patterns[src_idx];
         struct stat *stat_src = &cecup.traversal[L].stats[src_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
-        HardLinks *hard_links = item_hardlink_side(row_id, L);
-        bool is_hardlink = hard_links && (hard_links->count > 1);
+        HardLinks hard_links;
+        bool is_hardlink = item_hardlink_side(row_id, L, &hard_links);
 
         if (pattern_src) {
             *action_src = ACTION_IGNORE;
@@ -399,13 +394,16 @@ item_get_actions_reasons(int32 row_id,
         char *path_src = cecup.traversal[L].paths[src_idx];
         char *symlink_target_src = cecup.traversal[L].symlink_targets[src_idx];
         char *symlink_target_dst = cecup.traversal[R].symlink_targets[dst_idx];
-        HardLinks *hard_links_src = item_hardlink_side(row_id, L);
-        HardLinks *hard_links_dst = item_hardlink_side(row_id, R);
+        HardLinks hard_links_src = {0};
+        HardLinks hard_links_dst = {0};
+        bool is_hardlink;
         bool is_symlink = S_ISLNK(stat_src->st_mode);
-        bool is_hardlink = hard_links_src && (hard_links_src->count > 1);
         bool is_dir = S_ISDIR(stat_src->st_mode);
         bool equal = false;
         bool attributes_differ = false;
+
+        is_hardlink = item_hardlink_side(row_id, L, &hard_links_src);
+        item_hardlink_side(row_id, R, &hard_links_dst);
 
         if (pattern_src) {
             *action_src = ACTION_IGNORE;
@@ -488,11 +486,11 @@ item_get_actions_reasons(int32 row_id,
 
             ASSERT(path_src);
             if (is_hardlink) {
-                if (hard_links_dst == NULL) {
+                if (hard_links_dst.count == 0) {
                     equal = false;
                     attributes_differ = true;
                     *reason |= REASON_HARDLINK_MISSING_LINK;
-                } else if (!hard_links_match(hard_links_src, hard_links_dst)) {
+                } else if (!hard_links_match(&hard_links_src, &hard_links_dst)) {
                     equal = false;
                     attributes_differ = true;
                     *reason |= REASON_HARDLINK_NOT_MATCH;

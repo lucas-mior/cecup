@@ -340,7 +340,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
             char reason_buf[1024];
             char *symlink_target;
             char *ignore_pattern;
-            HardLinks *hard_links = NULL;
+            HardLinks hard_links = {0};
 
             reason_buf[0] = '\0';
             for (uint32 i = 0; i < REASON_BIT_COUNT; i += 1) {
@@ -374,14 +374,14 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
 
             symlink_target = item_symlink_target_side(row_id, side);
             ignore_pattern = item_ignore_pattern_side(row_id, side);
-            hard_links = item_hardlink_side(row_id, side);
+            item_hardlink_side(row_id, side, &hard_links);
 
             if (symlink_target) {
                 SNPRINTF(tip_buffer,
                          "%s\n%s%s:\n%s", filepath, RSYNC_SYMLINK, symlink_target, reason_buf);
-            } else if (hard_links) {
+            } else if (hard_links.count) {
                 int32 offset = 0;
-                int32 nlinks = count_hardlinks(hard_links);
+                int32 nlinks = count_hardlinks(&hard_links);
                 int32 nlinks_printed = 0;
 
                 offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
@@ -389,11 +389,11 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
                                     _("\nThere are %d Names for this file:\n"), nlinks);
 
-                for (int32 j = 0; j < hard_links->count; j += 1) {
+                for (int32 j = 0; j < hard_links.count; j += 1) {
                     int32 n;
 
                     n = snprintf(tip_buffer + offset, (size_t)(SIZEOF(tip_buffer) - offset - 5),
-                                 "\n%s%s", RSYNC_HARDLINK, hard_links->names[j]);
+                                 "\n%s%s", RSYNC_HARDLINK, hard_links.names[j]);
                     offset += n;
                     if (offset >= (SIZEOF(tip_buffer) - 5)) {
                         offset -= n;
