@@ -235,6 +235,37 @@ traversal_push(Traversal *traversal, struct stat *stat,
     return idx;
 }
 
+static HardLinkList *
+traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
+    char inode[32];
+    int32 inode_len;
+    HardLinkList **first_link_ptr;
+    HardLinkList *new_link;
+    HardLinkList *first_link;
+
+    inode_len = ITOA(inode, (long)stat.st_ino);
+    if ((first_link_ptr = hash_lookup_inode_map(traversal->inode_map,
+                                                inode, inode_len))) {
+        first_link = *first_link_ptr;
+
+        new_link = xarena_push(traversal->arena, SIZEOF(*new_link));
+        new_link->name = path;
+        new_link->name_len = path_len;
+        new_link->idx = traversal->nfiles;
+        new_link->next = NULL;
+
+        hard_link_append(first_link, new_link);
+    } else {
+        first_link = xarena_push(traversal->arena, SIZEOF(*first_link));
+        first_link->name = path; 
+        first_link->name_len = path_len;
+        first_link->idx = traversal->nfiles;
+        first_link->next = NULL;
+        hash_insert_inode_map(traversal->inode_map, inode, inode_len, first_link);
+    }
+
+    return first_link;
+}
 static void
 traversal_unlink(Traversal *traversal, int32 idx) {
     if (S_ISREG(traversal->stats[idx].st_mode)
