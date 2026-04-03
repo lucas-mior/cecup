@@ -404,7 +404,7 @@ work_preview(void *user_data) {
         if (!aux_is_root(bucket_src->key)
             && (action_src != ACTION_EQUAL) && (action_src != ACTION_IGNORE)) {
             int32 nlinks = count_hardlinks(hard_links);
-            while (cecup.ntransfers >= (cecup.transfers_capacity - nlinks)) {
+            while ((cecup.ntransfers + nlinks) >= cecup.transfers_capacity) {
                 int32 old_capacity = cecup.transfers_capacity;
                 if (cecup.transfers_capacity == 0) {
                     cecup.transfers_capacity = INITIAL_CAPACITY;
