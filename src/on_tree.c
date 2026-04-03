@@ -340,6 +340,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
             char reason_buf[1024];
             char *symlink_target;
             char *ignore_pattern;
+            HardLink *hard_link = NULL;
 
             reason_buf[0] = '\0';
             for (uint32 i = 0; i < REASON_BIT_COUNT; i += 1) {
@@ -373,9 +374,14 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
 
             symlink_target = item_symlink_target_side(row_id, side);
             ignore_pattern = item_ignore_pattern_side(row_id, side);
+            hard_link = item_hardlink_side(row_id, side);
 
             if (symlink_target) {
                 char *notation = RSYNC_SYMLINK;
+                SNPRINTF(tip_buffer,
+                         "%s%s%s:\n%s", filepath, notation, symlink_target, reason_buf);
+            } else if (hard_link) {
+                char *notation = RSYNC_HARDLINK;
                 SNPRINTF(tip_buffer,
                          "%s%s%s:\n%s", filepath, notation, symlink_target, reason_buf);
             } else if (ignore_pattern) {

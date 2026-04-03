@@ -253,7 +253,7 @@ item_symlink_target_side(int32 row_id, int32 side) {
 }
 
 static HardLink *
-item_hardlink_target_side(int32 row_id, int32 side) {
+item_hardlink_side(int32 row_id, int32 side) {
     int32 idx;
 
     if ((idx = cecup.rows[side][row_id]) >= 0) {
@@ -269,17 +269,6 @@ item_symlink_target_len_side(int32 row_id, int32 side) {
 
     if ((idx = cecup.rows[side][row_id]) >= 0) {
         return (int32)cecup.traversal[side].symlink_targets_lens[idx];
-    } else {
-        return 0;
-    }
-}
-
-static HardLink *
-item_hardlink_target_len_side(int32 row_id, int32 side) {
-    int32 idx;
-
-    if ((idx = cecup.rows[side][row_id]) >= 0) {
-        return cecup.traversal[side].hard_links[idx];
     } else {
         return 0;
     }

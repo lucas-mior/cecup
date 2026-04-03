@@ -370,7 +370,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         task->path = xmalloc(path_len + 1);
         memcpy64(task->path, filepath, path_len + 1);
 
-        if ((hard_links = item_hardlink_target_side(row_id, side))) {
+        if ((hard_links = item_hardlink_side(row_id, side))) {
             task->hard_links = hard_links_copy(hard_links);
         }
 
