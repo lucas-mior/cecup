@@ -47,11 +47,31 @@ hard_link_append(HardLink *list, HardLink *new) {
     return;
 }
 
+static uint64
+hash_string_fnv1a(char *str, int32 len) {
+    uint64 hash = 14695981039346656037ULL;
+
+    for (int32 i = 0; i < len; i += 1) {
+        hash ^= (uint64)((uchar)str[i]);
+        hash *= 1099511628211ULL;
+    }
+
+    return hash;
+}
+
 static void
 hard_link_replace_node(HardLink *list,
                        char *old_path, int32 old_path_len,
                        char *new_path, int32 new_path_len, int32 new_idx) {
     HardLink *current = list;
+    uint64 old_hash;
+    uint64 new_hash;
+
+    old_hash = hash_string_fnv1a(old_path, old_path_len);
+    new_hash = hash_string_fnv1a(new_path, new_path_len);
+
+    list->aggregate_hash ^= old_hash;
+    list->aggregate_hash ^= new_hash;
 
     while (current != NULL) {
         if (current->name_len == old_path_len) {
@@ -72,8 +92,11 @@ static HardLink *
 hard_link_remove(HardLink *list, char *name, int32 name_len) {
     HardLink *first = list;
     HardLink *before = list;
+    uint64 hash_val;
 
     ASSERT(list);
+
+    hash_val = hash_string_fnv1a(name, name_len);
 
     while (list) {
         if (list->name_len == name_len) {
@@ -88,10 +111,20 @@ hard_link_remove(HardLink *list, char *name, int32 name_len) {
     ASSERT(list);
 
     if (before == list) {
-        return list->next;
+        HardLink *new_first = list->next;
+
+        if (new_first) {
+            new_first->count = first->count - 1;
+            new_first->aggregate_hash = first->aggregate_hash ^ hash_val;
+        }
+
+        return new_first;
     }
 
     before->next = list->next;
+    first->count -= 1;
+    first->aggregate_hash ^= hash_val;
+
     return first;
 }
 
@@ -116,14 +149,19 @@ hard_links_match(HardLink *a, HardLink *b) {
     ASSERT(a);
     ASSERT(b);
 
-    for (HardLink *test = a; test; test = test->next) {
-        if (!hard_links_contain(test, b)) {
-            return false;
-        }
+    if (a->count != b->count) {
+        return false;
     }
 
-    for (HardLink *test = b; test; test = test->next) {
-        if (!hard_links_contain(test, a)) {
+    if (a->aggregate_hash != b->aggregate_hash) {
+        return false;
+    }
+
+    /* O(N^2) slow-path fallback only runs in the event of a hash collision.
+     * Since the lists are guaranteed to have the same count and no duplicates,
+     * a single directional check is mathematically sufficient. */
+    for (HardLink *test = a; test; test = test->next) {
+        if (!hard_links_contain(test, b)) {
             return false;
         }
     }

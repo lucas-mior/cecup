@@ -274,6 +274,9 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
         map->occupied = map->length;
 
         base_index = hash & map->bitmask;
+        if (DEBUGGING) {
+            error("Hash table resized.\n");
+        }
     }
 
     capacity = map->capacity;
@@ -438,6 +441,9 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
         map->occupied = map->length;
 
         base_index = hash & map->bitmask;
+        if (DEBUGGING) {
+            error("Hash table resized.\n");
+        }
     }
 
     capacity = map->capacity;

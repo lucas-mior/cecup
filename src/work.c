@@ -399,23 +399,23 @@ work_preview(void *user_data) {
         }
 
         row_id = item_add(src_idx, dst_idx);
-        item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
+        /* item_get_actions_reasons(row_id, &action_src, &action_dst, &reason); */
 
-        if (!aux_is_root(bucket_src->key)
-            && (action_src != ACTION_EQUAL) && (action_src != ACTION_IGNORE)) {
-            if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) {
-                int32 old_capacity = cecup.transfers_capacity;
-                if (cecup.transfers_capacity == 0) {
-                    cecup.transfers_capacity = INITIAL_CAPACITY;
-                }
-                cecup.transfers_capacity *= 2;
-                cecup.transfers = realloc(cecup.transfers,
-                                            old_capacity, cecup.transfers_capacity,
-                                            SIZEOF(*cecup.transfers));
-                cecup.transfers_lens = realloc(cecup.transfers_lens,
-                                                 old_capacity, cecup.transfers_capacity,
-                                                 SIZEOF(*cecup.transfers_lens));
-            }
+        /* if (!aux_is_root(bucket_src->key) */
+        /*     && (action_src != ACTION_EQUAL) && (action_src != ACTION_IGNORE)) { */
+        /*     if (cecup.ntransfers >= (cecup.transfers_capacity - 1)) { */
+        /*         int32 old_capacity = cecup.transfers_capacity; */
+        /*         if (cecup.transfers_capacity == 0) { */
+        /*             cecup.transfers_capacity = INITIAL_CAPACITY; */
+        /*         } */
+        /*         cecup.transfers_capacity *= 2; */
+        /*         cecup.transfers = realloc(cecup.transfers, */
+        /*                                     old_capacity, cecup.transfers_capacity, */
+        /*                                     SIZEOF(*cecup.transfers)); */
+        /*         cecup.transfers_lens = realloc(cecup.transfers_lens, */
+        /*                                          old_capacity, cecup.transfers_capacity, */
+        /*                                          SIZEOF(*cecup.transfers_lens)); */
+        /*     } */
             /* if (action_src == ACTION_HARDLINK) { */
             /*     for (HardLink *link = hard_links; link; link = link->next) { */
             /*         if (hash_insert_transfer_set(cecup.transfer_set, link->name, link->name_len)) { */
@@ -430,7 +430,7 @@ work_preview(void *user_data) {
             /*     cecup.transfers_lens[cecup.ntransfers] = path_len; */
             /*     cecup.ntransfers += 1; */
             /* } */
-        }
+        /* } */
 
         nfiles_processed += 1;
         if ((nfiles_processed % 1000) == 0) {

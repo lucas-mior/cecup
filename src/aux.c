@@ -259,10 +259,13 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
     HardLink **first_hard_link_ptr;
     HardLink *new_link;
     HardLink *first_hard_link;
+    uint64 hash_val;
 
+    hash_val = hash_string_fnv1a(path, path_len);
     inode_len = ITOA(inode, (long)stat.st_ino);
+
     if ((first_hard_link_ptr = hash_lookup_inode_map(traversal->inode_map,
-                                                inode, inode_len))) {
+                                                     inode, inode_len))) {
         first_hard_link = *first_hard_link_ptr;
 
         new_link = xarena_push(traversal->arena, SIZEOF(*new_link));
@@ -271,13 +274,19 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         new_link->idx = traversal->nfiles;
         new_link->next = NULL;
 
+        first_hard_link->count += 1;
+        first_hard_link->aggregate_hash ^= hash_val;
+
         hard_link_append(first_hard_link, new_link);
     } else {
         first_hard_link = xarena_push(traversal->arena, SIZEOF(*first_hard_link));
-        first_hard_link->name = path; 
+        first_hard_link->name = path;
         first_hard_link->name_len = path_len;
         first_hard_link->idx = traversal->nfiles;
         first_hard_link->next = NULL;
+        first_hard_link->count = 1;
+        first_hard_link->aggregate_hash = hash_val;
+
         hash_insert_inode_map(traversal->inode_map, inode, inode_len, first_hard_link);
     }
 
