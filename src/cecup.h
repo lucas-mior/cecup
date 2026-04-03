@@ -133,7 +133,7 @@ typedef struct HardLinks {
  } HardLinks;
 
 #define HASH_KEY_TYPE ino_t
-#define HASH_KEY_BY_VALUE 1
+#define HASH_KEY_FIXED_LEN 1
 #define HASH_VALUE_TYPE HardLinks
 #define HASH_PADDING_TYPE uint32
 #define HASH_DUPLICATE_KEYS 0
