@@ -276,16 +276,17 @@ traversal_unlink(Traversal *traversal, int32 idx) {
         int32 path_len = traversal->paths_lens[idx];
         HardLinkList **first_link_ptr;
         HardLinkList *first_link;
+        HardLinkList *new_first_link;
 
         inode_len = ITOA(inode, (long)traversal->stats[idx].st_ino);
         if ((first_link_ptr = hash_lookup_inode_map(traversal->inode_map, inode, inode_len))) {
             first_link = *first_link_ptr;
 
-            first_link = hard_link_remove(first_link, path, path_len);
+            new_first_link = hard_link_remove(first_link, path, path_len);
             if (first_link == NULL) {
                 hash_remove_inode_map(traversal->inode_map, inode, inode_len);
-            } else {
-                hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, first_link);
+            } else if (new_first_link != first_link) {
+                hash_overwrite_inode_map(traversal->inode_map, inode, inode_len, new_first_link);
             }
         }
     }
