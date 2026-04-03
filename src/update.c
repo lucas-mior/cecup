@@ -428,7 +428,7 @@ update_row_transfer(Message *message) {
             char *link_target = NULL;
             int32 link_target_len = 0;
 
-            if ((S_ISLNK(stat.st_mode))) {
+            if (S_ISLNK(stat.st_mode)) {
                 link_target_len = traversal_symlink_get(traversal_dst, full_path, &link_target);
             }
 
