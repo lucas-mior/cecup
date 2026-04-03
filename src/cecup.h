@@ -402,7 +402,7 @@ static struct {
     bool delete_after;
 
     GtkWidget *filter_new;
-    GtkWidget *filter_hard;
+    GtkWidget *filter_link;
     GtkWidget *filter_update;
     GtkWidget *filter_equal;
     GtkWidget *filter_delete;

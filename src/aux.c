@@ -555,7 +555,7 @@ save_config(void) {
                           gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry)));
 
     config_bool_set(key, "Filters", "new",    cecup.filter_new);
-    config_bool_set(key, "Filters", "hard",   cecup.filter_hard);
+    config_bool_set(key, "Filters", "hard",   cecup.filter_link);
     config_bool_set(key, "Filters", "update", cecup.filter_update);
     config_bool_set(key, "Filters", "equal",  cecup.filter_equal);
     config_bool_set(key, "Filters", "delete", cecup.filter_delete);

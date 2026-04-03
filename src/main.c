@@ -544,21 +544,21 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_halign(filter_hbox, GTK_ALIGN_CENTER);
 
     NEW_WITH_NAME(cecup.filter_new, gtk_toggle_button_new);
-    NEW_WITH_NAME(cecup.filter_hard, gtk_toggle_button_new);
+    NEW_WITH_NAME(cecup.filter_link, gtk_toggle_button_new);
     NEW_WITH_NAME(cecup.filter_update, gtk_toggle_button_new);
     NEW_WITH_NAME(cecup.filter_equal, gtk_toggle_button_new);
     NEW_WITH_NAME(cecup.filter_delete, gtk_toggle_button_new);
     NEW_WITH_NAME(cecup.filter_ignore, gtk_toggle_button_new);
 
     gtk_button_set_label(GTK_BUTTON(cecup.filter_new),    EMOJI_NEW);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_hard),   EMOJI_LINK);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_link),   EMOJI_LINK);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_update), EMOJI_UPDATE);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_equal),  EMOJI_EQUAL);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), EMOJI_DELETE);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), EMOJI_IGNORE);
 
     gtk_widget_set_tooltip_text(cecup.filter_new,    _("Show New Files"));
-    gtk_widget_set_tooltip_text(cecup.filter_hard,   _("Show links"));
+    gtk_widget_set_tooltip_text(cecup.filter_link,   _("Show links"));
     gtk_widget_set_tooltip_text(cecup.filter_update, _("Show Updates"));
     gtk_widget_set_tooltip_text(cecup.filter_equal,  _("Show equals"));
     gtk_widget_set_tooltip_text(cecup.filter_delete, _("Show Deletions"));
@@ -568,9 +568,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_start(cecup.filter_new, PADDING_FILTER_BUTTON);
     gtk_widget_set_margin_end(cecup.filter_new, PADDING_FILTER_BUTTON);
 
-    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_hard);
-    gtk_widget_set_margin_start(cecup.filter_hard, PADDING_FILTER_BUTTON);
-    gtk_widget_set_margin_end(cecup.filter_hard, PADDING_FILTER_BUTTON);
+    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_link);
+    gtk_widget_set_margin_start(cecup.filter_link, PADDING_FILTER_BUTTON);
+    gtk_widget_set_margin_end(cecup.filter_link, PADDING_FILTER_BUTTON);
 
     gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_update);
     gtk_widget_set_margin_start(cecup.filter_update, PADDING_FILTER_BUTTON);
@@ -678,7 +678,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                                          g_key_file_get_boolean(key, "Filters", "new", NULL));
         }
         if (g_key_file_has_key(key, "Filters", "hard", NULL)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_hard),
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_link),
                                          g_key_file_get_boolean(key, "Filters", "hard", NULL));
         }
         if (g_key_file_has_key(key, "Filters", "update", NULL)) {
@@ -733,7 +733,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     g_signal_connect(cecup.search_entry, "changed", G_CALLBACK(on_search_changed), NULL);
 
     g_signal_connect(cecup.filter_new,    "toggled", G_CALLBACK(on_filter_toggled), NULL);
-    g_signal_connect(cecup.filter_hard,   "toggled", G_CALLBACK(on_filter_toggled), NULL);
+    g_signal_connect(cecup.filter_link,   "toggled", G_CALLBACK(on_filter_toggled), NULL);
     g_signal_connect(cecup.filter_update, "toggled", G_CALLBACK(on_filter_toggled), NULL);
     g_signal_connect(cecup.filter_equal,  "toggled", G_CALLBACK(on_filter_toggled), NULL);
     g_signal_connect(cecup.filter_delete, "toggled", G_CALLBACK(on_filter_toggled), NULL);

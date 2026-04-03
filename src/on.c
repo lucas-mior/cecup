@@ -217,7 +217,7 @@ on_reset_clicked(GtkWidget *button, void *data) {
     (void)data;
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_new), TRUE);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_hard), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_link), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_update), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal), FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete), TRUE);
@@ -437,7 +437,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
         int32 count_selected = 0;
         int64 total_size_bytes = 0;
         bool filter_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
-        bool filter_hard = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
+        bool filter_link = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_link));
         bool filter_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
 
         parent_path_len = strlen32(parent_path);
@@ -500,7 +500,7 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                 }
 
                 if ((action_src == ACTION_NEW && filter_new)
-                    || (filter_hard && (action_src == ACTION_HARDLINK || action_src == ACTION_SYMLINK))
+                    || (filter_link && (action_src == ACTION_HARDLINK || action_src == ACTION_SYMLINK))
                     || (action_src == ACTION_UPDATE && filter_update)) {
                     total_size_bytes += size;
                 }

@@ -676,7 +676,7 @@ update_list_from_rows(void) {
     struct timespec t1_rows_loop;
 
     bool show_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_new));
-    bool show_link = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_hard));
+    bool show_link = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_link));
     bool show_update = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_update));
     bool show_equal = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_equal));
     bool show_delete = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
@@ -818,7 +818,7 @@ update_list_from_rows(void) {
     gtk_button_set_label(GTK_BUTTON(cecup.filter_new), button_label);
 
     SNPRINTF(button_label, "%s/%s %d", EMOJI_LINK, EMOJI_SYMLINK, count_link);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_hard), button_label);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_link), button_label);
 
     SNPRINTF(button_label, "%s %d", EMOJI_UPDATE, count_update);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_update), button_label);
