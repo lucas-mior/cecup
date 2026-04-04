@@ -146,10 +146,88 @@ on_log_functions_sink(void) {
 
 #if TESTING_on_log
 #include "on.c"
+#include "assert.c"
+
+typedef struct ClipResult {
+    bool done;
+    char *text;
+} ClipResult;
+
+static void
+clipboard_read_cb(GObject *source_object, GAsyncResult *res, void *data) {
+    ClipResult *result;
+
+    result = data;
+    result->text = gdk_clipboard_read_text_finish(GDK_CLIPBOARD(source_object), res, NULL);
+    result->done = true;
+
+    return;
+}
 
 int
 main(void) {
-    return 0;
+    GdkDisplay *display;
+    GdkClipboard *clipboard;
+    GVariant *param;
+    ClipResult res;
+
+    if (!gtk_init_check()) {
+        /* Headless environment detected; aborting GTK-dependent tests smoothly */
+        exit(EXIT_SUCCESS);
+    }
+
+    display = gdk_display_get_default();
+    if (display == NULL) {
+        exit(EXIT_SUCCESS);
+    }
+
+    clipboard = gdk_display_get_clipboard(display);
+    cecup.log_buffer = gtk_text_buffer_new(NULL);
+    gtk_text_buffer_set_text(cecup.log_buffer, "Log message 0\nLog message 1\nLog message 2", -1);
+
+    on_log_copy(NULL, NULL, "all");
+
+    res.done = false;
+    res.text = NULL;
+    gdk_clipboard_read_text_async(clipboard, NULL, clipboard_read_cb, &res);
+    while (!res.done) {
+        g_main_context_iteration(NULL, TRUE);
+    }
+
+    ASSERT(res.text != NULL);
+    ASSERT_EQUAL(res.text, "Log message 0\nLog message 1\nLog message 2");
+    g_free(res.text);
+
+    param = g_variant_new_int32(1);
+    g_variant_ref_sink(param);
+    on_log_copy(NULL, param, "line");
+    g_variant_unref(param);
+
+    res.done = false;
+    res.text = NULL;
+    gdk_clipboard_read_text_async(clipboard, NULL, clipboard_read_cb, &res);
+    while (!res.done) {
+        g_main_context_iteration(NULL, TRUE);
+    }
+
+    ASSERT(res.text != NULL);
+    ASSERT_EQUAL(res.text, "Log message 1");
+    PRINTLN(res.text);
+
+    g_free(res.text);
+    g_object_unref(cecup.log_buffer);
+
+    {
+        int64 end_time;
+
+        // Spin the GTK event loop for 10 seconds to serve clipboard requests
+        end_time = g_get_monotonic_time() + 10 * G_TIME_SPAN_SECOND;
+        while (g_get_monotonic_time() < end_time) {
+            g_main_context_iteration(NULL, TRUE);
+        }
+    }
+
+    exit(EXIT_SUCCESS);
 }
 
 #endif
