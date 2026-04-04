@@ -650,7 +650,7 @@ work_rsync(void *user_data) {
         }
     } while (0);
     /* if (!DEBUGGING) { */
-    /*     xunlink(files_from_filename); */
+    /* xunlink(files_from_filename); */
     /* } */
 
     work_batch_flush(&batch);
@@ -671,12 +671,59 @@ work_rsync_functions_sink(void) {
 
 #if TESTING_work_rsync
 #include "work.c"
+#include "assert.c"
 
 int
 main(void) {
-    (void)work_rsync;
-    (void)work_rsync_run;
-    return 0;
+    char *result;
+
+    /* Test valid file itemization: standard rsync flags + space + path */
+    {
+        char *line = ">f.st...... some/file.txt";
+        result = work_rsync_itemize_skip(line, strlen32(line));
+        ASSERT(result != NULL);
+        ASSERT_EQUAL(result, line + 12);
+        ASSERT(strcmp(result, "some/file.txt") == 0);
+    }
+
+    /* Test valid directory itemization */
+    {
+        char *line = ".d..t...... some/dir/";
+        result = work_rsync_itemize_skip(line, strlen32(line));
+        ASSERT(result != NULL);
+        ASSERT_EQUAL(result, line + 12);
+        ASSERT(strcmp(result, "some/dir/") == 0);
+    }
+
+    /* Test invalid first character (unknown action) */
+    {
+        char *line = "?f.st...... some/file.txt";
+        result = work_rsync_itemize_skip(line, strlen32(line));
+        ASSERT(result == NULL);
+    }
+
+    /* Test invalid second character (unknown type) */
+    {
+        char *line = ">?.st...... some/file.txt";
+        result = work_rsync_itemize_skip(line, strlen32(line));
+        ASSERT(result == NULL);
+    }
+
+    /* Test missing space separator between flags and path */
+    {
+        char *line = ">f.st......Xsome/file.txt";
+        result = work_rsync_itemize_skip(line, strlen32(line));
+        ASSERT(result == NULL);
+    }
+
+    /* Test line too short to contain flags and separator */
+    {
+        char *line = ">f.st";
+        result = work_rsync_itemize_skip(line, strlen32(line));
+        ASSERT(result == NULL);
+    }
+
+    exit(EXIT_SUCCESS);
 }
 
 #endif
