@@ -25,6 +25,9 @@ error () {
     return
 }
 
+alias trace_on='set -x'
+alias trace_off='{ set +x; } 2>/dev/null'
+
 if command -v measure; then
     measure=measure
 else
@@ -38,9 +41,6 @@ fi
 
 # gtk might not work correctly if you have stuff here
 export XDG_DATA_DIRS=""
-
-alias trace_on='set -x'
-alias trace_off='{ set +x; } 2>/dev/null'
 
 # export LC_ALL=C
 
@@ -263,7 +263,6 @@ case "$target" in
     generate_welcome_h
     trace_on
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && LC_ALL=C "$exe"
-    exit 0
     trace_off
     ;;
 "build"|"debug"|"run"|"release"|"valgrind"|"callgrind"|"perf"|"profile")
