@@ -204,8 +204,6 @@ update_ui_handler(void *data) {
         gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), "");
         gtk_widget_set_tooltip_text(cecup.progress_bar, "");
         break;
-    case MSG_ADD_ROW:
-    case MSG_BATCH:
     case MSG_LAST:
     default:
         LOG("Ignoring %s.\n", MSG_str(message->type));
