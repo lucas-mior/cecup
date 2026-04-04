@@ -430,15 +430,53 @@ list_model_functions_sink(void) {
 
 #include "update.c"
 #include "work.c"
+#include "assert.c"
 
 int
 main(void) {
-    (void)cecup_list_model_new;
-    (void)cecup_list_model_update;
-    (void)cecup_list_model_row_removed;
-    (void)cecup_list_model_row_changed;
-    (void)cecup_item_proxy_get_index;
-    (void)cecup_list_model_row_added;
+    CecupItemProxy *proxy;
+    int32 index_val;
+    int32 new_item_idx;
+
+    if (!gtk_init_check()) {
+        exit(EXIT_SUCCESS);
+    }
+
+    proxy = cecup_item_proxy_new(42);
+    ASSERT(proxy != NULL);
+
+    index_val = cecup_item_proxy_get_index(proxy);
+    ASSERT_EQUAL(index_val, 42);
+
+    g_object_unref(proxy);
+
+    g_mutex_init(&cecup.arena_mutex);
+
+    cecup.rows_capacity = 0;
+    cecup.rows_len = 0;
+    cecup.traversal[L].row_ids = xmalloc(50 * SIZEOF(int32));
+    cecup.traversal[R].row_ids = xmalloc(50 * SIZEOF(int32));
+
+    new_item_idx = item_add(10, 20);
+
+    ASSERT_EQUAL(new_item_idx, 0);
+    ASSERT_EQUAL(cecup.rows_len, 1);
+    ASSERT_EQUAL(cecup.rows_capacity, 1024);
+    ASSERT_EQUAL(cecup.rows[L][0], 10);
+    ASSERT_EQUAL(cecup.rows[R][0], 20);
+    ASSERT_EQUAL(cecup.traversal[L].row_ids[10], 0);
+    ASSERT_EQUAL(cecup.traversal[R].row_ids[20], 0);
+    ASSERT(cecup.rows_selected[0] == false);
+
+    free(cecup.rows[L], cecup.rows_capacity * SIZEOF(int32));
+    free(cecup.rows[R], cecup.rows_capacity * SIZEOF(int32));
+    free(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
+    free(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
+    free(cecup.traversal[L].row_ids, 50 * SIZEOF(int32));
+    free(cecup.traversal[R].row_ids, 50 * SIZEOF(int32));
+
+    g_mutex_clear(&cecup.arena_mutex);
+
     exit(EXIT_SUCCESS);
 }
 #endif
