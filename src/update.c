@@ -460,7 +460,6 @@ update_row_rename(char *old_path, int32 old_path_len,
     hash_remove_fs_map(traversal->map, path_old, path_old_len);
     traversal->row_ids[idx] = -1;
 
-
     {
         IgnorePattern *pattern;
         char *p_match_str = NULL;
