@@ -566,10 +566,86 @@ item_functions_sink(void) {
 #include "update.c"
 #include "work.c"
 #include "on.c"
+#include "assert.c"
 
 int
 main(void) {
-    return 0;
+    HardLinks hl1;
+    HardLinks hl2;
+    HardLinks hl3;
+    char *names[3];
+    int32 names_lens[3];
+    char *name_to_remove;
+    int32 name_to_remove_len;
+    HardLinks *ret;
+    SortEntry entry1;
+    SortEntry entry2;
+    int32 result;
+
+    memset64(&hl1, 0, SIZEOF(hl1));
+    memset64(&hl2, 0, SIZEOF(hl2));
+
+    hl1.count = 2;
+    hl1.aggregate_hash = 12345;
+
+    hl2.count = 2;
+    hl2.aggregate_hash = 12345;
+
+    ASSERT(hard_links_match(&hl1, &hl2));
+
+    hl2.aggregate_hash = 54321;
+    ASSERT(!hard_links_match(&hl1, &hl2));
+
+    names[0] = "file1.txt";
+    names[1] = "file2.txt";
+    names[2] = "file3.txt";
+
+    names_lens[0] = strlen32(names[0]);
+    names_lens[1] = strlen32(names[1]);
+    names_lens[2] = strlen32(names[2]);
+
+    memset64(&hl3, 0, SIZEOF(hl3));
+    hl3.count = 3;
+    hl3.capacity = 3;
+    hl3.names = names;
+    hl3.names_lens = names_lens;
+    hl3.aggregate_hash = rapidhash(names[0], names_lens[0]) ^ rapidhash(names[1], names_lens[1]) ^ rapidhash(names[2], names_lens[2]);
+
+    name_to_remove = "file2.txt";
+    name_to_remove_len = strlen32(name_to_remove);
+
+    ret = hard_link_remove(&hl3, name_to_remove, name_to_remove_len);
+    ASSERT(ret != NULL);
+    ASSERT_EQUAL(hl3.count, 2);
+    ASSERT_EQUAL(hl3.names[0], "file1.txt");
+    ASSERT_EQUAL(hl3.names[1], "file3.txt");
+
+    memset64(&entry1, 0, SIZEOF(entry1));
+    memset64(&entry2, 0, SIZEOF(entry2));
+
+    entry1.key.i64 = 10;
+    entry2.key.i64 = 20;
+
+    cecup.sort_order = GTK_SORT_ASCENDING;
+    result = cecup_item_compare_int_key(&entry1, &entry2);
+    ASSERT_LESS(result, 0);
+
+    cecup.sort_order = GTK_SORT_DESCENDING;
+    result = cecup_item_compare_int_key(&entry1, &entry2);
+    ASSERT_MORE(result, 0);
+
+    entry1.key.ptr = "apple";
+    entry2.key.ptr = "banana";
+
+    cecup.sort_order = GTK_SORT_ASCENDING;
+    result = cecup_item_compare_string_key(&entry1, &entry2);
+    ASSERT_LESS(result, 0);
+
+    cecup.sort_order = GTK_SORT_DESCENDING;
+    result = cecup_item_compare_string_key(&entry1, &entry2);
+    ASSERT_MORE(result, 0);
+
+    exit(EXIT_SUCCESS);
 }
 #endif
 
