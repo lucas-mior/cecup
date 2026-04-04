@@ -295,16 +295,53 @@ columns_functions_sink(void) {
 
 #if TESTING_columns
 
+#include "work.c"
+#include "assert.c"
+
 int
 main(void) {
-    (void)column_text_setup;
-    (void)column_text_bind;
-    (void)column_bind_path;
-    (void)column_setup_path;
-    (void)column_setup_action;
-    (void)column_bind_action;
-    (void)column_setup_checkbox;
-    (void)column_bind_checkbox;
+    GtkListItem *list_item;
+    GtkSignalListItemFactory *factory;
+    GtkWidget *child;
+    GtkWidget *dummy_tree;
+
+    if (!gtk_init_check()) {
+        exit(EXIT_SUCCESS);
+    }
+
+    factory = GTK_SIGNAL_LIST_ITEM_FACTORY(gtk_signal_list_item_factory_new());
+    g_object_ref_sink(factory);
+
+    list_item = GTK_LIST_ITEM(g_object_new(GTK_TYPE_LIST_ITEM, NULL));
+    g_object_ref_sink(list_item);
+
+    column_setup_checkbox(factory, list_item, NULL);
+    child = gtk_list_item_get_child(list_item);
+    ASSERT(child != NULL);
+    ASSERT(GTK_IS_CHECK_BUTTON(child));
+
+    column_setup_action(factory, list_item, NULL);
+    child = gtk_list_item_get_child(list_item);
+    ASSERT(child != NULL);
+    ASSERT(GTK_IS_LABEL(child));
+
+    column_text_setup(factory, list_item, NULL);
+    child = gtk_list_item_get_child(list_item);
+    ASSERT(child != NULL);
+    ASSERT(GTK_IS_LABEL(child));
+
+    dummy_tree = gtk_label_new("dummy");
+    g_object_ref_sink(dummy_tree);
+
+    column_setup_path(factory, list_item, dummy_tree);
+    child = gtk_list_item_get_child(list_item);
+    ASSERT(child != NULL);
+    ASSERT(GTK_IS_EDITABLE_LABEL(child));
+
+    g_object_unref(dummy_tree);
+    g_object_unref(list_item);
+    g_object_unref(factory);
+
     exit(EXIT_SUCCESS);
 }
 
