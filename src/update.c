@@ -291,9 +291,8 @@ update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
     changed = true;
 
     traversal_unlink(traversal, idx);
+    hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
 
-    hash_remove_fs_map(traversal->map,
-                       traversal->paths[idx], traversal->paths_lens[idx]);
     traversal->row_ids[idx] = -1;
     cecup.rows[side][row_id] = -1;
 
