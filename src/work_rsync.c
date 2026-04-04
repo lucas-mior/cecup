@@ -545,12 +545,14 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         base_path_len = cecup.dst_base_len;
     }
 
-    if (path_len > 0 && path[path_len - 1] != '/') {
-        if (unlink(full_path) == 0) {
+    ASSERT_MORE(path_len, 0);
+
+    if (path[path_len - 1] != '/') {
+        if (unlink(full_path) < 0) {
+            error("Error in unlink(%s): %s.\n", full_path, strerror(errno));
+        } else {
             work_batch_push(batch, MSG_ROW_REMOVE, side, path, path_len);
             LOG("Removed %s...\n", full_path);
-        } else {
-            error("Error in unlink(%s): %s.\n", full_path, strerror(errno));
         }
     } else {
         char *paths[2];
@@ -588,10 +590,10 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             case FTS_SL:
             case FTS_SLNONE:
             case FTS_DEFAULT:
-                if (unlink(entry->fts_accpath) == 0) {
-                    work_batch_push(batch, MSG_ROW_REMOVE, side, rel_path, rel_path_len);
-                } else {
+                if (unlink(entry->fts_accpath) < 0) {
                     error("Error in unlink(%s): %s.\n", entry->fts_accpath, strerror(errno));
+                } else {
+                    work_batch_push(batch, MSG_ROW_REMOVE, side, rel_path, rel_path_len);
                 }
                 break;
             case FTS_DP:
