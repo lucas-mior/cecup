@@ -963,14 +963,101 @@ update_functions_sink(void) {
 #include <assert.h>
 #include <string.h>
 #include "work.c"
+#include "assert.c"
 
 int
 main(void) {
-    (void)update_progress_bar;
-    (void)cecup_get_dirs;
-    (void)get_target_tasks;
-    (void)task_list_free;
-    (void)free_message;
+    if (!gtk_init_check()) {
+        exit(EXIT_SUCCESS);
+    }
+
+    /* 1. Setup global infrastructure to prevent crashes in sub-calls */
+    cecup.stop_button = gtk_button_new();
+    cecup.sync_button = gtk_button_new();
+    cecup.stats_label = gtk_label_new(NULL);
+    cecup.filter_new = gtk_toggle_button_new();
+    cecup.filter_link = gtk_toggle_button_new();
+    cecup.filter_update = gtk_toggle_button_new();
+    cecup.filter_equal = gtk_toggle_button_new();
+    cecup.filter_delete = gtk_toggle_button_new();
+    cecup.filter_ignore = gtk_toggle_button_new();
+
+    int32 n = 3;
+    cecup.rows_len = n;
+    cecup.rows[L] = xmalloc(n * SIZEOF(int32));
+    cecup.rows[R] = xmalloc(n * SIZEOF(int32));
+    cecup.rows_selected = xmalloc(n * SIZEOF(uint8));
+
+    for (int32 side = 0; side < 2; side += 1) {
+        Traversal *t = &cecup.traversal[side];
+        t->nfiles = n;
+        t->map = hash_create_fs_map(16);
+        t->paths = xmalloc(n * SIZEOF(char *));
+        t->paths_lens = xmalloc(n * SIZEOF(int32));
+        t->row_ids = xmalloc(n * SIZEOF(int32));
+        t->stats = xmalloc(n * SIZEOF(struct stat));
+        t->patterns = xmalloc(n * SIZEOF(char *));
+        t->symlink_targets = xmalloc(n * SIZEOF(char *));
+
+        memset64(t->stats, 0, n * SIZEOF(struct stat));
+        memset64(t->patterns, 0, n * SIZEOF(char *));
+        memset64(t->symlink_targets, 0, n * SIZEOF(char *));
+
+        t->paths[0] = "file_a"; t->paths_lens[0] = 6;
+        t->paths[1] = "file_b"; t->paths_lens[1] = 6;
+        t->paths[2] = "file_c"; t->paths_lens[2] = 6;
+
+        for (int32 i = 0; i < n; i += 1) {
+            hash_insert_fs_map(t->map, t->paths[i], t->paths_lens[i], i);
+            t->row_ids[i] = i;
+            cecup.rows[side][i] = i;
+            cecup.rows_selected[i] = 0;
+            t->stats[i].st_mode = S_IFREG | 0644;
+        }
+    }
+
+    /* Test update_row_remove - single file logic */
+    Message msg = {0};
+    msg.type = MSG_ROW_REMOVE;
+    msg.side = L;
+    msg.src_path = "file_a";
+    msg.src_path_len = 6;
+
+    /* Part 1: Remove from one side only. Rows count shouldn't change. */
+    bool res = update_row_remove(&msg);
+    ASSERT(res == true);
+    ASSERT_EQUAL(cecup.rows[L][0], -1);
+    ASSERT_EQUAL(cecup.rows[R][0], 0);
+    ASSERT_EQUAL(cecup.rows_len, 3);
+
+    /* Part 2: Remove from the other side. Arrays must shift. */
+    msg.side = R;
+    res = update_row_remove(&msg);
+    ASSERT(res == true);
+    ASSERT_EQUAL(cecup.rows_len, 2);
+    /* Index 1 (file_b) should now be row 0 */
+    ASSERT_EQUAL(cecup.rows[L][0], 1);
+    ASSERT_EQUAL(cecup.traversal[L].row_ids[1], 0);
+
+    /* Cleanup */
+    g_object_unref(cecup.stop_button);
+    g_object_unref(cecup.sync_button);
+    g_object_unref(cecup.stats_label);
+
+    for (int32 side = 0; side < 2; side += 1) {
+        Traversal *t = &cecup.traversal[side];
+        free(t->paths, n * SIZEOF(char *));
+        free(t->paths_lens, n * SIZEOF(int32));
+        free(t->row_ids, n * SIZEOF(int32));
+        free(t->stats, n * SIZEOF(struct stat));
+        free(t->patterns, n * SIZEOF(char *));
+        free(t->symlink_targets, n * SIZEOF(char *));
+        hash_destroy_fs_map(t->map);
+    }
+    free(cecup.rows[L], n * SIZEOF(int32));
+    free(cecup.rows[R], n * SIZEOF(int32));
+    free(cecup.rows_selected, n * SIZEOF(uint8));
+
     ASSERT(true);
     exit(EXIT_SUCCESS);
 }
