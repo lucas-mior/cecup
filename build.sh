@@ -134,7 +134,11 @@ case "$target" in
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     ;;
 "callgrind") 
-    CFLAGS="$CFLAGS -g -O2 -ftree-vectorize"
+    CFLAGS="$CFLAGS -g3 -O2 -ftree-vectorize"
+    CPPFLAGS="$CPPFLAGS $GNUSOURCE"
+    ;;
+"cachegrind") 
+    CFLAGS="$CFLAGS -g3 -O2 -ftree-vectorize"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     ;;
 "test")
@@ -395,6 +399,14 @@ case "$target" in
     out="callgrind_$(date +%s).callgrind"
     trace_on
     valgrind --tool=callgrind --callgrind-out-file="$out" bin/$program
+    kcachegrind "$out"
+    trace_off
+    exit
+    ;;
+"cachegrind")
+    out="cachegrind_$(date +%s).callgrind"
+    trace_on
+    valgrind --tool=cachegrind --cachegrind-out-file="$out" bin/$program
     kcachegrind "$out"
     trace_off
     exit
