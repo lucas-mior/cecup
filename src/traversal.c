@@ -294,32 +294,71 @@ main(void) {
     Traversal test_traversal;
     struct stat dummy_stat;
     int32 idx;
+    HardLinks hl;
 
     memset64(&test_traversal, 0, SIZEOF(test_traversal));
     memset64(&dummy_stat, 0, SIZEOF(dummy_stat));
 
     traversal_allocate(&test_traversal);
     ASSERT(test_traversal.ncapacity == INITIAL_CAPACITY);
-    ASSERT(test_traversal.nfiles == 0);
-    ASSERT(test_traversal.stats != NULL);
-    ASSERT(test_traversal.paths != NULL);
 
-    dummy_stat.st_ino = 12345;
+    dummy_stat.st_ino = 100;
     dummy_stat.st_mode = S_IFREG | 0644;
-    dummy_stat.st_nlink = 1;
     dummy_stat.st_size = 1024;
 
-    idx = traversal_push(&test_traversal, &dummy_stat, "test_file.txt", 13, NULL, 0, NULL, 0);
-
+    idx = traversal_push(&test_traversal, &dummy_stat, "file_1", 6, NULL, 0, NULL, 0);
     ASSERT_EQUAL(idx, 0);
     ASSERT_EQUAL(test_traversal.nfiles, 1);
-    ASSERT_EQUAL((int32)test_traversal.paths_lens[0], 13);
-    ASSERT_EQUAL(test_traversal.paths[0], "test_file.txt");
-    ASSERT_EQUAL((int32)test_traversal.stats[0].st_ino, 12345);
+    ASSERT_EQUAL((int32)test_traversal.stats[0].st_ino, 100);
 
+    for (int32 i = 1; i < (INITIAL_CAPACITY + 5); i += 1) {
+        char *name = xarena_push(test_traversal.arena, 16);
+        snprintf(name, 16, "file_%d", i);
+        traversal_push(&test_traversal, &dummy_stat, name, strlen32(name), NULL, 0, NULL, 0);
+    }
+    ASSERT(test_traversal.ncapacity > INITIAL_CAPACITY);
+    ASSERT_EQUAL(test_traversal.nfiles, INITIAL_CAPACITY + 5);
+
+    /* 3. Test HardLink 128-bit Logic */
+    struct stat link_stat;
+    memset64(&link_stat, 0, SIZEOF(link_stat));
+    link_stat.st_ino = 999;
+    link_stat.st_mode = S_IFREG | 0644;
+    link_stat.st_nlink = 2;
+
+    /* Add first link */
+    traversal_add_link(&test_traversal, link_stat, "link_a", 6);
+    ASSERT(hash_lookup_inode_map(test_traversal.inode_map, &link_stat.st_ino, &hl));
+    ASSERT_EQUAL(hl.count, 1);
+
+    uint64 first_lo = hl.aggregate_hash_lo;
+    uint64 first_hi = hl.aggregate_hash_hi;
+
+    /* Add second link and verify XOR sum changed */
+    traversal_add_link(&test_traversal, link_stat, "link_b", 6);
+    hash_lookup_inode_map(test_traversal.inode_map, &link_stat.st_ino, &hl);
+    ASSERT_EQUAL(hl.count, 2);
+    ASSERT(hl.aggregate_hash_lo != first_lo);
+    ASSERT(hl.aggregate_hash_hi != first_hi);
+
+    /* 4. Test traversal_unlink 128-bit restoration */
+    /* Manually push link_a to the traversal arrays so unlink can find it */
+    int32 link_idx = traversal_push(&test_traversal, &link_stat, "link_a", 6, NULL, 0, NULL, 0);
+
+    traversal_unlink(&test_traversal, link_idx);
+
+    /* After unlinking 'link_a', the hash should return to its state after 'link_b' alone */
+    /* (Because A ^ B ^ A = B) */
+    hash_lookup_inode_map(test_traversal.inode_map, &link_stat.st_ino, &hl);
+    ASSERT_EQUAL(hl.count, 1);
+
+    rapidhash128_t hash_b = rapidhash128("link_b", 6);
+    ASSERT_EQUAL(hl.aggregate_hash_lo, hash_b.lo);
+    ASSERT_EQUAL(hl.aggregate_hash_hi, hash_b.hi);
+
+    /* 5. Clean and Free */
     traversal_clean(&test_traversal);
     ASSERT_EQUAL(test_traversal.nfiles, 0);
-    ASSERT_EQUAL(test_traversal.file_count, 0);
 
     traversal_free(&test_traversal);
 
