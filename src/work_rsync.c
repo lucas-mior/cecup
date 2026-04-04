@@ -610,6 +610,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             }
 
             memcpy64(rel_path, path_tmp, rel_path_len + 1);
+            normalize(rel_path, &rel_path_len);
 
             if (is_dir && (rel_path[rel_path_len - 1] != '/')) {
                 rel_path_len += 1;
