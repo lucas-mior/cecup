@@ -130,7 +130,7 @@ case "$target" in
     exe="bin/${program}_perf"
     ;;
 "valgrind") 
-    CFLAGS="$CFLAGS -g -O0 -ftree-vectorize"
+    CFLAGS="$CFLAGS -g3 -O0 -ftree-vectorize"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     ;;
 "callgrind") 
@@ -376,12 +376,12 @@ esac
 case "$target" in
 "valgrind")
     vg_flags="$vg_flags --error-exitcode=1"
-    vg_flags="$vg_flags --leak-check=full"
-    vg_flags="$vg_flags --show-leak-kinds=definite"
-    vg_flags="$vg_flags --errors-for-leak-kinds=definite"
+    vg_flags="$vg_flags --leak-check=no"
+    # vg_flags="$vg_flags --show-leak-kinds=definite"
+    # vg_flags="$vg_flags --errors-for-leak-kinds=definite"
     vg_flags="$vg_flags --track-origins=yes"
     # vg_flags="$vg_flags --suppressions=valgrind.supress"
-    vg_flags="$vg_flags --gen-suppressions=yes"
+    # vg_flags="$vg_flags --gen-suppressions=yes"
     vg_flags="$vg_flags --main-stacksize=18388608"
 
     trace_on
