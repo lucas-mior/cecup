@@ -415,9 +415,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     int32 row_id;
     int32 other_idx;
     int32 new_idx;
-    int32 path_old_len;
     int32 merge_row_id;
-    char *path_old;
     char *new_path_alloc;
     int32 is_dir = 0;
 
@@ -437,11 +435,6 @@ update_row_rename(char *old_path, int32 old_path_len,
         return false;
     }
 
-    path_old = traversal->paths[idx];
-    path_old_len = traversal->paths_lens[idx];
-    ASSERT_EQUAL(path_old, old_path);
-    ASSERT_EQUAL(path_old_len, old_path_len);
-
     if (old_path[old_path_len - 1] == '/') {
         is_dir = 1;
     }
@@ -457,7 +450,7 @@ update_row_rename(char *old_path, int32 old_path_len,
 
     other_idx = cecup.rows[!side][row_id];
 
-    hash_remove_fs_map(traversal->map, path_old, path_old_len);
+    hash_remove_fs_map(traversal->map, old_path, old_path_len);
     traversal->row_ids[idx] = -1;
 
     {
@@ -481,13 +474,13 @@ update_row_rename(char *old_path, int32 old_path_len,
                                  p_match_str, p_match_len);
     }
 
-    if (S_ISREG(traversal->stats[idx].st_mode) && traversal->stats[idx].st_nlink > 1) {
+    if (S_ISREG(traversal->stats[idx].st_mode) && (traversal->stats[idx].st_nlink > 1)) {
         HardLinks hard_links;
         ino_t *inode = &traversal->stats[idx].st_ino;
 
         if (hash_lookup_inode_map(traversal->inode_map, inode, &hard_links)) {
             hard_link_replace_node(&hard_links,
-                                   path_old, path_old_len,
+                                   old_path, old_path_len,
                                    new_path_alloc, new_path_len);
             hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);
         }
