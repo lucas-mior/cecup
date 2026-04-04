@@ -424,10 +424,12 @@ update_row_rename(char *old_path, int32 old_path_len,
     bool changed = false;
 
     if (!hash_lookup_fs_map(traversal->map, old_path, old_path_len, &idx)) {
+        error("Didnt found %s on traversal hash map.\n", old_path);
         return false;
     }
 
     if ((row_id = traversal->row_ids[idx]) < 0) {
+        error("No row id for path %s.\n", old_path);
         return false;
     }
 
