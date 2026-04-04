@@ -125,12 +125,13 @@ _Static_assert((!R) == L, "!R must be L");
 #include "hash.c"
 
 typedef struct HardLinks {
-    uint64 aggregate_hash;
+    uint64 aggregate_hash_lo;
+    uint64 aggregate_hash_hi;
     int32 count;
     int32 capacity;
     char **names;
     int32 *names_lens;
- } HardLinks;
+} HardLinks;
 
 #define HASH_KEY_TYPE ino_t
 #define HASH_KEY_FIXED_LEN 1

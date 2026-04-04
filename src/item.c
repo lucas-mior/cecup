@@ -42,14 +42,13 @@ static void
 hard_link_replace_node(HardLinks *list,
                        char *old_path, int32 old_path_len,
                        char *new_path, int32 new_path_len) {
-    uint64 old_hash;
-    uint64 new_hash;
+    rapidhash128_t old_hash = rapidhash128(old_path, (size_t)old_path_len);
+    rapidhash128_t new_hash = rapidhash128(new_path, (size_t)new_path_len);
 
-    old_hash = rapidhash(old_path, (size_t)old_path_len);
-    new_hash = rapidhash(new_path, (size_t)new_path_len);
-
-    list->aggregate_hash ^= old_hash;
-    list->aggregate_hash ^= new_hash;
+    list->aggregate_hash_lo ^= old_hash.lo;
+    list->aggregate_hash_hi ^= old_hash.hi;
+    list->aggregate_hash_lo ^= new_hash.lo;
+    list->aggregate_hash_hi ^= new_hash.hi;
 
     for (int32 i = 0; i < list->count; i += 1) {
         if (list->names_lens[i] == old_path_len) {
@@ -64,40 +63,6 @@ hard_link_replace_node(HardLinks *list,
     return;
 }
 
-static HardLinks *
-hard_link_remove(HardLinks *list, char *name, int32 name_len) {
-    uint64 hash_val;
-    int32 found_idx = -1;
-
-    ASSERT(list);
-
-    hash_val = rapidhash(name, (size_t)name_len);
-
-    for (int32 i = 0; i < list->count; i += 1) {
-        if (list->names_lens[i] == name_len) {
-            if (memcmp64(list->names[i], name, name_len) == 0) {
-                found_idx = i;
-                break;
-            }
-        }
-    }
-
-    if (found_idx >= 0) {
-        for (int32 i = found_idx; i < (list->count - 1); i += 1) {
-            list->names[i] = list->names[i + 1];
-            list->names_lens[i] = list->names_lens[i + 1];
-        }
-        list->count -= 1;
-        list->aggregate_hash ^= hash_val;
-    }
-
-    if (list->count == 0) {
-        return NULL;
-    }
-
-    return list;
-}
-
 static bool
 hard_links_match(HardLinks *src, HardLinks *dst) {
     ASSERT(src);
@@ -107,7 +72,10 @@ hard_links_match(HardLinks *src, HardLinks *dst) {
         return false;
     }
 
-    if (src->aggregate_hash != dst->aggregate_hash) {
+    if (src->aggregate_hash_lo != dst->aggregate_hash_lo) {
+        return false;
+    }
+    if (src->aggregate_hash_hi != dst->aggregate_hash_hi) {
         return false;
     }
 
