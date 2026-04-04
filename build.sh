@@ -3,17 +3,8 @@
 # shellcheck disable=SC2086
 
 if [[ "${1:-}" != "--wrapped" ]]; then
-    # \x1b[0;31m = Red
-    # \x1b[0m    = Reset
-    # \x0a       = Literal Newline
-
-    pattern='/^\+/ {
-        s/$/\x1b[0m\x0a/;
-        s/(--?[a-z])/ \\\x0a    \1/g;
-        s/^\+/\x1b[0;31m+/;
-    }'
-
-    "$0" --wrapped "$@" 2> >(sed -Eu "$pattern" >&2)
+    # Filter out lines starting with '+' followed by '[' or '[['
+    "$0" --wrapped "$@" 2> >(grep -Ev '^\+ +\[+ ' >&2)
     exit $?
 fi
 shift
