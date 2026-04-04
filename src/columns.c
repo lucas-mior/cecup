@@ -251,10 +251,6 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
             struct tm time_information;
             time_t unix_timestamp;
 
-            // TODO: Bug. Timezone handling error. Manually adding `timezone_offset` to a unix
-            // timestamp and passing it to `gmtime_r` bypasses complex daylight saving time (DST)
-            // rules and historical timezone anomalies. You should pass the raw `mtime` directly to
-            // `localtime_r(&unix_timestamp, &time_information)` instead.
             unix_timestamp = (time_t)mtime + timezone_offset;
             gmtime_r(&unix_timestamp, &time_information);
             STRFTIME(text_buf, "%Y-%m-%d %H:%M:%S", &time_information);

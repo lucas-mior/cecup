@@ -241,7 +241,6 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     int32 nfiles_checksummed = 0;
     struct timespec time_stop = {0};
     bool delete_after = cecup.delete_after;
-    bool dropping_long_line = false;
 
     if (checksum) {
         update_progress_state(_("Verifying checksums"),
@@ -373,13 +372,10 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             pipes[0].fd = -1;
             goto read_error_pipe;
         }
-        if (pipes[0].revents & POLLHUP) {
-            // TODO: Bug. Setting fd = -1 on POLLHUP while POLLIN is also set discards the remaining
-            // unread data in the pipe buffer. The file descriptor should only be closed when
-            // `read64` actually returns 0.
-            pipes[0].fd = -1;
-        }
         if (!(pipes[0].revents & POLLIN)) {
+            if (pipes[0].revents & POLLHUP) {
+                pipes[0].fd = -1;
+            }
             goto read_error_pipe;
         }
 
@@ -393,6 +389,9 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         if (r <= 0) {
             if (r < 0) {
                 LOG_ERROR(_("Error reading stdout pipe: %s.\n"), strerror(errno));
+                pipes[0].fd = -1;
+            }
+            if (pipes[0].revents & POLLHUP) {
                 pipes[0].fd = -1;
             }
             goto read_error_pipe;
@@ -424,20 +423,10 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 
             if (eol == NULL) {
                 if (buf_output_pos >= (SIZEOF(buf_output) - 1)) {
-                    dropping_long_line = true;
-                    buf_output_pos = 0;
+                    error("rsync is outputting too long line.\n");
+                    fatal(EXIT_FAILURE);
                 }
                 break;
-            }
-
-            if (dropping_long_line) {
-                dropping_long_line = false;
-                remaining = buf_output_pos - ((int32)(eol - buf_output) + 1);
-                if (remaining > 0) {
-                    memmove64(buf_output, eol + 1, remaining);
-                }
-                buf_output_pos = remaining;
-                continue;
             }
 
             end = *eol;
@@ -502,10 +491,10 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             pipes[1].fd = -1;
             continue;
         }
-        if (pipes[1].revents & POLLHUP) {
-            pipes[1].fd = -1;
-        }
         if (!(pipes[1].revents & POLLIN)) {
+            if (pipes[1].revents & POLLHUP) {
+                pipes[1].fd = -1;
+            }
             continue;
         }
 
@@ -513,6 +502,9 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         if (r <= 0) {
             if (r < 0) {
                 LOG_ERROR(_("Error reading stderr pipe: %s.\n"), strerror(errno));
+                pipes[1].fd = -1;
+            }
+            if (pipes[1].revents & POLLHUP) {
                 pipes[1].fd = -1;
             }
             continue;
@@ -608,9 +600,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
                 rel_path_len = 1;
             }
 
-            // TODO: Bug. Buffer overflow risk. `entry->fts_pathlen` can be arbitrarily large for
-            // deeply nested directories, causing `rel_path_len` to exceed `MAX_PATH_LENGTH`, which
-            // will overflow the `rel_path` stack buffer.
+            ASSERT_LESS(entry->fts_pathlen, MAX_PATH_LENGTH);
             memcpy64(rel_path, path_tmp, rel_path_len + 1);
             normalize(rel_path, &rel_path_len);
 

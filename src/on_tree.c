@@ -193,12 +193,6 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
 
                 m_item = g_menu_item_new_submenu(_(menu_item->label), G_MENU_MODEL(submenu));
 
-                // TODO: Integration Bug: If `filepath` is NULL (which occurs when right-clicking on
-                // a side where a file is missing), all options in this menu and submenu are
-                // aggressively disabled. This stops the user from selecting valid actions like
-                // "Copy from original" or addressing the missing file using the valid `other_path`.
-                // You should probably check `if (is_busy || (filepath == NULL && other_path ==
-                // NULL))` before doing a blanket disable.
                 if (is_busy || (filepath == NULL)) {
                     g_menu_item_set_action_and_target(m_item, "none.none", NULL);
                 }
