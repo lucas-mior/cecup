@@ -253,10 +253,46 @@ on_path_functions_sink(void) {
 #if TESTING_on_path
 
 #include "work.c"
+#include "assert.c"
 
 int main(void) {
-    (void)on_path_editing_notify;
-    return 0;
+    GtkWidget *entry;
+    SelectionData *data;
+    int start_pos;
+    int end_pos;
+    char filename[64] = "dir/file.txt";
+    int32 filename_len = strlen32(filename);
+
+    if (!gtk_init_check()) {
+        exit(EXIT_SUCCESS);
+    }
+
+    entry = gtk_entry_new();
+    g_object_ref_sink(entry);
+    gtk_editable_set_text(GTK_EDITABLE(entry), filename);
+
+    data = xmalloc(SIZEOF(*data));
+    memset64(data, 0, SIZEOF(*data));
+    data->editable = GTK_EDITABLE(entry);
+    data->start_pos = 4;
+    data->end_pos = 8;
+
+    on_path_selection_idle(data);
+
+    {
+        int32 base_len;
+        char *base = basename2(filename, &filename_len, &base_len);
+        int64 expected_start = base - filename;
+        int64 expected_end = (char *)memchr(filename, '.', filename_len) - filename;
+
+        ASSERT(gtk_editable_get_selection_bounds(GTK_EDITABLE(entry), &start_pos, &end_pos));
+        ASSERT_EQUAL((int32)start_pos, expected_start);
+        ASSERT_EQUAL((int32)end_pos, expected_end);
+    }
+
+    g_object_unref(entry);
+
+    exit(EXIT_SUCCESS);
 }
 #endif
 
