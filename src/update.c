@@ -60,10 +60,20 @@ static bool update_row_rename(char *, int32 , char *, int32, int32 side);
 static gboolean
 update_ui_handler(void *data) {
     Message *message;
+    GtkTextIter end;
+    GtkTextIter start_line;
+    GtkTextTagTable *table;
+    int32 current_store_count;
+    bool is_cr;
+    bool buffer_ends_in_lf;
     bool needs_update;
 
     message = data;
     needs_update = false;
+
+    if (DEBUGGING) {
+        error("%s: %s\n", __func__, MSG_str(message->type));
+    }
 
     switch (message->type) {
     case MSG_ROW_REMOVE:
@@ -107,39 +117,6 @@ update_ui_handler(void *data) {
         free(batch, SIZEOF(*batch));
         break;
     }
-    default:
-        needs_update = update_ui_process_message(message);
-        break;
-    }
-
-    if (needs_update) {
-        update_list_from_rows();
-
-        if (DEBUGGING) {
-            check_consistent_state();
-        }
-    }
-
-    return G_SOURCE_REMOVE;
-}
-
-static bool
-update_ui_process_message(Message *message) {
-    GtkTextIter end;
-    GtkTextIter start_line;
-    GtkTextTagTable *table;
-    int32 current_store_count;
-    bool is_cr;
-    bool buffer_ends_in_lf;
-    bool needs_update;
-
-    needs_update = false;
-
-    if (DEBUGGING) {
-        error("%s: %s\n", __func__, MSG_str(message->type));
-    }
-
-    switch (message->type) {
     case MSG_LOG:
     case MSG_LOG_CMD:
     case MSG_LOG_ERROR:
