@@ -56,7 +56,7 @@ work_batch_flush(MessageBatch **batch_ptr) {
 }
 
 static void
-work_batch_push(MessageBatch **batch_ptr, enum MsgType type, char *path, int32 path_len) {
+work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int8 side, char *path, int32 path_len) {
     MessageBatch *batch;
 
     batch = *batch_ptr;
@@ -70,6 +70,7 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, char *path, int32 p
         batch = xmalloc(SIZEOF(*batch));
         memset64(batch, 0, SIZEOF(*batch));
         batch->type = type;
+        batch->side = side;
         batch->capacity = INITIAL_CAPACITY;
         batch->paths = xmalloc(batch->capacity * SIZEOF(*(batch->paths)));
         batch->paths_lens = xmalloc(batch->capacity * SIZEOF(*(batch->paths_lens)));
@@ -128,6 +129,7 @@ work_batch_push_rename(MessageBatch **batch_ptr, int8 side,
     if (batch == NULL) {
         batch = xmalloc(SIZEOF(*batch));
         memset64(batch, 0, SIZEOF(*batch));
+
         batch->type = MSG_ROW_RENAME;
         batch->side = side;
         batch->capacity = INITIAL_CAPACITY;
@@ -135,6 +137,7 @@ work_batch_push_rename(MessageBatch **batch_ptr, int8 side,
         batch->paths_lens = xmalloc(batch->capacity * SIZEOF(*(batch->paths_lens)));
         batch->dst_paths = xmalloc(batch->capacity * SIZEOF(*(batch->dst_paths)));
         batch->dst_paths_lens = xmalloc(batch->capacity * SIZEOF(*(batch->dst_paths_lens)));
+
         clock_gettime(CLOCK_MONOTONIC_COARSE, &batch->time_last_flush);
         *batch_ptr = batch;
     }
@@ -460,7 +463,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                 }
 
                 if (checksum && ((path_len != 2) || memcmp64(path, "./", 2))) {
-                    work_batch_push(batch_ptr, MSG_ROW_TRANSFER, path, path_len);
+                    work_batch_push(batch_ptr, R, MSG_ROW_TRANSFER, path, path_len);
                 }
             } else if (line_len > 2) {
                 char *percentage;
@@ -538,7 +541,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
 
     if (path_len > 0 && path[path_len - 1] != '/') {
         if (unlink(full_path) == 0) {
-            work_batch_push(batch, MSG_ROW_REMOVE, path, path_len);
+            work_batch_push(batch, MSG_ROW_REMOVE, side, path, path_len);
             LOG("Removed %s...\n", full_path);
         } else {
             error("Error in unlink(%s): %s.\n", full_path, strerror(errno));
@@ -580,7 +583,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             case FTS_SLNONE:
             case FTS_DEFAULT:
                 if (unlink(entry->fts_accpath) == 0) {
-                    work_batch_push(batch, MSG_ROW_REMOVE, rel_path, rel_path_len);
+                    work_batch_push(batch, MSG_ROW_REMOVE, side, rel_path, rel_path_len);
                 } else {
                     error("Error in unlink(%s): %s.\n", entry->fts_accpath, strerror(errno));
                 }
@@ -597,7 +600,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
                         dir_path[dir_path_len + 1] = '\0';
                         dir_path_len += 1;
                     }
-                    work_batch_push(batch, MSG_ROW_REMOVE, dir_path, dir_path_len);
+                    work_batch_push(batch, MSG_ROW_REMOVE, side, dir_path, dir_path_len);
                 } else {
                     error("Error in rmdir(%s): %s.\n", entry->fts_accpath, strerror(errno));
                 }
