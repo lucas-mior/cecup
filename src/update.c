@@ -415,7 +415,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     int32 row_id;
     int32 other_idx;
     int32 n_idx;
-    int32 sub_len;
+    int32 path_old_len;
     int32 suffix_len;
     int32 merge_row_id;
     char *path_old;
@@ -435,8 +435,8 @@ update_row_rename(char *old_path, int32 old_path_len,
 
     changed = true;
     path_old = traversal->paths[idx];
-    sub_len = traversal->paths_lens[idx];
-    suffix_len = sub_len - old_path_len;
+    path_old_len = traversal->paths_lens[idx];
+    suffix_len = path_old_len - old_path_len;
 
     path_new = xarena_push(traversal->arena, new_path_len + suffix_len + 1);
     memcpy64(path_new, new_path, new_path_len);
@@ -444,7 +444,7 @@ update_row_rename(char *old_path, int32 old_path_len,
 
     other_idx = cecup.rows[!side][row_id];
 
-    hash_remove_fs_map(traversal->map, path_old, sub_len);
+    hash_remove_fs_map(traversal->map, path_old, path_old_len);
     traversal->row_ids[idx] = -1;
 
     p_match = ignore_patterns_match(path_new, new_path_len + suffix_len,
@@ -473,7 +473,7 @@ update_row_rename(char *old_path, int32 old_path_len,
 
         if (hash_lookup_inode_map(traversal->inode_map, inode, &hard_links)) {
             hard_link_replace_node(&hard_links,
-                                   path_old, sub_len,
+                                   path_old, path_old_len,
                                    path_new, new_path_len + suffix_len);
             hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);
         }
