@@ -53,9 +53,12 @@ static bool update_ui_process_message(Message *message);
 static void update_progress_bar(enum MsgType type, double fraction);
 static void update_progress_state(char *text, char *tooltip);
 static inline void update_functions_sink(void);
-static bool update_row_transfer(char *path_transfered, int32 path_transfered_len);
-static bool update_row_remove(char *path_removed, int32 path_removed_len, int32 side);
-static bool update_row_rename(char *, int32 , char *, int32, int32 side);
+
+static bool update_rows(MessageBatch *batch);
+static bool update_row_remove(char *path, int32 path_len, int32 side);
+static bool update_row_transfer(char *path, int32 path_len);
+static bool update_row_rename(char *path, int32 path_len,
+                              char *dst_path, int32 dst_path_len, int32 side);
 
 static gboolean
 update_ui_handler(void *data) {
@@ -79,44 +82,10 @@ update_ui_handler(void *data) {
     case MSG_ROW_REMOVE:
     case MSG_ROW_TRANSFER:
     case MSG_ROW_RENAME:
-    {
-        MessageBatch *batch = data;
-        for (int32 i = 0; i < batch->count; i += 1) {
-            switch (batch->type) {
-            case MSG_ROW_REMOVE:
-                if (update_row_remove(batch->paths[i], batch->paths_lens[i], batch->side)) {
-                    needs_update = true;
-                }
-                break;
-            case MSG_ROW_TRANSFER:
-                if (update_row_transfer(batch->paths[i], batch->paths_lens[i])) {
-                    needs_update = true;
-                }
-                break;
-            case MSG_ROW_RENAME:
-                if (update_row_rename(batch->paths[i], batch->paths_lens[i],
-                                               batch->dst_paths[i], batch->dst_paths_lens[i],
-                                               batch->side)) {
-                    needs_update = true;
-                }
-                free(batch->dst_paths[i], batch->dst_paths_lens[i] + 1);
-                break;
-            default:
-                ASSERT(false);
-            }
-            free(batch->paths[i], batch->paths_lens[i] + 1);
+        if (update_rows(data)) {
+            needs_update = true;
         }
-
-        if (batch->type == MSG_ROW_RENAME) {
-            free(batch->dst_paths, batch->capacity * SIZEOF(*(batch->dst_paths)));
-            free(batch->dst_paths_lens, batch->capacity * SIZEOF(*(batch->dst_paths_lens)));
-        }
-
-        free(batch->paths, batch->capacity * SIZEOF(*(batch->paths)));
-        free(batch->paths_lens, batch->capacity * SIZEOF(*(batch->paths_lens)));
-        free(batch, SIZEOF(*batch));
         break;
-    }
     case MSG_LOG:
     case MSG_LOG_CMD:
     case MSG_LOG_ERROR:
@@ -249,6 +218,41 @@ update_ui_handler(void *data) {
 
     free_message(message);
     return needs_update;
+}
+
+static bool
+update_rows(MessageBatch *batch) {
+    bool changed = false;
+
+    for (int32 i = 0; i < batch->count; i += 1) {
+
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wswitch-enum"
+        switch (batch->type) {
+        case MSG_ROW_REMOVE:
+            if (update_row_remove(batch->paths[i], batch->paths_lens[i], batch->side)) {
+                changed = true;
+            }
+            break;
+        case MSG_ROW_TRANSFER:
+            if (update_row_transfer(batch->paths[i], batch->paths_lens[i])) {
+                changed = true;
+            }
+            break;
+        case MSG_ROW_RENAME:
+            if (update_row_rename(batch->paths[i], batch->paths_lens[i],
+                                  batch->dst_paths[i], batch->dst_paths_lens[i],
+                                  batch->side)) {
+                changed = true;
+            }
+            break;
+        default:
+            TRAP();
+        }
+        #pragma clang diagnostic pop
+    }
+
+    return changed;
 }
 
 static bool
