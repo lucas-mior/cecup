@@ -48,7 +48,7 @@ static void update_stats_text(int32 count_selected, int64 total_size_bytes);
 static bool update_row_remove(Message *message);
 static bool update_row_transfer(Message *message);
 static bool update_row_rename(Message *message);
-static void update_ignored_helper(Traversal *traversal, int32 side, int32 row_id, IgnorePattern *match);
+static void update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match);
 static bool update_row_ignore(Message *message);
 static void update_list_from_rows(void);
 static void update_stats_text(int32 count_selected, int64 total_size_bytes);
@@ -608,7 +608,8 @@ update_row_rename(Message *message) {
 }
 
 static void
-update_ignored_helper(Traversal *traversal, int32 side, int32 row_id, IgnorePattern *match) {
+update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match) {
+    Traversal *traversal = &cecup.traversal[side];
     ASSERT(match);
 
     if (cecup.rows[side][row_id] >= 0) {
@@ -648,8 +649,8 @@ update_row_ignore(Message *message) {
         }
 
         if (match) {
-            update_ignored_helper(&cecup.traversal[L], L, row_id, match);
-            update_ignored_helper(&cecup.traversal[R], R, row_id, match);
+            update_ignored_helper(L, row_id, match);
+            update_ignored_helper(R, row_id, match);
         }
     }
 
