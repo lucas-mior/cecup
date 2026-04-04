@@ -299,7 +299,7 @@ item_get_actions_reasons(int32 row_id,
         struct stat *stat_src = &cecup.traversal[L].stats[src_idx];
         bool is_symlink = S_ISLNK(stat_src->st_mode);
         HardLinks hard_links;
-        bool is_hardlink = item_hardlink_side(row_id, L, &hard_links);
+        bool is_hardlink = item_hardlink_side(row_id, L, &hard_links) && (hard_links.count > 1);
 
         if (pattern_src) {
             *action_src = ACTION_IGNORE;
@@ -341,7 +341,7 @@ item_get_actions_reasons(int32 row_id,
         bool equal = false;
         bool attributes_differ = false;
 
-        is_hardlink = item_hardlink_side(row_id, L, &hard_links_src);
+        is_hardlink = item_hardlink_side(row_id, L, &hard_links_src) && (hard_links_src.count > 1);
         item_hardlink_side(row_id, R, &hard_links_dst);
 
         if (pattern_src) {
