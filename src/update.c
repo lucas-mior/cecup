@@ -586,10 +586,6 @@ update_row_ignore(Message *message) {
         }
 
         if (cecup.ignore_count > 0) {
-            // TODO: Integration Bug: `update_row_ignore` only targets the very last pattern inside
-            // `cecup.ignore_patterns`. If `ignore_patterns_load()` completely reloads the file or
-            // adds multiple new items to the array, checking *only* the last index (`ignore_count -
-            // 1`) misses applying the rest of the preceding patterns against the current rows.
             IgnorePattern *added_pattern = &cecup.ignore_patterns[cecup.ignore_count - 1];
 
             if (ignore_pattern_match_single(added_pattern, path, path_len, is_dir)) {
