@@ -192,6 +192,11 @@ ignore_patterns_match(char *path, int32 path_len,
 
 static bool
 ignore_pattern_match_single(IgnorePattern *pattern, char *path, int32 path_len, bool is_dir) {
+    // TODO: Bug. Logic error causing directory ignore rules to fail on child files.  By checking
+    // `if (pattern->dir_only && !is_dir)` right at the start, you immediately reject files
+    // contained within ignored directories. For example, if "build/" is ignored, checking
+    // "build/main.o" (is_dir=false) will return false and the file will not be ignored. This check
+    // must only apply if the pattern matches the full path, not a directory prefix.
     if (pattern->dir_only && !is_dir) {
         return false;
     }

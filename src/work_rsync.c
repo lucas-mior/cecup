@@ -349,6 +349,9 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             break;
         }
 
+        // TODO: Integration Bug. Data race. `cecup.stop_working` is written by the GTK UI thread in
+        // `aux.c` using `cecup.stop_lock`, but is being read directly here in the background worker
+        // thread without acquiring the mutex lock.
         if (cecup.stop_working) {
             if (time_stop.tv_sec == 0) {
                 clock_gettime(CLOCK_MONOTONIC_COARSE, &time_stop);
@@ -371,12 +374,19 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             goto read_error_pipe;
         }
         if (pipes[0].revents & POLLHUP) {
+            // TODO: Bug. Setting fd = -1 on POLLHUP while POLLIN is also set discards the remaining
+            // unread data in the pipe buffer. The file descriptor should only be closed when
+            // `read64` actually returns 0.
             pipes[0].fd = -1;
         }
         if (!(pipes[0].revents & POLLIN)) {
             goto read_error_pipe;
         }
 
+        // TODO: Bug. If `buf_output` fills up completely without hitting an EOL in the previous
+        // iteration, `SIZEOF(buf_output) - buf_output_pos - 1` evaluates to 0.  `read64` is called
+        // with a size of 0, returning 0 immediately, which is misinterpreted below as EOF,
+        // permanently and prematurely closing the pipe.
         r = read64(pipe_stdout[0],
                    buf_output + buf_output_pos, SIZEOF(buf_output) - buf_output_pos - 1);
 
@@ -598,6 +608,9 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
                 rel_path_len = 1;
             }
 
+            // TODO: Bug. Buffer overflow risk. `entry->fts_pathlen` can be arbitrarily large for
+            // deeply nested directories, causing `rel_path_len` to exceed `MAX_PATH_LENGTH`, which
+            // will overflow the `rel_path` stack buffer.
             memcpy64(rel_path, path_tmp, rel_path_len + 1);
             normalize(rel_path, &rel_path_len);
 
@@ -655,6 +668,8 @@ work_rsync(void *user_data) {
     }
 
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ndeletions); i += 1) {
+        // TODO: Integration Bug. Data race. `cecup.stop_working` is read here without using atomic
+        // operations or `cecup.stop_lock`.
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);
@@ -675,6 +690,7 @@ work_rsync(void *user_data) {
             continue;
         }
 
+        // TODO: Integration Bug. Data race reading `cecup.stop_working`.
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);
@@ -775,6 +791,9 @@ work_rsync(void *user_data) {
             work_rsync_run(files_from_filename, nfiles_total, true, &batch);
         }
     } while (0);
+    // TODO: Bug. Resource leak. The temporary file created by `mkstemp` is never deleted
+    // because this code is commented out. Orphaned `cecup_XXXXXX` files will eventually
+    // exhaust the system's /tmp storage space or inodes.
     /* if (!DEBUGGING) { */
     /* xunlink(files_from_filename); */
     /* } */

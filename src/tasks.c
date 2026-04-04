@@ -78,6 +78,10 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         path_len = item_path_len_side(row_id, side);
         action = actions[side];
 
+        // TODO: Integration Bug. Silent failure on bulk actions. If a user triggers an action (like
+        // 'Apply' or 'Open') from the destination pane on files that only exist on the source side,
+        // `filepath` will be NULL and the task is silently skipped here. You should fall back to
+        // fetching the path from the opposite side if it is NULL on the current side.
         if (filepath == NULL) {
             continue;
         }
@@ -90,6 +94,11 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         memcpy64(task->path, filepath, path_len + 1);
 
         if (action == ACTION_HARDLINK) {
+            // TODO: Bug. Out-of-bounds array access / Segfault. If `action == ACTION_HARDLINK` but
+            // the file does not yet exist on the given `side` (e.g., creating a new hardlink on the
+            // destination), `idx` will be -1. Accessing `cecup.traversal[side].stats[-1]` will
+            // cause a segmentation fault. You must fetch the inode from the side where the file is
+            // guaranteed to exist.
             idx = cecup.rows[side][row_id];
             task->inode = cecup.traversal[side].stats[idx].st_ino;
         }

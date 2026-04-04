@@ -87,6 +87,10 @@ hard_link_copy_free(HardLinks *copy) {
     ASSERT(copy);
 
     for (int32 i = 0; i < copy->count; i += 1) {
+        // TODO: Bug: `copy->names[i]` stores string pointers that are heavily aliased and
+        // typically owned by the overarching `traversal` arrays or allocated on the custom arena
+        // (`xarena_push`). Calling `free()` on these will result in an invalid free or heap
+        // corruption. You should only free the structural arrays here.
         free(copy->names[i], copy->names_lens[i] + 1);
     }
 
@@ -233,14 +237,6 @@ item_get_actions_reasons(int32 row_id,
     bool delete_after = cecup.delete_after;
 
     *reason = 0;
-
-    /* if ((cecup.traversal[L].stats == NULL) */
-    /*      || (cecup.traversal[R].stats == NULL)) { */
-    /*     error("Function %s called while the traversal stats array is null.", __func__); */
-    /*     error("This probably means that there is some race condition.\n"); */
-    /*     error("Or another bug.\n"); */
-    /*     fatal(EXIT_FAILURE); */
-    /* } */
 
     if (src_idx < 0) {
         char *matched_dst;

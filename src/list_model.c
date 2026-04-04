@@ -179,6 +179,12 @@ cecup_list_model_get_item(GListModel *list, guint position) {
 
     ASSERT_LESS(pos, cecup.rows_visible_len);
 
+    // TODO: Integration Bug. Data Race / Use-After-Free.  This GTK signal executes in the main UI
+    // thread. It reads `cecup.rows_visible[pos]` WITHOUT acquiring `cecup.arena_mutex`.
+    // Concurrently, your background worker threads may be traversing directories and calling
+    // `item_add()`, which reallocates `cecup.rows_visible` to a new memory block. This triggers a
+    // Use-After-Free where GTK reads from the stale, freed memory pointer, causing unpredictable
+    // application crashes.
     row_id = cecup.rows_visible[pos];
     if (self->proxies[pos]) {
         if (self->proxies[pos]->index != row_id) {
@@ -388,6 +394,10 @@ item_add(int32 src_idx, int32 dst_idx) {
         cecup.rows_selected = realloc(cecup.rows_selected,
                                       old_capacity, cecup.rows_capacity,
                                       SIZEOF(uint8));
+
+        // TODO: Integration Bug. Concurrent reallocations here in a background thread invalidate
+        // the pointers that the GTK UI thread might currently be reading from inside
+        // `cecup_list_model_get_item`. See the related TODO in that function.
         cecup.rows_visible = realloc(cecup.rows_visible,
                                      old_capacity, cecup.rows_capacity,
                                      SIZEOF(*(cecup.rows_visible)));

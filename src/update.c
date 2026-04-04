@@ -81,6 +81,11 @@ update_ui_handler(void *data) {
         if (update_rows(data)) {
             update_list_needed = true;
         }
+        // TODO: Memory Leak. `update_rows` iteratively frees the individual string contents, but it
+        // does not free the arrays that held them (`batch->paths`, `batch->paths_lens`, etc.), nor
+        // does it free the `MessageBatch` struct pointer itself (`data`). Since `is_batch` skips
+        // the `free_message(message)` call below, the container and arrays leak entirely on every
+        // UI tick.
         break;
     case MSG_LOG:
     case MSG_LOG_CMD:
@@ -496,6 +501,10 @@ update_row_rename(char *old_path, int32 old_path_len,
     }
 
     if (merge_row_id >= 0) {
+        // TODO: Bug: If `cecup.rows[side][merge_row_id]` already contains a valid index (>= 0),
+        // overwriting it here causes that existing item to be orphaned/leaked from the traversal
+        // structures. You must check and handle the old index (e.g., `traversal_unlink`) prior to
+        // overwriting it.
         cecup.rows[side][merge_row_id] = new_idx;
         traversal->row_ids[new_idx] = merge_row_id;
 
@@ -577,6 +586,10 @@ update_row_ignore(Message *message) {
         }
 
         if (cecup.ignore_count > 0) {
+            // TODO: Integration Bug: `update_row_ignore` only targets the very last pattern inside
+            // `cecup.ignore_patterns`. If `ignore_patterns_load()` completely reloads the file or
+            // adds multiple new items to the array, checking *only* the last index (`ignore_count -
+            // 1`) misses applying the rest of the preceding patterns against the current rows.
             IgnorePattern *added_pattern = &cecup.ignore_patterns[cecup.ignore_count - 1];
 
             if (ignore_pattern_match_single(added_pattern, path, path_len, is_dir)) {

@@ -150,6 +150,12 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                         is_dir = true;
                     }
 
+                    // TODO: Bug: Depending on the implementation of `dirname2`, if it mutates
+                    // `path_copy` in-place (e.g., to insert null terminators and truncate the
+                    // path), the `name` and `extension` pointers extracted previously will be
+                    // corrupted or left dangling because they point into the `path_copy` buffer.
+                    // Extract a safe copy of the base name first, or use a separate buffer for
+                    // `dirname2`.
                     name = basename2(path_copy, &path_len, &length);
                     extension = memrchr64(name, '.', length);
                     dirname2(directory, path_copy, &path_len);
@@ -193,6 +199,12 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
 
                 m_item = g_menu_item_new_submenu(_(menu_item->label), G_MENU_MODEL(submenu));
 
+                // TODO: Integration Bug: If `filepath` is NULL (which occurs when right-clicking on
+                // a side where a file is missing), all options in this menu and submenu are
+                // aggressively disabled. This stops the user from selecting valid actions like
+                // "Copy from original" or addressing the missing file using the valid `other_path`.
+                // You should probably check `if (is_busy || (filepath == NULL && other_path ==
+                // NULL))` before doing a blanket disable.
                 if (is_busy || (filepath == NULL)) {
                     g_menu_item_set_action_and_target(m_item, "none.none", NULL);
                 }
@@ -384,6 +396,12 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 int32 offset = 0;
                 int32 nlinks_printed = 0;
 
+                // TODO: Integration Bug: `tip_buffer` has a fixed size of `MAX_PATH_LENGTH*2`
+                // (typically 4096). If `snprintf2` behaves like standard `snprintf` by returning
+                // the total number of characters it *would* have written on truncation, `offset`
+                // can balloon past `SIZEOF(tip_buffer)`. On the next iteration, the remaining size
+                // argument `SIZEOF(tip_buffer) - offset` will underflow to `SIZE_MAX`, causing a
+                // critical buffer overflow. You must clamp or verify `offset` before using it.
                 offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
                                     "%s:\n%s", filepath, reason_buf);
                 offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,

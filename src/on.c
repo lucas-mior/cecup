@@ -40,6 +40,11 @@
 static gboolean
 unparent_popover_idle(void *data) {
     GtkWidget *widget = data;
+    // TODO: Bug. Potential Use-After-Free. If the parent container or the application itself is
+    // destroyed between the popover closing and this idle callback executing, `widget` will point
+    // to freed memory and crash on `gtk_widget_unparent`.  You should take a strong reference
+    // before scheduling the idle callback and unref it here, or use `g_object_add_weak_pointer` to
+    // safely check if it still exists.
     gtk_widget_unparent(widget);
     return G_SOURCE_REMOVE;
 }
@@ -183,6 +188,12 @@ on_delete_after_toggled(GtkCheckButton *button, void *data) {
     if ((active = gtk_check_button_get_active(button))) {
         GtkWidget *dialog;
 
+        // TODO: Bug. Format string vulnerability / localization crash risk.
+        // `gtk_message_dialog_new` takes a printf-style format string as its message argument.  If
+        // a translator changes `100%%` to `100%` in the localized string, GTK will expect variadic
+        // arguments that do not exist, resulting in a segmentation fault.  You should strictly use
+        // "%s" as the format string for translated strings: gtk_message_dialog_new(..., "%s",
+        // _("Warning: ..."));
         dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
                                         GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
                                         _("Warning: 'Sync 100%%' (delete-after) is enabled."
@@ -310,6 +321,9 @@ on_stop_clicked(GtkWidget *button, void *data) {
     (void)button;
     (void)data;
 
+    // TODO: Integration Bug. Data race. `cecup.child_pid` is written by a background thread in
+    // `work_rsync.c`. Reading it here from the main GTK thread without using an atomic read (like
+    // `g_atomic_int_get`) or acquiring `cecup.stop_lock` can lead to a stale or torn PID read.
     pid_to_kill = cecup.child_pid;
     if (pid_to_kill > 0) {
         xkill(-pid_to_kill, SIGTERM);
@@ -742,6 +756,8 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
 
     stop_working(true);
 
+    // TODO: Integration Bug. Same data race vulnerability on `cecup.child_pid` as flagged in
+    // `on_stop_clicked`.
     if ((child_pid = cecup.child_pid) > 0) {
         int32 waited;
         int32 waited_count = 0;
@@ -752,6 +768,10 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
             if (errno == EINTR) {
                 continue;
             }
+            // TODO: Bug. 10-second UI hang on exit. If `waitpid` fails with `ECHILD`, it means the
+            // child process is already fully dead and has been reaped.  This loop treats `ECHILD`
+            // as an error, sleeps for 1 second, and repeats 10 times. You must add an explicit
+            // check to break if `errno == ECHILD`.
             waited_count += 1;
             if (waited_count >= 10) {
                 break;

@@ -382,6 +382,9 @@ on_menu_delete(GtkWidget *widget, void *data) {
         g_signal_connect(dialog, "response", G_CALLBACK(on_delete_response), tasks);
         gtk_widget_show(dialog);
     }
+    // TODO: Bug. Memory Leak. If `tasks->count` evaluates to 0, the `tasks` pointer is never passed
+    // to the dialog handler and is leaked. You need to explicitly call `task_list_free(tasks)` in
+    // an `else` block here.
 
     free_message(message);
     return;
@@ -400,6 +403,11 @@ on_menu_diff(GtkWidget *widget, void *data) {
     int32 diff_argument_count = 0;
 
     (void)widget;
+    // TODO: Bug. Memory Corruption. `gtk_editable_get_text` returns a `const char *` owned by the
+    // GTK widget. Casting it to `(char *)` and passing it to `strtok` Modifies the string in-place
+    // by injecting null terminators into GTK's internal memory buffer. This causes severe undefined
+    // behavior and crashes. You MUST duplicate the strings (e.g., using `xmemdup`) before
+    // tokenizing them.
     diff_tool = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry));
     term_cmd = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry));
 
@@ -470,6 +478,11 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 _exit(EXIT_FAILURE);
             }
         default:
+            // TODO: Integration Bug. Zombie Process Leak. You are forking a child process without
+            // ever calling `waitpid()` to reap it. Because the GTK main loop doesn't reap arbitrary
+            // children by default, this creates a Zombie process every time the user runs a diff.
+            // Either set `SIGCHLD` to `SIG_IGN`, use the double-fork technique, or use GLib's
+            // `g_child_watch_add()`.
             free(path_src, size_src);
             free(path_dst, size_dst);
             break;
