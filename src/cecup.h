@@ -100,9 +100,9 @@ _Static_assert((!R) == L, "!R must be L");
     X(LOG)                \
     X(LOG_ERROR)          \
     X(LOG_CMD)            \
-    X(ROW_TRANSFER)       \
-    X(ROW_REMOVE)         \
-    X(ROW_RENAME)         \
+    X(BATCH_ROW_TRANSFER) \
+    X(BATCH_ROW_REMOVE)   \
+    X(BATCH_ROW_RENAME)   \
     X(IGNORE_PATTERN)     \
     X(ENABLE_BUTTONS)     \
     X(CLEAR_TREES)        \

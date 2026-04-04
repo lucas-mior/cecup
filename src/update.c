@@ -74,9 +74,9 @@ update_ui_handler(void *data) {
     }
 
     switch (message->type) {
-    case MSG_ROW_REMOVE:
-    case MSG_ROW_TRANSFER:
-    case MSG_ROW_RENAME:
+    case MSG_BATCH_ROW_REMOVE:
+    case MSG_BATCH_ROW_TRANSFER:
+    case MSG_BATCH_ROW_RENAME:
         is_batch = true;
         if (update_rows(data)) {
             update_list_needed = true;
@@ -234,19 +234,19 @@ update_rows(MessageBatch *batch) {
         #pragma clang diagnostic push
         #pragma clang diagnostic ignored "-Wswitch-enum"
         switch (batch->type) {
-        case MSG_ROW_REMOVE:
+        case MSG_BATCH_ROW_REMOVE:
             if (update_row_remove(batch->paths[i], batch->paths_lens[i], batch->side)) {
                 changed = true;
             }
             free(batch->paths[i], batch->paths_lens[i] + 1);
             break;
-        case MSG_ROW_TRANSFER:
+        case MSG_BATCH_ROW_TRANSFER:
             if (update_row_transfer(batch->paths[i], batch->paths_lens[i])) {
                 changed = true;
             }
             free(batch->paths[i], batch->paths_lens[i] + 1);
             break;
-        case MSG_ROW_RENAME:
+        case MSG_BATCH_ROW_RENAME:
             if (update_row_rename(batch->paths[i], batch->paths_lens[i],
                                   batch->dst_paths[i], batch->dst_paths_lens[i],
                                   batch->side)) {
@@ -974,7 +974,7 @@ main(void) {
 
     /* Test update_row_remove - single file logic */
     Message msg = {0};
-    msg.type = MSG_ROW_REMOVE;
+    msg.type = MSG_BATCH_ROW_REMOVE;
     msg.side = L;
     msg.src_path = "file_a";
     msg.src_path_len = 6;

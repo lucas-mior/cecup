@@ -188,7 +188,7 @@ on_path_edited(GtkEditable *editable, void *data) {
             new_length += 1;
         }
 
-        work_batch_push_rename(&batch, MSG_ROW_RENAME, side,
+        work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, side,
                                relative_old, old_length, relative_new, new_length);
 
         if (relative_new[new_length - 1] == '/') {
@@ -226,7 +226,7 @@ on_path_edited(GtkEditable *editable, void *data) {
                     memcpy64(child_rel_old, relative_old, old_length);
                     memcpy64(child_rel_old + old_length, child_rel_new + new_length, suffix_len + 1);
 
-                    work_batch_push_rename(&batch, MSG_ROW_RENAME, side,
+                    work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, side,
                                            child_rel_old, child_rel_old_len,
                                            child_rel_new, child_rel_new_len);
                 }

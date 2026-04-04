@@ -127,7 +127,7 @@ work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
 
     batch = *batch_ptr;
 
-    if (batch != NULL && batch->type != MSG_ROW_RENAME) {
+    if (batch != NULL && batch->type != MSG_BATCH_ROW_RENAME) {
         work_batch_flush(batch_ptr);
         batch = NULL;
     }
@@ -469,7 +469,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                 }
 
                 if (checksum && ((path_len != 2) || memcmp64(path, "./", 2))) {
-                    work_batch_push(batch_ptr, MSG_ROW_TRANSFER, R, path, path_len);
+                    work_batch_push(batch_ptr, MSG_BATCH_ROW_TRANSFER, R, path, path_len);
                 }
             } else if (line_len > 2) {
                 char *percentage;
@@ -551,7 +551,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         if (unlink(full_path) < 0) {
             error("Error in unlink(%s): %s.\n", full_path, strerror(errno));
         } else {
-            work_batch_push(batch, MSG_ROW_REMOVE, side, path, path_len);
+            work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, path, path_len);
             LOG("Removed %s...\n", full_path);
         }
     } else {
@@ -622,13 +622,13 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
                 if (rmdir(entry->fts_accpath) < 0) {
                     error("Error in rmdir(%s): %s.\n", entry->fts_accpath, strerror(errno));
                 } else {
-                    work_batch_push(batch, MSG_ROW_REMOVE, side, rel_path, rel_path_len);
+                    work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, rel_path, rel_path_len);
                 }
             } else {
                 if (unlink(entry->fts_accpath) < 0) {
                     error("Error in unlink(%s): %s.\n", entry->fts_accpath, strerror(errno));
                 } else {
-                    work_batch_push(batch, MSG_ROW_REMOVE, side, rel_path, rel_path_len);
+                    work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, rel_path, rel_path_len);
                 }
             }
         }
