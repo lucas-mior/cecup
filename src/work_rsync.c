@@ -19,6 +19,8 @@
 #define WORK_RSYNC
 
 #include <ctype.h>
+#include <fts.h>
+
 #include "cecup.h"
 #include "update.c"
 
@@ -43,6 +45,10 @@ work_batch_flush(MessageBatch **batch_ptr) {
     if (batch->count > 0) {
         g_idle_add(update_ui_handler, batch);
     } else {
+        if (batch->paths != NULL) {
+            free(batch->paths, batch->capacity * SIZEOF(*(batch->paths)));
+            free(batch->paths_lens, batch->capacity * SIZEOF(*(batch->paths_lens)));
+        }
         free(batch, SIZEOF(*batch));
     }
 
@@ -51,23 +57,46 @@ work_batch_flush(MessageBatch **batch_ptr) {
 }
 
 static void
-work_batch_push(MessageBatch **batch_ptr, Message *message) {
+work_batch_push(MessageBatch **batch_ptr, enum MsgType type, char *path, int32 path_len) {
     MessageBatch *batch;
 
     batch = *batch_ptr;
+
+    if (batch != NULL && batch->type != type) {
+        work_batch_flush(batch_ptr);
+        batch = NULL;
+    }
+
     if (batch == NULL) {
         batch = xmalloc(SIZEOF(*batch));
         memset64(batch, 0, SIZEOF(*batch));
-        batch->type = MSG_BATCH;
-        batch->count = 0;
+        batch->type = type;
+        batch->capacity = INITIAL_CAPACITY;
+        batch->paths = xmalloc(batch->capacity * SIZEOF(*(batch->paths)));
+        batch->paths_lens = xmalloc(batch->capacity * SIZEOF(*(batch->paths_lens)));
         clock_gettime(CLOCK_MONOTONIC_COARSE, &batch->time_last_flush);
         *batch_ptr = batch;
     }
 
-    batch->messages[batch->count] = message;
+    if (batch->count >= batch->capacity) {
+        int32 old_capacity;
+
+        old_capacity = batch->capacity;
+        batch->capacity *= 2;
+        batch->paths = realloc(batch->paths,
+                               old_capacity, batch->capacity,
+                               SIZEOF(*(batch->paths)));
+        batch->paths_lens = realloc(batch->paths_lens,
+                                    old_capacity, batch->capacity,
+                                    SIZEOF(*(batch->paths_lens)));
+    }
+
+    batch->paths[batch->count] = xmalloc(path_len + 1);
+    memcpy64(batch->paths[batch->count], path, path_len + 1);
+    batch->paths_lens[batch->count] = path_len;
     batch->count += 1;
 
-    if (batch->count >= LENGTH(batch->messages)) {
+    if (batch->count >= batch->capacity) {
         work_batch_flush(batch_ptr);
     } else {
         struct timespec time_this_push;
@@ -76,7 +105,7 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
         clock_gettime(CLOCK_MONOTONIC_COARSE, &time_this_push);
         time_diff = (int64)(time_this_push.tv_sec - batch->time_last_flush.tv_sec);
 
-        if (time_diff > 10) {
+        if (time_diff > 1) {
             work_batch_flush(batch_ptr);
         }
     }
@@ -377,15 +406,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                 }
 
                 if (checksum && ((path_len != 2) || memcmp64(path, "./", 2))) {
-                    Message *msg_update = xmalloc(SIZEOF(*msg_update));
-                    memset64(msg_update, 0, SIZEOF(*msg_update));
-
-                    msg_update->type = MSG_ROW_TRANSFER;
-                    msg_update->src_path_len = path_len;
-                    msg_update->src_path = xmalloc(path_len + 1);
-                    memcpy64(msg_update->src_path, path, path_len + 1);
-
-                    work_batch_push(batch_ptr, msg_update);
+                    work_batch_push(batch_ptr, MSG_ROW_TRANSFER, path, path_len);
                 }
             } else if (line_len > 2) {
                 char *percentage;
@@ -451,21 +472,23 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 static void
 work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     char full_path[MAX_PATH_LENGTH];
-    bool success = false;
+    int32 base_path_len;
 
     if (side == L) {
         SNPRINTF(full_path, "%s/%s", cecup.src_base, path);
+        base_path_len = cecup.src_base_len;
     } else {
         SNPRINTF(full_path, "%s/%s", cecup.dst_base, path);
+        base_path_len = cecup.dst_base_len;
     }
 
     if (path_len > 0 && path[path_len - 1] != '/') {
-        if (unlink(full_path) < 0) {
+        if (unlink(full_path) == 0) {
+            work_batch_push(batch, MSG_ROW_REMOVE, path, path_len);
+            LOG("Removed %s...\n", full_path);
+        } else {
             error("Error in unlink(%s): %s.\n", full_path, strerror(errno));
-            return;
         }
-
-        success = true;
     } else {
         char *paths[2];
         FTS *fts_handle;
@@ -474,7 +497,6 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         paths[0] = full_path;
         paths[1] = NULL;
         fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL);
-        success = true;
 
         if (fts_handle == NULL) {
             error("Error in fts_open(%s): %s.\n", full_path, strerror(errno));
@@ -482,9 +504,20 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         }
 
         while ((entry = fts_read(fts_handle))) {
+            char *rel_path;
+            int32 rel_path_len;
+
             if (cecup.stop_working) {
-                success = false;
                 break;
+            }
+
+            /* Calculate relative path for UI updates */
+            rel_path = entry->fts_path + base_path_len;
+            rel_path_len = (int32)entry->fts_pathlen - base_path_len;
+
+            if (rel_path[0] == '/') {
+                rel_path += 1;
+                rel_path_len -= 1;
             }
 
             switch (entry->fts_info) {
@@ -492,46 +525,40 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             case FTS_SL:
             case FTS_SLNONE:
             case FTS_DEFAULT:
-                if (unlink(entry->fts_accpath) < 0) {
+                if (unlink(entry->fts_accpath) == 0) {
+                    work_batch_push(batch, MSG_ROW_REMOVE, rel_path, rel_path_len);
+                } else {
                     error("Error in unlink(%s): %s.\n", entry->fts_accpath, strerror(errno));
-                    success = false;
                 }
                 break;
             case FTS_DP:
-                /* Post-order directory: safe to remove once contents are gone */
-                if (rmdir(entry->fts_accpath) < 0) {
+                if (rmdir(entry->fts_accpath) == 0) {
+                    /* Directories in the batch should retain the trailing slash */
+                    int32 dir_path_len = rel_path_len;
+                    char dir_path[MAX_PATH_LENGTH];
+
+                    memcpy64(dir_path, rel_path, dir_path_len);
+                    if (dir_path[dir_path_len - 1] != '/') {
+                        dir_path[dir_path_len] = '/';
+                        dir_path[dir_path_len + 1] = '\0';
+                        dir_path_len += 1;
+                    }
+                    work_batch_push(batch, MSG_ROW_REMOVE, dir_path, dir_path_len);
+                } else {
                     error("Error in rmdir(%s): %s.\n", entry->fts_accpath, strerror(errno));
-                    success = false;
                 }
                 break;
             case FTS_DNR:
             case FTS_ERR:
             case FTS_NS:
                 error("FTS error on %s: %s.\n", entry->fts_path, strerror(entry->fts_errno));
-                success = false;
                 break;
             default:
                 break;
             }
         }
         fts_close(fts_handle);
-    }
-
-    if (success) {
-        Message *message;
-
-        message = xmalloc(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
-
-        message->type = MSG_ROW_REMOVE;
-        message->side = (int8)side;
-        message->src_path_len = path_len;
-        message->src_path = xmalloc(message->src_path_len + 1);
-        memcpy64(message->src_path, path, message->src_path_len + 1);
-
-        work_batch_push(batch, message);
-
-        LOG("Removed %s...\n", full_path);
+        LOG("Removed directory tree %s...\n", full_path);
     }
 
     return;

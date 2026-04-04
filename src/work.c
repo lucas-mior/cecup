@@ -18,7 +18,6 @@
 #if !defined(WORK_C)
 #define WORK_C
 
-#include <fts.h>
 #include <gtk/gtk.h>
 #include <ctype.h>
 #include <sys/wait.h>
@@ -28,6 +27,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
+#include <fts.h>
 
 #include "cecup.h"
 #include "util.c"

@@ -339,9 +339,14 @@ typedef struct Message {
 
 typedef struct MessageBatch {
     enum MsgType type;
-    int32 count;
+    int8 side;
     struct timespec time_last_flush;
-    Message *messages[BATCH_SIZE];
+
+    char **paths;
+    int32 *paths_lens;
+
+    int32 count;
+    int32 capacity;
 } MessageBatch;
 
 typedef struct Task {

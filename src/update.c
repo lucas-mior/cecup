@@ -56,26 +56,59 @@ static bool update_ui_process_message(Message *message);
 static void update_progress_bar(enum MsgType type, double fraction);
 static void update_progress_state(char *text, char *tooltip);
 static inline void update_functions_sink(void);
+static bool update_row_transfer_internal(char *path_transfered, int32 path_transfered_len);
+static bool update_row_remove_internal(char *path_removed, int32 path_removed_len, int32 side);
+
+static bool
+update_row_remove(Message *message) {
+    return update_row_remove_internal(message->src_path, message->src_path_len, message->side);
+}
+
+static bool
+update_row_transfer(Message *message) {
+    return update_row_transfer_internal(message->src_path, message->src_path_len);
+}
 
 static gboolean
 update_ui_handler(void *data) {
-    MessageBatch *batch;
     Message *message;
     bool needs_update;
 
     message = data;
     needs_update = false;
 
-    if (message->type == MSG_BATCH) {
-        batch = data;
+    switch (message->type) {
+    case MSG_ROW_REMOVE:
+    case MSG_ROW_TRANSFER:
+    case MSG_ROW_RENAME:
+    {
+        MessageBatch *batch = data;
         for (int32 i = 0; i < batch->count; i += 1) {
-            if (update_ui_process_message(batch->messages[i])) {
-                needs_update = true;
+            switch (batch->type) {
+            case MSG_ROW_REMOVE:
+                if (update_row_remove_internal(batch->paths[i], batch->paths_lens[i], batch->side)) {
+                    needs_update = true;
+                }
+                break;
+            case MSG_ROW_TRANSFER:
+                if (update_row_transfer_internal(batch->paths[i], batch->paths_lens[i])) {
+                    needs_update = true;
+                }
+                break;
+            default:
+                ASSERT(false);
             }
+            free(batch->paths[i], batch->paths_lens[i] + 1);
         }
+
+        free(batch->paths, batch->capacity*SIZEOF(*(batch->paths)));
+        free(batch->paths_lens, batch->capacity*SIZEOF(*(batch->paths_lens)));
         free(batch, SIZEOF(*batch));
-    } else {
+        break;
+    }
+    default:
         needs_update = update_ui_process_message(message);
+        break;
     }
 
     if (needs_update) {
@@ -250,10 +283,7 @@ update_ui_process_message(Message *message) {
 }
 
 static bool
-update_row_remove(Message *message) {
-    char *path_removed = message->src_path;
-    int32 path_removed_len = message->src_path_len;
-    int32 side = message->side;
+update_row_remove_internal(char *path_removed, int32 path_removed_len, int32 side) {
     bool changed = false;
     Traversal *traversal = &cecup.traversal[side];
 
@@ -363,12 +393,9 @@ update_row_remove(Message *message) {
 }
 
 static bool
-update_row_transfer(Message *message) {
+update_row_transfer_internal(char *path_transfered, int32 path_transfered_len) {
     Traversal *traversal_src = &cecup.traversal[L];
     Traversal *traversal_dst = &cecup.traversal[R];
-
-    char *path_transfered = message->src_path;
-    int32 path_transfered_len = message->src_path_len;
     int32 idx_src;
     int32 row_id;
     char full_path[MAX_PATH_LENGTH];
