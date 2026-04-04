@@ -392,6 +392,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 for (int32 j = 0; j < hard_links.count; j += 1) {
                     int32 n;
 
+                    ASSERT_LESS(hard_links.names_lens[j], MAX_PATH_LENGTH/2);
+
                     n = snprintf(tip_buffer + offset, (size_t)(SIZEOF(tip_buffer) - offset - 5),
                                  "\n%s%s", RSYNC_HARDLINK, hard_links.names[j]);
                     offset += n;
