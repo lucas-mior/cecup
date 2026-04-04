@@ -282,13 +282,46 @@ traversal_functions_sink(void) {
 #include <assert.h>
 #include <string.h>
 #include "work.c"
+#include "assert.c"
 
 int
 main(void) {
+    Traversal test_traversal;
+    struct stat dummy_stat;
+    int32 idx;
+
+    memset64(&test_traversal, 0, SIZEOF(test_traversal));
+    memset64(&dummy_stat, 0, SIZEOF(dummy_stat));
+
+    traversal_allocate(&test_traversal);
+    ASSERT(test_traversal.ncapacity == INITIAL_CAPACITY);
+    ASSERT(test_traversal.nfiles == 0);
+    ASSERT(test_traversal.stats != NULL);
+    ASSERT(test_traversal.paths != NULL);
+
+    dummy_stat.st_ino = 12345;
+    dummy_stat.st_mode = S_IFREG | 0644;
+    dummy_stat.st_nlink = 1;
+    dummy_stat.st_size = 1024;
+
+    idx = traversal_push(&test_traversal, &dummy_stat, "test_file.txt", 13, NULL, 0, NULL, 0);
+
+    ASSERT_EQUAL(idx, 0);
+    ASSERT_EQUAL(test_traversal.nfiles, 1);
+    ASSERT_EQUAL((int32)test_traversal.paths_lens[0], 13);
+    ASSERT_EQUAL(test_traversal.paths[0], "test_file.txt");
+    ASSERT_EQUAL((int32)test_traversal.stats[0].st_ino, 12345);
+
+    traversal_clean(&test_traversal);
+    ASSERT_EQUAL(test_traversal.nfiles, 0);
+    ASSERT_EQUAL(test_traversal.file_count, 0);
+
+    traversal_free(&test_traversal);
+
     ASSERT(true);
     exit(EXIT_SUCCESS);
 }
 
-#endif /* TESTING_tasks */
+#endif /* TESTING_traversal */
 
 #endif /* TRAVERSAL_C */
