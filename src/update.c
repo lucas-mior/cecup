@@ -419,7 +419,6 @@ update_row_rename(char *old_path, int32 old_path_len,
     int32 merge_row_id;
     char *path_old;
     char *new_path_alloc;
-    IgnorePattern *p_match;
     bool changed = false;
     int32 is_dir = 0;
 
@@ -463,13 +462,15 @@ update_row_rename(char *old_path, int32 old_path_len,
     hash_remove_fs_map(traversal->map, path_old, path_old_len);
     traversal->row_ids[idx] = -1;
 
-    p_match = ignore_patterns_match(new_path_alloc, new_path_len,
-                                    S_ISDIR(traversal->stats[idx].st_mode),
-                                    cecup.ignore_patterns, cecup.ignore_count);
 
     {
+        IgnorePattern *p_match;
         char *p_match_str = NULL;
         int32 p_match_len = 0;
+
+        p_match = ignore_patterns_match(new_path_alloc, new_path_len,
+                                        S_ISDIR(traversal->stats[idx].st_mode),
+                                        cecup.ignore_patterns, cecup.ignore_count);
 
         if (p_match) {
             p_match_str = p_match->str;
