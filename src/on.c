@@ -188,12 +188,6 @@ on_delete_after_toggled(GtkCheckButton *button, void *data) {
     if ((active = gtk_check_button_get_active(button))) {
         GtkWidget *dialog;
 
-        // TODO: Bug. Format string vulnerability / localization crash risk.
-        // `gtk_message_dialog_new` takes a printf-style format string as its message argument.  If
-        // a translator changes `100%%` to `100%` in the localized string, GTK will expect variadic
-        // arguments that do not exist, resulting in a segmentation fault.  You should strictly use
-        // "%s" as the format string for translated strings: gtk_message_dialog_new(..., "%s",
-        // _("Warning: ..."));
         dialog = gtk_message_dialog_new(GTK_WINDOW(cecup.gtk_window),
                                         GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
                                         _("Warning: 'Sync 100%%' (delete-after) is enabled."
@@ -570,9 +564,10 @@ on_ignore_clicked(GtkWidget *button, void *data) {
 
     (void)data;
     (void)button;
-    dialog = gtk_dialog_new_with_buttons(
-        _("Ignore Rules"), GTK_WINDOW(cecup.gtk_window), GTK_DIALOG_MODAL,
-        "_Save", GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE, NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Ignore Rules"), GTK_WINDOW(cecup.gtk_window),
+                                         GTK_DIALOG_MODAL,
+                                         "_Save", GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE,
+                                         NULL);
 
     gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
     scroll = gtk_scrolled_window_new();

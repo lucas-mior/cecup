@@ -471,11 +471,6 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 _exit(EXIT_FAILURE);
             }
         default:
-            // TODO: Integration Bug. Zombie Process Leak. You are forking a child process without
-            // ever calling `waitpid()` to reap it. Because the GTK main loop doesn't reap arbitrary
-            // children by default, this creates a Zombie process every time the user runs a diff.
-            // Either set `SIGCHLD` to `SIG_IGN`, use the double-fork technique, or use GLib's
-            // `g_child_watch_add()`.
             free(path_src, size_src);
             free(path_dst, size_dst);
             break;
