@@ -218,7 +218,7 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         hard_links.aggregate_hash_lo = name_hash.lo;
         hard_links.aggregate_hash_hi = name_hash.hi;
         hard_links.count = 1;
-        hard_links.capacity = 2;
+        hard_links.capacity = 4;
         hard_links.names = xmalloc(hard_links.capacity * SIZEOF(*(hard_links.names)));
         hard_links.names_lens = xmalloc(hard_links.capacity * SIZEOF(*(hard_links.names_lens)));
         hard_links.names[0] = path;
