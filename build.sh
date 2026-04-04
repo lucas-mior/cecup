@@ -137,10 +137,6 @@ case "$target" in
     CFLAGS="$CFLAGS -g3 -O2 -ftree-vectorize"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     ;;
-"cachegrind") 
-    CFLAGS="$CFLAGS -g3 -O2 -ftree-vectorize"
-    CPPFLAGS="$CPPFLAGS $GNUSOURCE"
-    ;;
 "test")
     CFLAGS="$CFLAGS -g $GNUSOURCE -DDEBUGGING=1 -fsanitize=undefined"
     ;;
