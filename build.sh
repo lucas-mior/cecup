@@ -2,10 +2,18 @@
 
 # shellcheck disable=SC2086
 
-if [[ "${1:-}" != "--parsed" ]]; then
+if [ "${1:-}" != "--parsed" ]; then
     # Filter out lines starting with '+' followed by '[' or '[['
     pattern="^\+ '\['.+'\]'"
-    "$0" --parsed "$@" 2> >(grep -Ev "$pattern" >&2)
+
+    # 1. Open FD 3 and point it to the current stdout (1).
+    # 2. Redirect the command's stderr (2) to stdout (1) so it enters the pipe.
+    # 3. Redirect the command's stdout (1) to FD 3 so it bypasses the pipe.
+    # 4. The pipe now only contains the original stderr.
+    # 5. grep filters the stream and sends it back to stderr (2).
+    { "$0" --parsed "$@" 2>&1 1>&3 | grep -Ev "$pattern" >&2; } 3>&1
+    
+    # Note: In POSIX, $? here will be the exit code of grep, not $0.
     exit $?
 fi
 shift
