@@ -609,7 +609,9 @@ main(void) {
     hl3.capacity = 3;
     hl3.names = names;
     hl3.names_lens = names_lens;
-    hl3.aggregate_hash = rapidhash(names[0], names_lens[0]) ^ rapidhash(names[1], names_lens[1]) ^ rapidhash(names[2], names_lens[2]);
+    hl3.aggregate_hash = rapidhash(names[0], names_lens[0]) 
+                         ^ rapidhash(names[1], names_lens[1])
+                         ^ rapidhash(names[2], names_lens[2]);
 
     name_to_remove = "file2.txt";
     name_to_remove_len = strlen32(name_to_remove);
