@@ -42,11 +42,6 @@ work_batch_flush(MessageBatch **batch_ptr) {
     }
 
     if (batch->count > 0) {
-        error("Flushing batch:\n");
-        error("count: %d\n", batch->count);
-        error("capacity: %d\n", batch->capacity);
-        error("type: %s\n", MSG_str(batch->type));
-        error("side: %d\n", batch->side);
         g_idle_add(update_ui_handler, batch);
     } else {
         error("Called work_batch_flush without count!\n");
