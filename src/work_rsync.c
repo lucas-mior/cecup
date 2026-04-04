@@ -113,6 +113,61 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, char *path, int32 p
     return;
 }
 
+static void
+work_batch_push_rename(MessageBatch **batch_ptr, int8 side,
+                       char *old_path, int32 old_len,
+                       char *new_path, int32 new_len) {
+    MessageBatch *batch;
+
+    batch = *batch_ptr;
+
+    if (batch != NULL && batch->type != MSG_ROW_RENAME) {
+        work_batch_flush(batch_ptr);
+        batch = NULL;
+    }
+
+    if (batch == NULL) {
+        batch = xmalloc(SIZEOF(*batch));
+        memset64(batch, 0, SIZEOF(*batch));
+        batch->type = MSG_ROW_RENAME;
+        batch->side = side;
+        batch->capacity = INITIAL_CAPACITY;
+        batch->paths = xmalloc(batch->capacity * SIZEOF(*(batch->paths)));
+        batch->paths_lens = xmalloc(batch->capacity * SIZEOF(*(batch->paths_lens)));
+        batch->dst_paths = xmalloc(batch->capacity * SIZEOF(*(batch->dst_paths)));
+        batch->dst_paths_lens = xmalloc(batch->capacity * SIZEOF(*(batch->dst_paths_lens)));
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &batch->time_last_flush);
+        *batch_ptr = batch;
+    }
+
+    if (batch->count >= batch->capacity) {
+        int32 old_capacity;
+
+        old_capacity = batch->capacity;
+        batch->capacity *= 2;
+        batch->paths = realloc(batch->paths, old_capacity, batch->capacity, SIZEOF(*(batch->paths)));
+        batch->paths_lens = realloc(batch->paths_lens, old_capacity, batch->capacity, SIZEOF(*(batch->paths_lens)));
+        batch->dst_paths = realloc(batch->dst_paths, old_capacity, batch->capacity, SIZEOF(*(batch->dst_paths)));
+        batch->dst_paths_lens = realloc(batch->dst_paths_lens, old_capacity, batch->capacity, SIZEOF(*(batch->dst_paths_lens)));
+    }
+
+    batch->paths[batch->count] = xmalloc(old_len + 1);
+    memcpy64(batch->paths[batch->count], old_path, old_len + 1);
+    batch->paths_lens[batch->count] = old_len;
+
+    batch->dst_paths[batch->count] = xmalloc(new_len + 1);
+    memcpy64(batch->dst_paths[batch->count], new_path, new_len + 1);
+    batch->dst_paths_lens[batch->count] = new_len;
+
+    batch->count += 1;
+
+    if (batch->count >= batch->capacity) {
+        work_batch_flush(batch_ptr);
+    }
+
+    return;
+}
+
 static char *
 work_rsync_itemize_skip(char *buf_output, int32 line_len) {
     if (line_len <= strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)) {

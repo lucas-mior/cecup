@@ -45,9 +45,6 @@
 
 static void update_list_from_rows(void);
 static void update_stats_text(int32 count_selected, int64 total_size_bytes);
-static bool update_row_remove(Message *message);
-static bool update_row_transfer(Message *message);
-static bool update_row_rename(Message *message);
 static void update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match);
 static bool update_row_ignore(Message *message);
 static void update_list_from_rows(void);
@@ -56,18 +53,9 @@ static bool update_ui_process_message(Message *message);
 static void update_progress_bar(enum MsgType type, double fraction);
 static void update_progress_state(char *text, char *tooltip);
 static inline void update_functions_sink(void);
-static bool update_row_transfer_internal(char *path_transfered, int32 path_transfered_len);
-static bool update_row_remove_internal(char *path_removed, int32 path_removed_len, int32 side);
-
-static bool
-update_row_remove(Message *message) {
-    return update_row_remove_internal(message->src_path, message->src_path_len, message->side);
-}
-
-static bool
-update_row_transfer(Message *message) {
-    return update_row_transfer_internal(message->src_path, message->src_path_len);
-}
+static bool update_row_transfer(char *path_transfered, int32 path_transfered_len);
+static bool update_row_remove(char *path_removed, int32 path_removed_len, int32 side);
+static bool update_row_rename(char *, int32 , char *, int32, int32 side);
 
 static gboolean
 update_ui_handler(void *data) {
@@ -86,14 +74,22 @@ update_ui_handler(void *data) {
         for (int32 i = 0; i < batch->count; i += 1) {
             switch (batch->type) {
             case MSG_ROW_REMOVE:
-                if (update_row_remove_internal(batch->paths[i], batch->paths_lens[i], batch->side)) {
+                if (update_row_remove(batch->paths[i], batch->paths_lens[i], batch->side)) {
                     needs_update = true;
                 }
                 break;
             case MSG_ROW_TRANSFER:
-                if (update_row_transfer_internal(batch->paths[i], batch->paths_lens[i])) {
+                if (update_row_transfer(batch->paths[i], batch->paths_lens[i])) {
                     needs_update = true;
                 }
+                break;
+            case MSG_ROW_RENAME:
+                if (update_row_rename(batch->paths[i], batch->paths_lens[i],
+                                               batch->dst_paths[i], batch->dst_paths_lens[i],
+                                               batch->side)) {
+                    needs_update = true;
+                }
+                free(batch->dst_paths[i], batch->dst_paths_lens[i] + 1);
                 break;
             default:
                 ASSERT(false);
@@ -101,8 +97,13 @@ update_ui_handler(void *data) {
             free(batch->paths[i], batch->paths_lens[i] + 1);
         }
 
-        free(batch->paths, batch->capacity*SIZEOF(*(batch->paths)));
-        free(batch->paths_lens, batch->capacity*SIZEOF(*(batch->paths_lens)));
+        if (batch->type == MSG_ROW_RENAME) {
+            free(batch->dst_paths, batch->capacity * SIZEOF(*(batch->dst_paths)));
+            free(batch->dst_paths_lens, batch->capacity * SIZEOF(*(batch->dst_paths_lens)));
+        }
+
+        free(batch->paths, batch->capacity * SIZEOF(*(batch->paths)));
+        free(batch->paths_lens, batch->capacity * SIZEOF(*(batch->paths_lens)));
         free(batch, SIZEOF(*batch));
         break;
     }
@@ -213,15 +214,6 @@ update_ui_process_message(Message *message) {
             gtk_widget_set_tooltip_text(cecup.progress_bar, message->src_path);
         }
         break;
-    case MSG_ROW_REMOVE:
-        needs_update = update_row_remove(message);
-        break;
-    case MSG_ROW_RENAME:
-        needs_update = update_row_rename(message);
-        break;
-    case MSG_ROW_TRANSFER:
-        needs_update = update_row_transfer(message);
-        break;
     case MSG_IGNORE_PATTERN:
         needs_update = update_row_ignore(message);
         break;
@@ -283,7 +275,7 @@ update_ui_process_message(Message *message) {
 }
 
 static bool
-update_row_remove_internal(char *path_removed, int32 path_removed_len, int32 side) {
+update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
     bool changed = false;
     Traversal *traversal = &cecup.traversal[side];
 
@@ -393,7 +385,7 @@ update_row_remove_internal(char *path_removed, int32 path_removed_len, int32 sid
 }
 
 static bool
-update_row_transfer_internal(char *path_transfered, int32 path_transfered_len) {
+update_row_transfer(char *path_transfered, int32 path_transfered_len) {
     Traversal *traversal_src = &cecup.traversal[L];
     Traversal *traversal_dst = &cecup.traversal[R];
     int32 idx_src;
@@ -474,14 +466,10 @@ update_row_transfer_internal(char *path_transfered, int32 path_transfered_len) {
 }
 
 static bool
-update_row_rename(Message *message) {
+update_row_rename(char *old_path, int32 old_path_len,
+                  char *new_path, int32 new_path_len, int32 side) {
     Traversal *traversal;
     Traversal *other_traversal;
-    char *old_path = message->src_path;
-    char *new_path = message->dst_path;
-    int32 old_path_len = message->src_path_len;
-    int32 new_path_len = message->dst_path_len;
-    int32 side = message->side;
     bool is_dir;
     bool changed = false;
 
@@ -584,7 +572,7 @@ update_row_rename(Message *message) {
                 cecup.rows[side][row_id] = -1;
                 i += 1;
             } else {
-                for (int32 j = i; j < (cecup.rows_len - 1); j += 1) {
+                for (int32 j = row_id; j < (cecup.rows_len - 1); j += 1) {
                     int32 idx_src;
                     int32 idx_dst;
 

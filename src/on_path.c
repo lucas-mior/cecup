@@ -23,6 +23,7 @@
 #include "util.c"
 #include "update.c"
 #include "cecup.h"
+#include "work_rsync.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_on_path 1
@@ -119,10 +120,12 @@ on_path_edited(GtkEditable *editable, void *data) {
     void *row_id_ptr;
     int8 side;
     char *base_path;
+    int32 base_path_len;
     char old_full[MAX_PATH_LENGTH];
     char *relative_old;
     int32 new_length;
     char *new_text;
+    MessageBatch *batch = NULL;
 
     side = (int8)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
@@ -132,20 +135,17 @@ on_path_edited(GtkEditable *editable, void *data) {
 
     row_id = GPOINTER_TO_INT(row_id_ptr) - 1;
     new_text = (char *)gtk_editable_get_text(editable);
-
     relative_old = item_path_side(row_id, side);
 
     if (side == L) {
         base_path = cecup.src_base;
+        base_path_len = cecup.src_base_len;
     } else {
         base_path = cecup.dst_base;
+        base_path_len = cecup.dst_base_len;
     }
 
-    if (relative_old == NULL) {
-        return;
-    }
-
-    if (strcmp(relative_old, new_text) == 0) {
+    if (relative_old == NULL || (strcmp(relative_old, new_text) == 0)) {
         return;
     }
 
@@ -164,19 +164,11 @@ on_path_edited(GtkEditable *editable, void *data) {
         int32 new_full_length;
 
         old_length = strlen32(relative_old);
-        ASSERT_MORE(old_length, 0);
-
         memcpy64(relative_new, new_text, new_length + 1);
         normalize(relative_new, &new_length);
 
         if (BEGINS_WITH(relative_new, "/")) {
-            LOG_ERROR(_("Invalid rename: %s starts with a slash.\n"),
-                      relative_new);
-            return;
-        }
-        if (BEGINS_WITH(relative_new, "../")) {
-            LOG_ERROR(_("Invalid rename: %s points to outside of the base directory.\n"),
-                      relative_new);
+            LOG_ERROR(_("Invalid rename: %s starts with a slash.\n"), relative_new);
             return;
         }
 
@@ -190,31 +182,58 @@ on_path_edited(GtkEditable *editable, void *data) {
 
         LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
 
-        if ((relative_old[old_length - 1] == '/')
-            && (relative_new[new_length - 1] != '/')) {
+        if ((relative_old[old_length - 1] == '/') && (relative_new[new_length - 1] != '/')) {
             relative_new[new_length] = '/';
             relative_new[new_length + 1] = '\0';
             new_length += 1;
         }
 
-        {
-            Message *message = xmalloc(SIZEOF(*message));
-            memset64(message, 0, SIZEOF(*message));
+        work_batch_push_rename(&batch, side, relative_old, old_length, relative_new, new_length);
 
-            message->type = MSG_ROW_RENAME;
-            message->side = side;
+        if (relative_new[new_length - 1] == '/') {
+            char *paths[2];
+            FTS *fts_handle;
+            FTSENT *entry;
 
-            message->src_path_len = old_length;
-            message->src_path = xmalloc(old_length + 1);
-            memcpy64(message->src_path, relative_old, old_length + 1);
+            paths[0] = new_full;
+            paths[1] = NULL;
+            fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL);
 
-            message->dst_path_len = new_length;
-            message->dst_path = xmalloc(new_length + 1);
-            memcpy64(message->dst_path, relative_new, new_length + 1);
+            if (fts_handle != NULL) {
+                while ((entry = fts_read(fts_handle))) {
+                    char *child_rel_new;
+                    char child_rel_old[MAX_PATH_LENGTH];
+                    int32 child_rel_new_len;
+                    int32 child_rel_old_len;
+                    int32 suffix_len;
 
-            aux_invalidate_preview();
-            g_idle_add(update_ui_handler, message);
+                    /* Skip the root directory itself as it's already pushed */
+                    if (entry->fts_level == 0) {
+                        continue;
+                    }
+
+                    child_rel_new = entry->fts_path + base_path_len;
+                    child_rel_new_len = (int32)entry->fts_pathlen - base_path_len;
+                    if (child_rel_new[0] == '/') {
+                        child_rel_new += 1;
+                        child_rel_new_len -= 1;
+                    }
+
+                    /* Construct old relative path by swapping prefixes */
+                    suffix_len = child_rel_new_len - new_length;
+                    child_rel_old_len = old_length + suffix_len;
+                    memcpy64(child_rel_old, relative_old, old_length);
+                    memcpy64(child_rel_old + old_length, child_rel_new + new_length, suffix_len + 1);
+
+                    work_batch_push_rename(&batch, side, child_rel_old, child_rel_old_len,
+                                           child_rel_new, child_rel_new_len);
+                }
+                fts_close(fts_handle);
+            }
         }
+
+        aux_invalidate_preview();
+        work_batch_flush(&batch);
     }
 
     return;

@@ -345,6 +345,9 @@ typedef struct MessageBatch {
     char **paths;
     int32 *paths_lens;
 
+    char **dst_paths;
+    int32 *dst_paths_lens;
+
     int32 count;
     int32 capacity;
 } MessageBatch;
