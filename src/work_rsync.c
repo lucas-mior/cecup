@@ -42,8 +42,14 @@ work_batch_flush(MessageBatch **batch_ptr) {
     }
 
     if (batch->count > 0) {
+        error("Flushing batch:\n");
+        error("count: %d\n", batch->count);
+        error("capacity: %d\n", batch->capacity);
+        error("type: %s\n", MSG_str(batch->type));
+        error("side: %d\n", batch->side);
         g_idle_add(update_ui_handler, batch);
     } else {
+        error("Called work_batch_flush without count!\n");
         if (batch->paths != NULL) {
             free(batch->paths, batch->capacity * SIZEOF(*(batch->paths)));
             free(batch->paths_lens, batch->capacity * SIZEOF(*(batch->paths_lens)));
@@ -57,11 +63,9 @@ work_batch_flush(MessageBatch **batch_ptr) {
 
 static void
 work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side, char *path, int32 path_len) {
-    MessageBatch *batch;
+    MessageBatch *batch = *batch_ptr;
 
-    batch = *batch_ptr;
-
-    if (batch != NULL && batch->type != type) {
+    if (batch && (batch->type != type)) {
         work_batch_flush(batch_ptr);
         batch = NULL;
     }
@@ -465,7 +469,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                 }
 
                 if (checksum && ((path_len != 2) || memcmp64(path, "./", 2))) {
-                    work_batch_push(batch_ptr, R, MSG_ROW_TRANSFER, path, path_len);
+                    work_batch_push(batch_ptr, MSG_ROW_TRANSFER, R, path, path_len);
                 }
             } else if (line_len > 2) {
                 char *percentage;
