@@ -427,8 +427,7 @@ update_row_rename(char *old_path, int32 old_path_len,
         return false;
     }
 
-    row_id = traversal->row_ids[idx];
-    if (row_id < 0) {
+    if ((row_id = traversal->row_ids[idx]) < 0) {
         return false;
     }
 
