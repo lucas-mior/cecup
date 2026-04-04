@@ -2,10 +2,10 @@
 
 # shellcheck disable=SC2086
 
-if [[ "${1:-}" != "--wrapped" ]]; then
+if [[ "${1:-}" != "--parsed" ]]; then
     # Filter out lines starting with '+' followed by '[' or '[['
     pattern="^\+ '\['.+'\]'"
-    "$0" --wrapped "$@" 2> >(grep -Ev "$pattern" >&2)
+    "$0" --parsed "$@" 2> >(grep -Ev "$pattern" >&2)
     exit $?
 fi
 shift
