@@ -85,7 +85,7 @@ work_batch_push(MessageBatch **batch_ptr, Message *message) {
 }
 
 static char *
-work_check_itemize_line(char *buf_output, int32 line_len) {
+work_rsync_itemize_skip(char *buf_output, int32 line_len) {
     if (line_len <= strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)) {
         return NULL;
     }
@@ -353,7 +353,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                 LOG("%s%c", buf_output, end);
             }
 
-            if ((path = work_check_itemize_line(buf_output, line_len))) {
+            if ((path = work_rsync_itemize_skip(buf_output, line_len))) {
                 int32 path_len;
                 char *sep;
 
