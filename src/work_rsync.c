@@ -690,7 +690,6 @@ work_rsync(void *user_data) {
             continue;
         }
 
-        // TODO: Integration Bug. Data race reading `cecup.stop_working`.
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);

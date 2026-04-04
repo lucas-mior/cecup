@@ -150,12 +150,6 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                         is_dir = true;
                     }
 
-                    // TODO: Bug: Depending on the implementation of `dirname2`, if it mutates
-                    // `path_copy` in-place (e.g., to insert null terminators and truncate the
-                    // path), the `name` and `extension` pointers extracted previously will be
-                    // corrupted or left dangling because they point into the `path_copy` buffer.
-                    // Extract a safe copy of the base name first, or use a separate buffer for
-                    // `dirname2`.
                     name = basename2(path_copy, &path_len, &length);
                     extension = memrchr64(name, '.', length);
                     dirname2(directory, path_copy, &path_len);
@@ -396,12 +390,6 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 int32 offset = 0;
                 int32 nlinks_printed = 0;
 
-                // TODO: Integration Bug: `tip_buffer` has a fixed size of `MAX_PATH_LENGTH*2`
-                // (typically 4096). If `snprintf2` behaves like standard `snprintf` by returning
-                // the total number of characters it *would* have written on truncation, `offset`
-                // can balloon past `SIZEOF(tip_buffer)`. On the next iteration, the remaining size
-                // argument `SIZEOF(tip_buffer) - offset` will underflow to `SIZE_MAX`, causing a
-                // critical buffer overflow. You must clamp or verify `offset` before using it.
                 offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
                                     "%s:\n%s", filepath, reason_buf);
                 offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
