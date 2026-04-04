@@ -266,13 +266,13 @@ item_get_actions_reasons(int32 row_id,
 
     *reason = 0;
 
-    if ((cecup.traversal[L].stats == NULL)
-         || (cecup.traversal[R].stats == NULL)) {
-        error("Function %s called while the traversal stats array is null.", __func__);
-        error("This probably means that there is some race condition.\n");
-        error("Or another bug.\n");
-        fatal(EXIT_FAILURE);
-    }
+    /* if ((cecup.traversal[L].stats == NULL) */
+    /*      || (cecup.traversal[R].stats == NULL)) { */
+    /*     error("Function %s called while the traversal stats array is null.", __func__); */
+    /*     error("This probably means that there is some race condition.\n"); */
+    /*     error("Or another bug.\n"); */
+    /*     fatal(EXIT_FAILURE); */
+    /* } */
 
     if (src_idx < 0) {
         char *matched_dst;

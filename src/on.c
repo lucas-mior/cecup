@@ -812,33 +812,129 @@ on_functions_sink(void) {
 #endif
 
 #if TESTING_on
+#include "assert.c"
+
 int
 main(void) {
-    (void)on_window_destroy;
-    (void)on_tree_tooltip;
-    (void)on_tree_button_press;
-    (void)on_tree_key_press;
-    (void)on_scroll_sync;
-    (void)on_browse_dst;
-    (void)on_browse_src;
-    (void)on_invert_clicked;
-    (void)on_ignore_clicked;
-    (void)on_sort_changed;
-    (void)on_filter_toggled;
-    (void)on_stop_clicked;
-    (void)on_sync_clicked;
-    (void)on_preview_clicked;
-    (void)on_reset_clicked;
-    (void)on_delete_ignored_toggled;
-    (void)on_preview_setting_toggled;
-    (void)on_search_changed;
-    (void)on_config_changed;
-    (void)on_log_button_press;
-    (void)on_log_copy;
-    (void)on_path_editing_notify;
-    (void)on_path_click_pressed;
-    (void)on_select_all_visible_clicked;
-    (void)on_unselect_all_clicked;
+    char *text_src;
+    char *text_dst;
+    int32 num_test_rows = 5;
+
+    if (!gtk_init_check()) {
+        exit(EXIT_SUCCESS);
+    }
+
+    // 1. Initialize global widgets to satisfy GTK calls in aux_invalidate_preview
+    cecup.stop_button = gtk_button_new();
+    cecup.sync_button = gtk_button_new();
+    cecup.filter_new = gtk_toggle_button_new();
+    cecup.filter_link = gtk_toggle_button_new();
+    cecup.filter_update = gtk_toggle_button_new();
+    cecup.filter_equal = gtk_toggle_button_new();
+    cecup.filter_delete = gtk_toggle_button_new();
+    cecup.filter_ignore = gtk_toggle_button_new();
+    cecup.check_fs_button = gtk_check_button_new();
+    cecup.delete_ignored_button = gtk_check_button_new();
+    cecup.delete_after_button = gtk_check_button_new();
+    cecup.diff_entry = gtk_entry_new();
+    cecup.term_entry = gtk_entry_new();
+    cecup.search_entry = gtk_entry_new();
+
+    // Mock store for update_list_from_rows
+    cecup.store = G_LIST_MODEL(cecup_list_model_new());
+
+    // 2. Setup the row infrastructure
+    cecup.rows_len = num_test_rows;
+    cecup.rows_visible_len = num_test_rows;
+    cecup.rows[L] = xmalloc(num_test_rows * SIZEOF(int32));
+    cecup.rows[R] = xmalloc(num_test_rows * SIZEOF(int32));
+    cecup.rows_visible = xmalloc(num_test_rows * SIZEOF(int32));
+    cecup.rows_selected = xmalloc(num_test_rows * SIZEOF(uint8));
+
+    for (int32 i = 0; i < num_test_rows; i += 1) {
+        cecup.rows[L][i] = i;
+        cecup.rows[R][i] = i;
+        cecup.rows_visible[i] = i;
+        cecup.rows_selected[i] = true;
+    }
+
+    // 3. Mock BOTH sides of the traversal (item_get_actions_reasons needs this)
+    for (int32 side = 0; side < 2; side += 1) {
+        Traversal *t = &cecup.traversal[side];
+        t->nfiles = num_test_rows;
+        t->paths = xmalloc(num_test_rows * SIZEOF(char *));
+        t->paths_lens = xmalloc(num_test_rows * SIZEOF(int32));
+        t->stats = xmalloc(num_test_rows * SIZEOF(struct stat));
+        t->patterns = xmalloc(num_test_rows * SIZEOF(char *));
+        t->symlink_targets = xmalloc(num_test_rows * SIZEOF(char *));
+
+        // Zero out to ensure pointers are NULL and stats are clean
+        memset64(t->stats, 0, num_test_rows * SIZEOF(struct stat));
+        memset64(t->patterns, 0, num_test_rows * SIZEOF(char *));
+        memset64(t->symlink_targets, 0, num_test_rows * SIZEOF(char *));
+
+        for (int32 i = 0; i < num_test_rows; i += 1) {
+            t->paths[i] = "test/path";
+            t->paths_lens[i] = 9;
+            t->stats[i].st_mode = S_IFREG | 0644; // Mock as regular files
+        }
+    }
+
+    /* --- Test on_invert_clicked logic --- */
+    cecup.dir_entry[L] = gtk_entry_new();
+    cecup.dir_entry[R] = gtk_entry_new();
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), "/home/user/src");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), "/mnt/backup/dst");
+
+    on_invert_clicked(NULL, NULL);
+
+    text_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
+    text_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R]));
+
+    ASSERT(strcmp(text_src, "/mnt/backup/dst") == 0);
+    ASSERT(strcmp(text_dst, "/home/user/src") == 0);
+
+    /* --- Test on_search_changed query allocation --- */
+    gtk_editable_set_text(GTK_EDITABLE(cecup.search_entry), "test_query");
+    on_search_changed(GTK_EDITABLE(cecup.search_entry), NULL);
+
+    ASSERT(cecup.search_query != NULL);
+    ASSERT_EQUAL(cecup.search_query_len, 10);
+    ASSERT(strcmp(cecup.search_query, "test_query") == 0);
+
+    /* --- Test on_unselect_all_clicked bulk logic --- */
+    on_unselect_all_clicked(NULL, NULL);
+
+    for (int32 i = 0; i < num_test_rows; i += 1) {
+        ASSERT(cecup.rows_selected[i] == false);
+    }
+
+    /* Cleanup mocks */
+    g_object_unref(cecup.dir_entry[L]);
+    g_object_unref(cecup.dir_entry[R]);
+    g_object_unref(cecup.search_entry);
+    g_object_unref(cecup.stop_button);
+    g_object_unref(cecup.sync_button);
+    g_object_unref(cecup.store);
+
+    if (cecup.search_query) {
+        free(cecup.search_query, cecup.search_query_len + 1);
+    }
+
+    free(cecup.rows[L], num_test_rows * SIZEOF(int32));
+    free(cecup.rows[R], num_test_rows * SIZEOF(int32));
+    free(cecup.rows_visible, num_test_rows * SIZEOF(int32));
+    free(cecup.rows_selected, num_test_rows * SIZEOF(uint8));
+
+    for (int32 side = 0; side < 2; side += 1) {
+        Traversal *t = &cecup.traversal[side];
+        free(t->paths, num_test_rows * SIZEOF(char *));
+        free(t->paths_lens, num_test_rows * SIZEOF(int32));
+        free(t->stats, num_test_rows * SIZEOF(struct stat));
+        free(t->patterns, num_test_rows * SIZEOF(char *));
+        free(t->symlink_targets, num_test_rows * SIZEOF(char *));
+    }
+
     exit(EXIT_SUCCESS);
 }
 #endif
