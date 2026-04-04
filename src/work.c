@@ -276,9 +276,9 @@ work_cleanup(void) {
     traversal_clean(&cecup.traversal[L]);
     traversal_clean(&cecup.traversal[R]);
 
-    hash_zero_transfer_set(cecup.transfer_setA);
+    hash_zero_transfer_set(cecup.transfer_set);
     hash_zero_deletion_set(cecup.deletion_set);
-    cecup.ntransfersA = 0;
+    cecup.ntransfers = 0;
     cecup.ndeletions = 0;
 
     cecup.rows_len = 0;
@@ -404,35 +404,35 @@ work_preview(void *user_data) {
             HardLinks hard_links = {0};
             item_hardlink_side(row_id, L, &hard_links);
 
-            while ((cecup.ntransfersA + hard_links.count + 1) >= cecup.transfers_capacityA) {
-                int32 old_capacity = cecup.transfers_capacityA;
-                if (cecup.transfers_capacityA == 0) {
-                    cecup.transfers_capacityA = INITIAL_CAPACITY;
+            while ((cecup.ntransfers + hard_links.count + 1) >= cecup.transfers_capacity) {
+                int32 old_capacity = cecup.transfers_capacity;
+                if (cecup.transfers_capacity == 0) {
+                    cecup.transfers_capacity = INITIAL_CAPACITY;
                 }
-                cecup.transfers_capacityA *= 2;
-                cecup.transfersA = realloc(cecup.transfersA,
-                                          old_capacity, cecup.transfers_capacityA,
-                                          SIZEOF(*cecup.transfersA));
-                cecup.transfers_lensA = realloc(cecup.transfers_lensA,
-                                               old_capacity, cecup.transfers_capacityA,
-                                               SIZEOF(*cecup.transfers_lensA));
+                cecup.transfers_capacity *= 2;
+                cecup.transfers = realloc(cecup.transfers,
+                                          old_capacity, cecup.transfers_capacity,
+                                          SIZEOF(*cecup.transfers));
+                cecup.transfers_lens = realloc(cecup.transfers_lens,
+                                               old_capacity, cecup.transfers_capacity,
+                                               SIZEOF(*cecup.transfers_lens));
             }
 
             if ((action_src == ACTION_HARDLINK) && (hard_links.count > 1)) {
                 for (int32 j = 0; j < hard_links.count; j += 1) {
-                    if (hash_insert_transfer_set(cecup.transfer_setA,
+                    if (hash_insert_transfer_set(cecup.transfer_set,
                                                  hard_links.names[j], hard_links.names_lens[j])) {
-                        cecup.transfersA[cecup.ntransfersA] = hard_links.names[j];
-                        cecup.transfers_lensA[cecup.ntransfersA] = hard_links.names_lens[j];
-                        cecup.ntransfersA += 1;
+                        cecup.transfers[cecup.ntransfers] = hard_links.names[j];
+                        cecup.transfers_lens[cecup.ntransfers] = hard_links.names_lens[j];
+                        cecup.ntransfers += 1;
                     }
                 }
             }
 
-            if (hash_insert_transfer_set(cecup.transfer_setA, bucket_src->key, path_len)) {
-                cecup.transfersA[cecup.ntransfersA] = bucket_src->key;
-                cecup.transfers_lensA[cecup.ntransfersA] = path_len;
-                cecup.ntransfersA += 1;
+            if (hash_insert_transfer_set(cecup.transfer_set, bucket_src->key, path_len)) {
+                cecup.transfers[cecup.ntransfers] = bucket_src->key;
+                cecup.transfers_lens[cecup.ntransfers] = path_len;
+                cecup.ntransfers += 1;
             }
         }
 

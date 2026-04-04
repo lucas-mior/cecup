@@ -455,11 +455,11 @@ static struct {
 
     Traversal traversal[2];
 
-    struct Hash_transfer_set *transfer_setA;
-    char **transfersA;
-    int32 *transfers_lensA;
-    int32 ntransfersA;
-    int32 transfers_capacityA;
+    struct Hash_transfer_set *transfer_set;
+    char **transfers;
+    int32 *transfers_lens;
+    int32 ntransfers;
+    int32 transfers_capacity;
 
     struct Hash_deletion_set *deletion_set;
     char **deletions;

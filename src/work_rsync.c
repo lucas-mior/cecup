@@ -532,14 +532,14 @@ work_rsync(void *user_data) {
     int32 nfiles_total;
 
     if (tasks == NULL) {
-        if ((cecup.ntransfersA <= 0) && (cecup.ndeletions <= 0)) {
+        if ((cecup.ntransfers <= 0) && (cecup.ndeletions <= 0)) {
             LOG_ERROR(_("There are no operations to make.\n"));
             work_finalize(false);
             free(thread_data, SIZEOF(*thread_data));
             return NULL;
         } else {
             has_transfers = true;
-            nfiles_total = cecup.ntransfersA;
+            nfiles_total = cecup.ntransfers;
         }
         tasks = xmalloc(sizeof(*tasks));
         memset64(tasks, 0, sizeof(*tasks));
@@ -594,9 +594,9 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
-    for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfersA); i += 1) {
-        char *file = cecup.transfersA[i];
-        int64 left = cecup.transfers_lensA[i];
+    for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
+        char *file = cecup.transfers[i];
+        int64 left = cecup.transfers_lens[i];
         int64 w;
         int64 written = 0;
 
