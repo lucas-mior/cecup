@@ -49,7 +49,6 @@ static void update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match
 static bool update_row_ignore(Message *message);
 static void update_list_from_rows(void);
 static void update_stats_text(int32 count_selected, int64 total_size_bytes);
-static bool update_ui_process_message(Message *message);
 static void update_progress_bar(enum MsgType type, double fraction);
 static void update_progress_state(char *text, char *tooltip);
 static inline void update_functions_sink(void);
@@ -62,17 +61,14 @@ static bool update_row_rename(char *path, int32 path_len,
 
 static gboolean
 update_ui_handler(void *data) {
-    Message *message;
+    Message *message = data;
     GtkTextIter end;
     GtkTextIter start_line;
     GtkTextTagTable *table;
     int32 current_store_count;
     bool is_cr;
     bool buffer_ends_in_lf;
-    bool needs_update;
-
-    message = data;
-    needs_update = false;
+    bool needs_update = false;
 
     if (DEBUGGING) {
         error("%s: %s\n", __func__, MSG_str(message->type));
