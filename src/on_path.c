@@ -126,6 +126,10 @@ on_path_edited(GtkEditable *editable, void *data) {
     int32 new_length;
     char *new_text;
     MessageBatch *batch = NULL;
+    char new_full[MAX_PATH_LENGTH];
+    char relative_new[MAX_PATH_LENGTH];
+    int32 old_length;
+    int32 new_full_length;
 
     side = (int8)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
@@ -154,90 +158,87 @@ on_path_edited(GtkEditable *editable, void *data) {
         LOG_ERROR("Error renaming: new path is too long.\n");
         return;
     }
+    if (new_length <= 0) {
+        LOG_ERROR("Error renaming: new length is zero.\n");
+        return;
+    }
 
     SNPRINTF(old_full, "%s/%s", base_path, relative_old);
 
-    if (new_length > 0) {
-        char new_full[MAX_PATH_LENGTH];
-        char relative_new[MAX_PATH_LENGTH];
-        int32 old_length;
-        int32 new_full_length;
+    old_length = strlen32(relative_old);
+    memcpy64(relative_new, new_text, new_length + 1);
+    normalize(relative_new, &new_length);
 
-        old_length = strlen32(relative_old);
-        memcpy64(relative_new, new_text, new_length + 1);
-        normalize(relative_new, &new_length);
-
-        if (BEGINS_WITH(relative_new, "/")) {
-            LOG_ERROR(_("Invalid rename: %s starts with a slash.\n"), relative_new);
-            return;
-        }
-
-        new_full_length = SNPRINTF(new_full, "%s/%s", base_path, relative_new);
-        normalize(new_full, &new_full_length);
-
-        if (renameat2(AT_FDCWD, old_full, AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
-            LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full, new_full, strerror(errno));
-            return;
-        }
-
-        LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
-
-        if ((relative_old[old_length - 1] == '/') && (relative_new[new_length - 1] != '/')) {
-            relative_new[new_length] = '/';
-            relative_new[new_length + 1] = '\0';
-            new_length += 1;
-        }
-
-        work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, side,
-                               relative_old, old_length, relative_new, new_length);
-
-        if (relative_new[new_length - 1] == '/') {
-            char *paths[2];
-            FTS *fts_handle;
-            FTSENT *entry;
-
-            paths[0] = new_full;
-            paths[1] = NULL;
-            fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL);
-
-            if (fts_handle != NULL) {
-                while ((entry = fts_read(fts_handle))) {
-                    char *child_rel_new;
-                    char child_rel_old[MAX_PATH_LENGTH];
-                    int32 child_rel_new_len;
-                    int32 child_rel_old_len;
-                    int32 suffix_len;
-
-                    /* Skip the root directory itself as it's already pushed */
-                    if (entry->fts_level == 0) {
-                        continue;
-                    }
-
-                    child_rel_new = entry->fts_path + base_path_len;
-                    child_rel_new_len = (int32)entry->fts_pathlen - base_path_len;
-                    if (child_rel_new[0] == '/') {
-                        child_rel_new += 1;
-                        child_rel_new_len -= 1;
-                    }
-
-                    /* Construct old relative path by swapping prefixes */
-                    suffix_len = child_rel_new_len - new_length;
-                    child_rel_old_len = old_length + suffix_len;
-                    memcpy64(child_rel_old, relative_old, old_length);
-                    memcpy64(child_rel_old + old_length, child_rel_new + new_length, suffix_len + 1);
-
-                    work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, side,
-                                           child_rel_old, child_rel_old_len,
-                                           child_rel_new, child_rel_new_len);
-                }
-                fts_close(fts_handle);
-            }
-        }
-
-        aux_invalidate_preview();
-        work_batch_flush(&batch);
+    if (BEGINS_WITH(relative_new, "/")) {
+        LOG_ERROR(_("Invalid rename: %s starts with a slash.\n"), relative_new);
+        return;
     }
 
+    new_full_length = SNPRINTF(new_full, "%s/%s", base_path, relative_new);
+    normalize(new_full, &new_full_length);
+
+    if (renameat2(AT_FDCWD, old_full, AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
+        LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full, new_full, strerror(errno));
+        return;
+    }
+
+    LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
+
+    if ((relative_old[old_length - 1] == '/') && (relative_new[new_length - 1] != '/')) {
+        relative_new[new_length] = '/';
+        relative_new[new_length + 1] = '\0';
+        new_length += 1;
+    }
+
+    work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, side,
+                           relative_old, old_length, relative_new, new_length);
+
+    if (relative_new[new_length - 1] == '/') {
+        char *paths[] = {new_full, NULL};
+        FTS *fts_handle;
+        FTSENT *entry;
+
+        if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
+            error("Error in fts_open(%s): %s.\n", paths[0], strerror(errno));
+            aux_invalidate_preview();
+            work_batch_flush(&batch);
+            return;
+        }
+
+        while ((entry = fts_read(fts_handle))) {
+            char *child_rel_new;
+            char child_rel_old[MAX_PATH_LENGTH];
+            int32 child_rel_new_len;
+            int32 child_rel_old_len;
+            int32 suffix_len;
+
+            /* Skip the root directory itself as it's already pushed */
+            if (entry->fts_level == 0) {
+                continue;
+            }
+
+            child_rel_new = entry->fts_path + base_path_len;
+            child_rel_new_len = (int32)entry->fts_pathlen - base_path_len;
+            if (child_rel_new[0] == '/') {
+                child_rel_new += 1;
+                child_rel_new_len -= 1;
+            }
+
+            /* Construct old relative path by swapping prefixes */
+            suffix_len = child_rel_new_len - new_length;
+            child_rel_old_len = old_length + suffix_len;
+            memcpy64(child_rel_old, relative_old, old_length);
+            memcpy64(child_rel_old + old_length, child_rel_new + new_length, suffix_len + 1);
+
+            work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, side,
+                                   child_rel_old, child_rel_old_len,
+                                   child_rel_new, child_rel_new_len);
+        }
+        fts_close(fts_handle);
+    }
+
+    aux_invalidate_preview();
+    work_batch_flush(&batch);
     return;
 }
 
