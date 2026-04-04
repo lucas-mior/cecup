@@ -448,6 +448,79 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     return true;
 }
 
+static void
+work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
+    char full_path[MAX_PATH_LENGTH];
+    pid_t child_rm;
+    int child_status;
+    bool removed = false;
+
+    if (side == L) {
+        SNPRINTF(full_path, "%s/%s", cecup.src_base, path);
+    } else {
+        SNPRINTF(full_path, "%s/%s", cecup.dst_base, path);
+    }
+
+    switch (child_rm = fork()) {
+    case -1:
+        error("Error forking: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    case 0: {
+        char cmd_rm[MAX_PATH_LENGTH];
+        char *args_rm[] = {
+            "rm",
+            "-rvf",
+            full_path,
+            NULL,
+        };
+
+        STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm) - 1);
+
+        execvp(args_rm[0], args_rm);
+        error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
+        _exit(EXIT_FAILURE);
+    }
+    default:
+    {
+        int waited;
+        int32 term_timeout = 0;
+        cecup.child_pid = child_rm;
+
+        while ((waited = waitpid(child_rm, &child_status, WNOHANG)) == 0) {
+            if (cecup.stop_working) {
+                term_timeout += 1;
+                if (term_timeout > 50) {
+                    xkill(child_rm, SIGKILL);
+                    term_timeout = 0;
+                }
+            }
+            usleep(100*1000);
+        }
+
+        if ((waited > 0) && WIFEXITED(child_status)) {
+            removed = !WEXITSTATUS(child_status);
+        }
+        cecup.child_pid = 0;
+        break;
+    }
+    }
+
+    if (removed) {
+        Message *message = xmalloc(SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
+
+        message->type = MSG_ROW_REMOVE;
+        message->side = (int8)side;
+        message->src_path_len = path_len;
+        message->src_path = xmalloc(message->src_path_len + 1);
+        memcpy64(message->src_path, path, message->src_path_len + 1);
+
+        work_batch_push(batch, message);
+
+        LOG("Removed %s...\n", full_path);
+    }
+}
+
 static void *
 work_rsync(void *user_data) {
     ThreadData *thread_data = user_data;
@@ -459,14 +532,14 @@ work_rsync(void *user_data) {
     int32 nfiles_total;
 
     if (tasks == NULL) {
-        if (cecup.ntransfers <= 0) {
+        if ((cecup.ntransfersA <= 0) && (cecup.ndeletions <= 0)) {
             LOG_ERROR(_("There are no operations to make.\n"));
             work_finalize(false);
             free(thread_data, SIZEOF(*thread_data));
             return NULL;
         } else {
             has_transfers = true;
-            nfiles_total = cecup.ntransfers;
+            nfiles_total = cecup.ntransfersA;
         }
         tasks = xmalloc(sizeof(*tasks));
         memset64(tasks, 0, sizeof(*tasks));
@@ -474,12 +547,21 @@ work_rsync(void *user_data) {
         nfiles_total = tasks->count;
     }
 
+    for (int32 i = 0; (tasks->count == 0) && (i < cecup.ndeletions); i += 1) {
+        if (cecup.stop_working) {
+            LOG_ERROR(_("Stop requested.\n"));
+            task_list_free(tasks);
+            work_batch_flush(&batch);
+            work_finalize(false);
+            free(thread_data, SIZEOF(*thread_data));
+            return NULL;
+        }
+
+        work_remove(&batch, cecup.deletions[i], cecup.deletions_lens[i], R);
+    }
+
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
-        char full_path[MAX_PATH_LENGTH];
-        pid_t child_rm;
-        int child_status;
-        bool removed = false;
 
         if (task->action != ACTION_DELETE) {
             has_transfers = true;
@@ -495,70 +577,7 @@ work_rsync(void *user_data) {
             return NULL;
         }
 
-        if (task->side == L) {
-            SNPRINTF(full_path, "%s/%s", cecup.src_base, task->path);
-        } else {
-            SNPRINTF(full_path, "%s/%s", cecup.dst_base, task->path);
-        }
-
-        switch (child_rm = fork()) {
-        case -1:
-            error("Error forking: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        case 0: {
-            char cmd_rm[MAX_PATH_LENGTH];
-            char *args_rm[] = {
-                "rm",
-                "-rvf",
-                full_path,
-                NULL,
-            };
-
-            STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm) - 1);
-
-            execvp(args_rm[0], args_rm);
-            error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
-            _exit(EXIT_FAILURE);
-        }
-        default:
-        {
-            int waited;
-            int32 term_timeout = 0;
-            cecup.child_pid = child_rm;
-
-            while ((waited = waitpid(child_rm, &child_status, WNOHANG)) == 0) {
-                if (cecup.stop_working) {
-                    term_timeout += 1;
-                    if (term_timeout > 50) {
-                        xkill(child_rm, SIGKILL);
-                        term_timeout = 0;
-                    }
-                }
-                usleep(100*1000);
-            }
-
-            if ((waited > 0) && WIFEXITED(child_status)) {
-                removed = !WEXITSTATUS(child_status);
-            }
-            cecup.child_pid = 0;
-            break;
-        }
-        }
-
-        if (removed) {
-            Message *message = xmalloc(SIZEOF(*message));
-            memset64(message, 0, SIZEOF(*message));
-
-            message->type = MSG_ROW_REMOVE;
-            message->side = task->side;
-            message->src_path_len = task->path_len;
-            message->src_path = xmalloc(message->src_path_len + 1);
-            memcpy64(message->src_path, task->path, message->src_path_len + 1);
-
-            work_batch_push(&batch, message);
-
-            LOG("Removed %s...\n", full_path);
-        }
+        work_remove(&batch, task->path, task->path_len, task->side);
     }
 
     if (!has_transfers) {
@@ -575,9 +594,9 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
-    for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
-        char *file = cecup.transfers[i];
-        int64 left = cecup.transfers_lens[i];
+    for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfersA); i += 1) {
+        char *file = cecup.transfersA[i];
+        int64 left = cecup.transfers_lensA[i];
         int64 w;
         int64 written = 0;
 

@@ -844,11 +844,17 @@ main(int32 argc, char **argv) {
     cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     cecup.rows_selected = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_selected)));
 
-    cecup.ntransfers = 0;
-    cecup.transfers_capacity = INITIAL_CAPACITY;
-    cecup.transfers = xmalloc(cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
-    cecup.transfers_lens = xmalloc(cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
-    cecup.transfer_set = hash_create_transfer_set(INITIAL_CAPACITY);
+    cecup.ntransfersA = 0;
+    cecup.transfers_capacityA = INITIAL_CAPACITY;
+    cecup.transfersA = xmalloc(cecup.transfers_capacityA*SIZEOF(*(cecup.transfersA)));
+    cecup.transfers_lensA = xmalloc(cecup.transfers_capacityA*SIZEOF(*(cecup.transfers_lensA)));
+    cecup.transfer_setA = hash_create_transfer_set(INITIAL_CAPACITY);
+
+    cecup.ndeletions = 0;
+    cecup.deletions_capacity = INITIAL_CAPACITY;
+    cecup.deletions = xmalloc(cecup.deletions_capacity*SIZEOF(*(cecup.deletions)));
+    cecup.deletions_lens = xmalloc(cecup.deletions_capacity*SIZEOF(*(cecup.deletions_lens)));
+    cecup.deletion_set = hash_create_deletion_set(INITIAL_CAPACITY);
 
     traversal_allocate(&cecup.traversal[L]);
     traversal_allocate(&cecup.traversal[R]);
@@ -937,9 +943,13 @@ main(int32 argc, char **argv) {
     free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     free(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
 
-    free(cecup.transfers, cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
-    free(cecup.transfers_lens, cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
-    hash_destroy_transfer_set(cecup.transfer_set);
+    free(cecup.transfersA, cecup.transfers_capacityA*SIZEOF(*(cecup.transfersA)));
+    free(cecup.transfers_lensA, cecup.transfers_capacityA*SIZEOF(*(cecup.transfers_lensA)));
+    hash_destroy_transfer_set(cecup.transfer_setA);
+
+    free(cecup.deletions, cecup.deletions_capacity*SIZEOF(*(cecup.deletions)));
+    free(cecup.deletions_lens, cecup.deletions_capacity*SIZEOF(*(cecup.deletions_lens)));
+    hash_destroy_deletion_set(cecup.deletion_set);
 
     free(cecup.src_base, cecup.src_base_len + 1);
     free(cecup.dst_base, cecup.dst_base_len + 1);
