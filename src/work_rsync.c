@@ -451,9 +451,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 static void
 work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     char full_path[MAX_PATH_LENGTH];
-    pid_t child_rm;
-    int child_status;
-    bool removed = false;
+    bool success = false;
 
     if (side == L) {
         SNPRINTF(full_path, "%s/%s", cecup.src_base, path);
@@ -461,52 +459,68 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         SNPRINTF(full_path, "%s/%s", cecup.dst_base, path);
     }
 
-    switch (child_rm = fork()) {
-    case -1:
-        error("Error forking: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    case 0: {
-        char cmd_rm[MAX_PATH_LENGTH];
-        char *args_rm[] = {
-            "rm",
-            "-rvf",
-            full_path,
-            NULL,
-        };
+    if (path_len > 0 && path[path_len - 1] != '/') {
+        if (unlink(full_path) < 0) {
+            error("Error in unlink(%s): %s.\n", full_path, strerror(errno));
+            return;
+        }
 
-        STRING_FROM_ARRAY(cmd_rm, " ", args_rm, LENGTH(args_rm) - 1);
+        success = true;
+    } else {
+        char *paths[2];
+        FTS *fts_handle;
+        FTSENT *entry;
 
-        execvp(args_rm[0], args_rm);
-        error("Error executing\n%s\n%s.\n", cmd_rm, strerror(errno));
-        _exit(EXIT_FAILURE);
-    }
-    default:
-    {
-        int waited;
-        int32 term_timeout = 0;
-        cecup.child_pid = child_rm;
+        paths[0] = full_path;
+        paths[1] = NULL;
+        fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL);
+        success = true;
 
-        while ((waited = waitpid(child_rm, &child_status, WNOHANG)) == 0) {
+        if (fts_handle == NULL) {
+            error("Error in fts_open(%s): %s.\n", full_path, strerror(errno));
+            return;
+        }
+
+        while ((entry = fts_read(fts_handle))) {
             if (cecup.stop_working) {
-                term_timeout += 1;
-                if (term_timeout > 50) {
-                    xkill(child_rm, SIGKILL);
-                    term_timeout = 0;
-                }
+                success = false;
+                break;
             }
-            usleep(100*1000);
-        }
 
-        if ((waited > 0) && WIFEXITED(child_status)) {
-            removed = !WEXITSTATUS(child_status);
+            switch (entry->fts_info) {
+            case FTS_F:
+            case FTS_SL:
+            case FTS_SLNONE:
+            case FTS_DEFAULT:
+                if (unlink(entry->fts_accpath) < 0) {
+                    error("Error in unlink(%s): %s.\n", entry->fts_accpath, strerror(errno));
+                    success = false;
+                }
+                break;
+            case FTS_DP:
+                /* Post-order directory: safe to remove once contents are gone */
+                if (rmdir(entry->fts_accpath) < 0) {
+                    error("Error in rmdir(%s): %s.\n", entry->fts_accpath, strerror(errno));
+                    success = false;
+                }
+                break;
+            case FTS_DNR:
+            case FTS_ERR:
+            case FTS_NS:
+                error("FTS error on %s: %s.\n", entry->fts_path, strerror(entry->fts_errno));
+                success = false;
+                break;
+            default:
+                break;
+            }
         }
-        cecup.child_pid = 0;
-        break;
-    }
+        fts_close(fts_handle);
     }
 
-    if (removed) {
-        Message *message = xmalloc(SIZEOF(*message));
+    if (success) {
+        Message *message;
+
+        message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         message->type = MSG_ROW_REMOVE;
@@ -519,6 +533,8 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
 
         LOG("Removed %s...\n", full_path);
     }
+
+    return;
 }
 
 static void *
