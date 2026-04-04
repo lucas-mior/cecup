@@ -213,11 +213,6 @@ update_ui_handler(void *data) {
     }
 
     if (!is_batch) {
-        if (DEBUGGING) {
-            error("Freeing message %s: %s\n", __func__, MSG_str(message->type));
-            PRINTLN(message->text);
-            PRINTLN(message->text_len);
-        }
         free_message(message);
     }
 
