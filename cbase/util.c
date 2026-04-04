@@ -1865,6 +1865,11 @@ normalize(char *path, int32 *length) {
         *length -= 2;
     }
 
+    while ((*length >= 2) && (path[*length - 2] == '/') && (path[*length - 1] == '.')) {
+        path[*length - 1] = '\0';
+        *length -= 1;
+    }
+
     off = 0;
     while ((p = memmem64(path + off, *length - off, "/./", 3))) {
         off = p - path;
