@@ -220,8 +220,8 @@ main(void) {
     {
         int64 end_time;
 
-        // Spin the GTK event loop for 10 seconds to serve clipboard requests
-        end_time = g_get_monotonic_time() + 10 * G_TIME_SPAN_SECOND;
+        error("Try pasting clipboard content...\n");
+        end_time = g_get_monotonic_time() + 2*G_TIME_SPAN_SECOND;
         while (g_get_monotonic_time() < end_time) {
             g_main_context_iteration(NULL, TRUE);
         }
