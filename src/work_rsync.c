@@ -123,11 +123,9 @@ static void
 work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
                        char *old_path, int32 old_len,
                        char *new_path, int32 new_len) {
-    MessageBatch *batch;
+    MessageBatch *batch = *batch_ptr;
 
-    batch = *batch_ptr;
-
-    if (batch != NULL && batch->type != MSG_BATCH_ROW_RENAME) {
+    if (batch && (batch->type != MSG_BATCH_ROW_RENAME)) {
         work_batch_flush(batch_ptr);
         batch = NULL;
     }
