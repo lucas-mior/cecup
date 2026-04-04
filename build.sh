@@ -9,7 +9,7 @@ error () {
     return
 }
 
-if [ -n "$BASH_VERSION" ]; then      
+if [ -n "$BASH_VERSION" ]; then
     # shellcheck disable=SC3044
     shopt -s expand_aliases
 fi
@@ -129,25 +129,25 @@ case "$target" in
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     exe="bin/${program}_perf"
     ;;
-"valgrind") 
+"valgrind")
     CFLAGS="$CFLAGS -g3 -O0 -ftree-vectorize"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     ;;
-"callgrind") 
+"callgrind")
     CFLAGS="$CFLAGS -g3 -O2 -ftree-vectorize"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     ;;
 "test")
     CFLAGS="$CFLAGS -g $GNUSOURCE -DDEBUGGING=1 -fsanitize=undefined"
     ;;
-"check") 
+"check")
     CC=gcc
     CFLAGS="$CFLAGS $GNUSOURCE -DDEBUGGING=1 -fanalyzer"
     ;;
-"build"|"run") 
+"build"|"run")
     CFLAGS="$CFLAGS $GNUSOURCE -O2 -flto -march=native -ftree-vectorize"
     ;;
-"release") 
+"release")
     CFLAGS="$CFLAGS $GNUSOURCE -DRELEASING=1 -O2 -flto -march=native -ftree-vectorize"
     ;;
 "fast_feedback")
@@ -278,7 +278,7 @@ case "$target" in
     $0 release
     install -Dm755 bin/${program}   ${DESTDIR}${PREFIX}/bin/${program}
     install -Dm644 ${program}.1     ${DESTDIR}${PREFIX}/man/man1/${program}.1
-    
+
     for lang in $LANGS; do
         if [ -f "po/$lang/LC_MESSAGES/$program.mo" ]; then
             install -Dm644 "po/$lang/LC_MESSAGES/$program.mo" \

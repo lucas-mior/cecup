@@ -13,7 +13,7 @@ This program, therefore, facilitates this processes by creating two lists
 of files: one of all the files in the source, and other of all the files in the
 destination. This way, the user can intuitively perform the backup, by first
 previewing and confirming:
-- which files are missing on the backup and will 
+- which files are missing on the backup and will
 - which files are newer on the source
 - which files are on the backup, but (no longer) exist on the source
 - which files have different size
