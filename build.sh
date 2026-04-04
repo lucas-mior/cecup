@@ -4,7 +4,7 @@
 
 if [ "${1:-}" != "--parsed" ]; then
     # Filter out lines starting with '+' followed by '[' or '[['
-    pattern="^\+ '\['.+'\]'"
+    pattern="^\+ \[.+\]"
 
     # 1. Open FD 3 and point it to the current stdout (1).
     # 2. Redirect the command's stderr (2) to stdout (1) so it enters the pipe.
