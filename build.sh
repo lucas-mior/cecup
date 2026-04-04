@@ -2,12 +2,29 @@
 
 # shellcheck disable=SC2086
 
+time0=$(date +%s.%N)
+
 set -e
 
 error () {
     >&2 printf "$@"
     return
 }
+
+report_time () {
+    time1=$(date +%s.%N)
+    duration=$(echo "$time1 - $time0" | bc)
+    error "$0 took %.3f seconds to run\n" "$duration"
+    exit 0
+}
+
+# trap report_time EXIT
+
+if command -v measure; then
+    measure=measure
+else
+    measure=""
+fi
 
 if [ -n "$BASH_VERSION" ]; then
     # shellcheck disable=SC3044
@@ -239,6 +256,7 @@ case "$target" in
     generate_welcome_h
     trace_on
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && LC_ALL=C "$exe"
+    exit 0
     trace_off
     ;;
 "build"|"debug"|"run"|"release"|"valgrind"|"callgrind"|"perf"|"profile")
@@ -258,9 +276,9 @@ case "$target" in
     ctags --kinds-C=+l+d cbase/*.c src/*.h src/*.c  2> /dev/null || true
     vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
     if [ "$CC" = "chibicc" ]; then
-        compile_with_chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
+        $measure compile_with_chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
     else
-        $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
+        $measure $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
     fi
 
     if [ $target = "debug" ]; then
@@ -434,3 +452,5 @@ if [ "$target" = "test_all" ]; then
         done
     done
 fi
+
+exit 0
