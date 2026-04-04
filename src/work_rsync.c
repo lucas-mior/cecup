@@ -56,7 +56,7 @@ work_batch_flush(MessageBatch **batch_ptr) {
 }
 
 static void
-work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int8 side, char *path, int32 path_len) {
+work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side, char *path, int32 path_len) {
     MessageBatch *batch;
 
     batch = *batch_ptr;
@@ -69,11 +69,13 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int8 side, char *pa
     if (batch == NULL) {
         batch = xmalloc(SIZEOF(*batch));
         memset64(batch, 0, SIZEOF(*batch));
+
         batch->type = type;
-        batch->side = side;
+        batch->side = (int8)side;
         batch->capacity = INITIAL_CAPACITY;
         batch->paths = xmalloc(batch->capacity * SIZEOF(*(batch->paths)));
         batch->paths_lens = xmalloc(batch->capacity * SIZEOF(*(batch->paths_lens)));
+
         clock_gettime(CLOCK_MONOTONIC_COARSE, &batch->time_last_flush);
         *batch_ptr = batch;
     }
@@ -114,7 +116,7 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int8 side, char *pa
 }
 
 static void
-work_batch_push_rename(MessageBatch **batch_ptr, int8 side,
+work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
                        char *old_path, int32 old_len,
                        char *new_path, int32 new_len) {
     MessageBatch *batch;
@@ -130,7 +132,7 @@ work_batch_push_rename(MessageBatch **batch_ptr, int8 side,
         batch = xmalloc(SIZEOF(*batch));
         memset64(batch, 0, SIZEOF(*batch));
 
-        batch->type = MSG_ROW_RENAME;
+        batch->type = type;
         batch->side = side;
         batch->capacity = INITIAL_CAPACITY;
         batch->paths = xmalloc(batch->capacity * SIZEOF(*(batch->paths)));
