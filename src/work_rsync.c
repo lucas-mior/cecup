@@ -35,9 +35,8 @@
 
 static void
 work_batch_flush(MessageBatch **batch_ptr) {
-    MessageBatch *batch;
+    MessageBatch *batch = *batch_ptr;
 
-    batch = *batch_ptr;
     if (batch == NULL) {
         return;
     }

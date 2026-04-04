@@ -43,15 +43,13 @@
 
 #define UI_INTERVAL_MS 100
 
-static void update_list_from_rows(void);
-static void update_stats_text(int32 count_selected, int64 total_size_bytes);
-static void update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match);
 static bool update_row_ignore(Message *message);
+static inline void update_functions_sink(void);
+static void update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match);
 static void update_list_from_rows(void);
-static void update_stats_text(int32 count_selected, int64 total_size_bytes);
 static void update_progress_bar(enum MsgType type, double fraction);
 static void update_progress_state(char *text, char *tooltip);
-static inline void update_functions_sink(void);
+static void update_stats_text(int32 count_selected, int64 total_size_bytes);
 
 static bool update_rows(MessageBatch *batch);
 static bool update_row_remove(char *path, int32 path_len, int32 side);
@@ -68,7 +66,8 @@ update_ui_handler(void *data) {
     int32 current_store_count;
     bool is_cr;
     bool buffer_ends_in_lf;
-    bool needs_update = false;
+    bool update_list_needed = false;
+    bool is_batch = false;
 
     if (DEBUGGING) {
         error("%s: %s\n", __func__, MSG_str(message->type));
@@ -78,8 +77,9 @@ update_ui_handler(void *data) {
     case MSG_ROW_REMOVE:
     case MSG_ROW_TRANSFER:
     case MSG_ROW_RENAME:
+        is_batch = true;
         if (update_rows(data)) {
-            needs_update = true;
+            update_list_needed = true;
         }
         break;
     case MSG_LOG:
@@ -157,7 +157,7 @@ update_ui_handler(void *data) {
         }
         break;
     case MSG_IGNORE_PATTERN:
-        needs_update = update_row_ignore(message);
+        update_list_needed = update_row_ignore(message);
         break;
     case MSG_ENABLE_BUTTONS:
         if (cecup.refresh_id != 0) {
@@ -212,8 +212,19 @@ update_ui_handler(void *data) {
         break;
     }
 
-    free_message(message);
-    return needs_update;
+    if (!is_batch) {
+        free_message(message);
+    }
+
+    if (update_list_needed) {
+        update_list_from_rows();
+
+        if (DEBUGGING) {
+            check_consistent_state();
+        }
+    }
+
+    return G_SOURCE_REMOVE;
 }
 
 static bool
@@ -229,11 +240,13 @@ update_rows(MessageBatch *batch) {
             if (update_row_remove(batch->paths[i], batch->paths_lens[i], batch->side)) {
                 changed = true;
             }
+            free(batch->paths[i], batch->paths_lens[i] + 1);
             break;
         case MSG_ROW_TRANSFER:
             if (update_row_transfer(batch->paths[i], batch->paths_lens[i])) {
                 changed = true;
             }
+            free(batch->paths[i], batch->paths_lens[i] + 1);
             break;
         case MSG_ROW_RENAME:
             if (update_row_rename(batch->paths[i], batch->paths_lens[i],
@@ -241,6 +254,8 @@ update_rows(MessageBatch *batch) {
                                   batch->side)) {
                 changed = true;
             }
+            free(batch->paths[i], batch->paths_lens[i] + 1);
+            free(batch->dst_paths[i], batch->dst_paths_lens[i] + 1);
             break;
         default:
             TRAP();
