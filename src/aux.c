@@ -55,12 +55,44 @@ stop_working(bool state) {
 }
 
 static void
+on_banner_response(GtkInfoBar *info_bar, int32 response_id, void *data) {
+    (void)response_id;
+    (void)data;
+    gtk_widget_set_visible(GTK_WIDGET(info_bar), FALSE);
+    return;
+}
+
+static void
 aux_invalidate_preview(void) {
+    static GtkWidget *warning_banner = NULL;
+
     cecup.preview_dirty = true;
     if (!gtk_widget_get_sensitive(cecup.stop_button)) {
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
         gtk_widget_set_tooltip_text(cecup.sync_button, _("Click Analysis first"));
     }
+
+    if (warning_banner == NULL) {
+        GtkWidget *label = gtk_label_new(_("Alterations were made. File list may not be entirely consistent"));
+        GtkWidget *parent = gtk_widget_get_parent(cecup.tree[L]);
+
+        warning_banner = gtk_info_bar_new();
+        gtk_info_bar_set_message_type(GTK_INFO_BAR(warning_banner), GTK_MESSAGE_WARNING);
+        gtk_info_bar_add_child(GTK_INFO_BAR(warning_banner), label);
+        gtk_info_bar_set_show_close_button(GTK_INFO_BAR(warning_banner), TRUE);
+        g_signal_connect(warning_banner, "response", G_CALLBACK(on_banner_response), NULL);
+
+        while (parent != NULL) {
+            if (GTK_IS_BOX(parent)) {
+                gtk_box_append(GTK_BOX(parent), warning_banner);
+                break;
+            }
+            parent = gtk_widget_get_parent(parent);
+        }
+    } else {
+        gtk_widget_set_visible(warning_banner, TRUE);
+    }
+
     return;
 }
 
