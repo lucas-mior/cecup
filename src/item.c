@@ -554,9 +554,10 @@ main(void) {
     HardLinks hl3;
     char *names[3];
     int32 names_lens[3];
-    char *name_to_remove;
-    int32 name_to_remove_len;
-    HardLinks *ret;
+    rapidhash128_t h0;
+    rapidhash128_t h1;
+    rapidhash128_t h2;
+    rapidhash128_t h_new;
     SortEntry entry1;
     SortEntry entry2;
     int32 result;
@@ -565,14 +566,16 @@ main(void) {
     memset64(&hl2, 0, SIZEOF(hl2));
 
     hl1.count = 2;
-    hl1.aggregate_hash = 12345;
+    hl1.aggregate_hash_lo = 0xAAAA;
+    hl1.aggregate_hash_hi = 0xBBBB;
 
     hl2.count = 2;
-    hl2.aggregate_hash = 12345;
+    hl2.aggregate_hash_lo = 0xAAAA;
+    hl2.aggregate_hash_hi = 0xBBBB;
 
     ASSERT(hard_links_match(&hl1, &hl2));
 
-    hl2.aggregate_hash = 54321;
+    hl2.aggregate_hash_lo = 0xCCCC;
     ASSERT(!hard_links_match(&hl1, &hl2));
 
     names[0] = "file1.txt";
@@ -583,24 +586,32 @@ main(void) {
     names_lens[1] = strlen32(names[1]);
     names_lens[2] = strlen32(names[2]);
 
+    h0 = rapidhash128(names[0], (size_t)names_lens[0]);
+    h1 = rapidhash128(names[1], (size_t)names_lens[1]);
+    h2 = rapidhash128(names[2], (size_t)names_lens[2]);
+
     memset64(&hl3, 0, SIZEOF(hl3));
     hl3.count = 3;
     hl3.capacity = 3;
     hl3.names = names;
     hl3.names_lens = names_lens;
-    hl3.aggregate_hash = rapidhash(names[0],   (size_t)names_lens[0]) 
-                         ^ rapidhash(names[1], (size_t)names_lens[1])
-                         ^ rapidhash(names[2], (size_t)names_lens[2]);
 
-    name_to_remove = "file2.txt";
-    name_to_remove_len = strlen32(name_to_remove);
+    hl3.aggregate_hash_lo = h0.lo ^ h1.lo ^ h2.lo;
+    hl3.aggregate_hash_hi = h0.hi ^ h1.hi ^ h2.hi;
 
-    ret = hard_link_remove(&hl3, name_to_remove, name_to_remove_len);
-    ASSERT(ret != NULL);
-    ASSERT_EQUAL(hl3.count, 2);
-    ASSERT_EQUAL(hl3.names[0], "file1.txt");
-    ASSERT_EQUAL(hl3.names[1], "file3.txt");
+    /* Replace "file2.txt" with "new_file.txt" */
+    h_new = rapidhash128("new_file.txt", 12);
+    hard_link_replace_node(&hl3, "file2.txt", names_lens[1], "new_file.txt", 12);
 
+    ASSERT_EQUAL(hl3.count, 3);
+    ASSERT(strcmp(hl3.names[1], "new_file.txt") == 0);
+    ASSERT_EQUAL(hl3.names_lens[1], 12);
+
+    /* Verify 128-bit hash consistency after replacement */
+    ASSERT_EQUAL(hl3.aggregate_hash_lo, (h0.lo ^ h2.lo ^ h_new.lo));
+    ASSERT_EQUAL(hl3.aggregate_hash_hi, (h0.hi ^ h2.hi ^ h_new.hi));
+
+    /* 3. Test Sorting Comparisons */
     memset64(&entry1, 0, SIZEOF(entry1));
     memset64(&entry2, 0, SIZEOF(entry2));
 
@@ -628,6 +639,6 @@ main(void) {
 
     exit(EXIT_SUCCESS);
 }
-#endif
+#endif /* TESTING_item */
 
 #endif /* ITEM_C */
