@@ -418,7 +418,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     int32 path_old_len;
     int32 merge_row_id;
     char *path_old;
-    char *path_new;
+    char *new_path_alloc;
     IgnorePattern *p_match;
     bool changed = false;
     int32 is_dir = 0;
@@ -443,13 +443,13 @@ update_row_rename(char *old_path, int32 old_path_len,
         is_dir = 1;
     }
 
-    path_new = xarena_push(traversal->arena, new_path_len + is_dir + 1);
-    memcpy64(path_new, new_path, new_path_len + 1);
+    new_path_alloc = xarena_push(traversal->arena, new_path_len + is_dir + 1);
+    memcpy64(new_path_alloc, new_path, new_path_len + 1);
 
-    if (is_dir && (path_new[new_path_len - 1] != '/')) {
+    if (is_dir && (new_path_alloc[new_path_len - 1] != '/')) {
         new_path_len += 1;
-        path_new[new_path_len - 1] = '/';
-        path_new[new_path_len] = '\0';
+        new_path_alloc[new_path_len - 1] = '/';
+        new_path_alloc[new_path_len] = '\0';
     }
 
     other_idx = cecup.rows[!side][row_id];
@@ -457,7 +457,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     hash_remove_fs_map(traversal->map, path_old, path_old_len);
     traversal->row_ids[idx] = -1;
 
-    p_match = ignore_patterns_match(path_new, new_path_len,
+    p_match = ignore_patterns_match(new_path_alloc, new_path_len,
                                     S_ISDIR(traversal->stats[idx].st_mode),
                                     cecup.ignore_patterns, cecup.ignore_count);
 
@@ -471,7 +471,7 @@ update_row_rename(char *old_path, int32 old_path_len,
         }
 
         n_idx = traversal_push(traversal, &traversal->stats[idx],
-                               path_new, new_path_len,
+                               new_path_alloc, new_path_len,
                                traversal->symlink_targets[idx],
                                traversal->symlink_targets_lens[idx],
                                p_match_str, p_match_len);
@@ -484,7 +484,7 @@ update_row_rename(char *old_path, int32 old_path_len,
         if (hash_lookup_inode_map(traversal->inode_map, inode, &hard_links)) {
             hard_link_replace_node(&hard_links,
                                    path_old, path_old_len,
-                                   path_new, new_path_len);
+                                   new_path_alloc, new_path_len);
             hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);
         }
     }
@@ -493,7 +493,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     {
         int32 m_idx;
 
-        if (hash_lookup_fs_map(other_traversal->map, path_new, new_path_len, &m_idx)) {
+        if (hash_lookup_fs_map(other_traversal->map, new_path_alloc, new_path_len, &m_idx)) {
             merge_row_id = other_traversal->row_ids[m_idx];
         }
     }
