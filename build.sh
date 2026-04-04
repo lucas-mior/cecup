@@ -12,7 +12,7 @@ if [ "${1:-}" != "--parsed" ]; then
     # 4. The pipe now only contains the original stderr.
     # 5. grep filters the stream and sends it back to stderr (2).
     { "$0" --parsed "$@" 2>&1 1>&3 | grep -Ev "$pattern" >&2; } 3>&1
-    
+
     # Note: In POSIX, $? here will be the exit code of grep, not $0.
     exit $?
 fi
@@ -112,8 +112,9 @@ option_remove() {
 
 generate_welcome_h() {
     if [ -f "README.md" ]; then
-        echo "Generating src/.welcome.h from README.md..."
+        trace_on
         python3 build_welcome.py README.md src/.welcome.h
+        trace_off
     fi
 }
 
