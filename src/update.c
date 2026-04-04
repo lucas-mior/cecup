@@ -649,7 +649,7 @@ update_row_ignore(Message *message) {
 
         if (match) {
             update_ignored_helper(&cecup.traversal[L], L, row_id, match);
-            update_ignored_helper(&cecup.traversal[L], R, row_id, match);
+            update_ignored_helper(&cecup.traversal[R], R, row_id, match);
         }
     }
 
