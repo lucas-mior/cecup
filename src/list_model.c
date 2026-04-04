@@ -395,9 +395,6 @@ item_add(int32 src_idx, int32 dst_idx) {
                                       old_capacity, cecup.rows_capacity,
                                       SIZEOF(uint8));
 
-        // TODO: Integration Bug. Concurrent reallocations here in a background thread invalidate
-        // the pointers that the GTK UI thread might currently be reading from inside
-        // `cecup_list_model_get_item`. See the related TODO in that function.
         cecup.rows_visible = realloc(cecup.rows_visible,
                                      old_capacity, cecup.rows_capacity,
                                      SIZEOF(*(cecup.rows_visible)));

@@ -20,6 +20,7 @@
 
 #include <ctype.h>
 #include <fts.h>
+#include <stdatomic.h>
 
 #include "cecup.h"
 #include "update.c"
@@ -236,10 +237,8 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     int32 pipe_stdout[2];
     int32 rsync_args_len = 0;
     int32 buf_output_pos = 0;
-    pid_t child_rsync;
     struct pollfd pipes[2];
     int32 nfiles_checksummed = 0;
-    struct timespec time_stop = {0};
     bool delete_after = cecup.delete_after;
 
     if (checksum) {
@@ -294,7 +293,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     xpipe(pipe_stdout);
     xpipe(pipe_stderr);
 
-    switch (child_rsync = fork()) {
+    switch (cecup.child_pid = fork()) {
     case -1:
         error("Error forking: %s.\n", strerror(errno));
         fatal(EXIT_FAILURE);
@@ -318,7 +317,6 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
         _exit(EXIT_FAILURE);
     default:
-        cecup.child_pid = child_rsync;
         XCLOSE(&pipe_stderr[1]);
         XCLOSE(&pipe_stdout[1]);
         break;
@@ -348,24 +346,8 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             break;
         }
 
-        // TODO: Integration Bug. Data race. `cecup.stop_working` is written by the GTK UI thread in
-        // `aux.c` using `cecup.stop_lock`, but is being read directly here in the background worker
-        // thread without acquiring the mutex lock.
         if (cecup.stop_working) {
-            if (time_stop.tv_sec == 0) {
-                clock_gettime(CLOCK_MONOTONIC_COARSE, &time_stop);
-            } else {
-                struct timespec time_now;
-                int64 time_diff;
-
-                clock_gettime(CLOCK_MONOTONIC_COARSE, &time_now);
-                time_diff = (int64)(time_now.tv_sec - time_stop.tv_sec);
-
-                if (time_diff > 5) {
-                    xkill(-child_rsync, SIGKILL);
-                    time_stop.tv_sec = time_now.tv_sec;
-                }
-            }
+            break;
         }
 
         if (pipes[0].revents & POLLERR) {
@@ -379,10 +361,6 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             goto read_error_pipe;
         }
 
-        // TODO: Bug. If `buf_output` fills up completely without hitting an EOL in the previous
-        // iteration, `SIZEOF(buf_output) - buf_output_pos - 1` evaluates to 0.  `read64` is called
-        // with a size of 0, returning 0 immediately, which is misinterpreted below as EOF,
-        // permanently and prematurely closing the pipe.
         r = read64(pipe_stdout[0],
                    buf_output + buf_output_pos, SIZEOF(buf_output) - buf_output_pos - 1);
 
@@ -514,10 +492,16 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
-    if (waitpid(child_rsync, NULL, 0) < 0) {
+    while (waitpid(cecup.child_pid, NULL, 0) < 0) {
         LOG_ERROR(_("Error waiting for child process: %s.\n"), strerror(errno));
+        if (errno == EINTR) {
+            continue;
+        }
         LOG_ERROR(_("Killing the child process with SIGKILL..."));
-        xkill(-child_rsync, SIGKILL);
+        if (errno == EAGAIN) {
+            xkill(-cecup.child_pid, SIGKILL);
+        }
+        cecup.child_pid = 0;
         return false;
     }
 
@@ -658,8 +642,6 @@ work_rsync(void *user_data) {
     }
 
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ndeletions); i += 1) {
-        // TODO: Integration Bug. Data race. `cecup.stop_working` is read here without using atomic
-        // operations or `cecup.stop_lock`.
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);
@@ -780,12 +762,9 @@ work_rsync(void *user_data) {
             work_rsync_run(files_from_filename, nfiles_total, true, &batch);
         }
     } while (0);
-    // TODO: Bug. Resource leak. The temporary file created by `mkstemp` is never deleted
-    // because this code is commented out. Orphaned `cecup_XXXXXX` files will eventually
-    // exhaust the system's /tmp storage space or inodes.
-    /* if (!DEBUGGING) { */
-    /* xunlink(files_from_filename); */
-    /* } */
+    if (!DEBUGGING) {
+        xunlink(files_from_filename);
+    }
 
     work_batch_flush(&batch);
     task_list_free(tasks);

@@ -133,7 +133,7 @@ on_menu_apply(GtkWidget *widget, void *data) {
         memset64(thread_data, 0, SIZEOF(*thread_data));
         thread_data->tasks = tasks;
 
-        g_thread_new("bulk_sync", work_rsync, thread_data);
+        cecup.work_thread = g_thread_new("bulk_sync", work_rsync, thread_data);
     } else {
         task_list_free(tasks);
     }
@@ -350,7 +350,7 @@ on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
         memset64(thread_data, 0, SIZEOF(*thread_data));
         thread_data->tasks = tasks;
 
-        g_thread_new("work_bulk_sync", work_rsync, thread_data);
+        cecup.work_thread = g_thread_new("work_bulk_sync", work_rsync, thread_data);
     } else {
         task_list_free(tasks);
     }

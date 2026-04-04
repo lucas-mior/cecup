@@ -263,7 +263,7 @@ on_preview_clicked(GtkWidget *button, void *data) {
         ThreadData *thread_data = xmalloc(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
 
-        g_thread_new("work_preview", work_preview, thread_data);
+        cecup.work_thread = g_thread_new("work_preview", work_preview, thread_data);
     }
 
     return;
@@ -285,7 +285,7 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
-    g_thread_new("work_rsync", work_rsync, thread_data);
+    cecup.work_thread = g_thread_new("work_rsync", work_rsync, thread_data);
     return;
 }
 
@@ -310,18 +310,9 @@ on_sync_clicked(GtkWidget *button, void *data) {
 
 static void
 on_stop_clicked(GtkWidget *button, void *data) {
-    int32 pid_to_kill;
-
     (void)button;
     (void)data;
 
-    // TODO: Integration Bug. Data race. `cecup.child_pid` is written by a background thread in
-    // `work_rsync.c`. Reading it here from the main GTK thread without using an atomic read (like
-    // `g_atomic_int_get`) or acquiring `cecup.stop_lock` can lead to a stale or torn PID read.
-    pid_to_kill = cecup.child_pid;
-    if (pid_to_kill > 0) {
-        xkill(-pid_to_kill, SIGTERM);
-    }
     stop_working(true);
     return;
 }
@@ -745,28 +736,27 @@ on_path_click_pressed(GtkGestureClick *gesture,
 
 static void
 on_window_destroy(GtkWidget *widget, void *user_data) {
-    pid_t child_pid;
     (void)widget;
     (void)user_data;
 
     stop_working(true);
+    if (cecup.work_thread) {
+        g_thread_join(cecup.work_thread);
+    }
 
-    // TODO: Integration Bug. Same data race vulnerability on `cecup.child_pid` as flagged in
-    // `on_stop_clicked`.
-    if ((child_pid = cecup.child_pid) > 0) {
+    if (cecup.child_pid > 0) {
         int32 waited;
         int32 waited_count = 0;
 
-        xkill(-child_pid, SIGTERM);
+        xkill(-cecup.child_pid, SIGTERM);
 
-        while ((waited = waitpid(child_pid, NULL, 0)) < 0) {
+        while ((waited = waitpid(cecup.child_pid, NULL, 0)) < 0) {
             if (errno == EINTR) {
                 continue;
             }
-            // TODO: Bug. 10-second UI hang on exit. If `waitpid` fails with `ECHILD`, it means the
-            // child process is already fully dead and has been reaped.  This loop treats `ECHILD`
-            // as an error, sleeps for 1 second, and repeats 10 times. You must add an explicit
-            // check to break if `errno == ECHILD`.
+            if (errno == ECHILD) {
+                break;
+            }
             waited_count += 1;
             if (waited_count >= 10) {
                 break;
@@ -776,7 +766,7 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
         }
 
         if ((waited < 0) && (errno != ECHILD)) {
-            xkill(-child_pid, SIGKILL);
+            xkill(-cecup.child_pid, SIGKILL);
         }
     }
 

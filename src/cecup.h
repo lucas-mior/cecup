@@ -452,7 +452,10 @@ static struct {
     Arena *arena;
     GMutex arena_mutex;
 
+    // this is only needed for killing rsync when the window is destroyed
     pid_t child_pid;
+    GThread *work_thread;
+
     volatile bool stop_working;
     GMutex stop_lock;
 

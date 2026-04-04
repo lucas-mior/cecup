@@ -143,10 +143,6 @@ work_traverse_fs(Traversal *traversal) {
         old_full_len = (int32)ent->fts_pathlen;
 
         if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
-            // TODO: Integration Bug: `work_traverse_fs` is called from `work_traverse_fs_thread`
-            // which runs in the background. `LOG_ERROR` typically modifies UI components (like the
-            // text buffer inside `cecup.log_view`), which violates GTK thread safety guarantees and
-            // will crash the app. Dispatch this logging to the main thread via `g_idle_add`.
             LOG_ERROR(_("Error: file path is too long:\n"));
             LOG_ERROR("%s\n", ent->fts_path);
             LOG_ERROR(_("Please fix your file system.\n"));
