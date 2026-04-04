@@ -4,7 +4,7 @@
 
 if [[ "${1:-}" != "--wrapped" ]]; then
     # Filter out lines starting with '+' followed by '[' or '[['
-    pattern="^ +'\['.+'\]'"
+    pattern="^\+ '\['.+'\]'"
     "$0" --wrapped "$@" 2> >(grep -Ev "$pattern" >&2)
     exit $?
 fi
