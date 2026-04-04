@@ -419,7 +419,6 @@ update_row_rename(char *old_path, int32 old_path_len,
     int32 merge_row_id;
     char *path_old;
     char *new_path_alloc;
-    bool changed = false;
     int32 is_dir = 0;
 
     if (!hash_lookup_fs_map(traversal->map, old_path, old_path_len, &idx)) {
@@ -438,7 +437,6 @@ update_row_rename(char *old_path, int32 old_path_len,
         return false;
     }
 
-    changed = true;
     path_old = traversal->paths[idx];
     path_old_len = traversal->paths_lens[idx];
     ASSERT_EQUAL(path_old, old_path);
@@ -550,7 +548,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     }
 
     aux_invalidate_preview();
-    return changed;
+    return true;
 }
 
 static void
