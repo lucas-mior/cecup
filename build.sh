@@ -80,7 +80,9 @@ CPPFLAGS="$CPPFLAGS -DLOCALEDIR=$PREFIX/share/locale"
 CFLAGS="$CFLAGS -std=c11"
 CFLAGS="$CFLAGS -Wfatal-errors"
 CFLAGS="$CFLAGS -Wall -Wextra"
-CFLAGS="$CFLAGS -fdiagnostics-color=always"
+if [ -z "$NOCOLORS" ]; then
+    CFLAGS="$CFLAGS -fdiagnostics-color=always"
+fi
 # CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-format-pedantic"
 CFLAGS="$CFLAGS -Wno-unknown-warning-option"
