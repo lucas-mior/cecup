@@ -493,11 +493,43 @@ on_menu_functions_sink(void) {
 #if TESTING_on_menu
 #include "work.c"
 #include "on.c"
+#include "assert.c"
 
 int
 main(void) {
-    (void)on_menu_ignore_action;
-    (void)on_menu_dispatch;
+    GVariant *param;
+    FILE *file;
+    char buffer[256];
+    int64 read_bytes;
+
+    if (!gtk_init_check()) {
+        exit(EXIT_SUCCESS);
+    }
+
+    SNPRINTF(cecup.ignore_path, "%s", "test_ignore_temp.txt");
+
+    file = fopen(cecup.ignore_path, "w");
+    ASSERT(file != NULL);
+    fclose(file);
+
+    param = g_variant_new_string("*.test_ext");
+    g_variant_ref_sink(param);
+
+    on_menu_ignore_action(NULL, param, NULL);
+
+    file = fopen(cecup.ignore_path, "r");
+    ASSERT(file != NULL);
+
+    memset64(buffer, 0, SIZEOF(buffer));
+    read_bytes = fread(buffer, 1, SIZEOF(buffer) - 1, file);
+    fclose(file);
+
+    ASSERT_MORE(read_bytes, 0);
+    ASSERT_EQUAL(buffer, "\n*.test_ext");
+
+    g_variant_unref(param);
+    remove(cecup.ignore_path);
+
     exit(EXIT_SUCCESS);
 }
 
