@@ -414,7 +414,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     int32 idx;
     int32 row_id;
     int32 other_idx;
-    int32 n_idx;
+    int32 new_idx;
     int32 path_old_len;
     int32 merge_row_id;
     char *path_old;
@@ -464,20 +464,20 @@ update_row_rename(char *old_path, int32 old_path_len,
 
 
     {
-        IgnorePattern *p_match;
+        IgnorePattern *pattern;
         char *p_match_str = NULL;
         int32 p_match_len = 0;
 
-        p_match = ignore_patterns_match(new_path_alloc, new_path_len,
+        pattern = ignore_patterns_match(new_path_alloc, new_path_len,
                                         S_ISDIR(traversal->stats[idx].st_mode),
                                         cecup.ignore_patterns, cecup.ignore_count);
 
-        if (p_match) {
-            p_match_str = p_match->str;
-            p_match_len = p_match->len;
+        if (pattern) {
+            p_match_str = pattern->str;
+            p_match_len = pattern->len;
         }
 
-        n_idx = traversal_push(traversal, &traversal->stats[idx],
+        new_idx = traversal_push(traversal, &traversal->stats[idx],
                                new_path_alloc, new_path_len,
                                traversal->symlink_targets[idx],
                                traversal->symlink_targets_lens[idx],
@@ -506,8 +506,8 @@ update_row_rename(char *old_path, int32 old_path_len,
     }
 
     if (merge_row_id >= 0) {
-        cecup.rows[side][merge_row_id] = n_idx;
-        traversal->row_ids[n_idx] = merge_row_id;
+        cecup.rows[side][merge_row_id] = new_idx;
+        traversal->row_ids[new_idx] = merge_row_id;
 
         if (other_idx >= 0) {
             cecup.rows[side][row_id] = -1;
@@ -534,9 +534,9 @@ update_row_rename(char *old_path, int32 old_path_len,
         }
     } else {
         if (other_idx >= 0) {
-            cecup.rows[side][row_id] = n_idx;
+            cecup.rows[side][row_id] = new_idx;
             cecup.rows[!side][row_id] = -1;
-            cecup.traversal[side].row_ids[n_idx] = row_id;
+            cecup.traversal[side].row_ids[new_idx] = row_id;
 
             if (side == L) {
                 item_add(-1, other_idx);
@@ -544,8 +544,8 @@ update_row_rename(char *old_path, int32 old_path_len,
                 item_add(other_idx, -1);
             }
         } else {
-            cecup.rows[side][row_id] = n_idx;
-            traversal->row_ids[n_idx] = row_id;
+            cecup.rows[side][row_id] = new_idx;
+            traversal->row_ids[new_idx] = row_id;
         }
     }
 
