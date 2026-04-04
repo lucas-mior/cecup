@@ -2,23 +2,12 @@
 
 # shellcheck disable=SC2086
 
-time0=$(date +%s.%N)
-
 set -e
 
 error () {
     >&2 printf "$@"
     return
 }
-
-report_time () {
-    time1=$(date +%s.%N)
-    duration=$(echo "$time1 - $time0" | bc)
-    error "$0 took %.3f seconds to run\n" "$duration"
-    exit 0
-}
-
-# trap report_time EXIT
 
 if command -v measure; then
     measure=measure
