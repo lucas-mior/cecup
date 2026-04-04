@@ -439,7 +439,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     ASSERT_EQUAL(path_old, old_path);
     ASSERT_EQUAL(path_old_len, old_path_len);
 
-    if ((old_path[old_path_len - 1] == '/')) {
+    if (old_path[old_path_len - 1] == '/') {
         is_dir = 1;
     }
 
