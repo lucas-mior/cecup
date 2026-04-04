@@ -226,12 +226,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
         for (int32 i = 0; i < LENGTH(base_css); i += 1) {
             int32 n;
-            // TODO: Bug: `snprintf2` likely mimics standard `snprintf` by returning the number of
-            // characters it *would* have written if not truncated. If truncation occurs,
-            // incrementing `offset` by `n` will push it beyond `SIZEOF(css_buffer)`. The next loop
-            // iteration will underflow `SIZEOF(css_buffer) - offset`, resulting in a massive
-            // `size_t` value and causing a critical buffer overflow. You must clamp `offset` before
-            // proceeding.
             n = snprintf2(css_buffer + offset, SIZEOF(css_buffer) - offset,
                           "%s\n", base_css[i]);
             offset += n;
@@ -244,8 +238,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                 continue;
             }
 
-            // TODO: Bug: Same buffer overflow vulnerability as above. Validate `offset` bounds
-            // after addition to prevent `SIZEOF(css_buffer) - offset` from underflowing.
             m = snprintf2(css_buffer + offset, SIZEOF(css_buffer) - offset,
                           "row:not(:selected)"
                           " .cell-color-%d { background-color: %s; }\n",
