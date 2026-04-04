@@ -266,11 +266,9 @@ work_traverse_fs(Traversal *traversal) {
             continue;
         }
 
-        for (int32 j = 0; j < hard_links.count; j += 1) {
-            qsort(hard_links.names, (size_t)hard_links.count, SIZEOF(char *), compare_names);
-            for (int32 k = 0; k < hard_links.count; k += 1) {
-                hard_links.names_lens[k] = strlen32(hard_links.names[k]);
-            }
+        qsort(hard_links.names, (size_t)hard_links.count, SIZEOF(char *), compare_names);
+        for (int32 k = 0; k < hard_links.count; k += 1) {
+            hard_links.names_lens[k] = strlen32(hard_links.names[k]);
         }
     }
 
