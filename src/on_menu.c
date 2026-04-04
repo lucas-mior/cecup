@@ -413,16 +413,14 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
     token = strtok(term_cmd, " ");
     while (token != NULL && term_argument_count < LENGTH(term_arguments)) {
-        term_arguments[term_argument_count] = token;
-        term_argument_count += 1;
+        term_arguments[term_argument_count++] = token;
         token = strtok(NULL, " ");
     }
     term_arguments[term_argument_count] = NULL;
 
     token = strtok(diff_tool, " ");
     while (token != NULL && diff_argument_count < LENGTH(diff_arguments)) {
-        diff_arguments[diff_argument_count] = token;
-        diff_argument_count += 1;
+        diff_arguments[diff_argument_count++] = token;
         token = strtok(NULL, " ");
     }
     diff_arguments[diff_argument_count] = NULL;
@@ -454,23 +452,18 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 int32 k = 0;
 
                 for (int32 j = 0; j < term_argument_count; j += 1) {
-                    combined_arguments[k] = term_arguments[j];
-                    k += 1;
+                    combined_arguments[k++] = term_arguments[j];
                 }
 
-                combined_arguments[k] = "-e";
-                k += 1;
+                combined_arguments[k++] = "-e";
 
                 for (int32 j = 0; j < diff_argument_count; j += 1) {
-                    combined_arguments[k] = diff_arguments[j];
-                    k += 1;
+                    combined_arguments[k++] = diff_arguments[j];
                 }
 
-                combined_arguments[k] = path_dst;
-                k += 1;
-                combined_arguments[k] = path_src;
-                k += 1;
-                combined_arguments[k] = NULL;
+                combined_arguments[k++] = path_dst;
+                combined_arguments[k++] = path_src;
+                combined_arguments[k++] = NULL;
 
                 execvp(combined_arguments[0], combined_arguments);
                 STRING_FROM_ARRAY(cmd, " ", combined_arguments, k);
