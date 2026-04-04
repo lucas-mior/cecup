@@ -539,7 +539,7 @@ static SortFunction sort_item_functions[] = {
 };
 
 static CompareFunction compare_item_functions[] = {
-    [COL_SELECTED]   = cecup_item_compare_string_key,
+    [COL_SELECTED]   = cecup_item_compare_int_key,
     [COL_SRC_ACTION] = cecup_item_compare_int_key,
     [COL_DST_ACTION] = cecup_item_compare_int_key,
     [COL_SRC_PATH]   = cecup_item_compare_string_key,
