@@ -560,12 +560,12 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), EMOJI_DELETE);
     gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), EMOJI_IGNORE);
 
-    gtk_widget_set_tooltip_text(cecup.filter_new,    _("Show New Files"));
+    gtk_widget_set_tooltip_text(cecup.filter_new,    _("Show new files"));
     gtk_widget_set_tooltip_text(cecup.filter_link,   _("Show links"));
-    gtk_widget_set_tooltip_text(cecup.filter_update, _("Show Updates"));
+    gtk_widget_set_tooltip_text(cecup.filter_update, _("Show updates"));
     gtk_widget_set_tooltip_text(cecup.filter_equal,  _("Show equals"));
-    gtk_widget_set_tooltip_text(cecup.filter_delete, _("Show Deletions"));
-    gtk_widget_set_tooltip_text(cecup.filter_ignore, _("Show Ignored"));
+    gtk_widget_set_tooltip_text(cecup.filter_delete, _("Show files to be deleted"));
+    gtk_widget_set_tooltip_text(cecup.filter_ignore, _("Show ignored files"));
 
     gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_new);
     gtk_widget_set_margin_start(cecup.filter_new, PADDING_FILTER_BUTTON);
