@@ -548,16 +548,12 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             LOG("Removed %s...\n", full_path);
         }
     } else {
-        char *paths[2];
+        char *paths[] = {full_path, NULL};
         FTS *fts_handle;
         FTSENT *entry;
 
-        paths[0] = full_path;
-        paths[1] = NULL;
-        fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL);
-
-        if (fts_handle == NULL) {
-            error("Error in fts_open(%s): %s.\n", full_path, strerror(errno));
+        if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
+            error("Error in fts_open(%s): %s.\n", paths[0], strerror(errno));
             return;
         }
 
