@@ -416,12 +416,12 @@ update_row_rename(char *old_path, int32 old_path_len,
     int32 other_idx;
     int32 n_idx;
     int32 path_old_len;
-    int32 suffix_len;
     int32 merge_row_id;
     char *path_old;
     char *path_new;
     IgnorePattern *p_match;
     bool changed = false;
+    int32 is_dir = 0;
 
     if (!hash_lookup_fs_map(traversal->map, old_path, old_path_len, &idx)) {
         error("Didnt found %s on traversal hash map.\n", old_path);
@@ -436,18 +436,28 @@ update_row_rename(char *old_path, int32 old_path_len,
     changed = true;
     path_old = traversal->paths[idx];
     path_old_len = traversal->paths_lens[idx];
-    suffix_len = path_old_len - old_path_len;
+    ASSERT_EQUAL(path_old, old_path);
+    ASSERT_EQUAL(path_old_len, old_path_len);
 
-    path_new = xarena_push(traversal->arena, new_path_len + suffix_len + 1);
-    memcpy64(path_new, new_path, new_path_len);
-    memcpy64(path_new + new_path_len, path_old + old_path_len, suffix_len + 1);
+    if ((old_path[old_path_len - 1] == '/')) {
+        is_dir = 1;
+    }
+
+    path_new = xarena_push(traversal->arena, new_path_len + is_dir + 1);
+    memcpy64(path_new, new_path, new_path_len + 1);
+
+    if (is_dir && (path_new[new_path_len - 1] != '/')) {
+        new_path_len += 1;
+        path_new[new_path_len - 1] = '/';
+        path_new[new_path_len] = '\0';
+    }
 
     other_idx = cecup.rows[!side][row_id];
 
     hash_remove_fs_map(traversal->map, path_old, path_old_len);
     traversal->row_ids[idx] = -1;
 
-    p_match = ignore_patterns_match(path_new, new_path_len + suffix_len,
+    p_match = ignore_patterns_match(path_new, new_path_len,
                                     S_ISDIR(traversal->stats[idx].st_mode),
                                     cecup.ignore_patterns, cecup.ignore_count);
 
@@ -461,7 +471,7 @@ update_row_rename(char *old_path, int32 old_path_len,
         }
 
         n_idx = traversal_push(traversal, &traversal->stats[idx],
-                               path_new, new_path_len + suffix_len,
+                               path_new, new_path_len,
                                traversal->symlink_targets[idx],
                                traversal->symlink_targets_lens[idx],
                                p_match_str, p_match_len);
@@ -474,7 +484,7 @@ update_row_rename(char *old_path, int32 old_path_len,
         if (hash_lookup_inode_map(traversal->inode_map, inode, &hard_links)) {
             hard_link_replace_node(&hard_links,
                                    path_old, path_old_len,
-                                   path_new, new_path_len + suffix_len);
+                                   path_new, new_path_len);
             hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);
         }
     }
@@ -483,7 +493,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     {
         int32 m_idx;
 
-        if (hash_lookup_fs_map(other_traversal->map, path_new, new_path_len + suffix_len, &m_idx)) {
+        if (hash_lookup_fs_map(other_traversal->map, path_new, new_path_len, &m_idx)) {
             merge_row_id = other_traversal->row_ids[m_idx];
         }
     }
