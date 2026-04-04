@@ -452,5 +452,3 @@ if [ "$target" = "test_all" ]; then
         done
     done
 fi
-
-exit 0
