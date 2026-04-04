@@ -478,10 +478,10 @@ update_row_rename(char *old_path, int32 old_path_len,
         }
 
         new_idx = traversal_push(traversal, &traversal->stats[idx],
-                               new_path_alloc, new_path_len,
-                               traversal->symlink_targets[idx],
-                               traversal->symlink_targets_lens[idx],
-                               p_match_str, p_match_len);
+                                 new_path_alloc, new_path_len,
+                                 traversal->symlink_targets[idx],
+                                 traversal->symlink_targets_lens[idx],
+                                 p_match_str, p_match_len);
     }
 
     if (S_ISREG(traversal->stats[idx].st_mode) && traversal->stats[idx].st_nlink > 1) {
