@@ -211,11 +211,16 @@ on_path_edited(GtkEditable *editable, void *data) {
             int32 child_rel_new_len;
             int32 child_rel_old_len;
             int32 suffix_len;
+            bool is_dir;
 
             /* Skip the root directory itself as it's already pushed */
             if (entry->fts_level == 0) {
                 continue;
             }
+            if (entry->fts_info == FTS_D) {
+                continue;
+            }
+            is_dir = entry->fts_info == FTS_DP;
 
             child_rel_new = entry->fts_path + base_path_len;
             child_rel_new_len = (int32)entry->fts_pathlen - base_path_len;
@@ -231,6 +236,12 @@ on_path_edited(GtkEditable *editable, void *data) {
             memcpy64(child_rel_old + old_length, child_rel_new + new_length, suffix_len + 1);
 
             normalize(child_rel_old, &child_rel_old_len);
+
+            if (is_dir && (child_rel_old[child_rel_old_len - 1] != '/')) {
+                child_rel_old_len += 1;
+                child_rel_old[child_rel_old_len - 1] = '/';
+                child_rel_old[child_rel_old_len] = '\0';
+            }
 
             work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, side,
                                    child_rel_old, child_rel_old_len,
