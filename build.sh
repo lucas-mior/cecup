@@ -9,7 +9,7 @@ error () {
     return
 }
 
-if [ -n "$BASH_VERSION" ]; then
+if [ -n "$BASH_VERSION" ]; then      
     # shellcheck disable=SC3044
     shopt -s expand_aliases
 fi

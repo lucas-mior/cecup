@@ -492,7 +492,7 @@ int main(void) {
     msg->text_len = 4;
     msg->src_path = xmalloc(5);
     msg->src_path_len = 4;
-    msg->dst_path = msg->src_path; 
+    msg->dst_path = msg->src_path;
     free_message(msg);
 
     /* Test free_message - NULL dst_path */
