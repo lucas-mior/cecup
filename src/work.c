@@ -258,6 +258,22 @@ work_traverse_fs(Traversal *traversal) {
         LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
     }
 
+    for (uint32 i = 0; i < traversal->inode_map->capacity; i += 1) {
+        Bucket_inode_map *bucket = &traversal->inode_map->array[i];
+        HardLinks hard_links = bucket->value;
+
+        if (bucket->slot_state != HASH_SLOT_USED) {
+            continue;
+        }
+
+        for (int32 j = 0; j < hard_links.count; j += 1) {
+            qsort(hard_links.names, (size_t)hard_links.count, SIZEOF(char *), compare_names);
+            for (int32 k = 0; k < hard_links.count; k += 1) {
+                hard_links.names_lens[k] = strlen32(hard_links.names[k]);
+            }
+        }
+    }
+
     file_count_return = (int32)file_count;
     return file_count_return;
 }

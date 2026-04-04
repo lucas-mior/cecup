@@ -187,17 +187,6 @@ traversal_symlink_get(Traversal *traversal, char *path, char **symlink_target) {
     return (int32)symlink_target_len;
 }
 
-static int
-compare_names(const void *a, const void *b) {
-    char *name_a;
-    char *name_b;
-
-    name_a = *(char **)a;
-    name_b = *(char **)b;
-
-    return strcmp(name_a, name_b);
-}
-
 static void
 traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
     HardLinks hard_links;
@@ -222,12 +211,6 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         hard_links.names[hard_links.count] = path;
         hard_links.names_lens[hard_links.count] = path_len;
         hard_links.count += 1;
-
-        qsort(hard_links.names, (size_t)hard_links.count, SIZEOF(char *), compare_names);
-
-        for (int32 i = 0; i < hard_links.count; i += 1) {
-            hard_links.names_lens[i] = strlen32(hard_links.names[i]);
-        }
 
         hash_overwrite_inode_map(traversal->inode_map, &stat.st_ino, hard_links);
     } else {

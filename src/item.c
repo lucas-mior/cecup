@@ -462,6 +462,17 @@ item_get_actions_reasons(int32 row_id,
     return;
 }
 
+static int
+compare_names(const void *a, const void *b) {
+    char *name_a;
+    char *name_b;
+
+    name_a = *(char **)a;
+    name_b = *(char **)b;
+
+    return strcmp(name_a, name_b);
+}
+
 #define COMPARE(A, B) \
     do { \
         if (A > B) { \
