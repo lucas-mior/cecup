@@ -101,7 +101,7 @@ generate_welcome_h() {
     fi
 }
 
-compile_with_chibicc () {
+with_chibicc () {
     args="$*"
     while ! problem=$(chibicc $args 2>&1); do
         trace_off
@@ -265,9 +265,9 @@ case "$target" in
     ctags --kinds-C=+l+d cbase/*.c src/*.h src/*.c  2> /dev/null || true
     vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
     if [ "$CC" = "chibicc" ]; then
-        $measure compile_with_chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
+        $measure with_chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
     else
-        $measure $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
+        $measure $CC          $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
     fi
 
     if [ $target = "debug" ]; then
@@ -351,7 +351,7 @@ case "$target" in
         if [ "$CC" = "chibicc" ]; then
             cmdline_no_cc=$(option_remove "$cmdline" "$CC")
             trace_on
-            if compile_with_chibicc "$cmdline_no_cc"; then
+            if with_chibicc "$cmdline_no_cc"; then
                 /tmp/${name}_test
             else
                 exit 1
