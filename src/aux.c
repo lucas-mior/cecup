@@ -463,11 +463,49 @@ aux_functions_sink(void) {
 #include "update.c"
 #include "work.c"
 #include "on.c"
+#include "assert.c"
 
 int main(void) {
-    (void)traversal_free;
-    (void)traversal_allocate;
-    return 0;
+    Message *msg;
+
+    /* Test aux_is_root */
+    ASSERT(aux_is_root("."));
+    ASSERT(aux_is_root("./"));
+    ASSERT(!aux_is_root(".."));
+    ASSERT(!aux_is_root("path/to/something"));
+
+    /* Test free_message - Separate paths */
+    msg = xmalloc(SIZEOF(*msg));
+    memset64(msg, 0, SIZEOF(*msg));
+    msg->text = xmalloc(10);
+    msg->text_len = 9;
+    msg->src_path = xmalloc(10);
+    msg->src_path_len = 9;
+    msg->dst_path = xmalloc(10);
+    msg->dst_path_len = 9;
+    free_message(msg);
+
+    /* Test free_message - Shared paths */
+    msg = xmalloc(SIZEOF(*msg));
+    memset64(msg, 0, SIZEOF(*msg));
+    msg->text = xmalloc(5);
+    msg->text_len = 4;
+    msg->src_path = xmalloc(5);
+    msg->src_path_len = 4;
+    msg->dst_path = msg->src_path; 
+    free_message(msg);
+
+    /* Test free_message - NULL dst_path */
+    msg = xmalloc(SIZEOF(*msg));
+    memset64(msg, 0, SIZEOF(*msg));
+    msg->text = xmalloc(5);
+    msg->text_len = 4;
+    msg->src_path = xmalloc(5);
+    msg->src_path_len = 4;
+    msg->dst_path = NULL;
+    free_message(msg);
+
+    exit(EXIT_SUCCESS);
 }
 #endif
 
