@@ -270,14 +270,13 @@ static bool
 update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
     bool changed = false;
     Traversal *traversal = &cecup.traversal[side];
+    int32 idx;
+    int32 row_id;
 
     if (path_removed == NULL || path_removed_len == 0) {
         error("Error: invalid arguments passed to %s.\n", __func__);
         fatal(EXIT_FAILURE);
     }
-
-    int32 idx;
-    int32 row_id;
 
     if ((!hash_lookup_fs_map(traversal->map, path_removed, path_removed_len, &idx))) {
         return false;
