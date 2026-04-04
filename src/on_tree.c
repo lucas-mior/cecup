@@ -512,12 +512,53 @@ on_tree_functions_sink(void) {
 
 #if TESTING_on_tree
 #include "on.c"
+#include "assert.c"
 
 int
 main(void) {
-    return 0;
+    GtkWidget *tree;
+    GtkWidget *cell;
+    void *lookup_row_id;
+    void *lookup_col;
+    int32 row_id;
+    enum ColumnType col;
+    uint32 pressed;
+    uint32 target;
+
+    if (!gtk_init_check()) {
+        exit(EXIT_SUCCESS);
+    }
+
+    tree = gtk_column_view_new(NULL);
+    g_object_ref_sink(tree);
+    g_object_set_data(G_OBJECT(tree), "side", GINT_TO_POINTER(L));
+
+    cell = gtk_label_new("dummy");
+    gtk_widget_set_parent(cell, tree);
+
+    g_object_set_data(G_OBJECT(cell), "cecup-row-id", GINT_TO_POINTER(101));
+    g_object_set_data(G_OBJECT(cell), "cecup-col", GINT_TO_POINTER(COLUMN_PATH));
+
+    lookup_row_id = g_object_get_data(G_OBJECT(cell), "cecup-row-id");
+    lookup_col = g_object_get_data(G_OBJECT(cell), "cecup-col");
+
+    ASSERT(lookup_row_id != NULL);
+    row_id = GPOINTER_TO_INT(lookup_row_id) - 1;
+    ASSERT_EQUAL(row_id, 100);
+
+    col = (enum ColumnType)GPOINTER_TO_INT(lookup_col);
+    ASSERT_EQUAL((int32)col, (int32)COLUMN_PATH);
+
+    target = gdk_keyval_to_lower(GDK_KEY_Delete);
+    pressed = gdk_keyval_to_lower(GDK_KEY_Delete);
+    ASSERT_EQUAL((int32)target, (int32)pressed);
+
+    g_object_unref(tree);
+
+    ASSERT(true);
+    exit(EXIT_SUCCESS);
 }
 
 #endif
 
-#endif /* ON_TREE */
+#endif /* ON_TREE_C */
