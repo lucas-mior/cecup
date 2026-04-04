@@ -190,9 +190,6 @@ on_path_edited(GtkEditable *editable, void *data) {
         new_length += 1;
     }
 
-    work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, side,
-                           relative_old, old_length, relative_new, new_length);
-
     if (relative_new[new_length - 1] == '/') {
         char *paths[] = {new_full, NULL};
         FTS *fts_handle;
@@ -249,6 +246,9 @@ on_path_edited(GtkEditable *editable, void *data) {
         }
         fts_close(fts_handle);
     }
+
+    work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, side,
+                           relative_old, old_length, relative_new, new_length);
 
     aux_invalidate_preview();
     work_batch_flush(&batch);
