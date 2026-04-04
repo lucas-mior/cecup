@@ -569,20 +569,13 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         }
 
         while ((entry = fts_read(fts_handle))) {
-            char *rel_path;
+            char *path_tmp;
             int32 rel_path_len;
+            int32 is_dir = false;
+            char rel_path[MAX_PATH_LENGTH];
 
             if (cecup.stop_working) {
                 break;
-            }
-
-            /* Calculate relative path for UI updates */
-            rel_path = entry->fts_path + base_path_len;
-            rel_path_len = (int32)entry->fts_pathlen - base_path_len;
-
-            if (rel_path[0] == '/') {
-                rel_path += 1;
-                rel_path_len -= 1;
             }
 
             switch (entry->fts_info) {
@@ -590,36 +583,52 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             case FTS_SL:
             case FTS_SLNONE:
             case FTS_DEFAULT:
-                if (unlink(entry->fts_accpath) < 0) {
-                    error("Error in unlink(%s): %s.\n", entry->fts_accpath, strerror(errno));
-                } else {
-                    work_batch_push(batch, MSG_ROW_REMOVE, side, rel_path, rel_path_len);
-                }
                 break;
             case FTS_DP:
-                if (rmdir(entry->fts_accpath) == 0) {
-                    /* Directories in the batch should retain the trailing slash */
-                    int32 dir_path_len = rel_path_len;
-                    char dir_path[MAX_PATH_LENGTH];
-
-                    memcpy64(dir_path, rel_path, dir_path_len);
-                    if (dir_path[dir_path_len - 1] != '/') {
-                        dir_path[dir_path_len] = '/';
-                        dir_path[dir_path_len + 1] = '\0';
-                        dir_path_len += 1;
-                    }
-                    work_batch_push(batch, MSG_ROW_REMOVE, side, dir_path, dir_path_len);
-                } else {
-                    error("Error in rmdir(%s): %s.\n", entry->fts_accpath, strerror(errno));
-                }
+                is_dir = true;
                 break;
             case FTS_DNR:
             case FTS_ERR:
             case FTS_NS:
                 error("FTS error on %s: %s.\n", entry->fts_path, strerror(entry->fts_errno));
-                break;
+                continue;
             default:
-                break;
+                continue;
+            }
+
+            path_tmp = entry->fts_path + base_path_len;
+            rel_path_len = (int32)entry->fts_pathlen - base_path_len;
+
+            if (path_tmp[0] == '/') {
+                path_tmp += 1;
+                rel_path_len -= 1;
+            }
+
+            if (rel_path_len == 0) {
+                path_tmp = ".";
+                rel_path_len = 1;
+            }
+
+            memcpy64(rel_path, path_tmp, rel_path_len + 1);
+
+            if (is_dir && (rel_path[rel_path_len - 1] != '/')) {
+                rel_path_len += 1;
+                rel_path[rel_path_len - 1] = '/';
+                rel_path[rel_path_len] = '\0';
+            }
+
+            if (is_dir) {
+                if (rmdir(entry->fts_accpath) < 0) {
+                    error("Error in rmdir(%s): %s.\n", entry->fts_accpath, strerror(errno));
+                } else {
+                    work_batch_push(batch, MSG_ROW_REMOVE, side, rel_path, rel_path_len);
+                }
+            } else {
+                if (unlink(entry->fts_accpath) < 0) {
+                    error("Error in unlink(%s): %s.\n", entry->fts_accpath, strerror(errno));
+                } else {
+                    work_batch_push(batch, MSG_ROW_REMOVE, side, rel_path, rel_path_len);
+                }
             }
         }
         fts_close(fts_handle);
