@@ -382,7 +382,7 @@ case "$target" in
                     gdb --quiet -ex run -ex "backtrace" -ex quit $test_exe 2>&1 | xsel -b
                 fi
             else
-                exit
+                exit 1
             fi
         fi
         trace_off
