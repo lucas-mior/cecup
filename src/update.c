@@ -858,7 +858,6 @@ update_stats_text(int32 count_selected, int64 total_size_bytes) {
 
 static void
 update_progress_bar(enum MsgType type, double fraction) {
-    Message *message;
     static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
     int32 index;
 
@@ -877,12 +876,15 @@ update_progress_bar(enum MsgType type, double fraction) {
     }
     last_fractions[index] = fraction;
 
-    message = xmalloc(SIZEOF(*message));
-    memset64(message, 0, SIZEOF(*message));
+    {
+        Message *message = xmalloc(SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
 
-    message->type = type;
-    message->fraction = fraction;
-    g_idle_add(update_ui_handler, message);
+        message->type = type;
+        message->fraction = fraction;
+
+        g_idle_add(update_ui_handler, message);
+    }
     return;
 }
 
