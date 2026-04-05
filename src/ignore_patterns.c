@@ -68,7 +68,7 @@ ignore_patterns_load(void) {
             line_len -= 1;
         }
 
-        if (line_len == 0 || line_buffer[0] == '#') {
+        if ((line_len == 0) || (line_buffer[0] == '#')) {
             continue;
         }
 
