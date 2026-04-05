@@ -285,6 +285,7 @@ traversal_functions_sink(void) {
 #if TESTING_traversal
 #include <assert.h>
 #include <string.h>
+#include <unistd.h>
 #include "work.c"
 #include "assert.c"
 
@@ -294,6 +295,13 @@ main(void) {
     struct stat dummy_stat;
     int32 idx;
     HardLinks hl;
+    char *symlink_target;
+    int32 symlink_len;
+    struct stat link_stat;
+    uint64 first_lo;
+    uint64 first_hi;
+    int32 link_idx;
+    rapidhash128_t hash_b;
 
     memset64(&test_traversal, 0, SIZEOF(test_traversal));
     memset64(&dummy_stat, 0, SIZEOF(dummy_stat));
@@ -318,8 +326,23 @@ main(void) {
     ASSERT(test_traversal.capacity > INITIAL_CAPACITY);
     ASSERT_EQUAL(test_traversal.nfiles, INITIAL_CAPACITY + 5);
 
+    /* 2.5 Test traversal_symlink_get */
+    symlink_target = NULL;
+    symlink_len = 0;
+
+    symlink("dummy_target.txt", "test_symlink");
+    symlink_len = traversal_symlink_get(&test_traversal, "test_symlink", &symlink_target);
+    ASSERT(symlink_len > 0);
+    ASSERT_EQUAL(symlink_len, strlen32("dummy_target.txt"));
+    ASSERT(symlink_target != NULL);
+    ASSERT(strcmp(symlink_target, "dummy_target.txt") == 0);
+    remove("test_symlink");
+
+    symlink_len = traversal_symlink_get(&test_traversal, "non_existent_symlink", &symlink_target);
+    ASSERT_EQUAL(symlink_len, 0);
+    ASSERT_NULL(symlink_target);
+
     /* 3. Test HardLink 128-bit Logic */
-    struct stat link_stat;
     memset64(&link_stat, 0, SIZEOF(link_stat));
     link_stat.st_ino = 999;
     link_stat.st_mode = S_IFREG | 0644;
@@ -330,8 +353,8 @@ main(void) {
     ASSERT(hash_lookup_inode_map(test_traversal.inode_map, &link_stat.st_ino, &hl));
     ASSERT_EQUAL(hl.count, 1);
 
-    uint64 first_lo = hl.aggregate_hash_lo;
-    uint64 first_hi = hl.aggregate_hash_hi;
+    first_lo = hl.aggregate_hash_lo;
+    first_hi = hl.aggregate_hash_hi;
 
     /* Add second link and verify XOR sum changed */
     traversal_add_link(&test_traversal, link_stat, "link_b", 6);
@@ -342,7 +365,7 @@ main(void) {
 
     /* 4. Test traversal_unlink 128-bit restoration */
     /* Manually push link_a to the traversal arrays so unlink can find it */
-    int32 link_idx = traversal_push(&test_traversal, &link_stat, "link_a", 6, NULL, 0, NULL, 0);
+    link_idx = traversal_push(&test_traversal, &link_stat, "link_a", 6, NULL, 0, NULL, 0);
 
     traversal_unlink(&test_traversal, link_idx);
 
@@ -351,7 +374,7 @@ main(void) {
     hash_lookup_inode_map(test_traversal.inode_map, &link_stat.st_ino, &hl);
     ASSERT_EQUAL(hl.count, 1);
 
-    rapidhash128_t hash_b = rapidhash128("link_b", 6);
+    hash_b = rapidhash128("link_b", 6);
     ASSERT_EQUAL(hl.aggregate_hash_lo, hash_b.lo);
     ASSERT_EQUAL(hl.aggregate_hash_hi, hash_b.hi);
 
