@@ -333,6 +333,11 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         pipes[0].revents = 0;
         pipes[1].revents = 0;
 
+        if (cecup.stop_working) {
+            xkill(-cecup.child_pid, SIGTERM);
+            break;
+        }
+
         switch (poll(pipes, 2, 100)) {
         case -1:
             if (errno != EINTR) {
@@ -343,11 +348,6 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         case 0:
             continue;
         default:
-            break;
-        }
-
-        if (cecup.stop_working) {
-            xkill(-cecup.child_pid, SIGTERM);
             break;
         }
 
