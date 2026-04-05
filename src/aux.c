@@ -504,6 +504,13 @@ aux_functions_sink(void) {
 
 int main(void) {
     Message *msg;
+    bool ok;
+    GtkWidget *box;
+    GtkWidget *paned;
+    GtkWidget *info;
+
+    g_mutex_init(&cecup.stop_lock);
+    g_mutex_init(&cecup.arena_mutex);
 
     /* Test aux_is_root */
     ASSERT(aux_is_root("."));
@@ -541,6 +548,117 @@ int main(void) {
     msg->src_path_len = 4;
     msg->dst_path = NULL;
     free_message(msg);
+
+    stop_working(true);
+    ASSERT(cecup.stop_working == true);
+    stop_working(false);
+    ASSERT(cecup.stop_working == false);
+
+    if (!gtk_init_check()) {
+        exit(EXIT_FAILURE);
+    }
+
+    cecup.sync_button = gtk_button_new();
+    cecup.stop_button = gtk_button_new();
+    cecup.preview_button = gtk_button_new();
+    cecup.ignore_button = gtk_button_new();
+    cecup.invert_button = gtk_button_new();
+    cecup.delete_after_button = gtk_check_button_new();
+    cecup.delete_ignored_button = gtk_check_button_new();
+    cecup.check_fs_button = gtk_check_button_new();
+    cecup.diff_entry = gtk_entry_new();
+    cecup.term_entry = gtk_entry_new();
+    cecup.browse_button[L] = gtk_button_new();
+    cecup.browse_button[R] = gtk_button_new();
+    cecup.dir_entry[L] = gtk_entry_new();
+    cecup.dir_entry[R] = gtk_entry_new();
+
+    cecup.filter_new = gtk_check_button_new();
+    cecup.filter_link = gtk_check_button_new();
+    cecup.filter_update = gtk_check_button_new();
+    cecup.filter_equal = gtk_check_button_new();
+    cecup.filter_delete = gtk_check_button_new();
+    cecup.filter_ignore = gtk_check_button_new();
+
+    box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    cecup.tree[L] = gtk_tree_view_new();
+    gtk_paned_set_start_child(GTK_PANED(paned), cecup.tree[L]);
+    gtk_box_append(GTK_BOX(box), paned);
+
+    /* Test aux_protect_interface_from_user */
+    aux_protect_interface_from_user(true);
+    ASSERT(gtk_widget_get_sensitive(cecup.stop_button) == TRUE);
+    ASSERT(gtk_widget_get_sensitive(cecup.sync_button) == FALSE);
+
+    aux_protect_interface_from_user(false);
+    ASSERT(gtk_widget_get_sensitive(cecup.stop_button) == FALSE);
+
+    /* Test cecup_get_dirs, cecup_reset_dir, save_config, config_bool_set */
+    SNPRINTF(cecup.config_path, "%s", "/tmp/cecup_test_config.ini");
+
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), "/tmp");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), "/var");
+    ok = cecup_get_dirs();
+    ASSERT(ok);
+
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), "/tmp");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), "/tmp");
+    ok = cecup_get_dirs();
+    ASSERT(!ok); /* Same directory failure */
+    remove("/tmp/cecup_test_config.ini");
+
+    /* Test on_banner_response */
+    info = gtk_info_bar_new();
+    gtk_widget_set_visible(info, TRUE);
+    on_banner_response(GTK_INFO_BAR(info), 0, NULL);
+    ASSERT(gtk_widget_get_visible(info) == FALSE);
+
+    /* Test check_consistent_state & check_consistent_traversal_rows */
+    cecup.rows_len = 1;
+    cecup.rows_capacity = 10;
+    cecup.rows[L] = xmalloc(10 * SIZEOF(int32));
+    cecup.rows[R] = xmalloc(10 * SIZEOF(int32));
+    cecup.rows[L][0] = 0;
+    cecup.rows[R][0] = 0;
+
+    cecup.traversal[L].nfiles = 1;
+    cecup.traversal[L].row_ids = xmalloc(10 * SIZEOF(int32));
+    cecup.traversal[L].row_ids[0] = 0;
+    cecup.traversal[L].paths = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[L].paths[0] = "test1";
+    cecup.traversal[L].paths_lens = xmalloc(10 * SIZEOF(int16));
+    cecup.traversal[L].paths_lens[0] = 5;
+    cecup.traversal[L].map = hash_create_fs_map(16);
+    hash_insert_fs_map(cecup.traversal[L].map, "test1", 5, 0);
+
+    cecup.traversal[R].nfiles = 1;
+    cecup.traversal[R].row_ids = xmalloc(10 * SIZEOF(int32));
+    cecup.traversal[R].row_ids[0] = 0;
+    cecup.traversal[R].paths = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[R].paths[0] = "test2";
+    cecup.traversal[R].paths_lens = xmalloc(10 * SIZEOF(int16));
+    cecup.traversal[R].paths_lens[0] = 5;
+    cecup.traversal[R].map = hash_create_fs_map(16);
+    hash_insert_fs_map(cecup.traversal[R].map, "test2", 5, 0);
+
+    check_consistent_state(); /* Would fatal() if failed */
+
+    /* Test log_internal */
+    log_internal(__FILE__, __LINE__, 0, "Test log msg %d", 42);
+    g_main_context_iteration(NULL, FALSE);
+
+    /* Cleanup testing memory to prevent leak sanitizers triggering */
+    free(cecup.rows[L], 10 * SIZEOF(int32));
+    free(cecup.rows[R], 10 * SIZEOF(int32));
+    free(cecup.traversal[L].row_ids, 10 * SIZEOF(int32));
+    free(cecup.traversal[L].paths, 10 * SIZEOF(char*));
+    free(cecup.traversal[L].paths_lens, 10 * SIZEOF(int16));
+    free(cecup.traversal[R].row_ids, 10 * SIZEOF(int32));
+    free(cecup.traversal[R].paths, 10 * SIZEOF(char*));
+    free(cecup.traversal[R].paths_lens, 10 * SIZEOF(int16));
+    hash_destroy_fs_map(cecup.traversal[L].map);
+    hash_destroy_fs_map(cecup.traversal[R].map);
 
     exit(EXIT_SUCCESS);
 }
