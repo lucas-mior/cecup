@@ -379,7 +379,9 @@ case "$target" in
             trace_on
             if $cmdline; then
                 if ! $test_exe; then
-                    gdb --quiet -ex run -ex "backtrace" -ex quit $test_exe 2>&1 | xsel -b
+                    gdb --quiet \
+                        -ex run -ex backtrace -ex quit \
+                        $test_exe 2>&1 | xsel -b
                 fi
             else
                 exit 1
