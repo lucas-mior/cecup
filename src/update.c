@@ -301,10 +301,7 @@ update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
 
     changed = true;
 
-    if (S_ISREG(traversal->stats[idx].st_mode)
-            && (traversal->stats[idx].st_nlink > 1)) {
-        traversal_unlink(traversal, idx);
-    }
+    traversal_unlink(traversal, idx);
 
     hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
 
