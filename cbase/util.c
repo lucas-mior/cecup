@@ -232,8 +232,6 @@ static void util_segv_handler(int32) __attribute__((noreturn));
 static int32 itoa2(char *, int32, llong);
 static long atoi2(char *);
 INLINE void *memchr64(void *pointer, int32 value, int64 size);
-static int xclose(char *file, int line,
-                  int *fd, char *fd_var_name, char *filename);
 
 #if !defined(CAT) || !defined(CAT3)
   #define CAT_(a, b)     a##b
@@ -2098,7 +2096,7 @@ timezone_init(void) {
 }
 #endif
 
-static volatile ullong here_counter = 0;
+static ullong here_counter = 0;
 
 #define HERE do { \
     fprintf(stderr, "\n===== HERE(%llu): %s:%d (%s)\n", \
@@ -2251,6 +2249,7 @@ main(int argc, char **argv) {
 
     (void)argc;
     (void)argv;
+    (void)here_counter;
 
     p2 = realloc(p2, 0, 1, SIZEMB(2));
     ASSERT(BEGINS_WITH(s1, "aaaa"));
