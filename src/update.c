@@ -514,10 +514,10 @@ update_row_rename(char *old_path, int32 old_path_len,
     }
 
     if (merge_row_id >= 0) {
-        // TODO: Bug: If `cecup.rows[side][merge_row_id]` already contains a valid index (>= 0),
-        // overwriting it here causes that existing item to be orphaned/leaked from the traversal
-        // structures. You must check and handle the old index (e.g., `traversal_unlink`) prior to
-        // overwriting it.
+        /* Since we use renameat2(RENAME_NOREPLACE),
+         * the new path should not exist on this side prior to the rename.
+         * of course, someone else could have renamed the file,
+         * but that is true of the whole program */
         cecup.rows[side][merge_row_id] = new_idx;
         traversal->row_ids[new_idx] = merge_row_id;
 
