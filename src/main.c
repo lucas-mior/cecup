@@ -636,10 +636,10 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         g_signal_connect(action_copy_line, "activate", G_CALLBACK(on_log_copy), "line");
     }
 
-    cecup.src_entry_id = g_signal_connect(cecup.dir_entry[L], "activate",
-                                          G_CALLBACK(on_config_changed), NULL);
-    cecup.dst_entry_id = g_signal_connect(cecup.dir_entry[R], "activate",
-                                          G_CALLBACK(on_config_changed), NULL);
+    cecup.entry_id[L] = g_signal_connect(cecup.dir_entry[L], "activate",
+                                         G_CALLBACK(on_config_changed), NULL);
+    cecup.entry_id[R] = g_signal_connect(cecup.dir_entry[R], "activate",
+                                         G_CALLBACK(on_config_changed), NULL);
 
     g_signal_connect(cecup.dir_entry[L], "changed",
                      G_CALLBACK(aux_invalidate_preview), NULL);

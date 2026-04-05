@@ -131,12 +131,9 @@ aux_protect_interface_from_user(bool state) {
 
 static void
 cecup_reset_dir(int32 side) {
-    // TODO: Integration Bug. Infinite recursion / Stack overflow.  Modifying the `gtk_editable`
-    // content here emits the "changed" signal. Because this is wired to `on_config_changed`, which
-    // in turn calls `cecup_get_dirs()`, passing invalid directory text initiates a recursive loop
-    // that repeatedly triggers the "changed" signal. You MUST block the signal handlers (e.g.,
-    // `cecup.src_entry_id`) prior to setting the text and unblock them immediately afterward.
+    g_signal_handler_block(cecup.dir_entry[side], cecup.entry_id[side]);
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[side]), "./");
+    g_signal_handler_unblock(cecup.dir_entry[side], cecup.entry_id[side]);
     aux_invalidate_preview();
     return;
 }
@@ -222,14 +219,14 @@ cecup_get_dirs(void) {
         cecup.dst_base_len = len;
     }
 
-    g_signal_handler_block(cecup.dir_entry[L], cecup.src_entry_id);
-    g_signal_handler_block(cecup.dir_entry[R], cecup.dst_entry_id);
+    g_signal_handler_block(cecup.dir_entry[L], cecup.entry_id[L]);
+    g_signal_handler_block(cecup.dir_entry[R], cecup.entry_id[R]);
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), cecup.src_base);
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), cecup.dst_base);
 
-    g_signal_handler_unblock(cecup.dir_entry[L], cecup.src_entry_id);
-    g_signal_handler_unblock(cecup.dir_entry[R], cecup.dst_entry_id);
+    g_signal_handler_unblock(cecup.dir_entry[L], cecup.entry_id[L]);
+    g_signal_handler_unblock(cecup.dir_entry[R], cecup.entry_id[R]);
 
     aux_invalidate_preview();
 

@@ -392,8 +392,7 @@ static struct {
     GtkWidget *invert_button;
     GtkWidget *dir_entry[2];
     GtkWidget *browse_button[2];
-    ulong src_entry_id;
-    ulong dst_entry_id;
+    ulong entry_id[2];
     char *src_base;
     char *dst_base;
     int32 src_base_len;
