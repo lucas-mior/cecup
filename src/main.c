@@ -385,9 +385,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     {
         char cwd[MAX_PATH_LENGTH];
-        // TODO: getcwd might fail and return NULL. It's properly checked here, but if the initial
-        // directory path is highly critical to startup, you might want a fallback strategy or to
-        // notify the user via a GUI dialog rather than a fatal exit.
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
             error("Error getting current working directory: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
