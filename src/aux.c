@@ -381,8 +381,8 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
             }
             if (rows[row_id] != idx) {
                 error("Consistency error:"
-                      " %s.row_ids["RED"%d"RESET"] -> row_id="YELLOW"%d"RESET","
-                      " but %s["YELLOW"%d"RESET"] -> idx="RED"%d"RESET".\n",
+                      " %s.row_ids["RED("%d")"] -> row_id="YELLOW("%d")","
+                      " but %s["YELLOW("%d")"] -> idx="RED("%d")".\n",
                       which_traversal, idx, row_id,
                       which_rows, row_id, rows[row_id]);
                 fatal(EXIT_FAILURE);
@@ -459,8 +459,8 @@ check_consistent_state(void) {
             }
             if (cecup.traversal[L].row_ids[src_idx] != row_id) {
                 error("Consistency error:"
-                      " rows_src["RED"%d"RESET"] -> src_idx="GREEN"%d"RESET","
-                      " but src.row_ids["GREEN"%d"RESET"] -> row_id="RED"%d"RESET".\n",
+                      " rows_src["RED("%d")"] -> src_idx="GREEN("%d")","
+                      " but src.row_ids["GREEN("%d")"] -> row_id="RED("%d")".\n",
                       row_id, src_idx,
                       src_idx, cecup.traversal[L].row_ids[src_idx]);
                 fatal(EXIT_FAILURE);
@@ -474,8 +474,8 @@ check_consistent_state(void) {
             }
             if (cecup.traversal[R].row_ids[dst_idx] != row_id) {
                 error("Consistency error:"
-                      " rows_dst["RED"%d"RESET"] -> dst_idx="GREEN"%d"RESET","
-                      " but dst.row_ids["GREEN"%d"RESET"] -> row_id="RED"%d"RESET".\n",
+                      " rows_dst["RED("%d")"] -> dst_idx="GREEN("%d")","
+                      " but dst.row_ids["GREEN("%d")"] -> row_id="RED("%d")".\n",
                       row_id, dst_idx,
                       dst_idx, cecup.traversal[R].row_ids[dst_idx]);
                 fatal(EXIT_FAILURE);
