@@ -451,6 +451,10 @@ main(void) {
     CecupItemProxy *proxy;
     int32 index_val;
     int32 new_item_idx;
+    CecupListModel *model;
+    GType item_type;
+    guint n_items;
+    gpointer item;
 
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
@@ -481,6 +485,54 @@ main(void) {
     ASSERT_EQUAL(cecup.traversal[L].row_ids[10], 0);
     ASSERT_EQUAL(cecup.traversal[R].row_ids[20], 0);
     ASSERT(cecup.rows_selected[0] == false);
+
+    item_add(11, 21);
+    item_add(12, 22);
+
+    cecup.rows_visible_len = 3;
+    cecup.rows_visible[0] = 0;
+    cecup.rows_visible[1] = 1;
+    cecup.rows_visible[2] = 2;
+
+    model = cecup_list_model_new();
+    ASSERT(model != NULL);
+
+    item_type = g_list_model_get_item_type(G_LIST_MODEL(model));
+    ASSERT(item_type == CECUP_TYPE_ITEM_PROXY);
+
+    cecup_list_model_update(model, 0, 3);
+    for (int32 i = 0; i < 100; i += 1) {
+        g_main_context_iteration(NULL, FALSE);
+        if (model->reported_count == 3) {
+            break;
+        }
+    }
+
+    n_items = g_list_model_get_n_items(G_LIST_MODEL(model));
+    ASSERT_EQUAL(n_items, 3);
+
+    item = g_list_model_get_item(G_LIST_MODEL(model), 1);
+    ASSERT(item != NULL);
+    ASSERT_EQUAL(cecup_item_proxy_get_index(CECUP_ITEM_PROXY(item)), 1);
+    g_object_unref(item);
+
+    item = g_list_model_get_item(G_LIST_MODEL(model), 10);
+    ASSERT_NULL(item);
+
+    cecup_list_model_row_changed(model, 1);
+
+    cecup_list_model_row_added(model, 99, 1);
+    ASSERT_EQUAL(cecup.rows_visible_len, 4);
+    ASSERT_EQUAL(cecup.rows_visible[1], 99);
+    ASSERT_EQUAL(cecup.rows_visible[2], 1);
+    ASSERT_EQUAL(model->reported_count, 4);
+
+    cecup_list_model_row_removed(model, 1);
+    ASSERT_EQUAL(cecup.rows_visible_len, 3);
+    ASSERT_EQUAL(cecup.rows_visible[1], 1);
+    ASSERT_EQUAL(model->reported_count, 3);
+
+    g_object_unref(model);
 
     free(cecup.rows[L], cecup.rows_capacity * SIZEOF(int32));
     free(cecup.rows[R], cecup.rows_capacity * SIZEOF(int32));
