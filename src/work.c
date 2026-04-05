@@ -28,6 +28,7 @@
 #include <string.h>
 #include <errno.h>
 #include <fts.h>
+#include <pthread.h>
 
 #include "cecup.h"
 #include "util.c"
@@ -47,16 +48,17 @@
 
 static void
 work_finalize(bool preview_clean) {
-    Message *message;
-
-    message = xmalloc(SIZEOF(*message));
-    memset64(message, 0, SIZEOF(*message));
-    message->type = MSG_ENABLE_BUTTONS;
-    message->preview_clean = preview_clean;
-
     update_progress_bar(MSG_PROGRESS, 1.0);
 
-    g_idle_add(update_ui_handler, message);
+    {
+        Message *message = xmalloc(SIZEOF(*message));
+        memset64(message, 0, SIZEOF(*message));
+
+        message->type = MSG_ENABLE_BUTTONS;
+        message->preview_clean = preview_clean;
+
+        g_idle_add(update_ui_handler, message);
+    }
     return;
 }
 
@@ -305,7 +307,7 @@ static void __attribute__((noreturn))
 work_preview_cancel_and_reset(void) {
     work_cleanup();
     work_finalize(false);
-    g_thread_exit(NULL);
+    pthread_exit(NULL);
 }
 
 static void *
@@ -367,14 +369,14 @@ work_preview(void *user_data) {
 
     LOG(_("Traversing file systems...\n"));
     if (!same_fs) {
-        GThread *t1;
-        GThread *t2;
+        pthread_t t1;
+        pthread_t t2;
 
-        t2 = g_thread_new("traversal_dst", work_traverse_fs_thread, &cecup.traversal[R]);
-        t1 = g_thread_new("traversal_src", work_traverse_fs_thread, &cecup.traversal[L]);
+        xpthread_create(&t1, NULL, work_traverse_fs_thread, &cecup.traversal[R]);
+        xpthread_create(&t2, NULL, work_traverse_fs_thread, &cecup.traversal[L]);
 
-        g_thread_join(t1);
-        g_thread_join(t2);
+        pthread_join(t1, NULL);
+        pthread_join(t2, NULL);
     } else {
         work_traverse_fs_thread(&cecup.traversal[L]);
         work_traverse_fs_thread(&cecup.traversal[R]);
@@ -509,8 +511,7 @@ work_preview(void *user_data) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
     PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
     work_finalize(true);
-    g_thread_exit(NULL);
-    return NULL;
+    pthread_exit(NULL);
 }
 
 #if 0 == TESTING_work

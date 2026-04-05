@@ -630,7 +630,7 @@ work_rsync(void *user_data) {
             LOG_ERROR(_("There are no operations to make.\n"));
             work_finalize(false);
             free(thread_data, SIZEOF(*thread_data));
-            return NULL;
+            pthread_exit(NULL);
         } else {
             has_transfers = true;
             nfiles_total = cecup.ntransfers;
@@ -648,7 +648,7 @@ work_rsync(void *user_data) {
             work_batch_flush(&batch);
             work_finalize(false);
             free(thread_data, SIZEOF(*thread_data));
-            return NULL;
+            pthread_exit(NULL);
         }
 
         work_remove(&batch, cecup.deletions[i], cecup.deletions_lens[i], R);
@@ -668,7 +668,7 @@ work_rsync(void *user_data) {
             work_batch_flush(&batch);
             work_finalize(false);
             free(thread_data, SIZEOF(*thread_data));
-            return NULL;
+            pthread_exit(NULL);
         }
 
         work_remove(&batch, task->path, task->path_len, task->side);
@@ -680,7 +680,7 @@ work_rsync(void *user_data) {
         work_finalize(false);
         task_list_free(tasks);
         free(thread_data, SIZEOF(*thread_data));
-        return NULL;
+        pthread_exit(NULL);
     }
 
     if ((files_from_fd = mkstemp(files_from_filename)) < 0) {
@@ -770,7 +770,7 @@ work_rsync(void *user_data) {
     task_list_free(tasks);
     work_finalize(false);
     free(thread_data, SIZEOF(*thread_data));
-    return NULL;
+    pthread_exit(NULL);
 }
 
 #if 0 == TESTING_work_rsync

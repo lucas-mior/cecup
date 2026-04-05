@@ -263,7 +263,7 @@ on_preview_clicked(GtkWidget *button, void *data) {
         ThreadData *thread_data = xmalloc(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
 
-        cecup.work_thread = g_thread_new("work_preview", work_preview, thread_data);
+        xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
     }
 
     return;
@@ -285,7 +285,7 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     thread_data = xmalloc(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
-    cecup.work_thread = g_thread_new("work_rsync", work_rsync, thread_data);
+    xpthread_create(&cecup.work_thread, NULL, work_rsync, thread_data);
     return;
 }
 
@@ -741,7 +741,7 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
 
     stop_working(true);
     if (cecup.work_thread) {
-        g_thread_join(cecup.work_thread);
+        pthread_kill(cecup.work_thread);
     }
 
     if (cecup.child_pid > 0) {
