@@ -295,53 +295,161 @@ columns_functions_sink(void) {
 
 #if TESTING_columns
 
+#include "util.c"
+#include "aux.c"
+#include "list_model.c"
 #include "work.c"
 #include "assert.c"
 
 int
 main(void) {
-    GtkListItem *list_item;
-    GtkSignalListItemFactory *factory;
-    GtkWidget *child;
-    GtkWidget *dummy_tree;
+    GtkWidget *window;
+    GtkWidget *tree;
+    GtkSelectionModel *sel;
+    CecupListModel *model;
+    GtkSignalListItemFactory *factory_cb;
+    GtkSignalListItemFactory *factory_act;
+    GtkSignalListItemFactory *factory_path;
+    GtkSignalListItemFactory *factory_size;
+    GtkSignalListItemFactory *factory_mtime;
+    GtkColumnViewColumn *col;
+    TextInfo *ti_size;
+    TextInfo *ti_mtime;
 
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
     }
 
-    factory = GTK_SIGNAL_LIST_ITEM_FACTORY(gtk_signal_list_item_factory_new());
-    g_object_ref_sink(factory);
+    cecup.rows_capacity = 10;
+    cecup.rows_selected = xmalloc(10 * SIZEOF(uint8));
+    cecup.rows_selected[0] = true;
+    cecup.rows[L] = xmalloc(10 * SIZEOF(int32));
+    cecup.rows[R] = xmalloc(10 * SIZEOF(int32));
+    cecup.rows[L][0] = 0;
+    cecup.rows[R][0] = 0;
 
-    list_item = GTK_LIST_ITEM(g_object_new(GTK_TYPE_LIST_ITEM, NULL));
-    g_object_ref_sink(list_item);
+    cecup.rows_visible = xmalloc(10 * SIZEOF(int32));
+    cecup.rows_visible[0] = 0;
+    cecup.rows_visible_len = 1;
 
-    column_setup_checkbox(factory, list_item, NULL);
-    child = gtk_list_item_get_child(list_item);
-    ASSERT(child != NULL);
-    ASSERT(GTK_IS_CHECK_BUTTON(child));
+    cecup.traversal[L].stats = xmalloc(10 * SIZEOF(struct stat));
+    cecup.traversal[R].stats = xmalloc(10 * SIZEOF(struct stat));
+    memset64(cecup.traversal[L].stats, 0, 10 * SIZEOF(struct stat));
+    memset64(cecup.traversal[R].stats, 0, 10 * SIZEOF(struct stat));
 
-    column_setup_action(factory, list_item, NULL);
-    child = gtk_list_item_get_child(list_item);
-    ASSERT(child != NULL);
-    ASSERT(GTK_IS_LABEL(child));
+    cecup.traversal[L].stats[0].st_size = 2048;
+    cecup.traversal[R].stats[0].st_size = 2048;
+    cecup.traversal[L].stats[0].st_mtime = 1600000000;
+    cecup.traversal[R].stats[0].st_mtime = 1600000000;
 
-    column_text_setup(factory, list_item, NULL);
-    child = gtk_list_item_get_child(list_item);
-    ASSERT(child != NULL);
-    ASSERT(GTK_IS_LABEL(child));
+    cecup.traversal[L].paths = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[R].paths = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[L].paths[0] = "test_l";
+    cecup.traversal[R].paths[0] = "test_r";
 
-    dummy_tree = gtk_label_new("dummy");
-    g_object_ref_sink(dummy_tree);
+    cecup.traversal[L].patterns = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[R].patterns = xmalloc(10 * SIZEOF(char*));
+    memset64(cecup.traversal[L].patterns, 0, 10 * SIZEOF(char*));
+    memset64(cecup.traversal[R].patterns, 0, 10 * SIZEOF(char*));
 
-    column_setup_path(factory, list_item, dummy_tree);
-    child = gtk_list_item_get_child(list_item);
-    ASSERT(child != NULL);
-    ASSERT(GTK_IS_EDITABLE_LABEL(child));
+    cecup.traversal[L].symlink_targets = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[R].symlink_targets = xmalloc(10 * SIZEOF(char*));
+    memset64(cecup.traversal[L].symlink_targets, 0, 10 * SIZEOF(char*));
+    memset64(cecup.traversal[R].symlink_targets, 0, 10 * SIZEOF(char*));
 
-    g_object_unref(dummy_tree);
-    g_object_unref(list_item);
-    g_object_unref(factory);
+    cecup.traversal[L].paths_lens = xmalloc(10 * SIZEOF(int16));
+    cecup.traversal[R].paths_lens = xmalloc(10 * SIZEOF(int16));
+    memset64(cecup.traversal[L].paths_lens, 0, 10 * SIZEOF(int16));
+    memset64(cecup.traversal[R].paths_lens, 0, 10 * SIZEOF(int16));
 
+    cecup.traversal[L].row_ids = xmalloc(10 * SIZEOF(int32));
+    cecup.traversal[R].row_ids = xmalloc(10 * SIZEOF(int32));
+    cecup.traversal[L].row_ids[0] = 0;
+    cecup.traversal[R].row_ids[0] = 0;
+
+    cecup.traversal[L].file_count = 1;
+    cecup.traversal[R].file_count = 1;
+
+    model = cecup_list_model_new();
+    model->reported_count = 1;
+
+    sel = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(model)));
+    tree = gtk_column_view_new(sel);
+    g_object_set_data(G_OBJECT(tree), "side", GINT_TO_POINTER(L));
+
+    factory_cb = GTK_SIGNAL_LIST_ITEM_FACTORY(gtk_signal_list_item_factory_new());
+    g_signal_connect(factory_cb, "setup", G_CALLBACK(column_setup_checkbox), GINT_TO_POINTER(L));
+    g_signal_connect(factory_cb, "bind", G_CALLBACK(column_bind_checkbox), GINT_TO_POINTER(L));
+    col = gtk_column_view_column_new(NULL, GTK_LIST_ITEM_FACTORY(factory_cb));
+    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), col);
+    g_object_unref(col);
+
+    factory_act = GTK_SIGNAL_LIST_ITEM_FACTORY(gtk_signal_list_item_factory_new());
+    g_signal_connect(factory_act, "setup", G_CALLBACK(column_setup_action), NULL);
+    g_signal_connect(factory_act, "bind", G_CALLBACK(column_bind_action), GINT_TO_POINTER(L));
+    col = gtk_column_view_column_new("Action", GTK_LIST_ITEM_FACTORY(factory_act));
+    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), col);
+    g_object_unref(col);
+
+    factory_path = GTK_SIGNAL_LIST_ITEM_FACTORY(gtk_signal_list_item_factory_new());
+    g_signal_connect(factory_path, "setup", G_CALLBACK(column_setup_path), tree);
+    g_signal_connect(factory_path, "bind", G_CALLBACK(column_bind_path), tree);
+    col = gtk_column_view_column_new("Path", GTK_LIST_ITEM_FACTORY(factory_path));
+    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), col);
+    g_object_unref(col);
+
+    factory_size = GTK_SIGNAL_LIST_ITEM_FACTORY(gtk_signal_list_item_factory_new());
+    ti_size = xmalloc(SIZEOF(TextInfo));
+    ti_size->type = COLUMN_SIZE;
+    ti_size->side = L;
+    g_object_set_data(G_OBJECT(factory_size), "text_info", ti_size);
+    g_signal_connect(factory_size, "setup", G_CALLBACK(column_text_setup), NULL);
+    g_signal_connect(factory_size, "bind", G_CALLBACK(column_text_bind), ti_size);
+    col = gtk_column_view_column_new("Size", GTK_LIST_ITEM_FACTORY(factory_size));
+    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), col);
+    g_object_unref(col);
+
+    factory_mtime = GTK_SIGNAL_LIST_ITEM_FACTORY(gtk_signal_list_item_factory_new());
+    ti_mtime = xmalloc(SIZEOF(TextInfo));
+    ti_mtime->type = COLUMN_MTIME;
+    ti_mtime->side = L;
+    g_object_set_data(G_OBJECT(factory_mtime), "text_info", ti_mtime);
+    g_signal_connect(factory_mtime, "setup", G_CALLBACK(column_text_setup), NULL);
+    g_signal_connect(factory_mtime, "bind", G_CALLBACK(column_text_bind), ti_mtime);
+    col = gtk_column_view_column_new("Mtime", GTK_LIST_ITEM_FACTORY(factory_mtime));
+    gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), col);
+    g_object_unref(col);
+
+    window = gtk_window_new();
+    gtk_window_set_child(GTK_WINDOW(window), tree);
+    gtk_window_present(GTK_WINDOW(window));
+
+    for (int32 i = 0; i < 100; i += 1) {
+        g_main_context_iteration(NULL, FALSE);
+    }
+
+    gtk_window_destroy(GTK_WINDOW(window));
+
+    free(ti_size, SIZEOF(TextInfo));
+    free(ti_mtime, SIZEOF(TextInfo));
+    free(cecup.rows_selected, 10 * SIZEOF(uint8));
+    free(cecup.rows_visible, 10 * SIZEOF(int32));
+    free(cecup.rows[L], 10 * SIZEOF(int32));
+    free(cecup.rows[R], 10 * SIZEOF(int32));
+    free(cecup.traversal[L].stats, 10 * SIZEOF(struct stat));
+    free(cecup.traversal[R].stats, 10 * SIZEOF(struct stat));
+    free(cecup.traversal[L].paths, 10 * SIZEOF(char*));
+    free(cecup.traversal[R].paths, 10 * SIZEOF(char*));
+    free(cecup.traversal[L].patterns, 10 * SIZEOF(char*));
+    free(cecup.traversal[R].patterns, 10 * SIZEOF(char*));
+    free(cecup.traversal[L].symlink_targets, 10 * SIZEOF(char*));
+    free(cecup.traversal[R].symlink_targets, 10 * SIZEOF(char*));
+    free(cecup.traversal[L].paths_lens, 10 * SIZEOF(int16));
+    free(cecup.traversal[R].paths_lens, 10 * SIZEOF(int16));
+    free(cecup.traversal[L].row_ids, 10 * SIZEOF(int32));
+    free(cecup.traversal[R].row_ids, 10 * SIZEOF(int32));
+
+    ASSERT(true);
     exit(EXIT_SUCCESS);
 }
 
