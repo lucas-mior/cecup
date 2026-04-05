@@ -408,8 +408,8 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
     } else {
         int32 idx = cecup.rows[R][row_id];
 
-        if (S_ISREG(traversal->stats[idx].st_mode)
-                && (traversal->stats[idx].st_nlink > 1)) {
+        if (S_ISREG(traversal_dst->stats[idx].st_mode)
+                && (traversal_dst->stats[idx].st_nlink > 1)) {
             traversal_unlink(traversal_dst, idx);
         }
 
