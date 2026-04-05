@@ -287,48 +287,116 @@ on_path_functions_sink(void) {
 
 #if TESTING_on_path
 
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "work.c"
 #include "assert.c"
 
-int main(void) {
-    GtkWidget *entry;
-    SelectionData *data;
-    int start_pos;
-    int end_pos;
-    char filename[64] = "dir/file.txt";
-    int32 filename_len = strlen32(filename);
+int
+main(void) {
+    GtkWidget *tree;
+    GtkWidget *label;
+    GParamSpec *pspec;
+    char *src_dir = "/tmp/cecup_test_src";
+    char *file_rel = "test_file.txt";
+    char src_file_full[MAX_PATH_LENGTH];
+    int32 n = 1;
 
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
     }
 
-    entry = gtk_entry_new();
-    g_object_ref_sink(entry);
-    gtk_editable_set_text(GTK_EDITABLE(entry), filename);
+    // 1. Setup Global State and Filesystem
+    memset64(&cecup, 0, SIZEOF(cecup));
+    cecup.src_base = xmemdup(src_dir, strlen32(src_dir) + 1);
+    cecup.src_base_len = strlen32(src_dir);
 
-    data = xmalloc(SIZEOF(*data));
-    memset64(data, 0, SIZEOF(*data));
-    data->editable = GTK_EDITABLE(entry);
-    data->start_pos = 4;
-    data->end_pos = 8;
+    mkdir(src_dir, 0755);
+    SNPRINTF(src_file_full, "%s/%s", src_dir, file_rel);
+    close(open(src_file_full, O_CREAT | O_RDWR, 0644));
 
-    on_path_selection_idle(data);
+    cecup.rows_len = n;
+    cecup.rows[L] = xmalloc(n * SIZEOF(int32));
+    cecup.rows[L][0] = 0;
 
     {
-        int32 base_len;
-        char *base = basename2(filename, &filename_len, &base_len);
-        int64 expected_start = base - filename;
-        int64 expected_end = (char *)memchr(filename, '.', filename_len) - filename;
+        Traversal *t = &cecup.traversal[L];
+        t->nfiles = n;
+        t->paths = xmalloc(n * SIZEOF(char *));
+        t->paths_lens = xmalloc(n * SIZEOF(int32));
+        t->paths[0] = xmemdup(file_rel, strlen32(file_rel) + 1);
+        t->paths_lens[0] = strlen32(file_rel);
 
-        ASSERT(gtk_editable_get_selection_bounds(GTK_EDITABLE(entry), &start_pos, &end_pos));
-        ASSERT_EQUAL((int32)start_pos, expected_start);
-        ASSERT_EQUAL((int32)end_pos, expected_end);
+        t->stats = xmalloc(n * SIZEOF(struct stat));
+        t->patterns = xmalloc(n * SIZEOF(char *));
+        t->symlink_targets = xmalloc(n * SIZEOF(char *));
+        memset64(t->stats, 0, n * SIZEOF(struct stat));
+        memset64(t->patterns, 0, n * SIZEOF(char *));
+        memset64(t->symlink_targets, 0, n * SIZEOF(char *));
+        t->map = hash_create_fs_map(INITIAL_CAPACITY);
     }
 
-    g_object_unref(entry);
+    // 2. Setup Widgets
+    label = gtk_editable_label_new(file_rel);
+    g_object_ref_sink(label);
+
+    tree = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    g_object_ref_sink(tree);
+    g_object_set_data(G_OBJECT(tree), "side", GINT_TO_POINTER(L));
+    g_object_set_data(G_OBJECT(label), "cecup-row-id", GINT_TO_POINTER(1));
+
+    // 3. Test on_path_editing_notify (routing)
+    pspec = g_param_spec_boolean("editing", "editing", "editing", FALSE, G_PARAM_READWRITE);
+
+    // Simulate start editing
+    gtk_editable_label_start_editing(GTK_EDITABLE_LABEL(label));
+    on_path_editing_notify(G_OBJECT(label), pspec, tree);
+
+    // Simulate end editing (without changing text yet)
+    gtk_editable_label_stop_editing(GTK_EDITABLE_LABEL(label), FALSE);
+    on_path_editing_notify(G_OBJECT(label), pspec, tree);
+
+    // 4. Test on_path_edited (The Rename syscall)
+    {
+        char *new_name = "renamed_file.txt";
+        char new_file_full[MAX_PATH_LENGTH];
+
+        gtk_editable_set_text(GTK_EDITABLE(label), new_name);
+
+        cecup.preview_dirty = false;
+        on_path_edited(GTK_EDITABLE(label), tree);
+
+        SNPRINTF(new_file_full, "%s/%s", src_dir, new_name);
+        ASSERT(access(new_file_full, F_OK) == 0);
+        ASSERT(access(src_file_full, F_OK) == -1);
+        ASSERT(cecup.preview_dirty == true);
+    }
+
+    // 5. Cleanup
+    {
+        Traversal *t = &cecup.traversal[L];
+        free(t->paths[0], strlen32(t->paths[0]) + 1);
+        free(t->paths, n * SIZEOF(char *));
+        free(t->paths_lens, n * SIZEOF(int32));
+        free(t->stats, n * SIZEOF(struct stat));
+        free(t->patterns, n * SIZEOF(char *));
+        free(t->symlink_targets, n * SIZEOF(char *));
+        hash_destroy_fs_map(t->map);
+        free(cecup.rows[L], n * SIZEOF(int32));
+        free(cecup.src_base, cecup.src_base_len + 1);
+    }
+
+    g_object_unref(label);
+    g_object_unref(tree);
+    g_param_spec_unref(pspec);
+
+    unlink("/tmp/cecup_test_src/renamed_file.txt");
+    rmdir(src_dir);
 
     exit(EXIT_SUCCESS);
 }
-#endif
+
+#endif /* TESTING_on_path */
 
 #endif /* ON_PATH_C */
