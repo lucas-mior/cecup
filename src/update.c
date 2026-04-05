@@ -378,8 +378,6 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
     if (cecup.rows[R][row_id] < 0) {
         int32 idx;
 
-        error("Case idx < 0 (new file)\n");
-
         if ((hash_lookup_fs_map(traversal_dst->map, path_transfered, path_transfered_len, &idx))) {
             cecup.rows[R][row_id] = idx;
         } else {
@@ -405,7 +403,6 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
         traversal_dst->row_ids[cecup.rows[R][row_id]] = row_id;
     } else {
         int32 idx = cecup.rows[R][row_id];
-        error("Case idx >= 0 (just update)\n");
 
         if (S_ISLNK(stat.st_mode)) {
             symlink_target_len = traversal_symlink_get(traversal_dst, full_path, &symlink_target);
