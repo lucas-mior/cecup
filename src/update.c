@@ -521,6 +521,8 @@ update_row_rename(char *old_path, int32 old_path_len,
          * the new path should not exist on this side prior to the rename.
          * of course, someone else could have renamed the file,
          * but that is true of the whole program */
+        ASSERT(cecup.rows[side][merge_row_id] == -1);
+
         cecup.rows[side][merge_row_id] = new_idx;
         traversal->row_ids[new_idx] = merge_row_id;
 
@@ -924,6 +926,11 @@ update_functions_sink(void) {
 #include "work.c"
 #include "assert.c"
 
+#define MOCK_WIDGET(var, constructor) do { \
+    var = constructor; \
+    g_object_ref_sink(var); \
+} while(0)
+
 int
 main(void) {
     int32 n = 3;
@@ -935,67 +942,98 @@ main(void) {
     }
 
     /* 1. Setup global infrastructure to prevent crashes in sub-calls */
-    cecup.stop_button = gtk_button_new();
-    cecup.sync_button = gtk_button_new();
-    cecup.stats_label = gtk_label_new(NULL);
-    cecup.filter_new = gtk_toggle_button_new();
-    cecup.filter_link = gtk_toggle_button_new();
-    cecup.filter_update = gtk_toggle_button_new();
-    cecup.filter_equal = gtk_toggle_button_new();
-    cecup.filter_delete = gtk_toggle_button_new();
-    cecup.filter_ignore = gtk_toggle_button_new();
+    MOCK_WIDGET(cecup.gtk_window, gtk_window_new());
+    MOCK_WIDGET(cecup.stop_button, gtk_button_new());
+    MOCK_WIDGET(cecup.sync_button, gtk_button_new());
+    MOCK_WIDGET(cecup.stats_label, gtk_label_new(NULL));
+    MOCK_WIDGET(cecup.filter_new, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.filter_link, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.filter_update, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.filter_equal, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.filter_delete, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.filter_ignore, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.progress_bar, gtk_progress_bar_new());
+
+    {
+        GtkWidget *text_view;
+        MOCK_WIDGET(text_view, gtk_text_view_new());
+        cecup.log_view = text_view;
+        cecup.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    }
+
+    cecup.store = G_LIST_MODEL(cecup_list_model_new());
 
     cecup.rows_len = n;
-    cecup.rows[L] = xmalloc(n * SIZEOF(int32));
-    cecup.rows[R] = xmalloc(n * SIZEOF(int32));
-    cecup.rows_selected = xmalloc(n * SIZEOF(uint8));
+    cecup.rows_visible_len = n;
+    cecup.rows_capacity = n;
+    cecup.rows[L] = xmalloc(cecup.rows_capacity * SIZEOF(int32));
+    cecup.rows[R] = xmalloc(cecup.rows_capacity * SIZEOF(int32));
+    cecup.rows_visible = xmalloc(cecup.rows_capacity * SIZEOF(int32));
+    cecup.rows_selected = xmalloc(cecup.rows_capacity * SIZEOF(uint8));
 
     for (int32 side = 0; side < 2; side += 1) {
         Traversal *t = &cecup.traversal[side];
 
         t->nfiles = n;
+        t->ncapacity = n;
         t->map = hash_create_fs_map(16);
-        t->paths = xmalloc(n * SIZEOF(char *));
-        t->paths_lens = xmalloc(n * SIZEOF(int32));
-        t->row_ids = xmalloc(n * SIZEOF(int32));
-        t->stats = xmalloc(n * SIZEOF(struct stat));
-        t->patterns = xmalloc(n * SIZEOF(char *));
-        t->symlink_targets = xmalloc(n * SIZEOF(char *));
+        t->inode_map = hash_create_inode_map(16);
+        t->arena = arena_create(SIZEMB(1));
 
-        memset64(t->stats, 0, n * SIZEOF(struct stat));
-        memset64(t->patterns, 0, n * SIZEOF(char *));
-        memset64(t->symlink_targets, 0, n * SIZEOF(char *));
+        t->paths = xmalloc(t->ncapacity * SIZEOF(char *));
+        t->paths_lens = xmalloc(t->ncapacity * SIZEOF(int16));
+        t->row_ids = xmalloc(t->ncapacity * SIZEOF(int32));
+        t->stats = xmalloc(t->ncapacity * SIZEOF(struct stat));
+        t->patterns = xmalloc(t->ncapacity * SIZEOF(char *));
+        t->patterns_lens = xmalloc(t->ncapacity * SIZEOF(int16));
+        t->symlink_targets = xmalloc(t->ncapacity * SIZEOF(char *));
+        t->symlink_targets_lens = xmalloc(t->ncapacity * SIZEOF(int16));
 
-        t->paths[0] = "file_a";
+        memset64(t->stats, 0, t->ncapacity * SIZEOF(struct stat));
+        memset64(t->patterns, 0, t->ncapacity * SIZEOF(char *));
+        memset64(t->patterns_lens, 0, t->ncapacity * SIZEOF(int16));
+        memset64(t->symlink_targets, 0, t->ncapacity * SIZEOF(char *));
+        memset64(t->symlink_targets_lens, 0, t->ncapacity * SIZEOF(int16));
+
+        t->paths[0] = xarena_push(t->arena, 7); memcpy64(t->paths[0], "file_a", 7);
         t->paths_lens[0] = 6;
-        t->paths[1] = "file_b";
+        t->paths[1] = xarena_push(t->arena, 7); memcpy64(t->paths[1], "file_b", 7);
         t->paths_lens[1] = 6;
-        t->paths[2] = "file_c";
+        t->paths[2] = xarena_push(t->arena, 7); memcpy64(t->paths[2], "file_c", 7);
         t->paths_lens[2] = 6;
 
         for (int32 i = 0; i < n; i += 1) {
             hash_insert_fs_map(t->map, t->paths[i], t->paths_lens[i], i);
             t->row_ids[i] = i;
             cecup.rows[side][i] = i;
+            cecup.rows_visible[i] = i;
             cecup.rows_selected[i] = 0;
             t->stats[i].st_mode = S_IFREG | 0644;
+            t->stats[i].st_ino = (ino_t)(i + side * 100);
+            t->stats[i].st_size = 1024;
+            t->stats[i].st_nlink = 1;
         }
     }
 
-    /* Test update_row_remove - single file logic */
+    cecup.src_base_len = 5;
+    cecup.src_base = xmemdup("/src/", 6);
+    cecup.dst_base_len = 5;
+    cecup.dst_base = xmemdup("/dst/", 6);
+
+    /* --- Test update_row_remove --- */
     msg.type = MSG_BATCH_ROW_REMOVE;
     msg.side = L;
     msg.src_path = "file_a";
     msg.src_path_len = 6;
 
-    /* Part 1: Remove from one side only. Rows count shouldn't change. */
+    /* Remove from one side only. Rows count shouldn't change. */
     res = update_row_remove(msg.src_path, msg.src_path_len, msg.side);
     ASSERT(res == true);
     ASSERT_EQUAL(cecup.rows[L][0], -1);
     ASSERT_EQUAL(cecup.rows[R][0], 0);
     ASSERT_EQUAL(cecup.rows_len, 3);
 
-    /* Part 2: Remove from the other side. Arrays must shift. */
+    /* Remove from the other side. Arrays must shift. */
     msg.side = R;
     res = update_row_remove(msg.src_path, msg.src_path_len, msg.side);
     ASSERT(res == true);
@@ -1005,26 +1043,146 @@ main(void) {
     ASSERT_EQUAL(cecup.rows[L][0], 1);
     ASSERT_EQUAL(cecup.traversal[L].row_ids[1], 0);
 
+    /* --- Test update_row_rename --- */
+    {
+        /* Rename handles virtual state internally through traversal map */
+        res = update_row_rename("file_b", 6, "file_d", 6, L);
+        ASSERT(res == true);
+
+        /* Old idx 1 must be removed, new idx assigned */
+        ASSERT(cecup.traversal[L].row_ids[1] == -1);
+        ASSERT(cecup.rows[L][0] > 1); /* it pushes a new item to traversal array */
+    }
+
+    /* --- Test update_row_ignore --- */
+    strcpy(cecup.ignore_path, "test_ignore.conf");
+    g_file_set_contents(cecup.ignore_path, "file_c\n", -1, NULL);
+
+    {
+        Message ignore_msg = {0};
+        update_row_ignore(&ignore_msg);
+
+        /* file_c is currently at row_id 1 after the previous shifts */
+        ASSERT(cecup.traversal[L].patterns[cecup.rows[L][1]] != NULL);
+        ASSERT(strcmp(cecup.traversal[L].patterns[cecup.rows[L][1]], "file_c") == 0);
+    }
+
+    /* --- Test update_list_from_rows (UI filtering logic) --- */
+    cecup.sort_col = COL_SIZE_RAW;
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal), TRUE);
+    update_list_from_rows();
+
+    /* --- Test update_stats_text --- */
+    update_stats_text(1, 4096);
+    update_stats_text(0, 0);
+
+    /* --- Test update_progress_bar / state --- */
+    update_progress_bar(MSG_PROGRESS, 0.5);
+    update_progress_bar(MSG_PROGRESS, 0.50001); /* Should be ignored due to delta */
+    update_progress_state("Processing...", "file_b");
+
+    /* --- Test update_ui_handler --- */
+    {
+        Message *ui_msg;
+
+        ui_msg = xmalloc(SIZEOF(*ui_msg));
+        memset64(ui_msg, 0, SIZEOF(*ui_msg));
+        ui_msg->type = MSG_LOG;
+        ui_msg->text = xmemdup("Test log\r", 10);
+        ui_msg->text_len = 9;
+        update_ui_handler(ui_msg);
+
+        ui_msg = xmalloc(SIZEOF(*ui_msg));
+        memset64(ui_msg, 0, SIZEOF(*ui_msg));
+        ui_msg->type = MSG_LOG_ERROR;
+        ui_msg->text = xmemdup("Test error\n", 12);
+        ui_msg->text_len = 11;
+        update_ui_handler(ui_msg);
+
+        ui_msg = xmalloc(SIZEOF(*ui_msg));
+        memset64(ui_msg, 0, SIZEOF(*ui_msg));
+        ui_msg->type = MSG_LOG_CMD;
+        ui_msg->text = xmemdup("Test cmd\n", 10);
+        ui_msg->text_len = 9;
+        update_ui_handler(ui_msg);
+
+        ui_msg = xmalloc(SIZEOF(*ui_msg));
+        memset64(ui_msg, 0, SIZEOF(*ui_msg));
+        ui_msg->type = MSG_PROGRESS;
+        ui_msg->fraction = 0.8;
+        ui_msg->text = xmemdup("Progress...", 12);
+        ui_msg->text_len = 11;
+        ui_msg->src_path = xmemdup("path/a", 7);
+        ui_msg->src_path_len = 6;
+        update_ui_handler(ui_msg);
+
+        ui_msg = xmalloc(SIZEOF(*ui_msg));
+        memset64(ui_msg, 0, SIZEOF(*ui_msg));
+        ui_msg->type = MSG_CLEAR_TREES;
+        update_ui_handler(ui_msg);
+        ASSERT_EQUAL(cecup.rows_len, 0);
+    }
+
+    /* --- Test update_rows (Batch processing) --- */
+    {
+        MessageBatch *batch;
+
+        batch = xmalloc(SIZEOF(*batch));
+        memset64(batch, 0, SIZEOF(*batch));
+        batch->type = MSG_BATCH_ROW_REMOVE;
+        batch->count = 0;
+        batch->capacity = 0;
+
+        update_ui_handler(batch);
+    }
+
     /* Cleanup */
+    g_object_unref(cecup.gtk_window);
     g_object_unref(cecup.stop_button);
     g_object_unref(cecup.sync_button);
     g_object_unref(cecup.stats_label);
+    g_object_unref(cecup.filter_new);
+    g_object_unref(cecup.filter_link);
+    g_object_unref(cecup.filter_update);
+    g_object_unref(cecup.filter_equal);
+    g_object_unref(cecup.filter_delete);
+    g_object_unref(cecup.filter_ignore);
+    g_object_unref(cecup.progress_bar);
+    g_object_unref(cecup.log_view);
+    g_object_unref(cecup.store);
+
+    unlink(cecup.ignore_path);
+    if (cecup.ignore_patterns) {
+        for(int32 i=0; i<cecup.ignore_count; i+=1) {
+            free(cecup.ignore_patterns[i].str, cecup.ignore_patterns[i].len + 1);
+        }
+        free(cecup.ignore_patterns, cecup.ignore_capacity * SIZEOF(IgnorePattern));
+    }
 
     for (int32 side = 0; side < 2; side += 1) {
         Traversal *t = &cecup.traversal[side];
 
         hash_destroy_fs_map(t->map);
-        free(t->paths, n * SIZEOF(char *));
-        free(t->paths_lens, n * SIZEOF(int32));
-        free(t->row_ids, n * SIZEOF(int32));
-        free(t->stats, n * SIZEOF(struct stat));
-        free(t->patterns, n * SIZEOF(char *));
-        free(t->symlink_targets, n * SIZEOF(char *));
+        hash_destroy_inode_map(t->inode_map);
+        arena_destroy(t->arena);
+
+        free(t->paths, t->ncapacity * SIZEOF(char *));
+        free(t->paths_lens, t->ncapacity * SIZEOF(int16));
+        free(t->row_ids, t->ncapacity * SIZEOF(int32));
+        free(t->stats, t->ncapacity * SIZEOF(struct stat));
+        free(t->patterns, t->ncapacity * SIZEOF(char *));
+        free(t->patterns_lens, t->ncapacity * SIZEOF(int16));
+        free(t->symlink_targets, t->ncapacity * SIZEOF(char *));
+        free(t->symlink_targets_lens, t->ncapacity * SIZEOF(int16));
     }
 
-    free(cecup.rows[L], n * SIZEOF(int32));
-    free(cecup.rows[R], n * SIZEOF(int32));
-    free(cecup.rows_selected, n * SIZEOF(uint8));
+    free(cecup.rows[L], cecup.rows_capacity * SIZEOF(int32));
+    free(cecup.rows[R], cecup.rows_capacity * SIZEOF(int32));
+    free(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
+    free(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
+
+    free(cecup.src_base, 6);
+    free(cecup.dst_base, 6);
 
     ASSERT(true);
     exit(EXIT_SUCCESS);

@@ -659,9 +659,9 @@ realloc_debug(char *file, int32 line,
         fatal(EXIT_FAILURE);
     }
     if (DEBUGGING_MEMORY) {
-        /* error_impl(file, line, */
-        /*            "Reallocating %p: %lld to %lld objects of size %lld.\n", */
-        /*            old, (llong)old_capacity, (llong)new_capacity, (llong)obj_size); */
+        error_impl(file, line,
+                   "Reallocating %p: %lld to %lld objects of size %lld.\n",
+                   old, (llong)old_capacity, (llong)new_capacity, (llong)obj_size);
     }
 
     new_size = new_capacity*obj_size;
@@ -677,8 +677,8 @@ free_debug(char *file, int32 line, void *pointer, int64 size) {
         fatal(EXIT_FAILURE);
     }
     if (pointer && size) {
-        /* error_impl(file, line, */
-        /*            "Freeing pointer of size %lld [%p]\n", (llong)size, pointer); */
+        error_impl(file, line,
+                   "Freeing pointer of size %lld [%p]\n", (llong)size, pointer);
         if (!RUNNING_ON_VALGRIND) {
             memset64(pointer, MEM_FREED, size);
         }
