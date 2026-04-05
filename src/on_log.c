@@ -170,6 +170,9 @@ main(void) {
     GdkClipboard *clipboard;
     GVariant *param;
     ClipResult res;
+    GtkWidget *window;
+    GtkWidget *text_view;
+    GtkGesture *gesture;
 
     if (!gtk_init_check()) {
         /* Headless environment detected; aborting GTK-dependent tests smoothly */
@@ -182,9 +185,17 @@ main(void) {
     }
 
     clipboard = gdk_display_get_clipboard(display);
-    cecup.log_buffer = gtk_text_buffer_new(NULL);
+
+    window = gtk_window_new();
+    g_object_ref_sink(window);
+
+    text_view = gtk_text_view_new();
+    cecup.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    gtk_window_set_child(GTK_WINDOW(window), text_view);
+
     gtk_text_buffer_set_text(cecup.log_buffer, "Log message 0\nLog message 1\nLog message 2", -1);
 
+    /* Test full copy */
     on_log_copy(NULL, NULL, "all");
 
     res.done = false;
@@ -198,6 +209,7 @@ main(void) {
     ASSERT_EQUAL(res.text, "Log message 0\nLog message 1\nLog message 2");
     g_free(res.text);
 
+    /* Test specific line copy */
     param = g_variant_new_int32(1);
     g_variant_ref_sink(param);
     on_log_copy(NULL, param, "line");
@@ -212,21 +224,35 @@ main(void) {
 
     ASSERT(res.text != NULL);
     ASSERT_EQUAL(res.text, "Log message 1");
-    PRINTLN(res.text);
-
     g_free(res.text);
-    g_object_unref(cecup.log_buffer);
 
-    {
-        int64 end_time;
+    /* Test early exit due to null parameter on line copy */
+    on_log_copy(NULL, NULL, "line");
 
-        error("Try pasting clipboard content...\n");
-        end_time = g_get_monotonic_time() + 2*G_TIME_SPAN_SECOND;
-        while (g_get_monotonic_time() < end_time) {
-            g_main_context_iteration(NULL, TRUE);
-        }
+    /* Test on_log_button_press bounds and early exits */
+    gesture = gtk_gesture_click_new();
+    gtk_widget_add_controller(text_view, GTK_EVENT_CONTROLLER(gesture));
+
+    /* Early exit npress != 1 */
+    on_log_button_press(GTK_GESTURE_CLICK(gesture), 2, 0.0, 0.0, NULL);
+
+    /* Early exit button != GDK_BUTTON_SECONDARY */
+    gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gesture), GDK_BUTTON_PRIMARY);
+    on_log_button_press(GTK_GESTURE_CLICK(gesture), 1, 0.0, 0.0, NULL);
+
+    /* Successful test of popover invocation */
+    gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gesture), GDK_BUTTON_SECONDARY);
+    on_log_button_press(GTK_GESTURE_CLICK(gesture), 1, 0.0, 0.0, NULL);
+
+    /* Spin main loop to process the popover events without leaving unref GTK states */
+    for (int32 i = 0; i < 5; i += 1) {
+        g_main_context_iteration(NULL, FALSE);
     }
 
+    /* Cleanup */
+    g_object_unref(window);
+
+    error("%s testing finished.\n", __FILE__);
     exit(EXIT_SUCCESS);
 }
 
