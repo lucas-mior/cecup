@@ -398,8 +398,8 @@ work_preview(void *user_data) {
         enum Action action_dst;
         enum Reason reason;
 
-        if ((bucket_src->key == HASH_SLOT_FREE)
-            || (bucket_src->key == HASH_SLOT_DELETED)) {
+        if ((bucket_src->key == (char *)HASH_SLOT_FREE)
+            || (bucket_src->key == (char *)HASH_SLOT_DELETED)) {
             continue;
         }
 
@@ -463,8 +463,8 @@ work_preview(void *user_data) {
         int32 src_idx;
         int32 path_len;
 
-        if ((bucket_dst->key == HASH_SLOT_FREE)
-            || (bucket_dst->key == HASH_SLOT_DELETED)) {
+        if ((bucket_dst->key == (char *)HASH_SLOT_FREE)
+            || (bucket_dst->key == (char *)HASH_SLOT_DELETED)) {
             continue;
         }
 
