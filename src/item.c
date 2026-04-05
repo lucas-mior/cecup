@@ -82,24 +82,6 @@ hard_links_match(HardLinks *src, HardLinks *dst) {
     return true;
 }
 
-static void
-hard_link_copy_free(HardLinks *copy) {
-    ASSERT(copy);
-
-    for (int32 i = 0; i < copy->count; i += 1) {
-        // TODO: Bug: `copy->names[i]` stores string pointers that are heavily aliased and
-        // typically owned by the overarching `traversal` arrays or allocated on the custom arena
-        // (`xarena_push`). Calling `free()` on these will result in an invalid free or heap
-        // corruption. You should only free the structural arrays here.
-        /* free(copy->names[i], copy->names_lens[i] + 1); */
-    }
-
-    free(copy->names, copy->capacity * SIZEOF(*copy->names));
-    free(copy, SIZEOF(*copy));
-
-    return;
-}
-
 static char *
 item_path_get(int32 row_id) {
     int32 src_idx = cecup.rows[L][row_id];
