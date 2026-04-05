@@ -277,8 +277,8 @@ update_rows(MessageBatch *batch) {
 
 static bool
 update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
-    bool changed = false;
     Traversal *traversal = &cecup.traversal[side];
+    bool changed = false;
     int32 idx;
     int32 row_id;
 
@@ -301,7 +301,11 @@ update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
 
     changed = true;
 
-    traversal_unlink(traversal, idx);
+    if (S_ISREG(traversal->stats[idx].st_mode)
+            && (traversal->stats[idx].st_nlink > 1)) {
+        traversal_unlink(traversal, idx);
+    }
+
     hash_remove_fs_map(traversal->map, traversal->paths[idx], traversal->paths_lens[idx]);
 
     traversal->row_ids[idx] = -1;
@@ -404,7 +408,10 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
     } else {
         int32 idx = cecup.rows[R][row_id];
 
-        traversal_unlink(traversal_dst, idx);
+        if (S_ISREG(traversal->stats[idx].st_mode)
+                && (traversal->stats[idx].st_nlink > 1)) {
+            traversal_unlink(traversal_dst, idx);
+        }
 
         if (S_ISLNK(stat.st_mode)) {
             symlink_target_len = traversal_symlink_get(traversal_dst, full_path, &symlink_target);
@@ -576,7 +583,12 @@ update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match) {
 
     if (cecup.rows[side][row_id] >= 0) {
         int32 idx = cecup.rows[side][row_id];
-        traversal_unlink(traversal, idx);
+
+        if (S_ISREG(traversal->stats[idx].st_mode)
+                && (traversal->stats[idx].st_nlink > 1)) {
+            traversal_unlink(traversal, idx);
+        }
+
         traversal->patterns[idx] = match->str;
         traversal->patterns_lens[idx] = (int16)match->len;
     }

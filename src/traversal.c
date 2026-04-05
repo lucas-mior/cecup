@@ -234,43 +234,40 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
 
 static void
 traversal_unlink(Traversal *traversal, int32 idx) {
-    if (S_ISREG(traversal->stats[idx].st_mode)
-            && (traversal->stats[idx].st_nlink > 1)) {
-        char *path = traversal->paths[idx];
-        int32 path_len = traversal->paths_lens[idx];
-        HardLinks hard_links;
-        rapidhash128_t name_hash;
-        ino_t *inode = &traversal->stats[idx].st_ino;
+    char *path = traversal->paths[idx];
+    int32 path_len = traversal->paths_lens[idx];
+    HardLinks hard_links;
+    rapidhash128_t name_hash;
+    ino_t *inode = &traversal->stats[idx].st_ino;
 
-        if ((hash_lookup_inode_map(traversal->inode_map, inode, &hard_links))) {
-            int32 found_idx = -1;
+    if ((hash_lookup_inode_map(traversal->inode_map, inode, &hard_links))) {
+        int32 found_idx = -1;
 
-            name_hash = rapidhash128(path, (size_t)path_len);
+        name_hash = rapidhash128(path, (size_t)path_len);
 
-            for (int32 i = 0; i < hard_links.count; i += 1) {
-                if (hard_links.names_lens[i] == path_len) {
-                    if (memcmp64(hard_links.names[i], path, path_len) == 0) {
-                        found_idx = i;
-                        break;
-                    }
+        for (int32 i = 0; i < hard_links.count; i += 1) {
+            if (hard_links.names_lens[i] == path_len) {
+                if (memcmp64(hard_links.names[i], path, path_len) == 0) {
+                    found_idx = i;
+                    break;
                 }
             }
+        }
 
-            if (found_idx >= 0) {
-                for (int32 i = found_idx; i < (hard_links.count - 1); i += 1) {
-                    hard_links.names[i] = hard_links.names[i + 1];
-                    hard_links.names_lens[i] = hard_links.names_lens[i + 1];
-                }
+        if (found_idx >= 0) {
+            for (int32 i = found_idx; i < (hard_links.count - 1); i += 1) {
+                hard_links.names[i] = hard_links.names[i + 1];
+                hard_links.names_lens[i] = hard_links.names_lens[i + 1];
+            }
 
-                hard_links.count -= 1;
-                hard_links.aggregate_hash_lo ^= name_hash.lo;
-                hard_links.aggregate_hash_hi ^= name_hash.hi;
+            hard_links.count -= 1;
+            hard_links.aggregate_hash_lo ^= name_hash.lo;
+            hard_links.aggregate_hash_hi ^= name_hash.hi;
 
-                if (hard_links.count == 0) {
-                    hash_remove_inode_map(traversal->inode_map, inode);
-                } else {
-                    hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);
-                }
+            if (hard_links.count == 0) {
+                hash_remove_inode_map(traversal->inode_map, inode);
+            } else {
+                hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);
             }
         }
     }
