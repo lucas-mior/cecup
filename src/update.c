@@ -44,7 +44,6 @@
 #define UI_INTERVAL_MS 100
 
 static bool update_row_ignore(Message *message);
-static inline void update_functions_sink(void);
 static void update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match);
 static void update_list_from_rows(void);
 static void update_progress_bar(double fraction);
@@ -1073,7 +1072,7 @@ main(void) {
     /* --- Test update_progress_bar / state --- */
     update_progress_bar(0.5);
     update_progress_bar(0.50001); /* Should be ignored due to delta */
-    update_progress_state("Processing...", "file_b");
+    update_progress_info("Processing...", "file_b");
 
     /* --- Test update_ui_handler --- */
     {
