@@ -407,7 +407,6 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
         int32 idx = cecup.rows[R][row_id];
 
         error("Case %s idx >= 0 (just update)\n", path_transfered);
-        TRAP();
 
         if (S_ISLNK(stat.st_mode)) {
             symlink_target_len = traversal_symlink_get(traversal_dst, full_path, &symlink_target);
