@@ -145,94 +145,93 @@ tasks_functions_sink(void) {
 #include <assert.h>
 #include <string.h>
 #include "work.c"
+#include "assert.c"
 
 int
 main(void) {
-    TaskList *test_tasks_free;
-    Task *task_item;
-    TaskList *target_tasks;
-    TaskList *clicked_tasks;
-    char *dummy_path;
-    int32 dummy_path_len;
+    TaskList *tasks;
+    int32 n = 3;
 
-    dummy_path = "dummy.txt";
-    dummy_path_len = strlen32(dummy_path);
+    memset64(&cecup, 0, SIZEOF(cecup));
 
-    test_tasks_free = xmalloc(STRUCT_ARRAY_SIZE(test_tasks_free, Task *, 1));
-    test_tasks_free->count = 1;
+    // 1. Setup Mock Environment
+    cecup.rows_len = n;
+    cecup.rows_selected = xmalloc(n * SIZEOF(uint8));
+    cecup.rows[L] = xmalloc(n * SIZEOF(int32));
+    cecup.rows[R] = xmalloc(n * SIZEOF(int32));
 
-    task_item = xmalloc(SIZEOF(*task_item));
-    memset64(task_item, 0, SIZEOF(*task_item));
-    task_item->path_len = dummy_path_len;
-    task_item->path = xmalloc(dummy_path_len + 1);
-    memcpy64(task_item->path, dummy_path, dummy_path_len + 1);
-    test_tasks_free->items[0] = task_item;
+    for (int32 side = 0; side < 2; side += 1) {
+        Traversal *t = &cecup.traversal[side];
+        t->stats = xmalloc(n * SIZEOF(struct stat));
+        t->paths = xmalloc(n * SIZEOF(char *));
+        t->paths_lens = xmalloc(n * SIZEOF(int32));
+        t->patterns = xmalloc(n * SIZEOF(char *));
+        t->symlink_targets = xmalloc(n * SIZEOF(char *));
+        t->map = hash_create_fs_map(INITIAL_CAPACITY);
 
+        memset64(t->stats, 0, n * SIZEOF(struct stat));
+        memset64(t->patterns, 0, n * SIZEOF(char *));
+        memset64(t->symlink_targets, 0, n * SIZEOF(char *));
+
+        for (int32 i = 0; i < n; i += 1) {
+            t->paths[i] = xmalloc(20);
+            snprintf(t->paths[i], 20, "file_%d.txt", i);
+            t->paths_lens[i] = (int16)strlen32(t->paths[i]);
+            t->stats[i].st_ino = (ino_t)(100 + i);
+            t->stats[i].st_mode = S_IFREG | 0644;
+            hash_insert_fs_map(t->map, t->paths[i], t->paths_lens[i], i);
+        }
+    }
+
+    for (int32 i = 0; i < n; i += 1) {
+        cecup.rows[L][i] = i;
+        cecup.rows[R][i] = i;
+        cecup.rows_selected[i] = (i < 2); // Select first two
+    }
+
+    // 2. Test row selection loop
+    tasks = get_target_tasks(L, NULL, ACTION_EQUAL);
+    ASSERT(tasks != NULL);
+    ASSERT_EQUAL(tasks->count, 2);
+    task_list_free(tasks);
+
+    // 3. Test ACTION_HARDLINK logic via fallback
+    // We MUST deselect rows to trigger the fallback block where 'clicked_action' is used
+    for (int32 i = 0; i < n; i += 1) {
+        cecup.rows_selected[i] = false;
+    }
+
+    // Test successful inode lookup in fallback
+    char *path_to_find = cecup.traversal[L].paths[0];
+    tasks = get_target_tasks(L, path_to_find, ACTION_HARDLINK);
+    ASSERT_EQUAL(tasks->count, 1);
+    ASSERT_EQUAL(tasks->items[0]->action, ACTION_HARDLINK);
+    ASSERT_EQUAL(tasks->items[0]->inode, 100);
+    task_list_free(tasks);
+
+    // Test fallback with path not in map (inode remains 0)
+    tasks = get_target_tasks(L, "missing.txt", ACTION_HARDLINK);
+    ASSERT_EQUAL(tasks->count, 1);
+    ASSERT_EQUAL(tasks->items[0]->inode, 0);
+    task_list_free(tasks);
+
+    // 4. Cleanup
     task_list_free(NULL);
-    task_list_free(test_tasks_free);
-
-    cecup.rows_len = 2;
-    cecup.rows_selected = xmalloc(2 * SIZEOF(uint8));
-    cecup.rows_selected[0] = true;
-    cecup.rows_selected[1] = false;
-
-    cecup.rows[L] = xmalloc(2 * SIZEOF(int32));
-    cecup.rows[R] = xmalloc(2 * SIZEOF(int32));
-    cecup.rows[L][0] = 0;
-    cecup.rows[R][0] = 0;
-    cecup.rows[L][1] = 1;
-    cecup.rows[R][1] = 1;
-
-    cecup.traversal[L].stats = xmalloc(2 * SIZEOF(struct stat));
-    cecup.traversal[R].stats = xmalloc(2 * SIZEOF(struct stat));
-    memset64(cecup.traversal[L].stats, 0, 2 * SIZEOF(struct stat));
-    memset64(cecup.traversal[R].stats, 0, 2 * SIZEOF(struct stat));
-
-    cecup.traversal[L].paths = xmalloc(2 * SIZEOF(char *));
-    cecup.traversal[R].paths = xmalloc(2 * SIZEOF(char *));
-    cecup.traversal[L].paths[0] = "test1.txt";
-    cecup.traversal[R].paths[0] = "test1.txt";
-    cecup.traversal[L].paths[1] = "test2.txt";
-    cecup.traversal[R].paths[1] = "test2.txt";
-
-    cecup.traversal[L].paths_lens = xmalloc(2 * SIZEOF(int32));
-    cecup.traversal[R].paths_lens = xmalloc(2 * SIZEOF(int32));
-    cecup.traversal[L].paths_lens[0] = strlen32("test1.txt");
-    cecup.traversal[R].paths_lens[0] = strlen32("test1.txt");
-    cecup.traversal[L].paths_lens[1] = strlen32("test2.txt");
-    cecup.traversal[R].paths_lens[1] = strlen32("test2.txt");
-
-    cecup.traversal[L].patterns = xmalloc(2 * SIZEOF(char *));
-    cecup.traversal[R].patterns = xmalloc(2 * SIZEOF(char *));
-    cecup.traversal[L].patterns[0] = NULL;
-    cecup.traversal[R].patterns[0] = NULL;
-    cecup.traversal[L].patterns[1] = NULL;
-    cecup.traversal[R].patterns[1] = NULL;
-
-    cecup.traversal[L].symlink_targets = xmalloc(2 * SIZEOF(char *));
-    cecup.traversal[R].symlink_targets = xmalloc(2 * SIZEOF(char *));
-    cecup.traversal[L].symlink_targets[0] = NULL;
-    cecup.traversal[R].symlink_targets[0] = NULL;
-    cecup.traversal[L].symlink_targets[1] = NULL;
-    cecup.traversal[R].symlink_targets[1] = NULL;
-
-    cecup.delete_after = false;
-    cecup.delete_ignored = false;
-
-    target_tasks = get_target_tasks(L, NULL, ACTION_EQUAL);
-    ASSERT(target_tasks != NULL);
-    ASSERT(target_tasks->count == 1);
-    ASSERT(target_tasks->items[0]->action == ACTION_EQUAL);
-
-    task_list_free(target_tasks);
-
-    cecup.rows_selected[0] = false;
-    clicked_tasks = get_target_tasks(L, "clicked.txt", ACTION_UPDATE);
-    ASSERT(clicked_tasks != NULL);
-    ASSERT(clicked_tasks->count == 1);
-    ASSERT(clicked_tasks->items[0]->action == ACTION_UPDATE);
-
-    task_list_free(clicked_tasks);
+    for (int32 side = 0; side < 2; side += 1) {
+        Traversal *t = &cecup.traversal[side];
+        for (int32 i = 0; i < n; i += 1) {
+            free(t->paths[i], 20);
+        }
+        free(t->stats, n * SIZEOF(struct stat));
+        free(t->paths, n * SIZEOF(char *));
+        free(t->paths_lens, n * SIZEOF(int32));
+        free(t->patterns, n * SIZEOF(char *));
+        free(t->symlink_targets, n * SIZEOF(char *));
+        hash_destroy_fs_map(t->map);
+    }
+    free(cecup.rows_selected, n * SIZEOF(uint8));
+    free(cecup.rows[L], n * SIZEOF(int32));
+    free(cecup.rows[R], n * SIZEOF(int32));
 
     exit(EXIT_SUCCESS);
 }
