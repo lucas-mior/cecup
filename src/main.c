@@ -862,7 +862,6 @@ main(int32 argc, char **argv) {
 
     cecup.sort_col = COL_SRC_PATH;
     cecup.sort_order = GTK_SORT_ASCENDING;
-    cecup.refresh_id = 0;
 
     {
         char xdg_buffer[MAX_PATH_LENGTH];

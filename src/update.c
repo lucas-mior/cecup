@@ -168,10 +168,6 @@ update_ui_handler(void *data) {
         update_list_needed = update_row_ignore(message);
         break;
     case MSG_ENABLE_BUTTONS:
-        if (cecup.refresh_id != 0) {
-            g_source_remove(cecup.refresh_id);
-            cecup.refresh_id = 0;
-        }
         update_list_from_rows();
 
         cecup.preview_dirty = !message->preview_clean;
@@ -185,10 +181,6 @@ update_ui_handler(void *data) {
         xpthread_join(&cecup.work_thread, NULL);
         break;
     case MSG_CLEAR_TREES:
-        if (cecup.refresh_id != 0) {
-            g_source_remove(cecup.refresh_id);
-            cecup.refresh_id = 0;
-        }
         g_mutex_lock(&cecup.arena_mutex);
 
         current_store_count = (int32)g_list_model_get_n_items(cecup.store);

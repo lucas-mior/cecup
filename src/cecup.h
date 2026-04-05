@@ -446,7 +446,6 @@ static struct {
 
     enum CecupColumn sort_col;
     GtkSortType sort_order;
-    uint32 refresh_id;
 
     Arena *arena;
     GMutex arena_mutex;

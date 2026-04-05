@@ -771,11 +771,6 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
         }
     }
 
-    if (cecup.refresh_id != 0) {
-        g_source_remove(cecup.refresh_id);
-        cecup.refresh_id = 0;
-    }
-
     if (cecup.search_timeout_id != 0) {
         g_source_remove(cecup.search_timeout_id);
         cecup.search_timeout_id = 0;
