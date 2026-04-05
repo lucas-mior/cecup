@@ -347,10 +347,6 @@ work_preview(void *user_data) {
     }
 
     if (check_different_fs && same_fs) {
-        // TODO: Integration Bug: `work_preview` is executed in a background thread, but calling
-        // `LOG_ERROR` will attempt to alter GTK UI widgets. This will cause race conditions
-        // resulting in random application crashes. Pass the error string to the main thread
-        // utilizing `g_idle_add`.
         LOG_ERROR(_("Safety stop: Original and backup are on the same storage device.\n"
                     "Check if the backup device is connected.\n"
                     "To force backup on a folder in the same device, uncheck"
