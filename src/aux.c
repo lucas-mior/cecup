@@ -293,12 +293,6 @@ log_internal(char *file, int line, enum MsgType type, char *format, ...) {
     va_list va_args;
     char fileline[64];
 
-    // TODO: Integration Bug. Format string vulnerability.  Callers using logging macros (e.g.,
-    // `LOG_ERROR`) routinely pass localized strings via `_("...")` directly into this function as
-    // the `format` argument. If a translator includes unescaped format specifiers (such as `%s` or
-    // `%d`) in the resulting output, `vsnprintf` will attempt to parse nonexistent variadic
-    // arguments, causing a segmentation fault.  You should ensure caller macros use `"%s"` as the
-    // base format, e.g. `LOG_ERROR("%s", _("..."))`
     va_start(va_args, format);
     n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
 
