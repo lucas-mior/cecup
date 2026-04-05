@@ -96,7 +96,7 @@ ignore_patterns_load(void) {
             *capacity *= 2;
             cecup.ignore_patterns = realloc(cecup.ignore_patterns,
                                             old_capacity, *capacity,
-                                            SIZEOF(IgnorePattern));
+                                            SIZEOF(*(cecup.ignore_patterns)));
         }
 
         pattern = &cecup.ignore_patterns[count];
