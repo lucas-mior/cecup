@@ -398,10 +398,8 @@ work_preview(void *user_data) {
         enum Action action_dst;
         enum Reason reason;
 
-        // TODO: Unsafe pointer cast. Casting a pointer to an integer and checking if it is <= 0 is
-        // non-portable and dangerous, as valid pointers can have the highest bit set depending on
-        // the architecture. Check for NULL directly: if (bucket_src->key == NULL) {
-        if ((int64)bucket_src->key <= 0) {
+        if ((bucket_src->key == HASH_SLOT_FREE)
+            || (bucket_src->key == HASH_SLOT_DELETED)) {
             continue;
         }
 
@@ -465,8 +463,8 @@ work_preview(void *user_data) {
         int32 src_idx;
         int32 path_len;
 
-        // TODO: Unsafe pointer cast. Ensure you evaluate 'if (bucket_dst->key == NULL)' instead.
-        if ((int64)bucket_dst->key <= 0) {
+        if ((bucket_dst->key == HASH_SLOT_FREE)
+            || (bucket_dst->key == HASH_SLOT_DELETED)) {
             continue;
         }
 
