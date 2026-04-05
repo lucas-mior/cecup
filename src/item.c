@@ -91,7 +91,7 @@ hard_link_copy_free(HardLinks *copy) {
         // typically owned by the overarching `traversal` arrays or allocated on the custom arena
         // (`xarena_push`). Calling `free()` on these will result in an invalid free or heap
         // corruption. You should only free the structural arrays here.
-        free(copy->names[i], copy->names_lens[i] + 1);
+        /* free(copy->names[i], copy->names_lens[i] + 1); */
     }
 
     free(copy->names, copy->capacity * SIZEOF(*copy->names));
