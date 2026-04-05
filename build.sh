@@ -164,7 +164,7 @@ case "$target" in
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     ;;
 "test")
-    CFLAGS="$CFLAGS -g $GNUSOURCE -DDEBUGGING=1 -fsanitize=undefined"
+    CFLAGS="$CFLAGS -g3 $GNUSOURCE -DDEBUGGING=1 -fsanitize=undefined"
     ;;
 "check")
     CC=gcc
