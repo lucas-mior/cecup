@@ -524,6 +524,7 @@ work_functions_sink(void) {
 #include <sys/time.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "assert.c"
 #include "arena.c"
@@ -563,6 +564,13 @@ create_test_file(char *path, char *content) {
     write64(fd, content, len);
     close(fd);
     return;
+}
+
+static void *
+test_cancel_thread(void *arg) {
+    (void)arg;
+    work_preview_cancel_and_reset();
+    return NULL;
 }
 
 int
@@ -664,8 +672,11 @@ main(void) {
         },
     };
 
+    if (!gtk_init_check()) {
+        exit(EXIT_SUCCESS);
+    }
+
     (void)work_rsync;
-    (void)work_preview;
 
     parsed = work_rsync_itemize_skip(buf1, strlen32(buf1));
     ASSERT(parsed);
@@ -796,6 +807,9 @@ main(void) {
     cecup.arena = arena_create(SIZEMB(64));
     g_mutex_init(&cecup.arena_mutex);
 
+    cecup.transfer_set = hash_create_transfer_set(1024);
+    cecup.deletion_set = hash_create_deletion_set(1024);
+
     cecup.rows_capacity = INITIAL_CAPACITY;
     cecup.rows[L] = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows[L])));
     cecup.rows[R] = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows[R])));
@@ -882,6 +896,55 @@ main(void) {
 
         ASSERT(action_src == entry->expected_src_action);
         ASSERT((reason & entry->expected_reason_mask) == entry->expected_reason_mask);
+    }
+
+    work_finalize(true);
+
+    cecup.ntransfers = 42;
+    work_cleanup();
+    ASSERT_EQUAL(cecup.ntransfers, 0);
+
+    {
+        pthread_t pt_traverse;
+
+        pthread_create(&pt_traverse, NULL, work_traverse_fs_thread, &cecup.traversal[L]);
+        pthread_join(pt_traverse, NULL);
+        ASSERT_MORE(cecup.traversal[L].file_count, 0);
+    }
+
+    {
+        pthread_t pt_preview;
+
+        cecup.ignore_patterns = NULL;
+        cecup.ignore_count = 0;
+        cecup.check_fs_button = gtk_check_button_new();
+        cecup.progress_bar = gtk_progress_bar_new();
+        cecup.stop_working = false;
+
+        pthread_create(&pt_preview, NULL, work_preview, NULL);
+        pthread_join(pt_preview, NULL);
+    }
+
+    {
+        pthread_t pt_cancel;
+
+        pthread_create(&pt_cancel, NULL, test_cancel_thread, NULL);
+        pthread_join(pt_cancel, NULL);
+    }
+
+    if (cecup.transfers_capacity > 0) {
+        free(cecup.transfers, cecup.transfers_capacity * SIZEOF(*(cecup.transfers)));
+        free(cecup.transfers_lens, cecup.transfers_capacity * SIZEOF(*(cecup.transfers_lens)));
+    }
+    if (cecup.deletions_capacity > 0) {
+        free(cecup.deletions, cecup.deletions_capacity * SIZEOF(*(cecup.deletions)));
+        free(cecup.deletions_lens, cecup.deletions_capacity * SIZEOF(*(cecup.deletions_lens)));
+    }
+    if (cecup.transfer_set != NULL) {
+        hash_destroy_transfer_set(cecup.transfer_set);
+    }
+    if (cecup.deletion_set != NULL) {
+        hash_destroy_deletion_set(cecup.deletion_set);
     }
 
     traversal_free(&cecup.traversal[L]);
