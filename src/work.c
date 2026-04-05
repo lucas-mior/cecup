@@ -452,8 +452,7 @@ work_preview(void *user_data) {
 
         nfiles_processed += 1;
         if ((nfiles_total < 4096) || (nfiles_processed % 4096) == 0) {
-            update_progress_bar(MSG_PROGRESS,
-                                (double)nfiles_processed / (double)nfiles_total);
+            update_progress_bar(MSG_PROGRESS, (double)nfiles_processed / (double)nfiles_total);
         }
     }
 
@@ -497,7 +496,7 @@ work_preview(void *user_data) {
         }
 
         nfiles_processed += 1;
-        if ((nfiles_processed % 1000) == 0) {
+        if ((nfiles_total < 4096) || (nfiles_processed % 4096) == 0) {
             update_progress_bar(MSG_PROGRESS, (double)nfiles_processed / (double)nfiles_total);
         }
     }
