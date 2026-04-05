@@ -660,15 +660,13 @@ update_list_from_rows(void) {
                            SIZEOF(*sort_entries));
     sort_entries_capacity = cecup.rows_len;
 
-    for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        int32 row_id;
+    for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
         enum Action src_act;
         enum Action dst_act;
         enum Reason reason;
         int64 size;
         bool is_visible = false;
 
-        row_id = i;
         if (cecup.rows_selected[row_id]) {
             count_selected += 1;
         }
