@@ -785,12 +785,30 @@ work_rsync_functions_sink(void) {
 #endif
 
 #if TESTING_work_rsync
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <stdlib.h>
+
 #include "work.c"
+#include "tasks.c"
 #include "assert.c"
 
 int
 main(void) {
     char *result;
+    MessageBatch *batch;
+    int32 fd;
+    bool res;
+    ThreadData *td;
+    TaskList *tl;
+    Task *t;
+    pthread_t pt;
+
+    if (!gtk_init_check()) {
+        exit(EXIT_SUCCESS);
+    }
 
     /* Test valid file itemization: standard rsync flags + space + path */
     {
@@ -837,6 +855,99 @@ main(void) {
         result = work_rsync_itemize_skip(line, strlen32(line));
         ASSERT(result == NULL);
     }
+
+    /* Initialize System State for IO Tests */
+    system("rm -rf /tmp/cecup_test_src /tmp/cecup_test_dst /tmp/cecup_test_files_from");
+    mkdir("/tmp/cecup_test_src", 0755);
+    mkdir("/tmp/cecup_test_dst", 0755);
+
+    cecup.src_base = xstrdup("/tmp/cecup_test_src");
+    cecup.src_base_len = strlen32(cecup.src_base);
+    cecup.dst_base = xstrdup("/tmp/cecup_test_dst");
+    cecup.dst_base_len = strlen32(cecup.dst_base);
+    cecup.delete_after = false;
+    cecup.stop_working = false;
+    cecup.child_pid = 0;
+    cecup.ntransfers = 0;
+    cecup.ndeletions = 0;
+
+    /* Test work_batch_push and work_batch_flush */
+    batch = NULL;
+    work_batch_push(&batch, MSG_BATCH_ROW_TRANSFER, L, "file.txt", 8);
+    ASSERT(batch != NULL);
+    ASSERT_EQUAL(batch->count, 1);
+    ASSERT(strcmp(batch->paths[0], "file.txt") == 0);
+
+    /* Push different type to force a flush */
+    work_batch_push(&batch, MSG_BATCH_ROW_REMOVE, L, "other.txt", 9);
+    ASSERT(batch != NULL);
+    ASSERT_EQUAL(batch->count, 1);
+    ASSERT_EQUAL(batch->type, MSG_BATCH_ROW_REMOVE);
+    ASSERT(strcmp(batch->paths[0], "other.txt") == 0);
+
+    work_batch_flush(&batch);
+    ASSERT(batch == NULL);
+
+    /* Test work_batch_push_rename */
+    work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, L, "old.txt", 7, "new.txt", 7);
+    ASSERT(batch != NULL);
+    ASSERT_EQUAL(batch->count, 1);
+    ASSERT(strcmp(batch->paths[0], "old.txt") == 0);
+    ASSERT(strcmp(batch->dst_paths[0], "new.txt") == 0);
+    work_batch_flush(&batch);
+    ASSERT(batch == NULL);
+
+    /* Test work_remove on file */
+    fd = open("/tmp/cecup_test_dst/rm_test.txt", O_CREAT | O_WRONLY, 0644);
+    close(fd);
+    ASSERT(access("/tmp/cecup_test_dst/rm_test.txt", F_OK) == 0);
+    work_remove(&batch, "rm_test.txt", 11, R);
+    ASSERT(access("/tmp/cecup_test_dst/rm_test.txt", F_OK) != 0);
+
+    /* Test work_remove on directory using FTS */
+    mkdir("/tmp/cecup_test_dst/rm_dir/", 0755);
+    fd = open("/tmp/cecup_test_dst/rm_dir/file.txt", O_CREAT | O_WRONLY, 0644);
+    close(fd);
+    work_remove(&batch, "rm_dir/", 7, R);
+    ASSERT(access("/tmp/cecup_test_dst/rm_dir", F_OK) != 0);
+
+    /* Test work_rsync_run */
+    fd = open("/tmp/cecup_test_src/sync_test.txt", O_CREAT | O_WRONLY, 0644);
+    write64(fd, "data", 4);
+    close(fd);
+
+    fd = open("/tmp/cecup_test_files_from", O_CREAT | O_WRONLY, 0644);
+    write64(fd, "sync_test.txt\n", 14);
+    close(fd);
+
+    res = work_rsync_run("/tmp/cecup_test_files_from", 1, false, &batch);
+    ASSERT(res == true);
+    ASSERT(access("/tmp/cecup_test_dst/sync_test.txt", F_OK) == 0);
+
+    /* Test work_rsync (Thread Runner) */
+    td = xmalloc(SIZEOF(ThreadData));
+    memset64(td, 0, SIZEOF(ThreadData));
+    tl = xmalloc(SIZEOF(TaskList) + 1 * SIZEOF(Task*));
+    memset64(tl, 0, SIZEOF(TaskList) + 1 * SIZEOF(Task*));
+    t = xmalloc(SIZEOF(Task));
+    memset64(t, 0, SIZEOF(Task));
+
+    t->action = ACTION_UPDATE;
+    t->side = R;
+    t->path = xstrdup("sync_test.txt");
+    t->path_len = 13;
+
+    tl->count = 1;
+    tl->items[0] = t;
+    td->tasks = tl;
+
+    pthread_create(&pt, NULL, work_rsync, td);
+    pthread_join(pt, NULL);
+
+    /* Teardown */
+    system("rm -rf /tmp/cecup_test_src /tmp/cecup_test_dst /tmp/cecup_test_files_from");
+    free(cecup.src_base, cecup.src_base_len + 1);
+    free(cecup.dst_base, cecup.dst_base_len + 1);
 
     exit(EXIT_SUCCESS);
 }
