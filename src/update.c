@@ -77,17 +77,20 @@ update_ui_handler(void *data) {
     case MSG_BATCH_ROW_REMOVE:
     case MSG_BATCH_ROW_TRANSFER:
     case MSG_BATCH_ROW_RENAME:
+    {
+        MessageBatch *batch = data;
         is_batch = true;
         aux_invalidate_preview();
-        if (update_rows(data)) {
+        if (update_rows(batch)) {
             update_list_needed = true;
         }
-        // TODO: Memory Leak. `update_rows` iteratively frees the individual string contents, but it
-        // does not free the arrays that held them (`batch->paths`, `batch->paths_lens`, etc.), nor
-        // does it free the `MessageBatch` struct pointer itself (`data`). Since `is_batch` skips
-        // the `free_message(message)` call below, the container and arrays leak entirely on every
-        // UI tick.
+        free(batch->paths,          batch->capacity*SIZEOF(*(batch->paths)));
+        free(batch->paths_lens,     batch->capacity*SIZEOF(*(batch->paths_lens)));
+        free(batch->dst_paths,      batch->capacity*SIZEOF(*(batch->dst_paths)));
+        free(batch->dst_paths_lens, batch->capacity*SIZEOF(*(batch->dst_paths_lens)));
+        free(batch, SIZEOF(*batch));
         break;
+    }
     case MSG_LOG:
     case MSG_LOG_CMD:
     case MSG_LOG_ERROR:
