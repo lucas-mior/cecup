@@ -90,15 +90,15 @@ traversal_free(Traversal *traversal) {
     hash_destroy_fs_map(traversal->map);
     hash_destroy_inode_map(traversal->inode_map);
 
-    free(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
-    free(traversal->patterns, capacity*SIZEOF(*(traversal->patterns)));
+    free(traversal->stats,           capacity*SIZEOF(*(traversal->stats)));
+    free(traversal->patterns,        capacity*SIZEOF(*(traversal->patterns)));
     free(traversal->symlink_targets, capacity*SIZEOF(*(traversal->symlink_targets)));
-    free(traversal->paths, capacity*SIZEOF(*(traversal->paths)));
+    free(traversal->paths,           capacity*SIZEOF(*(traversal->paths)));
 
-    free(traversal->paths_lens, capacity*SIZEOF(*(traversal->paths_lens)));
+    free(traversal->paths_lens,           capacity*SIZEOF(*(traversal->paths_lens)));
     free(traversal->symlink_targets_lens, capacity*SIZEOF(*(traversal->symlink_targets_lens)));
-    free(traversal->patterns_lens, capacity*SIZEOF(*(traversal->patterns_lens)));
-    free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
+    free(traversal->patterns_lens,        capacity*SIZEOF(*(traversal->patterns_lens)));
+    free(traversal->row_ids,              capacity*SIZEOF(*(traversal->row_ids)));
 
     arena_destroy(traversal->arena);
 
