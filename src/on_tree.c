@@ -512,48 +512,83 @@ on_tree_functions_sink(void) {
 
 #if TESTING_on_tree
 #include "on.c"
+#include "list_model.c"
 #include "assert.c"
 
 int
 main(void) {
-    GtkWidget *tree;
-    GtkWidget *cell;
-    void *lookup_row_id;
-    void *lookup_col;
-    int32 row_id;
-    enum ColumnType col;
-    uint32 pressed;
-    uint32 target;
-
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
     }
 
-    tree = gtk_column_view_new(NULL);
-    g_object_ref_sink(tree);
-    g_object_set_data(G_OBJECT(tree), "side", GINT_TO_POINTER(L));
+    {
+        GtkWidget *window;
+        CecupListModel *store;
+        GtkSelectionModel *sel;
+        GtkWidget *tree;
+        GtkWidget *cell;
+        GtkGesture *gesture;
+        GtkEventController *key_controller;
+        void *lookup_row_id;
+        void *lookup_col;
+        int32 row_id;
+        enum ColumnType col;
+        uint32 target;
+        uint32 pressed;
+        gboolean handled;
 
-    cell = gtk_label_new("dummy");
-    gtk_widget_set_parent(cell, tree);
+        window = gtk_window_new();
+        cecup.application = gtk_application_new("com.cecup.test", G_APPLICATION_NON_UNIQUE);
+        store = cecup_list_model_new();
+        sel = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(store)));
+        tree = gtk_column_view_new(sel);
+        cell = gtk_label_new("dummy");
 
-    g_object_set_data(G_OBJECT(cell), "cecup-row-id", GINT_TO_POINTER(101));
-    g_object_set_data(G_OBJECT(cell), "cecup-col", GINT_TO_POINTER(COLUMN_PATH));
+        g_object_ref_sink(cell);
 
-    lookup_row_id = g_object_get_data(G_OBJECT(cell), "cecup-row-id");
-    lookup_col = g_object_get_data(G_OBJECT(cell), "cecup-col");
+        gesture = gtk_gesture_click_new();
+        key_controller = gtk_event_controller_key_new();
 
-    ASSERT(lookup_row_id != NULL);
-    row_id = GPOINTER_TO_INT(lookup_row_id) - 1;
-    ASSERT_EQUAL(row_id, 100);
+        g_object_set_data(G_OBJECT(cecup.application), "active_tree", tree);
 
-    col = (enum ColumnType)GPOINTER_TO_INT(lookup_col);
-    ASSERT_EQUAL((int32)col, (int32)COLUMN_PATH);
+        gtk_window_set_child(GTK_WINDOW(window), tree);
+        g_object_set_data(G_OBJECT(tree), "side", GINT_TO_POINTER(L));
 
-    target = gdk_keyval_to_lower(GDK_KEY_Delete);
-    pressed = gdk_keyval_to_lower(GDK_KEY_Delete);
-    ASSERT_EQUAL((int32)target, (int32)pressed);
+        g_object_set_data(G_OBJECT(cell), "cecup-row-id", GINT_TO_POINTER(101));
+        g_object_set_data(G_OBJECT(cell), "cecup-col", GINT_TO_POINTER(COLUMN_PATH));
 
-    g_object_unref(tree);
+        lookup_row_id = g_object_get_data(G_OBJECT(cell), "cecup-row-id");
+        lookup_col = g_object_get_data(G_OBJECT(cell), "cecup-col");
+
+        ASSERT(lookup_row_id != NULL);
+        row_id = GPOINTER_TO_INT(lookup_row_id) - 1;
+        ASSERT_EQUAL(row_id, 100);
+
+        col = (enum ColumnType)GPOINTER_TO_INT(lookup_col);
+        ASSERT_EQUAL((int32)col, (int32)COLUMN_PATH);
+
+        target = gdk_keyval_to_lower(GDK_KEY_Delete);
+        pressed = gdk_keyval_to_lower(GDK_KEY_Delete);
+        ASSERT_EQUAL((int32)target, (int32)pressed);
+
+        gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(gesture));
+        gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(key_controller));
+
+        on_tree_button_press(GTK_GESTURE_CLICK(gesture), 1, 0.0, 0.0, NULL);
+
+        handled = on_tree_tooltip(tree, 0, 0, FALSE, NULL, NULL);
+        ASSERT_EQUAL(handled, FALSE);
+
+        handled = on_tree_key_press(GTK_EVENT_CONTROLLER_KEY(key_controller),
+                                    GDK_KEY_Delete, 0, 0, NULL);
+        ASSERT_EQUAL(handled, FALSE);
+
+        gtk_window_destroy(GTK_WINDOW(window));
+        g_object_unref(sel);
+        g_object_unref(store);
+        g_object_unref(cecup.application);
+        g_object_unref(cell);
+    }
 
     ASSERT(true);
     exit(EXIT_SUCCESS);
