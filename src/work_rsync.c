@@ -423,8 +423,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                 if (checksum) {
                     nfiles_checksummed += 1;
                     if ((nfiles_total < 1000) || ((nfiles_checksummed % 1000) == 0)) {
-                        update_progress_bar(MSG_PROGRESS,
-                                            (double)nfiles_checksummed / (double)nfiles_total);
+                        update_progress_bar((double)nfiles_checksummed / (double)nfiles_total);
                     }
                 }
 
@@ -455,7 +454,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                     }
                     if (*(percentage - 1) == ' ') {
                         progress = atoll(percentage);
-                        update_progress_bar(MSG_PROGRESS, (double)progress / 100.0);
+                        update_progress_bar((double)progress / 100.0);
                     }
                 }
             }

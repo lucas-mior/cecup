@@ -48,7 +48,7 @@
 
 static void
 work_finalize(bool preview_clean) {
-    update_progress_bar(MSG_PROGRESS, 1.0);
+    update_progress_bar(1.0);
 
     {
         Message *message = xmalloc(SIZEOF(*message));
@@ -452,7 +452,7 @@ work_preview(void *user_data) {
 
         nfiles_processed += 1;
         if ((nfiles_total < 4096) || (nfiles_processed % 4096) == 0) {
-            update_progress_bar(MSG_PROGRESS, (double)nfiles_processed / (double)nfiles_total);
+            update_progress_bar((double)nfiles_processed / (double)nfiles_total);
         }
     }
 
@@ -497,7 +497,7 @@ work_preview(void *user_data) {
 
         nfiles_processed += 1;
         if ((nfiles_total < 4096) || (nfiles_processed % 4096) == 0) {
-            update_progress_bar(MSG_PROGRESS, (double)nfiles_processed / (double)nfiles_total);
+            update_progress_bar((double)nfiles_processed / (double)nfiles_total);
         }
     }
 

@@ -47,7 +47,7 @@ static bool update_row_ignore(Message *message);
 static inline void update_functions_sink(void);
 static void update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match);
 static void update_list_from_rows(void);
-static void update_progress_bar(enum MsgType type, double fraction);
+static void update_progress_bar(double fraction);
 static void update_progress_state(char *text, char *tooltip);
 static void update_stats_text(int32 count_selected, int64 total_size_bytes);
 
@@ -857,30 +857,19 @@ update_stats_text(int32 count_selected, int64 total_size_bytes) {
 }
 
 static void
-update_progress_bar(enum MsgType type, double fraction) {
-    static double last_fractions[4] = {0.0, 0.0, 0.0, 0.0};
-    int32 index;
+update_progress_bar(double fraction) {
+    static double last_fraction;
 
-    if (type == MSG_PROGRESS) {
-        index = 3;
-    } else {
-        index = 0;
+    if ((fraction - last_fraction) < 0.001) {
+        return;
     }
-
-    if (fraction < 1.0) {
-        if ((fraction - last_fractions[index]) < 0.001) {
-            if ((fraction - last_fractions[index]) > -0.001) {
-                return;
-            }
-        }
-    }
-    last_fractions[index] = fraction;
+    last_fraction = fraction;
 
     {
         Message *message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
-        message->type = type;
+        message->type = MSG_PROGRESS;
         message->fraction = fraction;
 
         g_idle_add(update_ui_handler, message);
@@ -1082,8 +1071,8 @@ main(void) {
     update_stats_text(0, 0);
 
     /* --- Test update_progress_bar / state --- */
-    update_progress_bar(MSG_PROGRESS, 0.5);
-    update_progress_bar(MSG_PROGRESS, 0.50001); /* Should be ignored due to delta */
+    update_progress_bar(0.5);
+    update_progress_bar(0.50001); /* Should be ignored due to delta */
     update_progress_state("Processing...", "file_b");
 
     /* --- Test update_ui_handler --- */
