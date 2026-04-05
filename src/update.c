@@ -975,25 +975,25 @@ main(void) {
         Traversal *t = &cecup.traversal[side];
 
         t->nfiles = n;
-        t->ncapacity = n;
+        t->capacity = n;
         t->map = hash_create_fs_map(16);
         t->inode_map = hash_create_inode_map(16);
         t->arena = arena_create(SIZEMB(1));
 
-        t->paths = xmalloc(t->ncapacity * SIZEOF(char *));
-        t->paths_lens = xmalloc(t->ncapacity * SIZEOF(int16));
-        t->row_ids = xmalloc(t->ncapacity * SIZEOF(int32));
-        t->stats = xmalloc(t->ncapacity * SIZEOF(struct stat));
-        t->patterns = xmalloc(t->ncapacity * SIZEOF(char *));
-        t->patterns_lens = xmalloc(t->ncapacity * SIZEOF(int16));
-        t->symlink_targets = xmalloc(t->ncapacity * SIZEOF(char *));
-        t->symlink_targets_lens = xmalloc(t->ncapacity * SIZEOF(int16));
+        t->paths = xmalloc(t->capacity * SIZEOF(char *));
+        t->paths_lens = xmalloc(t->capacity * SIZEOF(int16));
+        t->row_ids = xmalloc(t->capacity * SIZEOF(int32));
+        t->stats = xmalloc(t->capacity * SIZEOF(struct stat));
+        t->patterns = xmalloc(t->capacity * SIZEOF(char *));
+        t->patterns_lens = xmalloc(t->capacity * SIZEOF(int16));
+        t->symlink_targets = xmalloc(t->capacity * SIZEOF(char *));
+        t->symlink_targets_lens = xmalloc(t->capacity * SIZEOF(int16));
 
-        memset64(t->stats, 0, t->ncapacity * SIZEOF(struct stat));
-        memset64(t->patterns, 0, t->ncapacity * SIZEOF(char *));
-        memset64(t->patterns_lens, 0, t->ncapacity * SIZEOF(int16));
-        memset64(t->symlink_targets, 0, t->ncapacity * SIZEOF(char *));
-        memset64(t->symlink_targets_lens, 0, t->ncapacity * SIZEOF(int16));
+        memset64(t->stats, 0, t->capacity * SIZEOF(struct stat));
+        memset64(t->patterns, 0, t->capacity * SIZEOF(char *));
+        memset64(t->patterns_lens, 0, t->capacity * SIZEOF(int16));
+        memset64(t->symlink_targets, 0, t->capacity * SIZEOF(char *));
+        memset64(t->symlink_targets_lens, 0, t->capacity * SIZEOF(int16));
 
         t->paths[0] = xarena_push(t->arena, 7); memcpy64(t->paths[0], "file_a", 7);
         t->paths_lens[0] = 6;
@@ -1166,14 +1166,14 @@ main(void) {
         hash_destroy_inode_map(t->inode_map);
         arena_destroy(t->arena);
 
-        free(t->paths, t->ncapacity * SIZEOF(char *));
-        free(t->paths_lens, t->ncapacity * SIZEOF(int16));
-        free(t->row_ids, t->ncapacity * SIZEOF(int32));
-        free(t->stats, t->ncapacity * SIZEOF(struct stat));
-        free(t->patterns, t->ncapacity * SIZEOF(char *));
-        free(t->patterns_lens, t->ncapacity * SIZEOF(int16));
-        free(t->symlink_targets, t->ncapacity * SIZEOF(char *));
-        free(t->symlink_targets_lens, t->ncapacity * SIZEOF(int16));
+        free(t->paths, t->capacity * SIZEOF(char *));
+        free(t->paths_lens, t->capacity * SIZEOF(int16));
+        free(t->row_ids, t->capacity * SIZEOF(int32));
+        free(t->stats, t->capacity * SIZEOF(struct stat));
+        free(t->patterns, t->capacity * SIZEOF(char *));
+        free(t->patterns_lens, t->capacity * SIZEOF(int16));
+        free(t->symlink_targets, t->capacity * SIZEOF(char *));
+        free(t->symlink_targets_lens, t->capacity * SIZEOF(int16));
     }
 
     free(cecup.rows[L], cecup.rows_capacity * SIZEOF(int32));

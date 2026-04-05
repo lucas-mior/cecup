@@ -48,7 +48,7 @@ traversal_allocate(Traversal *traversal) {
     traversal->patterns_lens = xmalloc(capacity*SIZEOF(*(traversal->patterns_lens)));
     traversal->row_ids = xmalloc(capacity*SIZEOF(*(traversal->row_ids)));
 
-    traversal->ncapacity = capacity;
+    traversal->capacity = capacity;
     traversal->nfiles = 0;
     return;
 }
@@ -62,19 +62,19 @@ traversal_clean(Traversal *traversal) {
 
     if (DEBUGGING) {
         dont_read(traversal->stats,
-                  traversal->ncapacity*SIZEOF(*(traversal->stats)));
+                  traversal->capacity*SIZEOF(*(traversal->stats)));
         dont_read(traversal->paths,
-                  traversal->ncapacity*SIZEOF(*(traversal->paths)));
+                  traversal->capacity*SIZEOF(*(traversal->paths)));
         dont_read(traversal->symlink_targets,
-                  traversal->ncapacity*SIZEOF(*(traversal->symlink_targets)));
+                  traversal->capacity*SIZEOF(*(traversal->symlink_targets)));
         dont_read(traversal->patterns,
-                  traversal->ncapacity*SIZEOF(*(traversal->patterns)));
+                  traversal->capacity*SIZEOF(*(traversal->patterns)));
         dont_read(traversal->paths_lens,
-                  traversal->ncapacity*SIZEOF(*(traversal->paths_lens)));
+                  traversal->capacity*SIZEOF(*(traversal->paths_lens)));
         dont_read(traversal->symlink_targets_lens,
-                  traversal->ncapacity*SIZEOF(*(traversal->symlink_targets_lens)));
+                  traversal->capacity*SIZEOF(*(traversal->symlink_targets_lens)));
         dont_read(traversal->patterns_lens,
-                  traversal->ncapacity*SIZEOF(*(traversal->patterns_lens)));
+                  traversal->capacity*SIZEOF(*(traversal->patterns_lens)));
     }
 
     traversal->file_count = 0;
@@ -85,7 +85,7 @@ traversal_clean(Traversal *traversal) {
 
 static void
 traversal_free(Traversal *traversal) {
-    int32 capacity = traversal->ncapacity;
+    int32 capacity = traversal->capacity;
 
     hash_destroy_fs_map(traversal->map);
     hash_destroy_inode_map(traversal->inode_map);
@@ -115,39 +115,39 @@ traversal_push(Traversal *traversal, struct stat *stat,
     struct stat stat_copy = *stat;
     int32 idx;
 
-    if (traversal->nfiles >= traversal->ncapacity) {
-        int32 old_capacity = traversal->ncapacity;
-        traversal->ncapacity *= 2;
+    if (traversal->nfiles >= traversal->capacity) {
+        int32 old_capacity = traversal->capacity;
+        traversal->capacity *= 2;
 
         traversal->stats = realloc(traversal->stats,
-                                   old_capacity, traversal->ncapacity,
+                                   old_capacity, traversal->capacity,
                                    SIZEOF(*(traversal->stats)));
 
         traversal->paths = realloc(traversal->paths,
-                                   old_capacity, traversal->ncapacity,
+                                   old_capacity, traversal->capacity,
                                    SIZEOF(*(traversal->paths)));
         traversal->symlink_targets = realloc(traversal->symlink_targets,
-                                             old_capacity, traversal->ncapacity,
+                                             old_capacity, traversal->capacity,
                                              SIZEOF(*(traversal->symlink_targets)));
         traversal->patterns = realloc(traversal->patterns,
-                                      old_capacity, traversal->ncapacity,
+                                      old_capacity, traversal->capacity,
                                       SIZEOF(*(traversal->patterns)));
 
         traversal->paths_lens = realloc(traversal->paths_lens,
-                                        old_capacity, traversal->ncapacity,
+                                        old_capacity, traversal->capacity,
                                         SIZEOF(*(traversal->paths_lens)));
         traversal->symlink_targets_lens = realloc(traversal->symlink_targets_lens,
-                                                  old_capacity, traversal->ncapacity,
+                                                  old_capacity, traversal->capacity,
                                                   SIZEOF(*(traversal->symlink_targets_lens)));
         traversal->patterns_lens = realloc(traversal->patterns_lens,
-                                           old_capacity, traversal->ncapacity,
+                                           old_capacity, traversal->capacity,
                                            SIZEOF(*(traversal->patterns_lens)));
 
         traversal->row_ids = realloc(traversal->row_ids,
-                                     old_capacity, traversal->ncapacity,
+                                     old_capacity, traversal->capacity,
                                      SIZEOF(*(traversal->row_ids)));
 
-        for (int32 i = old_capacity; i < traversal->ncapacity; i += 1) {
+        for (int32 i = old_capacity; i < traversal->capacity; i += 1) {
             traversal->row_ids[i] = -1;
         }
     }
@@ -302,7 +302,7 @@ main(void) {
     memset64(&dummy_stat, 0, SIZEOF(dummy_stat));
 
     traversal_allocate(&test_traversal);
-    ASSERT(test_traversal.ncapacity == INITIAL_CAPACITY);
+    ASSERT(test_traversal.capacity == INITIAL_CAPACITY);
 
     dummy_stat.st_ino = 100;
     dummy_stat.st_mode = S_IFREG | 0644;
@@ -318,7 +318,7 @@ main(void) {
         snprintf(name, 16, "file_%d", i);
         traversal_push(&test_traversal, &dummy_stat, name, strlen32(name), NULL, 0, NULL, 0);
     }
-    ASSERT(test_traversal.ncapacity > INITIAL_CAPACITY);
+    ASSERT(test_traversal.capacity > INITIAL_CAPACITY);
     ASSERT_EQUAL(test_traversal.nfiles, INITIAL_CAPACITY + 5);
 
     /* 3. Test HardLink 128-bit Logic */

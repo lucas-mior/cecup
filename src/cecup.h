@@ -161,7 +161,7 @@ typedef struct Traversal {
     struct Hash_fs_map *map;
     struct Hash_inode_map *inode_map;
 
-    int32 ncapacity;
+    int32 capacity;
     int32 nfiles;
 
     struct stat *stats;
