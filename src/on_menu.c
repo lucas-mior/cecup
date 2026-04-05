@@ -581,7 +581,7 @@ main(void) {
 
     msg = xmalloc(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
-    g_object_set_data(G_OBJECT(tree), "on_menu_copy_path", "absolute");
+    g_object_set_data(G_OBJECT(tree), "variant", "absolute");
     cecup.src_base = xmalloc(10);
     memcpy64(cecup.src_base, "/tmp", 5);
     on_menu_copy_path(tree, msg);
