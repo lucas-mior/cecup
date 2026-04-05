@@ -381,10 +381,9 @@ on_menu_delete(GtkWidget *widget, void *data) {
 
         g_signal_connect(dialog, "response", G_CALLBACK(on_delete_response), tasks);
         gtk_widget_show(dialog);
+    } else {
+        task_list_free(tasks);
     }
-    // TODO: Bug. Memory Leak. If `tasks->count` evaluates to 0, the `tasks` pointer is never passed
-    // to the dialog handler and is leaked. You need to explicitly call `task_list_free(tasks)` in
-    // an `else` block here.
 
     free_message(message);
     return;
@@ -394,8 +393,12 @@ static void
 on_menu_diff(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
+    char *term_cmd_raw;
+    char *diff_tool_raw;
     char *diff_tool;
     char *term_cmd;
+    int32 term_cmd_len;
+    int32 diff_tool_len;
     char *term_arguments[64];
     char *diff_arguments[64];
     char *token;
@@ -403,13 +406,15 @@ on_menu_diff(GtkWidget *widget, void *data) {
     int32 diff_argument_count = 0;
 
     (void)widget;
-    // TODO: Bug. Memory Corruption. `gtk_editable_get_text` returns a `const char *` owned by the
-    // GTK widget. Casting it to `(char *)` and passing it to `strtok` Modifies the string in-place
-    // by injecting null terminators into GTK's internal memory buffer. This causes severe undefined
-    // behavior and crashes. You MUST duplicate the strings (e.g., using `xmemdup`) before
-    // tokenizing them.
-    diff_tool = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry));
-    term_cmd = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry));
+
+    term_cmd_raw = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry));
+    diff_tool_raw = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry));
+
+    term_cmd_len = strlen32(term_cmd_raw);
+    diff_tool_len = strlen32(diff_tool_raw);
+
+    term_cmd = xmemdup(term_cmd_raw, term_cmd_len + 1);
+    diff_tool = xmemdup(diff_tool_raw, diff_tool_len + 1);
 
     token = strtok(term_cmd, " ");
     while (token != NULL && term_argument_count < LENGTH(term_arguments)) {
@@ -479,6 +484,8 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
     task_list_free(tasks);
     free_message(message);
+    free(term_cmd, term_cmd_len);
+    free(diff_tool, diff_tool_len);
     return;
 }
 
@@ -488,6 +495,7 @@ on_menu_functions_sink(void) {
     (void)on_menu_functions_sink;
     (void)on_menu_ignore_action;
     (void)on_menu_dispatch;
+    return;
 }
 #endif
 
@@ -495,6 +503,7 @@ on_menu_functions_sink(void) {
 #include "work.c"
 #include "on.c"
 #include "assert.c"
+#include "list_model.c"
 
 int
 main(void) {
@@ -502,13 +511,33 @@ main(void) {
     FILE *file;
     char buffer[256];
     int64 read_bytes;
+    Message *msg;
+    GtkWidget *tree;
+    GtkSelectionModel *sel;
+    CecupListModel *store;
 
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
     }
 
-    SNPRINTF(cecup.ignore_path, "%s", "test_ignore_temp.txt");
+    cecup.application = gtk_application_new("com.cecup.test.on_menu", G_APPLICATION_NON_UNIQUE);
+    cecup.gtk_window = gtk_window_new();
 
+    cecup.stop_button = gtk_button_new();
+    cecup.diff_entry = gtk_entry_new();
+    cecup.term_entry = gtk_entry_new();
+
+    gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "diff");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "xterm");
+
+    store = cecup_list_model_new();
+    sel = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(store)));
+    tree = gtk_column_view_new(sel);
+    g_object_ref_sink(tree);
+
+    g_object_set_data(G_OBJECT(cecup.application), "active_tree", tree);
+
+    SNPRINTF(cecup.ignore_path, "%s", "test_ignore_temp.txt");
     file = fopen(cecup.ignore_path, "w");
     ASSERT(file != NULL);
     fclose(file);
@@ -531,6 +560,71 @@ main(void) {
     g_variant_unref(param);
     remove(cecup.ignore_path);
 
+    cecup.rows_visible_len = 0;
+    cecup.rows_selected = xmalloc(10 * SIZEOF(uint8));
+    cecup.rows_selected[0] = false;
+
+    msg = xmalloc(SIZEOF(*msg));
+    memset64(msg, 0, SIZEOF(*msg));
+    msg->side = L;
+    msg->action = ACTION_NEW;
+    on_menu_apply(tree, msg);
+
+    msg = xmalloc(SIZEOF(*msg));
+    memset64(msg, 0, SIZEOF(*msg));
+    on_menu_rename(tree, msg);
+
+    msg = xmalloc(SIZEOF(*msg));
+    memset64(msg, 0, SIZEOF(*msg));
+    g_object_set_data(G_OBJECT(tree), "variant", "file");
+    on_menu_open_item(tree, msg);
+
+    msg = xmalloc(SIZEOF(*msg));
+    memset64(msg, 0, SIZEOF(*msg));
+    g_object_set_data(G_OBJECT(tree), "on_menu_copy_path", "absolute");
+    cecup.src_base = xmalloc(10);
+    memcpy64(cecup.src_base, "/tmp", 5);
+    on_menu_copy_path(tree, msg);
+
+    {
+        TaskList *tasks;
+
+        tasks = xmalloc(SIZEOF(TaskList));
+        tasks->count = 0;
+        on_delete_response(NULL, GTK_RESPONSE_NO, tasks);
+    }
+
+    msg = xmalloc(SIZEOF(*msg));
+    memset64(msg, 0, SIZEOF(*msg));
+    on_menu_delete(tree, msg);
+
+    msg = xmalloc(SIZEOF(*msg));
+    memset64(msg, 0, SIZEOF(*msg));
+    on_menu_diff(tree, msg);
+
+    {
+        GVariant *idx_param;
+
+        msg = xmalloc(SIZEOF(*msg));
+        memset64(msg, 0, SIZEOF(*msg));
+        g_object_set_data_full(G_OBJECT(cecup.application), "active_message", msg, free_message);
+
+        idx_param = g_variant_new_int32(0);
+        g_variant_ref_sink(idx_param);
+        on_menu_dispatch(NULL, idx_param, NULL);
+        g_variant_unref(idx_param);
+    }
+
+    free(cecup.src_base, 10);
+    free(cecup.rows_selected, 10 * SIZEOF(uint8));
+
+    g_object_unref(tree);
+    g_object_unref(sel);
+    g_object_unref(store);
+    g_object_unref(cecup.application);
+    gtk_window_destroy(GTK_WINDOW(cecup.gtk_window));
+
+    ASSERT(true);
     exit(EXIT_SUCCESS);
 }
 
