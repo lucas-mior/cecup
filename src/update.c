@@ -282,10 +282,6 @@ update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
     int32 idx;
     int32 row_id;
 
-    error("%s called with arguments: side = %d\n", __func__, side);
-    PRINT(path_removed_len);
-    PRINTLN(path_removed);
-
     if (path_removed == NULL || path_removed_len == 0) {
         error("Error: invalid arguments passed to %s.\n", __func__);
         fatal(EXIT_FAILURE);
