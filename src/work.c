@@ -322,8 +322,8 @@ work_preview(void *user_data) {
     (void)user_data;
     check_different_fs = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
 
-    update_progress_state(_("Analyzing changes"),
-                          _("Traversing file systems for differences..."));
+    update_progress_info(_("Analyzing changes"),
+                         _("Traversing file systems for differences..."));
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_work);
     work_cleanup();

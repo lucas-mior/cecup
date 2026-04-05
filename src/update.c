@@ -48,7 +48,7 @@ static inline void update_functions_sink(void);
 static void update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match);
 static void update_list_from_rows(void);
 static void update_progress_bar(double fraction);
-static void update_progress_state(char *text, char *tooltip);
+static void update_progress_info(char *text, char *tooltip);
 static void update_stats_text(int32 count_selected, int64 total_size_bytes);
 
 static bool update_rows(MessageBatch *batch);
@@ -878,7 +878,7 @@ update_progress_bar(double fraction) {
 }
 
 static void
-update_progress_state(char *text, char *tooltip) {
+update_progress_info(char *text, char *tooltip) {
     Message *message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 

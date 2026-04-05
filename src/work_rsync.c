@@ -242,11 +242,11 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     bool delete_after = cecup.delete_after;
 
     if (checksum) {
-        update_progress_state(_("Verifying checksums"),
-                              _("Performing verification of the new files..."));
+        update_progress_info(_("Verifying checksums"),
+                             _("Performing verification of the new files..."));
     } else {
-        update_progress_state(_("Syncing files"),
-                              _("Transferring data and updating metadata..."));
+        update_progress_info(_("Syncing files"),
+                             _("Transferring data and updating metadata..."));
     }
 
     SNPRINTF(src_base_with_slash, "%s/", cecup.src_base);
