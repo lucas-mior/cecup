@@ -60,6 +60,7 @@
 
 #define OS_UNIX (OS_LINUX || OS_MAC || OS_BSD)
 
+
 #if defined(__GNUC__)
 #define COMPILER_GCC 1
 #define COMPILER_CLANG 0
