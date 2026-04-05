@@ -422,8 +422,10 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 
                 if (checksum) {
                     nfiles_checksummed += 1;
-                    update_progress_bar(MSG_PROGRESS,
-                                        (double)nfiles_checksummed / (double)nfiles_total);
+                    if ((nfiles_total < 1000) || ((nfiles_checksummed % 1000) == 0)) {
+                        update_progress_bar(MSG_PROGRESS,
+                                            (double)nfiles_checksummed / (double)nfiles_total);
+                    }
                 }
 
                 while (*path == ' ') {
