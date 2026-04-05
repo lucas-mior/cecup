@@ -179,12 +179,19 @@ cecup_list_model_get_item(GListModel *list, guint position) {
 
     ASSERT_LESS(pos, cecup.rows_visible_len);
 
-    // TODO: Integration Bug. Data Race / Use-After-Free.  This GTK signal executes in the main UI
-    // thread. It reads `cecup.rows_visible[pos]` WITHOUT acquiring `cecup.arena_mutex`.
-    // Concurrently, your background worker threads may be traversing directories and calling
-    // `item_add()`, which reallocates `cecup.rows_visible` to a new memory block. This triggers a
-    // Use-After-Free where GTK reads from the stale, freed memory pointer, causing unpredictable
-    // application crashes.
+    // IS THIS A PROBLEM? Data Race / Use-After-Free.
+    // This GTK signal executes in the main UI thread.
+    // It reads `cecup.rows_visible[pos]` WITHOUT acquiring `cecup.arena_mutex`.
+    // Concurrently, the background worker threads may be traversing directories and calling
+    // `item_add()`, which might reallocate `cecup.rows_visible` to a new memory block.
+    // This triggers a Use-After-Free where GTK reads from the stale, freed memory pointer, causing
+    // unpredictable application crashes.
+    //
+    // However, item_add in the worker thread is only called when the interface is completely
+    // blocked (except for the stop button), so it should be impossible for this to be called at the
+    // same time. item_add is also called from update.c functions that always run on the main UI
+    // thread using g_idle_add(update_ui_handler), so we should be safe.
+
     row_id = cecup.rows_visible[pos];
     if (self->proxies[pos]) {
         if (self->proxies[pos]->index != row_id) {
