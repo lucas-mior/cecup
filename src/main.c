@@ -881,7 +881,7 @@ main(int32 argc, char **argv) {
         }
         SNPRINTF(config_base, "%s/cecup", XDG_CONFIG_HOME);
 
-        if (access(config_base, F_OK) == -1) {
+        if (access(config_base, F_OK) < 0) {
             pid_t child_cp;
 
             g_mkdir_with_parents(config_base, 0755);
