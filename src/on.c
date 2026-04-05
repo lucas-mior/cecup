@@ -820,6 +820,11 @@ on_functions_sink(void) {
 #if TESTING_on
 #include "assert.c"
 
+#define MOCK_WIDGET(var, constructor) do { \
+    var = constructor; \
+    g_object_ref_sink(var); \
+} while(0)
+
 int
 main(void) {
     char *text_src;
@@ -830,21 +835,27 @@ main(void) {
         exit(EXIT_SUCCESS);
     }
 
-    // 1. Initialize global widgets to satisfy GTK calls in aux_invalidate_preview
-    cecup.stop_button = gtk_button_new();
-    cecup.sync_button = gtk_button_new();
-    cecup.filter_new = gtk_toggle_button_new();
-    cecup.filter_link = gtk_toggle_button_new();
-    cecup.filter_update = gtk_toggle_button_new();
-    cecup.filter_equal = gtk_toggle_button_new();
-    cecup.filter_delete = gtk_toggle_button_new();
-    cecup.filter_ignore = gtk_toggle_button_new();
-    cecup.check_fs_button = gtk_check_button_new();
-    cecup.delete_ignored_button = gtk_check_button_new();
-    cecup.delete_after_button = gtk_check_button_new();
-    cecup.diff_entry = gtk_entry_new();
-    cecup.term_entry = gtk_entry_new();
-    cecup.search_entry = gtk_entry_new();
+    // 1. Initialize global widgets with proper reference sinking to satisfy GTK
+    MOCK_WIDGET(cecup.gtk_window, gtk_window_new());
+    MOCK_WIDGET(cecup.stop_button, gtk_button_new());
+    MOCK_WIDGET(cecup.sync_button, gtk_button_new());
+    MOCK_WIDGET(cecup.filter_new, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.filter_link, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.filter_update, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.filter_equal, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.filter_delete, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.filter_ignore, gtk_toggle_button_new());
+    MOCK_WIDGET(cecup.check_fs_button, gtk_check_button_new());
+    MOCK_WIDGET(cecup.delete_ignored_button, gtk_check_button_new());
+    MOCK_WIDGET(cecup.delete_after_button, gtk_check_button_new());
+    MOCK_WIDGET(cecup.diff_entry, gtk_entry_new());
+    MOCK_WIDGET(cecup.term_entry, gtk_entry_new());
+    MOCK_WIDGET(cecup.search_entry, gtk_entry_new());
+    MOCK_WIDGET(cecup.dir_entry[L], gtk_entry_new());
+    MOCK_WIDGET(cecup.dir_entry[R], gtk_entry_new());
+    MOCK_WIDGET(cecup.stats_label, gtk_label_new(""));
+    MOCK_WIDGET(cecup.tree[L], gtk_column_view_new(NULL));
+    MOCK_WIDGET(cecup.tree[R], gtk_column_view_new(NULL));
 
     // Mock store for update_list_from_rows
     cecup.store = G_LIST_MODEL(cecup_list_model_new());
@@ -886,9 +897,6 @@ main(void) {
         }
     }
 
-    /* --- Test on_invert_clicked logic --- */
-    cecup.dir_entry[L] = gtk_entry_new();
-    cecup.dir_entry[R] = gtk_entry_new();
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), "/home/user/src");
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), "/mnt/backup/dst");
 
@@ -915,12 +923,121 @@ main(void) {
         ASSERT(cecup.rows_selected[i] == false);
     }
 
+    {
+        GtkWidget *mock_widget;
+        GtkWidget *mock_child;
+        GtkAdjustment *mock_adj;
+        GtkCheckButton *mock_check;
+        GtkWidget *dialog_sync;
+        GtkWidget *dialog_ignore;
+        GtkWidget *dialog_src;
+        GtkWidget *dialog_dst;
+        GtkTextBuffer *mock_buffer;
+        GtkGesture *mock_gesture;
+        GtkWidget *mock_editable;
+
+        MOCK_WIDGET(mock_widget, gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
+
+        mock_child = gtk_button_new();
+        gtk_box_append(GTK_BOX(mock_widget), mock_child);
+
+        MOCK_WIDGET(mock_adj, gtk_adjustment_new(0.0, 0.0, 100.0, 1.0, 10.0, 10.0));
+
+        mock_check = GTK_CHECK_BUTTON(gtk_check_button_new());
+        g_object_ref_sink(mock_check);
+
+        MOCK_WIDGET(dialog_sync, gtk_dialog_new());
+        MOCK_WIDGET(dialog_ignore, gtk_dialog_new());
+        MOCK_WIDGET(dialog_src, gtk_dialog_new());
+        MOCK_WIDGET(dialog_dst, gtk_dialog_new());
+
+        mock_buffer = gtk_text_buffer_new(NULL);
+
+        mock_gesture = gtk_gesture_click_new();
+
+        MOCK_WIDGET(mock_editable, gtk_editable_label_new(""));
+        gtk_widget_add_controller(mock_editable, GTK_EVENT_CONTROLLER(mock_gesture));
+
+        unparent_popover_idle(mock_child);
+        on_popover_closed(mock_widget, NULL);
+        execute_menu_item_from_key_press(NULL, NULL);
+
+        cecup.config_path[0] = '\0';
+        on_config_changed(NULL, NULL);
+
+        on_search_timeout(NULL);
+        on_preview_setting_toggled(NULL, NULL);
+        on_delete_after_toggled(mock_check, NULL);
+        on_delete_ignored_toggled(mock_check, NULL);
+        on_reset_clicked(NULL, NULL);
+
+        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), "/invalid/path/for/test");
+        on_preview_clicked(NULL, NULL);
+
+        on_sync_response(GTK_DIALOG(dialog_sync), GTK_RESPONSE_REJECT, NULL);
+        on_sync_clicked(NULL, NULL);
+        on_stop_clicked(NULL, NULL);
+        on_filter_toggled(NULL, NULL);
+
+        on_sort_changed(NULL, 0, cecup.tree[L]);
+
+        update_visible_checkboxes(mock_widget, 0);
+
+        g_object_set_data(G_OBJECT(mock_check), "cecup-row-id", GINT_TO_POINTER(1));
+        on_cell_toggled(mock_check, GINT_TO_POINTER(L));
+
+        on_select_all_visible_clicked(NULL, NULL);
+
+        on_ignore_response(GTK_DIALOG(dialog_ignore), GTK_RESPONSE_REJECT, mock_buffer);
+        cecup.ignore_path[0] = '\0';
+        on_ignore_clicked(NULL, NULL);
+
+        on_browse_response_src(GTK_DIALOG(dialog_src), GTK_RESPONSE_REJECT, NULL);
+        on_browse_src(NULL, NULL);
+
+        on_browse_response_dst(GTK_DIALOG(dialog_dst), GTK_RESPONSE_REJECT, NULL);
+        on_browse_dst(NULL, NULL);
+
+        on_scroll_sync(mock_adj, mock_adj);
+
+        on_path_click_pressed(GTK_GESTURE_CLICK(mock_gesture), 0, 0, 0, NULL);
+
+        cecup.child_pid = 0;
+        memset64(&cecup.work_thread, 0, SIZEOF(cecup.work_thread));
+        on_window_destroy(NULL, NULL);
+
+        g_object_unref(mock_widget);
+        g_object_unref(mock_adj);
+        g_object_unref(mock_check);
+        g_object_unref(mock_editable);
+        g_object_unref(dialog_sync);
+        g_object_unref(dialog_ignore);
+        g_object_unref(dialog_src);
+        g_object_unref(dialog_dst);
+        g_object_unref(mock_buffer);
+    }
+
     /* Cleanup mocks */
-    g_object_unref(cecup.dir_entry[L]);
-    g_object_unref(cecup.dir_entry[R]);
-    g_object_unref(cecup.search_entry);
+    g_object_unref(cecup.gtk_window);
     g_object_unref(cecup.stop_button);
     g_object_unref(cecup.sync_button);
+    g_object_unref(cecup.filter_new);
+    g_object_unref(cecup.filter_link);
+    g_object_unref(cecup.filter_update);
+    g_object_unref(cecup.filter_equal);
+    g_object_unref(cecup.filter_delete);
+    g_object_unref(cecup.filter_ignore);
+    g_object_unref(cecup.check_fs_button);
+    g_object_unref(cecup.delete_ignored_button);
+    g_object_unref(cecup.delete_after_button);
+    g_object_unref(cecup.diff_entry);
+    g_object_unref(cecup.term_entry);
+    g_object_unref(cecup.search_entry);
+    g_object_unref(cecup.dir_entry[L]);
+    g_object_unref(cecup.dir_entry[R]);
+    g_object_unref(cecup.stats_label);
+    g_object_unref(cecup.tree[L]);
+    g_object_unref(cecup.tree[R]);
     g_object_unref(cecup.store);
 
     if (cecup.search_query) {
