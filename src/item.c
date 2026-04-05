@@ -539,6 +539,12 @@ main(void) {
     SortEntry entry1;
     SortEntry entry2;
     int32 result;
+    char *name_a_ptr;
+    char *name_b_ptr;
+    HardLinks dump_hl;
+    enum Action act_src;
+    enum Action act_dst;
+    enum Reason rsn;
 
     memset64(&hl1, 0, SIZEOF(hl1));
     memset64(&hl2, 0, SIZEOF(hl2));
@@ -614,6 +620,130 @@ main(void) {
     cecup.sort_order = GTK_SORT_DESCENDING;
     result = cecup_item_compare_string_key(&entry1, &entry2);
     ASSERT_MORE(result, 0);
+
+    /* 4. Test Remaining Utility/Action Functions */
+    name_a_ptr = "apple";
+    name_b_ptr = "banana";
+    result = compare_names(&name_a_ptr, &name_b_ptr);
+    ASSERT_LESS(result, 0);
+
+    cecup.rows[L] = xmalloc(10 * SIZEOF(int32));
+    cecup.rows[R] = xmalloc(10 * SIZEOF(int32));
+    cecup.traversal[L].paths = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[R].paths = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[L].paths_lens = xmalloc(10 * SIZEOF(int16));
+    cecup.traversal[R].paths_lens = xmalloc(10 * SIZEOF(int16));
+    cecup.traversal[L].stats = xmalloc(10 * SIZEOF(struct stat));
+    cecup.traversal[R].stats = xmalloc(10 * SIZEOF(struct stat));
+    cecup.traversal[L].patterns = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[R].patterns = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[L].symlink_targets = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[R].symlink_targets = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[L].symlink_targets_lens = xmalloc(10 * SIZEOF(int16));
+    cecup.traversal[R].symlink_targets_lens = xmalloc(10 * SIZEOF(int16));
+
+    memset64(cecup.traversal[L].stats, 0, 10 * SIZEOF(struct stat));
+    memset64(cecup.traversal[R].stats, 0, 10 * SIZEOF(struct stat));
+
+    /* Row 0: Valid L, Valid R (Equal) */
+    cecup.rows[L][0] = 0;
+    cecup.rows[R][0] = 0;
+    cecup.traversal[L].paths[0] = "left0";
+    cecup.traversal[R].paths[0] = "right0";
+    cecup.traversal[L].paths_lens[0] = 5;
+    cecup.traversal[R].paths_lens[0] = 6;
+    cecup.traversal[L].stats[0].st_size = 100;
+    cecup.traversal[R].stats[0].st_size = 100;
+    cecup.traversal[L].stats[0].st_mtime = 1000;
+    cecup.traversal[R].stats[0].st_mtime = 1000;
+    cecup.traversal[L].stats[0].st_mode = S_IFREG | 0644;
+    cecup.traversal[R].stats[0].st_mode = S_IFREG | 0644;
+    cecup.traversal[L].patterns[0] = NULL;
+    cecup.traversal[R].patterns[0] = NULL;
+    cecup.traversal[L].symlink_targets[0] = "tgtL";
+    cecup.traversal[R].symlink_targets[0] = "tgtR";
+    cecup.traversal[L].symlink_targets_lens[0] = 4;
+    cecup.traversal[R].symlink_targets_lens[0] = 4;
+    cecup.traversal[L].stats[0].st_nlink = 1;
+    cecup.traversal[R].stats[0].st_nlink = 1;
+
+    /* Row 1: Valid L, Missing R */
+    cecup.rows[L][1] = 1;
+    cecup.rows[R][1] = -1;
+    cecup.traversal[L].paths[1] = "left1";
+    cecup.traversal[L].paths_lens[1] = 5;
+    cecup.traversal[L].stats[1].st_size = 200;
+    cecup.traversal[L].stats[1].st_mtime = 2000;
+    cecup.traversal[L].stats[1].st_mode = S_IFREG | 0644;
+    cecup.traversal[L].patterns[1] = NULL;
+    cecup.traversal[L].symlink_targets[1] = NULL;
+    cecup.traversal[L].symlink_targets_lens[1] = 0;
+    cecup.traversal[L].stats[1].st_nlink = 1;
+
+    /* Row 2: Missing L, Valid R */
+    cecup.rows[L][2] = -1;
+    cecup.rows[R][2] = 2;
+    cecup.traversal[R].patterns[2] = NULL;
+
+    /* Assert Basic Getters */
+    ASSERT(strcmp(item_path_get(0), "left0") == 0);
+    ASSERT_EQUAL(item_path_len_get(0), 5);
+    ASSERT(strcmp(item_path_side(0, L), "left0") == 0);
+    ASSERT(strcmp(item_path_side(0, R), "right0") == 0);
+    ASSERT_EQUAL(item_size_side(0, L), 100);
+    ASSERT_EQUAL(item_size_side(0, R), 100);
+    ASSERT_EQUAL(item_size_side(1, R), -1);
+    ASSERT_EQUAL(item_mtime_side(0, L), 1000);
+    ASSERT_EQUAL(item_mtime_side(1, R), 0);
+    ASSERT_NULL(item_ignore_pattern_side(0, L));
+    ASSERT_EQUAL(item_path_len_side(0, R), 6);
+    ASSERT(strcmp(item_symlink_target_side(0, L), "tgtL") == 0);
+    ASSERT_EQUAL(item_symlink_target_len_side(0, R), 4);
+
+    memset64(&dump_hl, 0, SIZEOF(dump_hl));
+    ASSERT(!item_hardlink_side(0, L, &dump_hl));
+
+    /* Assert Action / Reason Logic */
+    cecup.delete_ignored = false;
+    cecup.delete_after = false;
+
+    item_get_actions_reasons(0, &act_src, &act_dst, &rsn);
+    ASSERT_EQUAL(act_src, ACTION_EQUAL);
+    ASSERT_EQUAL(act_dst, ACTION_EQUAL);
+    ASSERT((rsn & REASON_EQUAL) != 0);
+
+    item_get_actions_reasons(1, &act_src, &act_dst, &rsn);
+    ASSERT_EQUAL(act_src, ACTION_NEW);
+    ASSERT_EQUAL(act_dst, ACTION_NEW);
+    ASSERT((rsn & REASON_NEW) != 0);
+
+    item_get_actions_reasons(2, &act_src, &act_dst, &rsn);
+    ASSERT_EQUAL(act_src, ACTION_IGNORE);
+    ASSERT_EQUAL(act_dst, ACTION_IGNORE);
+    ASSERT((rsn & REASON_MISSING) != 0);
+
+    /* Modify Row 0 to create an UPDATE condition */
+    cecup.traversal[R].stats[0].st_size = 150;
+    item_get_actions_reasons(0, &act_src, &act_dst, &rsn);
+    ASSERT_EQUAL(act_src, ACTION_UPDATE);
+    ASSERT_EQUAL(act_dst, ACTION_UPDATE);
+    ASSERT((rsn & REASON_SIZE) != 0);
+
+    /* Memory Cleanup */
+    free(cecup.rows[L], 10 * SIZEOF(int32));
+    free(cecup.rows[R], 10 * SIZEOF(int32));
+    free(cecup.traversal[L].paths, 10 * SIZEOF(char*));
+    free(cecup.traversal[R].paths, 10 * SIZEOF(char*));
+    free(cecup.traversal[L].paths_lens, 10 * SIZEOF(int16));
+    free(cecup.traversal[R].paths_lens, 10 * SIZEOF(int16));
+    free(cecup.traversal[L].stats, 10 * SIZEOF(struct stat));
+    free(cecup.traversal[R].stats, 10 * SIZEOF(struct stat));
+    free(cecup.traversal[L].patterns, 10 * SIZEOF(char*));
+    free(cecup.traversal[R].patterns, 10 * SIZEOF(char*));
+    free(cecup.traversal[L].symlink_targets, 10 * SIZEOF(char*));
+    free(cecup.traversal[R].symlink_targets, 10 * SIZEOF(char*));
+    free(cecup.traversal[L].symlink_targets_lens, 10 * SIZEOF(int16));
+    free(cecup.traversal[R].symlink_targets_lens, 10 * SIZEOF(int16));
 
     exit(EXIT_SUCCESS);
 }
