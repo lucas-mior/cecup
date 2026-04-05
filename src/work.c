@@ -375,8 +375,8 @@ work_preview(void *user_data) {
         xpthread_create(&t1, NULL, work_traverse_fs_thread, &cecup.traversal[R]);
         xpthread_create(&t2, NULL, work_traverse_fs_thread, &cecup.traversal[L]);
 
-        pthread_join(t1, NULL);
-        pthread_join(t2, NULL);
+        xpthread_join(t1, NULL);
+        xpthread_join(t2, NULL);
     } else {
         work_traverse_fs_thread(&cecup.traversal[L]);
         work_traverse_fs_thread(&cecup.traversal[R]);

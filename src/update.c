@@ -179,7 +179,7 @@ update_ui_handler(void *data) {
         }
 
         error("Waiting for thread to join...\n");
-        pthread_join(cecup.work_thread, NULL);
+        xpthread_join(cecup.work_thread, NULL);
         cecup.work_thread = 0;
         break;
     case MSG_CLEAR_TREES:

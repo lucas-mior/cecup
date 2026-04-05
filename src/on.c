@@ -741,7 +741,8 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
 
     stop_working(true);
     if (cecup.work_thread) {
-        pthread_kill(cecup.work_thread, SIGKILL);
+        error("Joining thread...\n");
+        xpthread_join(cecup.work_thread, NULL);
     }
 
     if (cecup.child_pid > 0) {
