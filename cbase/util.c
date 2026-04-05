@@ -880,12 +880,13 @@ xpthread_create(pthread_t *thread, pthread_attr_t *attr,
 }
 
 static void
-xpthread_join(pthread_t thread, void **thread_return) {
+xpthread_join(pthread_t *thread, void **thread_return) {
     int err;
-    if ((err = pthread_join(thread, thread_return))) {
+    if ((err = pthread_join(*thread, thread_return))) {
         error("Error joining thread: %s.\n", strerror(err));
         fatal(EXIT_FAILURE);
     }
+    *thread = 0;
     return;
 }
 

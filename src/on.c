@@ -742,7 +742,7 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
     stop_working(true);
     if (cecup.work_thread) {
         error("Joining thread...\n");
-        xpthread_join(cecup.work_thread, NULL);
+        xpthread_join(&cecup.work_thread, NULL);
     }
 
     if (cecup.child_pid > 0) {
