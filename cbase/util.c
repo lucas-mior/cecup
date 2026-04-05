@@ -1779,7 +1779,7 @@ deg2rad(double degrees) {
     return degrees*DEG2RAD;
 }
 
-static int64
+static int32
 bytes_pretty(char *buffer, int64 raw) {
     char *suffixes[] = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
     double aux_pretty;
