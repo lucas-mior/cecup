@@ -166,7 +166,7 @@ on_search_changed(GtkEditable *editable, void *data) {
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
                                       GTK_ENTRY_ICON_SECONDARY, "view-refresh-symbolic");
 
-    cecup.search_timeout_id = g_timeout_add(250, on_search_timeout, NULL);
+    cecup.search_timeout_id = g_timeout_add(350, on_search_timeout, NULL);
     return;
 }
 
