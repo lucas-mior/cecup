@@ -888,9 +888,7 @@ update_progress_bar(enum MsgType type, double fraction) {
 
 static void
 update_progress_state(char *text, char *tooltip) {
-    Message *message;
-
-    message = xmalloc(SIZEOF(*message));
+    Message *message = xmalloc(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
     message->type = MSG_PROGRESS;
