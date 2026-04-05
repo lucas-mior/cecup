@@ -352,16 +352,17 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
     }
 
     if ((!hash_lookup_fs_map(traversal_src->map, path_transfered, path_transfered_len, &idx_src))) {
-        LOG_ERROR("Warning: transfered file does not exist in source.\n");
+        error("Warning: transfered file does not exist in source.\n");
         if (DEBUGGING) {
             fatal(EXIT_FAILURE);
         }
         return false;
     }
-
-    row_id = traversal_src->row_ids[idx_src];
-
-    if (row_id < 0) {
+    if ((row_id = traversal_src->row_ids[idx_src]) < 0) {
+        error("Warning: invalid source row of transfered file.\n");
+        if (DEBUGGING) {
+            fatal(EXIT_FAILURE);
+        }
         return false;
     }
 
