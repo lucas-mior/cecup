@@ -675,8 +675,7 @@ update_list_from_rows(void) {
 
         item_get_actions_reasons(row_id, &src_act, &dst_act, &reason);
 
-        size = item_size_side(row_id, L);
-        if (size < 0) {
+        if ((size = item_size_side(row_id, L)) < 0) {
             size = 0;
         }
 
