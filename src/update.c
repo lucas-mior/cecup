@@ -78,6 +78,7 @@ update_ui_handler(void *data) {
     case MSG_BATCH_ROW_TRANSFER:
     case MSG_BATCH_ROW_RENAME:
         is_batch = true;
+        aux_invalidate_preview();
         if (update_rows(data)) {
             update_list_needed = true;
         }
@@ -325,10 +326,6 @@ update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
         cecup.rows_len -= 1;
     }
 
-    if (changed) {
-        aux_invalidate_preview();
-    }
-
     return changed;
 }
 
@@ -378,7 +375,7 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
     if (cecup.rows[R][row_id] < 0) {
         int32 idx;
 
-        if ((hash_lookup_fs_map(traversal_dst->map, path_transfered, path_transfered_len, &idx))) {
+        if (hash_lookup_fs_map(traversal_dst->map, path_transfered, path_transfered_len, &idx)) {
             cecup.rows[R][row_id] = idx;
         } else {
             char *path = traversal_src->paths[idx_src];
@@ -404,15 +401,26 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
     } else {
         int32 idx = cecup.rows[R][row_id];
 
+        traversal_unlink(traversal_dst, idx);
+
         if (S_ISLNK(stat.st_mode)) {
             symlink_target_len = traversal_symlink_get(traversal_dst, full_path, &symlink_target);
             traversal_dst->symlink_targets[idx] = symlink_target;
             traversal_dst->symlink_targets_lens[idx] = (int16)symlink_target_len;
         }
         memcpy64(&traversal_dst->stats[idx], &stat, SIZEOF(struct stat));
+
+        if (S_ISREG(traversal_src->stats[idx_src].st_mode)
+                && (traversal_src->stats[idx_src].st_nlink > 1)) {
+            char *path = traversal_dst->paths[idx];
+            int32 path_len = traversal_dst->paths_lens[idx];
+
+            traversal_add_link(traversal_dst, stat, path, path_len);
+        }
+
+        traversal_dst->row_ids[idx] = row_id;
     }
 
-    aux_invalidate_preview();
     return true;
 }
 
@@ -553,7 +561,6 @@ update_row_rename(char *old_path, int32 old_path_len,
         }
     }
 
-    aux_invalidate_preview();
     return true;
 }
 
