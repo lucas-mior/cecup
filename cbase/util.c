@@ -1785,6 +1785,7 @@ bytes_pretty(char *buffer, int64 raw) {
     double aux_pretty;
     int64 i;
     int32 n;
+    char *comma;
 
     if (raw < 0) {
         *buffer = '\0';
@@ -1811,6 +1812,10 @@ bytes_pretty(char *buffer, int64 raw) {
         n = snprintf2(buffer, 16, "%.3f%s", aux_pretty, suffixes[i]);
     } else {
         n = snprintf2(buffer, 16, "%.4f%s", aux_pretty, suffixes[i]);
+    }
+
+    if ((comma = memchr64(buffer, ',', n))) {
+        *comma = '.';
     }
 
     return n;
