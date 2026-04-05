@@ -347,6 +347,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         }
 
         if (cecup.stop_working) {
+            xkill(-cecup.child_pid, SIGTERM);
             break;
         }
 
