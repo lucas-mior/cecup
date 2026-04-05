@@ -58,8 +58,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
     tasks = xmalloc(tasks_size);
     memset64(tasks, 0, tasks_size);
 
-    for (int32 i = 0; i < cecup.rows_len; i += 1) {
-        int32 row_id;
+    for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
         char *filepath;
         int32 path_len;
         enum Action action;
@@ -68,7 +67,6 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         int32 idx;
         Task *task;
 
-        row_id = i;
         if (!(cecup.rows_selected[row_id])) {
             continue;
         }
