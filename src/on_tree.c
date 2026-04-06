@@ -418,9 +418,9 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         }
         case COLUMN_SIZE:
         {
-            int64 size_raw = item_size_side(row_id, side);
+            int64 size_raw;
 
-            if (size_raw < 0) {
+            if ((size_raw = item_size_side(row_id, side)) < 0) {
                 size_raw = 0;
             }
             SNPRINTF(tip_buffer, "%s: %lld bytes", filepath, (llong)size_raw);
