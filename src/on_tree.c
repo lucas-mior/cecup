@@ -79,12 +79,12 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
     case GDK_BUTTON_SECONDARY: {
         GMenu *menu;
         GtkWidget *popover;
-        int32 row_id;
-        char *filepath = NULL;
-        char *other_path = NULL;
-        bool is_busy;
         GtkSelectionModel *selection;
         uint32 pos;
+        int32 row_id;
+        char *filepath;
+        char *other_path;
+        bool is_busy = gtk_widget_get_sensitive(cecup.stop_button);
         enum Action actions[2];
         enum Reason reason;
 
@@ -100,7 +100,6 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
         }
 
         gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
-        is_busy = gtk_widget_get_sensitive(cecup.stop_button);
         row_id = cecup.rows_visible[pos];
 
         filepath = item_path_side(row_id, side);
