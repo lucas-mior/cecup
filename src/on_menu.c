@@ -221,6 +221,7 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         char full_path[MAX_PATH_LENGTH];
         char *base_path;
         int32 n;
+        int fd;
 
         if (message->side == L) {
             base_path = cecup.src_base;
@@ -233,6 +234,12 @@ on_menu_open_item(GtkWidget *widget, void *data) {
             int32 path_len = n;
             dirname2(full_path, full_path, &path_len);
         }
+
+        if ((fd = open(full_path, O_RDONLY)) < 0) {
+            LOG_ERROR(_("Error opening %s: %s.\n"), full_path, strerror(errno));
+            continue;
+        }
+        XCLOSE(&fd);
 
         {
             char cmd[MAX_PATH_LENGTH];

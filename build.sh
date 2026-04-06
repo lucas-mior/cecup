@@ -290,8 +290,7 @@ case "$target" in
     fi
 
     if [ $target = "debug" ]; then
-        # G_DEBUG=fatal_warnings \
-            gdb $exe -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
+        G_DEBUG=fatal_warnings gdb $exe -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
     fi
     if [ $target = "run" ]; then
         $exe
