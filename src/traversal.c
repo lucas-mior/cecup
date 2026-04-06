@@ -95,8 +95,8 @@ traversal_free(Traversal *traversal) {
             continue;
         }
 
-        free (hard_links.names);
-        free (hard_links.names_lens);
+        free(hard_links.names,     hard_links.capacity*sizeof(*(hard_links.names)));
+        free(hard_links.names_len, hard_links.capacity*sizeof(*(hard_links.names_lens)));
     }
 
     hash_destroy_fs_map(traversal->map);
