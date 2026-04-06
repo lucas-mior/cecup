@@ -588,10 +588,12 @@ main(void) {
 
     {
         TaskList *tasks;
+        GtkWidget *dialog;
 
         tasks = xmalloc(SIZEOF(TaskList));
         tasks->count = 0;
-        on_delete_response(NULL, GTK_RESPONSE_NO, tasks);
+        dialog = gtk_dialog_new();
+        on_delete_response(GTK_DIALOG(dialog), GTK_RESPONSE_NO, tasks);
     }
 
     msg = xmalloc(SIZEOF(*msg));
@@ -619,8 +621,6 @@ main(void) {
     free(cecup.rows_selected, 10 * SIZEOF(uint8));
 
     g_object_unref(tree);
-    g_object_unref(sel);
-    g_object_unref(store);
     g_object_unref(cecup.application);
     gtk_window_destroy(GTK_WINDOW(cecup.gtk_window));
 

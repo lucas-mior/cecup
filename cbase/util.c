@@ -2316,11 +2316,11 @@ main(int argc, char **argv) {
     {
         char b[32];
         bytes_pretty(b, 512);
-        ASSERT_EQUAL(b, "512B");
+        ASSERT_EQUAL((char *)b, "512B");
         bytes_pretty(b, 1024);
-        ASSERT_EQUAL(b, "1.0000kB");
+        ASSERT_EQUAL((char *)b, "1.0000kB");
         bytes_pretty(b, SIZEMB(2));
-        ASSERT_EQUAL(b, "2.0000MB");
+        ASSERT_EQUAL((char *)b, "2.0000MB");
     }
 
     {
