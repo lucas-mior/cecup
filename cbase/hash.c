@@ -429,10 +429,11 @@ CAT(hash_insert_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
 #if !HASH_KEY_FIXED_LEN
                              , int32 key_length
 #endif
-  #if defined(HASH_VALUE_TYPE)
+#if defined(HASH_VALUE_TYPE)
                              , HASH_VALUE_TYPE value
-  #endif
+#endif
 ) {
+
 #if HASH_KEY_FIXED_LEN
     int32 key_length = sizeof(HASH_KEY_TYPE);
 #endif
@@ -443,9 +444,9 @@ CAT(hash_insert_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
                                                  , key_length
 #endif
                                                  , hash, index
-  #if defined(HASH_VALUE_TYPE)
+#if defined(HASH_VALUE_TYPE)
                                                  , value
-  #endif
+#endif
     );
 }
 
@@ -453,13 +454,11 @@ CAT(hash_insert_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
 #if defined(HASH_VALUE_TYPE)
 
 static bool
-CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
-                                         HASH_KEY_TYPE *key
+CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
 #if !HASH_KEY_FIXED_LEN
                                          , int32 key_length
 #endif
-                                         , uint64 hash, uint32 base_index
-                                         , HASH_VALUE_TYPE value
+                                         , uint64 hash, uint32 base_index , HASH_VALUE_TYPE value
 ) {
     uint32 target_idx = MAXOF(target_idx);
     Bucket *target;
@@ -535,9 +534,9 @@ CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
                                       , int32 key_length
 #endif
                                       , uint64 hash, uint32 base_index
-  #if defined(HASH_VALUE_TYPE)
+#if defined(HASH_VALUE_TYPE)
                                       , HASH_VALUE_TYPE *value_ptr
-  #endif
+#endif
 ) {
     uint32 target_idx;
 
@@ -547,46 +546,39 @@ CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
     if (CAT(hash_probe_, HASH_TYPE)(map, key, key_length, hash, base_index, &target_idx))
 #endif
     {
-  #if defined(HASH_VALUE_TYPE)
+#if defined(HASH_VALUE_TYPE)
         *value_ptr = map->array[target_idx].value;
-  #endif
+#endif
         return true;
     }
 
     return false;
 }
 
-#if HASH_KEY_FIXED_LEN
 static bool
 CAT(hash_lookup_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
-  #if defined(HASH_VALUE_TYPE)
+#if !HASH_KEY_FIXED_LEN
+                             , int32 key_length
+#endif
+#if defined(HASH_VALUE_TYPE)
                              , HASH_VALUE_TYPE *value_ptr
-  #endif
+#endif
 ) {
-    uint64 hash = hash_function(key, sizeof(HASH_KEY_TYPE));
-    uint32 index = hash_normal(map, hash);
-    return CAT(hash_lookup_pre_calc_, HASH_TYPE)(map, key, hash, index
-  #if defined(HASH_VALUE_TYPE)
-                                                 , value_ptr
-  #endif
-    );
-}
-#else
-static bool
-CAT(hash_lookup_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key, int32 key_length
-  #if defined(HASH_VALUE_TYPE)
-                             , HASH_VALUE_TYPE *value_ptr
-  #endif
-) {
+#if HASH_KEY_FIXED_LEN
+    int32 key_length = sizeof(HASH_KEY_TYPE);
+#endif
     uint64 hash = hash_function(key, key_length);
     uint32 index = hash_normal(map, hash);
-    return CAT(hash_lookup_pre_calc_, HASH_TYPE)(map, key, key_length, hash, index
-  #if defined(HASH_VALUE_TYPE)
+    return CAT(hash_lookup_pre_calc_, HASH_TYPE)(map, key
+#if !HASH_KEY_FIXED_LEN
+                                                 , key_length
+#endif
+                                                 , hash, index
+#if defined(HASH_VALUE_TYPE)
                                                  , value_ptr
-  #endif
+#endif
     );
 }
-#endif
 
 
 static bool
