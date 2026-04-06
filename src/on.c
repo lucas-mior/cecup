@@ -322,6 +322,10 @@ static void
 on_filter_toggled(GtkToggleButton *button, void *data) {
     (void)data;
     (void)button;
+    if (cecup.rows_len <= 0) {
+        LOG_ERROR(_("No files to filter. Click Analysis first")));
+        return;
+    }
     update_list_from_rows();
     save_config();
     return;
