@@ -83,7 +83,6 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
         char *filepath = NULL;
         char *other_path = NULL;
         bool is_busy;
-        Message *message;
         GtkSelectionModel *selection;
         uint32 pos;
         enum Action actions[2];
@@ -107,20 +106,25 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
         filepath = item_path_side(row_id, side);
         other_path = item_path_side(row_id, !side);
 
-        message = xmalloc(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
-        if (filepath) {
-            message->src_path_len = item_path_len_side(row_id, side);
-            message->src_path = xmalloc(message->src_path_len + 1);
-            memcpy64(message->src_path, filepath, message->src_path_len + 1);
+        {
+            Message *message = xmalloc(SIZEOF(*message));
+            memset64(message, 0, SIZEOF(*message));
+
+            if (filepath) {
+                message->src_path_len = item_path_len_side(row_id, side);
+                message->src_path = xmalloc(message->src_path_len + 1);
+                memcpy64(message->src_path, filepath, message->src_path_len + 1);
+            }
+            message->side = side;
+
+            item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
+            message->action = actions[side];
+
+            g_object_set_data(G_OBJECT(cecup.application),
+                              "active_tree", widget);
+            g_object_set_data_full(G_OBJECT(cecup.application),
+                                   "active_message", message, free_message);
         }
-        message->side = side;
-
-        item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
-        message->action = actions[side];
-
-        g_object_set_data(G_OBJECT(cecup.application), "active_tree", widget);
-        g_object_set_data_full(G_OBJECT(cecup.application), "active_message", message, free_message);
 
         menu = g_menu_new();
         for (int32 i = 0; i < LENGTH(tree_menu_items); i += 1) {
