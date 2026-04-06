@@ -290,7 +290,13 @@ case "$target" in
     fi
 
     if [ $target = "debug" ]; then
-        G_DEBUG=fatal_warnings gdb $exe -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
+        # reactivate fatal_warnings after solving:
+        # (cecup_debug:9237):
+        # Gtk-WARNING **:
+        # Trying to snapshot GtkGizmo 0x555555c69fd0 without a current allocation
+
+        # G_DEBUG=fatal_warnings \
+            gdb $exe -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
     fi
     if [ $target = "run" ]; then
         $exe
