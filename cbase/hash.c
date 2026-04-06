@@ -467,22 +467,20 @@ CAT(hash_insert_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key,
 #endif
 
 
+#if defined(HASH_VALUE_TYPE)
+
 #if HASH_KEY_FIXED_LEN
 static bool
 CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
                                          HASH_KEY_TYPE *key,
                                          uint64 hash, uint32 base_index
-  #if defined(HASH_VALUE_TYPE)
                                          , HASH_VALUE_TYPE value
-  #endif
 #else
 static bool
 CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
                                          HASH_KEY_TYPE *key, int32 key_length,
                                          uint64 hash, uint32 base_index
-  #if defined(HASH_VALUE_TYPE)
                                          , HASH_VALUE_TYPE value
-  #endif
 #endif
 ) {
     uint32 target_idx = MAXOF(target_idx);
@@ -500,9 +498,7 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
 #endif
     {
         target = &map->array[target_idx];
-  #if defined(HASH_VALUE_TYPE)
         target->value = value;
-  #endif
         return true;
     }
 
@@ -528,47 +524,29 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map,
     target->hash = hash;
 #endif
 
-#if defined(HASH_VALUE_TYPE)
     target->value = value;
-#endif
     map->length += 1;
     return true;
 }
 
 #if HASH_KEY_FIXED_LEN
 static bool
-CAT(hash_overwrite_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
-  #if defined(HASH_VALUE_TYPE)
-                                , HASH_VALUE_TYPE value
-  #endif
-) {
+CAT(hash_overwrite_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key , HASH_VALUE_TYPE value) {
     uint64 hash = hash_function(key, sizeof(HASH_KEY_TYPE));
     uint32 index = hash_normal(map, hash);
-    return CAT(hash_overwrite_pre_calc_, HASH_TYPE)(map, key, hash, index
-  #if defined(HASH_VALUE_TYPE)
-                                                    , value
-  #endif
-    );
+    return CAT(hash_overwrite_pre_calc_, HASH_TYPE)(map, key, hash, index , value);
 }
 #else
 static bool
 CAT(hash_overwrite_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key,
-                                int32 key_length
-  #if defined(HASH_VALUE_TYPE)
-                                , HASH_VALUE_TYPE value
-  #endif
-) {
+                                int32 key_length , HASH_VALUE_TYPE value) {
     uint64 hash = hash_function(key, key_length);
     uint32 index = hash_normal(map, hash);
-    return CAT(hash_overwrite_pre_calc_, HASH_TYPE)(map, key, key_length,
-                                                    hash, index
-  #if defined(HASH_VALUE_TYPE)
-                                                    , value
-  #endif
-    );
+    return CAT(hash_overwrite_pre_calc_, HASH_TYPE)(map, key, key_length, hash, index , value);
 }
 #endif
 
+#endif /* HASH_VALUE_TYPE (only define overwrite functions for HashMaps, not for HashSets */
 
 #if HASH_KEY_FIXED_LEN
 static bool
@@ -786,8 +764,10 @@ CAT(hash_functions_sink_, HASH_TYPE)(void) {
     (void)CAT(hash_probe_, HASH_TYPE);
     (void)CAT(hash_insert_pre_calc_, HASH_TYPE);
     (void)CAT(hash_insert_, HASH_TYPE);
+#if defined(HASH_VALUE_TYPE)
     (void)CAT(hash_overwrite_pre_calc_, HASH_TYPE);
     (void)CAT(hash_overwrite_, HASH_TYPE);
+#endif
     (void)CAT(hash_lookup_pre_calc_, HASH_TYPE);
     (void)CAT(hash_lookup_, HASH_TYPE);
     (void)CAT(hash_remove_pre_calc_, HASH_TYPE);

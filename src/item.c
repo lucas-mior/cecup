@@ -86,15 +86,20 @@ static char *
 item_path_get(int32 row_id) {
     int32 src_idx = cecup.rows[L][row_id];
     int32 dst_idx = cecup.rows[R][row_id];
+    char *path;
 
     if (src_idx >= 0) {
-        return cecup.traversal[L].paths[src_idx];
+        path = cecup.traversal[L].paths[src_idx];
     } else if (dst_idx >= 0) {
-        return cecup.traversal[R].paths[dst_idx];
+        path = cecup.traversal[R].paths[dst_idx];
     } else {
         error("Error: both source and destination have invalid indices.\n");
         fatal(EXIT_FAILURE);
     }
+
+    // just for clang-static analyzer
+    ASSERT(path);
+    return path;
 }
 
 static int32
