@@ -573,6 +573,9 @@ int main(void) {
     cecup.dir_entry[L] = gtk_entry_new();
     cecup.dir_entry[R] = gtk_entry_new();
 
+    cecup.entry_id[L] = g_signal_connect(cecup.dir_entry[L], "changed", G_CALLBACK(gtk_widget_show), NULL);
+    cecup.entry_id[R] = g_signal_connect(cecup.dir_entry[R], "changed", G_CALLBACK(gtk_widget_show), NULL);
+
     cecup.filter_new = gtk_check_button_new();
     cecup.filter_link = gtk_check_button_new();
     cecup.filter_update = gtk_check_button_new();
