@@ -45,7 +45,7 @@
 
 static bool update_row_ignore(Message *message);
 static void update_ignored_helper(int32 side, int32 row_id, IgnorePattern *match);
-static void update_list_from_rows(void);
+static void update_list_from_rows(enum UpdateRowsType);
 static void update_progress_bar(double fraction);
 static void update_progress_info(char *text, char *tooltip);
 static void update_stats_text(int32 count_selected, int64 total_size_bytes);
@@ -168,7 +168,7 @@ update_ui_handler(void *data) {
         update_list_needed = update_row_ignore(message);
         break;
     case MSG_ENABLE_BUTTONS:
-        update_list_from_rows();
+        update_list_from_rows(UPDATE_ROWS_COMPLETE);
 
         cecup.preview_dirty = !message->preview_clean;
         aux_protect_interface_from_user(false);
@@ -217,7 +217,7 @@ update_ui_handler(void *data) {
     }
 
     if (update_list_needed) {
-        update_list_from_rows();
+        update_list_from_rows(UPDATE_ROWS_COMPLETE);
 
         if (DEBUGGING) {
             check_consistent_state();
@@ -616,7 +616,7 @@ update_row_ignore(Message *message) {
 }
 
 static void
-update_list_from_rows(void) {
+update_list_from_rows(enum UpdateRowsType change) {
     int32 count_new = 0;
     int32 count_link = 0;
     int32 count_update = 0;
@@ -627,7 +627,6 @@ update_list_from_rows(void) {
     int32 current_store_count;
 
     int64 total_size_bytes = 0;
-    char button_label[64];
 
     struct timespec t0_rows_loop;
     struct timespec t1_rows_loop;
@@ -642,6 +641,16 @@ update_list_from_rows(void) {
     static SortEntry *sort_entries = NULL;
     static int32 sort_entries_capacity = 0;
 
+    int32 limit;
+
+    if (change == UPDATE_ROWS_COMPLETE) {
+        limit = cecup.rows_len;
+    } else {
+        limit = cecup.rows_visible_len;
+    }
+
+    PRINTLN(limit);
+
     current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
@@ -652,12 +661,19 @@ update_list_from_rows(void) {
                            SIZEOF(*sort_entries));
     sort_entries_capacity = cecup.rows_len;
 
-    for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
+    for (int32 i = 0; i < limit; i += 1) {
+        int32 row_id;
         enum Action src_act;
         enum Action dst_act;
         enum Reason reason;
         int64 size;
         bool is_visible = false;
+
+        if (change == UPDATE_ROWS_COMPLETE) {
+            row_id = i;
+        } else {
+            row_id = cecup.rows_visible[i];
+        }
 
         if (cecup.rows_selected[row_id]) {
             count_selected += 1;
@@ -766,27 +782,31 @@ update_list_from_rows(void) {
         }
     }
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_rows_loop);
-    PRINT_TIMINGS(cecup.rows_len, t0_rows_loop, t1_rows_loop, "rows loop");
+    PRINT_TIMINGS(limit, t0_rows_loop, t1_rows_loop, "rows loop");
 
-    SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_new), button_label);
+    if (change == UPDATE_ROWS_COMPLETE) {
+        char button_label[64];
 
-    SNPRINTF(button_label, "%s/%s %d", EMOJI_LINK, EMOJI_SYMLINK, count_link);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_link), button_label);
+        SNPRINTF(button_label, "%s %d", EMOJI_NEW, count_new);
+        gtk_button_set_label(GTK_BUTTON(cecup.filter_new), button_label);
 
-    SNPRINTF(button_label, "%s %d", EMOJI_UPDATE, count_update);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_update), button_label);
+        SNPRINTF(button_label, "%s/%s %d", EMOJI_LINK, EMOJI_SYMLINK, count_link);
+        gtk_button_set_label(GTK_BUTTON(cecup.filter_link), button_label);
 
-    SNPRINTF(button_label, "%s %d", EMOJI_EQUAL, count_equal);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_equal), button_label);
+        SNPRINTF(button_label, "%s %d", EMOJI_UPDATE, count_update);
+        gtk_button_set_label(GTK_BUTTON(cecup.filter_update), button_label);
 
-    SNPRINTF(button_label, "%s %d", EMOJI_DELETE, count_delete);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), button_label);
+        SNPRINTF(button_label, "%s %d", EMOJI_EQUAL, count_equal);
+        gtk_button_set_label(GTK_BUTTON(cecup.filter_equal), button_label);
 
-    SNPRINTF(button_label, "%s %d", EMOJI_IGNORE, count_ignore);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
+        SNPRINTF(button_label, "%s %d", EMOJI_DELETE, count_delete);
+        gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), button_label);
 
-    update_stats_text(count_selected, total_size_bytes);
+        SNPRINTF(button_label, "%s %d", EMOJI_IGNORE, count_ignore);
+        gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
+
+        update_stats_text(count_selected, total_size_bytes);
+    }
 
     if (cecup.rows_visible_len > 0) {
         struct timespec t0_sort;

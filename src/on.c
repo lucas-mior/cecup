@@ -138,7 +138,7 @@ on_config_changed(GtkWidget *widget, void *data) {
 static gboolean
 on_search_timeout(void *data) {
     (void)data;
-    update_list_from_rows();
+    update_list_from_rows(UPDATE_ROWS_COMPLETE);
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry), GTK_ENTRY_ICON_SECONDARY, NULL);
     cecup.search_timeout_id = 0;
     return G_SOURCE_REMOVE;
@@ -320,13 +320,20 @@ on_stop_clicked(GtkWidget *button, void *data) {
 
 static void
 on_filter_toggled(GtkToggleButton *button, void *data) {
-    (void)data;
-    (void)button;
+    enum UpdateRowsType change = UPDATE_ROWS_FILTER_OUT;
+
+    (void) data;
+
     if (cecup.rows_len <= 0) {
         LOG_ERROR(_("No files to filter. Click Analysis first"));
         return;
     }
-    update_list_from_rows();
+
+    if (gtk_toggle_button_get_active(button)) {
+        change = UPDATE_ROWS_COMPLETE;
+    }
+
+    update_list_from_rows(change);
     save_config();
     return;
 }
@@ -354,7 +361,7 @@ on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
             col_data = g_object_get_data(G_OBJECT(col), "col_id");
             cecup.sort_col = (enum CecupColumn)GPOINTER_TO_INT(col_data);
             cecup.sort_order = order;
-            update_list_from_rows();
+            update_list_from_rows(UPDATE_ROWS_SORT);
         }
     }
 
@@ -506,7 +513,7 @@ on_unselect_all_clicked(GtkWidget *button, void *data) {
         cecup.rows_selected[i] = false;
     }
 
-    update_list_from_rows();
+    update_list_from_rows(UPDATE_ROWS_COMPLETE);
     update_visible_checkboxes(cecup.tree[L], L);
     update_visible_checkboxes(cecup.tree[R], R);
     return;
@@ -524,7 +531,7 @@ on_select_all_visible_clicked(GtkWidget *button, void *data) {
         cecup.rows_selected[row_id] = true;
     }
 
-    update_list_from_rows();
+    update_list_from_rows(UPDATE_ROWS_SELECT);
     update_visible_checkboxes(cecup.tree[L], L);
     update_visible_checkboxes(cecup.tree[R], R);
     return;

@@ -478,6 +478,13 @@ static struct {
     bool preview_dirty;
 } cecup;
 
+enum UpdateRowsType {
+    UPDATE_ROWS_COMPLETE,
+    UPDATE_ROWS_SORT,
+    UPDATE_ROWS_SELECT,
+    UPDATE_ROWS_FILTER_OUT,
+};
+
 typedef struct ThreadData {
     TaskList *tasks;
 } ThreadData;
