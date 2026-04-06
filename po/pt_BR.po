@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-05 22:42-0300\n"
+"POT-Creation-Date: 2026-04-05 22:55-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -24,7 +24,8 @@ msgstr "Clique em \"Analisar\" primeiro"
 
 #: src/aux.c:76
 msgid "Alterations were made. File list may not be entirely consistent"
-msgstr "Alterações foram feitas. A lista de arquivos pode não estar consistente"
+msgstr ""
+"Alterações foram feitas. A lista de arquivos pode não estar consistente"
 
 #: src/aux.c:132 src/main.c:564
 msgid "Start copying and updating all files"
@@ -335,6 +336,7 @@ msgid "Launching %s...\n"
 msgstr "Executando %s...\n"
 
 #: src/on_menu.c:313
+#, c-format
 msgid "Error resolving full path of %s:%s. Copying relative path instead.\n"
 msgstr ""
 "Erro ao resolver o caminho completo de %s: %s. Copiando o caminho relativo.\n"
@@ -385,10 +387,13 @@ msgid "This filename on any folder (*/%s)"
 msgstr "Este nome de arquivo em qualquer pasta (*/%s)"
 
 #: src/on_tree.c:390
+#, c-format
 msgid ""
+"\n"
 "\n"
 "There are %d names for this file:\n"
 msgstr ""
+"\n"
 "\n"
 "Existem %d caminhos para esse arquivo\n"
 
@@ -534,14 +539,17 @@ msgid "Running sync...\n"
 msgstr "Executando sincronização...\n"
 
 #: src/work_rsync.c:370
+#, c-format
 msgid "Error reading stdout pipe: %s.\n"
-msgstr "Erro ao renomear %s para %s: %s\n"
+msgstr "Erro ao ler saída do comando: %s\n"
 
 #: src/work_rsync.c:484
+#, c-format
 msgid "Error reading stderr pipe: %s.\n"
 msgstr "Erro ao tentar ler erros do programa: %s.\n"
 
 #: src/work_rsync.c:498
+#, c-format
 msgid "Error waiting for child process: %s.\n"
 msgstr "Erro ao aguardar processo filho: %s.\n"
 
