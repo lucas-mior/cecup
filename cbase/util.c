@@ -1844,7 +1844,7 @@ shell_escape(char *path) {
 
 static void
 normalize(char *path, int32 *length) {
-    char *p = path;
+    char *p;
     int64 off = 0;
 
     if (*length < 0) {
