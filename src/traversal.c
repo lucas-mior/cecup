@@ -87,6 +87,18 @@ static void
 traversal_free(Traversal *traversal) {
     int32 capacity = traversal->capacity;
 
+    for (uint32 i = 0; i < traversal->inode_map->capacity; i += 1) {
+        Bucket_inode_map *bucket = &traversal->inode_map->array[i];
+        HardLinks hard_links = bucket->value;
+
+        if (bucket->slot_state != HASH_SLOT_USED) {
+            continue;
+        }
+
+        free (hard_links.names);
+        free (hard_links.names_lens);
+    }
+
     hash_destroy_fs_map(traversal->map);
     hash_destroy_inode_map(traversal->inode_map);
 
