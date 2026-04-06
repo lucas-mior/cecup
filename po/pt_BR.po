@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-04 00:33-0300\n"
+"POT-Creation-Date: 2026-04-05 22:42-0300\n"
 "PO-Revision-Date: 2026-02-27 06:13-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -18,40 +18,44 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: src/aux.c:62 src/aux.c:88
+#: src/aux.c:72 src/aux.c:129
 msgid "Click Analysis first"
 msgstr "Clique em \"Analisar\" primeiro"
 
-#: src/aux.c:91 src/main.c:290
+#: src/aux.c:76
+msgid "Alterations were made. File list may not be entirely consistent"
+msgstr "Alterações foram feitas. A lista de arquivos pode não estar consistente"
+
+#: src/aux.c:132 src/main.c:564
 msgid "Start copying and updating all files"
 msgstr "Iniciar a cópia e atualização de todos os arquivos"
 
-#: src/aux.c:117
+#: src/aux.c:160
 msgid "Error: Invalid source directory.\n"
 msgstr "Erro: Pasta de origem inválida.\n"
 
-#: src/aux.c:122
+#: src/aux.c:165
 msgid "Error: Invalid destination directory.\n"
 msgstr "Erro: Pasta de destino inválida.\n"
 
-#: src/aux.c:128 src/aux.c:133
+#: src/aux.c:171 src/aux.c:176
 #, c-format
 msgid "Error getting full path of %s: %s.\n"
 msgstr "Erro ao obter o caminho completo de %s: %s.\n"
 
-#: src/aux.c:139
+#: src/aux.c:182
 msgid "Error: source and backup are the same directory\n"
 msgstr "Erro: origem e backup são a mesma pasta\n"
 
-#: src/aux.c:150
+#: src/aux.c:193
 msgid "Error: source directory is contained in the destination directory\n"
 msgstr "Erro: a pasta de origem está contida na pasta de backup\n"
 
-#: src/aux.c:157
+#: src/aux.c:200
 msgid "Error: destination directory is contained in the source directory\n"
 msgstr "Erro: a pasta de backup está condita na pasta de origem\n"
 
-#: src/ignore_patterns.c:58 src/on_menu.c:100
+#: src/ignore_patterns.c:58 src/on_menu.c:100 src/on_menu.c:239
 #, c-format
 msgid "Error opening %s: %s.\n"
 msgstr "Erro ao tentar abrir %s: %s.\n"
@@ -80,7 +84,7 @@ msgstr "Aviso: padrão de exclusão '%s' detectado.\n"
 msgid "Warning: backslash '%s' detected.\n"
 msgstr "Aviso: barra invertida '%s' detectada.\n"
 
-#: src/ignore_patterns.c:126 src/on_menu.c:106
+#: src/ignore_patterns.c:129 src/on_menu.c:106
 #, c-format
 msgid "Error closing %s: %s.\n"
 msgstr "Erro ao fechar %s: %s.\n"
@@ -101,182 +105,179 @@ msgstr "Tamanho"
 msgid "Modification Time"
 msgstr "Data de modificação"
 
-#: src/main.c:278
-msgid "🔎 Analyze"
-msgstr "🔎 Analisar"
-
 #: src/main.c:279
 msgid "Edit Ignore Rules"
 msgstr "Editar regras de ignorados"
 
-#: src/main.c:280
-msgid "⏹️ Stop"
-msgstr "⏹️ Parar"
-
 #: src/main.c:281
-msgid "⏩ Apply Changes"
-msgstr "⏩ Aplicar mudanças"
-
-#: src/main.c:284
-msgid "Check which files need to be copied or updated"
-msgstr "Verificar quais arquivos precisam ser copiados ou atualizados"
-
-#: src/main.c:286
-msgid "Edit the list of filename patterns to ignore"
-msgstr "Editar a lista de padrões de nomes de arquivo para ignorar"
-
-#: src/main.c:288
-msgid "Cancel the current task"
-msgstr "Cancelar a tarefa atual"
-
-#: src/main.c:328
 msgid "Protect same-drive sync"
 msgstr "Impedir cópia no mesmo disco"
 
-#: src/main.c:330
+#: src/main.c:283
 msgid "Remove ignored items"
 msgstr "Excluir itens ignorados"
 
-#: src/main.c:332
+#: src/main.c:285
 msgid "Sync 100%"
 msgstr "Sincronia 100%"
 
-#: src/main.c:335
+#: src/main.c:288
+msgid "Edit the list of filename patterns to ignore"
+msgstr "Editar a lista de padrões de nomes de arquivo para ignorar"
+
+#: src/main.c:290
 msgid "Prevent copying if original and backup are on the same disk"
 msgstr "Evitar a cópia se a origem e o backup estiverem no mesmo disco"
 
-#: src/main.c:337
+#: src/main.c:292
 msgid "Remove files from backup if they were added to the ignore list"
 msgstr ""
 "Excluir arquivos do backup se eles foram adicionados à lista de ignorados"
 
-#: src/main.c:339
+#: src/main.c:294
 msgid "Delete files in backup that do not exist in the original"
 msgstr "Excluir do backup os arquivos que não existem na origem"
 
-#: src/main.c:345
+#: src/main.c:300
 msgid "Executable used for comparing files"
 msgstr "Executável usado para comparar os arquivos"
 
-#: src/main.c:347
+#: src/main.c:302
 msgid "Terminal emulator used to launch the diff tool"
 msgstr "Emulador de terminal usado para executar a ferramenta de comparação"
 
-#: src/main.c:350
+#: src/main.c:305
 msgid "Defaults"
 msgstr "Padrões"
 
-#: src/main.c:351
+#: src/main.c:306
 msgid "Restore original settings"
 msgstr "Restaurar configurações originais"
 
-#: src/main.c:365
+#: src/main.c:324
 msgid "Diff Tool:"
 msgstr "Ferramenta de comparação:"
 
-#: src/main.c:369
+#: src/main.c:328
 msgid "Terminal:"
 msgstr "Terminal:"
 
-#: src/main.c:380 src/work.c:309
+#: src/main.c:339 src/work.c:325
 msgid "Analyzing changes"
 msgstr "Analisando mudanças"
 
-#: src/main.c:415 src/main.c:437
+#: src/main.c:350
+msgid "Search files..."
+msgstr "Pesquisar arquivos..."
+
+#: src/main.c:356
+msgid "🔍"
+msgstr "🔍"
+
+#: src/main.c:366
+msgid "✅ Everything ready"
+msgstr "✅ Tudo pronto"
+
+#: src/main.c:374
+msgid "Select all visible"
+msgstr "Selecionar todos visíveis"
+
+#: src/main.c:375
+msgid "Unselect all"
+msgstr "Desmarcar todos"
+
+#: src/main.c:378
+msgid "Select all files which currently are on the list below"
+msgstr "Selecionar todos arquivos que atualmente estão na lista abaixo"
+
+#: src/main.c:380
+msgid "Unselect all files which are currently selected"
+msgstr "Desselecionar todos os arquivos que estão selecionados"
+
+#: src/main.c:404
+msgid "Show new files"
+msgstr "Mostrar arquivos novos"
+
+#: src/main.c:405
+msgid "Show links"
+msgstr "Mostrar links"
+
+#: src/main.c:406
+msgid "Show updates"
+msgstr "Mostrar atualizações"
+
+#: src/main.c:407
+msgid "Show equals"
+msgstr "Mostrar iguais"
+
+#: src/main.c:408
+msgid "Show files to be deleted"
+msgstr "Mostrar arquivos a serem deletados"
+
+#: src/main.c:409
+msgid "Show ignored files"
+msgstr "Mostrar ignorados"
+
+#: src/main.c:513 src/main.c:535
 msgid "Select Folder"
 msgstr "Selecionar pasta"
 
-#: src/main.c:416
+#: src/main.c:514
 msgid "Folder containing original files"
 msgstr "Pasta contendo seus arquivos de origem"
 
-#: src/main.c:417
+#: src/main.c:515
 msgid "Open browser to select the folder containing original files"
 msgstr ""
 "Abrir explorador de arquivos para selecionar pasta contendo seus arquivos de "
 "origem"
 
-#: src/main.c:428
+#: src/main.c:526
 msgid "Invert Original and Backup"
 msgstr "Inverter origem e backup"
 
-#: src/main.c:438
+#: src/main.c:536
 msgid "Folder where the backup will be stored"
 msgstr "Pasta onde o backup será armazenado"
 
-#: src/main.c:439
+#: src/main.c:537
 msgid "Open browser to select the folder where the backup will be stored"
 msgstr ""
 "Abrir explorador de arquivos para selecionar pasta onde o backup será feito"
 
-#: src/main.c:453
-msgid "Search files..."
-msgstr "Pesquisar arquivos..."
+#: src/main.c:555
+msgid "🔎 Analyze"
+msgstr "🔎 Analisar"
 
-#: src/main.c:459
-msgid "🔍"
-msgstr "🔍"
+#: src/main.c:556
+msgid "⏹️ Stop"
+msgstr "⏹️ Parar"
 
-#: src/main.c:470
-msgid "Select all visible"
-msgstr "Selecionar todos visíveis"
-
-#: src/main.c:471
-msgid "Unselect all"
-msgstr "Desmarcar todos"
-
-#: src/main.c:474
-msgid "Select all files which currently are on the list below"
-msgstr "Selecionar todos arquivos que atualmente estão na lista abaixo"
-
-#: src/main.c:476
-msgid "Unselect all files which are currently selected"
-msgstr "Desselecionar todos os arquivos que estão selecionados"
+#: src/main.c:557
+msgid "⏩ Apply Changes"
+msgstr "⏩ Aplicar mudanças"
 
 #: src/main.c:560
-#, fuzzy
-msgid "Show new files"
-msgstr "Mostrar arquivos novos"
-
-#: src/main.c:561
-msgid "Show links"
-msgstr "Mostrar links"
+msgid "Check which files need to be copied or updated"
+msgstr "Verificar quais arquivos precisam ser copiados ou atualizados"
 
 #: src/main.c:562
-#, fuzzy
-msgid "Show updates"
-msgstr "Mostrar atualizações"
+msgid "Cancel the current task"
+msgstr "Cancelar a tarefa atual"
 
-#: src/main.c:563
-msgid "Show equals"
-msgstr "Mostrar iguais"
-
-#: src/main.c:564
-msgid "Show files to be deleted"
-msgstr "Mostrar arquivos a serem deletados"
-
-#: src/main.c:565
-#, fuzzy
-msgid "Show ignored files"
-msgstr "Mostrar ignorados"
-
-#: src/main.c:595
-msgid "✅ Everything ready"
-msgstr "✅ Tudo pronto"
-
-#: src/main.c:754
+#: src/main.c:750
 msgid "Welcome to cecup"
 msgstr "Bem vindo"
 
-#: src/main.c:756
+#: src/main.c:752
 msgid "_OK"
 msgstr "_OK"
 
-#: src/on.c:77
+#: src/on.c:83
 msgid "Action blocked: Background task is running.\n"
 msgstr "Ação bloqueada: Há uma tarefa sendo executada em segundo plano.\n"
 
-#: src/on.c:188
+#: src/on.c:194
 #, c-format
 msgid ""
 "Warning: 'Sync 100%%' (delete-after) is enabled. Files in the backup folder "
@@ -287,32 +288,36 @@ msgstr ""
 "backup que não existem na pasta de origem serão EXCLUÍDOS PERMANENTEMENTE. "
 "Além disso, arquivos que são mais novos no destino serão SOBRESCRITOS."
 
-#: src/on.c:243
+#: src/on.c:249
 msgid "Invalid paths. Aborting preview...\n"
 msgstr "Caminhos inválidos. Abortando...\n"
 
-#: src/on.c:300
+#: src/on.c:306
 #, c-format
 msgid "Sync %s -> %s?"
 msgstr "Sincronizar %s -> %s?"
 
-#: src/on.c:560
+#: src/on.c:326
+msgid "No files to filter. Click Analysis first"
+msgstr "Não há arquivos para filtrar. Clique em \"Analisar\" primeiro"
+
+#: src/on.c:564
 msgid "Ignore Rules"
 msgstr "Regras de ignorados"
 
-#: src/on.c:594
+#: src/on.c:604
 msgid "Error: source directory path is too long.\n"
 msgstr "Erro: o caminho da pasta de origem é muito longo.\n"
 
-#: src/on.c:601
+#: src/on.c:611
 msgid "Error: destination directory path is too long.\n"
 msgstr "Erro: o caminho da pasta de destino é muito longo.\n"
 
-#: src/on.c:637
+#: src/on.c:647
 msgid "Src"
 msgstr "Origem"
 
-#: src/on.c:671
+#: src/on.c:681
 msgid "Dst"
 msgstr "Destino"
 
@@ -324,17 +329,17 @@ msgstr "📝 Copiar linha"
 msgid "📋 Copy Whole Log"
 msgstr "📋 Copiar log inteiro"
 
-#: src/on_menu.c:245
+#: src/on_menu.c:252
 #, c-format
 msgid "Launching %s...\n"
 msgstr "Executando %s...\n"
 
-#: src/on_menu.c:306
-#, fuzzy, c-format
+#: src/on_menu.c:313
 msgid "Error resolving full path of %s:%s. Copying relative path instead.\n"
-msgstr "Erro ao resolver o caminho completo de %s: %s.\n"
+msgstr ""
+"Erro ao resolver o caminho completo de %s: %s. Copiando o caminho relativo.\n"
 
-#: src/on_menu.c:380
+#: src/on_menu.c:387
 #, c-format
 msgid "Permanently delete %d item(s)?"
 msgstr "Excluir permanentemente %d item(ns)?"
@@ -344,17 +349,12 @@ msgstr "Excluir permanentemente %d item(ns)?"
 msgid "Invalid rename: %s starts with a slash.\n"
 msgstr "Renomeio inválido: %s começa com barra.\n"
 
-#: src/on_path.c:178
-#, c-format
-msgid "Invalid rename: %s points to outside of the base directory.\n"
-msgstr "Renomeio inválido: %s aponta para fora da pasta base.\n"
-
-#: src/on_path.c:187
+#: src/on_path.c:181
 #, c-format
 msgid "Error renaming %s to %s: %s\n"
 msgstr "Erro ao renomear %s para %s: %s\n"
 
-#: src/on_path.c:191
+#: src/on_path.c:185
 #, c-format
 msgid "Renamed: %s -> %s\n"
 msgstr "Renomeado: %s -> %s\n"
@@ -385,22 +385,23 @@ msgid "This filename on any folder (*/%s)"
 msgstr "Este nome de arquivo em qualquer pasta (*/%s)"
 
 #: src/on_tree.c:390
-#, fuzzy, c-format
 msgid ""
 "\n"
 "There are %d names for this file:\n"
-msgstr "Existem %d caminhos para esse arquivo"
+msgstr ""
+"\n"
+"Existem %d caminhos para esse arquivo\n"
 
 #: src/on_tree.c:412
 msgid "pattern"
 msgstr "padrão"
 
-#: src/traversal.c:179
+#: src/traversal.c:181
 #, c-format
 msgid "Error in readlink(%s): %s.\n"
 msgstr "Erro em readlink(%s): %s.\n"
 
-#: src/update.c:876
+#: src/update.c:832
 #, c-format
 msgid ""
 "<span foreground='red'>Selected files: %d</span>\n"
@@ -409,7 +410,7 @@ msgstr ""
 "<span foreground='red'>Arquivos selecionados: %d</span>\n"
 "Tamanho total da transferência: 📦 %s"
 
-#: src/update.c:882
+#: src/update.c:838
 #, c-format
 msgid ""
 "Selected files: %d\n"
@@ -418,70 +419,70 @@ msgstr ""
 "Arquivos selecionados: %d\n"
 "Tamanho total da transferência: 📦 %s"
 
-#: src/work.c:80
+#: src/work.c:82
 #, c-format
 msgid "Error walking directory %s: %s.\n"
 msgstr "Erro ao percorrer o pasta %s: %s.\n"
 
-#: src/work.c:116
+#: src/work.c:118
 #, c-format
 msgid "Error while traversing file system: %s.\n"
 msgstr "Erro ao percorrer sistemas de arquivos: %s.\n"
 
-#: src/work.c:119
+#: src/work.c:121
 #, c-format
 msgid "Directory '%s' is unreadable.\n"
 msgstr "Pasta '%s' não pode ser lida.\n"
 
-#: src/work.c:122
+#: src/work.c:124
 #, c-format
 msgid "Failed to get file information for %s: %s.\n"
 msgstr "Falha ao requisitar informações do arquivo %s: %s.\n"
 
-#: src/work.c:146
+#: src/work.c:148
 msgid "Error: file path is too long:\n"
 msgstr "Erro: o caminho do arquivo é muito longo:\n"
 
-#: src/work.c:148 src/work.c:157 src/work.c:165 src/work.c:181
+#: src/work.c:150 src/work.c:159 src/work.c:167 src/work.c:183
 msgid "Please fix your file system.\n"
 msgstr "Por favor, corrija seu sistema de arquivos.\n"
 
-#: src/work.c:155
+#: src/work.c:157
 msgid "Error: there is a space in the start of the filename:\n"
 msgstr "Erro: há um espaço no início do nome do arquivo:\n"
 
-#: src/work.c:163
+#: src/work.c:165
 msgid "Error: there is space in the end of the filename:\n"
 msgstr "Erro: há um espaço no final do nome do arquivo:\n"
 
-#: src/work.c:179
+#: src/work.c:181
 msgid "Error: filename contains problematic characters/patterns:\n"
 msgstr "Erro: o nome do arquivo contém caracteres/padrões problemáticos:\n"
 
-#: src/work.c:189
+#: src/work.c:191
 #, c-format
 msgid "More than %lld files found.\n"
 msgstr "Mais de %lld arquivos encontrados.\n"
 
-#: src/work.c:190
+#: src/work.c:192
 msgid "Please work in smaller subdirs.\n"
 msgstr "Por favor, trabalhe em subpastas menores.\n"
 
-#: src/work.c:258
+#: src/work.c:260
 #, c-format
 msgid "Error in fts_close: %s.\n"
 msgstr "Erro em fts_close: %s.\n"
 
-#: src/work.c:310
+#: src/work.c:326
 msgid "Traversing file systems for differences..."
 msgstr "Percorrendo os sistemas de arquivos em busca de diferenças..."
 
-#: src/work.c:320 src/work.c:325
+#: src/work.c:336 src/work.c:341
 #, c-format
 msgid "Error getting directory info from %s: %s.\n"
 msgstr "Erro ao obter informações do pasta de %s: %s.\n"
 
-#: src/work.c:334
+#: src/work.c:350
 msgid ""
 "Safety stop: Original and backup are on the same storage device.\n"
 "Check if the backup device is connected.\n"
@@ -494,224 +495,221 @@ msgstr ""
 "Para forçar o backup em uma pasta no mesmo dispositivo, desmarque a opção "
 "\"Impedir cópia no mesmo disco\".\n"
 
-#: src/work.c:350
+#: src/work.c:366
 msgid "Traversing file systems...\n"
 msgstr "Percorrendo sistemas de arquivos...\n"
 
-#: src/work.c:366 src/work_rsync.c:552 src/work_rsync.c:572
-#: src/work_rsync.c:665
+#: src/work.c:382 src/work_rsync.c:648 src/work_rsync.c:668
+#: src/work_rsync.c:761
 msgid "Stop requested.\n"
 msgstr "Parada solicitada.\n"
 
-#: src/work.c:370
+#: src/work.c:386
 msgid "File system traversal finished.\n"
 msgstr "Busca no sistema de arquivos concluída.\n"
 
-#: src/work.c:373
+#: src/work.c:389
 #, c-format
 msgid "Found %lld files to analyse...\n"
 msgstr "Encontrados %lld arquivos para analisar...\n"
 
-#: src/work_rsync.c:162
+#: src/work_rsync.c:245
 msgid "Verifying checksums"
 msgstr "Verificando checksums"
 
-#: src/work_rsync.c:163
+#: src/work_rsync.c:246
 msgid "Performing verification of the new files..."
 msgstr "Realizando a verificação dos novos arquivos..."
 
-#: src/work_rsync.c:165
+#: src/work_rsync.c:248
 msgid "Syncing files"
 msgstr "Sincronizando arquivos"
 
-#: src/work_rsync.c:166
+#: src/work_rsync.c:249
 msgid "Transferring data and updating metadata..."
 msgstr "Transferindo dados e atualizando metadados..."
 
-#: src/work_rsync.c:206
+#: src/work_rsync.c:289
 msgid "Running sync...\n"
 msgstr "Executando sincronização...\n"
 
-#: src/work_rsync.c:300
-#, fuzzy, c-format
+#: src/work_rsync.c:370
 msgid "Error reading stdout pipe: %s.\n"
 msgstr "Erro ao renomear %s para %s: %s\n"
 
-#: src/work_rsync.c:428
-#, fuzzy, c-format
+#: src/work_rsync.c:484
 msgid "Error reading stderr pipe: %s.\n"
 msgstr "Erro ao tentar ler erros do programa: %s.\n"
 
-#: src/work_rsync.c:439
-#, c-format
+#: src/work_rsync.c:498
 msgid "Error waiting for child process: %s.\n"
 msgstr "Erro ao aguardar processo filho: %s.\n"
 
-#: src/work_rsync.c:440
+#: src/work_rsync.c:502
 msgid "Killing the child process with SIGKILL..."
 msgstr "Matando o processo filho com SIGKILL..."
 
-#: src/work_rsync.c:536
+#: src/work_rsync.c:632
 msgid "There are no operations to make.\n"
 msgstr "Não há operações a fazer.\n"
 
-#: src/work_rsync.c:584
+#: src/work_rsync.c:680
 msgid "No transfers to make.\n"
 msgstr "Nenhuma transferência a fazer.\n"
 
-#: src/cecup.h:197 src/cecup.h:208
+#: src/cecup.h:196 src/cecup.h:207
 msgid "Copy to backup"
 msgstr "Copiar para o backup"
 
-#: src/cecup.h:198 src/cecup.h:209
+#: src/cecup.h:197 src/cecup.h:208
 msgid "Create hardlink in backup"
 msgstr "Criar hardlink no backup"
 
-#: src/cecup.h:199 src/cecup.h:210
+#: src/cecup.h:198 src/cecup.h:209
 msgid "Create symlink in backup"
 msgstr "Criar link simbólico no backup"
 
-#: src/cecup.h:200
+#: src/cecup.h:199
 msgid "Update file in backup"
 msgstr "Atualizar arquivo no backup"
 
-#: src/cecup.h:201 src/cecup.h:212 src/cecup.h:223 src/cecup.h:234
+#: src/cecup.h:200 src/cecup.h:211 src/cecup.h:222 src/cecup.h:233
 msgid "Already identical"
 msgstr "Já são idênticos"
 
-#: src/cecup.h:202 src/cecup.h:213
+#: src/cecup.h:201 src/cecup.h:212
 msgid "Not found in original"
 msgstr "Não encontrado na origem"
 
-#: src/cecup.h:204 src/cecup.h:215 src/cecup.h:226 src/cecup.h:237
+#: src/cecup.h:203 src/cecup.h:214 src/cecup.h:225 src/cecup.h:236
 msgid "Skip"
 msgstr "Pular"
 
-#: src/cecup.h:211
+#: src/cecup.h:210
 msgid "Update folder in backup"
 msgstr "Atualizar pasta no backup"
 
-#: src/cecup.h:219 src/cecup.h:230
+#: src/cecup.h:218 src/cecup.h:229
 msgid "Copy from original"
 msgstr "Copiar da origem"
 
-#: src/cecup.h:220 src/cecup.h:231
+#: src/cecup.h:219 src/cecup.h:230
 msgid "Create hardlink according to original"
 msgstr "Criar hardlink conforme a origem"
 
-#: src/cecup.h:221 src/cecup.h:232
+#: src/cecup.h:220 src/cecup.h:231
 msgid "Create symlink according to original"
 msgstr "Criar link simbólico conforme a origem"
 
-#: src/cecup.h:222 src/cecup.h:233
+#: src/cecup.h:221 src/cecup.h:232
 msgid "Update from original"
 msgstr "Atualizar conforme a origem"
 
-#: src/cecup.h:225 src/cecup.h:236
+#: src/cecup.h:224 src/cecup.h:235
 msgid "Remove from backup"
 msgstr "Remover do backup"
 
-#: src/cecup.h:251
+#: src/cecup.h:250
 msgid "Files are equal"
 msgstr "Os arquivos são iguais"
 
-#: src/cecup.h:252 src/cecup.h:274
+#: src/cecup.h:251 src/cecup.h:273
 msgid "Matches an ignore pattern"
 msgstr "Corresponde a um padrão de ignorados"
 
-#: src/cecup.h:253
+#: src/cecup.h:252
 msgid "File does not exist in the original folder"
 msgstr "O arquivo não existe na pasta de origem"
 
-#: src/cecup.h:254
+#: src/cecup.h:253
 msgid "New file found in the original folder"
 msgstr "Novo arquivo encontrado na pasta de origem"
 
-#: src/cecup.h:255
+#: src/cecup.h:254
 msgid "Hardlinked file in the original folder"
 msgstr "Arquivo com hardlink na origem"
 
-#: src/cecup.h:256 src/cecup.h:278
+#: src/cecup.h:255 src/cecup.h:277
 msgid "Backup item is not a regular file"
 msgstr "O item de backup não é um arquivo comum"
 
-#: src/cecup.h:257 src/cecup.h:279
+#: src/cecup.h:256 src/cecup.h:278
 msgid "Backup item is missing link target"
 msgstr "O item de backup não possui um destino de link"
 
-#: src/cecup.h:258 src/cecup.h:280
+#: src/cecup.h:257 src/cecup.h:279
 msgid "Link targets do not match"
 msgstr "Os destinos dos links não coincidem"
 
-#: src/cecup.h:259 src/cecup.h:281
+#: src/cecup.h:258 src/cecup.h:280
 msgid "Symlink in the original folder"
 msgstr "Link simbólico na pasta de origem"
 
-#: src/cecup.h:260 src/cecup.h:282
+#: src/cecup.h:259 src/cecup.h:281
 msgid "Could not resolve link to check"
 msgstr "Não foi possível resolver o link para checar"
 
-#: src/cecup.h:261 src/cecup.h:283
+#: src/cecup.h:260 src/cecup.h:282
 msgid "Destination is not a symlink"
 msgstr "O arquivo na pasta de destino não é um link simbólico"
 
-#: src/cecup.h:262 src/cecup.h:284
+#: src/cecup.h:261 src/cecup.h:283
 msgid "Symbolic link targets do not match"
 msgstr "Os destinos dos links simbólicos não coincidem"
 
-#: src/cecup.h:263
+#: src/cecup.h:262
 msgid "File sizes differ"
 msgstr "Os tamanhos dos arquivos diferem"
 
-#: src/cecup.h:264
+#: src/cecup.h:263
 msgid "File in the source is newer than backup"
 msgstr "O arquivo na origem é mais recente que no backup"
 
-#: src/cecup.h:265
+#: src/cecup.h:264
 msgid "File in the source is older than backup"
 msgstr "O arquivo na origem é mais antigo que no backup"
 
-#: src/cecup.h:266 src/cecup.h:288
+#: src/cecup.h:265 src/cecup.h:287
 msgid "Metadata change times differ"
 msgstr "As datas de alteração de metadados diferem"
 
-#: src/cecup.h:267 src/cecup.h:289
+#: src/cecup.h:266 src/cecup.h:288
 msgid "Owners differ"
 msgstr "Os proprietários diferem"
 
-#: src/cecup.h:268 src/cecup.h:290
+#: src/cecup.h:267 src/cecup.h:289
 msgid "Groups differ"
 msgstr "Os grupos diferem"
 
-#: src/cecup.h:269 src/cecup.h:291
+#: src/cecup.h:268 src/cecup.h:290
 msgid "Permissions differ"
 msgstr "As permissões diferem"
 
-#: src/cecup.h:273
+#: src/cecup.h:272
 msgid "Folders are equal"
 msgstr "As pastas são iguais"
 
-#: src/cecup.h:275
+#: src/cecup.h:274
 msgid "Folder does not exist in the original folder"
 msgstr "A pasta não existe na origem"
 
-#: src/cecup.h:276
+#: src/cecup.h:275
 msgid "New folder found in the original folder"
 msgstr "Nova pasta encontrada na origem"
 
-#: src/cecup.h:277
+#: src/cecup.h:276
 msgid "Hardlinked folder in the original folder"
 msgstr "Pasta com hardlink na origem"
 
-#: src/cecup.h:285
+#: src/cecup.h:284
 msgid "Folder sizes differ"
 msgstr "Os tamanhos das pastas diferem"
 
-#: src/cecup.h:286
+#: src/cecup.h:285
 msgid "Folder in the source is newer than backup"
 msgstr "A pasta na origem é mais recente que no backup"
 
-#: src/cecup.h:287
+#: src/cecup.h:286
 msgid "Folder in the source is older than backup"
 msgstr "A pasta na origem é mais antiga que no backup"
 
@@ -786,6 +784,10 @@ msgstr "💤 Ignorar..."
 #: src/on.h:42
 msgid "Add ignore pattern for this file"
 msgstr "Adicionar padrão de ignorados para este arquivo"
+
+#, c-format
+#~ msgid "Invalid rename: %s points to outside of the base directory.\n"
+#~ msgstr "Renomeio inválido: %s aponta para fora da pasta base.\n"
 
 #~ msgid "Show Deletions"
 #~ msgstr "Mostrar exclusões"
