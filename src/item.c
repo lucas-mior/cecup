@@ -97,8 +97,6 @@ item_path_get(int32 row_id) {
         fatal(EXIT_FAILURE);
     }
 
-    // just for clang-static analyzer
-    ASSERT(path);
     return path;
 }
 
