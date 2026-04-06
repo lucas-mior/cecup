@@ -321,9 +321,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         action = actions[side];
 
         filepath = item_path_get(row_id);
-
-        path_len = strlen32(filepath);
-        if (path_len > 0 && filepath[path_len - 1] == '/') {
+        path_len = item_path_len_get(row_id);
+        if (filepath[path_len - 1] == '/') {
             is_dir = true;
         }
 
