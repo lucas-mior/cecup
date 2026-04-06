@@ -487,6 +487,56 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_box_append(GTK_BOX(main_vbox), search_hbox);
 
+    NEW_WITH_NAME(filter_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
+    gtk_widget_set_halign(filter_hbox, GTK_ALIGN_CENTER);
+
+    NEW_WITH_NAME(cecup.filter_new, gtk_toggle_button_new);
+    NEW_WITH_NAME(cecup.filter_link, gtk_toggle_button_new);
+    NEW_WITH_NAME(cecup.filter_update, gtk_toggle_button_new);
+    NEW_WITH_NAME(cecup.filter_equal, gtk_toggle_button_new);
+    NEW_WITH_NAME(cecup.filter_delete, gtk_toggle_button_new);
+    NEW_WITH_NAME(cecup.filter_ignore, gtk_toggle_button_new);
+
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_new),    EMOJI_NEW);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_link),   EMOJI_LINK);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_update), EMOJI_UPDATE);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_equal),  EMOJI_EQUAL);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), EMOJI_DELETE);
+    gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), EMOJI_IGNORE);
+
+    gtk_widget_set_tooltip_text(cecup.filter_new,    _("Show new files"));
+    gtk_widget_set_tooltip_text(cecup.filter_link,   _("Show links"));
+    gtk_widget_set_tooltip_text(cecup.filter_update, _("Show updates"));
+    gtk_widget_set_tooltip_text(cecup.filter_equal,  _("Show equals"));
+    gtk_widget_set_tooltip_text(cecup.filter_delete, _("Show files to be deleted"));
+    gtk_widget_set_tooltip_text(cecup.filter_ignore, _("Show ignored files"));
+
+    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_new);
+    gtk_widget_set_margin_start(cecup.filter_new, PADDING_FILTER_BUTTON);
+    gtk_widget_set_margin_end(cecup.filter_new, PADDING_FILTER_BUTTON);
+
+    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_link);
+    gtk_widget_set_margin_start(cecup.filter_link, PADDING_FILTER_BUTTON);
+    gtk_widget_set_margin_end(cecup.filter_link, PADDING_FILTER_BUTTON);
+
+    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_update);
+    gtk_widget_set_margin_start(cecup.filter_update, PADDING_FILTER_BUTTON);
+    gtk_widget_set_margin_end(cecup.filter_update, PADDING_FILTER_BUTTON);
+
+    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_equal);
+    gtk_widget_set_margin_start(cecup.filter_equal, PADDING_FILTER_BUTTON);
+    gtk_widget_set_margin_end(cecup.filter_equal, PADDING_FILTER_BUTTON);
+
+    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_delete);
+    gtk_widget_set_margin_start(cecup.filter_delete, PADDING_FILTER_BUTTON);
+    gtk_widget_set_margin_end(cecup.filter_delete, PADDING_FILTER_BUTTON);
+
+    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_ignore);
+    gtk_widget_set_margin_start(cecup.filter_ignore, PADDING_FILTER_BUTTON);
+    gtk_widget_set_margin_end(cecup.filter_ignore, PADDING_FILTER_BUTTON);
+
+    gtk_box_append(GTK_BOX(main_vbox), filter_hbox);
+
     NEW_WITH_NAME(v_paned, gtk_paned_new, GTK_ORIENTATION_VERTICAL);
     gtk_widget_set_vexpand(v_paned, TRUE);
     gtk_box_append(GTK_BOX(main_vbox), v_paned);
@@ -546,56 +596,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_top(footer_vbox, SPACING_BOX);
     gtk_widget_set_margin_bottom(footer_vbox, SPACING_BOX);
     gtk_box_append(GTK_BOX(top_vbox), footer_vbox);
-
-    NEW_WITH_NAME(filter_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
-    gtk_widget_set_halign(filter_hbox, GTK_ALIGN_CENTER);
-
-    NEW_WITH_NAME(cecup.filter_new, gtk_toggle_button_new);
-    NEW_WITH_NAME(cecup.filter_link, gtk_toggle_button_new);
-    NEW_WITH_NAME(cecup.filter_update, gtk_toggle_button_new);
-    NEW_WITH_NAME(cecup.filter_equal, gtk_toggle_button_new);
-    NEW_WITH_NAME(cecup.filter_delete, gtk_toggle_button_new);
-    NEW_WITH_NAME(cecup.filter_ignore, gtk_toggle_button_new);
-
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_new),    EMOJI_NEW);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_link),   EMOJI_LINK);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_update), EMOJI_UPDATE);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_equal),  EMOJI_EQUAL);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_delete), EMOJI_DELETE);
-    gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), EMOJI_IGNORE);
-
-    gtk_widget_set_tooltip_text(cecup.filter_new,    _("Show new files"));
-    gtk_widget_set_tooltip_text(cecup.filter_link,   _("Show links"));
-    gtk_widget_set_tooltip_text(cecup.filter_update, _("Show updates"));
-    gtk_widget_set_tooltip_text(cecup.filter_equal,  _("Show equals"));
-    gtk_widget_set_tooltip_text(cecup.filter_delete, _("Show files to be deleted"));
-    gtk_widget_set_tooltip_text(cecup.filter_ignore, _("Show ignored files"));
-
-    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_new);
-    gtk_widget_set_margin_start(cecup.filter_new, PADDING_FILTER_BUTTON);
-    gtk_widget_set_margin_end(cecup.filter_new, PADDING_FILTER_BUTTON);
-
-    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_link);
-    gtk_widget_set_margin_start(cecup.filter_link, PADDING_FILTER_BUTTON);
-    gtk_widget_set_margin_end(cecup.filter_link, PADDING_FILTER_BUTTON);
-
-    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_update);
-    gtk_widget_set_margin_start(cecup.filter_update, PADDING_FILTER_BUTTON);
-    gtk_widget_set_margin_end(cecup.filter_update, PADDING_FILTER_BUTTON);
-
-    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_equal);
-    gtk_widget_set_margin_start(cecup.filter_equal, PADDING_FILTER_BUTTON);
-    gtk_widget_set_margin_end(cecup.filter_equal, PADDING_FILTER_BUTTON);
-
-    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_delete);
-    gtk_widget_set_margin_start(cecup.filter_delete, PADDING_FILTER_BUTTON);
-    gtk_widget_set_margin_end(cecup.filter_delete, PADDING_FILTER_BUTTON);
-
-    gtk_box_append(GTK_BOX(filter_hbox), cecup.filter_ignore);
-    gtk_widget_set_margin_start(cecup.filter_ignore, PADDING_FILTER_BUTTON);
-    gtk_widget_set_margin_end(cecup.filter_ignore, PADDING_FILTER_BUTTON);
-
-    gtk_box_append(GTK_BOX(footer_vbox), filter_hbox);
 
     {
         GtkWidget *log_scroll;
