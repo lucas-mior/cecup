@@ -595,4 +595,13 @@ static void stop_working(bool state);
 
 static gboolean update_ui_handler(void *data);
 
+static void
+disable_dbus_warning(void) {
+    if (setenv("GTK_IM_MODULE", "gtk-im-context-simple", true) < 0) {
+        error("Error in setenv: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    }
+    return;
+}
+
 #endif /* CECUP_H */

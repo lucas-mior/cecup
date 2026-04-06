@@ -378,12 +378,11 @@ case "$target" in
         else
             trace_on
             if $cmdline; then
-                { echo "running $test_exe...";
-                    $test_exe 2>&1; }| xsel -b
-                if ! $test_exe; then
+                if ! G_DEBUG=fatal_warnings $test_exe; then
                     gdb --quiet \
                         -ex run -ex backtrace -ex quit \
                         $test_exe 2>&1 | xsel -b
+                    exit 1
                 fi
             else
                 exit 1

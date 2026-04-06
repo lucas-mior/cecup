@@ -456,6 +456,8 @@ main(void) {
     guint n_items;
     gpointer item;
 
+    disable_dbus_warning();
+
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
     }

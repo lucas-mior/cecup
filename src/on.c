@@ -40,18 +40,19 @@
 static gboolean
 unparent_popover_idle(void *data) {
     GtkWidget *widget = data;
-    // TODO: Bug. Potential Use-After-Free. If the parent container or the application itself is
-    // destroyed between the popover closing and this idle callback executing, `widget` will point
-    // to freed memory and crash on `gtk_widget_unparent`.  You should take a strong reference
-    // before scheduling the idle callback and unref it here, or use `g_object_add_weak_pointer` to
-    // safely check if it still exists.
-    gtk_widget_unparent(widget);
+
+    if (gtk_widget_get_parent(widget) != NULL) {
+        gtk_widget_unparent(widget);
+    }
+    g_object_unref(widget);
+
     return G_SOURCE_REMOVE;
 }
 
 static void
 on_popover_closed(GtkWidget *popover, void *data) {
     (void)data;
+    g_object_ref(popover);
     g_idle_add(unparent_popover_idle, popover);
     return;
 }
@@ -848,6 +849,9 @@ main(void) {
     MOCK_WIDGET(cecup.search_entry, gtk_entry_new());
     MOCK_WIDGET(cecup.dir_entry[L], gtk_entry_new());
     MOCK_WIDGET(cecup.dir_entry[R], gtk_entry_new());
+    cecup.entry_id[L] = g_signal_connect(cecup.dir_entry[L], "changed", G_CALLBACK(gtk_widget_show), NULL);
+    cecup.entry_id[R] = g_signal_connect(cecup.dir_entry[R], "changed", G_CALLBACK(gtk_widget_show), NULL);
+
     MOCK_WIDGET(cecup.stats_label, gtk_label_new(""));
     MOCK_WIDGET(cecup.tree[L], gtk_column_view_new(NULL));
     MOCK_WIDGET(cecup.tree[R], gtk_column_view_new(NULL));
@@ -953,8 +957,11 @@ main(void) {
         MOCK_WIDGET(mock_editable, gtk_editable_label_new(""));
         gtk_widget_add_controller(mock_editable, GTK_EVENT_CONTROLLER(mock_gesture));
 
+        g_object_ref(mock_child);
         unparent_popover_idle(mock_child);
         on_popover_closed(mock_widget, NULL);
+        g_main_context_iteration(NULL, FALSE);
+
         execute_menu_item_from_key_press(NULL, NULL);
 
         cecup.config_path[0] = '\0';

@@ -316,6 +316,8 @@ main(void) {
     TextInfo *ti_size;
     TextInfo *ti_mtime;
 
+    disable_dbus_warning();
+
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
     }

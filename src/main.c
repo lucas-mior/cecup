@@ -793,10 +793,7 @@ main(int32 argc, char **argv) {
     ASSERT_EQUAL(!L, R);
     ASSERT_EQUAL(!R, L);
 
-    if (setenv("GTK_IM_MODULE", "gtk-im-context-simple", true) < 0) {
-        error("Error in setenv: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
+    disable_dbus_warning();
 
     {
         char *locale_devel;
