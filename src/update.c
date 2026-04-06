@@ -936,11 +936,48 @@ main(void) {
     MOCK_WIDGET(cecup.filter_ignore, gtk_toggle_button_new());
     MOCK_WIDGET(cecup.progress_bar, gtk_progress_bar_new());
 
+    MOCK_WIDGET(cecup.tree[L], gtk_column_view_new(NULL));
+    MOCK_WIDGET(cecup.tree[R], gtk_column_view_new(NULL));
+    MOCK_WIDGET(cecup.dir_entry[L], gtk_entry_new());
+    MOCK_WIDGET(cecup.dir_entry[R], gtk_entry_new());
+    MOCK_WIDGET(cecup.diff_entry, gtk_entry_new());
+    MOCK_WIDGET(cecup.term_entry, gtk_entry_new());
+    MOCK_WIDGET(cecup.search_entry, gtk_entry_new());
+    MOCK_WIDGET(cecup.check_fs_button, gtk_check_button_new());
+    MOCK_WIDGET(cecup.delete_after_button, gtk_check_button_new());
+    MOCK_WIDGET(cecup.delete_ignored_button, gtk_check_button_new());
+
     {
         GtkWidget *text_view;
         MOCK_WIDGET(text_view, gtk_text_view_new());
         cecup.log_view = text_view;
         cecup.log_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    }
+
+    {
+        GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+        gtk_window_set_child(GTK_WINDOW(cecup.gtk_window), box);
+        gtk_box_append(GTK_BOX(box), cecup.stop_button);
+        gtk_box_append(GTK_BOX(box), cecup.sync_button);
+        gtk_box_append(GTK_BOX(box), cecup.stats_label);
+        gtk_box_append(GTK_BOX(box), cecup.filter_new);
+        gtk_box_append(GTK_BOX(box), cecup.filter_link);
+        gtk_box_append(GTK_BOX(box), cecup.filter_update);
+        gtk_box_append(GTK_BOX(box), cecup.filter_equal);
+        gtk_box_append(GTK_BOX(box), cecup.filter_delete);
+        gtk_box_append(GTK_BOX(box), cecup.filter_ignore);
+        gtk_box_append(GTK_BOX(box), cecup.progress_bar);
+        gtk_box_append(GTK_BOX(box), cecup.log_view);
+        gtk_box_append(GTK_BOX(box), cecup.tree[L]);
+        gtk_box_append(GTK_BOX(box), cecup.tree[R]);
+        gtk_box_append(GTK_BOX(box), cecup.dir_entry[L]);
+        gtk_box_append(GTK_BOX(box), cecup.dir_entry[R]);
+        gtk_box_append(GTK_BOX(box), cecup.diff_entry);
+        gtk_box_append(GTK_BOX(box), cecup.term_entry);
+        gtk_box_append(GTK_BOX(box), cecup.search_entry);
+        gtk_box_append(GTK_BOX(box), cecup.check_fs_button);
+        gtk_box_append(GTK_BOX(box), cecup.delete_after_button);
+        gtk_box_append(GTK_BOX(box), cecup.delete_ignored_button);
     }
 
     cecup.store = G_LIST_MODEL(cecup_list_model_new());
@@ -1132,6 +1169,16 @@ main(void) {
     g_object_unref(cecup.progress_bar);
     g_object_unref(cecup.log_view);
     g_object_unref(cecup.store);
+    g_object_unref(cecup.tree[L]);
+    g_object_unref(cecup.tree[R]);
+    g_object_unref(cecup.dir_entry[L]);
+    g_object_unref(cecup.dir_entry[R]);
+    g_object_unref(cecup.diff_entry);
+    g_object_unref(cecup.term_entry);
+    g_object_unref(cecup.search_entry);
+    g_object_unref(cecup.check_fs_button);
+    g_object_unref(cecup.delete_after_button);
+    g_object_unref(cecup.delete_ignored_button);
 
     unlink(cecup.ignore_path);
     if (cecup.ignore_patterns) {
