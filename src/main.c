@@ -269,6 +269,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(main_vbox), header_vbox);
 
     NEW_WITH_NAME(options_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
+    gtk_widget_set_hexpand(options_hbox, TRUE);
 
     NEW_WITH_NAME(cecup.ignore_button, gtk_button_new);
     NEW_WITH_NAME(cecup.check_fs_button, gtk_check_button_new);
