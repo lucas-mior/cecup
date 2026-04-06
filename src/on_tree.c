@@ -584,8 +584,6 @@ main(void) {
         ASSERT_EQUAL(handled, FALSE);
 
         gtk_window_destroy(GTK_WINDOW(window));
-        g_object_unref(sel);
-        g_object_unref(store);
         g_object_unref(cecup.application);
         g_object_unref(cell);
     }
