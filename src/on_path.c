@@ -298,6 +298,8 @@ main(void) {
     GtkWidget *tree;
     GtkWidget *label;
     GParamSpec *pspec;
+    GtkWidget *box_parent;
+    GtkWidget *paned;
     char *src_dir = "/tmp/cecup_test_src";
     char *file_rel = "test_file.txt";
     char src_file_full[MAX_PATH_LENGTH];
@@ -324,7 +326,7 @@ main(void) {
         Traversal *t = &cecup.traversal[L];
         t->nfiles = n;
         t->paths = xmalloc(n * SIZEOF(char *));
-        t->paths_lens = xmalloc(n * SIZEOF(int32));
+        t->paths_lens = xmalloc(n * SIZEOF(int16));
         t->paths[0] = xmemdup(file_rel, strlen32(file_rel) + 1);
         t->paths_lens[0] = strlen32(file_rel);
 
@@ -338,6 +340,18 @@ main(void) {
     }
 
     // 2. Setup Widgets
+    cecup.stop_button = gtk_button_new();
+    g_object_ref_sink(cecup.stop_button);
+    cecup.sync_button = gtk_button_new();
+    g_object_ref_sink(cecup.sync_button);
+
+    box_parent = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    g_object_ref_sink(box_parent);
+    paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    gtk_box_append(GTK_BOX(box_parent), paned);
+    cecup.tree[L] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_paned_set_start_child(GTK_PANED(paned), cecup.tree[L]);
+
     label = gtk_editable_label_new(file_rel);
     g_object_ref_sink(label);
 
@@ -378,7 +392,7 @@ main(void) {
         Traversal *t = &cecup.traversal[L];
         free(t->paths[0], strlen32(t->paths[0]) + 1);
         free(t->paths, n * SIZEOF(char *));
-        free(t->paths_lens, n * SIZEOF(int32));
+        free(t->paths_lens, n * SIZEOF(int16));
         free(t->stats, n * SIZEOF(struct stat));
         free(t->patterns, n * SIZEOF(char *));
         free(t->symlink_targets, n * SIZEOF(char *));
@@ -389,6 +403,9 @@ main(void) {
 
     g_object_unref(label);
     g_object_unref(tree);
+    g_object_unref(cecup.stop_button);
+    g_object_unref(cecup.sync_button);
+    g_object_unref(box_parent);
     g_param_spec_unref(pspec);
 
     unlink("/tmp/cecup_test_src/renamed_file.txt");
