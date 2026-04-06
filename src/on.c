@@ -556,14 +556,19 @@ on_ignore_clicked(GtkWidget *button, void *data) {
 
     (void)data;
     (void)button;
+
     dialog = gtk_dialog_new_with_buttons(_("Ignore Rules"), GTK_WINDOW(cecup.gtk_window),
                                          GTK_DIALOG_MODAL,
                                          "_Save", GTK_RESPONSE_ACCEPT, "_Close", GTK_RESPONSE_CLOSE,
                                          NULL);
 
     gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 500);
+
     scroll = gtk_scrolled_window_new();
     view = gtk_text_view_new();
+
+    gtk_text_view_set_monospace(GTK_TEXT_VIEW(view), TRUE);
+
     buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 
     if (g_file_get_contents(cecup.ignore_path, &text, NULL, NULL)) {
