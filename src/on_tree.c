@@ -472,12 +472,12 @@ on_tree_key_press(GtkEventControllerKey *controller,
     GtkWidget *widget;
     GtkSelectionModel *selection;
     uint32 pos;
-    gboolean handled;
+    gboolean handled = FALSE;
     GdkModifierType modifiers;
 
     (void)data;
     (void)keycode;
-    handled = FALSE;
+
     widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
     selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
 
