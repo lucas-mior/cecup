@@ -458,7 +458,7 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
 #if !HASH_KEY_FIXED_LEN
                                          , int32 key_length
 #endif
-                                         , uint64 hash, uint32 base_index , HASH_VALUE_TYPE value
+                                         , uint64 hash, uint32 base_index, HASH_VALUE_TYPE value
 ) {
     uint32 target_idx = MAXOF(target_idx);
     Bucket *target;
@@ -522,7 +522,7 @@ CAT(hash_overwrite_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
 #if !HASH_KEY_FIXED_LEN
                                                     , key_length
 #endif
-                                                    , hash, index , value);
+                                                    , hash, index, value);
 }
 
 #endif /* HASH_VALUE_TYPE (only define overwrite functions for HashMaps, not for HashSets */
