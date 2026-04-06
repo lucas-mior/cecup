@@ -387,7 +387,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
                                     "%s:\n%s", filepath, reason_buf);
                 offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
-                                    _("\nThere are %d names for this file:\n"), hard_links.count);
+                                    _("\n\nThere are %d names for this file:\n"), hard_links.count);
 
                 for (int32 j = 0; j < hard_links.count; j += 1) {
                     int32 n;

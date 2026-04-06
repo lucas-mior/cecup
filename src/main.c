@@ -215,7 +215,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
             "paned > separator { min-width: 10px; min-height: 10px; }",
             "scrollbar.vertical slider { min-width: 12px; }",
             "scrollbar.horizontal slider { min-height: 8px; }",
-            "tooltip label { max-width: 1200px; padding: 4px; }",
             "progressbar text { font-size: 11pt; font-weight: bold; }"
         };
         GtkCssProvider *css_provider;
