@@ -277,6 +277,8 @@ traversal_unlink(Traversal *traversal, int32 idx) {
             hard_links.aggregate_hash_hi ^= name_hash.hi;
 
             if (hard_links.count == 0) {
+                free(hard_links.names,      hard_links.capacity*SIZEOF(*(hard_links.names)));
+                free(hard_links.names_lens, hard_links.capacity*SIZEOF(*(hard_links.names_lens)));
                 hash_remove_inode_map(traversal->inode_map, inode);
             } else {
                 hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);
