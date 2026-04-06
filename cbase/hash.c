@@ -809,6 +809,7 @@ static struct Hash_map_by_value *hash_create_map_by_value(uint32);
 static void hash_destroy_map_by_value(struct Hash_map_by_value *);
 static uint32 hash_ndeleted_map_by_value(struct Hash_map_by_value *);
 static bool hash_insert_map_by_value(struct Hash_map_by_value *, int64 *, int32);
+static bool hash_overwrite_map_by_value(struct Hash_map_by_value *, int64 *, int32);
 static bool hash_lookup_map_by_value(struct Hash_map_by_value *, int64 *, int32 *);
 static bool hash_remove_map_by_value(struct Hash_map_by_value *, int64 *);
 
@@ -834,11 +835,9 @@ static String
 random_string(Arena *arena, uint32 nbytes) {
     char characters[] = "abcdefghijklmnopqrstuvwxyz1234567890";
     String string;
-    int32 size;
-    int32 len;
+    int32 len = (int32)(nbytes + (uint)rand() % 16u);
+    int32 size = len + 1;
 
-    len = (int32)(nbytes + (uint)rand() % 16u);
-    size = len + 1;
     string.s = arena_push(arena, size);
 
     for (int32 i = 0; i < len; i += 1) {
@@ -857,17 +856,13 @@ int
 main(void) {
     struct timespec t0;
     struct timespec t1;
-    struct Hash_map *map;
-    Arena *arena;
-    String str1 = {.s = "aaaaaaaaaaaaaaaa", .value = 0};
-    String str2 = {.s = "bbbbbbbbbbbbbbb", .value = 1};
-    String *strings;
+    struct Hash_map *map = hash_create_map(100);
+    Arena *arena = arena_create(NBYTES*NSTRINGS);
+    String *strings = xmalloc(NSTRINGS*sizeof(*strings));
+    String str1 = {.s = "aaaaaaaaaaaaaaaa", .value = 10};
+    String str2 = {.s = "bbbbbbbbbbbbbbb", .value = 20};
     uint32 initial_capacity;
-    int32 test;
-
-    map = hash_create_map(100);
-    arena = arena_create(NBYTES*NSTRINGS);
-    strings = xmalloc(NSTRINGS*sizeof(*strings));
+    int32 test = 0;
 
     ASSERT(map);
     initial_capacity = map->capacity;
@@ -875,11 +870,23 @@ main(void) {
     str1.len = strlen32(str1.s);
     str2.len = strlen32(str2.s);
 
+    // Initial insertions
     ASSERT(hash_insert_map(map, str1.s, str1.len, str1.value));
     ASSERT(!hash_insert_map(map, str1.s, str1.len, 1));
     ASSERT(hash_insert_map(map, str2.s, str2.len, str2.value));
-
     ASSERT_EQUAL(hash_length(map), 2u);
+
+    // Test overwrite (existing key)
+    ASSERT(hash_overwrite_map(map, str1.s, str1.len, 555));
+    ASSERT_EQUAL(hash_length(map), 2u);
+    ASSERT(hash_lookup_map(map, str1.s, str1.len, &test));
+    ASSERT_EQUAL(test, 555);
+
+    // Test overwrite (new key / upsert)
+    ASSERT(hash_overwrite_map(map, "new_key", 7, 777));
+    ASSERT_EQUAL(hash_length(map), 3u);
+    ASSERT(hash_lookup_map(map, "new_key", 7, &test));
+    ASSERT_EQUAL(test, 777);
 
     ASSERT(!hash_lookup_map(map, "does_not_exist", 14, &test));
 
@@ -899,7 +906,7 @@ main(void) {
     ASSERT(map->capacity > initial_capacity);
 
     for (uint32 i = 0; i < NSTRINGS; i += 1) {
-        int32 stored;
+        int32 stored = 0;
         ASSERT(hash_lookup_map(map, strings[i].s, strings[i].len, &stored));
         ASSERT_EQUAL(stored, strings[i].value);
     }
@@ -924,6 +931,7 @@ main(void) {
         struct Hash_map_by_value *map2 = hash_create_map_by_value(16);
         int64 key1 = 12345;
         int64 key2 = 67890;
+        int64 key3 = 55555;
         int32 value1 = 99;
         int32 value2 = 100;
         int32 test2 = 0;
@@ -935,8 +943,20 @@ main(void) {
 
         ASSERT_EQUAL(hash_length(map2), 2u);
 
+        // Test overwrite map_by_value (update)
+        ASSERT(hash_overwrite_map_by_value(map2, &key1, 888));
+        ASSERT_EQUAL(hash_length(map2), 2u);
         ASSERT(hash_lookup_map_by_value(map2, &key1, &test2));
-        ASSERT_EQUAL(test2, value1);
+        ASSERT_EQUAL(test2, 888);
+
+        // Test overwrite map_by_value (insert)
+        ASSERT(hash_overwrite_map_by_value(map2, &key3, 333));
+        ASSERT_EQUAL(hash_length(map2), 3u);
+        ASSERT(hash_lookup_map_by_value(map2, &key3, &test2));
+        ASSERT_EQUAL(test2, 333);
+
+        ASSERT(hash_lookup_map_by_value(map2, &key1, &test2));
+        ASSERT_EQUAL(test2, 888);
 
         ASSERT(!hash_lookup_map_by_value(map2, &missing_key, &test2));
 
