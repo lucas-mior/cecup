@@ -268,62 +268,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_bottom(header_vbox, SPACING_BOX);
     gtk_box_append(GTK_BOX(main_vbox), header_vbox);
 
-    NEW_WITH_NAME(button_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
-
-    NEW_WITH_NAME(cecup.preview_button, gtk_button_new);
-    NEW_WITH_NAME(cecup.ignore_button, gtk_button_new);
-    NEW_WITH_NAME(cecup.stop_button, gtk_button_new);
-    NEW_WITH_NAME(cecup.sync_button, gtk_button_new);
-
-    gtk_button_set_label(GTK_BUTTON(cecup.preview_button), _("🔎 Analyze"));
-    gtk_button_set_label(GTK_BUTTON(cecup.ignore_button),  _("Edit Ignore Rules"));
-    gtk_button_set_label(GTK_BUTTON(cecup.stop_button),    _("⏹️ Stop"));
-    gtk_button_set_label(GTK_BUTTON(cecup.sync_button),    _("⏩ Apply Changes"));
-
-    gtk_widget_set_tooltip_text(cecup.preview_button,
-                                _("Check which files need to be copied or updated"));
-    gtk_widget_set_tooltip_text(cecup.ignore_button,
-                                _("Edit the list of filename patterns to ignore"));
-    gtk_widget_set_tooltip_text(cecup.stop_button,
-                                _("Cancel the current task"));
-    gtk_widget_set_tooltip_text(cecup.sync_button,
-                                _("Start copying and updating all files"));
-
-    cecup.preview_dirty = true;
-
-    gtk_widget_set_sensitive(cecup.stop_button, FALSE);
-
-    gtk_box_append(GTK_BOX(button_hbox), cecup.ignore_button);
-    gtk_widget_set_margin_start(cecup.ignore_button, PADDING_BUTTON);
-    gtk_widget_set_margin_end(cecup.ignore_button, PADDING_BUTTON);
-
-    {
-        GtkWidget *spacer = gtk_label_new("");
-
-        gtk_widget_set_hexpand(spacer, TRUE);
-        gtk_box_append(GTK_BOX(button_hbox), spacer);
-    }
-
-    gtk_box_append(GTK_BOX(button_hbox), cecup.preview_button);
-    gtk_widget_set_margin_start(cecup.preview_button, PADDING_BUTTON);
-    gtk_widget_set_margin_end(cecup.preview_button, PADDING_BUTTON);
-
-    gtk_box_append(GTK_BOX(button_hbox), cecup.stop_button);
-    gtk_widget_set_margin_start(cecup.stop_button, PADDING_BUTTON);
-    gtk_widget_set_margin_end(cecup.stop_button, PADDING_BUTTON);
-
-    gtk_box_append(GTK_BOX(button_hbox), cecup.sync_button);
-    gtk_widget_set_margin_start(cecup.sync_button, PADDING_BUTTON);
-    gtk_widget_set_margin_end(cecup.sync_button, PADDING_BUTTON);
-
-    gtk_box_append(GTK_BOX(header_vbox), button_hbox);
-
     NEW_WITH_NAME(options_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
 
+    NEW_WITH_NAME(cecup.ignore_button, gtk_button_new);
     NEW_WITH_NAME(cecup.check_fs_button, gtk_check_button_new);
     NEW_WITH_NAME(cecup.delete_ignored_button, gtk_check_button_new);
     NEW_WITH_NAME(cecup.delete_after_button, gtk_check_button_new);
 
+    gtk_button_set_label(GTK_BUTTON(cecup.ignore_button),  _("Edit Ignore Rules"));
     gtk_check_button_set_label(GTK_CHECK_BUTTON(cecup.check_fs_button),
                                _("Protect same-drive sync"));
     gtk_check_button_set_label(GTK_CHECK_BUTTON(cecup.delete_ignored_button),
@@ -331,6 +283,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_check_button_set_label(GTK_CHECK_BUTTON(cecup.delete_after_button),
                                _("Sync 100%"));
 
+    gtk_widget_set_tooltip_text(cecup.ignore_button,
+                                _("Edit the list of filename patterns to ignore"));
     gtk_widget_set_tooltip_text(cecup.check_fs_button,
                                 _("Prevent copying if original and backup are on the same disk"));
     gtk_widget_set_tooltip_text(cecup.delete_ignored_button,
@@ -349,6 +303,10 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     NEW_WITH_NAME(reset_button, gtk_button_new);
     gtk_button_set_label(GTK_BUTTON(reset_button), _("Defaults"));
     gtk_widget_set_tooltip_text(reset_button, _("Restore original settings"));
+
+    gtk_box_append(GTK_BOX(options_hbox), cecup.ignore_button);
+    gtk_widget_set_margin_start(cecup.ignore_button, PADDING_BUTTON);
+    gtk_widget_set_margin_end(cecup.ignore_button, PADDING_BUTTON);
 
     gtk_box_append(GTK_BOX(options_hbox), cecup.check_fs_button);
     gtk_widget_set_margin_start(cecup.check_fs_button, PADDING_BUTTON);
@@ -585,6 +543,41 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[R]);
 
     gtk_box_append(GTK_BOX(top_vbox), paths_hbox);
+
+    NEW_WITH_NAME(button_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
+    gtk_widget_set_halign(button_hbox, GTK_ALIGN_CENTER);
+
+    NEW_WITH_NAME(cecup.preview_button, gtk_button_new);
+    NEW_WITH_NAME(cecup.stop_button, gtk_button_new);
+    NEW_WITH_NAME(cecup.sync_button, gtk_button_new);
+
+    gtk_button_set_label(GTK_BUTTON(cecup.preview_button), _("🔎 Analyze"));
+    gtk_button_set_label(GTK_BUTTON(cecup.stop_button),    _("⏹️ Stop"));
+    gtk_button_set_label(GTK_BUTTON(cecup.sync_button),    _("⏩ Apply Changes"));
+
+    gtk_widget_set_tooltip_text(cecup.preview_button,
+                                _("Check which files need to be copied or updated"));
+    gtk_widget_set_tooltip_text(cecup.stop_button,
+                                _("Cancel the current task"));
+    gtk_widget_set_tooltip_text(cecup.sync_button,
+                                _("Start copying and updating all files"));
+
+    cecup.preview_dirty = true;
+    gtk_widget_set_sensitive(cecup.stop_button, FALSE);
+
+    gtk_box_append(GTK_BOX(button_hbox), cecup.preview_button);
+    gtk_widget_set_margin_start(cecup.preview_button, PADDING_BUTTON);
+    gtk_widget_set_margin_end(cecup.preview_button, PADDING_BUTTON);
+
+    gtk_box_append(GTK_BOX(button_hbox), cecup.stop_button);
+    gtk_widget_set_margin_start(cecup.stop_button, PADDING_BUTTON);
+    gtk_widget_set_margin_end(cecup.stop_button, PADDING_BUTTON);
+
+    gtk_box_append(GTK_BOX(button_hbox), cecup.sync_button);
+    gtk_widget_set_margin_start(cecup.sync_button, PADDING_BUTTON);
+    gtk_widget_set_margin_end(cecup.sync_button, PADDING_BUTTON);
+
+    gtk_box_append(GTK_BOX(top_vbox), button_hbox);
 
     NEW_WITH_NAME(footer_vbox, gtk_box_new, GTK_ORIENTATION_VERTICAL, SPACING_BOX);
     gtk_widget_set_margin_top(footer_vbox, SPACING_BOX);
