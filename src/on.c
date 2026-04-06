@@ -232,7 +232,7 @@ on_reset_clicked(GtkWidget *button, void *data) {
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_ignored_button), FALSE);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after_button), FALSE);
 
-    gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "unidiff.bash");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "diff");
     gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "xterm");
     save_config();
     aux_invalidate_preview();
