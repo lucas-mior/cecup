@@ -451,9 +451,18 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     }
 
     if (tip_text) {
-        gtk_tooltip_set_text(t, tip_text);
+        GtkWidget *label;
+
+        label = gtk_label_new(tip_text);
+        /* Allow wrapping but set a high threshold for the width */
+        gtk_label_set_wrap(GTK_LABEL(label), TRUE);
+        gtk_label_set_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD_CHAR);
+        gtk_label_set_max_width_chars(GTK_LABEL(label), 120);
+
+        gtk_tooltip_set_custom(t, label);
         return TRUE;
     }
+
     return FALSE;
 }
 
