@@ -201,11 +201,9 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                 g_object_unref(m_item);
                 g_object_unref(submenu);
             } else {
-                GMenuItem *m_item;
-                bool disabled;
+                GMenuItem *m_item = g_menu_item_new(_(menu_item->label), NULL);
+                bool disabled = false;
 
-                disabled = false;
-                m_item = g_menu_item_new(_(menu_item->label), NULL);
                 g_menu_item_set_action_and_target(m_item, "app.tree_dispatch", "i", i);
 
                 if (is_busy) {
