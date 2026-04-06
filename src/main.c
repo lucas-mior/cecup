@@ -383,68 +383,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_box_append(GTK_BOX(header_vbox), progress_vbox);
     gtk_widget_set_margin_bottom(progress_vbox, 5);
 
-    {
-        char cwd[MAX_PATH_LENGTH];
-        if (getcwd(cwd, sizeof(cwd)) == NULL) {
-            error("Error getting current working directory: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
-
-        if (strlen32(cwd) > (SIZEOF(src_path_buffer) / 2)) {
-            error("Error: current working directory path is too long.\n");
-            fatal(EXIT_FAILURE);
-        }
-
-        SNPRINTF(src_path_buffer, "%s/a/", cwd);
-        SNPRINTF(dst_path_buffer, "%s/b/", cwd);
-    }
-
-    NEW_WITH_NAME(paths_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, 10);
-    gtk_widget_set_margin_start(paths_hbox, 10);
-    gtk_widget_set_margin_end(paths_hbox, 10);
-    gtk_widget_set_margin_top(paths_hbox, 10);
-    gtk_widget_set_margin_bottom(paths_hbox, 10);
-    gtk_box_append(GTK_BOX(main_vbox), paths_hbox);
-
-    NEW_WITH_NAME(entry_hbox[L], gtk_box_new, GTK_ORIENTATION_HORIZONTAL, 5);
-    NEW_WITH_NAME(cecup.dir_entry[L], gtk_entry_new);
-    NEW_WITH_NAME(cecup.browse_button[L], gtk_button_new);
-
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), src_path_buffer);
-
-    gtk_button_set_label(GTK_BUTTON(cecup.browse_button[L]), _("Select Folder"));
-    gtk_widget_set_tooltip_text(cecup.dir_entry[L], _("Folder containing original files"));
-    gtk_widget_set_tooltip_text(cecup.browse_button[L], _("Open browser to select"
-                                                          " the folder containing original files"));
-
-    gtk_widget_set_hexpand(cecup.dir_entry[L], TRUE);
-    gtk_box_append(GTK_BOX(entry_hbox[L]), cecup.dir_entry[L]);
-    gtk_box_append(GTK_BOX(entry_hbox[L]), cecup.browse_button[L]);
-    gtk_widget_set_hexpand(entry_hbox[L], TRUE);
-    gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[L]);
-
-    NEW_WITH_NAME(cecup.invert_button, gtk_button_new);
-    gtk_button_set_label(GTK_BUTTON(cecup.invert_button), "<--->");
-    gtk_widget_set_tooltip_text(cecup.invert_button, _("Invert Original and Backup"));
-    gtk_box_append(GTK_BOX(paths_hbox), cecup.invert_button);
-
-    NEW_WITH_NAME(entry_hbox[R], gtk_box_new, GTK_ORIENTATION_HORIZONTAL, 5);
-    NEW_WITH_NAME(cecup.dir_entry[R], gtk_entry_new);
-    NEW_WITH_NAME(cecup.browse_button[R], gtk_button_new);
-
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), dst_path_buffer);
-
-    gtk_button_set_label(GTK_BUTTON(cecup.browse_button[R]), _("Select Folder"));
-    gtk_widget_set_tooltip_text(cecup.dir_entry[R], _("Folder where the backup will be stored"));
-    gtk_widget_set_tooltip_text(cecup.browse_button[R], _("Open browser to select"
-                                                          " the folder where the backup will be stored"));
-
-    gtk_widget_set_hexpand(cecup.dir_entry[R], TRUE);
-    gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.dir_entry[R]);
-    gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.browse_button[R]);
-    gtk_widget_set_hexpand(entry_hbox[R], TRUE);
-    gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[R]);
-
     NEW_WITH_NAME(search_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, SPACING_BOX);
     NEW_WITH_NAME(cecup.search_entry, gtk_entry_new);
 
@@ -585,12 +523,68 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_paned_set_end_child(GTK_PANED(paned_trees), vbox[R]);
 
     {
-        GtkAdjustment *l_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[L]));
-        GtkAdjustment *r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[R]));
+        char cwd[MAX_PATH_LENGTH];
 
-        g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
-        g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
+        if (getcwd(cwd, sizeof(cwd)) == NULL) {
+            error("Error getting current working directory: %s.\n", strerror(errno));
+            fatal(EXIT_FAILURE);
+        }
+
+        if (strlen32(cwd) > (SIZEOF(src_path_buffer) / 2)) {
+            error("Error: current working directory path is too long.\n");
+            fatal(EXIT_FAILURE);
+        }
+
+        SNPRINTF(src_path_buffer, "%s/a/", cwd);
+        SNPRINTF(dst_path_buffer, "%s/b/", cwd);
     }
+
+    NEW_WITH_NAME(paths_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk_widget_set_margin_start(paths_hbox, 10);
+    gtk_widget_set_margin_end(paths_hbox, 10);
+    gtk_widget_set_margin_top(paths_hbox, 10);
+    gtk_widget_set_margin_bottom(paths_hbox, 10);
+
+    NEW_WITH_NAME(entry_hbox[L], gtk_box_new, GTK_ORIENTATION_HORIZONTAL, 5);
+    NEW_WITH_NAME(cecup.dir_entry[L], gtk_entry_new);
+    NEW_WITH_NAME(cecup.browse_button[L], gtk_button_new);
+
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), src_path_buffer);
+
+    gtk_button_set_label(GTK_BUTTON(cecup.browse_button[L]), _("Select Folder"));
+    gtk_widget_set_tooltip_text(cecup.dir_entry[L], _("Folder containing original files"));
+    gtk_widget_set_tooltip_text(cecup.browse_button[L], _("Open browser to select"
+                                                          " the folder containing original files"));
+
+    gtk_widget_set_hexpand(cecup.dir_entry[L], TRUE);
+    gtk_box_append(GTK_BOX(entry_hbox[L]), cecup.dir_entry[L]);
+    gtk_box_append(GTK_BOX(entry_hbox[L]), cecup.browse_button[L]);
+    gtk_widget_set_hexpand(entry_hbox[L], TRUE);
+    gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[L]);
+
+    NEW_WITH_NAME(cecup.invert_button, gtk_button_new);
+    gtk_button_set_label(GTK_BUTTON(cecup.invert_button), "<--->");
+    gtk_widget_set_tooltip_text(cecup.invert_button, _("Invert Original and Backup"));
+    gtk_box_append(GTK_BOX(paths_hbox), cecup.invert_button);
+
+    NEW_WITH_NAME(entry_hbox[R], gtk_box_new, GTK_ORIENTATION_HORIZONTAL, 5);
+    NEW_WITH_NAME(cecup.dir_entry[R], gtk_entry_new);
+    NEW_WITH_NAME(cecup.browse_button[R], gtk_button_new);
+
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), dst_path_buffer);
+
+    gtk_button_set_label(GTK_BUTTON(cecup.browse_button[R]), _("Select Folder"));
+    gtk_widget_set_tooltip_text(cecup.dir_entry[R], _("Folder where the backup will be stored"));
+    gtk_widget_set_tooltip_text(cecup.browse_button[R], _("Open browser to select"
+                                                          " the folder where the backup will be stored"));
+
+    gtk_widget_set_hexpand(cecup.dir_entry[R], TRUE);
+    gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.dir_entry[R]);
+    gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.browse_button[R]);
+    gtk_widget_set_hexpand(entry_hbox[R], TRUE);
+    gtk_box_append(GTK_BOX(paths_hbox), entry_hbox[R]);
+
+    gtk_box_append(GTK_BOX(top_vbox), paths_hbox);
 
     NEW_WITH_NAME(footer_vbox, gtk_box_new, GTK_ORIENTATION_VERTICAL, SPACING_BOX);
     gtk_widget_set_margin_top(footer_vbox, SPACING_BOX);
@@ -612,6 +606,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(log_scroll), cecup.log_view);
 
         gtk_paned_set_end_child(GTK_PANED(v_paned), log_scroll);
+    }
+
+    {
+        GtkAdjustment *l_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[L]));
+        GtkAdjustment *r_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll[R]));
+
+        g_signal_connect(l_adj, "value-changed", G_CALLBACK(on_scroll_sync), r_adj);
+        g_signal_connect(r_adj, "value-changed", G_CALLBACK(on_scroll_sync), l_adj);
     }
 
     {
