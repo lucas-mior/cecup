@@ -82,7 +82,6 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
         int32 row_id;
         char *filepath = NULL;
         char *other_path = NULL;
-        GdkRectangle rect;
         bool is_busy;
         Message *message;
         GtkSelectionModel *selection;
@@ -244,6 +243,8 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
         if (gtk_widget_translate_coordinates(widget, parent,
                                              x, y,
                                              &translated_x, &translated_y)) {
+            GdkRectangle rect;
+
             popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
             gtk_widget_set_parent(popover, parent);
 
