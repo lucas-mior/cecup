@@ -464,6 +464,13 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_hexpand(cecup.search_entry, TRUE);
     gtk_box_append(GTK_BOX(search_hbox), cecup.search_entry);
 
+    NEW_WITH_NAME(cecup.stats_label, gtk_label_new, "");
+
+    gtk_label_set_label(GTK_LABEL(cecup.stats_label), _("✅ Everything ready"));
+    gtk_box_append(GTK_BOX(search_hbox), cecup.stats_label);
+    gtk_widget_set_margin_start(cecup.stats_label, 10);
+    gtk_widget_set_margin_end(cecup.stats_label, 10);
+
     NEW_WITH_NAME(cecup.select_visible_button, gtk_button_new);
     NEW_WITH_NAME(cecup.unselect_button, gtk_button_new);
 
@@ -589,13 +596,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_margin_end(cecup.filter_ignore, PADDING_FILTER_BUTTON);
 
     gtk_box_append(GTK_BOX(footer_vbox), filter_hbox);
-
-    NEW_WITH_NAME(cecup.stats_label, gtk_label_new, "");
-
-    gtk_label_set_label(GTK_LABEL(cecup.stats_label), _("✅ Everything ready"));
-    gtk_box_append(GTK_BOX(footer_vbox), cecup.stats_label);
-    gtk_widget_set_margin_top(cecup.stats_label, 5);
-    gtk_widget_set_margin_bottom(cecup.stats_label, 5);
 
     {
         GtkWidget *log_scroll;
