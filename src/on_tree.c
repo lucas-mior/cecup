@@ -216,6 +216,12 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                     }
                 }
 
+                if (menu_item->callback == on_menu_apply) {
+                    if ((actions[side] == ACTION_EQUAL) || (actions[side] == ACTION_IGNORE)) {
+                        disabled = true;
+                    }
+                }
+
                 if (filepath == NULL) {
                     disabled = true;
                 }
