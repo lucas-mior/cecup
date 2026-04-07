@@ -696,7 +696,7 @@ update_list_from_rows(enum UpdateRowsType change) {
             }
         }
 
-        if ((size_src = item_size_side(row_id, L)) < 0) {
+        if ((size_src = traversal_size_side(idx_src, L)) < 0) {
             size_src = 0;
         }
 
@@ -751,7 +751,7 @@ update_list_from_rows(enum UpdateRowsType change) {
 
         if (((change == UPDATE_ROWS_COMPLETE) || (change == UPDATE_ROWS_FILTER_OUT))
             && (cecup.search_query_len > 0)) {
-            char *path = item_path_get(row_id);
+            char *path = traversal_path_get(idx_src, idx_dst);
             if (strcasestr(path, cecup.search_query) == NULL) {
                 continue;
             }
@@ -766,14 +766,14 @@ update_list_from_rows(enum UpdateRowsType change) {
 
             switch (cecup.sort_col) {
             case COL_SRC_PATH:
-                if ((path = item_path_side(row_id, L))) {
+                if ((path = traversal_path_side(idx_src, L))) {
                     cache_rows[v_idx].key.ptr = path;
                 } else {
                     cache_rows[v_idx].key.ptr = "";
                 }
                 break;
             case COL_DST_PATH:
-                if ((path = item_path_side(row_id, R))) {
+                if ((path = traversal_path_side(idx_dst, R))) {
                     cache_rows[v_idx].key.ptr = path;
                 } else {
                     cache_rows[v_idx].key.ptr = "";
@@ -783,13 +783,13 @@ update_list_from_rows(enum UpdateRowsType change) {
                 cache_rows[v_idx].key.i64 = size_src;
                 break;
             case COL_DST_SIZE_RAW:
-                cache_rows[v_idx].key.i64 = item_size_side(row_id, R);
+                cache_rows[v_idx].key.i64 = traversal_size_side(idx_dst, R);
                 break;
             case COL_SRC_MTIME_RAW:
-                cache_rows[v_idx].key.i64 = item_mtime_side(row_id, L);
+                cache_rows[v_idx].key.i64 = traversal_mtime_side(idx_src, L);
                 break;
             case COL_DST_MTIME_RAW:
-                cache_rows[v_idx].key.i64 = item_mtime_side(row_id, R);
+                cache_rows[v_idx].key.i64 = traversal_mtime_side(idx_dst, R);
                 break;
             case COL_SRC_ACTION:
             case COL_SELECTED:
