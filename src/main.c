@@ -832,8 +832,8 @@ main(int32 argc, char **argv) {
     memset64(&cecup, 0, SIZEOF(cecup));
 
     cecup.arena = arena_create(SIZEMB(64));
-    g_mutex_init(&cecup.arena_mutex);
-    g_mutex_init(&cecup.stop_lock);
+    pthread_mutex_init(&cecup.arena_mutex, NULL);
+    pthread_mutex_init(&cecup.stop_lock, NULL);
 
     cecup.rows_len = 0;
     cecup.rows_capacity = INITIAL_CAPACITY;
@@ -957,8 +957,8 @@ main(int32 argc, char **argv) {
     traversal_free(&cecup.traversal[L]);
     traversal_free(&cecup.traversal[R]);
 
-    g_mutex_clear(&cecup.arena_mutex);
-    g_mutex_clear(&cecup.stop_lock);
+    xpthread_mutex_destroy(&cecup.arena_mutex);
+    xpthread_mutex_destroy(&cecup.stop_lock);
 
     exit(status);
 }

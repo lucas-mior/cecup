@@ -48,9 +48,9 @@ aux_is_root(char *path) {
 
 static void
 stop_working(bool state) {
-    g_mutex_lock(&cecup.stop_lock);
+    pthread_mutex_lock(&cecup.stop_lock);
     cecup.stop_working = state;
-    g_mutex_unlock(&cecup.stop_lock);
+    pthread_mutex_unlock(&cecup.stop_lock);
     return;
 }
 
@@ -466,7 +466,7 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
 
 static void
 check_consistent_state(void) {
-    g_mutex_lock(&cecup.arena_mutex);
+    pthread_mutex_lock(&cecup.arena_mutex);
 
     error("Checking consistent state...\n");
 
@@ -513,7 +513,7 @@ check_consistent_state(void) {
     CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal[L], cecup.rows[L]);
     CHECK_CONSISTENT_TRAVERSAL_ROWS(&cecup.traversal[R], cecup.rows[R]);
 
-    g_mutex_unlock(&cecup.arena_mutex);
+    pthread_mutex_unlock(&cecup.arena_mutex);
 
     error("State is consistent...\n");
     return;

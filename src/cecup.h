@@ -450,14 +450,14 @@ static struct {
     GtkSortType sort_order;
 
     Arena *arena;
-    GMutex arena_mutex;
+    pthread_mutex_t arena_mutex;
 
     // this is only needed for killing rsync when the window is destroyed
     pid_t child_pid;
     pthread_t work_thread;
 
     volatile bool stop_working;
-    GMutex stop_lock;
+    pthread_mutex_t stop_lock;
 
     IgnorePattern *ignore_patterns;
     int32 ignore_count;

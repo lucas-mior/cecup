@@ -181,7 +181,7 @@ update_ui_handler(void *data) {
         xpthread_join(&cecup.work_thread, NULL);
         break;
     case MSG_CLEAR_TREES:
-        g_mutex_lock(&cecup.arena_mutex);
+        pthread_mutex_lock(&cecup.arena_mutex);
 
         current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
@@ -200,7 +200,7 @@ update_ui_handler(void *data) {
 
         cecup_list_model_update(CECUP_LIST_MODEL(cecup.store), current_store_count, 0);
 
-        g_mutex_unlock(&cecup.arena_mutex);
+        pthread_mutex_unlock(&cecup.arena_mutex);
 
         gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(cecup.progress_bar), 0.0);
         gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), "");
