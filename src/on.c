@@ -251,6 +251,7 @@ on_preview_clicked(GtkWidget *button, void *data) {
     }
 
     aux_protect_interface_from_user(true);
+    update_progress_bar(0.0);
 
     {
         Message *message = xmalloc(SIZEOF(*message));

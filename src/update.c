@@ -878,8 +878,10 @@ static void
 update_progress_bar(double fraction) {
     static double last_fraction;
 
-    if ((fraction - last_fraction) < 0.001) {
-        return;
+    if ((fraction > 0.0) && (last_fraction < 1.0)) {
+        if ((fraction - last_fraction) < 0.001) {
+            return;
+        }
     }
     last_fraction = fraction;
 
