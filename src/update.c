@@ -651,6 +651,9 @@ update_list_from_rows(enum UpdateRowsType change) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
 
     cache_rows = realloc(cache_rows, cache_rows_capacity, cecup.rows_len, SIZEOF(*cache_rows));
+    if (cache_rows_capacity == 0) {
+        ASSERT_EQUAL(change, UPDATE_ROWS_COMPLETE);
+    }
     for (int32 i = cache_rows_capacity; i < cecup.rows_len; i += 1) {
         RowCache *cache_row = &cache_rows[i];
         cache_row->row_id = -1;
