@@ -652,7 +652,7 @@ update_list_from_rows(enum UpdateRowsType change) {
 
     cache_rows = realloc(cache_rows, cache_rows_capacity, cecup.rows_len, SIZEOF(*cache_rows));
     if (cache_rows_capacity == 0) {
-        ASSERT_EQUAL(change, UPDATE_ROWS_COMPLETE);
+        ASSERT_EQUAL((int32)change, (int32)UPDATE_ROWS_COMPLETE);
     }
     for (int32 i = cache_rows_capacity; i < cecup.rows_len; i += 1) {
         RowCache *cache_row = &cache_rows[i];
