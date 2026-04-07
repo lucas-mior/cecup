@@ -1,7 +1,7 @@
 # cecup
 GUI backup tool inspired by FreeFileSync and Rsync
 
-![cecup demo](cecup.gif)
+<!-- ![cecup demo](cecup.gif) -->
 
 ## Logic
 This tool is made to facilitate the correct and intuitive backup of a file
