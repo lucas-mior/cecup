@@ -69,6 +69,7 @@ work_traverse_fs(Traversal *traversal) {
     char *paths[2];
     FTS *fts_handle;
     FTSENT *ent;
+    struct timespec time_last_report = {0};
 
     if (cecup.stop_working) {
         return 0;
@@ -253,9 +254,18 @@ work_traverse_fs(Traversal *traversal) {
                        symlink_target, symlink_target_len,
                        matched_pattern, matched_pattern_len);
 
-        if (((file_count + 1) < 4096) || (((file_count + 1) % 4096) == 0)) {
-            LOG("Found %lld files... %s/%s\r",
-                (llong)file_count, traversal->base_path, ent->fts_path);
+        if ((file_count % 4096) == 0) {
+            struct timespec time_now;
+
+            clock_gettime(CLOCK_MONOTONIC_COARSE, &time_now);
+            if (((time_now.tv_sec - time_last_report.tv_sec) > 1)
+                    || ((time_now.tv_nsec - time_last_report.tv_nsec) > 1000*1000*100)) {
+
+                LOG("Found %lld files... %s/%s\r",
+                    (llong)file_count, traversal->base_path, ent->fts_path);
+
+                clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_report);
+            }
         }
     }
     LOG("\n");
