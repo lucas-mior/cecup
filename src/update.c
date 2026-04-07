@@ -673,6 +673,8 @@ update_list_from_rows(enum UpdateRowsType change) {
         int64 size_src;
         int64 size_src_for_sum;
         bool is_visible = false;
+        int32 idx_src;
+        int32 idx_dst;
 
         if (change == UPDATE_ROWS_COMPLETE) {
             row_id = i;
@@ -683,6 +685,9 @@ update_list_from_rows(enum UpdateRowsType change) {
             dst_action = cache_rows[i].dst_action;
             ASSERT_MORE(row_id, -1);
         }
+
+        idx_src = cecup.rows[L][row_id];
+        idx_dst = cecup.rows[R][row_id];
 
         if (cecup.rows_selected[row_id]) {
             count_selected += 1;
