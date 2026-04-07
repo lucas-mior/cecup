@@ -167,7 +167,7 @@ update_ui_handler(void *data) {
     case MSG_IGNORE_PATTERN:
         update_list_needed = update_row_ignore(message);
         break;
-    case MSG_ENABLE_BUTTONS:
+    case MSG_WORK_FINISHED:
         update_list_from_rows(UPDATE_ROWS_COMPLETE);
 
         cecup.preview_dirty = !message->preview_clean;

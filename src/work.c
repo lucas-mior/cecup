@@ -54,7 +54,7 @@ work_finalize(bool preview_clean) {
         Message *message = xmalloc(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
-        message->type = MSG_ENABLE_BUTTONS;
+        message->type = MSG_WORK_FINISHED;
         message->preview_clean = preview_clean;
 
         g_idle_add(update_ui_handler, message);

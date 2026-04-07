@@ -104,7 +104,7 @@ _Static_assert((!R) == L, "!R must be L");
     X(BATCH_ROW_REMOVE)   \
     X(BATCH_ROW_RENAME)   \
     X(IGNORE_PATTERN)     \
-    X(ENABLE_BUTTONS)     \
+    X(WORK_FINISHED)      \
     X(CLEAR_TREES)        \
     X(PROGRESS)
 #include "xenums.c"
