@@ -145,15 +145,39 @@ cecup_reset_dir(int32 side) {
 }
 
 static void
-cecup_set_dirs(void) {
+cecup_set_dirs(char *new_src, int32 new_src_len, char *new_dst, int32 new_dst_len) {
+    if (new_src) {
+        if (cecup.src_base) {
+            free(cecup.src_base, cecup.src_base_len + 1);
+        }
+        cecup.src_base = xmalloc(new_src_len + 1);
+        memcpy64(cecup.src_base, new_src, new_src_len + 1);
+        cecup.src_base_len = new_src_len;
+    }
+
+    if (new_dst) {
+        if (cecup.dst_base) {
+            free(cecup.dst_base, cecup.dst_base_len + 1);
+        }
+        cecup.dst_base = xmalloc(new_dst_len + 1);
+        memcpy64(cecup.dst_base, new_dst, new_dst_len + 1);
+        cecup.dst_base_len = new_dst_len;
+    }
+
     g_signal_handler_block(cecup.dir_entry[L], cecup.entry_id[L]);
     g_signal_handler_block(cecup.dir_entry[R], cecup.entry_id[R]);
 
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), cecup.src_base);
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), cecup.dst_base);
+    if (cecup.src_base) {
+        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), cecup.src_base);
+    }
+    if (cecup.dst_base) {
+        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), cecup.dst_base);
+    }
 
     g_signal_handler_unblock(cecup.dir_entry[L], cecup.entry_id[L]);
     g_signal_handler_unblock(cecup.dir_entry[R], cecup.entry_id[R]);
+
+    return;
 }
 
 static bool
@@ -234,35 +258,17 @@ cecup_get_dirs(void) {
 
     if (cecup.src_base && cecup.dst_base) {
         if (!strcmp(cecup.src_base, full_src) && !strcmp(cecup.dst_base, full_dst)) {
-            cecup_set_dirs();
+            cecup_set_dirs(NULL, 0, NULL, 0);
             return true;
         }
     }
 
-    if (cecup.src_base) {
-        free(cecup.src_base, cecup.src_base_len + 1);
-    }
-    if (cecup.dst_base) {
-        free(cecup.dst_base, cecup.dst_base_len + 1);
-    }
-
-    {
-        cecup.src_base = xmalloc(full_src_len + 1);
-        memcpy64(cecup.src_base, full_src, full_src_len + 1);
-        cecup.src_base_len = full_src_len;
-
-        cecup.dst_base = xmalloc(full_dst_len + 1);
-        memcpy64(cecup.dst_base, full_dst, full_dst_len + 1);
-        cecup.dst_base_len = full_dst_len;
-    }
-
-    cecup_set_dirs();
+    cecup_set_dirs(full_src, full_src_len, full_dst, full_dst_len);
 
     aux_invalidate_preview();
 
     return true;
 }
-
 static void
 config_bool_set(GKeyFile *key, char *section, char *name, GtkWidget *button) {
     gboolean state;

@@ -538,9 +538,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     NEW_WITH_NAME(cecup.dir_entry[R], gtk_entry_new);
     NEW_WITH_NAME(cecup.browse_button[R], gtk_button_new);
 
-    g_signal_connect(cecup.dir_entry[L], "activate", G_CALLBACK(on_dirs_editing_notify), NULL);
-    g_signal_connect(cecup.dir_entry[R], "activate", G_CALLBACK(on_dirs_editing_notify), NULL);
-
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), dst_path_buffer);
 
     gtk_button_set_label(GTK_BUTTON(cecup.browse_button[R]), _("Select Folder"));
@@ -643,16 +640,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         g_signal_connect(action_copy_line, "activate", G_CALLBACK(on_log_copy), "line");
     }
 
-    cecup.entry_id[L] = g_signal_connect(cecup.dir_entry[L], "activate",
-                                         G_CALLBACK(on_config_changed), NULL);
-    cecup.entry_id[R] = g_signal_connect(cecup.dir_entry[R], "activate",
-                                         G_CALLBACK(on_config_changed), NULL);
-
-    g_signal_connect(cecup.dir_entry[L], "changed",
-                     G_CALLBACK(aux_invalidate_preview), NULL);
-    g_signal_connect(cecup.dir_entry[R], "changed",
-                     G_CALLBACK(aux_invalidate_preview), NULL);
-
     do {
         GKeyFile *key;
         char *value;
@@ -725,6 +712,11 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
         g_key_file_free(key);
     } while (0);
+
+    cecup.entry_id[L] = g_signal_connect(cecup.dir_entry[L], "activate",
+                                         G_CALLBACK(on_config_changed), NULL);
+    cecup.entry_id[R] = g_signal_connect(cecup.dir_entry[R], "activate",
+                                         G_CALLBACK(on_config_changed), NULL);
 
     g_signal_connect(cecup.browse_button[L], "clicked", G_CALLBACK(on_browse_src),      NULL);
     g_signal_connect(cecup.browse_button[R], "clicked", G_CALLBACK(on_browse_dst),      NULL);
