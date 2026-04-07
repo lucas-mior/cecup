@@ -138,9 +138,14 @@ on_config_changed(GtkWidget *widget, void *data) {
 static gboolean
 on_search_timeout(void *data) {
     (void)data;
+
+    cecup.search_timeout_id = 0;
+    if (cecup.nrows <= 0) {
+        return G_SOURCE_REMOVE;
+    }
+
     update_list_from_rows(UPDATE_ROWS_COMPLETE);
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry), GTK_ENTRY_ICON_SECONDARY, NULL);
-    cecup.search_timeout_id = 0;
     return G_SOURCE_REMOVE;
 }
 
