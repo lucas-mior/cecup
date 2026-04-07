@@ -140,7 +140,7 @@ on_search_timeout(void *data) {
     (void)data;
 
     cecup.search_timeout_id = 0;
-    if (cecup.nrows <= 0) {
+    if (cecup.rows_len <= 0) {
         return G_SOURCE_REMOVE;
     }
 
