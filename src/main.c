@@ -52,7 +52,7 @@ free_text_info(void *data) {
 }
 
 static void
-main_setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupColumn col_path) {
+main_setup_tree_columns(GtkWidget *tree) {
     GActionMap *action_map = G_ACTION_MAP(cecup.application);
     int8 side = (int8)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
@@ -88,7 +88,11 @@ main_setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupCol
         gtk_column_view_column_set_resizable(column, TRUE);
         gtk_column_view_column_set_sorter(column, sorter);
 
-        g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(col_act));
+        if (side == L) {
+            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_SRC_ACTION));
+        } else {
+            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_DST_ACTION));
+        }
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
         g_object_unref(column);
     }
@@ -105,7 +109,11 @@ main_setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupCol
         gtk_column_view_column_set_fixed_width(column, 500);
         gtk_column_view_column_set_sorter(column, sorter);
 
-        g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(col_path));
+        if (side == L) {
+            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_SRC_PATH));
+        } else {
+            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_DST_PATH));
+        }
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
         g_object_unref(column);
     }
@@ -465,7 +473,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     }
 
     g_object_set_data(G_OBJECT(cecup.tree[L]), "side", GINT_TO_POINTER(L));
-    main_setup_tree_columns(cecup.tree[L], COL_SRC_ACTION, COL_SRC_PATH);
+    main_setup_tree_columns(cecup.tree[L]);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[L]), cecup.tree[L]);
     gtk_box_append(GTK_BOX(vbox[L]), scroll[L]);
     gtk_widget_set_vexpand(scroll[L], TRUE);
@@ -483,7 +491,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     }
 
     g_object_set_data(G_OBJECT(cecup.tree[R]), "side", GINT_TO_POINTER(R));
-    main_setup_tree_columns(cecup.tree[R], COL_DST_ACTION, COL_DST_PATH);
+    main_setup_tree_columns(cecup.tree[R]);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll[R]), cecup.tree[R]);
     gtk_box_append(GTK_BOX(vbox[R]), scroll[R]);
     gtk_widget_set_vexpand(scroll[R], TRUE);
