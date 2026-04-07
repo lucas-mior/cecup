@@ -30,16 +30,6 @@
 #define TESTING 0
 #endif
 
-typedef struct RowCache {
-    int32 row_id;
-    enum Action src_action;
-    enum Action dst_action;
-    union {
-        char *ptr;
-        int64 i64;
-    } key;
-} RowCache;
-
 static void
 hard_link_replace_node(HardLinks *list,
                        char *old_path, int32 old_path_len,

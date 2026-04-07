@@ -487,6 +487,16 @@ enum UpdateRowsType {
     UPDATE_ROWS_FILTER_OUT,
 };
 
+typedef struct RowCache {
+    int32 row_id;
+    enum Action src_action;
+    enum Action dst_action;
+    union {
+        char *ptr;
+        int64 i64;
+    } key;
+} RowCache;
+
 typedef struct ThreadData {
     TaskList *tasks;
 } ThreadData;
