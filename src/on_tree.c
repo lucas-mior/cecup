@@ -283,6 +283,13 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     char tip_buffer[MAX_PATH_LENGTH*2];
     char text_buf[64] = "";
 
+    char *filepath;
+    enum Action action;
+    enum Action actions[2];
+    enum Reason reason;
+    bool is_dir = false;
+    int32 path_len;
+
     (void)k;
     (void)d;
 
@@ -308,145 +315,138 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
 
     side = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "side"));
 
-    if (row_id_ptr) {
-        char *filepath;
-        enum Action action;
-        enum Action actions[2];
-        enum Reason reason;
-        bool is_dir = false;
-        int32 path_len;
+    ASSERT(row_id_ptr);
 
-        item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
+    item_get_actions_reasons(row_id, &actions[L], &actions[R], &reason);
 
-        action = actions[side];
+    action = actions[side];
 
-        filepath = item_path_get(row_id);
-        path_len = item_path_len_get(row_id);
-        if (filepath[path_len - 1] == '/') {
-            is_dir = true;
+    filepath = item_path_get(row_id);
+    path_len = item_path_len_get(row_id);
+    if (filepath[path_len - 1] == '/') {
+        is_dir = true;
+    }
+
+    switch (column_type) {
+    case COLUMN_ACTION:
+        if (is_dir) {
+            tip_text  = _(action_strings_dir[side][action]);
+        } else {
+            tip_text = _(action_strings_file[side][action]);
         }
+        break;
+    case COLUMN_PATH:
+    {
+        int32 pos = 0;
+        char reason_buf[1024];
+        char *symlink_target;
+        char *ignore_pattern;
+        HardLinks hard_links = {0};
 
-        switch (column_type) {
-        case COLUMN_ACTION:
+        reason_buf[0] = '\0';
+        for (uint32 i = 0; i < REASON_BIT_COUNT; i += 1) {
+            char *base_msg;
+
+            if (!(reason & (1u << i))) {
+                continue;
+            }
+
+            if ((i >= LENGTH(reason_strings_file)) || (i >= LENGTH(reason_strings_dir))) {
+                continue;
+            }
+            if ((reason_strings_file[i] == NULL) || (reason_strings_dir[i] == NULL)) {
+                continue;
+            }
+
+            if (pos > 0) {
+                pos += snprintf2(reason_buf + pos, SIZEOF(reason_buf) - pos, "\n");
+            }
+
             if (is_dir) {
-                tip_text  = _(action_strings_dir[side][action]);
+                base_msg = _(reason_strings_dir[i]);
             } else {
-                tip_text = _(action_strings_file[side][action]);
-            }
-            break;
-        case COLUMN_PATH:
-        {
-            int32 pos = 0;
-            char reason_buf[1024];
-            char *symlink_target;
-            char *ignore_pattern;
-            HardLinks hard_links = {0};
-
-            reason_buf[0] = '\0';
-            for (uint32 i = 0; i < REASON_BIT_COUNT; i += 1) {
-                char *base_msg;
-
-                if (!(reason & (1u << i))) {
-                    continue;
-                }
-
-                if ((i >= LENGTH(reason_strings_file)) || (i >= LENGTH(reason_strings_dir))) {
-                    continue;
-                }
-                if ((reason_strings_file[i] == NULL) || (reason_strings_dir[i] == NULL)) {
-                    continue;
-                }
-
-                if (pos > 0) {
-                    pos += snprintf2(reason_buf + pos, SIZEOF(reason_buf) - pos, "\n");
-                }
-
-                if (is_dir) {
-                    base_msg = _(reason_strings_dir[i]);
-                } else {
-                    base_msg = _(reason_strings_file[i]);
-                }
-
-                if (base_msg) {
-                    pos += snprintf2(reason_buf + pos, SIZEOF(reason_buf) - pos, "%s", base_msg);
-                }
+                base_msg = _(reason_strings_file[i]);
             }
 
-            symlink_target = item_symlink_target_side(row_id, side);
-            ignore_pattern = item_ignore_pattern_side(row_id, side);
-            item_hardlink_side(row_id, side, &hard_links);
-
-            if (symlink_target) {
-                SNPRINTF(tip_buffer,
-                         "%s\n%s%s:\n%s", filepath, RSYNC_SYMLINK, symlink_target, reason_buf);
-            } else if (hard_links.count > 0) {
-                int32 offset = 0;
-                int32 nlinks_printed = 0;
-
-                offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
-                                    "%s:\n%s", filepath, reason_buf);
-                offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
-                                    _("\n\nThere are %d names for this file:\n"), hard_links.count);
-
-                for (int32 j = 0; j < hard_links.count; j += 1) {
-                    int32 n;
-
-                    ASSERT_LESS(hard_links.names_lens[j], MAX_PATH_LENGTH/2);
-
-                    n = snprintf(tip_buffer + offset, (size_t)(SIZEOF(tip_buffer) - offset - 5),
-                                 "\n%s%s", RSYNC_HARDLINK, hard_links.names[j]);
-                    offset += n;
-                    if (offset >= (SIZEOF(tip_buffer) - 5)) {
-                        offset -= n;
-                        break;
-                    }
-
-                    nlinks_printed += 1;
-                }
-                if (nlinks_printed < hard_links.count) {
-                    snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset, "\n...");
-                }
-            } else if (ignore_pattern) {
-                SNPRINTF(tip_buffer,
-                         "%s:\n%s (" N_("pattern") ": %s)", filepath, reason_buf, ignore_pattern);
-            } else {
-                SNPRINTF(tip_buffer,
-                         "%s:\n%s", filepath, reason_buf);
+            if (base_msg) {
+                pos += snprintf2(reason_buf + pos, SIZEOF(reason_buf) - pos, "%s", base_msg);
             }
-            tip_text = tip_buffer;
-            break;
         }
-        case COLUMN_SIZE:
-        {
-            int64 size_raw;
 
-            if ((size_raw = item_size_side(row_id, side)) < 0) {
-                size_raw = 0;
+        symlink_target = item_symlink_target_side(row_id, side);
+        ignore_pattern = item_ignore_pattern_side(row_id, side);
+        item_hardlink_side(row_id, side, &hard_links);
+
+        if (symlink_target) {
+            SNPRINTF(tip_buffer,
+                     "%s\n%s%s:\n%s", filepath, RSYNC_SYMLINK, symlink_target, reason_buf);
+        } else if (hard_links.count > 0) {
+            int32 offset = 0;
+            int32 nlinks_printed = 0;
+
+            offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
+                                "%s:\n%s", filepath, reason_buf);
+            offset += snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset,
+                                _("\n\nThere are %d names for this file:\n"), hard_links.count);
+
+            for (int32 j = 0; j < hard_links.count; j += 1) {
+                int32 n;
+
+                ASSERT_LESS(hard_links.names_lens[j], MAX_PATH_LENGTH/2);
+
+                n = snprintf(tip_buffer + offset, (size_t)(SIZEOF(tip_buffer) - offset - 5),
+                             "\n%s%s", RSYNC_HARDLINK, hard_links.names[j]);
+                offset += n;
+                if (offset >= (SIZEOF(tip_buffer) - 5)) {
+                    offset -= n;
+                    break;
+                }
+
+                nlinks_printed += 1;
             }
-            SNPRINTF(tip_buffer, "%s: %lld bytes", filepath, (llong)size_raw);
-            tip_text = tip_buffer;
-            break;
-        }
-        case COLUMN_MTIME:
-        {
-            int64 mtime_raw = item_mtime_side(row_id, side);
-
-            if (mtime_raw > 0) {
-                struct tm time_information;
-                time_t unix_timestamp;
-
-                unix_timestamp = (time_t)mtime_raw + timezone_offset;
-                gmtime_r(&unix_timestamp, &time_information);
-                STRFTIME(text_buf, "%Y-%m-%d %H:%M:%S", &time_information);
+            if (nlinks_printed < hard_links.count) {
+                snprintf2(tip_buffer + offset, SIZEOF(tip_buffer) - offset, "\n...");
             }
-            SNPRINTF(tip_buffer, "%s: %s", filepath, text_buf);
-            tip_text = tip_buffer;
-            break;
+        } else if (ignore_pattern) {
+            SNPRINTF(tip_buffer,
+                     "%s:\n%s (" N_("pattern") ": %s)", filepath, reason_buf, ignore_pattern);
+        } else {
+            SNPRINTF(tip_buffer,
+                     "%s:\n%s", filepath, reason_buf);
         }
-        case COLUMN_LAST:
-        default:
-            break;
+        tip_text = tip_buffer;
+        break;
+    }
+    case COLUMN_SIZE:
+    {
+        int64 size_raw;
+
+        if ((size_raw = item_size_side(row_id, side)) < 0) {
+            size_raw = 0;
         }
+        SNPRINTF(tip_buffer, "%s: %lld bytes", filepath, (llong)size_raw);
+        tip_text = tip_buffer;
+        break;
+    }
+    case COLUMN_MTIME:
+    {
+        int64 mtime_raw = item_mtime_side(row_id, side);
+
+        if (mtime_raw > 0) {
+            struct tm time_information;
+            time_t unix_timestamp;
+
+            unix_timestamp = (time_t)mtime_raw + timezone_offset;
+            gmtime_r(&unix_timestamp, &time_information);
+            STRFTIME(text_buf, "%Y-%m-%d %H:%M:%S", &time_information);
+        }
+        SNPRINTF(tip_buffer, "%s: %s", filepath, text_buf);
+        tip_text = tip_buffer;
+        break;
+    }
+    case COLUMN_LAST:
+    default:
+        break;
     }
 
     if (tip_text) {
