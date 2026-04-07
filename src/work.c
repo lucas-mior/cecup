@@ -252,7 +252,13 @@ work_traverse_fs(Traversal *traversal) {
                        path, path_len,
                        symlink_target, symlink_target_len,
                        matched_pattern, matched_pattern_len);
+
+        if (((file_count+1) < 4096) || (((file_count+1) % 4096) == 0)) {
+            LOG("Found %lld files... %s/%s\r",
+                (llong)file_count, traversal->base_path, ent->fts_path);
+        }
     }
+    LOG("\n");
 
     if (fts_close(fts_handle) < 0) {
         LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
