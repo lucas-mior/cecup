@@ -381,7 +381,7 @@ static int32
 item_add(int32 src_idx, int32 dst_idx) {
     int32 index;
 
-    pthread_mutex_lock(&cecup.arena_mutex);
+    xpthread_mutex_lock(&cecup.arena_mutex);
 
     if (cecup.rows_len >= cecup.rows_capacity) {
         int64 old_capacity = cecup.rows_capacity;
@@ -422,7 +422,7 @@ item_add(int32 src_idx, int32 dst_idx) {
         cecup.traversal[R].row_ids[dst_idx] = index;
     }
 
-    pthread_mutex_unlock(&cecup.arena_mutex);
+    xpthread_mutex_unlock(&cecup.arena_mutex);
     return index;
 }
 

@@ -299,7 +299,7 @@ work_traverse_fs_thread(void *user_data) {
 
 static void
 work_cleanup(void) {
-    pthread_mutex_lock(&cecup.arena_mutex);
+    xpthread_mutex_lock(&cecup.arena_mutex);
 
     traversal_clean(&cecup.traversal[L]);
     traversal_clean(&cecup.traversal[R]);
@@ -311,7 +311,7 @@ work_cleanup(void) {
 
     cecup.rows_len = 0;
 
-    pthread_mutex_unlock(&cecup.arena_mutex);
+    xpthread_mutex_unlock(&cecup.arena_mutex);
     return;
 }
 
