@@ -354,6 +354,11 @@ on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
     (void)sorter;
     (void)change;
 
+    if (cecup.rows_len <= 0) {
+        LOG_ERROR(_("No files to sort. Click Analysis first"));
+        return;
+    }
+
     view = GTK_COLUMN_VIEW(data);
     view_sorter = gtk_column_view_get_sorter(view);
 
