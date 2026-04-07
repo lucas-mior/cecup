@@ -266,7 +266,6 @@ work_traverse_fs(Traversal *traversal) {
             }
         }
     }
-    LOG("\n");
 
     if (fts_close(fts_handle) < 0) {
         LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
