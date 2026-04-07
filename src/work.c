@@ -79,8 +79,7 @@ work_traverse_fs(Traversal *traversal) {
 
     if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
         if (cecup.stop_working == false) {
-            LOG_ERROR(_("Error walking directory %s: %s.\n"),
-                      traversal->base_path, strerror(errno));
+            LOG_ERROR(_("Error walking directory %s: %s.\n"), paths[0], strerror(errno));
         }
         return 0;
     }
