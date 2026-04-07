@@ -135,6 +135,17 @@ on_config_changed(GtkWidget *widget, void *data) {
     return;
 }
 
+static void
+on_dirs_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
+    (void)object;
+    (void)pspec;
+    (void)data;
+
+    cecup_get_dirs();
+
+    return;
+}
+
 static gboolean
 on_search_timeout(void *data) {
     (void)data;

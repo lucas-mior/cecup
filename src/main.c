@@ -538,6 +538,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     NEW_WITH_NAME(cecup.dir_entry[R], gtk_entry_new);
     NEW_WITH_NAME(cecup.browse_button[R], gtk_button_new);
 
+    g_signal_connect(cecup.dir_entry[L], "activate", G_CALLBACK(on_dirs_editing_notify), NULL);
+    g_signal_connect(cecup.dir_entry[R], "activate", G_CALLBACK(on_dirs_editing_notify), NULL);
+
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), dst_path_buffer);
 
     gtk_button_set_label(GTK_BUTTON(cecup.browse_button[R]), _("Select Folder"));

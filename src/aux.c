@@ -144,10 +144,24 @@ cecup_reset_dir(int32 side) {
     return;
 }
 
+static void
+cecup_set_dirs(void) {
+    g_signal_handler_block(cecup.dir_entry[L], cecup.entry_id[L]);
+    g_signal_handler_block(cecup.dir_entry[R], cecup.entry_id[R]);
+
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), cecup.src_base);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), cecup.dst_base);
+
+    g_signal_handler_unblock(cecup.dir_entry[L], cecup.entry_id[L]);
+    g_signal_handler_unblock(cecup.dir_entry[R], cecup.entry_id[R]);
+}
+
 static bool
 cecup_get_dirs(void) {
     char full_src[PATH_MAX];
     char full_dst[PATH_MAX];
+    int32 full_src_len;
+    int32 full_dst_len;
     char *tmp_src;
     char *tmp_dst;
 
@@ -184,23 +198,44 @@ cecup_get_dirs(void) {
         return false;
     }
 
-    {
-        int32 len_src = strlen32(full_src);
-        int32 len_dst = strlen32(full_dst);
+    full_src_len = strlen32(full_src);
+    full_dst_len = strlen32(full_dst);
 
-        if ((len_src > len_dst) && !memcmp64(full_src, full_dst, len_dst)) {
-            if ((len_dst == 1 && full_dst[0] == '/') || (full_src[len_dst] == '/')) {
+    normalize(full_src, &full_src_len);
+    normalize(full_dst, &full_dst_len);
+
+    if (full_src[full_src_len - 1] != '/') {
+        full_src_len += 1;
+        full_src[full_src_len - 1] = '/';
+        full_src[full_src_len] = '\0';
+    }
+    if (full_dst[full_dst_len - 1] != '/') {
+        full_dst_len += 1;
+        full_dst[full_dst_len - 1] = '/';
+        full_dst[full_dst_len] = '\0';
+    }
+
+    {
+        if ((full_src_len > full_dst_len) && !memcmp64(full_src, full_dst, full_dst_len)) {
+            if ((full_dst_len == 1 && full_dst[0] == '/') || (full_src[full_dst_len] == '/')) {
                 LOG_ERROR(_("Error: source directory is contained in the destination directory\n"));
                 cecup_reset_dir(L);
                 return false;
             }
         }
-        if ((len_dst > len_src) && !memcmp64(full_dst, full_src, len_src)) {
-            if ((len_src == 1 && full_src[0] == '/') || (full_dst[len_src] == '/')) {
+        if ((full_dst_len > full_src_len) && !memcmp64(full_dst, full_src, full_src_len)) {
+            if ((full_src_len == 1 && full_src[0] == '/') || (full_dst[full_src_len] == '/')) {
                 LOG_ERROR(_("Error: destination directory is contained in the source directory\n"));
                 cecup_reset_dir(R);
                 return false;
             }
+        }
+    }
+
+    if (cecup.src_base && cecup.dst_base) {
+        if (!strcmp(cecup.src_base, full_src) && !strcmp(cecup.dst_base, full_dst)) {
+            cecup_set_dirs();
+            return true;
         }
     }
 
@@ -212,27 +247,16 @@ cecup_get_dirs(void) {
     }
 
     {
-        int32 len;
+        cecup.src_base = xmalloc(full_src_len + 1);
+        memcpy64(cecup.src_base, full_src, full_src_len + 1);
+        cecup.src_base_len = full_src_len;
 
-        len = strlen32(full_src);
-        cecup.src_base = xmalloc(len + 1);
-        memcpy64(cecup.src_base, full_src, len + 1);
-        cecup.src_base_len = len;
-
-        len = strlen32(full_dst);
-        cecup.dst_base = xmalloc(len + 1);
-        memcpy64(cecup.dst_base, full_dst, len + 1);
-        cecup.dst_base_len = len;
+        cecup.dst_base = xmalloc(full_dst_len + 1);
+        memcpy64(cecup.dst_base, full_dst, full_dst_len + 1);
+        cecup.dst_base_len = full_dst_len;
     }
 
-    g_signal_handler_block(cecup.dir_entry[L], cecup.entry_id[L]);
-    g_signal_handler_block(cecup.dir_entry[R], cecup.entry_id[R]);
-
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), cecup.src_base);
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), cecup.dst_base);
-
-    g_signal_handler_unblock(cecup.dir_entry[L], cecup.entry_id[L]);
-    g_signal_handler_unblock(cecup.dir_entry[R], cecup.entry_id[R]);
+    cecup_set_dirs();
 
     aux_invalidate_preview();
 
