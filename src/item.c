@@ -496,7 +496,8 @@ static SortFunction sort_item_functions[] = {
     [COL_SRC_SIZE_RAW]   = compare_int_sort,
     [COL_DST_SIZE_RAW]   = compare_int_sort,
     [COL_MTIME_TEXT] = compare_int_sort,
-    [COL_MTIME_RAW]  = compare_int_sort,
+    [COL_SRC_MTIME_RAW]  = compare_int_sort,
+    [COL_DST_MTIME_RAW]  = compare_int_sort,
     [COL_ROW_ID]     = compare_int_sort,
     [NUM_COLS]       = compare_int_sort,
 };
@@ -511,7 +512,8 @@ static CompareFunction compare_item_functions[] = {
     [COL_SRC_SIZE_RAW]   = cecup_item_compare_int_key,
     [COL_DST_SIZE_RAW]   = cecup_item_compare_int_key,
     [COL_MTIME_TEXT] = cecup_item_compare_int_key,
-    [COL_MTIME_RAW]  = cecup_item_compare_int_key,
+    [COL_SRC_MTIME_RAW]  = cecup_item_compare_int_key,
+    [COL_DST_MTIME_RAW]  = cecup_item_compare_int_key,
     [COL_ROW_ID]     = cecup_item_compare_int_key,
     [NUM_COLS]       = cecup_item_compare_int_key,
 };

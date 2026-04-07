@@ -769,8 +769,11 @@ update_list_from_rows(enum UpdateRowsType change) {
             case COL_DST_SIZE_RAW:
                 cache_rows[v_idx].key.i64 = item_size_side(row_id, R);
                 break;
-            case COL_MTIME_RAW:
+            case COL_SRC_MTIME_RAW:
                 cache_rows[v_idx].key.i64 = item_mtime_side(row_id, L);
+                break;
+            case COL_DST_MTIME_RAW:
+                cache_rows[v_idx].key.i64 = item_mtime_side(row_id, R);
                 break;
             case COL_SRC_ACTION:
             case COL_SELECTED:

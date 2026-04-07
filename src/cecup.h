@@ -311,7 +311,8 @@ enum CecupColumn {
     COL_SRC_SIZE_RAW,
     COL_DST_SIZE_RAW,
     COL_MTIME_TEXT,
-    COL_MTIME_RAW,
+    COL_SRC_MTIME_RAW,
+    COL_DST_MTIME_RAW,
     COL_ROW_ID,
     NUM_COLS
 };
