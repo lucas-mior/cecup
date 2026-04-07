@@ -681,8 +681,8 @@ update_list_from_rows(enum UpdateRowsType change) {
             row_id = cache_rows[i].row_id;
             src_action = cache_rows[i].src_action;
             dst_action = cache_rows[i].dst_action;
+            ASSERT_MORE(row_id, -1);
         }
-        ASSERT_MORE(row_id, -1);
 
         if (cecup.rows_selected[row_id]) {
             count_selected += 1;
