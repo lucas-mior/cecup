@@ -100,7 +100,6 @@ work_traverse_fs(Traversal *traversal) {
             break;
         }
 
-        /* fts */
         switch (ent->fts_info) {
         case FTS_D:
             is_dir = true;
