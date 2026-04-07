@@ -405,17 +405,14 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     char *toggled_path;
     int32 toggled_path_len;
     bool is_active;
-    int8 side;
     static bool in_update = false;
-    int32 count_selected = 0;
-    int64 total_size_bytes = 0;
     bool toggled_is_root;
+
+    (void)user_data;
 
     if (in_update) {
         return;
     }
-
-    side = (int8)GPOINTER_TO_INT(user_data);
 
     if ((row_id_ptr = g_object_get_data(G_OBJECT(renderer), "cecup-row-id")) == NULL) {
         return;
@@ -470,36 +467,9 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
                 }
             }
         }
-
-        if (cecup.rows_selected[row_id]) {
-            enum Action action_src;
-            enum Action action_dst;
-            enum Reason reason;
-            int64 size;
-
-            count_selected += 1;
-            item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
-
-            if ((size = item_size_side(row_id, L)) < 0) {
-                size = 0;
-            }
-
-            if ((action_src == ACTION_NEW)
-                || (action_src == ACTION_HARDLINK)
-                || (action_src == ACTION_SYMLINK)
-                || (action_src == ACTION_UPDATE)) {
-                total_size_bytes += size;
-            }
-        }
     }
 
-    update_stats_text(count_selected, total_size_bytes);
-
-    g_list_model_items_changed(cecup.store, 0,
-                               (uint32)cecup.rows_visible_len,
-                               (uint32)cecup.rows_visible_len);
-    update_visible_checkboxes(cecup.tree[side], side);
-
+    update_list_from_rows(UPDATE_ROWS_SELECT);
     in_update = false;
     return;
 }
