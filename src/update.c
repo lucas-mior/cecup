@@ -269,7 +269,6 @@ update_rows(MessageBatch *batch) {
 static bool
 update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
     Traversal *traversal = &cecup.traversal[side];
-    bool changed = false;
     int32 idx;
     int32 row_id;
 
@@ -285,8 +284,6 @@ update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
     if ((row_id = traversal->row_ids[idx]) < 0) {
         return false;
     }
-
-    changed = true;
 
     traversal_unlink(traversal, idx);
 
@@ -317,7 +314,7 @@ update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
         cecup.rows_len -= 1;
     }
 
-    return changed;
+    return true;
 }
 
 static bool
