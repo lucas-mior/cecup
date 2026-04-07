@@ -46,7 +46,7 @@
 #define TESTING 0
 #endif
 
-static void
+static void __attribute__((noreturn))
 work_finalize(bool preview_clean) {
     update_progress_bar(1.0);
 
@@ -59,7 +59,7 @@ work_finalize(bool preview_clean) {
 
         g_idle_add(update_ui_handler, message);
     }
-    return;
+    pthread_exit(NULL);
 }
 
 static int32
@@ -311,7 +311,6 @@ static void __attribute__((noreturn))
 work_preview_cancel_and_reset(void) {
     work_cleanup();
     work_finalize(false);
-    pthread_exit(NULL);
 }
 
 static void *
@@ -508,7 +507,6 @@ work_preview(void *user_data) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
     PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
     work_finalize(true);
-    pthread_exit(NULL);
 }
 
 #if 0 == TESTING_work
