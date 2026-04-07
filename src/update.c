@@ -651,6 +651,13 @@ update_list_from_rows(enum UpdateRowsType change) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
 
     cache_rows = realloc(cache_rows, cache_rows_capacity, cecup.rows_len, SIZEOF(*cache_rows));
+    for (int32 i = cache_rows_capacity; i < cecup.rows_len; i += 1) {
+        RowCache *cache_row = &cache_rows[i];
+        cache_row->row_id = -1;
+        cache_row->dst_action = 0;
+        cache_row->src_action = 0;
+        cache_row->key.i64 = 0;
+    }
     cache_rows_capacity = cecup.rows_len;
 
     cecup.rows_visible_len = 0;
@@ -672,6 +679,7 @@ update_list_from_rows(enum UpdateRowsType change) {
             src_action = cache_rows[i].src_action;
             dst_action = cache_rows[i].dst_action;
         }
+        ASSERT_MORE(row_id, -1);
 
         if (cecup.rows_selected[row_id]) {
             count_selected += 1;
