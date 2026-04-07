@@ -126,7 +126,11 @@ main_setup_tree_columns(GtkWidget *tree, enum CecupColumn col_act, enum CecupCol
         gtk_column_view_column_set_resizable(column, TRUE);
         gtk_column_view_column_set_sorter(column, sorter);
 
-        g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_SIZE_RAW));
+        if (side == L) {
+            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_SRC_SIZE_RAW));
+        } else {
+            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_DST_SIZE_RAW));
+        }
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
         g_object_unref(column);
     }
