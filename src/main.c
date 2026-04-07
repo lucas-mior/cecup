@@ -753,8 +753,6 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     g_signal_connect(cecup.delete_ignored_button, "toggled", G_CALLBACK(on_delete_ignored_toggled), NULL);
     g_signal_connect(cecup.delete_after_button, "toggled", G_CALLBACK(on_delete_after_toggled), NULL);
 
-    cecup_get_dirs();
-
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
 
     if (is_first_run || DEBUGGING) {
