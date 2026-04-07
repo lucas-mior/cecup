@@ -260,9 +260,7 @@ work_traverse_fs(Traversal *traversal) {
             clock_gettime(CLOCK_MONOTONIC_COARSE, &time_now);
             if (((time_now.tv_sec - time_last_report.tv_sec) > 1)
                     || ((time_now.tv_nsec - time_last_report.tv_nsec) > 1000*1000*100)) {
-
-                LOG("Found %lld files... %s/%s\r",
-                    (llong)file_count, traversal->base_path, ent->fts_path);
+                LOG("Found %lld files... %s\r", (llong)file_count, ent->fts_path);
 
                 clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_report);
             }
