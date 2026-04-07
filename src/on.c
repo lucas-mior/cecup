@@ -878,10 +878,10 @@ main(void) {
     // 2. Setup the row infrastructure
     cecup.rows_len = num_test_rows;
     cecup.rows_visible_len = num_test_rows;
-    cecup.rows[L] = xmalloc(num_test_rows * SIZEOF(int32));
-    cecup.rows[R] = xmalloc(num_test_rows * SIZEOF(int32));
-    cecup.rows_visible = xmalloc(num_test_rows * SIZEOF(int32));
-    cecup.rows_selected = xmalloc(num_test_rows * SIZEOF(uint8));
+    cecup.rows[L] = xmalloc(num_test_rows*SIZEOF(int32));
+    cecup.rows[R] = xmalloc(num_test_rows*SIZEOF(int32));
+    cecup.rows_visible = xmalloc(num_test_rows*SIZEOF(int32));
+    cecup.rows_selected = xmalloc(num_test_rows*SIZEOF(uint8));
 
     for (int32 i = 0; i < num_test_rows; i += 1) {
         cecup.rows[L][i] = i;
@@ -894,16 +894,16 @@ main(void) {
     for (int32 side = 0; side < 2; side += 1) {
         Traversal *t = &cecup.traversal[side];
         t->nfiles = num_test_rows;
-        t->paths = xmalloc(num_test_rows * SIZEOF(char *));
-        t->paths_lens = xmalloc(num_test_rows * SIZEOF(int32));
-        t->stats = xmalloc(num_test_rows * SIZEOF(struct stat));
-        t->patterns = xmalloc(num_test_rows * SIZEOF(char *));
-        t->symlink_targets = xmalloc(num_test_rows * SIZEOF(char *));
+        t->paths = xmalloc(num_test_rows*SIZEOF(char *));
+        t->paths_lens = xmalloc(num_test_rows*SIZEOF(int32));
+        t->stats = xmalloc(num_test_rows*SIZEOF(struct stat));
+        t->patterns = xmalloc(num_test_rows*SIZEOF(char *));
+        t->symlink_targets = xmalloc(num_test_rows*SIZEOF(char *));
 
         // Zero out to ensure pointers are NULL and stats are clean
-        memset64(t->stats, 0, num_test_rows * SIZEOF(struct stat));
-        memset64(t->patterns, 0, num_test_rows * SIZEOF(char *));
-        memset64(t->symlink_targets, 0, num_test_rows * SIZEOF(char *));
+        memset64(t->stats, 0, num_test_rows*SIZEOF(struct stat));
+        memset64(t->patterns, 0, num_test_rows*SIZEOF(char *));
+        memset64(t->symlink_targets, 0, num_test_rows*SIZEOF(char *));
 
         for (int32 i = 0; i < num_test_rows; i += 1) {
             t->paths[i] = "test/path";
@@ -1062,18 +1062,18 @@ main(void) {
         free(cecup.search_query, cecup.search_query_len + 1);
     }
 
-    free(cecup.rows[L], num_test_rows * SIZEOF(int32));
-    free(cecup.rows[R], num_test_rows * SIZEOF(int32));
-    free(cecup.rows_visible, num_test_rows * SIZEOF(int32));
-    free(cecup.rows_selected, num_test_rows * SIZEOF(uint8));
+    free(cecup.rows[L], num_test_rows*SIZEOF(int32));
+    free(cecup.rows[R], num_test_rows*SIZEOF(int32));
+    free(cecup.rows_visible, num_test_rows*SIZEOF(int32));
+    free(cecup.rows_selected, num_test_rows*SIZEOF(uint8));
 
     for (int32 side = 0; side < 2; side += 1) {
         Traversal *t = &cecup.traversal[side];
-        free(t->paths, num_test_rows * SIZEOF(char *));
-        free(t->paths_lens, num_test_rows * SIZEOF(int32));
-        free(t->stats, num_test_rows * SIZEOF(struct stat));
-        free(t->patterns, num_test_rows * SIZEOF(char *));
-        free(t->symlink_targets, num_test_rows * SIZEOF(char *));
+        free(t->paths, num_test_rows*SIZEOF(char *));
+        free(t->paths_lens, num_test_rows*SIZEOF(int32));
+        free(t->stats, num_test_rows*SIZEOF(struct stat));
+        free(t->patterns, num_test_rows*SIZEOF(char *));
+        free(t->symlink_targets, num_test_rows*SIZEOF(char *));
     }
 
     exit(EXIT_SUCCESS);
