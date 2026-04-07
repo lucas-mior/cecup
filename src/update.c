@@ -660,8 +660,8 @@ update_list_from_rows(enum UpdateRowsType change) {
         enum Action src_action;
         enum Action dst_action;
         enum Reason reason;
-        int64 size;
-        int64 size_for_sum;
+        int64 size_src;
+        int64 size_src_for_sum;
         bool is_visible = false;
 
         if (change == UPDATE_ROWS_COMPLETE) {
@@ -680,30 +680,30 @@ update_list_from_rows(enum UpdateRowsType change) {
             }
         }
 
-        if ((size = item_size_side(row_id, L)) < 0) {
-            size = 0;
+        if ((size_src = item_size_side(row_id, L)) < 0) {
+            size_src = 0;
         }
 
-        size_for_sum = size;
+        size_src_for_sum = size_src;
         if ((count_selected > 0) && !cecup.rows_selected[row_id]) {
-            size_for_sum = 0;
+            size_src_for_sum = 0;
         }
 
         switch (src_action) {
         case ACTION_NEW:
             count_new += 1;
-            total_size_bytes += size_for_sum;
+            total_size_bytes += size_src_for_sum;
             is_visible = show_new;
             break;
         case ACTION_HARDLINK:
         case ACTION_SYMLINK:
             count_link += 1;
-            total_size_bytes += size_for_sum;
+            total_size_bytes += size_src_for_sum;
             is_visible = show_link;
             break;
         case ACTION_UPDATE:
             count_update += 1;
-            total_size_bytes += size_for_sum;
+            total_size_bytes += size_src_for_sum;
             is_visible = show_update;
             break;
         case ACTION_EQUAL:
@@ -764,7 +764,7 @@ update_list_from_rows(enum UpdateRowsType change) {
                 }
                 break;
             case COL_SIZE_RAW:
-                cache_rows[v_idx].key.i64 = size;
+                cache_rows[v_idx].key.i64 = size_src;
                 break;
             case COL_MTIME_RAW:
                 cache_rows[v_idx].key.i64 = item_mtime_side(row_id, L);
