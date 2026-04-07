@@ -541,8 +541,8 @@ main(void) {
     rapidhash128_t h1;
     rapidhash128_t h2;
     rapidhash128_t h_new;
-    SortEntry entry1;
-    SortEntry entry2;
+    RowCache entry1;
+    RowCache entry2;
     int32 result;
     char *name_a_ptr;
     char *name_b_ptr;
