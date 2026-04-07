@@ -646,8 +646,6 @@ update_list_from_rows(enum UpdateRowsType change) {
         limit = cecup.rows_visible_len;
     }
 
-    PRINTLN(limit);
-
     current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
