@@ -806,7 +806,7 @@ update_list_from_rows(enum UpdateRowsType change) {
         update_stats_text(count_selected, total_size_bytes);
     }
 
-    if (cecup.rows_visible_len > 0) {
+    if ((change != UPDATE_ROWS_SELECT) && (cecup.rows_visible_len > 0)) {
         struct timespec t0_sort;
         struct timespec t1_sort;
         clock_gettime(CLOCK_MONOTONIC_RAW, &t0_sort);
