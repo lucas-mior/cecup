@@ -30,13 +30,15 @@
 #define TESTING 0
 #endif
 
-typedef struct SortEntry {
+typedef struct RowCache {
     int32 row_id;
+    enum Action src_action;
+    enum Action dst_action;
     union {
-        int64 i64;
         char *ptr;
+        int64 i64;
     } key;
-} SortEntry;
+} RowCache;
 
 static void
 hard_link_replace_node(HardLinks *list,
@@ -435,8 +437,8 @@ compare_names(const void *a, const void *b) {
 
 INLINE int32
 cecup_item_compare_string_key(const void *a, const void *b) {
-    SortEntry *entry_a = (SortEntry *)a;
-    SortEntry *entry_b = (SortEntry *)b;
+    RowCache *entry_a = (RowCache *)a;
+    RowCache *entry_b = (RowCache *)b;
     int32 result;
     char *path_a = entry_a->key.ptr;
     char *path_b = entry_b->key.ptr;
@@ -454,8 +456,8 @@ cecup_item_compare_string_key(const void *a, const void *b) {
 
 INLINE int32
 cecup_item_compare_int_key(const void *a, const void *b) {
-    SortEntry *entry_a = (SortEntry *)a;
-    SortEntry *entry_b = (SortEntry *)b;
+    RowCache *entry_a = (RowCache *)a;
+    RowCache *entry_b = (RowCache *)b;
     int32 result = 0;
     int64 key_a = entry_a->key.i64;
     int64 key_b = entry_b->key.i64;
@@ -471,15 +473,15 @@ cecup_item_compare_int_key(const void *a, const void *b) {
 
 #undef COMPARE
 
-typedef void(*SortFunction)(SortEntry *a, int64);
+typedef void(*SortFunction)(RowCache *a, int64);
 typedef int(*CompareFunction)(const void *a, const void *b);
 
-#define i_key SortEntry
+#define i_key RowCache
 #define i_cmp(a,b) cecup_item_compare_string_key(a,b)
 #define T compare_string
 #include "stc/sort.h"
 
-#define i_key SortEntry
+#define i_key RowCache
 #define i_cmp(a,b) cecup_item_compare_int_key(a,b)
 #define T compare_int
 #include "stc/sort.h"

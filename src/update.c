@@ -635,8 +635,8 @@ update_list_from_rows(enum UpdateRowsType change) {
     bool show_delete = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_delete));
     bool show_ignore = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore));
 
-    static SortEntry *sort_entries = NULL;
-    static int32 sort_entries_capacity = 0;
+    static RowCache *cache_rows = NULL;
+    static int32 cache_rows_capacity = 0;
 
     int32 limit;
 
@@ -650,137 +650,165 @@ update_list_from_rows(enum UpdateRowsType change) {
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
 
-    sort_entries = realloc(sort_entries,
-                           sort_entries_capacity, cecup.rows_len,
-                           SIZEOF(*sort_entries));
-    sort_entries_capacity = cecup.rows_len;
+    cache_rows = realloc(cache_rows, cache_rows_capacity, cecup.rows_len, SIZEOF(*cache_rows));
+    cache_rows_capacity = cecup.rows_len;
 
-    if ((change == UPDATE_ROWS_COMPLETE) || (change == UPDATE_ROWS_FILTER_OUT)) {
-        cecup.rows_visible_len = 0;
+    cecup.rows_visible_len = 0;
 
-        for (int32 i = 0; i < limit; i += 1) {
-            int32 row_id;
-            enum Action src_act;
-            enum Action dst_act;
-            enum Reason reason;
-            int64 size;
-            bool is_visible = false;
+    for (int32 i = 0; i < limit; i += 1) {
+        int32 row_id;
+        enum Action src_action;
+        enum Action dst_action;
+        enum Reason reason;
+        int64 size;
+        int64 size_for_sum;
+        bool is_visible = false;
 
-            if (change == UPDATE_ROWS_COMPLETE) {
-                row_id = i;
-            } else {
-                row_id = cecup.rows_visible[i];
-            }
+        if (change == UPDATE_ROWS_COMPLETE) {
+            row_id = i;
+            item_get_actions_reasons(row_id, &src_action, &dst_action, &reason);
+        } else {
+            row_id = cache_rows[i].row_id;
+            src_action = cache_rows[i].src_action;
+            dst_action = cache_rows[i].dst_action;
+        }
 
-            if (cecup.rows_selected[row_id]) {
-                count_selected += 1;
-            }
-
-            item_get_actions_reasons(row_id, &src_act, &dst_act, &reason);
-
-            if ((size = item_size_side(row_id, L)) < 0) {
-                size = 0;
-            }
-
-            switch (src_act) {
-            case ACTION_NEW:
-                count_new += 1;
-                total_size_bytes += size;
-                is_visible = show_new;
-                break;
-            case ACTION_HARDLINK:
-            case ACTION_SYMLINK:
-                count_link += 1;
-                total_size_bytes += size;
-                is_visible = show_link;
-                break;
-            case ACTION_UPDATE:
-                count_update += 1;
-                total_size_bytes += size;
-                is_visible = show_update;
-                break;
-            case ACTION_EQUAL:
-                count_equal += 1;
-                is_visible = show_equal;
-                break;
-            case ACTION_DELETED:
-            case ACTION_DELETE:
-                count_delete += 1;
-                is_visible = show_delete;
-                break;
-            case ACTION_IGNORE:
-                if (dst_act == ACTION_DELETE) {
-                    count_delete += 1;
-                    is_visible = show_delete;
-                } else {
-                    count_ignore += 1;
-                    is_visible = show_ignore;
-                }
-                break;
-            case ACTION_LAST:
-            default:
-                break;
-            }
-
-            if (!is_visible) {
-                continue;
-            }
-
-            if (cecup.search_query_len > 0) {
-                char *path = item_path_get(row_id);
-                if (strcasestr(path, cecup.search_query) == NULL) {
-                    continue;
-                }
-            }
-
-            {
-                int32 v_idx = cecup.rows_visible_len;
-                char *path;
-                sort_entries[v_idx].row_id = row_id;
-
-                switch (cecup.sort_col) {
-                case COL_SRC_PATH:
-                    if ((path = item_path_side(row_id, L))) {
-                        sort_entries[v_idx].key.ptr = path;
-                    } else {
-                        sort_entries[v_idx].key.ptr = "";
-                    }
-                    break;
-                case COL_DST_PATH:
-                    if ((path = item_path_side(row_id, R))) {
-                        sort_entries[v_idx].key.ptr = path;
-                    } else {
-                        sort_entries[v_idx].key.ptr = "";
-                    }
-                    break;
-                case COL_SIZE_RAW:
-                    sort_entries[v_idx].key.i64 = size;
-                    break;
-                case COL_MTIME_RAW:
-                    sort_entries[v_idx].key.i64 = item_mtime_side(row_id, L);
-                    break;
-                case COL_SRC_ACTION:
-                case COL_SELECTED:
-                    sort_entries[v_idx].key.i64 = (int64)src_act;
-                    break;
-                case COL_DST_ACTION:
-                    sort_entries[v_idx].key.i64 = (int64)dst_act;
-                    break;
-                case COL_MTIME_TEXT:
-                case COL_SIZE_TEXT:
-                case COL_ROW_ID:
-                case NUM_COLS:
-                default:
-                    sort_entries[v_idx].key.i64 = 0;
-                    break;
-                }
-
-                cecup.rows_visible_len += 1;
+        if (cecup.rows_selected[row_id]) {
+            count_selected += 1;
+            if (count_selected == 1) {
+                total_size_bytes = 0;
             }
         }
+
+        if ((size = item_size_side(row_id, L)) < 0) {
+            size = 0;
+        }
+
+        size_for_sum = size;
+        if ((count_selected > 0) && !cecup.rows_selected[row_id]) {
+            size_for_sum = 0;
+        }
+
+        switch (src_action) {
+        case ACTION_NEW:
+            count_new += 1;
+            total_size_bytes += size_for_sum;
+            is_visible = show_new;
+            break;
+        case ACTION_HARDLINK:
+        case ACTION_SYMLINK:
+            count_link += 1;
+            total_size_bytes += size_for_sum;
+            is_visible = show_link;
+            break;
+        case ACTION_UPDATE:
+            count_update += 1;
+            total_size_bytes += size_for_sum;
+            is_visible = show_update;
+            break;
+        case ACTION_EQUAL:
+            count_equal += 1;
+            is_visible = show_equal;
+            break;
+        case ACTION_DELETED:
+        case ACTION_DELETE:
+            count_delete += 1;
+            is_visible = show_delete;
+            break;
+        case ACTION_IGNORE:
+            if (dst_action == ACTION_DELETE) {
+                count_delete += 1;
+                is_visible = show_delete;
+            } else {
+                count_ignore += 1;
+                is_visible = show_ignore;
+            }
+            break;
+        case ACTION_LAST:
+        default:
+            break;
+        }
+
+        if (!is_visible) {
+            continue;
+        }
+
+        if (((change == UPDATE_ROWS_COMPLETE) || (change == UPDATE_ROWS_FILTER_OUT))
+            && (cecup.search_query_len > 0)) {
+            char *path = item_path_get(row_id);
+            if (strcasestr(path, cecup.search_query) == NULL) {
+                continue;
+            }
+        }
+
+        {
+            int32 v_idx = cecup.rows_visible_len;
+            char *path;
+            cache_rows[v_idx].row_id = row_id;
+            cache_rows[v_idx].src_action = src_action;
+            cache_rows[v_idx].dst_action = dst_action;
+
+            switch (cecup.sort_col) {
+            case COL_SRC_PATH:
+                if ((path = item_path_side(row_id, L))) {
+                    cache_rows[v_idx].key.ptr = path;
+                } else {
+                    cache_rows[v_idx].key.ptr = "";
+                }
+                break;
+            case COL_DST_PATH:
+                if ((path = item_path_side(row_id, R))) {
+                    cache_rows[v_idx].key.ptr = path;
+                } else {
+                    cache_rows[v_idx].key.ptr = "";
+                }
+                break;
+            case COL_SIZE_RAW:
+                cache_rows[v_idx].key.i64 = size;
+                break;
+            case COL_MTIME_RAW:
+                cache_rows[v_idx].key.i64 = item_mtime_side(row_id, L);
+                break;
+            case COL_SRC_ACTION:
+            case COL_SELECTED:
+                cache_rows[v_idx].key.i64 = (int64)src_action;
+                break;
+            case COL_DST_ACTION:
+                cache_rows[v_idx].key.i64 = (int64)dst_action;
+                break;
+            case COL_MTIME_TEXT:
+            case COL_SIZE_TEXT:
+            case COL_ROW_ID:
+            case NUM_COLS:
+            default:
+                cache_rows[v_idx].key.i64 = 0;
+                break;
+            }
+
+            cecup.rows_visible_len += 1;
+        }
     }
+
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_rows_loop);
     PRINT_TIMINGS(limit, t0_rows_loop, t1_rows_loop, "rows loop");
+
+    if ((change != UPDATE_ROWS_SELECT) && (cecup.rows_visible_len > 0)) {
+        struct timespec t0_sort;
+        struct timespec t1_sort;
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t0_sort);
+
+        sort_item_functions[cecup.sort_col](cache_rows, (int64)cecup.rows_visible_len);
+
+        (void)sort_item_functions;
+        (void)compare_item_functions;
+
+        for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
+            cecup.rows_visible[k] = cache_rows[k].row_id;
+        }
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &t1_sort);
+        PRINT_TIMINGS(cecup.rows_visible_len, t0_sort, t1_sort, "sorting");
+    }
 
     if (change == UPDATE_ROWS_COMPLETE) {
         char button_label[64];
@@ -803,25 +831,9 @@ update_list_from_rows(enum UpdateRowsType change) {
         SNPRINTF(button_label, "%s %d", EMOJI_IGNORE, count_ignore);
         gtk_button_set_label(GTK_BUTTON(cecup.filter_ignore), button_label);
 
-        update_stats_text(count_selected, total_size_bytes);
     }
-
-    if ((change != UPDATE_ROWS_SELECT) && (cecup.rows_visible_len > 0)) {
-        struct timespec t0_sort;
-        struct timespec t1_sort;
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t0_sort);
-
-        sort_item_functions[cecup.sort_col](sort_entries, (int64)cecup.rows_visible_len);
-
-        (void)sort_item_functions;
-        (void)compare_item_functions;
-
-        for (int32 k = 0; k < cecup.rows_visible_len; k += 1) {
-            cecup.rows_visible[k] = sort_entries[k].row_id;
-        }
-
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t1_sort);
-        PRINT_TIMINGS(cecup.rows_visible_len, t0_sort, t1_sort, "sorting");
+    if ((change == UPDATE_ROWS_COMPLETE) || (change == UPDATE_ROWS_SELECT)) {
+        update_stats_text(count_selected, total_size_bytes);
     }
 
     {
