@@ -94,6 +94,22 @@ _Static_assert((!R) == L, "!R must be L");
 #include "xenums.c"
 
 #define ENUM_BITFLAGS 0
+#define ENUM_NAME CecupColumn
+#define ENUM_PREFIX_ COL_
+#define ENUM_FIELDS \
+    X(SELECTED)     \
+    X(SRC_ACTION)   \
+    X(DST_ACTION)   \
+    X(SRC_PATH)     \
+    X(DST_PATH)     \
+    X(SRC_SIZE)     \
+    X(DST_SIZE)     \
+    X(SRC_MTIME)    \
+    X(DST_MTIME)    \
+    X(ROW_ID)
+#include "xenums.c"
+
+#define ENUM_BITFLAGS 0
 #define ENUM_NAME MsgType
 #define ENUM_PREFIX_ MSG_
 #define ENUM_FIELDS \
@@ -295,20 +311,6 @@ static char *colors[] = {
     [ACTION_IGNORE]   = "#FFF3CD",
     [ACTION_DELETE]   = "#F8D7DA",
     [ACTION_DELETED]  = "#F8D7DA",
-};
-
-enum CecupColumn {
-    COL_SELECTED = 0,
-    COL_SRC_ACTION,
-    COL_DST_ACTION,
-    COL_SRC_PATH,
-    COL_DST_PATH,
-    COL_SRC_SIZE,
-    COL_DST_SIZE,
-    COL_SRC_MTIME,
-    COL_DST_MTIME,
-    COL_ROW_ID,
-    NUM_COLS
 };
 
 typedef struct Message {

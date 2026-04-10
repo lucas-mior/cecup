@@ -799,7 +799,7 @@ update_list_from_rows(enum UpdateRowsType change) {
                 cache_rows[v_idx].key.i64 = (int64)dst_action;
                 break;
             case COL_ROW_ID:
-            case NUM_COLS:
+            case COL_LAST:
             default:
                 cache_rows[v_idx].key.i64 = 0;
                 break;

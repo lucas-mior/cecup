@@ -487,7 +487,7 @@ static SortFunction sort_item_functions[] = {
     [COL_SRC_MTIME]  = row_compare_int_sort,
     [COL_DST_MTIME]  = row_compare_int_sort,
     [COL_ROW_ID]     = row_compare_int_sort,
-    [NUM_COLS]       = row_compare_int_sort,
+    [COL_LAST]       = row_compare_int_sort,
 };
 
 static CompareFunction compare_item_functions[] = {
@@ -501,7 +501,7 @@ static CompareFunction compare_item_functions[] = {
     [COL_SRC_MTIME]  = cecup_item_compare_int_key,
     [COL_DST_MTIME]  = cecup_item_compare_int_key,
     [COL_ROW_ID]     = cecup_item_compare_int_key,
-    [NUM_COLS]       = cecup_item_compare_int_key,
+    [COL_LAST]       = cecup_item_compare_int_key,
 };
 
 #if (0 == TESTING_item) && TESTING
