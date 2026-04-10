@@ -576,27 +576,6 @@ create_test_file(char *path, char *content) {
     return;
 }
 
-static void *
-test_cancel_thread(void *arg) {
-    (void)arg;
-    work_preview_cancel_and_reset();
-    return NULL;
-}
-
-static void *
-test_finalize_thread(void *arg) {
-    (void)arg;
-    work_finalize(true);
-    return NULL;
-}
-
-static void *
-test_cleanup_thread(void *arg) {
-    (void)arg;
-    work_cleanup();
-    return NULL;
-}
-
 int
 main(void) {
     char buf1[] = ">f+++++++++ some/file.txt";
@@ -923,49 +902,35 @@ main(void) {
     }
 
     {
-        pthread_t pt_finalize;
-
-        pthread_create(&pt_finalize, NULL, test_finalize_thread, NULL);
-        pthread_join(pt_finalize, NULL);
-    }
-
-    cecup.ntransfers = 42;
-
-    {
-        pthread_t pt_cleanup;
-
-        pthread_create(&pt_cleanup, NULL, test_cleanup_thread, NULL);
-        pthread_join(pt_cleanup, NULL);
-    }
-
-    ASSERT_EQUAL(cecup.ntransfers, 0);
-
-    {
         pthread_t pt_traverse;
 
-        pthread_create(&pt_traverse, NULL, work_traverse_fs_thread, &cecup.traversal[L]);
-        pthread_join(pt_traverse, NULL);
+        xpthread_create(&pt_traverse, NULL, work_traverse_fs_thread, &cecup.traversal[L]);
+        xpthread_join(&pt_traverse, NULL);
         ASSERT_MORE(cecup.traversal[L].file_count, 0);
     }
 
     {
-        pthread_t pt_preview;
-
         cecup.ignore_patterns = NULL;
         cecup.ignore_count = 0;
         cecup.check_fs_button = gtk_check_button_new();
         cecup.progress_bar = gtk_progress_bar_new();
         cecup.stop_working = false;
 
-        pthread_create(&pt_preview, NULL, work_preview, NULL);
-        pthread_join(pt_preview, NULL);
+        xpthread_create(&cecup.work_thread, NULL, work_preview, NULL);
+        xpthread_join(&cecup.work_thread, NULL);
+
+        ASSERT_MORE(cecup.traversal[L].file_count, 0);
+        ASSERT_MORE(cecup.traversal[R].file_count, 0);
     }
 
     {
-        pthread_t pt_cancel;
+        cecup.stop_working = true;
+        cecup.ntransfers = 42;
 
-        pthread_create(&pt_cancel, NULL, test_cancel_thread, NULL);
-        pthread_join(pt_cancel, NULL);
+        xpthread_create(&cecup.work_thread, NULL, work_preview, NULL);
+        xpthread_join(&cecup.work_thread, NULL);
+
+        ASSERT_EQUAL(cecup.ntransfers, 0); 
     }
 
     if (cecup.transfers_capacity > 0) {
