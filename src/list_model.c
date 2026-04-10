@@ -293,7 +293,7 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
 
         proxies_to_move = MIN(cecup.rows_visible_len, self->proxies_capacity) - 1 - index;
         if (proxies_to_move > 0) {
-            memmove64(&self->proxies[index], &self->proxies[index + 1], proxies_to_move * SIZEOF(CecupItemProxy *));
+            memmove64(&self->proxies[index], &self->proxies[index + 1], proxies_to_move*SIZEOF(CecupItemProxy *));
         }
 
         if (cecup.rows_visible_len - 1 < self->proxies_capacity) {
@@ -303,7 +303,7 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
 
     items_to_move = cecup.rows_visible_len - 1 - index;
     if (items_to_move > 0) {
-        memmove64(&cecup.rows_visible[index], &cecup.rows_visible[index + 1], items_to_move * SIZEOF(int32));
+        memmove64(&cecup.rows_visible[index], &cecup.rows_visible[index + 1], items_to_move*SIZEOF(int32));
     }
     cecup.rows_visible_len -= 1;
 
@@ -336,7 +336,7 @@ cecup_list_model_row_added(CecupListModel *self, int32 row_index, int32 position
 
         proxies_to_move = limit - position;
         if (proxies_to_move > 0) {
-            memmove64(&self->proxies[position + 1], &self->proxies[position], proxies_to_move * SIZEOF(CecupItemProxy *));
+            memmove64(&self->proxies[position + 1], &self->proxies[position], proxies_to_move*SIZEOF(CecupItemProxy *));
         }
 
         if (position < self->proxies_capacity) {
@@ -346,7 +346,7 @@ cecup_list_model_row_added(CecupListModel *self, int32 row_index, int32 position
 
     rows_to_move = cecup.rows_visible_len - position;
     if (rows_to_move > 0) {
-        memmove64(&cecup.rows_visible[position + 1], &cecup.rows_visible[position], rows_to_move * SIZEOF(int32));
+        memmove64(&cecup.rows_visible[position + 1], &cecup.rows_visible[position], rows_to_move*SIZEOF(int32));
     }
     cecup.rows_visible[position] = row_index;
     cecup.rows_visible_len += 1;
@@ -470,12 +470,12 @@ main(void) {
 
     g_object_unref(proxy);
 
-    g_mutex_init(&cecup.arena_mutex);
+    pthread_mutex_init(&cecup.arena_mutex, NULL);
 
     cecup.rows_capacity = 0;
     cecup.rows_len = 0;
-    cecup.traversal[L].row_ids = xmalloc(50 * SIZEOF(int32));
-    cecup.traversal[R].row_ids = xmalloc(50 * SIZEOF(int32));
+    cecup.traversal[L].row_ids = xmalloc(50*SIZEOF(int32));
+    cecup.traversal[R].row_ids = xmalloc(50*SIZEOF(int32));
 
     new_item_idx = item_add(10, 20);
 
@@ -536,14 +536,12 @@ main(void) {
 
     g_object_unref(model);
 
-    free(cecup.rows[L], cecup.rows_capacity * SIZEOF(int32));
-    free(cecup.rows[R], cecup.rows_capacity * SIZEOF(int32));
-    free(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
-    free(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
-    free(cecup.traversal[L].row_ids, 50 * SIZEOF(int32));
-    free(cecup.traversal[R].row_ids, 50 * SIZEOF(int32));
-
-    g_mutex_clear(&cecup.arena_mutex);
+    free(cecup.rows[L], cecup.rows_capacity*SIZEOF(int32));
+    free(cecup.rows[R], cecup.rows_capacity*SIZEOF(int32));
+    free(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
+    free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(int32));
+    free(cecup.traversal[L].row_ids, 50*SIZEOF(int32));
+    free(cecup.traversal[R].row_ids, 50*SIZEOF(int32));
 
     exit(EXIT_SUCCESS);
 }
