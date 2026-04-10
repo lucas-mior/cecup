@@ -118,7 +118,6 @@ _Static_assert((!R) == L, "!R must be L");
 #define HASH_VALUE_FORMATTER "%d"
 #define HASH_PADDING_TYPE uint32
 #define HASH_DUPLICATE_KEYS 0
-#define HASH_AUTO_RESIZE 1
 #define HASH_TYPE fs_map
 #include "hash.c"
 
@@ -136,19 +135,16 @@ typedef struct HardLinks {
 #define HASH_VALUE_TYPE HardLinks
 #define HASH_PADDING_TYPE uint32
 #define HASH_DUPLICATE_KEYS 0
-#define HASH_AUTO_RESIZE 1
 #define HASH_TYPE inode_map
 #include "hash.c"
 
 #define HASH_KEY_TYPE char
 #define HASH_DUPLICATE_KEYS 1
-#define HASH_AUTO_RESIZE 1
 #define HASH_TYPE transfer_set
 #include "hash.c"
 
 #define HASH_KEY_TYPE char
 #define HASH_DUPLICATE_KEYS 1
-#define HASH_AUTO_RESIZE 1
 #define HASH_TYPE deletion_set
 #include "hash.c"
 
