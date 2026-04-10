@@ -105,8 +105,7 @@ _Static_assert((!R) == L, "!R must be L");
     X(SRC_SIZE)     \
     X(DST_SIZE)     \
     X(SRC_MTIME)    \
-    X(DST_MTIME)    \
-    X(ROW_ID)
+    X(DST_MTIME)
 #include "xenums.c"
 
 #define ENUM_BITFLAGS 0
