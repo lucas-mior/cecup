@@ -345,6 +345,7 @@ CAT(hash_probe_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
             }
         } else {
 #if HASH_KEY_FIXED_LEN
+            (void)hash;
             if (!memcmp64(&iterator->key, key, sizeof(HASH_KEY_TYPE)))
 #else
             if ((iterator->hash == hash)
