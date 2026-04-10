@@ -468,28 +468,28 @@ typedef int(*CompareFunction)(const void *a, const void *b);
 
 #define i_key RowCache
 #define i_cmp(a,b) cecup_item_compare_string_key(a,b)
-#define T compare_string
+#define T row_compare_string
 #include "stc/sort.h"
 
 #define i_key RowCache
 #define i_cmp(a,b) cecup_item_compare_int_key(a,b)
-#define T compare_int
+#define T row_compare_int
 #include "stc/sort.h"
 
 static SortFunction sort_item_functions[] = {
-    [COL_SELECTED]   = compare_int_sort,
-    [COL_SRC_ACTION] = compare_int_sort,
-    [COL_DST_ACTION] = compare_int_sort,
-    [COL_SRC_PATH]   = compare_string_sort,
-    [COL_DST_PATH]   = compare_string_sort,
-    [COL_SIZE_TEXT]  = compare_int_sort,
-    [COL_SRC_SIZE_RAW]   = compare_int_sort,
-    [COL_DST_SIZE_RAW]   = compare_int_sort,
-    [COL_MTIME_TEXT] = compare_int_sort,
-    [COL_SRC_MTIME_RAW]  = compare_int_sort,
-    [COL_DST_MTIME_RAW]  = compare_int_sort,
-    [COL_ROW_ID]     = compare_int_sort,
-    [NUM_COLS]       = compare_int_sort,
+    [COL_SELECTED]       = row_compare_int_sort,
+    [COL_SRC_ACTION]     = row_compare_int_sort,
+    [COL_DST_ACTION]     = row_compare_int_sort,
+    [COL_SRC_PATH]       = row_compare_string_sort,
+    [COL_DST_PATH]       = row_compare_string_sort,
+    [COL_SIZE_TEXT]      = row_compare_int_sort,
+    [COL_SRC_SIZE_RAW]   = row_compare_int_sort,
+    [COL_DST_SIZE_RAW]   = row_compare_int_sort,
+    [COL_MTIME_TEXT]     = row_compare_int_sort,
+    [COL_SRC_MTIME_RAW]  = row_compare_int_sort,
+    [COL_DST_MTIME_RAW]  = row_compare_int_sort,
+    [COL_ROW_ID]         = row_compare_int_sort,
+    [NUM_COLS]           = row_compare_int_sort,
 };
 
 static CompareFunction compare_item_functions[] = {
