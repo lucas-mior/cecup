@@ -200,12 +200,14 @@ main(void) {
     }
 
     // Test successful inode lookup in fallback
-    char *path_to_find = cecup.traversal[L].paths[0];
-    tasks = get_target_tasks(L, path_to_find, ACTION_HARDLINK);
-    ASSERT_EQUAL(tasks->count, 1);
-    ASSERT_EQUAL(tasks->items[0]->action, ACTION_HARDLINK);
-    ASSERT_EQUAL(tasks->items[0]->inode, 100);
-    task_list_free(tasks);
+    {
+        char *path_to_find = cecup.traversal[L].paths[0];
+        tasks = get_target_tasks(L, path_to_find, ACTION_HARDLINK);
+        ASSERT_EQUAL(tasks->count, 1);
+        ASSERT(tasks->items[0]->action == ACTION_HARDLINK);
+        ASSERT_EQUAL(tasks->items[0]->inode, 100);
+        task_list_free(tasks);
+    }
 
     // Test fallback with path not in map (inode remains 0)
     tasks = get_target_tasks(L, "missing.txt", ACTION_HARDLINK);
