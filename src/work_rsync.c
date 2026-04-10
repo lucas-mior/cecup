@@ -813,7 +813,7 @@ main(void) {
 
     /* Test valid directory itemization */
     {
-        char *line = ".d..task...... some/dir/";
+        char *line = ".d..t...... some/dir/";
         result = work_rsync_itemize_skip(line, strlen32(line));
         ASSERT(result != NULL);
         ASSERT_EQUAL(result, line + 12);
@@ -922,11 +922,12 @@ main(void) {
         Task *task;
 
         thread_data = xmalloc(SIZEOF(*thread_data));
-        memset64(thread_data, 0, SIZEOF(*thread_data));
         task_list = xmalloc(SIZEOF(*task_list) + 1*SIZEOF(Task*));
-        memset64(task_list, 0, SIZEOF(*task_list) + 1*SIZEOF(Task*));
-        task = xmalloc(SIZEOF(*task_list));
-        memset64(task, 0, SIZEOF(*task_list));
+        task = xmalloc(SIZEOF(*task));
+
+        memset64(thread_data, 0, SIZEOF(*thread_data));
+        memset64(task_list,   0, SIZEOF(*task_list) + 1*SIZEOF(Task*));
+        memset64(task,        0, SIZEOF(*task));
 
         task->action = ACTION_UPDATE;
         task->side = R;
