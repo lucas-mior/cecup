@@ -921,12 +921,12 @@ main(void) {
     ASSERT(access("/tmp/cecup_test_dst/sync_test.txt", F_OK) == 0);
 
     /* Test work_rsync (Thread Runner) */
-    thread_data = xmalloc(SIZEOF(ThreadData));
-    memset64(thread_data, 0, SIZEOF(ThreadData));
-    task_list = xmalloc(SIZEOF(TaskList) + 1 * SIZEOF(Task*));
-    memset64(task_list, 0, SIZEOF(TaskList) + 1 * SIZEOF(Task*));
-    task = xmalloc(SIZEOF(Task));
-    memset64(task, 0, SIZEOF(Task));
+    thread_data = xmalloc(SIZEOF(*thread_data));
+    memset64(thread_data, 0, SIZEOF(*thread_data));
+    task_list = xmalloc(SIZEOF(*task_list) + 1*SIZEOF(Task*));
+    memset64(task_list, 0, SIZEOF(*task_list) + 1*SIZEOF(Task*));
+    task = xmalloc(SIZEOF(*task_list));
+    memset64(task, 0, SIZEOF(*task_list));
 
     task->action = ACTION_UPDATE;
     task->side = R;
