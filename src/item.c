@@ -707,25 +707,25 @@ main(void) {
     cecup.delete_after = false;
 
     item_get_actions_reasons(0, &action_src, &action_dst, &rsn);
-    ASSERT_EQUAL(action_src, ACTION_EQUAL);
-    ASSERT_EQUAL(action_dst, ACTION_EQUAL);
+    ASSERT(action_src == ACTION_EQUAL);
+    ASSERT(action_dst == ACTION_EQUAL);
     ASSERT((rsn & REASON_EQUAL) != 0);
 
     item_get_actions_reasons(1, &action_src, &action_dst, &rsn);
-    ASSERT_EQUAL(action_src, ACTION_NEW);
-    ASSERT_EQUAL(action_dst, ACTION_NEW);
+    ASSERT(action_src == ACTION_NEW);
+    ASSERT(action_dst == ACTION_NEW);
     ASSERT((rsn & REASON_NEW) != 0);
 
     item_get_actions_reasons(2, &action_src, &action_dst, &rsn);
-    ASSERT_EQUAL(action_src, ACTION_IGNORE);
-    ASSERT_EQUAL(action_dst, ACTION_IGNORE);
+    ASSERT(action_src == ACTION_IGNORE);
+    ASSERT(action_dst == ACTION_IGNORE);
     ASSERT((rsn & REASON_MISSING) != 0);
 
     /* Modify Row 0 to create an UPDATE condition */
     cecup.traversal[R].stats[0].st_size = 150;
     item_get_actions_reasons(0, &action_src, &action_dst, &rsn);
-    ASSERT_EQUAL(action_src, ACTION_UPDATE);
-    ASSERT_EQUAL(action_dst, ACTION_UPDATE);
+    ASSERT(action_src == ACTION_UPDATE);
+    ASSERT(action_dst == ACTION_UPDATE);
     ASSERT((rsn & REASON_SIZE) != 0);
 
     /* Memory Cleanup */
