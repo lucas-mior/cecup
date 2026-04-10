@@ -798,8 +798,6 @@ update_list_from_rows(enum UpdateRowsType change) {
             case COL_DST_ACTION:
                 cache_rows[v_idx].key.i64 = (int64)dst_action;
                 break;
-            case COL_MTIME_TEXT:
-            case COL_SIZE_TEXT:
             case COL_ROW_ID:
             case NUM_COLS:
             default:
