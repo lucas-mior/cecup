@@ -172,6 +172,8 @@ CHECK_COMMON_MAP(bitmask);
 CHECK_COMMON_MAP(length);
 CHECK_COMMON_MAP(occupied);
 
+#undef CHECK_COMMON_MAP
+
 static void
 CAT(hash_zero_, HASH_TYPE)(struct Map *map) {
     map->length = 0;
