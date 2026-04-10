@@ -545,8 +545,8 @@ int main(void) {
     GtkWidget *paned;
     GtkWidget *info;
 
-    g_mutex_init(&cecup.stop_lock);
-    g_mutex_init(&cecup.arena_mutex);
+    pthread_mutex_init(&cecup.stop_lock, NULL);
+    pthread_mutex_init(&cecup.arena_mutex, NULL);
 
     /* Test aux_is_root */
     ASSERT(aux_is_root("."));

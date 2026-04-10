@@ -93,9 +93,11 @@ typedef uint64_t uint64;
 #define HASH_PRINT_SUMMARY_map(MAP) hash_print_summary_map(MAP, QUOTE(MAP))
 #define HASH_PRINT_SUMMARY_set(MAP) hash_print_summary_set(MAP, QUOTE(MAP))
 
-#if !defined(CAT)
-#define CAT_(a, b) a##b
-#define CAT(a, b) CAT_(a, b)
+#if !defined(CAT) || !defined(CAT3)
+  #define CAT_(a, b)     a##b
+  #define CAT3_(a, b, c) a##b##c
+  #define CAT(a, b)      CAT_(a, b)
+  #define CAT3(a, b, c)  CAT3_(a, b, c)
 #endif
 
 struct CommonBucket;
@@ -232,9 +234,9 @@ CAT(hash_destroy_, HASH_TYPE)(struct Map *map) {
 
 static void
 CAT(hash_resize_, HASH_TYPE)(struct Map *map) {
-    uint32 new_capacity = map->capacity * 2;
+    uint32 new_capacity = map->capacity*2;
     uint32 new_bitmask = (new_capacity - 1);
-    int64 new_size = new_capacity * sizeof(Bucket);
+    int64 new_size = new_capacity*sizeof(Bucket);
     Bucket *new_array = xmmap_commit(&new_size);
     Bucket *old_array = map->array;
     uint32 old_capacity = map->capacity;
@@ -343,7 +345,7 @@ CAT(hash_probe_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
             }
         } else {
 #if HASH_KEY_FIXED_LEN
-            if ((iterator->hash == hash) && !memcmp64(&iterator->key, key, sizeof(HASH_KEY_TYPE)))
+            if (!memcmp64(&iterator->key, key, sizeof(HASH_KEY_TYPE)))
 #else
             if ((iterator->hash == hash)
                     && (iterator->key_len == key_length)
