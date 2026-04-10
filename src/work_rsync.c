@@ -796,9 +796,6 @@ main(void) {
     char *result;
     MessageBatch *batch;
     int32 fd;
-    ThreadData *thread_data;
-    TaskList *task_list;
-    Task *task;
     pthread_t thread;
 
     if (!gtk_init_check()) {
@@ -919,24 +916,30 @@ main(void) {
     ASSERT(access("/tmp/cecup_test_dst/sync_test.txt", F_OK) == 0);
 
     /* Test work_rsync (Thread Runner) */
-    thread_data = xmalloc(SIZEOF(*thread_data));
-    memset64(thread_data, 0, SIZEOF(*thread_data));
-    task_list = xmalloc(SIZEOF(*task_list) + 1*SIZEOF(Task*));
-    memset64(task_list, 0, SIZEOF(*task_list) + 1*SIZEOF(Task*));
-    task = xmalloc(SIZEOF(*task_list));
-    memset64(task, 0, SIZEOF(*task_list));
+    {
+        ThreadData *thread_data;
+        TaskList *task_list;
+        Task *task;
 
-    task->action = ACTION_UPDATE;
-    task->side = R;
-    task->path = xstrdup("sync_test.txt");
-    task->path_len = 13;
+        thread_data = xmalloc(SIZEOF(*thread_data));
+        memset64(thread_data, 0, SIZEOF(*thread_data));
+        task_list = xmalloc(SIZEOF(*task_list) + 1*SIZEOF(Task*));
+        memset64(task_list, 0, SIZEOF(*task_list) + 1*SIZEOF(Task*));
+        task = xmalloc(SIZEOF(*task_list));
+        memset64(task, 0, SIZEOF(*task_list));
 
-    task_list->count = 1;
-    task_list->items[0] = task;
-    thread_data->tasks = task_list;
+        task->action = ACTION_UPDATE;
+        task->side = R;
+        task->path = xstrdup("sync_test.txt");
+        task->path_len = 13;
 
-    xpthread_create(&thread, NULL, work_rsync, thread_data);
-    xpthread_join(&thread, NULL);
+        task_list->count = 1;
+        task_list->items[0] = task;
+        thread_data->tasks = task_list;
+
+        xpthread_create(&thread, NULL, work_rsync, thread_data);
+        xpthread_join(&thread, NULL);
+    }
 
     /* Teardown */
     system("rm -rf /tmp/cecup_test_src /tmp/cecup_test_dst /tmp/cecup_test_files_from");
