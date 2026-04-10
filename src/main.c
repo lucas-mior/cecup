@@ -135,9 +135,9 @@ main_setup_tree_columns(GtkWidget *tree) {
         gtk_column_view_column_set_sorter(column, sorter);
 
         if (side == L) {
-            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_SRC_SIZE_RAW));
+            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_SRC_SIZE));
         } else {
-            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_DST_SIZE_RAW));
+            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_DST_SIZE));
         }
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
         g_object_unref(column);
@@ -161,9 +161,9 @@ main_setup_tree_columns(GtkWidget *tree) {
         gtk_column_view_column_set_sorter(column, sorter);
 
         if (side == L) {
-            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_SRC_MTIME_RAW));
+            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_SRC_MTIME));
         } else {
-            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_DST_MTIME_RAW));
+            g_object_set_data(G_OBJECT(column), "col_id", GINT_TO_POINTER(COL_DST_MTIME));
         }
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
         g_object_unref(column);
