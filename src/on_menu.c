@@ -558,7 +558,7 @@ main(void) {
     ASSERT(file != NULL);
 
     memset64(buffer, 0, SIZEOF(buffer));
-    read_bytes = fread(buffer, 1, SIZEOF(buffer) - 1, file);
+    read_bytes = fread64(buffer, 1, SIZEOF(buffer) - 1, file);
     fclose(file);
 
     ASSERT_MORE(read_bytes, 0);

@@ -328,7 +328,7 @@ main(void) {
         t->paths = xmalloc(n * SIZEOF(char *));
         t->paths_lens = xmalloc(n * SIZEOF(int16));
         t->paths[0] = xmemdup(file_rel, strlen32(file_rel) + 1);
-        t->paths_lens[0] = strlen32(file_rel);
+        t->paths_lens[0] = (int16)strlen32(file_rel);
 
         t->stats = xmalloc(n * SIZEOF(struct stat));
         t->patterns = xmalloc(n * SIZEOF(char *));
