@@ -541,8 +541,8 @@ main(void) {
     char *name_a_ptr;
     char *name_b_ptr;
     HardLinks dump_hl;
-    enum Action act_src;
-    enum Action act_dst;
+    enum Action action_src;
+    enum Action action_dst;
     enum Reason rsn;
 
     memset64(&hl1, 0, SIZEOF(hl1));
@@ -706,26 +706,26 @@ main(void) {
     cecup.delete_ignored = false;
     cecup.delete_after = false;
 
-    item_get_actions_reasons(0, &act_src, &act_dst, &rsn);
-    ASSERT_EQUAL(act_src, ACTION_EQUAL);
-    ASSERT_EQUAL(act_dst, ACTION_EQUAL);
+    item_get_actions_reasons(0, &action_src, &action_dst, &rsn);
+    ASSERT_EQUAL(action_src, ACTION_EQUAL);
+    ASSERT_EQUAL(action_dst, ACTION_EQUAL);
     ASSERT((rsn & REASON_EQUAL) != 0);
 
-    item_get_actions_reasons(1, &act_src, &act_dst, &rsn);
-    ASSERT_EQUAL(act_src, ACTION_NEW);
-    ASSERT_EQUAL(act_dst, ACTION_NEW);
+    item_get_actions_reasons(1, &action_src, &action_dst, &rsn);
+    ASSERT_EQUAL(action_src, ACTION_NEW);
+    ASSERT_EQUAL(action_dst, ACTION_NEW);
     ASSERT((rsn & REASON_NEW) != 0);
 
-    item_get_actions_reasons(2, &act_src, &act_dst, &rsn);
-    ASSERT_EQUAL(act_src, ACTION_IGNORE);
-    ASSERT_EQUAL(act_dst, ACTION_IGNORE);
+    item_get_actions_reasons(2, &action_src, &action_dst, &rsn);
+    ASSERT_EQUAL(action_src, ACTION_IGNORE);
+    ASSERT_EQUAL(action_dst, ACTION_IGNORE);
     ASSERT((rsn & REASON_MISSING) != 0);
 
     /* Modify Row 0 to create an UPDATE condition */
     cecup.traversal[R].stats[0].st_size = 150;
-    item_get_actions_reasons(0, &act_src, &act_dst, &rsn);
-    ASSERT_EQUAL(act_src, ACTION_UPDATE);
-    ASSERT_EQUAL(act_dst, ACTION_UPDATE);
+    item_get_actions_reasons(0, &action_src, &action_dst, &rsn);
+    ASSERT_EQUAL(action_src, ACTION_UPDATE);
+    ASSERT_EQUAL(action_dst, ACTION_UPDATE);
     ASSERT((rsn & REASON_SIZE) != 0);
 
     /* Memory Cleanup */
