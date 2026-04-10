@@ -878,7 +878,7 @@ main(void) {
     work_batch_push(&batch, MSG_BATCH_ROW_REMOVE, L, "other.txt", 9);
     ASSERT(batch != NULL);
     ASSERT_EQUAL(batch->count, 1);
-    ASSERT_EQUAL(batch->type, MSG_BATCH_ROW_REMOVE);
+    ASSERT_EQUAL((uint32)batch->type, (uint32)MSG_BATCH_ROW_REMOVE);
     ASSERT(strcmp(batch->paths[0], "other.txt") == 0);
 
     work_batch_flush(&batch);
