@@ -937,8 +937,8 @@ main(void) {
     tl->items[0] = t;
     td->tasks = tl;
 
-    pthread_create(&pt, NULL, work_rsync, td);
-    pthread_join(pt, NULL);
+    xpthread_create(&pt, NULL, work_rsync, td);
+    xpthread_join(&pt, NULL);
 
     /* Teardown */
     system("rm -rf /tmp/cecup_test_src /tmp/cecup_test_dst /tmp/cecup_test_files_from");
