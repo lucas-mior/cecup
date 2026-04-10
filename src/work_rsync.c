@@ -797,9 +797,9 @@ main(void) {
     MessageBatch *batch;
     int32 fd;
     bool res;
-    ThreadData *td;
-    TaskList *tl;
-    Task *t;
+    ThreadData *thread_data;
+    TaskList *task_list;
+    Task *task;
     pthread_t pt;
 
     if (!gtk_init_check()) {
@@ -817,7 +817,7 @@ main(void) {
 
     /* Test valid directory itemization */
     {
-        char *line = ".d..t...... some/dir/";
+        char *line = ".d..task...... some/dir/";
         result = work_rsync_itemize_skip(line, strlen32(line));
         ASSERT(result != NULL);
         ASSERT_EQUAL(result, line + 12);
@@ -921,23 +921,23 @@ main(void) {
     ASSERT(access("/tmp/cecup_test_dst/sync_test.txt", F_OK) == 0);
 
     /* Test work_rsync (Thread Runner) */
-    td = xmalloc(SIZEOF(ThreadData));
-    memset64(td, 0, SIZEOF(ThreadData));
-    tl = xmalloc(SIZEOF(TaskList) + 1 * SIZEOF(Task*));
-    memset64(tl, 0, SIZEOF(TaskList) + 1 * SIZEOF(Task*));
-    t = xmalloc(SIZEOF(Task));
-    memset64(t, 0, SIZEOF(Task));
+    thread_data = xmalloc(SIZEOF(ThreadData));
+    memset64(thread_data, 0, SIZEOF(ThreadData));
+    task_list = xmalloc(SIZEOF(TaskList) + 1 * SIZEOF(Task*));
+    memset64(task_list, 0, SIZEOF(TaskList) + 1 * SIZEOF(Task*));
+    task = xmalloc(SIZEOF(Task));
+    memset64(task, 0, SIZEOF(Task));
 
-    t->action = ACTION_UPDATE;
-    t->side = R;
-    t->path = xstrdup("sync_test.txt");
-    t->path_len = 13;
+    task->action = ACTION_UPDATE;
+    task->side = R;
+    task->path = xstrdup("sync_test.txt");
+    task->path_len = 13;
 
-    tl->count = 1;
-    tl->items[0] = t;
-    td->tasks = tl;
+    task_list->count = 1;
+    task_list->items[0] = task;
+    thread_data->tasks = task_list;
 
-    xpthread_create(&pt, NULL, work_rsync, td);
+    xpthread_create(&pt, NULL, work_rsync, thread_data);
     xpthread_join(&pt, NULL);
 
     /* Teardown */
