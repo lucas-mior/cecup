@@ -800,7 +800,7 @@ main(void) {
     ThreadData *thread_data;
     TaskList *task_list;
     Task *task;
-    pthread_t pt;
+    pthread_t thread;
 
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
@@ -937,8 +937,8 @@ main(void) {
     task_list->items[0] = task;
     thread_data->tasks = task_list;
 
-    xpthread_create(&pt, NULL, work_rsync, thread_data);
-    xpthread_join(&pt, NULL);
+    xpthread_create(&thread, NULL, work_rsync, thread_data);
+    xpthread_join(&thread, NULL);
 
     /* Teardown */
     system("rm -rf /tmp/cecup_test_src /tmp/cecup_test_dst /tmp/cecup_test_files_from");
