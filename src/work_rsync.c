@@ -796,7 +796,6 @@ main(void) {
     char *result;
     MessageBatch *batch;
     int32 fd;
-    bool res;
     ThreadData *thread_data;
     TaskList *task_list;
     Task *task;
@@ -916,8 +915,7 @@ main(void) {
     write64(fd, "sync_test.txt\n", 14);
     close(fd);
 
-    res = work_rsync_run("/tmp/cecup_test_files_from", 1, false, &batch);
-    ASSERT(res == true);
+    ASSERT(work_rsync_run("/tmp/cecup_test_files_from", 1, false, &batch));
     ASSERT(access("/tmp/cecup_test_dst/sync_test.txt", F_OK) == 0);
 
     /* Test work_rsync (Thread Runner) */
