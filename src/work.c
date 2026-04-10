@@ -35,7 +35,6 @@
 #include "update.c"
 #include "traversal.c"
 #include "ignore_patterns.c"
-#include "work_rsync.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_work 1
@@ -578,14 +577,9 @@ create_test_file(char *path, char *content) {
 
 int
 main(void) {
-    char buf1[] = ">f+++++++++ some/file.txt";
-    char buf2[] = "cd+++++++++ some/dir/";
-    char buf3[] = ".f...p..... some/file.txt";
-    char buf4[] = "invalid line";
     char temp_dir[] = "/tmp/cecup_work_test_XXXXXX";
     char src_dir[MAX_PATH_LENGTH];
     char dst_dir[MAX_PATH_LENGTH];
-    char *parsed;
     IgnorePattern pattern;
     static TestEntry test_entries[] = {
         {
@@ -678,23 +672,6 @@ main(void) {
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
     }
-
-    (void)work_rsync;
-
-    parsed = work_rsync_itemize_skip(buf1, strlen32(buf1));
-    ASSERT(parsed);
-    ASSERT_EQUAL(parsed, "some/file.txt");
-
-    parsed = work_rsync_itemize_skip(buf2, strlen32(buf2));
-    ASSERT(parsed);
-    ASSERT_EQUAL(parsed, "some/dir/");
-
-    parsed = work_rsync_itemize_skip(buf3, strlen32(buf3));
-    ASSERT(parsed);
-    ASSERT_EQUAL(parsed, "some/file.txt");
-
-    parsed = work_rsync_itemize_skip(buf4, strlen32(buf4));
-    ASSERT_NULL(parsed);
 
     ASSERT(mkdtemp(temp_dir));
 
