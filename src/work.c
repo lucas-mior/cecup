@@ -815,7 +815,7 @@ main(void) {
     memset64(&cecup, 0, SIZEOF(cecup));
 
     cecup.arena = arena_create(SIZEMB(64));
-    g_mutex_init(&cecup.arena_mutex);
+    pthread_mutex_init(&cecup.arena_mutex, NULL);
 
     cecup.transfer_set = hash_create_transfer_set(1024);
     cecup.deletion_set = hash_create_deletion_set(1024);
@@ -968,7 +968,6 @@ main(void) {
     }
 
     arena_destroy(cecup.arena);
-    g_mutex_clear(&cecup.arena_mutex);
 
     {
         char cmd[MAX_PATH_LENGTH];

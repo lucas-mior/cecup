@@ -1141,7 +1141,7 @@ main(void) {
     }
 
     /* --- Test update_list_from_rows (UI filtering logic) --- */
-    cecup.sort_col = COL_SIZE_RAW;
+    cecup.sort_col = COL_SRC_SIZE_RAW;
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal), TRUE);
     update_list_from_rows(UPDATE_ROWS_COMPLETE);
 
