@@ -583,6 +583,20 @@ test_cancel_thread(void *arg) {
     return NULL;
 }
 
+static void *
+test_finalize_thread(void *arg) {
+    (void)arg;
+    work_finalize(true);
+    return NULL;
+}
+
+static void *
+test_cleanup_thread(void *arg) {
+    (void)arg;
+    work_cleanup();
+    return NULL;
+}
+
 int
 main(void) {
     char buf1[] = ">f+++++++++ some/file.txt";
@@ -908,10 +922,22 @@ main(void) {
         ASSERT((reason & entry->expected_reason_mask) == entry->expected_reason_mask);
     }
 
-    work_finalize(true);
+    {
+        pthread_t pt_finalize;
+
+        pthread_create(&pt_finalize, NULL, test_finalize_thread, NULL);
+        pthread_join(pt_finalize, NULL);
+    }
 
     cecup.ntransfers = 42;
-    work_cleanup();
+
+    {
+        pthread_t pt_cleanup;
+
+        pthread_create(&pt_cleanup, NULL, test_cleanup_thread, NULL);
+        pthread_join(pt_cleanup, NULL);
+    }
+
     ASSERT_EQUAL(cecup.ntransfers, 0);
 
     {
