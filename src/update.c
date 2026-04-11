@@ -1046,8 +1046,8 @@ main(void) {
 
         t->nfiles = n;
         t->capacity = n;
-        t->map = hash_create_fs_map(16);
-        t->inode_map = hash_create_inode_map(16);
+        t->map = hash_create_fs_map(16, "t->map");
+        t->inode_map = hash_create_inode_map(16, "t->inode_map");
         t->arena = arena_create(SIZEMB(1));
 
         t->paths = xmalloc(t->capacity * SIZEOF(char *));

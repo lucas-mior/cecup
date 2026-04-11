@@ -847,16 +847,16 @@ main(int32 argc, char **argv) {
     cecup.transfers_capacity = INITIAL_CAPACITY;
     cecup.transfers = xmalloc(cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
     cecup.transfers_lens = xmalloc(cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
-    cecup.transfer_set = hash_create_transfer_set(INITIAL_CAPACITY);
+    cecup.transfer_set = hash_create_transfer_set(INITIAL_CAPACITY, "cecup.transfer_set");
 
     cecup.ndeletions = 0;
     cecup.deletions_capacity = INITIAL_CAPACITY;
     cecup.deletions = xmalloc(cecup.deletions_capacity*SIZEOF(*(cecup.deletions)));
     cecup.deletions_lens = xmalloc(cecup.deletions_capacity*SIZEOF(*(cecup.deletions_lens)));
-    cecup.deletion_set = hash_create_deletion_set(INITIAL_CAPACITY);
+    cecup.deletion_set = hash_create_deletion_set(INITIAL_CAPACITY, "cecup.deletion_set");
 
-    traversal_allocate(&cecup.traversal[L]);
-    traversal_allocate(&cecup.traversal[R]);
+    traversal_allocate(&cecup.traversal[L], L);
+    traversal_allocate(&cecup.traversal[R], R);
 
     cecup.ignore_patterns = NULL;
     cecup.ignore_capacity = 0;

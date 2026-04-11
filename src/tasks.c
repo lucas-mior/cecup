@@ -165,7 +165,7 @@ main(void) {
         t->paths_lens = xmalloc(n * SIZEOF(int32));
         t->patterns = xmalloc(n * SIZEOF(char *));
         t->symlink_targets = xmalloc(n * SIZEOF(char *));
-        t->map = hash_create_fs_map(INITIAL_CAPACITY);
+        t->map = hash_create_fs_map(INITIAL_CAPACITY, "t->map");
 
         memset64(t->stats, 0, n * SIZEOF(struct stat));
         memset64(t->patterns, 0, n * SIZEOF(char *));

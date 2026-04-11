@@ -668,7 +668,7 @@ int main(void) {
     cecup.traversal[L].paths[0] = "test1";
     cecup.traversal[L].paths_lens = xmalloc(10 * SIZEOF(int16));
     cecup.traversal[L].paths_lens[0] = 5;
-    cecup.traversal[L].map = hash_create_fs_map(16);
+    cecup.traversal[L].map = hash_create_fs_map(16, "traversal[L].map");
     hash_insert_fs_map(cecup.traversal[L].map, "test1", 5, 0);
 
     cecup.traversal[R].nfiles = 1;
@@ -678,7 +678,7 @@ int main(void) {
     cecup.traversal[R].paths[0] = "test2";
     cecup.traversal[R].paths_lens = xmalloc(10 * SIZEOF(int16));
     cecup.traversal[R].paths_lens[0] = 5;
-    cecup.traversal[R].map = hash_create_fs_map(16);
+    cecup.traversal[R].map = hash_create_fs_map(16, "traversal[R].map");
     hash_insert_fs_map(cecup.traversal[R].map, "test2", 5, 0);
 
     check_consistent_state(); /* Would fatal() if failed */

@@ -787,8 +787,8 @@ main(void) {
     cecup.arena = arena_create(SIZEMB(64));
     pthread_mutex_init(&cecup.arena_mutex, NULL);
 
-    cecup.transfer_set = hash_create_transfer_set(1024);
-    cecup.deletion_set = hash_create_deletion_set(1024);
+    cecup.transfer_set = hash_create_transfer_set(1024, "cecup.transfer_set");
+    cecup.deletion_set = hash_create_deletion_set(1024, "cecup.deletion_set");
 
     cecup.rows_capacity = INITIAL_CAPACITY;
     cecup.rows[L] = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows[L])));
@@ -810,11 +810,11 @@ main(void) {
     cecup.dst_base = dst_dir;
     cecup.dst_base_len = strlen32(dst_dir);
 
-    traversal_allocate(&cecup.traversal[L]);
+    traversal_allocate(&cecup.traversal[L], L);
     cecup.traversal[L].base_path = src_dir;
     cecup.traversal[L].base_path_len = strlen32(src_dir);
 
-    traversal_allocate(&cecup.traversal[R]);
+    traversal_allocate(&cecup.traversal[R], R);
     cecup.traversal[R].base_path = dst_dir;
     cecup.traversal[R].base_path_len = strlen32(dst_dir);
 

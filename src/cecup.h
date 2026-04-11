@@ -36,6 +36,15 @@
 #define L 0
 #define R 1
 
+static char *
+side_name(int32 side) {
+    if (side == L) {
+        return "L";
+    } else {
+        return "R";
+    }
+}
+
 _Static_assert((!L) == R, "!L must be R");
 _Static_assert((!R) == L, "!R must be L");
 

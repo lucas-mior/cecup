@@ -30,13 +30,18 @@
 #endif
 
 static void
-traversal_allocate(Traversal *traversal) {
+traversal_allocate(Traversal *traversal, int32 side) {
     int32 capacity = INITIAL_CAPACITY;
+    char name[256];
+
 
     traversal->arena = arena_create(SIZEMB(64));
 
-    traversal->map = hash_create_fs_map(INITIAL_CAPACITY);
-    traversal->inode_map = hash_create_inode_map(INITIAL_CAPACITY);
+    SNPRINTF(name, "traversal[%s]->map", side_name(side));
+    traversal->map = hash_create_fs_map(INITIAL_CAPACITY, name);
+
+    SNPRINTF(name, "traversal[%s]->map", side_name(side));
+    traversal->inode_map = hash_create_inode_map(INITIAL_CAPACITY, name);
 
     traversal->stats = xmalloc(capacity*SIZEOF(*(traversal->stats)));
     traversal->patterns = xmalloc(capacity*SIZEOF(*(traversal->patterns)));
@@ -430,7 +435,7 @@ main(void) {
     memset64(&test_traversal, 0, SIZEOF(test_traversal));
     memset64(&dummy_stat, 0, SIZEOF(dummy_stat));
 
-    traversal_allocate(&test_traversal);
+    traversal_allocate(&test_traversal, L);
     ASSERT(test_traversal.capacity == INITIAL_CAPACITY);
 
     dummy_stat.st_ino = 100;

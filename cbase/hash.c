@@ -102,6 +102,7 @@ typedef uint64_t uint64;
 struct CommonBucket;
 
 typedef struct CommonMap {
+    char *name;
     int64 size;
     uint32 capacity;
     uint32 bitmask;
@@ -152,6 +153,7 @@ typedef struct Bucket {
 // TODO: Struct `Map` is not typedef'd. Per your codebase rules ("do typedef
 // structs"), define it as `typedef struct Map { ... } Map;`.
 struct Map {
+    char *name;
     int64 size;
     uint32 capacity;
     uint32 bitmask;
@@ -181,7 +183,7 @@ CAT(hash_zero_, HASH_TYPE)(struct Map *map) {
 }
 
 static struct Map *
-CAT(hash_create_, HASH_TYPE)(uint32 length) {
+CAT(hash_create_, HASH_TYPE)(uint32 length, char *name) {
     struct Map *map;
     int64 array_size;
     uint32 capacity = 1;
@@ -201,6 +203,7 @@ CAT(hash_create_, HASH_TYPE)(uint32 length) {
     array_size = capacity*sizeof(Bucket);
 
     map = xmalloc(sizeof(*map));
+    map->name = xstrdup(name);
     map->array = xmmap_commit(&array_size);
     map->capacity = capacity;
     map->bitmask = (1 << power) - 1;
@@ -646,8 +649,9 @@ CAT(hash_remove_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
 }
 
 static void
-CAT(hash_print_summary_, HASH_TYPE)(struct Map *map, char *name) {
-    printf("struct Hash%s %s {\n", QUOTE(HASH_TYPE), name);
+CAT(hash_print_summary_, HASH_TYPE)(struct Map *map) {
+    printf("struct Hash%s {\n", QUOTE(HASH_TYPE));
+    printf("  name: %s\n", map->name);
     printf("  capacity: %u\n", map->capacity);
     printf("  length: %u\n", map->length);
     printf("  expected collisions: %u\n", hash_expected_collisions(map));
@@ -815,7 +819,7 @@ hash_expected_collisions(void *map) {
 
 // Have to add these declarations so that clangd does not complain
 struct Hash_map_by_value;
-static struct Hash_map_by_value *hash_create_map_by_value(uint32);
+static struct Hash_map_by_value *hash_create_map_by_value(uint32, char *);
 static void hash_destroy_map_by_value(struct Hash_map_by_value *);
 static uint32 hash_ndeleted_map_by_value(struct Hash_map_by_value *);
 static bool hash_insert_map_by_value(struct Hash_map_by_value *, int64 *, int32);
@@ -865,7 +869,7 @@ int
 main(void) {
     struct timespec t0;
     struct timespec t1;
-    struct Hash_map *map = hash_create_map(100);
+    struct Hash_map *map = hash_create_map(100, "strings map");
     Arena *arena = arena_create(NBYTES*NSTRINGS);
     String *strings = xmalloc(NSTRINGS*sizeof(*strings));
     String str1 = {.s = "aaaaaaaaaaaaaaaa", .value = 10};
@@ -937,7 +941,7 @@ main(void) {
     free(strings, NSTRINGS*sizeof(*strings));
 
     {
-        struct Hash_map_by_value *map2 = hash_create_map_by_value(16);
+        struct Hash_map_by_value *map2 = hash_create_map_by_value(16, "value map");
         int64 key1 = 12345;
         int64 key2 = 67890;
         int64 key3 = 55555;
