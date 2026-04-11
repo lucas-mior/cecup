@@ -1048,7 +1048,7 @@ main(void) {
         t->capacity = n;
         t->map = hash_create_fs_map(16, "t->map");
         t->inode_map = hash_create_inode_map(16, "t->inode_map");
-        t->arena = arena_create(SIZEMB(1));
+        t->arena = arena_create(SIZEMB(1), "t->arena");
 
         t->paths = xmalloc(t->capacity * SIZEOF(char *));
         t->paths_lens = xmalloc(t->capacity * SIZEOF(int16));

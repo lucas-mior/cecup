@@ -35,7 +35,8 @@ traversal_allocate(Traversal *traversal, int32 side) {
     char name[256];
 
 
-    traversal->arena = arena_create(SIZEMB(64));
+    SNPRINTF(name, "traversal[%s]->arena", side_name(side));
+    traversal->arena = arena_create(SIZEMB(64), name);
 
     SNPRINTF(name, "traversal[%s]->map", side_name(side));
     traversal->map = hash_create_fs_map(INITIAL_CAPACITY, name);

@@ -218,7 +218,11 @@ CAT(hash_create_, HASH_TYPE)(uint32 length, char *name) {
     map->length = 0;
     map->occupied = 0;
 #if HASH_DUPLICATE_KEYS
-    map->arena_keys = arena_create(SIZEMB(2));
+    {
+        char name[256];
+        SNPRINTF(name, "%s->arena_keys", map->name);
+        map->arena_keys = arena_create(SIZEMB(2), name);
+    }
 #endif
     return map;
 }
@@ -872,7 +876,7 @@ main(void) {
     struct timespec t0;
     struct timespec t1;
     struct Hash_map *map = hash_create_map(100, "strings map");
-    Arena *arena = arena_create(NBYTES*NSTRINGS);
+    Arena *arena = arena_create(NBYTES*NSTRINGS, "strings arena");
     String *strings = xmalloc(NSTRINGS*sizeof(*strings));
     String str1 = {.s = "aaaaaaaaaaaaaaaa", .value = 10};
     String str2 = {.s = "bbbbbbbbbbbbbbb", .value = 20};

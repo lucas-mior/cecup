@@ -784,7 +784,7 @@ main(void) {
 
     memset64(&cecup, 0, SIZEOF(cecup));
 
-    cecup.arena = arena_create(SIZEMB(64));
+    cecup.arena = arena_create(SIZEMB(64), "cecup.arena");
     pthread_mutex_init(&cecup.arena_mutex, NULL);
 
     cecup.transfer_set = hash_create_transfer_set(1024, "cecup.transfer_set");
