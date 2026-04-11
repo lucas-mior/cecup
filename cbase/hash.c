@@ -31,6 +31,7 @@
 #include "rapidhash.h"
 #include "util.c"
 #include "assert.c"
+#include "arena.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_hash 1
@@ -159,6 +160,9 @@ struct Map {
     uint32 bitmask;
     uint32 length;
     uint32 occupied;
+#if HASH_DUPLICATE_KEYS
+    Arena *arena_keys;
+#endif
     Bucket *array;
 };
 
@@ -179,6 +183,9 @@ CAT(hash_zero_, HASH_TYPE)(struct Map *map) {
     map->length = 0;
     map->occupied = 0;
     memset64(map->array, 0, map->capacity*sizeof(Bucket));
+#if HASH_DUPLICATE_KEYS
+    arena_reset(map->arena_keys);
+#endif
     return;
 }
 
@@ -210,6 +217,9 @@ CAT(hash_create_, HASH_TYPE)(uint32 length, char *name) {
     map->size = array_size;
     map->length = 0;
     map->occupied = 0;
+#if HASH_DUPLICATE_KEYS
+    map->arena_keys = arena_create(SIZEMB(2));
+#endif
     return map;
 }
 
@@ -219,16 +229,7 @@ CAT(hash_destroy_, HASH_TYPE)(struct Map *map) {
         return;
     }
 #if !HASH_KEY_FIXED_LEN && HASH_DUPLICATE_KEYS
-    for (uint32 i = 0; i < map->capacity; i += 1) {
-        switch ((int64)map->array[i].key) {
-        case HASH_SLOT_DELETED:
-        case HASH_SLOT_FREE:
-            break;
-        default:
-            free(map->array[i].key, map->array[i].key_len);
-            break;
-        }
-    }
+    arena_destroy(map->arena_keys);
 #endif
     xmunmap(map->array, map->size);
     free(map, sizeof(*map));
@@ -421,7 +422,8 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
         map->occupied += 1;
     }
   #if HASH_DUPLICATE_KEYS
-    target->key = xmemdup(key, key_length + 1);
+    target->key = xarena_push(map->arena_keys, key_length + 1);
+    memcpy64(target->key, key, key_length + 1);
   #else
     target->key = key;
   #endif
@@ -619,7 +621,7 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
     if (CAT(hash_probe_, HASH_TYPE)(map, key, key_length, hash, base_index, &target_idx)) {
         target = &map->array[target_idx];
   #if HASH_DUPLICATE_KEYS
-        free(target->key, target->key_len);
+        arena_decr(map->arena_keys, target->key);
   #endif
         target->key = (HASH_KEY_TYPE *)(int64)HASH_SLOT_DELETED;
         map->length -= 1;
