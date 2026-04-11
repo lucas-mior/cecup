@@ -482,6 +482,9 @@ arena_reset(Arena *arena) {
     do {
         arena->pos = arena->begin;
         arena->npushed = 0;
+        if (DEBUGGING) {
+            memset64(arena->begin, MEM_FREED, arena_data_size(arena));
+        }
     } while ((arena = arena->next));
 
     return first->begin;
