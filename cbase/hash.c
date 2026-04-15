@@ -44,15 +44,12 @@
 #define HASH_VALUE_TYPE int32
 #define HASH_VALUE_FORMATTER "%d"
 #define HASH_TYPE map
+#define HASH_DUPLICATE_KEYS 1
 #endif
 
 #define HASH_SLOT_USED     1
 #define HASH_SLOT_FREE     0
 #define HASH_SLOT_DELETED -1
-
-#if !defined(ALIGNMENT)
-#define ALIGNMENT 16
-#endif
 
 INLINE uint64 hash_function(void *key, int32 key_length);
 INLINE uint32 hash_normal(void *map, uint64 hash);
@@ -476,6 +473,7 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
     }
   #if HASH_DUPLICATE_KEYS
     target->key = xarena_push(map->arena_keys, key_length + 1);
+    memcpy64(target->key, key, key_length + 1);
   #else
     target->key = key;
   #endif
@@ -743,6 +741,9 @@ CAT(hash_functions_sink_, HASH_TYPE)(void) {
 INLINE uint64
 hash_function(void *key, int32 key_length) {
     uint64 hash;
+    if (DEBUGGING) {
+        ASSERT_MORE(key_length, 0);
+    }
     hash = rapidhash(key, (size_t)key_length);
     return hash;
 }
@@ -839,8 +840,8 @@ int
 main(void) {
     struct timespec t0;
     struct timespec t1;
-    struct Hash_map *map = hash_create_map(100, "strings map");
-    Arena *arena = arena_create(NBYTES*NSTRINGS, "strings arena");
+    struct Hash_map *map = hash_create_map(100, "strings_map");
+    Arena *arena = arena_create(NBYTES*NSTRINGS, "strings_arena");
     String *strings = xmalloc(NSTRINGS*sizeof(*strings));
     String str1 = {.s = "aaaaaaaaaaaaaaaa", .value = 10};
     String str2 = {.s = "bbbbbbbbbbbbbbb", .value = 20};
@@ -853,23 +854,23 @@ main(void) {
     str1.len = strlen32(str1.s);
     str2.len = strlen32(str2.s);
 
-    // Initial insertions
     ASSERT(hash_insert_map(map, str1.s, str1.len, str1.value));
     ASSERT(!hash_insert_map(map, str1.s, str1.len, 1));
     ASSERT(hash_insert_map(map, str2.s, str2.len, str2.value));
     ASSERT_EQUAL(hash_length(map), 2u);
 
-    // Test overwrite (existing key)
     ASSERT(hash_overwrite_map(map, str1.s, str1.len, 555));
     ASSERT_EQUAL(hash_length(map), 2u);
     ASSERT(hash_lookup_map(map, str1.s, str1.len, &test));
     ASSERT_EQUAL(test, 555);
 
-    // Test overwrite (new key / upsert)
     ASSERT(hash_overwrite_map(map, "new_key", 7, 777));
     ASSERT_EQUAL(hash_length(map), 3u);
     ASSERT(hash_lookup_map(map, "new_key", 7, &test));
     ASSERT_EQUAL(test, 777);
+    arena_print(map->arena_keys);
+    hash_print_summary_map(map);
+    ASSERT_EQUAL(map->arena_keys->npushed, map->length);
 
     ASSERT(!hash_lookup_map(map, "does_not_exist", 14, &test));
 
@@ -903,7 +904,8 @@ main(void) {
     ASSERT_EQUAL(map->occupied, 0);
 
     for (uint32 i = 0; i < 10; i += 1) {
-        ASSERT(hash_insert_map(map, strings[i].s, strings[i].len, strings[i].value));
+        ASSERT(hash_insert_map(map,
+                               strings[i].s, strings[i].len, strings[i].value));
     }
     ASSERT_EQUAL(hash_length(map), 10);
 
@@ -911,7 +913,7 @@ main(void) {
     free(strings, NSTRINGS*sizeof(*strings));
 
     {
-        struct Hash_map_by_value *map2 = hash_create_map_by_value(16, "value map");
+        struct Hash_map_by_value *map2;
         int64 key1 = 12345;
         int64 key2 = 67890;
         int64 key3 = 55555;
@@ -920,19 +922,18 @@ main(void) {
         int32 test2 = 0;
         int64 missing_key = 999;
 
+        map2 = hash_create_map_by_value(16, "value_map");
         ASSERT(hash_insert_map_by_value(map2, &key1, value1));
         ASSERT(!hash_insert_map_by_value(map2, &key1, 1));
         ASSERT(hash_insert_map_by_value(map2, &key2, value2));
 
         ASSERT_EQUAL(hash_length(map2), 2u);
 
-        // Test overwrite map_by_value (update)
         ASSERT(hash_overwrite_map_by_value(map2, &key1, 888));
         ASSERT_EQUAL(hash_length(map2), 2u);
         ASSERT(hash_lookup_map_by_value(map2, &key1, &test2));
         ASSERT_EQUAL(test2, 888);
 
-        // Test overwrite map_by_value (insert)
         ASSERT(hash_overwrite_map_by_value(map2, &key3, 333));
         ASSERT_EQUAL(hash_length(map2), 3u);
         ASSERT(hash_lookup_map_by_value(map2, &key3, &test2));

@@ -58,6 +58,7 @@
 #include "generic.c"
 #include "minmax.c"
 #include "base_macros.h"
+#include "assert.c"
 
 #if !defined(__CPROC__) && defined(__has_include)
   #if __has_include(<valgrind/valgrind.h>)
@@ -90,17 +91,6 @@ static int32 program_len __attribute__((unused));
 static bool timezone_initialized = false;
 static time_t timezone_offset = 0;
 
-#define SIZEOF(X) ((int64)sizeof(X))
-
-#if !defined(SIZEKB)
-#define SIZEKB(X) ((int64)(X)*1024ll)
-#define SIZEMB(X) ((int64)(X)*1024ll*1024ll)
-#define SIZEGB(X) ((int64)(X)*1024ll*1024ll*1024ll)
-#endif
-
-#if !defined(LENGTH)
-#define LENGTH(x) (int64)((sizeof(x) / sizeof(*x)))
-#endif
 #if !defined(SNPRINTF)
 #define SNPRINTF(BUFFER, FORMAT, ...) \
     snprintf2(BUFFER, sizeof(BUFFER), FORMAT, __VA_ARGS__)
@@ -112,8 +102,6 @@ static time_t timezone_offset = 0;
 
 #define STRUCT_ARRAY_SIZE(struct_object, ArrayType, array_length) \
     (int64)(SIZEOF(*(struct_object)) + ((array_length)*SIZEOF(ArrayType)))
-
-#define SWAP(x, y) do { __typeof__(x) SWAP = x; x = y; y = SWAP; } while (0)
 
 #define STRING_FROM_ARRAY(BUFFER, SEP, ARRAY, LENGTH) \
 _Generic((ARRAY), \
@@ -143,8 +131,6 @@ _Generic((ARRAY), \
 #define ERROR_NOTIFY 0
 #endif
 
-#include "assert.c"
-
 #if !defined(FLAGS_HUGE_PAGES)
 #if defined(MAP_HUGETLB) && defined(MAP_HUGE_2MB)
 #define FLAGS_HUGE_PAGES MAP_HUGETLB | MAP_HUGE_2MB
@@ -157,14 +143,6 @@ _Generic((ARRAY), \
 #define MAP_POPULATE 0
 #endif
 
-#if !defined(INLINE)
-#if defined(__GNUC__)
-#define INLINE static inline __attribute__((always_inline))
-#else
-#define INLINE static inline
-#endif
-#endif
-
 #if DEBUGGING || TESTING_util
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Wc11-extensions"
@@ -172,26 +150,6 @@ _Generic((ARRAY), \
 #pragma clang diagnostic ignored "-Wdouble-promotion"
 #endif
 
-#endif
-
-#define UTIL_ALIGN_UINT(SIZE, A) (int64)(((SIZE) + ((A) - 1)) & ~((A) - 1))
-#define ALIGN16(x) (((x) + 15) & ~15)
-
-#define UTIL_ALIGN(SIZE, A) \
-_Generic((SIZE), \
-    ullong: UTIL_ALIGN_UINT((ullong)SIZE, (ullong)A), \
-    ulong:  UTIL_ALIGN_UINT((ulong)SIZE,  (ulong)A),  \
-    uint:   UTIL_ALIGN_UINT((uint)SIZE,   (uint)A),   \
-    llong:  UTIL_ALIGN_UINT((ullong)SIZE, (ullong)A), \
-    long:   UTIL_ALIGN_UINT((ulong)SIZE,  (ulong)A),  \
-    int:    UTIL_ALIGN_UINT((uint)SIZE,   (uint)A)    \
-)
-
-#if !defined(ALIGNMENT)
-#define ALIGNMENT 16ul
-#endif
-#if !defined(ALIGN)
-#define ALIGN(x) UTIL_ALIGN(x, ALIGNMENT)
 #endif
 
 static char *notifiers[2] = {"dunstify", "notify-send"};
@@ -740,13 +698,13 @@ xmmap_commit(int64 *size) {
                          | FLAGS_HUGE_PAGES,
                      -1, 0);
             if (p != MAP_FAILED) {
-                *size = UTIL_ALIGN(*size, SIZEMB(2));
+                *size = ALIGN_POWER_OF_2(*size, SIZEMB(2));
                 break;
             }
         }
         p = mmap(NULL, (size_t)*size, PROT_READ | PROT_WRITE,
                  MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0);
-        *size = UTIL_ALIGN(*size, util_page_size);
+        *size = ALIGN_POWER_OF_2(*size, util_page_size);
     } while (0);
     if (p == MAP_FAILED) {
         error("Error in mmap(%lld): %s.\n", (llong)*size, strerror(errno));
@@ -2209,9 +2167,9 @@ main(int argc, char **argv) {
         ASSERT_EQUAL(a, 20);
         ASSERT_EQUAL(b, 10);
 
-        ASSERT_EQUAL(UTIL_ALIGN(7, 16), 16);
-        ASSERT_EQUAL(UTIL_ALIGN(16, 16), 16);
-        ASSERT_EQUAL(UTIL_ALIGN(17, 16), 32);
+        ASSERT_EQUAL(ALIGN_POWER_OF_2(7, 16), 16);
+        ASSERT_EQUAL(ALIGN_POWER_OF_2(16, 16), 16);
+        ASSERT_EQUAL(ALIGN_POWER_OF_2(17, 16), 32);
         ASSERT_EQUAL(ALIGN16(7), 16);
     }
 

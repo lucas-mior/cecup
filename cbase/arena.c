@@ -48,36 +48,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#if !defined(SIZEKB)
-#define SIZEKB(X) ((int64)(X)*1024l)
-#define SIZEMB(X) ((int64)(X)*1024l*1024l)
-#define SIZEGB(X) ((int64)(X)*1024l*1024l*1024l)
-#endif
-
-#define ARENA_ALIGN(S, A) (int64)(((S) + ((A) - 1)) & ~((A) - 1))
-#if !defined(ALIGNMENT)
-#define ALIGNMENT 16ul
-#endif
-#if !defined(ALIGN)
-#define ALIGN(x) ARENA_ALIGN((ulong)x, ALIGNMENT)
-#endif
-
 #if OS_LINUX && defined(MAP_HUGE_2MB)
 #define FLAGS_HUGE_PAGES MAP_HUGETLB | MAP_HUGE_2MB
 #else
 #define FLAGS_HUGE_PAGES 0
-#endif
-
-#if !defined(DEBUGGING)
-#define DEBUGGING 0
-#endif
-
-#if !defined(INLINE)
-#if defined(__GNUC__)
-#define INLINE static inline __attribute__((always_inline))
-#else
-#define INLINE static inline
-#endif
 #endif
 
 typedef unsigned char uchar;
@@ -230,13 +204,13 @@ arena_allocate(int64 *size) {
             p = mmap(NULL, (size_t)*size, PROT_READ | PROT_WRITE,
                      MAP_ANON | MAP_PRIVATE | FLAGS_HUGE_PAGES, -1, 0);
             if (p != MAP_FAILED) {
-                *size = ARENA_ALIGN(*size, SIZEMB(2));
+                *size = ALIGN_POWER_OF_2(*size, SIZEMB(2));
                 break;
             }
         }
         p = mmap(NULL, (size_t)*size, PROT_READ | PROT_WRITE,
                  MAP_ANON | MAP_PRIVATE, -1, 0);
-        *size = ARENA_ALIGN(*size, arena_page_size);
+        *size = ALIGN_POWER_OF_2(*size, arena_page_size);
     } while (0);
 
     if (p == MAP_FAILED) {
@@ -276,7 +250,7 @@ arena_allocate(int64 *size) {
                GetLastError());
         return NULL;
     }
-    *size = ARENA_ALIGN(*size, arena_page_size);
+    *size = ALIGN_POWER_OF_2(*size, arena_page_size);
     return p;
 }
 bool
@@ -339,9 +313,7 @@ arena_push(Arena *arena, int64 size) {
     }
     arena->pos = (char *)arena->pos + size;
     arena->npushed += 1;
-#if COMPILER_GCC || COMPILER_CLANG
-    before = __builtin_assume_aligned(before, ALIGNMENT);
-#endif
+    ASSUME_ALIGNED(before);
     return before;
 }
 
@@ -554,12 +526,12 @@ main(void) {
     ASSERT(arena->pos == arena->begin);
     arena_size = (uint32)arena_data_size(arena);
 
-    ASSERT_EQUAL(ARENA_ALIGN(1, 16), 16);
-    ASSERT_EQUAL(ARENA_ALIGN(2, 16), 16);
-    ASSERT_EQUAL(ARENA_ALIGN(10, 16), 16);
-    ASSERT_EQUAL(ARENA_ALIGN(16, 16), 16);
-    ASSERT_EQUAL(ARENA_ALIGN(17, 16), 32);
-    ASSERT_EQUAL(ARENA_ALIGN(18, 16), 32);
+    ASSERT_EQUAL(ALIGN_POWER_OF_2(1, 16), 16);
+    ASSERT_EQUAL(ALIGN_POWER_OF_2(2, 16), 16);
+    ASSERT_EQUAL(ALIGN_POWER_OF_2(10, 16), 16);
+    ASSERT_EQUAL(ALIGN_POWER_OF_2(16, 16), 16);
+    ASSERT_EQUAL(ALIGN_POWER_OF_2(17, 16), 32);
+    ASSERT_EQUAL(ALIGN_POWER_OF_2(18, 16), 32);
 
     srand((uint32)time(NULL));
 

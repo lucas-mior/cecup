@@ -29,14 +29,6 @@
 #define error2(...) fprintf(stderr, __VA_ARGS__)
 #endif
 
-#if !defined(RED) || !defined(GREEN) || !defined(YELLOW) || !defined(RESET)
-#define RESET     "\x1b[0m"
-#define RED(S)    "\x1b[31m"   S RESET
-#define GREEN(S)  "\x1b[32m"   S RESET
-#define YELLOW(S) "\x1b[33m"   S RESET
-#define BLUE(S)   "\x1b[1;34m" S RESET
-#endif
-
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_generic 1
 #elif !defined(TESTING_generic)
@@ -56,73 +48,74 @@
 #endif
 
 #include "primitives.h"
+#include "base_macros.h"
 
-#define TYPENAME(VAR) \
-_Generic((VAR), \
-    void*:   "void*",  \
-    char*:   "char*",  \
-    bool:    "bool",   \
-    char:    "char",   \
-    schar:   "schar",  \
-    short:   "short",  \
-    int:     "int",    \
-    long:    "long",   \
-    llong:   "llong",  \
-    uchar:   "uchar",  \
-    ushort:  "ushort", \
-    uint:    "uint",   \
-    ulong:   "ulong",  \
-    ullong:  "ullong", \
-    float:   "float",  \
-    double:  "double", \
+#define TYPENAME(VAR)        \
+_Generic((VAR),              \
+    void*:   "void*",        \
+    char*:   "char*",        \
+    bool:    "bool",         \
+    char:    "char",         \
+    schar:   "schar",        \
+    short:   "short",        \
+    int:     "int",          \
+    long:    "long",         \
+    llong:   "llong",        \
+    uchar:   "uchar",        \
+    ushort:  "ushort",       \
+    uint:    "uint",         \
+    ulong:   "ulong",        \
+    ullong:  "ullong",       \
+    float:   "float",        \
+    double:  "double",       \
     default: _Generic((VAR), \
-        ldouble: "ldouble", \
-        default: "unknown" \
-    ) \
+        ldouble: "ldouble",  \
+        default: "unknown"   \
+    )                        \
 )
 
-#define MINOF(VARIABLE) \
-_Generic((VARIABLE), \
-    schar:   SCHAR_MIN, \
-    short:   SHRT_MIN,  \
-    int:     INT_MIN,   \
-    long:    LONG_MIN,  \
-    llong:   LLONG_MIN, \
-    uchar:   0,         \
-    ushort:  0,         \
-    uint:    0u,        \
-    ulong:   0ul,       \
-    ullong:  0ull,      \
-    char:    CHAR_MIN,  \
-    bool:    0,         \
-    float:   -FLT_MAX,  \
-    double:  -DBL_MAX,  \
+#define MINOF(VARIABLE)           \
+_Generic((VARIABLE),              \
+    schar:   SCHAR_MIN,           \
+    short:   SHRT_MIN,            \
+    int:     INT_MIN,             \
+    long:    LONG_MIN,            \
+    llong:   LLONG_MIN,           \
+    uchar:   0,                   \
+    ushort:  0,                   \
+    uint:    0u,                  \
+    ulong:   0ul,                 \
+    ullong:  0ull,                \
+    char:    CHAR_MIN,            \
+    bool:    0,                   \
+    float:   -FLT_MAX,            \
+    double:  -DBL_MAX,            \
     default: _Generic((VARIABLE), \
-        ldouble: -LDBL_MAX, \
-        default: 0 \
-    ) \
+        ldouble: -LDBL_MAX,       \
+        default: 0                \
+    )                             \
 )
 
-#define MAXOF(VARIABLE) \
-_Generic((VARIABLE), \
-    schar:   SCHAR_MAX,  \
-    short:   SHRT_MAX,   \
-    int:     INT_MAX,    \
-    long:    LONG_MAX,   \
-    llong:   LLONG_MAX,  \
-    uchar:   UCHAR_MAX,  \
-    ushort:  USHRT_MAX,  \
-    uint:    UINT_MAX,   \
-    ulong:   ULONG_MAX,  \
-    ullong:  ULLONG_MAX, \
-    char:    CHAR_MAX,   \
-    bool:    1,          \
-    float:   FLT_MAX,    \
-    double:  DBL_MAX,    \
+#define MAXOF(VARIABLE)           \
+_Generic((VARIABLE),              \
+    schar:   SCHAR_MAX,           \
+    short:   SHRT_MAX,            \
+    int:     INT_MAX,             \
+    long:    LONG_MAX,            \
+    llong:   LLONG_MAX,           \
+    uchar:   UCHAR_MAX,           \
+    ushort:  USHRT_MAX,           \
+    uint:    UINT_MAX,            \
+    ulong:   ULONG_MAX,           \
+    ullong:  ULLONG_MAX,          \
+    char:    CHAR_MAX,            \
+    bool:    1,                   \
+    float:   FLT_MAX,             \
+    double:  DBL_MAX,             \
     default: _Generic((VARIABLE), \
-        ldouble: LDBL_MAX,   \
-        default: 1 \
-    ) \
+        ldouble: LDBL_MAX,        \
+        default: 1                \
+    )                             \
 )
 
 static ldouble
@@ -149,18 +142,18 @@ ldouble_from_char(char x) {
     TRAP();
     return (ldouble)0.0;
 }
-static ldouble ldouble_from_schar(schar x)     { return (ldouble)x; }
-static ldouble ldouble_from_short(short x)     { return (ldouble)x; }
-static ldouble ldouble_from_int(int x)         { return (ldouble)x; }
-static ldouble ldouble_from_long(long x)       { return (ldouble)x; }
-static ldouble ldouble_from_llong(llong x)     { return (ldouble)x; }
-static ldouble ldouble_from_uchar(uchar x)     { return (ldouble)x; }
-static ldouble ldouble_from_ushort(ushort x)   { return (ldouble)x; }
-static ldouble ldouble_from_uint(uint x)       { return (ldouble)x; }
-static ldouble ldouble_from_ulong(ulong x)     { return (ldouble)x; }
-static ldouble ldouble_from_ullong(ullong x)   { return (ldouble)x; }
-static ldouble ldouble_from_float(float x)     { return (ldouble)x; }
-static ldouble ldouble_from_double(double x)   { return (ldouble)x; }
+static ldouble ldouble_from_schar  (schar x)   { return (ldouble)x; }
+static ldouble ldouble_from_short  (short x)   { return (ldouble)x; }
+static ldouble ldouble_from_int    (int x)     { return (ldouble)x; }
+static ldouble ldouble_from_long   (long x)    { return (ldouble)x; }
+static ldouble ldouble_from_llong  (llong x)   { return (ldouble)x; }
+static ldouble ldouble_from_uchar  (uchar x)   { return (ldouble)x; }
+static ldouble ldouble_from_ushort (ushort x)  { return (ldouble)x; }
+static ldouble ldouble_from_uint   (uint x)    { return (ldouble)x; }
+static ldouble ldouble_from_ulong  (ulong x)   { return (ldouble)x; }
+static ldouble ldouble_from_ullong (ullong x)  { return (ldouble)x; }
+static ldouble ldouble_from_float  (float x)   { return (ldouble)x; }
+static ldouble ldouble_from_double (double x)  { return (ldouble)x; }
 static ldouble ldouble_from_ldouble(ldouble x) { return x;          }
 
 enum Type {
@@ -186,54 +179,46 @@ enum Type {
 
 #define TYPEID(VAR) \
 _Generic((VAR), \
-    void*:   TYPE_VOIDP,  \
-    char*:   TYPE_CHARP,  \
-    bool:    TYPE_BOOL,   \
-    char:    TYPE_CHAR,   \
-    schar:   TYPE_SCHAR,  \
-    short:   TYPE_SHORT,  \
-    int:     TYPE_INT,    \
-    long:    TYPE_LONG,   \
-    llong:   TYPE_LLONG,  \
-    uchar:   TYPE_UCHAR,  \
-    ushort:  TYPE_USHORT, \
-    uint:    TYPE_UINT,   \
-    ulong:   TYPE_ULONG,  \
-    ullong:  TYPE_ULLONG, \
-    float:   TYPE_FLOAT,  \
-    double:  TYPE_DOUBLE, \
-    default: _Generic((VAR), \
+    void*:   TYPE_VOIDP,       \
+    char*:   TYPE_CHARP,       \
+    bool:    TYPE_BOOL,        \
+    char:    TYPE_CHAR,        \
+    schar:   TYPE_SCHAR,       \
+    short:   TYPE_SHORT,       \
+    int:     TYPE_INT,         \
+    long:    TYPE_LONG,        \
+    llong:   TYPE_LLONG,       \
+    uchar:   TYPE_UCHAR,       \
+    ushort:  TYPE_USHORT,      \
+    uint:    TYPE_UINT,        \
+    ulong:   TYPE_ULONG,       \
+    ullong:  TYPE_ULLONG,      \
+    float:   TYPE_FLOAT,       \
+    double:  TYPE_DOUBLE,      \
+    default: _Generic((VAR),   \
         ldouble: TYPE_LDOUBLE, \
-        default: TYPE_OTHER  \
-    ) \
+        default: TYPE_OTHER    \
+    )                          \
 )
 
 union Primitive {
-    void*    avoidp;
-    char*    acharp;
-    bool     abool;
-    char     achar;
-    schar    aschar;
-    short    ashort;
-    int      aint;
-    long     along;
-    llong    allong;
-    uchar    auchar;
-    ushort   aushort;
-    uint     auint;
-    ulong    aulong;
-    ullong   aullong;
-    float    afloat;
-    double   adouble;
-    ldouble  aldouble;
-    int8     aint8;
-    int16    aint16;
-    int32    aint32;
-    int64    aint64;
-    uint8    auint8;
-    uint16   auint16;
-    uint32   auint32;
-    uint64   auint64;
+    void*   avoidp;
+    char*   acharp;
+    bool    abool;
+    char    achar;
+    schar   aschar;
+    short   ashort;
+    int     aint;
+    long    along;
+    llong   allong;
+    uchar   auchar;
+    ushort  aushort;
+    uint    auint;
+    ulong   aulong;
+    ullong  aullong;
+    float   afloat;
+    double  adouble;
+    ldouble aldouble;
 };
 
 static llong
@@ -318,9 +303,7 @@ ldouble_get(union Primitive var, enum Type type) {
     case TYPE_ULLONG:  return (ldouble)var.aullong;
     case TYPE_FLOAT:   return (ldouble)var.afloat;
     case TYPE_DOUBLE:  return (ldouble)var.adouble;
-#if !defined(__CPROC__)
     case TYPE_LDOUBLE: return var.aldouble;
-#endif
     case TYPE_OTHER:
     default:           TRAP(); break;
     }
@@ -331,26 +314,26 @@ void UNSUPPORTED_TYPE_FOR_LDOUBLE_GET_GENERIC(void);
 
 #define LDOUBLE_GET(x) \
 _Generic((x), \
-    void*:   ldouble_from_voidp,  \
-    char*:   ldouble_from_charp,  \
-    bool:    ldouble_from_bool,   \
-    char:    ldouble_from_char,   \
-    schar:   ldouble_from_schar,  \
-    short:   ldouble_from_short,  \
-    int:     ldouble_from_int,    \
-    long:    ldouble_from_long,   \
-    llong:   ldouble_from_llong,  \
-    uchar:   ldouble_from_uchar,  \
-    ushort:  ldouble_from_ushort, \
-    uint:    ldouble_from_uint,   \
-    ulong:   ldouble_from_ulong,  \
-    ullong:  ldouble_from_ullong, \
-    float:   ldouble_from_float,  \
-    double:  ldouble_from_double, \
-    default: _Generic((x), \
-        ldouble: ldouble_from_ldouble, \
+    void*:   ldouble_from_voidp,                          \
+    char*:   ldouble_from_charp,                          \
+    bool:    ldouble_from_bool,                           \
+    char:    ldouble_from_char,                           \
+    schar:   ldouble_from_schar,                          \
+    short:   ldouble_from_short,                          \
+    int:     ldouble_from_int,                            \
+    long:    ldouble_from_long,                           \
+    llong:   ldouble_from_llong,                          \
+    uchar:   ldouble_from_uchar,                          \
+    ushort:  ldouble_from_ushort,                         \
+    uint:    ldouble_from_uint,                           \
+    ulong:   ldouble_from_ulong,                          \
+    ullong:  ldouble_from_ullong,                         \
+    float:   ldouble_from_float,                          \
+    double:  ldouble_from_double,                         \
+    default: _Generic((x),                                \
+        ldouble: ldouble_from_ldouble,                    \
         default: UNSUPPORTED_TYPE_FOR_LDOUBLE_GET_GENERIC \
-    ) \
+    )                                                     \
 )(x)
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -399,10 +382,10 @@ _Generic((VAR), \
     ullong:  PRINT_UNSIGNED(VAR, TYPE_ULLONG),                         \
     float:   PRINT_LDOUBLE(VAR,  TYPE_FLOAT),                          \
     double:  PRINT_LDOUBLE(VAR,  TYPE_DOUBLE),                         \
-    default: _Generic((VAR), \
-        ldouble: PRINT_LDOUBLE(VAR,  TYPE_LDOUBLE),                        \
-        default: 0\
-    ) \
+    default: _Generic((VAR),                                           \
+        ldouble: PRINT_LDOUBLE(VAR,  TYPE_LDOUBLE),                    \
+        default: 0                                                     \
+    )                                                                  \
 )
 
 #define PRINTLN(VAR) do { \
