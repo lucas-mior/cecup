@@ -27,13 +27,12 @@
     #pragma warning(disable: 4116 4996) // unnamed type definition in parentheses
 #endif
 #include <inttypes.h>
-#include <stddef.h>
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
 
 #ifndef ISIZE_MAX
-    typedef ptrdiff_t   isize_t;
+    typedef int64_t     isize_t;
     typedef isize_t     isize; // [deprecated]
     #define ISIZE_MIN   PTRDIFF_MIN
     #define ISIZE_MAX   PTRDIFF_MAX

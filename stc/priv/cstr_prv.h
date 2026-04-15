@@ -26,7 +26,6 @@
 
 #include <stdio.h> /* FILE*, vsnprintf */
 #include <stdlib.h> /* malloc */
-#include <stddef.h> /* size_t */
 #include <stdarg.h> /* cstr_vfmt() */
 /**************************** PRIVATE API **********************************/
 

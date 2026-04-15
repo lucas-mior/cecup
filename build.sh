@@ -29,7 +29,7 @@ alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
 
 if command -v measure; then
-    measure=measure
+    measure=$(which measure)
 else
     measure=""
 fi
@@ -121,12 +121,19 @@ generate_welcome_h() {
     fi
 }
 
-with_chibicc () {
+with_other () {
+    compiler="$1"
+    compiler_macro=$(echo "$compiler" | tr '[:lower:]' '[:upper:]')
+    compiler_macro="__${compiler_macro}__"
+    shift
     args="$*"
-    while ! problem=$(chibicc $args 2>&1); do
+    trace_on
+    while ! problem=$($compiler "-D${compiler_macro}" $args 2>&1); do
         trace_off
+        problem=$(echo "$problem" | head -n 1 | tr -d "'")
+
         sleep 0.4
-        if echo "$problem" | grep -q "unknown argument:"; then
+        if echo "$problem" | grep -Eq "unknown (argument|option)"; then
             arg=$(echo "$problem" | awk '{print $NF}')
             printf "\nRemoving argument $arg...\n"
             args=$(option_remove "$args" "$arg")
@@ -135,7 +142,7 @@ with_chibicc () {
             printf "\nRemoving argument $arg...\n"
             args=$(option_remove "$args" "$arg")
         else
-            printf "\n\nError compiling with chibicc:\n\n${problem}\n\n"
+            printf "\n\nError compiling with $compiler:\n\n%s" "${problem}\n\n"
             return 1
         fi
         printf "\n"
@@ -284,7 +291,9 @@ case "$target" in
     ctags --kinds-C=+l+d cbase/*.c src/*.h src/*.c  2> /dev/null || true
     vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
     if [ "$CC" = "chibicc" ]; then
-        $measure with_chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
+        with_other chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
+    elif [ "$CC" = "cproc" ]; then
+        with_other cproc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
     else
         $measure $CC          $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
     fi
@@ -362,6 +371,7 @@ case "$target" in
             if ! zig version; then
                 continue
             fi
+            CC="zig cc"
             cmdline="zig cc $CPPFLAGS $CFLAGS"
             cmdline=$(option_remove "$cmdline" "-D_GNU_SOURCE")
             cmdline="$cmdline -target x86_64-windows-gnu"
@@ -373,10 +383,10 @@ case "$target" in
             cmdline="$cmdline $flags -o $test_exe $src"
         fi
 
-        if [ "$CC" = "chibicc" ]; then
+        if [ "$CC" = "chibicc" ] || [ "$CC" = "cproc" ]; then
             cmdline_no_cc=$(option_remove "$cmdline" "$CC")
             trace_on
-            if with_chibicc "$cmdline_no_cc"; then
+            if with_other "$CC" "$cmdline_no_cc"; then
                 /tmp/${name}_test
             else
                 exit 1
