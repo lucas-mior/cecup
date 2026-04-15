@@ -47,7 +47,7 @@
   #elif defined(_MSC_VER)
   #define TRAP(...) __debugbreak()
   #else
-  #define TRAP(...) *(volatile int *)0 = 0
+  #define TRAP(...) *(int *)0 = 0
   #endif
 #endif
 
@@ -60,24 +60,7 @@
     } \
 } while (0)
 
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef unsigned long ulong;
-typedef unsigned long long ullong;
-
-typedef signed char schar;
-typedef long long llong;
-typedef long double ldouble;
-
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
+#include "primitives.h"
 
 #define GENERATE_ASSERT_STRINGS(MODE, SYMBOL) \
 static void \
@@ -241,7 +224,7 @@ a_ldouble_##MODE(char *file, uint line, char *func, \
                  ldouble var1, ldouble var2) { \
     if (!(var1 SYMBOL var2)) { \
         error2("\n%s: Assertion failed at %s:%u\n", func, file, line); \
-        error2("[%s%lld]%s = %Lf " #SYMBOL " %Lf = %s[%s%lld]\n", \
+        error2("[%s%lld]%s = "LDOUBLE_FORMAT #SYMBOL LDOUBLE_FORMAT" = %s[%s%lld]\n", \
                type1, bits1, name1, var1, var2, name2, type2, bits2); \
         TRAP(); \
     } \
@@ -339,8 +322,10 @@ _Generic((VAR2), \
     ullong:  A_SIGNED_UNSIGNED(MODE, VAR1, VAR2, TYPE1, TYPE_ULLONG ), \
     float:   A_BOTH_LDOUBLE(MODE,    VAR1, VAR2, TYPE1, TYPE_FLOAT  ), \
     double:  A_BOTH_LDOUBLE(MODE,    VAR1, VAR2, TYPE1, TYPE_DOUBLE ), \
-    ldouble: A_BOTH_LDOUBLE(MODE,    VAR1, VAR2, TYPE1, TYPE_LDOUBLE), \
-    default: UNSUPPORTED_TYPE_FOR_GENERIC_A_FIRST_SIGNED() \
+    default: _Generic((VAR2), \
+      ldouble: A_BOTH_LDOUBLE(MODE,  VAR1, VAR2, TYPE1, TYPE_LDOUBLE), \
+      default: UNSUPPORTED_TYPE_FOR_GENERIC_A_FIRST_SIGNED() \
+    ) \
 )
 void UNSUPPORTED_TYPE_FOR_GENERIC_A_FIRST_SIGNED(void);
 
@@ -373,8 +358,10 @@ _Generic((VAR2), \
     ullong:  A_BOTH_UNSIGNED(MODE,   VAR1, VAR2, TYPE1, TYPE_ULLONG ), \
     float:   A_BOTH_LDOUBLE(MODE,    VAR1, VAR2, TYPE1, TYPE_FLOAT  ), \
     double:  A_BOTH_LDOUBLE(MODE,    VAR1, VAR2, TYPE1, TYPE_DOUBLE ), \
-    ldouble: A_BOTH_LDOUBLE(MODE,    VAR1, VAR2, TYPE1, TYPE_LDOUBLE), \
-    default: UNSUPPORTED_TYPE_FOR_GENERIC_A_FIRST_UNSIGNED() \
+    default: _Generic((VAR2), \
+      ldouble: A_BOTH_LDOUBLE(MODE,    VAR1, VAR2, TYPE1, TYPE_LDOUBLE), \
+      default: UNSUPPORTED_TYPE_FOR_GENERIC_A_FIRST_UNSIGNED() \
+    ) \
 )
 void UNSUPPORTED_TYPE_FOR_GENERIC_A_FIRST_UNSIGNED(void);
 
@@ -400,8 +387,10 @@ _Generic((VAR2), \
     ullong:  A_BOTH_LDOUBLE(MODE, VAR1, VAR2, TYPE1, TYPE_ULLONG ), \
     float:   A_BOTH_LDOUBLE(MODE, VAR1, VAR2, TYPE1, TYPE_FLOAT  ), \
     double:  A_BOTH_LDOUBLE(MODE, VAR1, VAR2, TYPE1, TYPE_DOUBLE ), \
-    ldouble: A_BOTH_LDOUBLE(MODE, VAR1, VAR2, TYPE1, TYPE_LDOUBLE), \
-    default: UNSUPPORTED_TYPE_FOR_GENERIC_A_FIRST_LDOUBLE() \
+    default: _Generic((VAR2), \
+      ldouble: A_BOTH_LDOUBLE(MODE, VAR1, VAR2, TYPE1, TYPE_LDOUBLE), \
+      default: UNSUPPORTED_TYPE_FOR_GENERIC_A_FIRST_LDOUBLE() \
+    ) \
 )
 void UNSUPPORTED_TYPE_FOR_GENERIC_A_FIRST_LDOUBLE(void);
 
@@ -424,6 +413,7 @@ void UNSUPPORTED_TYPE_FOR_GENERIC_A_FIRST_BOOL(void);
 
 void UNSUPPORTED_TYPE_FOR_GENERIC_ASSERT_COMPARE_CHARP(void);
 void UNSUPPORTED_TYPE_FOR_GENERIC_ASSERT_COMPARE_VOIDP(void);
+void UNSUPPORTED_TYPE_FOR_GENERIC_ASSERT_COMPARE(void);
 #define ASSERT_COMPARE(MODE, VAR1, VAR2) \
 _Generic((VAR1), \
     void *: _Generic((VAR2), \
@@ -452,8 +442,11 @@ _Generic((VAR1), \
     ullong:  A_FIRST_UNSIGNED(MODE, VAR1, VAR2, TYPE_ULLONG ), \
     float:   A_FIRST_LDOUBLE(MODE,  VAR1, VAR2, TYPE_FLOAT  ), \
     double:  A_FIRST_LDOUBLE(MODE,  VAR1, VAR2, TYPE_DOUBLE ), \
-    ldouble: A_FIRST_LDOUBLE(MODE,  VAR1, VAR2, TYPE_LDOUBLE), \
-    bool:    A_FIRST_BOOL(MODE,     VAR1, VAR2, TYPE_BOOL)    \
+    bool:    A_FIRST_BOOL(MODE,     VAR1, VAR2, TYPE_BOOL),    \
+    default: _Generic((VAR1), \
+      ldouble: A_FIRST_LDOUBLE(MODE,  VAR1, VAR2, TYPE_LDOUBLE), \
+      default: UNSUPPORTED_TYPE_FOR_GENERIC_ASSERT_COMPARE() \
+    ) \
 )
 
 #define ASSERT_EQUAL(VAR1, VAR2)      ASSERT_COMPARE(equal,      VAR1, VAR2)
@@ -535,7 +528,7 @@ assert_functions_sink(void) {
 #include <signal.h>
 #include <setjmp.h>
 
-static volatile sig_atomic_t assertion_failed = false;
+static sig_atomic_t assertion_failed = false;
 static sigjmp_buf assert_env;
 
 static void __attribute__((noreturn))

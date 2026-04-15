@@ -51,11 +51,6 @@
 #define HASH_SLOT_FREE     0
 #define HASH_SLOT_DELETED -1
 
-#if !defined(GREEN)
-#define GREEN "\x1b[32m"
-#define RESET "\x1b[0m"
-#endif
-
 #if !defined(ALIGNMENT)
 #define ALIGNMENT 16
 #endif
@@ -66,39 +61,8 @@ INLINE uint32 hash_capacity(void *map);
 INLINE uint32 hash_length(void *map);
 uint32 hash_expected_collisions(void *map);
 
-#if !defined(INTEGERS)
-#define INTEGERS
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef unsigned long ulong;
-typedef unsigned long long ullong;
-
-typedef long long llong;
-
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-#endif
-
-#if !defined(QUOTE)
-#define QUOTE_(x) #x
-#define QUOTE(x) QUOTE_(x)
-#endif
 #define HASH_PRINT_SUMMARY_map(MAP) hash_print_summary_map(MAP, QUOTE(MAP))
 #define HASH_PRINT_SUMMARY_set(MAP) hash_print_summary_set(MAP, QUOTE(MAP))
-
-#if !defined(CAT) || !defined(CAT3)
-  #define CAT_(a, b)     a##b
-  #define CAT3_(a, b, c) a##b##c
-  #define CAT(a, b)      CAT_(a, b)
-  #define CAT3(a, b, c)  CAT3_(a, b, c)
-#endif
 
 struct CommonBucket;
 
@@ -470,6 +434,7 @@ CAT(hash_insert_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
 
 
 #if defined(HASH_VALUE_TYPE)
+/* only define overwrite functions for HashMaps, not for HashSets */
 
 static bool
 CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
@@ -511,7 +476,7 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
         map->occupied += 1;
     }
   #if HASH_DUPLICATE_KEYS
-    target->key = xmemdup(key, key_length + 1);
+    target->key = xarena_push(map->arena_keys, key_length + 1);
   #else
     target->key = key;
   #endif
@@ -543,7 +508,7 @@ CAT(hash_overwrite_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
                                                     , hash, index, value);
 }
 
-#endif /* HASH_VALUE_TYPE (only define overwrite functions for HashMaps, not for HashSets */
+#endif /* HASH_VALUE_TYPE (only define overwrite functions for HashMaps, not for HashSets) */
 
 static bool
 CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
@@ -805,10 +770,10 @@ hash_length(void *map) {
 uint32
 hash_expected_collisions(void *map) {
     CommonMap *map2 = map;
-    long double n = map2->length;
-    long double m = map2->capacity;
-    long double result = n - m*(1 - powl((m - 1) / m, n));
-    return (uint32)(roundl(result));
+    double n = map2->length;
+    double m = map2->capacity;
+    double result = n - m*(1 - pow((m - 1) / m, n));
+    return (uint32)(round(result));
 }
 
 #endif /* HASH_H2 */

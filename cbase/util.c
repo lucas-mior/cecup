@@ -34,43 +34,7 @@
 #include <sys/stat.h>
 #include <float.h>
 
-#if defined(__linux__)
-#define OS_LINUX 1
-#define OS_MAC 0
-#define OS_BSD 0
-#define OS_WINDOWS 0
-#elif defined(__APPLE__) && defined(__MACH__)
-#define OS_LINUX 0
-#define OS_MAC 1
-#define OS_BSD 0
-#define OS_WINDOWS 0
-#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-#define OS_LINUX 0
-#define OS_MAC 0
-#define OS_BSD 1
-#define OS_WINDOWS 0
-#elif defined(_WIN32) || defined(_WIN64)
-#define OS_LINUX 0
-#define OS_MAC 0
-#define OS_BSD 0
-#define OS_WINDOWS 1
-#else
-#error "Unsupported OS.\n"
-#endif
-
-#define OS_UNIX (OS_LINUX || OS_MAC || OS_BSD)
-
-
-#if defined(__GNUC__)
-#define COMPILER_GCC 1
-#define COMPILER_CLANG 0
-#elif defined(__clang__)
-#define COMPILER_GCC 0
-#define COMPILER_CLANG 1
-#else
-#define COMPILER_GCC 0
-#define COMPILER_CLANG 0
-#endif
+#include "platform_detection.h"
 
 #if OS_WINDOWS
 #include <windows.h>
@@ -93,8 +57,9 @@
 
 #include "generic.c"
 #include "minmax.c"
+#include "base_macros.h"
 
-#if defined(__has_include)
+#if !defined(__CPROC__) && defined(__has_include)
   #if __has_include(<valgrind/valgrind.h>)
     #include <valgrind/valgrind.h>
   #else
@@ -110,6 +75,7 @@
 #define TESTING_util 0
 #endif
 
+static int32 snprintf2(char *buffer, int64 size, char *format, ...);
 static void __attribute__((format(printf, 3, 4)))
     error_impl(char *file, int32 line, char *format, ...);
 #define error(...) error_impl(__FILE__, __LINE__, __VA_ARGS__)
@@ -154,6 +120,16 @@ _Generic((ARRAY), \
     double *: string_from_doubles, \
     char **: string_from_strings \
 )(BUFFER, sizeof(BUFFER), SEP, ARRAY, LENGTH)
+
+#define SFA_TYPE char *
+#define SFA_NAME strings
+#define SFA_FORMAT "%s"
+#include "sfa.h"
+
+#define SFA_TYPE double
+#define SFA_NAME doubles
+#define SFA_FORMAT "%f"
+#include "sfa.h"
 
 #if !defined(DEBUGGING)
 #define DEBUGGING 0
@@ -229,20 +205,6 @@ static long atoi2(char *);
 INLINE void *memchr64(void *pointer, int32 value, int64 size);
 INLINE int memcmp64(void *left, void *right, int64 size);
 
-#if !defined(CAT) || !defined(CAT3)
-  #define CAT_(a, b)     a##b
-  #define CAT3_(a, b, c) a##b##c
-  #define CAT(a, b)      CAT_(a, b)
-  #define CAT3(a, b, c)  CAT3_(a, b, c)
-#endif
-
-#if !defined(SELECT_ON_NUM_ARGS)
-  #define NUM_ARGS_(_1, _2, _3, _4, _5, _6, _7, _8, n, ...) n
-  #define NUM_ARGS(...) NUM_ARGS_(__VA_ARGS__, 8, 7, 6, 5, 4, 3, 2, 1, x)
-  #define SELECT_ON_NUM_ARGS(macro, ...) \
-      CAT(macro, NUM_ARGS(__VA_ARGS__))(__VA_ARGS__)
-#endif
-
 #if OS_WINDOWS
 static void *
 memmem(void *haystack, size_t hay_len, void *needle, size_t needle_len) {
@@ -293,9 +255,9 @@ memrchr(const void *pointer, int32 character_to_find, size_t size) {
     return NULL;
 }
 
-#define X64(func) \
+#define X64(FUNC) \
 INLINE void \
-CAT(func, 64)(void *dest, void *source, int64 n) { \
+CAT(FUNC, 64)(void *dest, void *source, int64 n) { \
     if (n == 0) \
         return; \
     if (DEBUGGING) { \
@@ -309,7 +271,7 @@ CAT(func, 64)(void *dest, void *source, int64 n) { \
             fatal(EXIT_FAILURE); \
         } \
     } \
-    func(dest, source, (size_t)n); \
+    FUNC(dest, source, (size_t)n); \
     return; \
 }
 
@@ -328,8 +290,8 @@ memset64(void *buffer, int value, int64 size) {
             fatal(EXIT_FAILURE);
         }
         if ((ullong)size >= (ullong)SIZE_MAX) {
-            error("Error in %s: Size (%lld) is bigger than SIZEMAX\n", __func__,
-                  (llong)size);
+            error("Error in %s: Size (%lld) is bigger than SIZEMAX\n",
+                  __func__, (llong)size);
             fatal(EXIT_FAILURE);
         }
     }
@@ -404,8 +366,8 @@ strncmp32(char *left, char *right, int64 size) {
     }
     if (DEBUGGING) {
         if ((ullong)size >= (ullong)SIZE_MAX) {
-            error("Error in %s: Size (%lld) is bigger than SIZEMAX\n", __func__,
-                  (llong)size);
+            error("Error in %s: Size (%lld) is bigger than SIZEMAX\n",
+                  __func__, (llong)size);
             fatal(EXIT_FAILURE);
         }
     }
@@ -436,8 +398,8 @@ memcmp64(void *left, void *right, int64 size) {
     }
     if (DEBUGGING) {
         if ((ullong)size >= (ullong)SIZE_MAX) {
-            error("Error in %s: Size (%lld) is bigger than SIZEMAX\n", __func__,
-                  (llong)size);
+            error("Error in %s: Size (%lld) is bigger than SIZEMAX\n",
+                  __func__, (llong)size);
             fatal(EXIT_FAILURE);
         }
     }
@@ -445,10 +407,10 @@ memcmp64(void *left, void *right, int64 size) {
     return result;
 }
 
-#define X64(func, TYPE) \
+#define X64(FUNC, TYPE) \
 INLINE int64 \
-CAT(func, 64)(int fd, void *buffer, int64 size) { \
-    TYPE instance; \
+CAT(FUNC, 64)(int fd, void *buffer, int64 size) { \
+    TYPE instance = 0; \
     ssize_t w; \
     (void)instance; \
     if (size == 0) \
@@ -459,10 +421,10 @@ CAT(func, 64)(int fd, void *buffer, int64 size) { \
     } \
     if ((ullong)size >= (ullong)MAXOF(instance)) { \
         error("Error in %s: Size (%lld) is too big for %s\n", __func__, \
-              (llong)size, #func); \
+              (llong)size, #FUNC); \
         fatal(EXIT_FAILURE); \
     } \
-    w = func(fd, buffer, (TYPE)size); \
+    w = FUNC(fd, buffer, (TYPE)size); \
     return (int64)w; \
 }
 
@@ -497,9 +459,9 @@ write_all(int fd, char *buffer, int64 left) {
     return;
 }
 
-#define X64(func) \
+#define X64(FUNC) \
 INLINE int64 \
-CAT(func, 64)(void *buffer, int64 size, int64 n, FILE *file) { \
+CAT(FUNC, 64)(void *buffer, int64 size, int64 n, FILE *file) { \
     size_t rw; \
     if ((size_t)size >= (SIZE_MAX/(size_t)n)) { \
         error("Error in %s: Overflow (%lld*%lld)\n", \
@@ -521,7 +483,7 @@ CAT(func, 64)(void *buffer, int64 size, int64 n, FILE *file) { \
               __func__, (llong)size); \
         fatal(EXIT_FAILURE); \
     } \
-    rw = func(buffer, (size_t)size, (size_t)n, file); \
+    rw = FUNC(buffer, (size_t)size, (size_t)n, file); \
     return (int64)rw; \
 }
 
@@ -533,25 +495,27 @@ X64(fread)
 static void
 qsort64(void *base, int64 n, int64 size,
         int (*compar)(const void *, const void *)) {
-    if ((size_t)size >= (SIZE_MAX / (size_t)n)) {
-        error("Error in %s: Overflow (%lld*%lld)\n", __func__, (llong)size,
-              (llong)n);
-        fatal(EXIT_FAILURE);
-    }
-    if ((size <= 0) || (n <= 0)) {
-        error("Error in %s: Invalid size(%lld) or n(%lld)\n", __func__,
-              (llong)size, (llong)n);
-        fatal(EXIT_FAILURE);
-    }
-    if ((ullong)size >= (ullong)SIZE_MAX) {
-        error("Error in %s: Size (%lld) is bigger than SIZEMAX\n", __func__,
-              (llong)size);
-        fatal(EXIT_FAILURE);
-    }
-    if ((ullong)n >= (ullong)SIZE_MAX) {
-        error("Error in %s: Number (%lld) is bigger than SIZEMAX\n", __func__,
-              (llong)size);
-        fatal(EXIT_FAILURE);
+    if (DEBUGGING) {
+        if ((size_t)size >= (SIZE_MAX / (size_t)n)) {
+            error("Error in %s: Overflow (%lld*%lld)\n",
+                  __func__, (llong)size, (llong)n);
+            fatal(EXIT_FAILURE);
+        }
+        if ((size <= 0) || (n <= 0)) {
+            error("Error in %s: Invalid size(%lld) or n(%lld)\n",
+                  __func__, (llong)size, (llong)n);
+            fatal(EXIT_FAILURE);
+        }
+        if ((ullong)size >= (ullong)SIZE_MAX) {
+            error("Error in %s: Size (%lld) is bigger than SIZEMAX\n",
+                  __func__, (llong)size);
+            fatal(EXIT_FAILURE);
+        }
+        if ((ullong)n >= (ullong)SIZE_MAX) {
+            error("Error in %s: Number (%lld) is bigger than SIZEMAX\n",
+                  __func__, (llong)size);
+            fatal(EXIT_FAILURE);
+        }
     }
     qsort(base, (size_t)n, (size_t)size, compar);
     return;
@@ -797,8 +761,8 @@ xmunmap(void *p, int64 size) {
         return;
     }
     if (munmap(p, (size_t)size) < 0) {
-        error("Error in munmap(%p, %lld): %s.\n", p, (llong)size,
-              strerror(errno));
+        error("Error in munmap(%p, %lld): %s.\n",
+              p, (llong)size, strerror(errno));
         fatal(EXIT_FAILURE);
     }
     return;
@@ -826,8 +790,8 @@ xmmap_commit(int64 *size) {
     p = VirtualAlloc(NULL, (size_t)*size, MEM_COMMIT | MEM_RESERVE,
                      PAGE_READWRITE);
     if (p == NULL) {
-        fprintf(stderr, "Error in VirtualAlloc(%lld): %lu.\n", (llong)*size,
-                GetLastError());
+        fprintf(stderr, "Error in VirtualAlloc(%lld): %lu.\n",
+                        (llong)*size, GetLastError());
         fatal(EXIT_FAILURE);
     }
     return p;
@@ -918,7 +882,8 @@ snprintf2(char *buffer, int64 size, char *format, ...) {
     va_end(args);
 
     if ((n < 0) || (n >= size)) {
-        fprintf(stderr, "Error in vsnprintf(%s) (n = %lld)\n", format, (llong)n);
+        fprintf(stderr, "Error in vsnprintf(\"%s\") (n = %lld)\n",
+                        format, (llong)n);
         fatal(EXIT_FAILURE);
     }
     return n;
@@ -1254,27 +1219,6 @@ util_command_launch(int argc, char **argv) {
 }
 #endif
 
-#define GENERATE_STRING_FROM_ARRAY(NAME, TYPE, FORMAT) \
-static void \
-string_from_##NAME(char *buffer, int32 size, \
-                   char *sep, TYPE array, int32 array_length) { \
-    int32 n = 0; \
-    for (int32 i = 0; i < (array_length - 1); i += 1) { \
-        int32 space = size - n; \
-        int32 m = snprintf2(buffer + n, space, FORMAT"%s", array[i], sep); \
-        n += m; \
-    } \
-    { \
-        int32 i = array_length - 1; \
-        int32 space = size - n; \
-        snprintf2(buffer + n, space, FORMAT, array[i]); \
-    } \
-    return; \
-}
-
-GENERATE_STRING_FROM_ARRAY(strings, char **, "%s")
-GENERATE_STRING_FROM_ARRAY(doubles, double *, "%f")
-
 void __attribute__((format(printf, 3, 4)))
 error_impl(char *file, int32 line, char *format, ...) {
     char buffer[BUFSIZ];
@@ -1296,8 +1240,8 @@ error_impl(char *file, int32 line, char *format, ...) {
             n = vsnprintf(big_buffer, (size_t)m, format, args);
             pbuffer = big_buffer;
         } else {
-            fprintf(stderr, "Error in vsnprintf(\"%s\") (n = %lld).\n", format,
-                    (llong)n);
+            fprintf(stderr, "Error in vsnprintf(\"%s\") (n = %lld).\n",
+                            format, (llong)n);
             fatal(EXIT_FAILURE);
         }
     }
@@ -1305,8 +1249,8 @@ error_impl(char *file, int32 line, char *format, ...) {
     va_end(args);
 
     if ((n < 0) || (n >= m)) {
-        fprintf(stderr, "Error in vsnprintf(\"%s\") (n = %lld).\n", format,
-                (llong)n);
+        fprintf(stderr, "Error in vsnprintf(\"%s\") (n = %lld).\n",
+                        format, (llong)n);
         fatal(EXIT_FAILURE);
     }
 
@@ -1332,8 +1276,8 @@ error_impl(char *file, int32 line, char *format, ...) {
     switch (fork()) {
     case 0:
         for (uint32 i = 0; i < LENGTH(notifiers); i += 1) {
-            execlp(notifiers[i], notifiers[i], "-u", "critical", program,
-                   pbuffer, NULL);
+            execlp(notifiers[i],
+                   notifiers[i], "-u", "critical", program, pbuffer, NULL);
         }
         fprintf(stderr, "Error executing notifier: %s.\n", strerror(errno));
         exit(EXIT_FAILURE);
@@ -1437,8 +1381,8 @@ util_copy_file_sync(char *destination, char *source) {
     if ((destination_fd
              = open(destination,
                     O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) < 0) {
-        error("Error opening %s for writing: %s.\n", destination,
-              strerror(errno));
+        error("Error opening %s for writing: %s.\n",
+              destination, strerror(errno));
         XCLOSE(&source_fd, source);
         return -1;
     }
@@ -1495,8 +1439,8 @@ util_copy_file_async(char *destination, char *source, int *dest_fd) {
     if ((*dest_fd
          = open(destination, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR))
         < 0) {
-        error("Error opening %s for writing: %s.\n", destination,
-              strerror(errno));
+        error("Error opening %s for writing: %s.\n",
+              destination, strerror(errno));
         XCLOSE(&source_fd, source);
         return -1;
     }
@@ -1529,8 +1473,8 @@ util_copy_file_async_thread(void *arg) {
             break;
         }
         if (n < 0) {
-            error("Error in poll(nfds=%lld): %s.\n", (llong)copy_files->nfds,
-                  strerror(errno));
+            error("Error in poll(nfds=%lld): %s.\n",
+                  (llong)copy_files->nfds, strerror(errno));
             break;
         }
         for (int32 i = 0; i < copy_files->nfds; i += 1) {
@@ -1696,7 +1640,7 @@ util_equal_files(char *filename_a, char *filename_b) {
         equal = false;
         goto out;
     }
-    if (stat_a.st_dev == stat_b.st_dev && stat_a.st_ino == stat_b.st_ino) {
+    if ((stat_a.st_dev == stat_b.st_dev) && (stat_a.st_ino == stat_b.st_ino)) {
         equal = true;
         goto out;
     }
@@ -2213,7 +2157,7 @@ write_file(char *path, void *data, int64 len) {
 }
 #define WRITE_FILE(PATH, STRING) write_file(PATH, STRING, strlen32(STRING))
 
-static volatile sig_atomic_t received_signal = false;
+static sig_atomic_t received_signal = false;
 static void
 signal_handler(int signal_number) {
     (void)signal_number;

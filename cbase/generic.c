@@ -44,35 +44,18 @@
 #endif
 
 #if 1 == TESTING_generic
-#define TRAP(...) raise(SIGILL)
+  #define TRAP(...) raise(SIGILL)
 #elif !defined(TRAP)
-#if defined(__GNUC__) || defined(__clang__)
-#define TRAP(...) __builtin_trap()
-#elif defined(_MSC_VER)
-#define TRAP(...) __debugbreak()
-#else
-#define TRAP(...) *(volatile int *)0 = 0
+  #if defined(__GNUC__) || defined(__clang__)
+    #define TRAP(...) __builtin_trap()
+  #elif defined(_MSC_VER)
+    #define TRAP(...) __debugbreak()
+  #else
+    #define TRAP(...) *(int *)0 = 0
+  #endif
 #endif
-#endif
 
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef unsigned long ulong;
-typedef unsigned long long ullong;
-
-typedef signed char schar;
-typedef long long llong;
-typedef long double ldouble;
-
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
+#include "primitives.h"
 
 #define TYPENAME(VAR) \
 _Generic((VAR), \
@@ -92,7 +75,10 @@ _Generic((VAR), \
     ullong:  "ullong", \
     float:   "float",  \
     double:  "double", \
-    ldouble: "ldouble" \
+    default: _Generic((VAR), \
+        ldouble: "ldouble", \
+        default: "unknown" \
+    ) \
 )
 
 #define MINOF(VARIABLE) \
@@ -111,7 +97,10 @@ _Generic((VARIABLE), \
     bool:    0,         \
     float:   -FLT_MAX,  \
     double:  -DBL_MAX,  \
-    ldouble: -LDBL_MAX  \
+    default: _Generic((VARIABLE), \
+        ldouble: -LDBL_MAX, \
+        default: 0 \
+    ) \
 )
 
 #define MAXOF(VARIABLE) \
@@ -130,32 +119,35 @@ _Generic((VARIABLE), \
     bool:    1,          \
     float:   FLT_MAX,    \
     double:  DBL_MAX,    \
-    ldouble: LDBL_MAX    \
+    default: _Generic((VARIABLE), \
+        ldouble: LDBL_MAX,   \
+        default: 1 \
+    ) \
 )
 
 static ldouble
 ldouble_from_voidp(void* x) {
     (void)x;
     TRAP();
-    return 0.0l;
+    return (ldouble)0.0;
 }
 static ldouble
 ldouble_from_charp(char* x) {
     (void)x;
     TRAP();
-    return 0.0l;
+    return (ldouble)0.0;
 }
 static ldouble
 ldouble_from_bool(bool x) {
     (void)x;
     TRAP();
-    return 0.0l;
+    return (ldouble)0.0;
 }
 static ldouble
 ldouble_from_char(char x) {
     (void)x;
     TRAP();
-    return 0.0l;
+    return (ldouble)0.0;
 }
 static ldouble ldouble_from_schar(schar x)     { return (ldouble)x; }
 static ldouble ldouble_from_short(short x)     { return (ldouble)x; }
@@ -210,28 +202,38 @@ _Generic((VAR), \
     ullong:  TYPE_ULLONG, \
     float:   TYPE_FLOAT,  \
     double:  TYPE_DOUBLE, \
-    ldouble: TYPE_LDOUBLE, \
-    default: TYPE_OTHER \
+    default: _Generic((VAR), \
+        ldouble: TYPE_LDOUBLE, \
+        default: TYPE_OTHER  \
+    ) \
 )
 
 union Primitive {
-    void*   avoidp;
-    char*   acharp;
-    bool    abool;
-    char    achar;
-    schar   aschar;
-    short   ashort;
-    int     aint;
-    long    along;
-    llong   allong;
-    uchar   auchar;
-    ushort  aushort;
-    uint    auint;
-    ulong   aulong;
-    ullong  aullong;
-    float   afloat;
-    double  adouble;
-    ldouble aldouble;
+    void*    avoidp;
+    char*    acharp;
+    bool     abool;
+    char     achar;
+    schar    aschar;
+    short    ashort;
+    int      aint;
+    long     along;
+    llong    allong;
+    uchar    auchar;
+    ushort   aushort;
+    uint     auint;
+    ulong    aulong;
+    ullong   aullong;
+    float    afloat;
+    double   adouble;
+    ldouble  aldouble;
+    int8     aint8;
+    int16    aint16;
+    int32    aint32;
+    int64    aint64;
+    uint8    auint8;
+    uint16   auint16;
+    uint32   auint32;
+    uint64   auint64;
 };
 
 static llong
@@ -275,22 +277,22 @@ typebits(enum Type type) {
 static char *
 typename(enum Type type) {
     switch (type) {
-    case TYPE_VOIDP:   return "void*";
-    case TYPE_CHARP:   return "char*";
-    case TYPE_BOOL:    return "bool";
-    case TYPE_CHAR:    return "char";
-    case TYPE_SCHAR:   return "schar";
-    case TYPE_SHORT:   return "short";
-    case TYPE_INT:     return "int";
-    case TYPE_LONG:    return "long";
-    case TYPE_LLONG:   return "llong";
-    case TYPE_UCHAR:   return "uchar";
-    case TYPE_USHORT:  return "ushort";
-    case TYPE_UINT:    return "uint";
-    case TYPE_ULONG:   return "ulong";
-    case TYPE_ULLONG:  return "ullong";
-    case TYPE_FLOAT:   return "float";
-    case TYPE_DOUBLE:  return "double";
+    case TYPE_VOIDP:  return "void*";
+    case TYPE_CHARP:  return "char*";
+    case TYPE_BOOL:   return "bool";
+    case TYPE_CHAR:   return "char";
+    case TYPE_SCHAR:  return "schar";
+    case TYPE_SHORT:  return "short";
+    case TYPE_INT:    return "int";
+    case TYPE_LONG:   return "long";
+    case TYPE_LLONG:  return "llong";
+    case TYPE_UCHAR:  return "uchar";
+    case TYPE_USHORT: return "ushort";
+    case TYPE_UINT:   return "uint";
+    case TYPE_ULONG:  return "ulong";
+    case TYPE_ULLONG: return "ullong";
+    case TYPE_FLOAT:  return "float";
+    case TYPE_DOUBLE: return "double";
     case TYPE_LDOUBLE: return "ldouble";
     case TYPE_OTHER:
     default:           return "unknown type";
@@ -316,12 +318,16 @@ ldouble_get(union Primitive var, enum Type type) {
     case TYPE_ULLONG:  return (ldouble)var.aullong;
     case TYPE_FLOAT:   return (ldouble)var.afloat;
     case TYPE_DOUBLE:  return (ldouble)var.adouble;
+#if !defined(__CPROC__)
     case TYPE_LDOUBLE: return var.aldouble;
+#endif
     case TYPE_OTHER:
     default:           TRAP(); break;
     }
-    return 0.0l;
+    return (ldouble)0.0;
 }
+
+void UNSUPPORTED_TYPE_FOR_LDOUBLE_GET_GENERIC(void);
 
 #define LDOUBLE_GET(x) \
 _Generic((x), \
@@ -341,7 +347,10 @@ _Generic((x), \
     ullong:  ldouble_from_ullong, \
     float:   ldouble_from_float,  \
     double:  ldouble_from_double, \
-    ldouble: ldouble_from_ldouble \
+    default: _Generic((x), \
+        ldouble: ldouble_from_ldouble, \
+        default: UNSUPPORTED_TYPE_FOR_LDOUBLE_GET_GENERIC \
+    ) \
 )(x)
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -358,8 +367,14 @@ _Generic((x), \
   fprintf(stderr, "["GREEN("%s%lld")"]%s = %llu ", \
                   typename(TYPE), typebits(TYPE), #VAR, (ullong)(VAR))
 
+#if defined(__CPROC__)
+#define LDOUBLE_FORMAT "%f"
+#else
+#define LDOUBLE_FORMAT "%Lf"
+#endif
+
 #define PRINT_LDOUBLE(VAR, TYPE) \
-  fprintf(stderr, "["GREEN("%s%lld")"]%s = %Lf ", \
+  fprintf(stderr, "["GREEN("%s%lld")"]%s = "LDOUBLE_FORMAT" ", \
                   typename(TYPE), typebits(TYPE), #VAR, LDOUBLE_GET2(VAR, TYPE))
 
 #define PRINT_OTHER(VAR, TYPE, FORMAT, CAST) \
@@ -384,7 +399,10 @@ _Generic((VAR), \
     ullong:  PRINT_UNSIGNED(VAR, TYPE_ULLONG),                         \
     float:   PRINT_LDOUBLE(VAR,  TYPE_FLOAT),                          \
     double:  PRINT_LDOUBLE(VAR,  TYPE_DOUBLE),                         \
-    ldouble: PRINT_LDOUBLE(VAR,  TYPE_LDOUBLE)                         \
+    default: _Generic((VAR), \
+        ldouble: PRINT_LDOUBLE(VAR,  TYPE_LDOUBLE),                        \
+        default: 0\
+    ) \
 )
 
 #define PRINTLN(VAR) do { \
@@ -432,23 +450,26 @@ int
 main(void) {
     union Primitive primitive;
 
-    assert(MINOF(primitive.aldouble) == -LDBL_MAX);
-    assert(MINOF(primitive.adouble)  == -DBL_MAX);
     assert(MINOF(primitive.afloat)   == -FLT_MAX);
+    assert(MINOF(primitive.aint)     == INT_MIN);
+#if !defined(__CPROC__)
+    assert(MINOF(primitive.adouble)  == -DBL_MAX);
+    assert(MINOF(primitive.aldouble) == -LDBL_MAX);
+#endif
+    assert(MINOF(primitive.allong)   == LLONG_MIN);
+    assert(MINOF(primitive.along)    == LONG_MIN);
     assert(MINOF(primitive.aschar)   == SCHAR_MIN);
     assert(MINOF(primitive.ashort)   == SHRT_MIN);
-    assert(MINOF(primitive.aint)     == INT_MIN);
-    assert(MINOF(primitive.along)    == LONG_MIN);
-    assert(MINOF(primitive.allong)   == LLONG_MIN);
     assert(MINOF(primitive.auchar)   == 0);
-    assert(MINOF(primitive.aushort)  == 0);
     assert(MINOF(primitive.auint)    == 0u);
-    assert(MINOF(primitive.aulong)   == 0ul);
     assert(MINOF(primitive.aullong)  == 0ull);
-    assert(MINOF(primitive.abool)    == 0);
+    assert(MINOF(primitive.aulong)   == 0ul);
+    assert(MINOF(primitive.aushort)  == 0);
 
+#if !defined(__CPROC__)
     assert(MAXOF(primitive.aldouble) == LDBL_MAX);
     assert(MAXOF(primitive.adouble)  == DBL_MAX);
+#endif
     assert(MAXOF(primitive.afloat)   == FLT_MAX);
     assert(MAXOF(primitive.aschar)   == SCHAR_MAX);
     assert(MAXOF(primitive.ashort)   == SHRT_MAX);
@@ -492,8 +513,10 @@ main(void) {
                    typename(TYPEID(primitive.afloat))));
     assert(!strcmp(TYPENAME(primitive.adouble),
                    typename(TYPEID(primitive.adouble))));
+#if !defined(__CPROC__)
     assert(!strcmp(TYPENAME(primitive.aldouble),
                    typename(TYPEID(primitive.aldouble))));
+#endif
 
     {
         int32 var_int32;
@@ -529,9 +552,17 @@ main(void) {
         uint var_uint = UINT_MAX;
         uint64 var_uint64 = UINT64_MAX;
         float var_float = FLT_MAX;
+#if !defined(__CPROC__)
+        // DBL_MAX is defined with L suffix in the gcc headers,
+        // which means long double,
+        // and cproc uses the gcc pre processor
+        // and cproc uses the gcc headers (at least in this case),
+        // and qbe does not support long double,
+        // which means that cproc also does not support long double
         double var_double = DBL_MAX;
-        long double var_longdouble = (ldouble)DBL_MAX;
-        long double var_longdouble2 = LDOUBLE_GET(var_longdouble);
+#else
+        double var_double = 1e300;
+#endif
 
         PRINTLN(var_voidptr);
         PRINTLN(var_string);
@@ -550,8 +581,14 @@ main(void) {
         PRINTLN(var_uint64);
         PRINTLN(var_float);
         PRINTLN(var_double);
-        PRINTLN(var_longdouble);
-        PRINTLN(var_longdouble2);
+#if !defined(__CPROC__)
+        {
+            ldouble var_longdouble = (ldouble)DBL_MAX;
+            ldouble var_longdouble2 = LDOUBLE_GET(var_longdouble);
+            PRINTLN(var_longdouble);
+            PRINTLN(var_longdouble2);
+        }
+#endif
 
         PRINTLN(*var_string);
         PRINTLN(var_uint - (uint)var_int);
