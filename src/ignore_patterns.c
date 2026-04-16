@@ -46,9 +46,8 @@ ignore_patterns_load(void) {
     }
 
     for (int32 i = 0; i < cecup.ignore_count; i += 1) {
-        IgnorePattern *pattern;
-        pattern = &cecup.ignore_patterns[i];
-        free(pattern->str, pattern->len + 1);
+        IgnorePattern *pattern = &cecup.ignore_patterns[i];
+        free2(pattern->str, pattern->len + 1);
     }
 
     count = 0;
@@ -94,9 +93,9 @@ ignore_patterns_load(void) {
         if (count >= *capacity) {
             int32 old_capacity = *capacity;
             *capacity *= 2;
-            cecup.ignore_patterns = realloc(cecup.ignore_patterns,
-                                            old_capacity, *capacity,
-                                            SIZEOF(*(cecup.ignore_patterns)));
+            cecup.ignore_patterns = realloc2(cecup.ignore_patterns,
+                                             old_capacity, *capacity,
+                                             SIZEOF(*(cecup.ignore_patterns)));
         }
 
         pattern = &cecup.ignore_patterns[count];
@@ -357,7 +356,7 @@ main(void) {
     pattern = ignore_patterns_match("main.c", 6, false, patterns, 1);
     ASSERT(pattern != NULL);
     ASSERT(strcmp(pattern->str, "*.c") == 0);
-    free(patterns[0].str, patterns[0].len + 1);
+    free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "build/");
     pattern = ignore_patterns_match("build", 5, true, patterns, 1);
@@ -367,30 +366,30 @@ main(void) {
     // Testing the current expected behavior due to the 'dir_only' early exit logic
     pattern = ignore_patterns_match("build", 5, false, patterns, 1);
     ASSERT_NULL(pattern);
-    free(patterns[0].str, patterns[0].len + 1);
+    free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "obj");
     pattern = ignore_patterns_match("src/obj/main.o", 14, false, patterns, 1);
     ASSERT(pattern != NULL);
     ASSERT(strcmp(pattern->str, "obj") == 0);
-    free(patterns[0].str, patterns[0].len + 1);
+    free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "/src");
     pattern = ignore_patterns_match("src/main.c", 10, false, patterns, 1);
     ASSERT(pattern != NULL);
     ASSERT(strcmp(pattern->match_str, "src") == 0);
-    free(patterns[0].str, patterns[0].len + 1);
+    free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "/src");
     pattern = ignore_patterns_match("lib/src/main.c", 14, false, patterns, 1);
     ASSERT_NULL(pattern);
-    free(patterns[0].str, patterns[0].len + 1);
+    free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "foo/bar");
     pattern = ignore_patterns_match("foo/bar/baz.c", 13, false, patterns, 1);
     ASSERT(pattern != NULL);
     ASSERT(strcmp(pattern->str, "foo/bar") == 0);
-    free(patterns[0].str, patterns[0].len + 1);
+    free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "*.h");
     test_pattern_init(&patterns[1], "build/");
@@ -399,15 +398,15 @@ main(void) {
     ASSERT(pattern != NULL);
     ASSERT(strcmp(pattern->str, "*.o") == 0);
 
-    free(patterns[0].str, patterns[0].len + 1);
-    free(patterns[1].str, patterns[1].len + 1);
-    free(patterns[2].str, patterns[2].len + 1);
+    free2(patterns[0].str, patterns[0].len + 1);
+    free2(patterns[1].str, patterns[1].len + 1);
+    free2(patterns[2].str, patterns[2].len + 1);
 
     // Clean up memory allocated inside ignore_patterns_load
     for (int32 i = 0; i < cecup.ignore_count; i += 1) {
-        free(cecup.ignore_patterns[i].str, cecup.ignore_patterns[i].len + 1);
+        free2(cecup.ignore_patterns[i].str, cecup.ignore_patterns[i].len + 1);
     }
-    free(cecup.ignore_patterns, cecup.ignore_capacity * SIZEOF(IgnorePattern));
+    free2(cecup.ignore_patterns, cecup.ignore_capacity * SIZEOF(IgnorePattern));
 
     exit(EXIT_SUCCESS);
 }

@@ -1,3 +1,6 @@
+#if !defined(PLATFORM_DETECTION_H)
+#define PLATFORM_DETECTION_H
+
 #if defined(__linux__)
 #define OS_LINUX 1
 #define OS_MAC 0
@@ -34,3 +37,24 @@
 #define COMPILER_GCC 0
 #define COMPILER_CLANG 0
 #endif
+
+#if OS_WINDOWS
+#include <windows.h>
+#endif
+
+#if OS_UNIX
+#include <sys/mman.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <pthread.h>
+#include <poll.h>
+#endif
+
+#if OS_MAC
+#include <sys/param.h>
+#undef MIN
+#undef MAX
+#endif
+
+#endif /* PLATFORM_DETECTION_H */

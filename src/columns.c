@@ -432,24 +432,24 @@ main(void) {
 
     gtk_window_destroy(GTK_WINDOW(window));
 
-    free(ti_size, SIZEOF(TextInfo));
-    free(ti_mtime, SIZEOF(TextInfo));
-    free(cecup.rows_selected, 10 * SIZEOF(uint8));
-    free(cecup.rows_visible, 10 * SIZEOF(int32));
-    free(cecup.rows[L], 10 * SIZEOF(int32));
-    free(cecup.rows[R], 10 * SIZEOF(int32));
-    free(cecup.traversal[L].stats, 10 * SIZEOF(struct stat));
-    free(cecup.traversal[R].stats, 10 * SIZEOF(struct stat));
-    free(cecup.traversal[L].paths, 10 * SIZEOF(char*));
-    free(cecup.traversal[R].paths, 10 * SIZEOF(char*));
-    free(cecup.traversal[L].patterns, 10 * SIZEOF(char*));
-    free(cecup.traversal[R].patterns, 10 * SIZEOF(char*));
-    free(cecup.traversal[L].symlink_targets, 10 * SIZEOF(char*));
-    free(cecup.traversal[R].symlink_targets, 10 * SIZEOF(char*));
-    free(cecup.traversal[L].paths_lens, 10 * SIZEOF(int16));
-    free(cecup.traversal[R].paths_lens, 10 * SIZEOF(int16));
-    free(cecup.traversal[L].row_ids, 10 * SIZEOF(int32));
-    free(cecup.traversal[R].row_ids, 10 * SIZEOF(int32));
+    free2(ti_size, SIZEOF(TextInfo));
+    free2(ti_mtime, SIZEOF(TextInfo));
+    free2(cecup.rows_selected, 10 * SIZEOF(uint8));
+    free2(cecup.rows_visible, 10 * SIZEOF(int32));
+    free2(cecup.rows[L], 10 * SIZEOF(int32));
+    free2(cecup.rows[R], 10 * SIZEOF(int32));
+    free2(cecup.traversal[L].stats, 10 * SIZEOF(struct stat));
+    free2(cecup.traversal[R].stats, 10 * SIZEOF(struct stat));
+    free2(cecup.traversal[L].paths, 10 * SIZEOF(char*));
+    free2(cecup.traversal[R].paths, 10 * SIZEOF(char*));
+    free2(cecup.traversal[L].patterns, 10 * SIZEOF(char*));
+    free2(cecup.traversal[R].patterns, 10 * SIZEOF(char*));
+    free2(cecup.traversal[L].symlink_targets, 10 * SIZEOF(char*));
+    free2(cecup.traversal[R].symlink_targets, 10 * SIZEOF(char*));
+    free2(cecup.traversal[L].paths_lens, 10 * SIZEOF(int16));
+    free2(cecup.traversal[R].paths_lens, 10 * SIZEOF(int16));
+    free2(cecup.traversal[L].row_ids, 10 * SIZEOF(int32));
+    free2(cecup.traversal[R].row_ids, 10 * SIZEOF(int32));
 
     ASSERT(true);
     exit(EXIT_SUCCESS);

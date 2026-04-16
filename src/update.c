@@ -83,11 +83,11 @@ update_ui_handler(void *data) {
         if (update_rows(batch)) {
             update_list_needed = true;
         }
-        free(batch->paths,          batch->capacity*SIZEOF(*(batch->paths)));
-        free(batch->paths_lens,     batch->capacity*SIZEOF(*(batch->paths_lens)));
-        free(batch->dst_paths,      batch->capacity*SIZEOF(*(batch->dst_paths)));
-        free(batch->dst_paths_lens, batch->capacity*SIZEOF(*(batch->dst_paths_lens)));
-        free(batch, SIZEOF(*batch));
+        free2(batch->paths,          batch->capacity*SIZEOF(*(batch->paths)));
+        free2(batch->paths_lens,     batch->capacity*SIZEOF(*(batch->paths_lens)));
+        free2(batch->dst_paths,      batch->capacity*SIZEOF(*(batch->dst_paths)));
+        free2(batch->dst_paths_lens, batch->capacity*SIZEOF(*(batch->dst_paths_lens)));
+        free2(batch, SIZEOF(*batch));
         break;
     }
     case MSG_LOG:
@@ -240,13 +240,13 @@ update_rows(MessageBatch *batch) {
             if (update_row_remove(batch->paths[i], batch->paths_lens[i], batch->side)) {
                 changed = true;
             }
-            free(batch->paths[i], batch->paths_lens[i] + 1);
+            free2(batch->paths[i], batch->paths_lens[i] + 1);
             break;
         case MSG_BATCH_ROW_TRANSFER:
             if (update_row_transfer(batch->paths[i], batch->paths_lens[i])) {
                 changed = true;
             }
-            free(batch->paths[i], batch->paths_lens[i] + 1);
+            free2(batch->paths[i], batch->paths_lens[i] + 1);
             break;
         case MSG_BATCH_ROW_RENAME:
             if (update_row_rename(batch->paths[i], batch->paths_lens[i],
@@ -254,8 +254,8 @@ update_rows(MessageBatch *batch) {
                                   batch->side)) {
                 changed = true;
             }
-            free(batch->paths[i], batch->paths_lens[i] + 1);
-            free(batch->dst_paths[i], batch->dst_paths_lens[i] + 1);
+            free2(batch->paths[i], batch->paths_lens[i] + 1);
+            free2(batch->dst_paths[i], batch->dst_paths_lens[i] + 1);
             break;
         default:
             TRAP();
@@ -650,7 +650,7 @@ update_list_from_rows(enum UpdateRowsType change) {
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
 
-    cache_rows = realloc(cache_rows, cache_rows_capacity, cecup.rows_len, SIZEOF(*cache_rows));
+    cache_rows = realloc2(cache_rows, cache_rows_capacity, cecup.rows_len, SIZEOF(*cache_rows));
     if (cache_rows_capacity == 0) {
         ASSERT_EQUAL((int32)change, (int32)UPDATE_ROWS_COMPLETE);
     }
@@ -1234,9 +1234,9 @@ main(void) {
     unlink(cecup.ignore_path);
     if (cecup.ignore_patterns) {
         for(int32 i=0; i<cecup.ignore_count; i+=1) {
-            free(cecup.ignore_patterns[i].str, cecup.ignore_patterns[i].len + 1);
+            free2(cecup.ignore_patterns[i].str, cecup.ignore_patterns[i].len + 1);
         }
-        free(cecup.ignore_patterns, cecup.ignore_capacity * SIZEOF(IgnorePattern));
+        free2(cecup.ignore_patterns, cecup.ignore_capacity * SIZEOF(IgnorePattern));
     }
 
     for (int32 side = 0; side < 2; side += 1) {
@@ -1246,23 +1246,23 @@ main(void) {
         hash_destroy_inode_map(t->inode_map);
         arena_destroy(t->arena);
 
-        free(t->paths, t->capacity * SIZEOF(char *));
-        free(t->paths_lens, t->capacity * SIZEOF(int16));
-        free(t->row_ids, t->capacity * SIZEOF(int32));
-        free(t->stats, t->capacity * SIZEOF(struct stat));
-        free(t->patterns, t->capacity * SIZEOF(char *));
-        free(t->patterns_lens, t->capacity * SIZEOF(int16));
-        free(t->symlink_targets, t->capacity * SIZEOF(char *));
-        free(t->symlink_targets_lens, t->capacity * SIZEOF(int16));
+        free2(t->paths, t->capacity * SIZEOF(char *));
+        free2(t->paths_lens, t->capacity * SIZEOF(int16));
+        free2(t->row_ids, t->capacity * SIZEOF(int32));
+        free2(t->stats, t->capacity * SIZEOF(struct stat));
+        free2(t->patterns, t->capacity * SIZEOF(char *));
+        free2(t->patterns_lens, t->capacity * SIZEOF(int16));
+        free2(t->symlink_targets, t->capacity * SIZEOF(char *));
+        free2(t->symlink_targets_lens, t->capacity * SIZEOF(int16));
     }
 
-    free(cecup.rows[L], cecup.rows_capacity * SIZEOF(int32));
-    free(cecup.rows[R], cecup.rows_capacity * SIZEOF(int32));
-    free(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
-    free(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
+    free2(cecup.rows[L], cecup.rows_capacity * SIZEOF(int32));
+    free2(cecup.rows[R], cecup.rows_capacity * SIZEOF(int32));
+    free2(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
+    free2(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
 
-    free(cecup.src_base, 6);
-    free(cecup.dst_base, 6);
+    free2(cecup.src_base, 6);
+    free2(cecup.dst_base, 6);
 
     ASSERT(true);
     exit(EXIT_SUCCESS);

@@ -110,7 +110,7 @@ cecup_list_model_finalize(GObject *object) {
                 g_object_unref(self->proxies[i]);
             }
         }
-        free(self->proxies, self->proxies_capacity*SIZEOF(CecupItemProxy *));
+        free2(self->proxies, self->proxies_capacity*SIZEOF(CecupItemProxy *));
     }
 
     G_OBJECT_CLASS(cecup_list_model_parent_class)->finalize(object);
@@ -168,9 +168,9 @@ cecup_list_model_get_item(GListModel *list, guint position) {
             self->proxies_capacity = pos + 256;
         }
 
-        self->proxies = realloc(self->proxies,
-                                old_capacity, self->proxies_capacity,
-                                SIZEOF(CecupItemProxy *));
+        self->proxies = realloc2(self->proxies,
+                                 old_capacity, self->proxies_capacity,
+                                 SIZEOF(CecupItemProxy *));
 
         for (int32 i = old_capacity; i < self->proxies_capacity; i += 1) {
             self->proxies[i] = NULL;
@@ -392,19 +392,19 @@ item_add(int32 src_idx, int32 dst_idx) {
             cecup.rows_capacity *= 2;
         }
 
-        cecup.rows[L] = realloc(cecup.rows[L],
-                                old_capacity, cecup.rows_capacity,
-                                SIZEOF(*(cecup.rows[L])));
-        cecup.rows[R] = realloc(cecup.rows[R],
-                                old_capacity, cecup.rows_capacity,
-                                SIZEOF(*(cecup.rows[R])));
-        cecup.rows_selected = realloc(cecup.rows_selected,
-                                      old_capacity, cecup.rows_capacity,
-                                      SIZEOF(uint8));
+        cecup.rows[L] = realloc2(cecup.rows[L],
+                                 old_capacity, cecup.rows_capacity,
+                                 SIZEOF(*(cecup.rows[L])));
+        cecup.rows[R] = realloc2(cecup.rows[R],
+                                 old_capacity, cecup.rows_capacity,
+                                 SIZEOF(*(cecup.rows[R])));
+        cecup.rows_selected = realloc2(cecup.rows_selected,
+                                       old_capacity, cecup.rows_capacity,
+                                       SIZEOF(uint8));
 
-        cecup.rows_visible = realloc(cecup.rows_visible,
-                                     old_capacity, cecup.rows_capacity,
-                                     SIZEOF(*(cecup.rows_visible)));
+        cecup.rows_visible = realloc2(cecup.rows_visible,
+                                      old_capacity, cecup.rows_capacity,
+                                      SIZEOF(*(cecup.rows_visible)));
     }
 
     index = cecup.rows_len;
@@ -536,12 +536,12 @@ main(void) {
 
     g_object_unref(model);
 
-    free(cecup.rows[L], cecup.rows_capacity*SIZEOF(int32));
-    free(cecup.rows[R], cecup.rows_capacity*SIZEOF(int32));
-    free(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
-    free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(int32));
-    free(cecup.traversal[L].row_ids, 50*SIZEOF(int32));
-    free(cecup.traversal[R].row_ids, 50*SIZEOF(int32));
+    free2(cecup.rows[L], cecup.rows_capacity*SIZEOF(int32));
+    free2(cecup.rows[R], cecup.rows_capacity*SIZEOF(int32));
+    free2(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
+    free2(cecup.rows_visible, cecup.rows_capacity*SIZEOF(int32));
+    free2(cecup.traversal[L].row_ids, 50*SIZEOF(int32));
+    free2(cecup.traversal[R].row_ids, 50*SIZEOF(int32));
 
     exit(EXIT_SUCCESS);
 }

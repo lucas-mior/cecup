@@ -39,11 +39,11 @@ task_list_free(TaskList *tasks) {
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
 
-        free(task->path, task->path_len + 1);
-        free(task, SIZEOF(*task));
+        free2(task->path, task->path_len + 1);
+        free2(task, SIZEOF(*task));
     }
 
-    free(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, tasks->count));
+    free2(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, tasks->count));
     return;
 }
 
@@ -220,18 +220,18 @@ main(void) {
     for (int32 side = 0; side < 2; side += 1) {
         Traversal *t = &cecup.traversal[side];
         for (int32 i = 0; i < n; i += 1) {
-            free(t->paths[i], 20);
+            free2(t->paths[i], 20);
         }
-        free(t->stats, n * SIZEOF(struct stat));
-        free(t->paths, n * SIZEOF(char *));
-        free(t->paths_lens, n * SIZEOF(int32));
-        free(t->patterns, n * SIZEOF(char *));
-        free(t->symlink_targets, n * SIZEOF(char *));
+        free2(t->stats, n * SIZEOF(struct stat));
+        free2(t->paths, n * SIZEOF(char *));
+        free2(t->paths_lens, n * SIZEOF(int32));
+        free2(t->patterns, n * SIZEOF(char *));
+        free2(t->symlink_targets, n * SIZEOF(char *));
         hash_destroy_fs_map(t->map);
     }
-    free(cecup.rows_selected, n * SIZEOF(uint8));
-    free(cecup.rows[L], n * SIZEOF(int32));
-    free(cecup.rows[R], n * SIZEOF(int32));
+    free2(cecup.rows_selected, n * SIZEOF(uint8));
+    free2(cecup.rows[L], n * SIZEOF(int32));
+    free2(cecup.rows[R], n * SIZEOF(int32));
 
     exit(EXIT_SUCCESS);
 }

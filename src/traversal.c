@@ -66,23 +66,6 @@ traversal_clean(Traversal *traversal) {
     hash_zero_fs_map(traversal->map);
     hash_zero_inode_map(traversal->inode_map);
 
-    if (DEBUGGING) {
-        dont_read(traversal->stats,
-                  traversal->capacity*SIZEOF(*(traversal->stats)));
-        dont_read(traversal->paths,
-                  traversal->capacity*SIZEOF(*(traversal->paths)));
-        dont_read(traversal->symlink_targets,
-                  traversal->capacity*SIZEOF(*(traversal->symlink_targets)));
-        dont_read(traversal->patterns,
-                  traversal->capacity*SIZEOF(*(traversal->patterns)));
-        dont_read(traversal->paths_lens,
-                  traversal->capacity*SIZEOF(*(traversal->paths_lens)));
-        dont_read(traversal->symlink_targets_lens,
-                  traversal->capacity*SIZEOF(*(traversal->symlink_targets_lens)));
-        dont_read(traversal->patterns_lens,
-                  traversal->capacity*SIZEOF(*(traversal->patterns_lens)));
-    }
-
     traversal->file_count = 0;
     traversal->nfiles = 0;
 
@@ -101,24 +84,24 @@ traversal_free(Traversal *traversal) {
             continue;
         }
 
-        free(hard_links.names,      hard_links.capacity*SIZEOF(*(hard_links.names)));
-        free(hard_links.names_lens, hard_links.capacity*SIZEOF(*(hard_links.names_lens)));
+        free2(hard_links.names,      hard_links.capacity*SIZEOF(*(hard_links.names)));
+        free2(hard_links.names_lens, hard_links.capacity*SIZEOF(*(hard_links.names_lens)));
     }
 
     hash_destroy_fs_map(traversal->map);
     hash_destroy_inode_map(traversal->inode_map);
 
-    free(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
+    free2(traversal->stats, capacity*SIZEOF(*(traversal->stats)));
 
-    free(traversal->patterns,        capacity*SIZEOF(*(traversal->patterns)));
-    free(traversal->symlink_targets, capacity*SIZEOF(*(traversal->symlink_targets)));
-    free(traversal->paths,           capacity*SIZEOF(*(traversal->paths)));
+    free2(traversal->patterns,        capacity*SIZEOF(*(traversal->patterns)));
+    free2(traversal->symlink_targets, capacity*SIZEOF(*(traversal->symlink_targets)));
+    free2(traversal->paths,           capacity*SIZEOF(*(traversal->paths)));
 
-    free(traversal->paths_lens,           capacity*SIZEOF(*(traversal->paths_lens)));
-    free(traversal->symlink_targets_lens, capacity*SIZEOF(*(traversal->symlink_targets_lens)));
-    free(traversal->patterns_lens,        capacity*SIZEOF(*(traversal->patterns_lens)));
+    free2(traversal->paths_lens,           capacity*SIZEOF(*(traversal->paths_lens)));
+    free2(traversal->symlink_targets_lens, capacity*SIZEOF(*(traversal->symlink_targets_lens)));
+    free2(traversal->patterns_lens,        capacity*SIZEOF(*(traversal->patterns_lens)));
 
-    free(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
+    free2(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
 
     arena_destroy(traversal->arena);
 
@@ -137,33 +120,33 @@ traversal_push(Traversal *traversal, struct stat *stat,
         int32 old_capacity = traversal->capacity;
         traversal->capacity *= 2;
 
-        traversal->stats = realloc(traversal->stats,
-                                   old_capacity, traversal->capacity,
-                                   SIZEOF(*(traversal->stats)));
+        traversal->stats = realloc2(traversal->stats,
+                                    old_capacity, traversal->capacity,
+                                    SIZEOF(*(traversal->stats)));
 
-        traversal->paths = realloc(traversal->paths,
-                                   old_capacity, traversal->capacity,
-                                   SIZEOF(*(traversal->paths)));
-        traversal->symlink_targets = realloc(traversal->symlink_targets,
-                                             old_capacity, traversal->capacity,
-                                             SIZEOF(*(traversal->symlink_targets)));
-        traversal->patterns = realloc(traversal->patterns,
+        traversal->paths = realloc2(traversal->paths,
+                                    old_capacity, traversal->capacity,
+                                    SIZEOF(*(traversal->paths)));
+        traversal->symlink_targets = realloc2(traversal->symlink_targets,
+                                              old_capacity, traversal->capacity,
+                                              SIZEOF(*(traversal->symlink_targets)));
+        traversal->patterns = realloc2(traversal->patterns,
+                                       old_capacity, traversal->capacity,
+                                       SIZEOF(*(traversal->patterns)));
+
+        traversal->paths_lens = realloc2(traversal->paths_lens,
+                                         old_capacity, traversal->capacity,
+                                         SIZEOF(*(traversal->paths_lens)));
+        traversal->symlink_targets_lens = realloc2(traversal->symlink_targets_lens,
+                                                   old_capacity, traversal->capacity,
+                                                   SIZEOF(*(traversal->symlink_targets_lens)));
+        traversal->patterns_lens = realloc2(traversal->patterns_lens,
+                                            old_capacity, traversal->capacity,
+                                            SIZEOF(*(traversal->patterns_lens)));
+
+        traversal->row_ids = realloc2(traversal->row_ids,
                                       old_capacity, traversal->capacity,
-                                      SIZEOF(*(traversal->patterns)));
-
-        traversal->paths_lens = realloc(traversal->paths_lens,
-                                        old_capacity, traversal->capacity,
-                                        SIZEOF(*(traversal->paths_lens)));
-        traversal->symlink_targets_lens = realloc(traversal->symlink_targets_lens,
-                                                  old_capacity, traversal->capacity,
-                                                  SIZEOF(*(traversal->symlink_targets_lens)));
-        traversal->patterns_lens = realloc(traversal->patterns_lens,
-                                           old_capacity, traversal->capacity,
-                                           SIZEOF(*(traversal->patterns_lens)));
-
-        traversal->row_ids = realloc(traversal->row_ids,
-                                     old_capacity, traversal->capacity,
-                                     SIZEOF(*(traversal->row_ids)));
+                                      SIZEOF(*(traversal->row_ids)));
 
         for (int32 i = old_capacity; i < traversal->capacity; i += 1) {
             traversal->row_ids[i] = -1;
@@ -221,12 +204,12 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         if (hard_links.count >= hard_links.capacity) {
             old_capacity = hard_links.capacity;
             hard_links.capacity *= 2;
-            hard_links.names = realloc(hard_links.names,
-                                       old_capacity, hard_links.capacity,
-                                       SIZEOF(*(hard_links.names)));
-            hard_links.names_lens = realloc(hard_links.names_lens,
-                                            old_capacity, hard_links.capacity,
-                                            SIZEOF(*(hard_links.names_lens)));
+            hard_links.names = realloc2(hard_links.names,
+                                        old_capacity, hard_links.capacity,
+                                        SIZEOF(*(hard_links.names)));
+            hard_links.names_lens = realloc2(hard_links.names_lens,
+                                             old_capacity, hard_links.capacity,
+                                             SIZEOF(*(hard_links.names_lens)));
         }
 
         hard_links.names[hard_links.count] = path;
@@ -283,8 +266,8 @@ traversal_unlink(Traversal *traversal, int32 idx) {
             hard_links.aggregate_hash_hi ^= name_hash.hi;
 
             if (hard_links.count == 0) {
-                free(hard_links.names,      hard_links.capacity*SIZEOF(*(hard_links.names)));
-                free(hard_links.names_lens, hard_links.capacity*SIZEOF(*(hard_links.names_lens)));
+                free2(hard_links.names,      hard_links.capacity*SIZEOF(*(hard_links.names)));
+                free2(hard_links.names_lens, hard_links.capacity*SIZEOF(*(hard_links.names_lens)));
                 hash_remove_inode_map(traversal->inode_map, inode);
             } else {
                 hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);

@@ -339,7 +339,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     *buf_pointer = '\0';
     gdk_clipboard_set_text(clipboard, buffer);
 
-    free(buffer, buffer_size);
+    free2(buffer, buffer_size);
     task_list_free(tasks);
     free_message(message);
     return;
@@ -483,16 +483,16 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 _exit(EXIT_FAILURE);
             }
         default:
-            free(path_src, size_src);
-            free(path_dst, size_dst);
+            free2(path_src, size_src);
+            free2(path_dst, size_dst);
             break;
         }
     }
 
     task_list_free(tasks);
     free_message(message);
-    free(term_cmd, term_cmd_len);
-    free(diff_tool, diff_tool_len);
+    free2(term_cmd, term_cmd_len);
+    free2(diff_tool, diff_tool_len);
     return;
 }
 
@@ -624,8 +624,8 @@ main(void) {
         g_variant_unref(idx_param);
     }
 
-    free(cecup.src_base, 10);
-    free(cecup.rows_selected, 10 * SIZEOF(uint8));
+    free2(cecup.src_base, 10);
+    free2(cecup.rows_selected, 10 * SIZEOF(uint8));
 
     g_object_unref(tree);
     g_object_unref(cecup.application);

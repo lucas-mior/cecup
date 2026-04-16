@@ -159,7 +159,7 @@ on_search_changed(GtkEditable *editable, void *data) {
     len = strlen32(text);
 
     if (cecup.search_query) {
-        free(cecup.search_query, cecup.search_query_len + 1);
+        free2(cecup.search_query, cecup.search_query_len + 1);
     }
 
     cecup.search_query = xmemdup(text, len + 1);
@@ -1070,21 +1070,21 @@ main(void) {
     g_object_unref(cecup.store);
 
     if (cecup.search_query) {
-        free(cecup.search_query, cecup.search_query_len + 1);
+        free2(cecup.search_query, cecup.search_query_len + 1);
     }
 
-    free(cecup.rows[L], num_test_rows*SIZEOF(int32));
-    free(cecup.rows[R], num_test_rows*SIZEOF(int32));
-    free(cecup.rows_visible, num_test_rows*SIZEOF(int32));
-    free(cecup.rows_selected, num_test_rows*SIZEOF(uint8));
+    free2(cecup.rows[L], num_test_rows*SIZEOF(int32));
+    free2(cecup.rows[R], num_test_rows*SIZEOF(int32));
+    free2(cecup.rows_visible, num_test_rows*SIZEOF(int32));
+    free2(cecup.rows_selected, num_test_rows*SIZEOF(uint8));
 
     for (int32 side = 0; side < 2; side += 1) {
         Traversal *t = &cecup.traversal[side];
-        free(t->paths, num_test_rows*SIZEOF(char *));
-        free(t->paths_lens, num_test_rows*SIZEOF(int32));
-        free(t->stats, num_test_rows*SIZEOF(struct stat));
-        free(t->patterns, num_test_rows*SIZEOF(char *));
-        free(t->symlink_targets, num_test_rows*SIZEOF(char *));
+        free2(t->paths, num_test_rows*SIZEOF(char *));
+        free2(t->paths_lens, num_test_rows*SIZEOF(int32));
+        free2(t->stats, num_test_rows*SIZEOF(struct stat));
+        free2(t->patterns, num_test_rows*SIZEOF(char *));
+        free2(t->symlink_targets, num_test_rows*SIZEOF(char *));
     }
 
     exit(EXIT_SUCCESS);

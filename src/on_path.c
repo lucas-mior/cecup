@@ -47,7 +47,7 @@ on_path_selection_idle(void *data) {
     gtk_editable_select_region(selection_data->editable,
                                selection_data->start_pos, selection_data->end_pos);
 
-    free(selection_data, sizeof(*selection_data));
+    free2(selection_data, sizeof(*selection_data));
     return G_SOURCE_REMOVE;
 }
 
@@ -390,15 +390,15 @@ main(void) {
     // 5. Cleanup
     {
         Traversal *t = &cecup.traversal[L];
-        free(t->paths[0], strlen32(t->paths[0]) + 1);
-        free(t->paths, n * SIZEOF(char *));
-        free(t->paths_lens, n * SIZEOF(int16));
-        free(t->stats, n * SIZEOF(struct stat));
-        free(t->patterns, n * SIZEOF(char *));
-        free(t->symlink_targets, n * SIZEOF(char *));
+        free2(t->paths[0], strlen32(t->paths[0]) + 1);
+        free2(t->paths, n * SIZEOF(char *));
+        free2(t->paths_lens, n * SIZEOF(int16));
+        free2(t->stats, n * SIZEOF(struct stat));
+        free2(t->patterns, n * SIZEOF(char *));
+        free2(t->symlink_targets, n * SIZEOF(char *));
         hash_destroy_fs_map(t->map);
-        free(cecup.rows[L], n * SIZEOF(int32));
-        free(cecup.src_base, cecup.src_base_len + 1);
+        free2(cecup.rows[L], n * SIZEOF(int32));
+        free2(cecup.src_base, cecup.src_base_len + 1);
     }
 
     g_object_unref(label);

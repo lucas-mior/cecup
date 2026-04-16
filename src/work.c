@@ -434,12 +434,12 @@ work_preview(void *user_data) {
                     cecup.transfers_capacity = INITIAL_CAPACITY;
                 }
                 cecup.transfers_capacity *= 2;
-                cecup.transfers = realloc(cecup.transfers,
-                                          old_capacity, cecup.transfers_capacity,
-                                          SIZEOF(*cecup.transfers));
-                cecup.transfers_lens = realloc(cecup.transfers_lens,
-                                               old_capacity, cecup.transfers_capacity,
-                                               SIZEOF(*cecup.transfers_lens));
+                cecup.transfers = realloc2(cecup.transfers,
+                                           old_capacity, cecup.transfers_capacity,
+                                           SIZEOF(*cecup.transfers));
+                cecup.transfers_lens = realloc2(cecup.transfers_lens,
+                                                old_capacity, cecup.transfers_capacity,
+                                                SIZEOF(*cecup.transfers_lens));
             }
 
             if ((action_src == ACTION_HARDLINK) && (hard_links.count > 1)) {
@@ -489,12 +489,12 @@ work_preview(void *user_data) {
                         cecup.deletions_capacity = INITIAL_CAPACITY;
                     }
                     cecup.deletions_capacity *= 2;
-                    cecup.deletions = realloc(cecup.deletions,
-                                              old_capacity, cecup.deletions_capacity,
-                                              SIZEOF(*cecup.deletions));
-                    cecup.deletions_lens = realloc(cecup.deletions_lens,
-                                                   old_capacity, cecup.deletions_capacity,
-                                                   SIZEOF(*cecup.deletions_lens));
+                    cecup.deletions = realloc2(cecup.deletions,
+                                               old_capacity, cecup.deletions_capacity,
+                                               SIZEOF(*cecup.deletions));
+                    cecup.deletions_lens = realloc2(cecup.deletions_lens,
+                                                    old_capacity, cecup.deletions_capacity,
+                                                    SIZEOF(*cecup.deletions_lens));
                 }
 
                 if (hash_insert_deletion_set(cecup.deletion_set, bucket_dst->key, path_len)) {
@@ -911,12 +911,12 @@ main(void) {
     }
 
     if (cecup.transfers_capacity > 0) {
-        free(cecup.transfers, cecup.transfers_capacity * SIZEOF(*(cecup.transfers)));
-        free(cecup.transfers_lens, cecup.transfers_capacity * SIZEOF(*(cecup.transfers_lens)));
+        free2(cecup.transfers, cecup.transfers_capacity * SIZEOF(*(cecup.transfers)));
+        free2(cecup.transfers_lens, cecup.transfers_capacity * SIZEOF(*(cecup.transfers_lens)));
     }
     if (cecup.deletions_capacity > 0) {
-        free(cecup.deletions, cecup.deletions_capacity * SIZEOF(*(cecup.deletions)));
-        free(cecup.deletions_lens, cecup.deletions_capacity * SIZEOF(*(cecup.deletions_lens)));
+        free2(cecup.deletions, cecup.deletions_capacity * SIZEOF(*(cecup.deletions)));
+        free2(cecup.deletions_lens, cecup.deletions_capacity * SIZEOF(*(cecup.deletions_lens)));
     }
     if (cecup.transfer_set != NULL) {
         hash_destroy_transfer_set(cecup.transfer_set);
@@ -929,10 +929,10 @@ main(void) {
     traversal_free(&cecup.traversal[R]);
 
     if (cecup.rows_capacity > 0) {
-        free(cecup.rows[L], cecup.rows_capacity*SIZEOF(*(cecup.rows[L])));
-        free(cecup.rows[R], cecup.rows_capacity*SIZEOF(*(cecup.rows[R])));
-        free(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
-        free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
+        free2(cecup.rows[L], cecup.rows_capacity*SIZEOF(*(cecup.rows[L])));
+        free2(cecup.rows[R], cecup.rows_capacity*SIZEOF(*(cecup.rows[R])));
+        free2(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
+        free2(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     }
 
     arena_destroy(cecup.arena);

@@ -47,10 +47,10 @@ work_batch_flush(MessageBatch **batch_ptr) {
     } else {
         error("Called work_batch_flush without count!\n");
         if (batch->paths != NULL) {
-            free(batch->paths, batch->capacity * SIZEOF(*(batch->paths)));
-            free(batch->paths_lens, batch->capacity * SIZEOF(*(batch->paths_lens)));
+            free2(batch->paths, batch->capacity * SIZEOF(*(batch->paths)));
+            free2(batch->paths_lens, batch->capacity * SIZEOF(*(batch->paths_lens)));
         }
-        free(batch, SIZEOF(*batch));
+        free2(batch, SIZEOF(*batch));
     }
 
     *batch_ptr = NULL;
@@ -85,12 +85,12 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side, char *p
 
         old_capacity = batch->capacity;
         batch->capacity *= 2;
-        batch->paths = realloc(batch->paths,
-                               old_capacity, batch->capacity,
-                               SIZEOF(*(batch->paths)));
-        batch->paths_lens = realloc(batch->paths_lens,
-                                    old_capacity, batch->capacity,
-                                    SIZEOF(*(batch->paths_lens)));
+        batch->paths = realloc2(batch->paths,
+                                old_capacity, batch->capacity,
+                                SIZEOF(*(batch->paths)));
+        batch->paths_lens = realloc2(batch->paths_lens,
+                                     old_capacity, batch->capacity,
+                                     SIZEOF(*(batch->paths_lens)));
     }
 
     batch->paths[batch->count] = xmalloc(path_len + 1);
@@ -147,10 +147,14 @@ work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
 
         old_capacity = batch->capacity;
         batch->capacity *= 2;
-        batch->paths = realloc(batch->paths, old_capacity, batch->capacity, SIZEOF(*(batch->paths)));
-        batch->paths_lens = realloc(batch->paths_lens, old_capacity, batch->capacity, SIZEOF(*(batch->paths_lens)));
-        batch->dst_paths = realloc(batch->dst_paths, old_capacity, batch->capacity, SIZEOF(*(batch->dst_paths)));
-        batch->dst_paths_lens = realloc(batch->dst_paths_lens, old_capacity, batch->capacity, SIZEOF(*(batch->dst_paths_lens)));
+        batch->paths = realloc2(batch->paths,
+                                old_capacity, batch->capacity, SIZEOF(*(batch->paths)));
+        batch->paths_lens = realloc2(batch->paths_lens,
+                                     old_capacity, batch->capacity, SIZEOF(*(batch->paths_lens)));
+        batch->dst_paths = realloc2(batch->dst_paths,
+                                    old_capacity, batch->capacity, SIZEOF(*(batch->dst_paths)));
+        batch->dst_paths_lens = realloc2(batch->dst_paths_lens,
+                                         old_capacity, batch->capacity, SIZEOF(*(batch->dst_paths_lens)));
     }
 
     batch->paths[batch->count] = xmalloc(old_len + 1);
@@ -630,7 +634,7 @@ work_rsync(void *user_data) {
     if (tasks == NULL) {
         if ((cecup.ntransfers <= 0) && (cecup.ndeletions <= 0)) {
             LOG_ERROR(_("There are no operations to make.\n"));
-            free(thread_data, SIZEOF(*thread_data));
+            free2(thread_data, SIZEOF(*thread_data));
             work_finalize(false);
         } else {
             has_transfers = true;
@@ -647,7 +651,7 @@ work_rsync(void *user_data) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);
             work_batch_flush(&batch);
-            free(thread_data, SIZEOF(*thread_data));
+            free2(thread_data, SIZEOF(*thread_data));
             work_finalize(false);
         }
 
@@ -666,7 +670,7 @@ work_rsync(void *user_data) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);
             work_batch_flush(&batch);
-            free(thread_data, SIZEOF(*thread_data));
+            free2(thread_data, SIZEOF(*thread_data));
             work_finalize(false);
         }
 
@@ -676,7 +680,7 @@ work_rsync(void *user_data) {
     if (!has_transfers) {
         LOG_ERROR(_("No transfers to make.\n"));
         work_batch_flush(&batch);
-        free(thread_data, SIZEOF(*thread_data));
+        free2(thread_data, SIZEOF(*thread_data));
         task_list_free(tasks);
         work_finalize(false);
     }
@@ -767,7 +771,7 @@ work_rsync(void *user_data) {
     work_batch_flush(&batch);
     task_list_free(tasks);
     work_finalize(false);
-    free(thread_data, SIZEOF(*thread_data));
+    free2(thread_data, SIZEOF(*thread_data));
     pthread_exit(NULL);
 }
 
@@ -944,8 +948,8 @@ main(void) {
 
     /* Teardown */
     system("rm -rf /tmp/cecup_test_src /tmp/cecup_test_dst /tmp/cecup_test_files_from");
-    free(cecup.src_base, cecup.src_base_len + 1);
-    free(cecup.dst_base, cecup.dst_base_len + 1);
+    free2(cecup.src_base, cecup.src_base_len + 1);
+    free2(cecup.dst_base, cecup.dst_base_len + 1);
 
     exit(EXIT_SUCCESS);
 }

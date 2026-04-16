@@ -148,7 +148,7 @@ static void
 cecup_set_dirs(char *new_src, int32 new_src_len, char *new_dst, int32 new_dst_len) {
     if (new_src) {
         if (cecup.src_base) {
-            free(cecup.src_base, cecup.src_base_len + 1);
+            free2(cecup.src_base, cecup.src_base_len + 1);
         }
         cecup.src_base = xmalloc(new_src_len + 1);
         memcpy64(cecup.src_base, new_src, new_src_len + 1);
@@ -157,7 +157,7 @@ cecup_set_dirs(char *new_src, int32 new_src_len, char *new_dst, int32 new_dst_le
 
     if (new_dst) {
         if (cecup.dst_base) {
-            free(cecup.dst_base, cecup.dst_base_len + 1);
+            free2(cecup.dst_base, cecup.dst_base_len + 1);
         }
         cecup.dst_base = xmalloc(new_dst_len + 1);
         memcpy64(cecup.dst_base, new_dst, new_dst_len + 1);
@@ -366,21 +366,21 @@ free_message(void *data) {
     //       only uses size for verbose logging
     //       and pointer == NULL is ignored, so we don't need to check NULL here.
     if ((message = data)) {
-        free(message->text, message->text_len + 1);
+        free2(message->text, message->text_len + 1);
         if (message->dst_path != message->src_path) {
             // in this case,
             // dst_path might be NULL or a different allocation than src_path
-            free(message->src_path, message->src_path_len + 1);
-            free(message->dst_path, message->dst_path_len + 1);
+            free2(message->src_path, message->src_path_len + 1);
+            free2(message->dst_path, message->dst_path_len + 1);
         } else {
             // in this case,
             // either both are NULL (which free() simply ignores)
             // or only src_path is allocated.
             // dst_path might be the same pointer to the src_path allocation, or be NULL.
-            free(message->src_path, message->src_path_len + 1);
+            free2(message->src_path, message->src_path_len + 1);
         }
 
-        free(message, SIZEOF(*message));
+        free2(message, SIZEOF(*message));
     }
     return;
 }
@@ -688,14 +688,14 @@ int main(void) {
     g_main_context_iteration(NULL, FALSE);
 
     /* Cleanup testing memory to prevent leak sanitizers triggering */
-    free(cecup.rows[L], 10 * SIZEOF(int32));
-    free(cecup.rows[R], 10 * SIZEOF(int32));
-    free(cecup.traversal[L].row_ids, 10 * SIZEOF(int32));
-    free(cecup.traversal[L].paths, 10 * SIZEOF(char*));
-    free(cecup.traversal[L].paths_lens, 10 * SIZEOF(int16));
-    free(cecup.traversal[R].row_ids, 10 * SIZEOF(int32));
-    free(cecup.traversal[R].paths, 10 * SIZEOF(char*));
-    free(cecup.traversal[R].paths_lens, 10 * SIZEOF(int16));
+    free2(cecup.rows[L], 10 * SIZEOF(int32));
+    free2(cecup.rows[R], 10 * SIZEOF(int32));
+    free2(cecup.traversal[L].row_ids, 10 * SIZEOF(int32));
+    free2(cecup.traversal[L].paths, 10 * SIZEOF(char*));
+    free2(cecup.traversal[L].paths_lens, 10 * SIZEOF(int16));
+    free2(cecup.traversal[R].row_ids, 10 * SIZEOF(int32));
+    free2(cecup.traversal[R].paths, 10 * SIZEOF(char*));
+    free2(cecup.traversal[R].paths_lens, 10 * SIZEOF(int16));
     hash_destroy_fs_map(cecup.traversal[L].map);
     hash_destroy_fs_map(cecup.traversal[R].map);
 

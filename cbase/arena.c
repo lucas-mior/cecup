@@ -48,12 +48,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#if OS_LINUX && defined(MAP_HUGE_2MB)
-#define FLAGS_HUGE_PAGES MAP_HUGETLB | MAP_HUGE_2MB
-#else
-#define FLAGS_HUGE_PAGES 0
-#endif
-
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
@@ -298,7 +292,7 @@ arena_with_space(Arena *arena, int64 size) {
     return arena;
 }
 
-static void *__attribute__((malloc))
+static void *
 arena_push(Arena *arena, int64 size) {
     void *before;
     size = ALIGN(size);
@@ -334,7 +328,7 @@ xarena_push(Arena *arena, int64 size) {
 
     if (arena == NULL) {
         if (global_arena == NULL) {
-            global_arena = arena_create(SIZEMB(2), "global arena");
+            global_arena = arena_create(SIZEMB(2), "global_arena");
             arena = global_arena;
         } else {
             error2("Error in %s: arena is NULL.\n", __func__);

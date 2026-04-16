@@ -47,7 +47,7 @@ static bool is_first_run = false;
 
 static void
 free_text_info(void *data) {
-    free(data, SIZEOF(TextInfo));
+    free2(data, SIZEOF(TextInfo));
     return;
 }
 
@@ -936,21 +936,21 @@ main(int32 argc, char **argv) {
     g_object_unref(cecup.application);
     g_object_unref(cecup.store);
 
-    free(cecup.rows[L], cecup.rows_capacity*SIZEOF(*(cecup.rows[L])));
-    free(cecup.rows[R], cecup.rows_capacity*SIZEOF(*(cecup.rows[R])));
-    free(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
-    free(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
+    free2(cecup.rows[L], cecup.rows_capacity*SIZEOF(*(cecup.rows[L])));
+    free2(cecup.rows[R], cecup.rows_capacity*SIZEOF(*(cecup.rows[R])));
+    free2(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
+    free2(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
 
-    free(cecup.transfers, cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
-    free(cecup.transfers_lens, cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
+    free2(cecup.transfers, cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
+    free2(cecup.transfers_lens, cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
     hash_destroy_transfer_set(cecup.transfer_set);
 
-    free(cecup.deletions, cecup.deletions_capacity*SIZEOF(*(cecup.deletions)));
-    free(cecup.deletions_lens, cecup.deletions_capacity*SIZEOF(*(cecup.deletions_lens)));
+    free2(cecup.deletions, cecup.deletions_capacity*SIZEOF(*(cecup.deletions)));
+    free2(cecup.deletions_lens, cecup.deletions_capacity*SIZEOF(*(cecup.deletions_lens)));
     hash_destroy_deletion_set(cecup.deletion_set);
 
-    free(cecup.src_base, cecup.src_base_len + 1);
-    free(cecup.dst_base, cecup.dst_base_len + 1);
+    free2(cecup.src_base, cecup.src_base_len + 1);
+    free2(cecup.dst_base, cecup.dst_base_len + 1);
 
     arena_destroy(cecup.arena);
 
