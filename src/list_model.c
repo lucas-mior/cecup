@@ -291,7 +291,7 @@ cecup_list_model_row_removed(CecupListModel *self, int32 index) {
             self->proxies[index] = NULL;
         }
 
-        proxies_to_move = MIN(cecup.rows_visible_len, self->proxies_capacity) - 1 - index;
+        proxies_to_move = (int32)MIN(cecup.rows_visible_len, self->proxies_capacity) - 1 - index;
         if (proxies_to_move > 0) {
             memmove64(&self->proxies[index], &self->proxies[index + 1], proxies_to_move*SIZEOF(CecupItemProxy *));
         }
@@ -327,7 +327,7 @@ cecup_list_model_row_added(CecupListModel *self, int32 row_index, int32 position
         int32 limit;
         int32 proxies_to_move;
 
-        limit = MIN(cecup.rows_visible_len, self->proxies_capacity - 1);
+        limit = (int32)MIN(cecup.rows_visible_len, self->proxies_capacity - 1);
 
         if (self->proxies[limit]) {
             g_object_unref(self->proxies[limit]);
