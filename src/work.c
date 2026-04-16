@@ -45,7 +45,7 @@
 #define TESTING 0
 #endif
 
-static void __attribute__((noreturn))
+static void __attribute((noreturn))
 work_finalize(bool preview_clean) {
     update_progress_bar(1.0);
 
@@ -314,7 +314,7 @@ work_cleanup(void) {
     return;
 }
 
-static void __attribute__((noreturn))
+static void __attribute((noreturn))
 work_preview_cancel_and_reset(void) {
     work_cleanup();
     work_finalize(false);
