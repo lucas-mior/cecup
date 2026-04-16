@@ -67,14 +67,14 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side, char *p
     }
 
     if (batch == NULL) {
-        batch = xmalloc(SIZEOF(*batch));
+        batch = malloc2(SIZEOF(*batch));
         memset64(batch, 0, SIZEOF(*batch));
 
         batch->type = type;
         batch->side = (int8)side;
         batch->capacity = INITIAL_CAPACITY;
-        batch->paths = xmalloc(batch->capacity * SIZEOF(*(batch->paths)));
-        batch->paths_lens = xmalloc(batch->capacity * SIZEOF(*(batch->paths_lens)));
+        batch->paths = malloc2(batch->capacity * SIZEOF(*(batch->paths)));
+        batch->paths_lens = malloc2(batch->capacity * SIZEOF(*(batch->paths_lens)));
 
         clock_gettime(CLOCK_MONOTONIC_COARSE, &batch->time_last_flush);
         *batch_ptr = batch;
@@ -93,7 +93,7 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side, char *p
                                      SIZEOF(*(batch->paths_lens)));
     }
 
-    batch->paths[batch->count] = xmalloc(path_len + 1);
+    batch->paths[batch->count] = malloc2(path_len + 1);
     memcpy64(batch->paths[batch->count], path, path_len + 1);
     batch->paths_lens[batch->count] = path_len;
     batch->count += 1;
@@ -127,16 +127,16 @@ work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
     }
 
     if (batch == NULL) {
-        batch = xmalloc(SIZEOF(*batch));
+        batch = malloc2(SIZEOF(*batch));
         memset64(batch, 0, SIZEOF(*batch));
 
         batch->type = type;
         batch->side = side;
         batch->capacity = INITIAL_CAPACITY;
-        batch->paths = xmalloc(batch->capacity * SIZEOF(*(batch->paths)));
-        batch->paths_lens = xmalloc(batch->capacity * SIZEOF(*(batch->paths_lens)));
-        batch->dst_paths = xmalloc(batch->capacity * SIZEOF(*(batch->dst_paths)));
-        batch->dst_paths_lens = xmalloc(batch->capacity * SIZEOF(*(batch->dst_paths_lens)));
+        batch->paths = malloc2(batch->capacity * SIZEOF(*(batch->paths)));
+        batch->paths_lens = malloc2(batch->capacity * SIZEOF(*(batch->paths_lens)));
+        batch->dst_paths = malloc2(batch->capacity * SIZEOF(*(batch->dst_paths)));
+        batch->dst_paths_lens = malloc2(batch->capacity * SIZEOF(*(batch->dst_paths_lens)));
 
         clock_gettime(CLOCK_MONOTONIC_COARSE, &batch->time_last_flush);
         *batch_ptr = batch;
@@ -157,11 +157,11 @@ work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
                                          old_capacity, batch->capacity, SIZEOF(*(batch->dst_paths_lens)));
     }
 
-    batch->paths[batch->count] = xmalloc(old_len + 1);
+    batch->paths[batch->count] = malloc2(old_len + 1);
     memcpy64(batch->paths[batch->count], old_path, old_len + 1);
     batch->paths_lens[batch->count] = old_len;
 
-    batch->dst_paths[batch->count] = xmalloc(new_len + 1);
+    batch->dst_paths[batch->count] = malloc2(new_len + 1);
     memcpy64(batch->dst_paths[batch->count], new_path, new_len + 1);
     batch->dst_paths_lens[batch->count] = new_len;
 
@@ -640,7 +640,7 @@ work_rsync(void *user_data) {
             has_transfers = true;
             nfiles_total = cecup.ntransfers;
         }
-        tasks = xmalloc(sizeof(*tasks));
+        tasks = malloc2(sizeof(*tasks));
         memset64(tasks, 0, sizeof(*tasks));
     } else {
         nfiles_total = tasks->count;
@@ -925,9 +925,9 @@ main(void) {
         TaskList *task_list;
         Task *task;
 
-        thread_data = xmalloc(SIZEOF(*thread_data));
-        task_list = xmalloc(SIZEOF(*task_list) + 1*SIZEOF(Task*));
-        task = xmalloc(SIZEOF(*task));
+        thread_data = malloc2(SIZEOF(*thread_data));
+        task_list = malloc2(SIZEOF(*task_list) + 1*SIZEOF(Task*));
+        task = malloc2(SIZEOF(*task));
 
         memset64(thread_data, 0, SIZEOF(*thread_data));
         memset64(task_list,   0, SIZEOF(*task_list) + 1*SIZEOF(Task*));

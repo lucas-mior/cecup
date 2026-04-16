@@ -107,7 +107,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     }
 
     {
-        Message *message = xmalloc(SIZEOF(*message));
+        Message *message = malloc2(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         message->type = MSG_IGNORE_PATTERN;
@@ -129,7 +129,7 @@ on_menu_apply(GtkWidget *widget, void *data) {
         ThreadData *thread_data;
 
         aux_protect_interface_from_user(true);
-        thread_data = xmalloc(SIZEOF(*thread_data));
+        thread_data = malloc2(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
         thread_data->tasks = tasks;
 
@@ -273,7 +273,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     bool absolute;
 
     buffer_size = SIZEMB(8);
-    buffer = xmalloc(buffer_size);
+    buffer = malloc2(buffer_size);
     buf_pointer = buffer;
 
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
@@ -353,7 +353,7 @@ on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
         ThreadData *thread_data;
 
         aux_protect_interface_from_user(true);
-        thread_data = xmalloc(SIZEOF(*thread_data));
+        thread_data = malloc2(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
         thread_data->tasks = tasks;
 
@@ -443,8 +443,8 @@ on_menu_diff(GtkWidget *widget, void *data) {
         Task *task = tasks->items[i];
         int32 size_src = strlen32(cecup.src_base) + strlen32(task->path) + 2;
         int32 size_dst = strlen32(cecup.dst_base) + strlen32(task->path) + 2;
-        char *path_src = xmalloc(size_src);
-        char *path_dst = xmalloc(size_dst);
+        char *path_src = malloc2(size_src);
+        char *path_dst = malloc2(size_dst);
 
         switch (fork()) {
         case -1:
@@ -568,28 +568,28 @@ main(void) {
     remove(cecup.ignore_path);
 
     cecup.rows_visible_len = 0;
-    cecup.rows_selected = xmalloc(10 * SIZEOF(uint8));
+    cecup.rows_selected = malloc2(10 * SIZEOF(uint8));
     cecup.rows_selected[0] = false;
 
-    msg = xmalloc(SIZEOF(*msg));
+    msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
     msg->side = L;
     msg->action = ACTION_NEW;
     on_menu_apply(tree, msg);
 
-    msg = xmalloc(SIZEOF(*msg));
+    msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
     on_menu_rename(tree, msg);
 
-    msg = xmalloc(SIZEOF(*msg));
+    msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
     g_object_set_data(G_OBJECT(tree), "variant", "file");
     on_menu_open_item(tree, msg);
 
-    msg = xmalloc(SIZEOF(*msg));
+    msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
     g_object_set_data(G_OBJECT(tree), "variant", "absolute");
-    cecup.src_base = xmalloc(10);
+    cecup.src_base = malloc2(10);
     memcpy64(cecup.src_base, "/tmp", 5);
     on_menu_copy_path(tree, msg);
 
@@ -597,24 +597,24 @@ main(void) {
         TaskList *tasks;
         GtkWidget *dialog;
 
-        tasks = xmalloc(SIZEOF(TaskList));
+        tasks = malloc2(SIZEOF(TaskList));
         tasks->count = 0;
         dialog = gtk_dialog_new();
         on_delete_response(GTK_DIALOG(dialog), GTK_RESPONSE_NO, tasks);
     }
 
-    msg = xmalloc(SIZEOF(*msg));
+    msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
     on_menu_delete(tree, msg);
 
-    msg = xmalloc(SIZEOF(*msg));
+    msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
     on_menu_diff(tree, msg);
 
     {
         GVariant *idx_param;
 
-        msg = xmalloc(SIZEOF(*msg));
+        msg = malloc2(SIZEOF(*msg));
         memset64(msg, 0, SIZEOF(*msg));
         g_object_set_data_full(G_OBJECT(cecup.application), "active_message", msg, free_message);
 

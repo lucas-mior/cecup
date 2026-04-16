@@ -44,15 +44,15 @@ traversal_allocate(Traversal *traversal, int32 side) {
     SNPRINTF(name, "traversal[%s]->map", side_name(side));
     traversal->inode_map = hash_create_inode_map(INITIAL_CAPACITY, name);
 
-    traversal->stats = xmalloc(capacity*SIZEOF(*(traversal->stats)));
-    traversal->patterns = xmalloc(capacity*SIZEOF(*(traversal->patterns)));
-    traversal->symlink_targets = xmalloc(capacity*SIZEOF(*(traversal->symlink_targets)));
-    traversal->paths = xmalloc(capacity*SIZEOF(*(traversal->paths)));
+    traversal->stats = malloc2(capacity*SIZEOF(*(traversal->stats)));
+    traversal->patterns = malloc2(capacity*SIZEOF(*(traversal->patterns)));
+    traversal->symlink_targets = malloc2(capacity*SIZEOF(*(traversal->symlink_targets)));
+    traversal->paths = malloc2(capacity*SIZEOF(*(traversal->paths)));
 
-    traversal->paths_lens = xmalloc(capacity*SIZEOF(*(traversal->paths_lens)));
-    traversal->symlink_targets_lens = xmalloc(capacity*SIZEOF(*(traversal->symlink_targets_lens)));
-    traversal->patterns_lens = xmalloc(capacity*SIZEOF(*(traversal->patterns_lens)));
-    traversal->row_ids = xmalloc(capacity*SIZEOF(*(traversal->row_ids)));
+    traversal->paths_lens = malloc2(capacity*SIZEOF(*(traversal->paths_lens)));
+    traversal->symlink_targets_lens = malloc2(capacity*SIZEOF(*(traversal->symlink_targets_lens)));
+    traversal->patterns_lens = malloc2(capacity*SIZEOF(*(traversal->patterns_lens)));
+    traversal->row_ids = malloc2(capacity*SIZEOF(*(traversal->row_ids)));
 
     traversal->capacity = capacity;
     traversal->nfiles = 0;
@@ -222,8 +222,8 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         hard_links.aggregate_hash_hi = name_hash.hi;
         hard_links.count = 1;
         hard_links.capacity = 4;
-        hard_links.names = xmalloc(hard_links.capacity * SIZEOF(*(hard_links.names)));
-        hard_links.names_lens = xmalloc(hard_links.capacity * SIZEOF(*(hard_links.names_lens)));
+        hard_links.names = malloc2(hard_links.capacity * SIZEOF(*(hard_links.names)));
+        hard_links.names_lens = malloc2(hard_links.capacity * SIZEOF(*(hard_links.names_lens)));
         hard_links.names[0] = path;
         hard_links.names_lens[0] = path_len;
 

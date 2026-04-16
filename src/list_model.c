@@ -474,8 +474,8 @@ main(void) {
 
     cecup.rows_capacity = 0;
     cecup.rows_len = 0;
-    cecup.traversal[L].row_ids = xmalloc(50*SIZEOF(int32));
-    cecup.traversal[R].row_ids = xmalloc(50*SIZEOF(int32));
+    cecup.traversal[L].row_ids = malloc2(50*SIZEOF(int32));
+    cecup.traversal[R].row_ids = malloc2(50*SIZEOF(int32));
 
     new_item_idx = item_add(10, 20);
 

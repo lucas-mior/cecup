@@ -150,7 +150,7 @@ cecup_set_dirs(char *new_src, int32 new_src_len, char *new_dst, int32 new_dst_le
         if (cecup.src_base) {
             free2(cecup.src_base, cecup.src_base_len + 1);
         }
-        cecup.src_base = xmalloc(new_src_len + 1);
+        cecup.src_base = malloc2(new_src_len + 1);
         memcpy64(cecup.src_base, new_src, new_src_len + 1);
         cecup.src_base_len = new_src_len;
     }
@@ -159,7 +159,7 @@ cecup_set_dirs(char *new_src, int32 new_src_len, char *new_dst, int32 new_dst_le
         if (cecup.dst_base) {
             free2(cecup.dst_base, cecup.dst_base_len + 1);
         }
-        cecup.dst_base = xmalloc(new_dst_len + 1);
+        cecup.dst_base = malloc2(new_dst_len + 1);
         memcpy64(cecup.dst_base, new_dst, new_dst_len + 1);
         cecup.dst_base_len = new_dst_len;
     }
@@ -338,7 +338,7 @@ log_internal(char *file, int line, enum MsgType type, char *format, ...) {
     }
     va_end(va_args);
 
-    message = xmalloc(SIZEOF(*message));
+    message = malloc2(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
     if (RELEASING) {
@@ -348,7 +348,7 @@ log_internal(char *file, int line, enum MsgType type, char *format, ...) {
     }
 
     message->text_len = n + m;
-    message->text = xmalloc(n + m + 1);
+    message->text = malloc2(n + m + 1);
 
     memcpy64(message->text, fileline, m);
     memcpy64(message->text + m, buffer, n + 1);
@@ -555,32 +555,32 @@ int main(void) {
     ASSERT(!aux_is_root("path/to/something"));
 
     /* Test free_message - Separate paths */
-    msg = xmalloc(SIZEOF(*msg));
+    msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
-    msg->text = xmalloc(10);
+    msg->text = malloc2(10);
     msg->text_len = 9;
-    msg->src_path = xmalloc(10);
+    msg->src_path = malloc2(10);
     msg->src_path_len = 9;
-    msg->dst_path = xmalloc(10);
+    msg->dst_path = malloc2(10);
     msg->dst_path_len = 9;
     free_message(msg);
 
     /* Test free_message - Shared paths */
-    msg = xmalloc(SIZEOF(*msg));
+    msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
-    msg->text = xmalloc(5);
+    msg->text = malloc2(5);
     msg->text_len = 4;
-    msg->src_path = xmalloc(5);
+    msg->src_path = malloc2(5);
     msg->src_path_len = 4;
     msg->dst_path = msg->src_path;
     free_message(msg);
 
     /* Test free_message - NULL dst_path */
-    msg = xmalloc(SIZEOF(*msg));
+    msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
-    msg->text = xmalloc(5);
+    msg->text = malloc2(5);
     msg->text_len = 4;
-    msg->src_path = xmalloc(5);
+    msg->src_path = malloc2(5);
     msg->src_path_len = 4;
     msg->dst_path = NULL;
     free_message(msg);
@@ -656,27 +656,27 @@ int main(void) {
     /* Test check_consistent_state & check_consistent_traversal_rows */
     cecup.rows_len = 1;
     cecup.rows_capacity = 10;
-    cecup.rows[L] = xmalloc(10 * SIZEOF(int32));
-    cecup.rows[R] = xmalloc(10 * SIZEOF(int32));
+    cecup.rows[L] = malloc2(10 * SIZEOF(int32));
+    cecup.rows[R] = malloc2(10 * SIZEOF(int32));
     cecup.rows[L][0] = 0;
     cecup.rows[R][0] = 0;
 
     cecup.traversal[L].nfiles = 1;
-    cecup.traversal[L].row_ids = xmalloc(10 * SIZEOF(int32));
+    cecup.traversal[L].row_ids = malloc2(10 * SIZEOF(int32));
     cecup.traversal[L].row_ids[0] = 0;
-    cecup.traversal[L].paths = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[L].paths = malloc2(10 * SIZEOF(char*));
     cecup.traversal[L].paths[0] = "test1";
-    cecup.traversal[L].paths_lens = xmalloc(10 * SIZEOF(int16));
+    cecup.traversal[L].paths_lens = malloc2(10 * SIZEOF(int16));
     cecup.traversal[L].paths_lens[0] = 5;
     cecup.traversal[L].map = hash_create_fs_map(16, "traversal[L].map");
     hash_insert_fs_map(cecup.traversal[L].map, "test1", 5, 0);
 
     cecup.traversal[R].nfiles = 1;
-    cecup.traversal[R].row_ids = xmalloc(10 * SIZEOF(int32));
+    cecup.traversal[R].row_ids = malloc2(10 * SIZEOF(int32));
     cecup.traversal[R].row_ids[0] = 0;
-    cecup.traversal[R].paths = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[R].paths = malloc2(10 * SIZEOF(char*));
     cecup.traversal[R].paths[0] = "test2";
-    cecup.traversal[R].paths_lens = xmalloc(10 * SIZEOF(int16));
+    cecup.traversal[R].paths_lens = malloc2(10 * SIZEOF(int16));
     cecup.traversal[R].paths_lens[0] = 5;
     cecup.traversal[R].map = hash_create_fs_map(16, "traversal[R].map");
     hash_insert_fs_map(cecup.traversal[R].map, "test2", 5, 0);

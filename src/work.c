@@ -50,7 +50,7 @@ work_finalize(bool preview_clean) {
     update_progress_bar(1.0);
 
     {
-        Message *message = xmalloc(SIZEOF(*message));
+        Message *message = malloc2(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         message->type = MSG_WORK_FINISHED;
@@ -791,10 +791,10 @@ main(void) {
     cecup.deletion_set = hash_create_deletion_set(1024, "cecup.deletion_set");
 
     cecup.rows_capacity = INITIAL_CAPACITY;
-    cecup.rows[L] = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows[L])));
-    cecup.rows[R] = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows[R])));
-    cecup.rows_selected = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows_selected)));
-    cecup.rows_visible = xmalloc(cecup.rows_capacity * SIZEOF(*(cecup.rows_visible)));
+    cecup.rows[L] = malloc2(cecup.rows_capacity * SIZEOF(*(cecup.rows[L])));
+    cecup.rows[R] = malloc2(cecup.rows_capacity * SIZEOF(*(cecup.rows[R])));
+    cecup.rows_selected = malloc2(cecup.rows_capacity * SIZEOF(*(cecup.rows_selected)));
+    cecup.rows_visible = malloc2(cecup.rows_capacity * SIZEOF(*(cecup.rows_visible)));
 
     pattern.str = "ignored_file.txt";
     pattern.len = strlen32(pattern.str);

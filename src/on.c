@@ -101,12 +101,12 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
     if (filepath || (menu_item->callback == on_menu_rename)) {
         enum Action actions[2];
         enum Reason reason;
-        Message *message = xmalloc(SIZEOF(*message));
+        Message *message = malloc2(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         if (filepath) {
             message->src_path_len = path_len;
-            message->src_path = xmalloc(path_len + 1);
+            message->src_path = malloc2(path_len + 1);
             memcpy64(message->src_path, filepath, path_len + 1);
         }
 
@@ -259,7 +259,7 @@ on_preview_clicked(GtkWidget *button, void *data) {
     update_progress_bar(0.0);
 
     {
-        Message *message = xmalloc(SIZEOF(*message));
+        Message *message = malloc2(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         message->type = MSG_CLEAR_TREES;
@@ -267,7 +267,7 @@ on_preview_clicked(GtkWidget *button, void *data) {
     }
 
     {
-        ThreadData *thread_data = xmalloc(SIZEOF(*thread_data));
+        ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
 
         xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
@@ -289,7 +289,7 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
 
     aux_protect_interface_from_user(true);
 
-    thread_data = xmalloc(SIZEOF(*thread_data));
+    thread_data = malloc2(SIZEOF(*thread_data));
     memset64(thread_data, 0, SIZEOF(*thread_data));
 
     xpthread_create(&cecup.work_thread, NULL, work_rsync, thread_data);
@@ -889,10 +889,10 @@ main(void) {
     // 2. Setup the row infrastructure
     cecup.rows_len = num_test_rows;
     cecup.rows_visible_len = num_test_rows;
-    cecup.rows[L] = xmalloc(num_test_rows*SIZEOF(int32));
-    cecup.rows[R] = xmalloc(num_test_rows*SIZEOF(int32));
-    cecup.rows_visible = xmalloc(num_test_rows*SIZEOF(int32));
-    cecup.rows_selected = xmalloc(num_test_rows*SIZEOF(uint8));
+    cecup.rows[L] = malloc2(num_test_rows*SIZEOF(int32));
+    cecup.rows[R] = malloc2(num_test_rows*SIZEOF(int32));
+    cecup.rows_visible = malloc2(num_test_rows*SIZEOF(int32));
+    cecup.rows_selected = malloc2(num_test_rows*SIZEOF(uint8));
 
     for (int32 i = 0; i < num_test_rows; i += 1) {
         cecup.rows[L][i] = i;
@@ -905,11 +905,11 @@ main(void) {
     for (int32 side = 0; side < 2; side += 1) {
         Traversal *t = &cecup.traversal[side];
         t->nfiles = num_test_rows;
-        t->paths = xmalloc(num_test_rows*SIZEOF(char *));
-        t->paths_lens = xmalloc(num_test_rows*SIZEOF(int32));
-        t->stats = xmalloc(num_test_rows*SIZEOF(struct stat));
-        t->patterns = xmalloc(num_test_rows*SIZEOF(char *));
-        t->symlink_targets = xmalloc(num_test_rows*SIZEOF(char *));
+        t->paths = malloc2(num_test_rows*SIZEOF(char *));
+        t->paths_lens = malloc2(num_test_rows*SIZEOF(int32));
+        t->stats = malloc2(num_test_rows*SIZEOF(struct stat));
+        t->patterns = malloc2(num_test_rows*SIZEOF(char *));
+        t->symlink_targets = malloc2(num_test_rows*SIZEOF(char *));
 
         // Zero out to ensure pointers are NULL and stats are clean
         memset64(t->stats, 0, num_test_rows*SIZEOF(struct stat));

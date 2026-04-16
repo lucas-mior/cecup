@@ -620,20 +620,20 @@ main(void) {
     result = compare_names(&name_a_ptr, &name_b_ptr);
     ASSERT_LESS(result, 0);
 
-    cecup.rows[L] = xmalloc(10 * SIZEOF(int32));
-    cecup.rows[R] = xmalloc(10 * SIZEOF(int32));
-    cecup.traversal[L].paths = xmalloc(10 * SIZEOF(char*));
-    cecup.traversal[R].paths = xmalloc(10 * SIZEOF(char*));
-    cecup.traversal[L].paths_lens = xmalloc(10 * SIZEOF(int16));
-    cecup.traversal[R].paths_lens = xmalloc(10 * SIZEOF(int16));
-    cecup.traversal[L].stats = xmalloc(10 * SIZEOF(struct stat));
-    cecup.traversal[R].stats = xmalloc(10 * SIZEOF(struct stat));
-    cecup.traversal[L].patterns = xmalloc(10 * SIZEOF(char*));
-    cecup.traversal[R].patterns = xmalloc(10 * SIZEOF(char*));
-    cecup.traversal[L].symlink_targets = xmalloc(10 * SIZEOF(char*));
-    cecup.traversal[R].symlink_targets = xmalloc(10 * SIZEOF(char*));
-    cecup.traversal[L].symlink_targets_lens = xmalloc(10 * SIZEOF(int16));
-    cecup.traversal[R].symlink_targets_lens = xmalloc(10 * SIZEOF(int16));
+    cecup.rows[L] = malloc2(10 * SIZEOF(int32));
+    cecup.rows[R] = malloc2(10 * SIZEOF(int32));
+    cecup.traversal[L].paths = malloc2(10 * SIZEOF(char*));
+    cecup.traversal[R].paths = malloc2(10 * SIZEOF(char*));
+    cecup.traversal[L].paths_lens = malloc2(10 * SIZEOF(int16));
+    cecup.traversal[R].paths_lens = malloc2(10 * SIZEOF(int16));
+    cecup.traversal[L].stats = malloc2(10 * SIZEOF(struct stat));
+    cecup.traversal[R].stats = malloc2(10 * SIZEOF(struct stat));
+    cecup.traversal[L].patterns = malloc2(10 * SIZEOF(char*));
+    cecup.traversal[R].patterns = malloc2(10 * SIZEOF(char*));
+    cecup.traversal[L].symlink_targets = malloc2(10 * SIZEOF(char*));
+    cecup.traversal[R].symlink_targets = malloc2(10 * SIZEOF(char*));
+    cecup.traversal[L].symlink_targets_lens = malloc2(10 * SIZEOF(int16));
+    cecup.traversal[R].symlink_targets_lens = malloc2(10 * SIZEOF(int16));
 
     memset64(cecup.traversal[L].stats, 0, 10 * SIZEOF(struct stat));
     memset64(cecup.traversal[R].stats, 0, 10 * SIZEOF(struct stat));

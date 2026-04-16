@@ -99,7 +99,7 @@ on_path_editing_started(GtkEditable *editable, void *data) {
         }
 
         if (end_pos > start_pos) {
-            SelectionData *selection_data = xmalloc(SIZEOF(*selection_data));
+            SelectionData *selection_data = malloc2(SIZEOF(*selection_data));
             memset64(selection_data, 0, SIZEOF(*selection_data));
 
             selection_data->editable = editable;
@@ -319,20 +319,20 @@ main(void) {
     close(open(src_file_full, O_CREAT | O_RDWR, 0644));
 
     cecup.rows_len = n;
-    cecup.rows[L] = xmalloc(n * SIZEOF(int32));
+    cecup.rows[L] = malloc2(n * SIZEOF(int32));
     cecup.rows[L][0] = 0;
 
     {
         Traversal *t = &cecup.traversal[L];
         t->nfiles = n;
-        t->paths = xmalloc(n * SIZEOF(char *));
-        t->paths_lens = xmalloc(n * SIZEOF(int16));
+        t->paths = malloc2(n * SIZEOF(char *));
+        t->paths_lens = malloc2(n * SIZEOF(int16));
         t->paths[0] = xmemdup(file_rel, strlen32(file_rel) + 1);
         t->paths_lens[0] = (int16)strlen32(file_rel);
 
-        t->stats = xmalloc(n * SIZEOF(struct stat));
-        t->patterns = xmalloc(n * SIZEOF(char *));
-        t->symlink_targets = xmalloc(n * SIZEOF(char *));
+        t->stats = malloc2(n * SIZEOF(struct stat));
+        t->patterns = malloc2(n * SIZEOF(char *));
+        t->symlink_targets = malloc2(n * SIZEOF(char *));
         memset64(t->stats, 0, n * SIZEOF(struct stat));
         memset64(t->patterns, 0, n * SIZEOF(char *));
         memset64(t->symlink_targets, 0, n * SIZEOF(char *));

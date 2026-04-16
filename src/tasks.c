@@ -55,7 +55,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
     tasks_size = STRUCT_ARRAY_SIZE(tasks, Task *, cecup.rows_len);
     count = 0;
-    tasks = xmalloc(tasks_size);
+    tasks = malloc2(tasks_size);
     memset64(tasks, 0, tasks_size);
 
     for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
@@ -80,11 +80,11 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
             continue;
         }
 
-        task = xmalloc(SIZEOF(*task));
+        task = malloc2(SIZEOF(*task));
         memset64(task, 0, SIZEOF(*task));
 
         task->path_len = path_len;
-        task->path = xmalloc(path_len + 1);
+        task->path = malloc2(path_len + 1);
         memcpy64(task->path, filepath, path_len + 1);
 
         if (action == ACTION_HARDLINK) {
@@ -107,11 +107,11 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count));
         tasks->count = count;
 
-        task = xmalloc(SIZEOF(*task));
+        task = malloc2(SIZEOF(*task));
         memset64(task, 0, SIZEOF(*task));
 
         task->path_len = strlen32(clicked_path);
-        task->path = xmalloc(task->path_len + 1);
+        task->path = malloc2(task->path_len + 1);
         memcpy64(task->path, clicked_path, task->path_len + 1);
 
         if (clicked_action == ACTION_HARDLINK) {
@@ -154,17 +154,17 @@ main(void) {
 
     // 1. Setup Mock Environment
     cecup.rows_len = n;
-    cecup.rows_selected = xmalloc(n * SIZEOF(uint8));
-    cecup.rows[L] = xmalloc(n * SIZEOF(int32));
-    cecup.rows[R] = xmalloc(n * SIZEOF(int32));
+    cecup.rows_selected = malloc2(n * SIZEOF(uint8));
+    cecup.rows[L] = malloc2(n * SIZEOF(int32));
+    cecup.rows[R] = malloc2(n * SIZEOF(int32));
 
     for (int32 side = 0; side < 2; side += 1) {
         Traversal *t = &cecup.traversal[side];
-        t->stats = xmalloc(n * SIZEOF(struct stat));
-        t->paths = xmalloc(n * SIZEOF(char *));
-        t->paths_lens = xmalloc(n * SIZEOF(int32));
-        t->patterns = xmalloc(n * SIZEOF(char *));
-        t->symlink_targets = xmalloc(n * SIZEOF(char *));
+        t->stats = malloc2(n * SIZEOF(struct stat));
+        t->paths = malloc2(n * SIZEOF(char *));
+        t->paths_lens = malloc2(n * SIZEOF(int32));
+        t->patterns = malloc2(n * SIZEOF(char *));
+        t->symlink_targets = malloc2(n * SIZEOF(char *));
         t->map = hash_create_fs_map(INITIAL_CAPACITY, "t->map");
 
         memset64(t->stats, 0, n * SIZEOF(struct stat));
@@ -172,7 +172,7 @@ main(void) {
         memset64(t->symlink_targets, 0, n * SIZEOF(char *));
 
         for (int32 i = 0; i < n; i += 1) {
-            t->paths[i] = xmalloc(20);
+            t->paths[i] = malloc2(20);
             snprintf(t->paths[i], 20, "file_%d.txt", i);
             t->paths_lens[i] = (int16)strlen32(t->paths[i]);
             t->stats[i].st_ino = (ino_t)(100 + i);

@@ -323,19 +323,19 @@ main(void) {
     }
 
     cecup.rows_capacity = 10;
-    cecup.rows_selected = xmalloc(10 * SIZEOF(uint8));
+    cecup.rows_selected = malloc2(10 * SIZEOF(uint8));
     cecup.rows_selected[0] = true;
-    cecup.rows[L] = xmalloc(10 * SIZEOF(int32));
-    cecup.rows[R] = xmalloc(10 * SIZEOF(int32));
+    cecup.rows[L] = malloc2(10 * SIZEOF(int32));
+    cecup.rows[R] = malloc2(10 * SIZEOF(int32));
     cecup.rows[L][0] = 0;
     cecup.rows[R][0] = 0;
 
-    cecup.rows_visible = xmalloc(10 * SIZEOF(int32));
+    cecup.rows_visible = malloc2(10 * SIZEOF(int32));
     cecup.rows_visible[0] = 0;
     cecup.rows_visible_len = 1;
 
-    cecup.traversal[L].stats = xmalloc(10 * SIZEOF(struct stat));
-    cecup.traversal[R].stats = xmalloc(10 * SIZEOF(struct stat));
+    cecup.traversal[L].stats = malloc2(10 * SIZEOF(struct stat));
+    cecup.traversal[R].stats = malloc2(10 * SIZEOF(struct stat));
     memset64(cecup.traversal[L].stats, 0, 10 * SIZEOF(struct stat));
     memset64(cecup.traversal[R].stats, 0, 10 * SIZEOF(struct stat));
 
@@ -344,28 +344,28 @@ main(void) {
     cecup.traversal[L].stats[0].st_mtime = 1600000000;
     cecup.traversal[R].stats[0].st_mtime = 1600000000;
 
-    cecup.traversal[L].paths = xmalloc(10 * SIZEOF(char*));
-    cecup.traversal[R].paths = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[L].paths = malloc2(10 * SIZEOF(char*));
+    cecup.traversal[R].paths = malloc2(10 * SIZEOF(char*));
     cecup.traversal[L].paths[0] = "test_l";
     cecup.traversal[R].paths[0] = "test_r";
 
-    cecup.traversal[L].patterns = xmalloc(10 * SIZEOF(char*));
-    cecup.traversal[R].patterns = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[L].patterns = malloc2(10 * SIZEOF(char*));
+    cecup.traversal[R].patterns = malloc2(10 * SIZEOF(char*));
     memset64(cecup.traversal[L].patterns, 0, 10 * SIZEOF(char*));
     memset64(cecup.traversal[R].patterns, 0, 10 * SIZEOF(char*));
 
-    cecup.traversal[L].symlink_targets = xmalloc(10 * SIZEOF(char*));
-    cecup.traversal[R].symlink_targets = xmalloc(10 * SIZEOF(char*));
+    cecup.traversal[L].symlink_targets = malloc2(10 * SIZEOF(char*));
+    cecup.traversal[R].symlink_targets = malloc2(10 * SIZEOF(char*));
     memset64(cecup.traversal[L].symlink_targets, 0, 10 * SIZEOF(char*));
     memset64(cecup.traversal[R].symlink_targets, 0, 10 * SIZEOF(char*));
 
-    cecup.traversal[L].paths_lens = xmalloc(10 * SIZEOF(int16));
-    cecup.traversal[R].paths_lens = xmalloc(10 * SIZEOF(int16));
+    cecup.traversal[L].paths_lens = malloc2(10 * SIZEOF(int16));
+    cecup.traversal[R].paths_lens = malloc2(10 * SIZEOF(int16));
     memset64(cecup.traversal[L].paths_lens, 0, 10 * SIZEOF(int16));
     memset64(cecup.traversal[R].paths_lens, 0, 10 * SIZEOF(int16));
 
-    cecup.traversal[L].row_ids = xmalloc(10 * SIZEOF(int32));
-    cecup.traversal[R].row_ids = xmalloc(10 * SIZEOF(int32));
+    cecup.traversal[L].row_ids = malloc2(10 * SIZEOF(int32));
+    cecup.traversal[R].row_ids = malloc2(10 * SIZEOF(int32));
     cecup.traversal[L].row_ids[0] = 0;
     cecup.traversal[R].row_ids[0] = 0;
 
@@ -401,7 +401,7 @@ main(void) {
     g_object_unref(col);
 
     factory_size = GTK_SIGNAL_LIST_ITEM_FACTORY(gtk_signal_list_item_factory_new());
-    ti_size = xmalloc(SIZEOF(TextInfo));
+    ti_size = malloc2(SIZEOF(TextInfo));
     ti_size->type = COLUMN_SIZE;
     ti_size->side = L;
     g_object_set_data(G_OBJECT(factory_size), "text_info", ti_size);
@@ -412,7 +412,7 @@ main(void) {
     g_object_unref(col);
 
     factory_mtime = GTK_SIGNAL_LIST_ITEM_FACTORY(gtk_signal_list_item_factory_new());
-    ti_mtime = xmalloc(SIZEOF(TextInfo));
+    ti_mtime = malloc2(SIZEOF(TextInfo));
     ti_mtime->type = COLUMN_MTIME;
     ti_mtime->side = L;
     g_object_set_data(G_OBJECT(factory_mtime), "text_info", ti_mtime);

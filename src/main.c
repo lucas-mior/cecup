@@ -121,7 +121,7 @@ main_setup_tree_columns(GtkWidget *tree) {
     {
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
-        TextInfo *text_info = xmalloc(SIZEOF(*text_info));
+        TextInfo *text_info = malloc2(SIZEOF(*text_info));
         GtkColumnViewColumn *column = gtk_column_view_column_new(_("Size"), factory);
 
         text_info->side = side;
@@ -146,7 +146,7 @@ main_setup_tree_columns(GtkWidget *tree) {
     {
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         GtkSorter *sorter = GTK_SORTER(gtk_string_sorter_new(NULL));
-        TextInfo *text_info = xmalloc(SIZEOF(*text_info));
+        TextInfo *text_info = malloc2(SIZEOF(*text_info));
         GtkColumnViewColumn *column = gtk_column_view_column_new(_("Modification Time"), factory);
 
         text_info->side = side;
@@ -838,21 +838,21 @@ main(int32 argc, char **argv) {
     cecup.rows_len = 0;
     cecup.rows_capacity = INITIAL_CAPACITY;
 
-    cecup.rows[L] = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows[L])));
-    cecup.rows[R] = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows[R])));
-    cecup.rows_visible = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
-    cecup.rows_selected = xmalloc(cecup.rows_capacity*SIZEOF(*(cecup.rows_selected)));
+    cecup.rows[L] = malloc2(cecup.rows_capacity*SIZEOF(*(cecup.rows[L])));
+    cecup.rows[R] = malloc2(cecup.rows_capacity*SIZEOF(*(cecup.rows[R])));
+    cecup.rows_visible = malloc2(cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
+    cecup.rows_selected = malloc2(cecup.rows_capacity*SIZEOF(*(cecup.rows_selected)));
 
     cecup.ntransfers = 0;
     cecup.transfers_capacity = INITIAL_CAPACITY;
-    cecup.transfers = xmalloc(cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
-    cecup.transfers_lens = xmalloc(cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
+    cecup.transfers = malloc2(cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
+    cecup.transfers_lens = malloc2(cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
     cecup.transfer_set = hash_create_transfer_set(INITIAL_CAPACITY, "cecup.transfer_set");
 
     cecup.ndeletions = 0;
     cecup.deletions_capacity = INITIAL_CAPACITY;
-    cecup.deletions = xmalloc(cecup.deletions_capacity*SIZEOF(*(cecup.deletions)));
-    cecup.deletions_lens = xmalloc(cecup.deletions_capacity*SIZEOF(*(cecup.deletions_lens)));
+    cecup.deletions = malloc2(cecup.deletions_capacity*SIZEOF(*(cecup.deletions)));
+    cecup.deletions_lens = malloc2(cecup.deletions_capacity*SIZEOF(*(cecup.deletions_lens)));
     cecup.deletion_set = hash_create_deletion_set(INITIAL_CAPACITY, "cecup.deletion_set");
 
     traversal_allocate(&cecup.traversal[L], L);

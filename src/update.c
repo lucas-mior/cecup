@@ -905,7 +905,7 @@ update_progress_bar(double fraction) {
     last_fraction = fraction;
 
     {
-        Message *message = xmalloc(SIZEOF(*message));
+        Message *message = malloc2(SIZEOF(*message));
         memset64(message, 0, SIZEOF(*message));
 
         message->type = MSG_PROGRESS;
@@ -918,7 +918,7 @@ update_progress_bar(double fraction) {
 
 static void
 update_progress_info(char *text, char *tooltip) {
-    Message *message = xmalloc(SIZEOF(*message));
+    Message *message = malloc2(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
     message->type = MSG_PROGRESS;
@@ -926,13 +926,13 @@ update_progress_info(char *text, char *tooltip) {
 
     if (text) {
         message->text_len = strlen32(text);
-        message->text = xmalloc(message->text_len + 1);
+        message->text = malloc2(message->text_len + 1);
         memcpy64(message->text, text, message->text_len + 1);
     }
 
     if (tooltip) {
         message->src_path_len = strlen32(tooltip);
-        message->src_path = xmalloc(message->src_path_len + 1);
+        message->src_path = malloc2(message->src_path_len + 1);
         memcpy64(message->src_path, tooltip, message->src_path_len + 1);
     }
 
@@ -1036,10 +1036,10 @@ main(void) {
     cecup.rows_len = n;
     cecup.rows_visible_len = n;
     cecup.rows_capacity = n;
-    cecup.rows[L] = xmalloc(cecup.rows_capacity * SIZEOF(int32));
-    cecup.rows[R] = xmalloc(cecup.rows_capacity * SIZEOF(int32));
-    cecup.rows_visible = xmalloc(cecup.rows_capacity * SIZEOF(int32));
-    cecup.rows_selected = xmalloc(cecup.rows_capacity * SIZEOF(uint8));
+    cecup.rows[L] = malloc2(cecup.rows_capacity * SIZEOF(int32));
+    cecup.rows[R] = malloc2(cecup.rows_capacity * SIZEOF(int32));
+    cecup.rows_visible = malloc2(cecup.rows_capacity * SIZEOF(int32));
+    cecup.rows_selected = malloc2(cecup.rows_capacity * SIZEOF(uint8));
 
     for (int32 side = 0; side < 2; side += 1) {
         Traversal *t = &cecup.traversal[side];
@@ -1050,14 +1050,14 @@ main(void) {
         t->inode_map = hash_create_inode_map(16, "t->inode_map");
         t->arena = arena_create(SIZEMB(1), "t->arena");
 
-        t->paths = xmalloc(t->capacity * SIZEOF(char *));
-        t->paths_lens = xmalloc(t->capacity * SIZEOF(int16));
-        t->row_ids = xmalloc(t->capacity * SIZEOF(int32));
-        t->stats = xmalloc(t->capacity * SIZEOF(struct stat));
-        t->patterns = xmalloc(t->capacity * SIZEOF(char *));
-        t->patterns_lens = xmalloc(t->capacity * SIZEOF(int16));
-        t->symlink_targets = xmalloc(t->capacity * SIZEOF(char *));
-        t->symlink_targets_lens = xmalloc(t->capacity * SIZEOF(int16));
+        t->paths = malloc2(t->capacity * SIZEOF(char *));
+        t->paths_lens = malloc2(t->capacity * SIZEOF(int16));
+        t->row_ids = malloc2(t->capacity * SIZEOF(int32));
+        t->stats = malloc2(t->capacity * SIZEOF(struct stat));
+        t->patterns = malloc2(t->capacity * SIZEOF(char *));
+        t->patterns_lens = malloc2(t->capacity * SIZEOF(int16));
+        t->symlink_targets = malloc2(t->capacity * SIZEOF(char *));
+        t->symlink_targets_lens = malloc2(t->capacity * SIZEOF(int16));
 
         memset64(t->stats, 0, t->capacity * SIZEOF(struct stat));
         memset64(t->patterns, 0, t->capacity * SIZEOF(char *));
@@ -1155,28 +1155,28 @@ main(void) {
     {
         Message *ui_msg;
 
-        ui_msg = xmalloc(SIZEOF(*ui_msg));
+        ui_msg = malloc2(SIZEOF(*ui_msg));
         memset64(ui_msg, 0, SIZEOF(*ui_msg));
         ui_msg->type = MSG_LOG;
         ui_msg->text = xmemdup("Test log\r", 10);
         ui_msg->text_len = 9;
         update_ui_handler(ui_msg);
 
-        ui_msg = xmalloc(SIZEOF(*ui_msg));
+        ui_msg = malloc2(SIZEOF(*ui_msg));
         memset64(ui_msg, 0, SIZEOF(*ui_msg));
         ui_msg->type = MSG_LOG_ERROR;
         ui_msg->text = xmemdup("Test error\n", 12);
         ui_msg->text_len = 11;
         update_ui_handler(ui_msg);
 
-        ui_msg = xmalloc(SIZEOF(*ui_msg));
+        ui_msg = malloc2(SIZEOF(*ui_msg));
         memset64(ui_msg, 0, SIZEOF(*ui_msg));
         ui_msg->type = MSG_LOG_CMD;
         ui_msg->text = xmemdup("Test cmd\n", 10);
         ui_msg->text_len = 9;
         update_ui_handler(ui_msg);
 
-        ui_msg = xmalloc(SIZEOF(*ui_msg));
+        ui_msg = malloc2(SIZEOF(*ui_msg));
         memset64(ui_msg, 0, SIZEOF(*ui_msg));
         ui_msg->type = MSG_PROGRESS;
         ui_msg->fraction = 0.8;
@@ -1186,7 +1186,7 @@ main(void) {
         ui_msg->src_path_len = 6;
         update_ui_handler(ui_msg);
 
-        ui_msg = xmalloc(SIZEOF(*ui_msg));
+        ui_msg = malloc2(SIZEOF(*ui_msg));
         memset64(ui_msg, 0, SIZEOF(*ui_msg));
         ui_msg->type = MSG_CLEAR_TREES;
         update_ui_handler(ui_msg);
@@ -1197,7 +1197,7 @@ main(void) {
     {
         MessageBatch *batch;
 
-        batch = xmalloc(SIZEOF(*batch));
+        batch = malloc2(SIZEOF(*batch));
         memset64(batch, 0, SIZEOF(*batch));
         batch->type = MSG_BATCH_ROW_REMOVE;
         batch->count = 0;

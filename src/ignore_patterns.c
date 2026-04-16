@@ -41,7 +41,7 @@ ignore_patterns_load(void) {
 
     if (cecup.ignore_patterns == NULL) {
         *capacity = 16;
-        cecup.ignore_patterns = xmalloc(*capacity * SIZEOF(*cecup.ignore_patterns));
+        cecup.ignore_patterns = malloc2(*capacity * SIZEOF(*cecup.ignore_patterns));
         cecup.ignore_count = 0;
     }
 
