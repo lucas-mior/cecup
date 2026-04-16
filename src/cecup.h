@@ -164,12 +164,7 @@ typedef struct HardLinks {
 
 #define HASH_KEY_TYPE char
 #define HASH_DUPLICATE_KEYS 1
-#define HASH_TYPE transfer_set
-#include "hash.c"
-
-#define HASH_KEY_TYPE char
-#define HASH_DUPLICATE_KEYS 1
-#define HASH_TYPE deletion_set
+#define HASH_TYPE actions_set
 #include "hash.c"
 
 typedef struct Traversal {
@@ -469,13 +464,13 @@ static struct {
 
     Traversal traversal[2];
 
-    struct Hash_transfer_set *transfer_set;
+    struct Hash_actions_set *actions_set;
+
     char **transfers;
     int32 *transfers_lens;
     int32 ntransfers;
     int32 transfers_capacity;
 
-    struct Hash_deletion_set *deletion_set;
     char **deletions;
     int32 *deletions_lens;
     int32 ndeletions;

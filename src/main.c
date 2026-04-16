@@ -843,17 +843,17 @@ main(int32 argc, char **argv) {
     cecup.rows_visible = malloc2(cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     cecup.rows_selected = malloc2(cecup.rows_capacity*SIZEOF(*(cecup.rows_selected)));
 
+    cecup.actions_set = hash_create_actions_set(INITIAL_CAPACITY, "cecup.actions_set");
+
     cecup.ntransfers = 0;
     cecup.transfers_capacity = INITIAL_CAPACITY;
     cecup.transfers = malloc2(cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
     cecup.transfers_lens = malloc2(cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
-    cecup.transfer_set = hash_create_transfer_set(INITIAL_CAPACITY, "cecup.transfer_set");
 
     cecup.ndeletions = 0;
     cecup.deletions_capacity = INITIAL_CAPACITY;
     cecup.deletions = malloc2(cecup.deletions_capacity*SIZEOF(*(cecup.deletions)));
     cecup.deletions_lens = malloc2(cecup.deletions_capacity*SIZEOF(*(cecup.deletions_lens)));
-    cecup.deletion_set = hash_create_deletion_set(INITIAL_CAPACITY, "cecup.deletion_set");
 
     traversal_allocate(&cecup.traversal[L], L);
     traversal_allocate(&cecup.traversal[R], R);
@@ -943,11 +943,10 @@ main(int32 argc, char **argv) {
 
     free2(cecup.transfers, cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
     free2(cecup.transfers_lens, cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
-    hash_destroy_transfer_set(cecup.transfer_set);
+    hash_destroy_actions_set(cecup.actions_set);
 
     free2(cecup.deletions, cecup.deletions_capacity*SIZEOF(*(cecup.deletions)));
     free2(cecup.deletions_lens, cecup.deletions_capacity*SIZEOF(*(cecup.deletions_lens)));
-    hash_destroy_deletion_set(cecup.deletion_set);
 
     free2(cecup.src_base, cecup.src_base_len + 1);
     free2(cecup.dst_base, cecup.dst_base_len + 1);

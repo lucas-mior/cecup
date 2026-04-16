@@ -303,8 +303,7 @@ work_cleanup(void) {
     traversal_clean(&cecup.traversal[L]);
     traversal_clean(&cecup.traversal[R]);
 
-    hash_zero_transfer_set(cecup.transfer_set);
-    hash_zero_deletion_set(cecup.deletion_set);
+    hash_zero_actions_set(cecup.actions_set);
     cecup.ntransfers = 0;
     cecup.ndeletions = 0;
 
@@ -444,7 +443,7 @@ work_preview(void *user_data) {
 
             if ((action_src == ACTION_HARDLINK) && (hard_links.count > 1)) {
                 for (int32 j = 0; j < hard_links.count; j += 1) {
-                    if (hash_insert_transfer_set(cecup.transfer_set,
+                    if (hash_insert_actions_set(cecup.actions_set,
                                                  hard_links.names[j], hard_links.names_lens[j])) {
                         cecup.transfers[cecup.ntransfers] = hard_links.names[j];
                         cecup.transfers_lens[cecup.ntransfers] = hard_links.names_lens[j];
@@ -453,7 +452,7 @@ work_preview(void *user_data) {
                 }
             }
 
-            if (hash_insert_transfer_set(cecup.transfer_set, bucket_src->key, path_len)) {
+            if (hash_insert_actions_set(cecup.actions_set, bucket_src->key, path_len)) {
                 cecup.transfers[cecup.ntransfers] = bucket_src->key;
                 cecup.transfers_lens[cecup.ntransfers] = path_len;
                 cecup.ntransfers += 1;
@@ -497,7 +496,7 @@ work_preview(void *user_data) {
                                                     SIZEOF(*cecup.deletions_lens));
                 }
 
-                if (hash_insert_deletion_set(cecup.deletion_set, bucket_dst->key, path_len)) {
+                if (hash_insert_actions_set(cecup.actions_set, bucket_dst->key, path_len)) {
                     cecup.deletions[cecup.ndeletions] = bucket_dst->key;
                     cecup.deletions_lens[cecup.ndeletions] = path_len;
                     cecup.ndeletions += 1;
@@ -787,8 +786,7 @@ main(void) {
     cecup.arena = arena_create(SIZEMB(64), "cecup.arena");
     pthread_mutex_init(&cecup.arena_mutex, NULL);
 
-    cecup.transfer_set = hash_create_transfer_set(1024, "cecup.transfer_set");
-    cecup.deletion_set = hash_create_deletion_set(1024, "cecup.deletion_set");
+    cecup.actions_set = hash_create_actions_set(1024, "cecup.actions_set");
 
     cecup.rows_capacity = INITIAL_CAPACITY;
     cecup.rows[L] = malloc2(cecup.rows_capacity * SIZEOF(*(cecup.rows[L])));
@@ -918,11 +916,8 @@ main(void) {
         free2(cecup.deletions, cecup.deletions_capacity * SIZEOF(*(cecup.deletions)));
         free2(cecup.deletions_lens, cecup.deletions_capacity * SIZEOF(*(cecup.deletions_lens)));
     }
-    if (cecup.transfer_set != NULL) {
-        hash_destroy_transfer_set(cecup.transfer_set);
-    }
-    if (cecup.deletion_set != NULL) {
-        hash_destroy_deletion_set(cecup.deletion_set);
+    if (cecup.actions_set != NULL) {
+        hash_destroy_actions_set(cecup.actions_set);
     }
 
     traversal_free(&cecup.traversal[L]);
