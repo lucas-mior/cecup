@@ -23,6 +23,7 @@ static int64 memory_page_size = 0;
 
 #if TESTING_memory
 #define DEBUGGING_MEMORY 1
+#define MEMORY_CHECK_USE_AFTER_FREE 1
 #endif
 
 #if !defined(MEMORY_CHECK_USE_AFTER_FREE)
@@ -725,7 +726,7 @@ int main(void) {
         }
         printf("realloc_flex (shrink) successful.\n");
 
-        free2(flex, STRUCT_ARRAY_SIZE(flex, int64, shrink));
+        free2(flex, SIZEOF(*flex) + (shrink*SIZEOF(int64)));
     }
 
     {
