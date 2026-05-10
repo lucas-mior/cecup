@@ -73,6 +73,12 @@ main="main.c"
 exe="bin/$program"
 mkdir -p "$(dirname "$exe")"
 
+if [ "$target" = "test" ] && [ -z "$CC" ] && command tcc; then
+    CC=tcc
+else
+    CC="${CC:-cc}"
+fi
+
 CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
 CPPFLAGS="$CPPFLAGS -DGETTEXT_PACKAGE=$program"
 CPPFLAGS="$CPPFLAGS -DLOCALEDIR=$PREFIX/share/locale"
@@ -102,7 +108,6 @@ LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk4) -lpthread"
 LDFLAGS="$LDFLAGS -lm"
 OS=$(uname -a)
 
-CC="${CC:-cc}"
 if echo "$OS" | grep -q "Linux"; then
     if echo "$OS" | grep -q "GNU"; then
         GNUSOURCE="-D_GNU_SOURCE"
