@@ -349,7 +349,9 @@ free_debug(char *file, int32 line, void *pointer, int64 size) {
             error_impl(file, line, 
                        "Error: size mismatch freeing %p. Expected %lld, got %lld.\n",
                        pointer, (llong)info.size, (llong)size);
-            error_impl(info.file, info.line, "Memory was allocated here.\n");
+            error_impl(info.file, info.line,
+                       "Memory was allocated here. (reallocated = %d)\n",
+                       info.reallocated);
             fatal(EXIT_FAILURE);
         }
         
