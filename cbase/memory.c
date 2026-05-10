@@ -311,6 +311,79 @@ realloc_debug(char *file, int32 line,
     return p;
 }
 
+static void *
+realloc_flex_debug_impl(char *file, int32 line,
+                        void *old, int64 old_size, int64 new_size) {
+    void *p;
+
+    if (RUNNING_ON_VALGRIND) {
+        return realloc(old, (size_t)new_size);
+    }
+
+    if (new_size <= 0) {
+        error_impl(file, line,
+                   "Error in %s: invalid object size = %lld.\n",
+                   __func__, (llong)new_size);
+        fatal(EXIT_FAILURE);
+    }
+
+    {
+        DebugAllocInfo info;
+        uchar *ptr;
+
+        info.size = new_size;
+        info.file = file;
+        info.line = line;
+        info.reallocated = 0;
+
+        pthread_mutex_lock(&allocations_mutex);
+
+        if ((old != NULL) && (allocations == NULL)) {
+            error_impl(file, line, "Reallocating invalid pointer %p.", old);
+            fatal(EXIT_FAILURE);
+        } else if (allocations == NULL) {
+            allocations = hash_create_alloc_map(1024, "DebugAllocations");
+        }
+        if (old != NULL) {
+            DebugAllocInfo old_info;
+            if (!hash_lookup_alloc_map(allocations, &old, &old_info)) {
+                error_impl(file, line, "Reallocating invalid pointer %p.\n", old);
+                fatal(EXIT_FAILURE);
+            }
+            if (old_info.reallocated == -1) {
+                error_impl(file, line, "Reallocating freed pointer %p.\n", old);
+                fatal(EXIT_FAILURE);
+            }
+            if (old_info.size != old_size) {
+                error_impl(file, line,
+                           "Reallocation old size does not match size"
+                           " allocated on %s:%d: %lld != %lld\n",
+                           old_info.file, old_info.line,
+                           (llong)old_info.size, (llong)old_size);
+                fatal(EXIT_FAILURE);
+            }
+            if (((uchar *)old)[old_size] != 0xDC) {
+                error_impl(old_info.file, old_info.line,
+                           "Memory overflow detected before realloc in %p.\n", old);
+                fatal(EXIT_FAILURE);
+            }
+
+            info.reallocated = old_info.reallocated + 1;
+            hash_remove_alloc_map(allocations, &old);
+        }
+
+        p = xrealloc(old, new_size + 1);
+        ptr = (uchar *)p;
+        ptr[new_size] = 0xDC;
+
+        hash_insert_alloc_map(allocations, &p, info);
+
+        pthread_mutex_unlock(&allocations_mutex);
+    }
+
+    return p;
+}
+
 static void
 free_debug(char *file, int32 line, void *pointer, int64 size) {
     DebugAllocInfo info;
@@ -390,11 +463,21 @@ free2_(void *pointer, int64 size) {
     return;
 }
 
+#define realloc_flex_(old, old_capacity, new_capacity, obj_size) \
+    xrealloc(old, STRUCT_ARRAY_SIZE(old, obj_size, new_capacity))
+
+#define realloc_flex_debug(old, old_capacity, new_capacity, obj_size) \
+    realloc_flex_debug_impl(__FILE__, __LINE__, old, \
+                            STRUCT_ARRAY_SIZE(old, obj_size, old_capacity), \
+                            STRUCT_ARRAY_SIZE(old, obj_size, new_capacity))
+
 #if DEBUGGING_MEMORY
 #define malloc2(size) \
     malloc_debug(__FILE__, __LINE__, size)
 #define realloc2(old, old_capacity, new_capacity, obj_size) \
     realloc_debug(__FILE__, __LINE__, old, old_capacity, new_capacity, obj_size)
+#define realloc_flex(old, old_capacity, new_capacity, obj_size) \
+    realloc_flex_debug(old, old_capacity, new_capacity, obj_size)
 #define free2(pointer, size) \
     free_debug(__FILE__, __LINE__, pointer, size)
 #else
@@ -402,6 +485,8 @@ free2_(void *pointer, int64 size) {
     xmalloc(size)
 #define realloc2(old, old_capacity, new_capacity, obj_size) \
     realloc4(old, old_capacity, new_capacity, obj_size)
+#define realloc_flex(old, old_capacity, new_capacity, obj_size) \
+    realloc_flex_(old, old_capacity, new_capacity, obj_size)
 #define free2(pointer, size) \
     free2_(pointer, size)
 #endif
