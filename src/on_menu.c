@@ -493,8 +493,8 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
     task_list_free(tasks);
     free_message(message);
-    free2(term_cmd, term_cmd_len);
-    free2(diff_tool, diff_tool_len);
+    free2(term_cmd, term_cmd_len + 1);
+    free2(diff_tool, diff_tool_len + 1);
     return;
 }
 
