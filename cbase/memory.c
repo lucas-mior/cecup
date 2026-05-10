@@ -622,6 +622,11 @@ test_expected_fail_handler(int sig) {
     siglongjmp(test_jump_env, 1);
 }
 
+typedef struct TestFlex {
+    int32 count;
+    int64 items[];
+} TestFlex;
+
 #define ASSERT_EXPECTED_FATAL(BLOCK) do { \
     caught_expected_fail = false; \
     if (sigsetjmp(test_jump_env, 1) == 0) { \
@@ -692,6 +697,40 @@ int main(void) {
     }
 
     {
+        int64 count = 5;
+        int64 grow = 10;
+        int64 shrink = 3;
+        int64 initial_size;
+        TestFlex *flex;
+
+        initial_size = SIZEOF(TestFlex) + (count * SIZEOF(int64));
+        flex = malloc2(initial_size);
+        flex->count = (int32)count;
+
+        for (int32 i = 0; i < count; i += 1) {
+            flex->items[i] = (int64)(i * 10);
+        }
+
+        memory_check();
+        flex = realloc_flex(flex, count, grow, SIZEOF(int64));
+        flex->count = (int32)grow;
+        for (int32 i = 0; i < count; i += 1) {
+            ASSERT(flex->items[i] == (int64)(i * 10));
+        }
+        printf("realloc_flex (grow) preserved data.\n");
+
+        memory_check();
+        flex = realloc_flex(flex, grow, shrink, SIZEOF(int64));
+        flex->count = (int32)shrink;
+        for (int32 i = 0; i < shrink; i += 1) {
+            ASSERT(flex->items[i] == (int64)(i * 10));
+        }
+        printf("realloc_flex (shrink) successful.\n");
+
+        free2(flex, STRUCT_ARRAY_SIZE(flex, int64, shrink));
+    }
+
+    {
         char *original = "Comprehensive memory test string";
         char *mem_dup;
         char *dup = xstrdup(original);
@@ -750,6 +789,22 @@ int main(void) {
         });
         pthread_mutex_unlock(&allocations_mutex);
         free2(arr, count*SIZEOF(int64));
+    }
+
+    {
+        int64 count = 5;
+        int64 initial_size;
+        TestFlex *flex;
+
+        initial_size = SIZEOF(TestFlex) + (count * SIZEOF(int64));
+        flex = malloc2(initial_size);
+
+        ASSERT_EXPECTED_FATAL({
+            // Realloc flex with wrong old capacity
+            realloc_flex(flex, count + 2, 10, SIZEOF(int64));
+        });
+        pthread_mutex_unlock(&allocations_mutex);
+        free2(flex, initial_size);
     }
 
     {
