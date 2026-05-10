@@ -463,9 +463,6 @@ free2_(void *pointer, int64 size) {
     return;
 }
 
-#define realloc_flex_(old, old_capacity, new_capacity, obj_size) \
-    xrealloc(old, STRUCT_ARRAY_SIZE(old, obj_size, new_capacity))
-
 #define realloc_flex_debug(old, old_capacity, new_capacity, obj_size) \
     realloc_flex_debug_impl(__FILE__, __LINE__, old, \
                             STRUCT_ARRAY_SIZE(old, obj_size, old_capacity), \
@@ -486,7 +483,7 @@ free2_(void *pointer, int64 size) {
 #define realloc2(old, old_capacity, new_capacity, obj_size) \
     realloc4(old, old_capacity, new_capacity, obj_size)
 #define realloc_flex(old, old_capacity, new_capacity, obj_size) \
-    realloc_flex_(old, old_capacity, new_capacity, obj_size)
+    xrealloc(old, STRUCT_ARRAY_SIZE(old, obj_size, new_capacity))
 #define free2(pointer, size) \
     free2_(pointer, size)
 #endif
