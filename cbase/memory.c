@@ -312,18 +312,21 @@ realloc_debug(char *file, int32 line,
 }
 
 static void *
-realloc_flex_debug_impl(char *file, int32 line,
-                        void *old, int64 old_size, int64 new_size) {
+realloc_flex_debug(char *file, int32 line,
+                   void *old, int64 struct_size,
+                   int64 old_capacity, int64 new_capacity, int64 obj_size) {
     void *p;
+    int64 total_size = struct_size + new_capacity*obj_size;
+    int64 old_size = struct_size + old_capacity*obj_size;
 
     if (RUNNING_ON_VALGRIND) {
-        return realloc(old, (size_t)new_size);
+        return realloc(old, (size_t)total_size);
     }
 
-    if (new_size <= 0) {
+    if (new_capacity <= 0) {
         error_impl(file, line,
                    "Error in %s: invalid object size = %lld.\n",
-                   __func__, (llong)new_size);
+                   __func__, (llong)new_capacity);
         fatal(EXIT_FAILURE);
     }
 
@@ -331,7 +334,7 @@ realloc_flex_debug_impl(char *file, int32 line,
         DebugAllocInfo info;
         uchar *ptr;
 
-        info.size = new_size;
+        info.size = total_size;
         info.file = file;
         info.line = line;
         info.reallocated = 0;
@@ -372,9 +375,9 @@ realloc_flex_debug_impl(char *file, int32 line,
             hash_remove_alloc_map(allocations, &old);
         }
 
-        p = xrealloc(old, new_size + 1);
+        p = xrealloc(old, total_size + 1);
         ptr = (uchar *)p;
-        ptr[new_size] = 0xDC;
+        ptr[total_size] = 0xDC;
 
         hash_insert_alloc_map(allocations, &p, info);
 
@@ -463,18 +466,13 @@ free2_(void *pointer, int64 size) {
     return;
 }
 
-#define realloc_flex_debug(old, old_capacity, new_capacity, obj_size) \
-    realloc_flex_debug_impl(__FILE__, __LINE__, old, \
-                            STRUCT_ARRAY_SIZE(old, obj_size, old_capacity), \
-                            STRUCT_ARRAY_SIZE(old, obj_size, new_capacity))
-
 #if DEBUGGING_MEMORY
 #define malloc2(size) \
     malloc_debug(__FILE__, __LINE__, size)
 #define realloc2(old, old_capacity, new_capacity, obj_size) \
     realloc_debug(__FILE__, __LINE__, old, old_capacity, new_capacity, obj_size)
 #define realloc_flex(old, old_capacity, new_capacity, obj_size) \
-    realloc_flex_debug(old, old_capacity, new_capacity, obj_size)
+    realloc_flex_debug(__FILE__, __LINE__, old, SIZEOF(*old), old_capacity, new_capacity, obj_size)
 #define free2(pointer, size) \
     free_debug(__FILE__, __LINE__, pointer, size)
 #else
