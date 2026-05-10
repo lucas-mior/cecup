@@ -104,7 +104,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         int32 idx;
 
         count = 1;
-        tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count));
+        tasks = realloc_flex(tasks, cecup.rows_len, count, SIZEOF(Task *));
         tasks->count = count;
 
         task = malloc2(SIZEOF(*task));
@@ -124,7 +124,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         task->side = side;
         tasks->items[0] = task;
     } else {
-        tasks = xrealloc(tasks, STRUCT_ARRAY_SIZE(tasks, Task *, count));
+        tasks = realloc_flex(tasks, cecup.rows_len, count, SIZEOF(Task *));
         tasks->count = count;
     }
 
