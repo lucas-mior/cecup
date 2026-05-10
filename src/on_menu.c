@@ -420,8 +420,10 @@ on_menu_diff(GtkWidget *widget, void *data) {
     term_cmd_len = strlen32(term_cmd_raw);
     diff_tool_len = strlen32(diff_tool_raw);
 
-    term_cmd = xmemdup(term_cmd_raw, term_cmd_len + 1);
-    diff_tool = xmemdup(diff_tool_raw, diff_tool_len + 1);
+    term_cmd = malloc2(term_cmd_len + 1);
+    memcpy64(term_cmd, term_cmd_raw, term_cmd_len + 1);
+    diff_tool = malloc2(diff_tool_len + 1);
+    memcpy64(diff_tool, diff_tool_raw, diff_tool_len + 1);
 
     token = strtok(term_cmd, " ");
     while (token != NULL && term_argument_count < LENGTH(term_arguments)) {
