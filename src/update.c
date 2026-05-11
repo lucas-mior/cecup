@@ -69,7 +69,7 @@ update_ui_handler(void *data) {
     bool is_batch = false;
 
     if (DEBUGGING) {
-        error("%s: Handling message: %s\n", __func__, MSG_str(message->type));
+        error("Handling message: %s\n", MSG_str(message->type));
     }
 
     switch (message->type) {
@@ -273,7 +273,7 @@ update_row_remove(char *path_removed, int32 path_removed_len, int32 side) {
     int32 row_id;
 
     if (path_removed == NULL || path_removed_len == 0) {
-        error("Error: invalid arguments passed to %s.\n", __func__);
+        error("Error: invalid arguments.\n");
         fatal(EXIT_FAILURE);
     }
 
@@ -329,7 +329,7 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
     int32 symlink_target_len = 0;
 
     if ((path_transfered == NULL) || (path_transfered_len == 0)) {
-        error("Error: invalid arguments passed to %s.\n", __func__);
+        error("Error: invalid arguments.\n");
         if (DEBUGGING) {
             fatal(EXIT_FAILURE);
         }

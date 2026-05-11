@@ -49,7 +49,7 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
         gtk_text_buffer_get_bounds(cecup.log_buffer, &text_start, &text_end);
     } else if (strcmp(which, "line") == 0) {
         if (parameter == NULL) {
-            error("Error in %s: GVariant *parameter is NULL.\n", __func__);
+            error("Error: GVariant *parameter is NULL.\n");
             return;
         }
         line_num = g_variant_get_int32(parameter);
@@ -60,7 +60,7 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
             gtk_text_iter_forward_to_line_end(&text_end);
         }
     } else {
-        error("%s called with wrong argument (which = %s)\n", __func__, which);
+        error("Error: called with wrong argument (which = %s)\n", which);
         fatal(EXIT_FAILURE);
     }
 

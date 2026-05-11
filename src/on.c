@@ -90,8 +90,7 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
     }
 
     if (pos >= (uint32)cecup.rows_visible_len) {
-        error("Error in %s: list position returned by gtk is out of range for cecup.rows array.\n",
-              __func__);
+        error("Error: list position returned by gtk is out of range for cecup.rows array.\n");
         return;
     }
     row_id = cecup.rows_visible[pos];
@@ -434,8 +433,8 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
 
     row_id_toggled = GPOINTER_TO_INT(row_id_ptr) - 1;
     if ((row_id_toggled < 0) || (row_id_toggled >= cecup.rows_len)) {
-        error("Error in %s: Invalid row_id=%d passed via \"cecup-row-id\" object data.\n",
-              __func__, row_id_toggled);
+        error("Error: Invalid row_id=%d passed via \"cecup-row-id\" object data.\n",
+              row_id_toggled);
         return;
     }
 
