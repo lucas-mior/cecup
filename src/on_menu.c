@@ -45,18 +45,18 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     (void)data;
 
     if ((tree = g_object_get_data(G_OBJECT(cecup.application), "active_tree")) == NULL) {
-        error("Error in %s: Can't get \"active_tree\" from the application widget.\n", __func__);
+        error("Error: Can't get \"active_tree\" from the application widget.\n");
     }
     if ((message = g_object_steal_data(G_OBJECT(cecup.application), "active_message")) == NULL) {
-        error("Error in %s: Can't get \"active_message\" from the application widget.\n", __func__);
+        error("Error: Can't get \"active_message\" from the application widget.\n");
     }
     if (parameter == NULL) {
-        error("Error in %s: GVariant *parameter is NULL.\n", __func__);
+        error("Error: GVariant *parameter is NULL.\n");
     }
     if (parameter) {
         index = g_variant_get_int32(parameter);
         if ((index < 0) || (index >= LENGTH(tree_menu_items))) {
-            error("Error in %s: index out of range for the menu items array.\n", __func__);
+            error("Error: index out of range for the menu items array.\n");
             index = -1;
         }
     }
@@ -88,7 +88,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     (void)data;
 
     if (parameter == NULL) {
-        error("Error in %s: GVariant *parameter is NULL.\n", __func__);
+        error("Error: GVariant *parameter is NULL.\n");
         fatal(EXIT_FAILURE);
     }
     if ((pattern = (char *)g_variant_get_string(parameter, NULL)) == NULL) {
@@ -210,9 +210,9 @@ on_menu_open_item(GtkWidget *widget, void *data) {
     } else if (!strcmp(variant, "file")) {
         folder = false;
     } else {
-        error("Error in %s:"
+        error("Error: "
               "\"variant\" must be \"folder\" or \"file\", but \"%s\" was passed.\n",
-              __func__, variant);
+              variant);
         fatal(EXIT_FAILURE);
     }
 
