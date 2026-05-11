@@ -537,7 +537,10 @@ main(void) {
     cecup.term_entry = gtk_entry_new();
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "diff");
-    gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "xterm");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "true");
+
+    cecup.src_base = xstrdup("/tmp");
+    cecup.dst_base = xstrdup("/tmp");
 
     store = cecup_list_model_new();
     sel = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(store)));
@@ -577,22 +580,30 @@ main(void) {
     memset64(msg, 0, SIZEOF(*msg));
     msg->side = L;
     msg->action = ACTION_NEW;
+    msg->src_path = xstrdup("test.txt");
+    msg->src_path_len = 8;
     on_menu_apply(tree, msg);
 
     msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
+    msg->src_path = xstrdup("test.txt");
+    msg->src_path_len = 8;
     on_menu_rename(tree, msg);
 
     msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
+    msg->side = L;
+    msg->src_path = xstrdup("test.txt");
+    msg->src_path_len = 8;
     g_object_set_data(G_OBJECT(tree), "variant", "file");
     on_menu_open_item(tree, msg);
 
     msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
+    msg->side = L;
+    msg->src_path = xstrdup("test.txt");
+    msg->src_path_len = 8;
     g_object_set_data(G_OBJECT(tree), "variant", "absolute");
-    cecup.src_base = malloc2(10);
-    memcpy64(cecup.src_base, "/tmp", 5);
     on_menu_copy_path(tree, msg);
 
     {
@@ -607,10 +618,16 @@ main(void) {
 
     msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
+    msg->side = L;
+    msg->src_path = xstrdup("test.txt");
+    msg->src_path_len = 8;
     on_menu_delete(tree, msg);
 
     msg = malloc2(SIZEOF(*msg));
     memset64(msg, 0, SIZEOF(*msg));
+    msg->side = L;
+    msg->src_path = xstrdup("test.txt");
+    msg->src_path_len = 8;
     on_menu_diff(tree, msg);
 
     {
@@ -627,6 +644,7 @@ main(void) {
     }
 
     free2(cecup.src_base, 10);
+    free2(cecup.dst_base, 10);
     free2(cecup.rows_selected, 10 * SIZEOF(uint8));
 
     g_object_unref(tree);
