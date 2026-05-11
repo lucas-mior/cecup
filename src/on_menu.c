@@ -540,7 +540,9 @@ main(void) {
     gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "true");
 
     cecup.src_base = xstrdup("/tmp");
+    cecup.src_base_len = strlen32(cecup.src_base);
     cecup.dst_base = xstrdup("/tmp");
+    cecup.dst_base_len = strlen32(cecup.dst_base);
 
     store = cecup_list_model_new();
     sel = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(store)));
@@ -635,6 +637,10 @@ main(void) {
 
         msg = malloc2(SIZEOF(*msg));
         memset64(msg, 0, SIZEOF(*msg));
+        msg->side = L;
+        msg->action = ACTION_NEW;
+        msg->src_path = xstrdup("test.txt");
+        msg->src_path_len = 8;
         g_object_set_data_full(G_OBJECT(cecup.application), "active_message", msg, free_message);
 
         idx_param = g_variant_new_int32(0);
@@ -643,8 +649,8 @@ main(void) {
         g_variant_unref(idx_param);
     }
 
-    free2(cecup.src_base, 10);
-    free2(cecup.dst_base, 10);
+    free2(cecup.src_base, cecup.src_base_len + 1);
+    free2(cecup.dst_base, cecup.dst_base_len + 1);
     free2(cecup.rows_selected, 10 * SIZEOF(uint8));
 
     g_object_unref(tree);
