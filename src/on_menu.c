@@ -285,9 +285,9 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     } else if (!strcmp(variant, "relative")) {
         absolute = false;
     } else {
-        error("Error in %s:"
+        error("Error: "
               "\"variant\" must be \"absolute\" or \"relative\", but \"%s\" was passed.\n",
-              __func__, variant);
+              variant);
         fatal(EXIT_FAILURE);
     }
 
