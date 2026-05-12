@@ -870,11 +870,12 @@ main(int32 argc, char **argv) {
         char config_base[MAX_PATH_LENGTH];
         char *XDG_CONFIG_HOME;
 
-        if ((XDG_CONFIG_HOME = getenv("XDG_CONFIG_HOME")) == NULL) {
+        GETENV(XDG_CONFIG_HOME);
+        if (XDG_CONFIG_HOME == NULL) {
             char *HOME;
 
-            if ((HOME = getenv("HOME")) == NULL) {
-                error("HOME is not defined. Fix your system.\n");
+            GETENV(HOME);
+            if (HOME == NULL) {
                 fatal(EXIT_FAILURE);
             }
             SNPRINTF(xdg_buffer, "%s/.config", HOME);
