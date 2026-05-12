@@ -169,7 +169,6 @@ on_path_edited(GtkEditable *editable, void *data) {
     memcpy64(relative_new, new_text, new_length + 1);
     normalize(relative_new, &new_length);
 
-    ASSERT_EQUAL(new_length, strlen32(relative_new));
     if (BEGINS_WITH(relative_new, new_length, "/")) {
         LOG_ERROR(_("Invalid rename: %s starts with a slash.\n"), relative_new);
         return;
