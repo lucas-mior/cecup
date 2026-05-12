@@ -416,7 +416,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             line_len = (int32)(eol - buf_output);
             *eol = '\0';
 
-            if (!BEGINS_WITH(buf_output, RSYNC_DUPLICATE)) {
+            if (!BEGINS_WITH(buf_output, line_len, RSYNC_DUPLICATE)) {
                 LOG("%s%c", buf_output, end);
             }
 
