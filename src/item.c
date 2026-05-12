@@ -404,7 +404,7 @@ item_get_actions_reasons(int32 row_id,
 }
 
 static int
-compare_names(const void *a, const void *b) {
+compare_names(void *a, void *b) {
     char *name_a;
     char *name_b;
 
@@ -426,7 +426,7 @@ compare_names(const void *a, const void *b) {
     } while (0)
 
 INLINE int32
-cecup_item_compare_string_key(const void *a, const void *b) {
+cecup_item_compare_string_key(void *a, void *b) {
     RowCache *entry_a = (RowCache *)a;
     RowCache *entry_b = (RowCache *)b;
     int32 result;
@@ -445,7 +445,7 @@ cecup_item_compare_string_key(const void *a, const void *b) {
 }
 
 INLINE int32
-cecup_item_compare_int_key(const void *a, const void *b) {
+cecup_item_compare_int_key(void *a, void *b) {
     RowCache *entry_a = (RowCache *)a;
     RowCache *entry_b = (RowCache *)b;
     int32 result = 0;
@@ -464,7 +464,7 @@ cecup_item_compare_int_key(const void *a, const void *b) {
 #undef COMPARE
 
 typedef void(*SortFunction)(RowCache *a, int64);
-typedef int(*CompareFunction)(const void *a, const void *b);
+typedef int(*CompareFunction)(void *a, void *b);
 
 #define i_key RowCache
 #define i_cmp(a,b) cecup_item_compare_string_key(a,b)
