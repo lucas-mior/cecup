@@ -79,8 +79,9 @@ traversal_free(Traversal *traversal) {
     for (uint32 i = 0; i < traversal->inode_map->capacity; i += 1) {
         Bucket_inode_map *bucket = &traversal->inode_map->array[i];
         HardLinks hard_links = bucket->value;
+        int8 slot_state = traversal->inode_map->slot_states[i];
 
-        if (bucket->slot_state != HASH_SLOT_USED) {
+        if (slot_state != HASH_SLOT_USED) {
             continue;
         }
 
