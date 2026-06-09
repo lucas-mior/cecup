@@ -57,80 +57,80 @@ _Static_assert((!R) == L, "!R must be L");
 #define ENUM_NAME Action
 #define ENUM_PREFIX_ ACTION_
 #define ENUM_FIELDS     \
-    X(NEW)              \
-    X(UPDATE)           \
-    X(HARDLINK)         \
-    X(SYMLINK)          \
-    X(EQUAL)            \
-    X(DELETED)          \
-    X(DELETE)           \
-    X(IGNORE)
+    X(ACTION_NEW)              \
+    X(ACTION_UPDATE)           \
+    X(ACTION_HARDLINK)         \
+    X(ACTION_SYMLINK)          \
+    X(ACTION_EQUAL)            \
+    X(ACTION_DELETED)          \
+    X(ACTION_DELETE)           \
+    X(ACTION_IGNORE)
 #include "xenums.c"
 
 #define ENUM_BITFLAGS 1
 #define ENUM_NAME Reason
 #define ENUM_PREFIX_ REASON_
 #define ENUM_FIELDS     \
-    X(NEW)              \
-    X(SIZE)             \
-    X(MTIME_NEWER)      \
-    X(MTIME_OLDER)      \
-    X(CTIME)            \
-    X(OWNER)            \
-    X(GROUP)            \
-    X(PERM)             \
-    X(HARDLINK)         \
-    X(SYMLINK)          \
-    X(SYMLINK_NOT)       \
-    X(SYMLINK_NO_TARGET) \
-    X(SYMLINK_NOT_MATCH) \
-    X(HARDLINK_NOT_REGULAR) \
-    X(HARDLINK_MISSING_LINK) \
-    X(HARDLINK_NOT_MATCH) \
-    X(EQUAL)            \
-    X(IGNORED)          \
-    X(MISSING)
+    X(REASON_NEW)              \
+    X(REASON_SIZE)             \
+    X(REASON_MTIME_NEWER)      \
+    X(REASON_MTIME_OLDER)      \
+    X(REASON_CTIME)            \
+    X(REASON_OWNER)            \
+    X(REASON_GROUP)            \
+    X(REASON_PERM)             \
+    X(REASON_HARDLINK)         \
+    X(REASON_SYMLINK)          \
+    X(REASON_SYMLINK_NOT)       \
+    X(REASON_SYMLINK_NO_TARGET) \
+    X(REASON_SYMLINK_NOT_MATCH) \
+    X(REASON_HARDLINK_NOT_REGULAR) \
+    X(REASON_HARDLINK_MISSING_LINK) \
+    X(REASON_HARDLINK_NOT_MATCH) \
+    X(REASON_EQUAL)            \
+    X(REASON_IGNORED)          \
+    X(REASON_MISSING)
 #include "xenums.c"
 
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME ColumnType
 #define ENUM_PREFIX_ COLUMN_
 #define ENUM_FIELDS     \
-    X(ACTION)           \
-    X(PATH)             \
-    X(SIZE)             \
-    X(MTIME)
+    X(COLUMN_ACTION)           \
+    X(COLUMN_PATH)             \
+    X(COLUMN_SIZE)             \
+    X(COLUMN_MTIME)
 #include "xenums.c"
 
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME CecupColumn
 #define ENUM_PREFIX_ COL_
 #define ENUM_FIELDS \
-    X(SELECTED)     \
-    X(SRC_ACTION)   \
-    X(DST_ACTION)   \
-    X(SRC_PATH)     \
-    X(DST_PATH)     \
-    X(SRC_SIZE)     \
-    X(DST_SIZE)     \
-    X(SRC_MTIME)    \
-    X(DST_MTIME)
+    X(COL_SELECTED)     \
+    X(COL_SRC_ACTION)   \
+    X(COL_DST_ACTION)   \
+    X(COL_SRC_PATH)     \
+    X(COL_DST_PATH)     \
+    X(COL_SRC_SIZE)     \
+    X(COL_DST_SIZE)     \
+    X(COL_SRC_MTIME)    \
+    X(COL_DST_MTIME)
 #include "xenums.c"
 
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME MsgType
 #define ENUM_PREFIX_ MSG_
 #define ENUM_FIELDS \
-    X(LOG)                \
-    X(LOG_ERROR)          \
-    X(LOG_CMD)            \
-    X(BATCH_ROW_TRANSFER) \
-    X(BATCH_ROW_REMOVE)   \
-    X(BATCH_ROW_RENAME)   \
-    X(IGNORE_PATTERN)     \
-    X(WORK_FINISHED)      \
-    X(CLEAR_TREES)        \
-    X(PROGRESS)
+    X(MSG_LOG)                \
+    X(MSG_LOG_ERROR)          \
+    X(MSG_LOG_CMD)            \
+    X(MSG_BATCH_ROW_TRANSFER) \
+    X(MSG_BATCH_ROW_REMOVE)   \
+    X(MSG_BATCH_ROW_RENAME)   \
+    X(MSG_IGNORE_PATTERN)     \
+    X(MSG_WORK_FINISHED)      \
+    X(MSG_CLEAR_TREES)        \
+    X(MSG_PROGRESS)
 #include "xenums.c"
 
 #if !defined(error2)
