@@ -18,7 +18,7 @@
 #if !defined(AUX_C)
 #define AUX_C
 
-#include <gtk/gtk.h>
+#include "gtk_include.h"
 
 #include "cecup.h"
 #include "item.c"

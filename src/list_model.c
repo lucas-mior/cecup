@@ -18,7 +18,7 @@
 #if !defined(LIST_MODEL_C)
 #define LIST_MODEL_C
 
-#include <gtk/gtk.h>
+#include "gtk_include.h"
 
 #include "cecup.h"
 #include "util.c"

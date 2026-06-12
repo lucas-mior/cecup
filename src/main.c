@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gtk/gtk.h>
+#include "gtk_include.h"
 #include <sys/stat.h>
 #include <unistd.h>
 

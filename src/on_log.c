@@ -18,7 +18,7 @@
 #if !defined(ON_LOG_C)
 #define ON_LOG_C
 
-#include <gtk/gtk.h>
+#include "gtk_include.h"
 #include <string.h>
 #include "util.c"
 #include "cecup.h"

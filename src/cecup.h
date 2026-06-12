@@ -18,7 +18,7 @@
 #if !defined(CECUP_H)
 #define CECUP_H
 
-#include <gtk/gtk.h>
+#include "gtk_include.h"
 #include <sys/stat.h>
 #include "generic.c"
 #include "arena.c"

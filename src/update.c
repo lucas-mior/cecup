@@ -18,7 +18,7 @@
 #if !defined(UPDATE_C)
 #define UPDATE_C
 
-#include <gtk/gtk.h>
+#include "gtk_include.h"
 #include <glib/gmain.h>
 #include <stdlib.h>
 

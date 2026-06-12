@@ -18,7 +18,7 @@
 #if !defined (ON_PATH_C)
 #define ON_PATH_C
 
-#include <gtk/gtk.h>
+#include "gtk_include.h"
 
 #include "util.c"
 #include "update.c"

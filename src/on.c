@@ -18,7 +18,7 @@
 #if !defined(ON_C)
 #define ON_C
 
-#include <gtk/gtk.h>
+#include "gtk_include.h"
 
 #include "cecup.h"
 #include "update.c"

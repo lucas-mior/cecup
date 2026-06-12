@@ -18,7 +18,7 @@
 #if !defined(WORK_C)
 #define WORK_C
 
-#include <gtk/gtk.h>
+#include "gtk_include.h"
 #include <ctype.h>
 #include <sys/wait.h>
 #include <dirent.h>

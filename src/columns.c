@@ -18,7 +18,7 @@
 #if !defined(COLUMNS_C)
 #define COLUMNS_C
 
-#include <gtk/gtk.h>
+#include "gtk_include.h"
 
 #include "cecup.h"
 #include "on.c"

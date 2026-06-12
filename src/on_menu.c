@@ -18,7 +18,7 @@
 #if !defined(ON_MENU_C)
 #define ON_MENU_C
 
-#include <gtk/gtk.h>
+#include "gtk_include.h"
 
 #include "cecup.h"
 #include "util.c"
