@@ -99,7 +99,6 @@ CFLAGS="$CFLAGS -Wno-deprecated-declarations"
 CFLAGS="$CFLAGS -Wno-unknown-pragmas"
 CFLAGS="$CFLAGS -Wno-format-security"
 CFLAGS="$CFLAGS -Wno-unused-function"
-CFLAGS="$CFLAGS -Wno-comma"
 CFLAGS="$CFLAGS -Wno-undef"
 
 LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk4) -lpthread"
@@ -265,6 +264,7 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
     CFLAGS="$CFLAGS -Wno-unknown-warning-option"
     CFLAGS="$CFLAGS -Wno-gnu-union-cast"
+    CFLAGS="$CFLAGS -Wno-comma"
 
     # to avoid using -Wno-unused-function
     CFLAGS="$CFLAGS -Wno-unneeded-internal-declaration"
