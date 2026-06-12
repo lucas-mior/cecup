@@ -91,8 +91,6 @@ if [ -z "$NOCOLORS" ]; then
 fi
 # CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-format-pedantic"
-CFLAGS="$CFLAGS -Wno-unknown-warning-option"
-CFLAGS="$CFLAGS -Wno-gnu-union-cast"
 CFLAGS="$CFLAGS -Wno-unused-macros"
 CFLAGS="$CFLAGS -Wno-constant-logical-operand"
 CFLAGS="$CFLAGS -Wno-float-equal"
@@ -265,6 +263,8 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-used-but-marked-unused"
     CFLAGS="$CFLAGS -Wno-double-promotion"
     CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
+    CFLAGS="$CFLAGS -Wno-unknown-warning-option"
+    CFLAGS="$CFLAGS -Wno-gnu-union-cast"
 
     # to avoid using -Wno-unused-function
     CFLAGS="$CFLAGS -Wno-unneeded-internal-declaration"
