@@ -169,6 +169,8 @@ on_path_edited(GtkEditable *editable, void *data) {
     memcpy64(relative_new, new_text, new_length + 1);
     normalize(relative_new, &new_length);
 
+    // TODO: Reject ".." path components and verify the resolved destination
+    // remains below base_path. normalize does not remove parent traversal.
     if (BEGINS_WITH(relative_new, new_length, "/")) {
         LOG_ERROR(_("Invalid rename: %s starts with a slash.\n"), relative_new);
         return;
@@ -202,6 +204,9 @@ on_path_edited(GtkEditable *editable, void *data) {
             return;
         }
 
+        // TODO: Detect FTS_ERR, FTS_DNR, FTS_NS, fts_read errno, and
+        // fts_close failure. A partial walk leaves the model inconsistent after
+        // the filesystem rename; force a complete preview instead.
         while ((entry = fts_read(fts_handle))) {
             char *child_rel_new;
             char child_rel_old[MAX_PATH_LENGTH];
@@ -263,13 +268,12 @@ on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
     is_editing = gtk_editable_label_get_editing(GTK_EDITABLE_LABEL(object));
 
     if (is_editing) {
-        // TODO: Memory Leak. Calling `g_object_ref(object)` increments the reference count, but
-        // `on_path_editing_started` does not drop the reference. This leads to leaking the object
-        // every time editing begins.
+        // TODO: This ref leaks. Transfer a ref into SelectionData and release
+        // it in the idle callback after the selection is applied.
         on_path_editing_started(GTK_EDITABLE(g_object_ref(object)), data);
     } else {
-        // TODO: Memory Leak. Similar to the branch above, `on_path_edited` does not unref the
-        // object. This leads to leaking the object every time editing finishes.
+        // TODO: This synchronous call needs no extra ref. The current ref leaks
+        // every time editing finishes.
         on_path_edited(GTK_EDITABLE(g_object_ref(object)), data);
     }
 

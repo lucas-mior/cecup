@@ -101,6 +101,8 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
         return;
     }
 
+    // TODO: Check fprintf and fclose before scheduling MSG_IGNORE_PATTERN.
+    // A failed append currently reloads the old file as if the rule was added.
     fprintf(ignore_file, "\n%s", pattern);
     if (fclose(ignore_file)) {
         LOG_ERROR(_("Error closing %s: %s.\n"), cecup.ignore_path, strerror(errno));
@@ -314,6 +316,8 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
                             "%s. Copying relative path instead.\n"),
                           path_relative, strerror(errno));
                 SNPRINTF(path_full, "%s", path_relative);
+                // TODO: Do not continue after preparing the fallback. This
+                // branch promises to copy it but skips the item entirely.
                 continue;
             }
             path = path_full;
@@ -406,6 +410,9 @@ on_menu_diff(GtkWidget *widget, void *data) {
     char *term_cmd;
     int32 term_cmd_len;
     int32 diff_tool_len;
+    // TODO: Each parser can fill all 64 entries before writing a NULL at
+    // index 64, and the combined vector can require 132 entries. Reserve the
+    // terminators and bounds-check every combined append.
     char *term_arguments[64];
     char *diff_arguments[64];
     char *token;
@@ -485,6 +492,8 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 _exit(EXIT_FAILURE);
             }
         default:
+            // TODO: Retain and reap the child PID. Without waitpid or a
+            // child watch, a completed diff process can remain a zombie.
             free2(path_src, size_src);
             free2(path_dst, size_dst);
             break;

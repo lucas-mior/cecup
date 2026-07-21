@@ -64,6 +64,10 @@ traversal_clean(Traversal *traversal) {
 
     arena_reset(traversal->arena);
     hash_zero_fs_map(traversal->map);
+
+    // TODO: Free each used HardLinks names/names_lens allocation before
+    // zeroing the map. hash_zero_inode_map discards those pointers and leaks
+    // every hard-link group.
     hash_zero_inode_map(traversal->inode_map);
 
     traversal->file_count = 0;
@@ -179,6 +183,8 @@ traversal_symlink_get(Traversal *traversal, char *path, char **symlink_target) {
     char buffer[MAX_PATH_LENGTH];
     int64 symlink_target_len;
 
+    // TODO: A return value equal to SIZEOF(buffer) - 1 means the target may
+    // have been truncated. Detect that case and retry with a larger buffer.
     if ((symlink_target_len = readlink(path, buffer, SIZEOF(buffer) - 1)) < 0) {
         LOG_ERROR(_("Error in readlink(%s): %s.\n"), path, strerror(errno));
         *symlink_target = NULL;

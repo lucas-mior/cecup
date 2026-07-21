@@ -13,5 +13,8 @@ style.sh
 package
 a$
 b$
+a/
+b/
+bin/
 *.mo
 *.gif

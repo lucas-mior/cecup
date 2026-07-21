@@ -59,6 +59,8 @@ ignore_patterns_load(void) {
     }
 
     while (fgets(line_buffer, SIZEOF(line_buffer), file)) {
+        // TODO: Reject or consume a line that fills the buffer without a
+        // newline. Its continuation is currently parsed as another pattern.
         int32 line_len = strlen32(line_buffer);
         IgnorePattern *pattern;
 
@@ -122,6 +124,8 @@ ignore_patterns_load(void) {
         count += 1;
     }
 
+    // TODO: Check ferror before installing count. A read failure silently
+    // activates a partial ignore-rule set.
     cecup.ignore_count = count;
 
     if (fclose(file)) {
@@ -194,11 +198,9 @@ ignore_patterns_match(char *path, int32 path_len,
 
 static bool
 ignore_pattern_match_single(IgnorePattern *pattern, char *path, int32 path_len, bool is_dir) {
-    // TODO: Bug. Logic error causing directory ignore rules to fail on child files.  By checking
-    // `if (pattern->dir_only && !is_dir)` right at the start, you immediately reject files
-    // contained within ignored directories. For example, if "build/" is ignored, checking
-    // "build/main.o" (is_dir=false) will return false and the file will not be ignored. This check
-    // must only apply if the pattern matches the full path, not a directory prefix.
+    // TODO: This early check makes a rule such as "build/" reject
+    // "build/main.o" before testing its directory prefix. Apply dir_only only
+    // to a full-path match, not to descendants of a matched directory.
     if (pattern->dir_only && !is_dir) {
         return false;
     }

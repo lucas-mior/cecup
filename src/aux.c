@@ -192,6 +192,8 @@ cecup_get_dirs(void) {
     tmp_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
     tmp_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R]));
 
+    // TODO: Do not persist entry text until both paths are validated.
+    // Analysis currently saves invalid or noncanonical paths before checks.
     save_config();
 
     if (strlen32(tmp_src) <= 0) {
@@ -228,6 +230,8 @@ cecup_get_dirs(void) {
     normalize(full_src, &full_src_len);
     normalize(full_dst, &full_dst_len);
 
+    // TODO: realpath can fill PATH_MAX - 1 bytes. Appending '/' and '\0'
+    // can write one byte past either stack buffer; reserve two bytes.
     if (full_src[full_src_len - 1] != '/') {
         full_src_len += 1;
         full_src[full_src_len - 1] = '/';
@@ -240,6 +244,8 @@ cecup_get_dirs(void) {
     }
 
     {
+        // TODO: Both canonical paths already end in '/'. A prefix match is
+        // sufficient; checking the next byte misses non-root containment.
         if ((full_src_len > full_dst_len) && !memcmp64(full_src, full_dst, full_dst_len)) {
             if ((full_dst_len == 1 && full_dst[0] == '/') || (full_src[full_dst_len] == '/')) {
                 LOG_ERROR(_("Error: source directory is contained in the destination directory\n"));
@@ -312,6 +318,8 @@ save_config(void) {
     config_bool_set(key, "Options", "delete_after",   cecup.delete_after_button);
     config_bool_set(key, "Options", "delete_ignored", cecup.delete_ignored_button);
 
+    // TODO: Check both GError results. Serialization, permission, and
+    // disk-full failures are currently silent.
     out = g_key_file_to_data(key, &len, NULL);
     g_file_set_contents(cecup.config_path, out, (gssize)len, NULL);
 

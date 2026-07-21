@@ -394,6 +394,9 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
             traversal_unlink(traversal_dst, idx);
         }
 
+        // TODO: Clear symlink_targets[idx] and its length when stat is not a
+        // symlink. A replaced symlink otherwise keeps displaying its old
+        // target.
         if (S_ISLNK(stat.st_mode)) {
             symlink_target_len = traversal_symlink_get(traversal_dst, full_path, &symlink_target);
             traversal_dst->symlink_targets[idx] = symlink_target;
@@ -581,6 +584,9 @@ update_row_ignore(Message *message) {
     (void)message;
 
     aux_invalidate_preview();
+
+    // TODO: ignore_patterns_load frees every old pattern string. Rematch and
+    // replace or clear every traversal pattern pointer before tooltips use it.
     ignore_patterns_load();
 
     for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
@@ -793,6 +799,8 @@ update_list_from_rows(enum UpdateRowsType change) {
                 break;
             case COL_SRC_ACTION:
             case COL_SELECTED:
+                // TODO: COL_SELECTED must use rows_selected[row_id], not
+                // src_action. It currently duplicates source-action ordering.
                 cache_rows[v_idx].key.i64 = (int64)src_action;
                 break;
             case COL_DST_ACTION:

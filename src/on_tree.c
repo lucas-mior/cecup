@@ -432,11 +432,17 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     {
         int64 mtime_raw = item_mtime_side(row_id, side);
 
+        // TODO: Timestamp zero and valid pre-epoch values are rendered blank.
+        // Distinguish a missing row from a timestamp by its index, not by its
+        // sign.
         if (mtime_raw > 0) {
             struct tm time_information;
             time_t unix_timestamp;
 
             unix_timestamp = (time_t)mtime_raw + timezone_offset;
+            // TODO: Use localtime_r for each timestamp and check its result.
+            // A startup-time offset is wrong across DST, and gmtime_r failure
+            // leaves time_information unusable for strftime.
             gmtime_r(&unix_timestamp, &time_information);
             STRFTIME(text_buf, "%Y-%m-%d %H:%M:%S", &time_information);
         }

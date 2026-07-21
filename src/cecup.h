@@ -154,6 +154,8 @@ typedef struct HardLinks {
     int32 *names_lens;
 } HardLinks;
 
+// TODO: Inodes are unique only within a device. FTS can cross mount points,
+// so this key must include both st_dev and st_ino to avoid merging files.
 #define HASH_KEY_TYPE ino_t
 #define HASH_KEY_FIXED_LEN 1
 #define HASH_VALUE_TYPE HardLinks
@@ -455,6 +457,9 @@ static struct {
     pid_t child_pid;
     pthread_t work_thread;
 
+    // TODO: This flag is read and written by multiple threads without one
+    // synchronization mechanism. volatile does not prevent a C data race; use
+    // an atomic flag or lock every access.
     volatile bool stop_working;
     pthread_mutex_t stop_lock;
 

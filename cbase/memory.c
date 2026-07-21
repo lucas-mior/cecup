@@ -119,6 +119,7 @@ memset64(void *buffer, int value, int64 size) {
 INLINE void *
 xmalloc(int64 size, bool zero) {
     void *p;
+
     if (size == 0) {
         size = 1;
     }
@@ -129,6 +130,7 @@ xmalloc(int64 size, bool zero) {
     if (zero) {
         memset64(p, 0, size);
     }
+
     return p;
 }
 
@@ -208,14 +210,13 @@ malloc_debug(char *file, int32 line, char *func, int64 size, bool zero) {
                    "Invalid allocation size = %lld.\n", (llong)size);
         fatal(EXIT_FAILURE);
     }
-    if ((ullong)size >= (ullong)SIZE_MAX) {
+    if (size >= (MAXOF(size) - 2*MEMORY_PADDING)) {
         error_impl(file, line, func,
-                   "Allocation size (%lld) is bigger than SIZEMAX\n",
-                   (llong)size);
+                   "Allocation size (%lld) is too big.\n", (llong)size);
         fatal(EXIT_FAILURE);
     }
 
-    base_p = xmalloc(size + 2 * MEMORY_PADDING, false);
+    base_p = xmalloc(size + 2*MEMORY_PADDING, false);
     ptr = (uchar *)base_p;
 
     for (int32 j = 0; j < MEMORY_PADDING; j += 1) {
@@ -297,10 +298,10 @@ realloc_debug(char *file, int32 line, char *func,
                    "realloc: invalid capacity = %lld.\n", (llong)new_capacity);
         fatal(EXIT_FAILURE);
     }
-    if (((ullong)SIZE_MAX / (ullong)obj_size) < (ullong)new_capacity) {
+    if ((MAXOF(new_size) / obj_size) < new_capacity) {
         error_impl(file, line, func,
-                   "realloc: allocation size (%lld) is bigger than SIZEMAX\n",
-                   (llong)new_capacity);
+                   "realloc: %lld objects of size %lld is too much.\n",
+                   (llong)new_capacity, (llong)obj_size);
         fatal(EXIT_FAILURE);
     }
 
@@ -313,6 +314,7 @@ realloc_debug(char *file, int32 line, char *func,
 
     old_size = old_capacity*obj_size;
     new_size = new_capacity*obj_size;
+    ASSERT(new_size <= (MAXOF(new_size) - 2*MEMORY_PADDING));
 
     {
         DebugAllocInfo info;
@@ -385,7 +387,7 @@ realloc_debug(char *file, int32 line, char *func,
 
             if (MEMORY_CHECK_DOUBLE_FREE || MEMORY_CHECK_USE_AFTER_FREE) {
                 int64 copy_size = old_size;
-                base_p = xmalloc(new_size + 2 * MEMORY_PADDING, false);
+                base_p = xmalloc(new_size + 2*MEMORY_PADDING, false);
 
                 if (new_size < old_size) {
                     copy_size = new_size;
@@ -404,11 +406,11 @@ realloc_debug(char *file, int32 line, char *func,
                 }
             } else {
                 old_base = ((uchar *)old - MEMORY_PADDING);
-                base_p = xrealloc(old_base, new_size + 2 * MEMORY_PADDING);
+                base_p = xrealloc(old_base, new_size + 2*MEMORY_PADDING);
             }
         } else {
             old_base = NULL;
-            base_p = xrealloc(old_base, new_size + 2 * MEMORY_PADDING);
+            base_p = xrealloc(old_base, new_size + 2*MEMORY_PADDING);
         }
 
         ptr = (uchar *)base_p;
@@ -438,7 +440,7 @@ realloc_flex_debug(char *file, int32 line, char *func,
     void *old_base;
     void *base_p;
     uchar *ptr;
-    int64 total_size;
+    int64 new_size;
     int64 old_size;
     (void)old_capacity;
 
@@ -457,15 +459,16 @@ realloc_flex_debug(char *file, int32 line, char *func,
                    "Invalid new capacity = %lld.\n", (llong)new_capacity);
         fatal(EXIT_FAILURE);
     }
-    if (((ullong)SIZE_MAX / (ullong)obj_size) < (ullong)new_capacity) {
+    if ((INT64_MAX / obj_size) < new_capacity) {
         error_impl(file, line, func,
-                   "Flex allocation capacity overflows SIZEMAX.\n");
+                   "Allocating %lld objects of size %lld is too much.\n",
+                   (llong)new_capacity, (llong)obj_size);
         fatal(EXIT_FAILURE);
     }
-    if (((ullong)SIZE_MAX - (ullong)struct_size) <
-        (ullong)(new_capacity * obj_size)) {
+    if ((INT64_MAX - struct_size) < (new_capacity*obj_size)) {
         error_impl(file, line, func,
-                   "Total flex allocation size overflows SIZEMAX.\n");
+                   "Allocating %lld objects of size %lld is too much.\n",
+                   (llong)new_capacity, (llong)obj_size);
         fatal(EXIT_FAILURE);
     }
 
@@ -476,14 +479,15 @@ realloc_flex_debug(char *file, int32 line, char *func,
         return realloc(old, (size_t)(struct_size + new_capacity*obj_size));
     }
 
-    total_size = struct_size + new_capacity*obj_size;
     old_size = struct_size + old_capacity*obj_size;
+    new_size = struct_size + new_capacity*obj_size;
+    ASSERT(new_size <= (MAXOF(new_size) - 2*MEMORY_PADDING));
 
     {
         DebugAllocInfo info;
         intptr p_key;
 
-        info.size = total_size;
+        info.size = new_size;
         info.file = file;
         info.line = line;
         info.func = func;
@@ -550,10 +554,10 @@ realloc_flex_debug(char *file, int32 line, char *func,
 
             if (MEMORY_CHECK_DOUBLE_FREE || MEMORY_CHECK_USE_AFTER_FREE) {
                 int64 copy_size = old_size;
-                base_p = xmalloc(total_size + 2 * MEMORY_PADDING, false);
+                base_p = xmalloc(new_size + 2*MEMORY_PADDING, false);
 
-                if (total_size < old_size) {
-                    copy_size = total_size;
+                if (new_size < old_size) {
+                    copy_size = new_size;
                 }
                 if (copy_size > 0) {
                     memcpy64((uchar *)base_p + MEMORY_PADDING, old, copy_size);
@@ -564,16 +568,17 @@ realloc_flex_debug(char *file, int32 line, char *func,
                 old_info.func = func;
                 old_info.reallocated = -1;
                 hash_insert_alloc_map(allocations, &old_key, old_info);
+
                 if (MEMORY_CHECK_USE_AFTER_FREE) {
                     memset64(old, 0xCD, old_info.size);
                 }
             } else {
                 old_base = ((uchar *)old - MEMORY_PADDING);
-                base_p = xrealloc(old_base, total_size + 2 * MEMORY_PADDING);
+                base_p = xrealloc(old_base, new_size + 2*MEMORY_PADDING);
             }
         } else {
             old_base = NULL;
-            base_p = xrealloc(old_base, total_size + 2 * MEMORY_PADDING);
+            base_p = xrealloc(old_base, new_size + 2*MEMORY_PADDING);
         }
 
         ptr = (uchar *)base_p;
@@ -582,7 +587,7 @@ realloc_flex_debug(char *file, int32 line, char *func,
             ptr[j] = 0xDC;
         }
         for (int32 j = 0; j < MEMORY_PADDING; j += 1) {
-            ptr[MEMORY_PADDING + total_size + j] = 0xDC;
+            ptr[MEMORY_PADDING + new_size + j] = 0xDC;
         }
 
         p = ptr + MEMORY_PADDING;
@@ -730,6 +735,10 @@ static void *
 xmmap_commit(int64 *size) {
     void *p;
 
+    if (*size < 0) {
+        error("Invalid size = %lld\n", (llong)*size);
+        fatal(EXIT_FAILURE);
+    }
     if (*size == 0) {
         *size = 1;
     }
@@ -748,6 +757,8 @@ xmmap_commit(int64 *size) {
         memory_page_size = aux;
     }
 
+    // TODO: Round *size before mmap. The current code maps the unrounded
+    // length, then exposes and unmaps the larger rounded length.
     do {
         if ((*size >= SIZEMB(2)) && FLAGS_HUGE_PAGES) {
             p = mmap(NULL, (size_t)*size, PROT_READ | PROT_WRITE,
@@ -990,19 +1001,19 @@ int main(void) {
         int64 initial_size;
         TestFlex *flex;
 
-        initial_size = SIZEOF(TestFlex) + (count * SIZEOF(int64));
+        initial_size = SIZEOF(TestFlex) + (count*SIZEOF(int64));
         flex = malloc2(initial_size);
         flex->count = (int32)count;
 
         for (int32 i = 0; i < count; i += 1) {
-            flex->items[i] = (int64)(i * 10);
+            flex->items[i] = (int64)(i*10);
         }
 
         memory_check();
         flex = realloc_flex(flex, count, grow, SIZEOF(int64));
         flex->count = (int32)grow;
         for (int32 i = 0; i < count; i += 1) {
-            ASSERT(flex->items[i] == (int64)(i * 10));
+            ASSERT(flex->items[i] == (int64)(i*10));
         }
         printf("realloc_flex (grow) preserved data.\n");
 
@@ -1010,7 +1021,7 @@ int main(void) {
         flex = realloc_flex(flex, grow, shrink, SIZEOF(int64));
         flex->count = (int32)shrink;
         for (int32 i = 0; i < shrink; i += 1) {
-            ASSERT(flex->items[i] == (int64)(i * 10));
+            ASSERT(flex->items[i] == (int64)(i*10));
         }
         printf("realloc_flex (shrink) successful.\n");
 
@@ -1038,12 +1049,12 @@ int main(void) {
 
     {
         int32 iterations = 2500;
-        void **ptrs = malloc2(iterations * SIZEOF(void *));
+        void **ptrs = malloc2(iterations*SIZEOF(void *));
 
         printf("\n--- Starting High-Volume Stress Tests ---\n");
 
         for (int32 i = 0; i < iterations; i += 1) {
-            ptrs[i] = malloc2(1 * SIZEOF(int64));
+            ptrs[i] = malloc2(1*SIZEOF(int64));
             ((int64 *)ptrs[i])[0] = (int64)i;
         }
         memory_check();
@@ -1051,16 +1062,16 @@ int main(void) {
         for (int32 i = 0; i < iterations; i += 1) {
             ptrs[i] = realloc2(ptrs[i], 1, 2, SIZEOF(int64));
             ASSERT(((int64 *)ptrs[i])[0] == (int64)i);
-            ((int64 *)ptrs[i])[1] = (int64)(i * 2);
+            ((int64 *)ptrs[i])[1] = (int64)(i*2);
         }
         memory_check();
 
         for (int32 i = 0; i < iterations; i += 1) {
             ASSERT(((int64 *)ptrs[i])[0] == (int64)i);
-            ASSERT(((int64 *)ptrs[i])[1] == (int64)(i * 2));
-            free2(ptrs[i], 2 * SIZEOF(int64));
+            ASSERT(((int64 *)ptrs[i])[1] == (int64)(i*2));
+            free2(ptrs[i], 2*SIZEOF(int64));
         }
-        free2(ptrs, iterations * SIZEOF(void *));
+        free2(ptrs, iterations*SIZEOF(void *));
         printf("High-volume tracking and validation successful.\n");
     }
 
@@ -1069,7 +1080,7 @@ int main(void) {
         TestString *v_strings;
 
         printf("Starting High-Volume Variable String Stress Tests.\n");
-        v_strings = malloc2(num_strings * SIZEOF(*v_strings));
+        v_strings = malloc2(num_strings*SIZEOF(*v_strings));
 
         srand(1337);
         for (int32 i = 0; i < num_strings; i += 1) {
@@ -1100,7 +1111,7 @@ int main(void) {
         for (int32 i = 0; i < num_strings; i += 1) {
             free2(v_strings[i].s, v_strings[i].len + 1);
         }
-        free2(v_strings, num_strings * SIZEOF(*v_strings));
+        free2(v_strings, num_strings*SIZEOF(*v_strings));
         printf("High-volume variable string tests successful.\n");
     }
 
@@ -1154,7 +1165,7 @@ int main(void) {
         int64 initial_size;
         TestFlex *flex;
 
-        initial_size = SIZEOF(TestFlex) + (count * SIZEOF(int64));
+        initial_size = SIZEOF(TestFlex) + (count*SIZEOF(int64));
         flex = malloc2(initial_size);
 
         ASSERT_EXPECTED_FATAL({

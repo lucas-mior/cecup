@@ -65,6 +65,9 @@ main_setup_tree_columns(GtkWidget *tree) {
 
         g_signal_connect(dispatch, "activate", G_CALLBACK(on_menu_dispatch),      NULL);
         g_signal_connect(ignore,   "activate", G_CALLBACK(on_menu_ignore_action), NULL);
+
+        // TODO: The action map keeps its own refs. Drop the creator refs after
+        // connecting the signals; both actions otherwise leak.
     }
 
     {
@@ -646,6 +649,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
         g_signal_connect(action_copy_all, "activate", G_CALLBACK(on_log_copy), "all");
         g_signal_connect(action_copy_line, "activate", G_CALLBACK(on_log_copy), "line");
+
+        // TODO: The action map keeps its own refs. Drop the creator refs after
+        // connecting the signals; both actions otherwise leak.
     }
 
     do {
@@ -653,6 +659,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         char *value;
 
         key = g_key_file_new();
+        // TODO: Capture GError and ignore only a missing file. Malformed or
+        // unreadable configuration is currently discarded without a message.
         if (!g_key_file_load_from_file(key, cecup.config_path, G_KEY_FILE_NONE, NULL)) {
             g_key_file_free(key);
             break;
@@ -675,6 +683,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
             g_free(value);
         }
 
+        // TODO: Pass GError to the typed getters. Invalid boolean text
+        // silently becomes false and changes saved options.
         if (g_key_file_has_key(key, "Filters", "new", NULL)) {
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_new),
                                          g_key_file_get_boolean(key, "Filters", "new", NULL));
@@ -721,6 +731,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         g_key_file_free(key);
     } while (0);
 
+    // TODO: Editing these entries must invalidate the existing preview.
+    // Sync displays the new text but otherwise uses the old cecup.*_base paths.
     cecup.entry_id[L] = g_signal_connect(cecup.dir_entry[L], "activate",
                                          G_CALLBACK(on_config_changed), NULL);
     cecup.entry_id[R] = g_signal_connect(cecup.dir_entry[R], "activate",
@@ -805,16 +817,20 @@ main(int32 argc, char **argv) {
         char *locale_system;
         char *locale_local_system;
 
-        // TODO: Hardcoded locale paths might fail if the application is installed in non-standard
-        //       prefixes (like /opt) or sandboxed environments (like Flatpak/Snap).
+        // TODO: Hardcoded locale paths can fail when the application is
+        // installed in a non-standard prefix or a sandbox.
         locale_devel = "./po";
         locale_system = "/usr/share/locale/";
         locale_local_system = "/usr/local/share/locale/";
 
         if (setlocale(LC_ALL, "") == NULL) {
+            // TODO: setlocale is not required to set errno. strerror(errno)
+            // can therefore report an unrelated and misleading cause.
             error("Error setting locale: %s.\n", strerror(errno));
         }
 
+        // TODO: Check for this application's catalog, not only the parent
+        // directory. /usr/share/locale normally masks /usr/local/share/locale.
         if (access(locale_devel, F_OK) == 0) {
             bindtextdomain("cecup", locale_devel);
         } else if (access(locale_system, F_OK) == 0) {
@@ -883,6 +899,8 @@ main(int32 argc, char **argv) {
         }
         SNPRINTF(config_base, "%s/cecup", XDG_CONFIG_HOME);
 
+        // TODO: Verify an existing config_base is a directory. Also check
+        // mkdir and cp results before treating setup as a successful first run.
         if (access(config_base, F_OK) < 0) {
             pid_t child_cp;
 
@@ -912,6 +930,8 @@ main(int32 argc, char **argv) {
                 _exit(EXIT_FAILURE);
             }
             default:
+                // TODO: Capture and validate the child status. waitpid success
+                // does not mean cp exited successfully.
                 while (waitpid(child_cp, NULL, 0) < 0) {
                     if (errno == EINTR) {
                         continue;
@@ -952,6 +972,8 @@ main(int32 argc, char **argv) {
     free2(cecup.src_base, cecup.src_base_len + 1);
     free2(cecup.dst_base, cecup.dst_base_len + 1);
 
+    // TODO: Free search_query and every current ignore-pattern string and
+    // array. They are otherwise leaked during normal shutdown.
     arena_destroy(cecup.arena);
 
     traversal_free(&cecup.traversal[L]);

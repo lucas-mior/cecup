@@ -277,6 +277,9 @@ item_get_actions_reasons(int32 row_id,
         HardLinks hard_links_src = {0};
         HardLinks hard_links_dst = {0};
         bool is_hardlink;
+
+        // TODO: Compare st_mode & S_IFMT before metadata. Different node types
+        // with matching attributes can otherwise be marked equal.
         bool is_symlink = S_ISLNK(stat_src->st_mode);
         bool is_dir = S_ISDIR(stat_src->st_mode);
         bool equal = false;
@@ -284,6 +287,9 @@ item_get_actions_reasons(int32 row_id,
 
         is_hardlink = item_hardlink_side(row_id, L, &hard_links_src) && (hard_links_src.count > 1);
         item_hardlink_side(row_id, R, &hard_links_dst);
+
+        // TODO: Also reject destination hard-link topology when the source has
+        // one name. Extra destination links are currently accepted as equal.
 
         if (pattern_src) {
             *action_src = ACTION_IGNORE;
