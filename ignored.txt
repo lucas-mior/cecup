@@ -1,6 +1,5 @@
 .git/
 .cache/
-autom4te.cache$
 .clangd$
 LICENSE$
 bin$
@@ -9,14 +8,5 @@ tags$
 compile_commands.json$
 .*\.o
 .*\.a
-.deps/
-src/ncmpcpp$
-configure$
-libtool$
-Makefile.in
-config.log
-build/
-obj
-AUTHORS
 style.sed
 style.sh
