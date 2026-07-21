@@ -170,8 +170,7 @@ memory_check(void) {
                 }
             }
 
-            if (MEMORY_CHECK_USE_AFTER_FREE
-                    && (info.reallocated == -1)) {
+            if (MEMORY_CHECK_USE_AFTER_FREE && (info.reallocated == -1)) {
                 for (int64 j = 0; j < info.size; j += 1) {
                     if (p[j] != 0xCD) {
                         error_impl(info.file, info.line, info.func,
@@ -327,14 +326,14 @@ realloc_debug(char *file, int32 line, char *func,
 
         pthread_mutex_lock(&allocations_mutex);
 
-        if ((old != NULL) && (allocations == NULL)) {
+        if (old && (allocations == NULL)) {
             error_impl(file, line, func,
                        "Tried to reallocate invalid pointer: %p.", old);
             fatal(EXIT_FAILURE);
         } else if (allocations == NULL) {
             allocations = hash_create_alloc_map(1024, "DebugAllocations");
         }
-        if (old != NULL) {
+        if (old) {
             DebugAllocInfo old_info;
             intptr old_key = (intptr)old;
 
@@ -477,7 +476,6 @@ realloc_flex_debug(char *file, int32 line, char *func,
         return realloc(old, (size_t)(struct_size + new_capacity*obj_size));
     }
 
-
     total_size = struct_size + new_capacity*obj_size;
     old_size = struct_size + old_capacity*obj_size;
 
@@ -493,14 +491,14 @@ realloc_flex_debug(char *file, int32 line, char *func,
 
         pthread_mutex_lock(&allocations_mutex);
 
-        if ((old != NULL) && (allocations == NULL)) {
+        if (old && (allocations == NULL)) {
             error_impl(file, line, func,
                        "Tried to reallocate invalid pointer: %p.\n", old);
             fatal(EXIT_FAILURE);
         } else if (allocations == NULL) {
             allocations = hash_create_alloc_map(1024, "DebugAllocations");
         }
-        if (old != NULL) {
+        if (old) {
             DebugAllocInfo old_info;
             intptr old_key = (intptr)old;
 
@@ -732,10 +730,11 @@ static void *
 xmmap_commit(int64 *size) {
     void *p;
 
+    if (*size == 0) {
+        *size = 1;
+    }
+
     if (RUNNING_ON_VALGRIND) {
-        if (*size == 0) {
-            *size = 1;
-        }
         p = malloc((size_t)*size);
         memset64(p, 0, *size);
         return p;
