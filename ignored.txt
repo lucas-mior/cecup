@@ -10,3 +10,8 @@ compile_commands.json$
 .*\.a
 style.sed
 style.sh
+package
+a$
+b$
+*.mo
+*.gif
