@@ -299,8 +299,8 @@ msgid "Sync %s -> %s?"
 msgstr "Sincronizar %s -> %s?"
 
 #: src/on.c:326
-msgid "No files to filter. Click Analysis first"
-msgstr "Não há arquivos para filtrar. Clique em \"Analisar\" primeiro"
+msgid "No files to filter. Click Analysis first.\n"
+msgstr "Não há arquivos para filtrar. Clique em \"Analisar\" primeiro.\n"
 
 #: src/on.c:564
 msgid "Ignore Rules"

@@ -338,9 +338,7 @@ on_filter_toggled(GtkToggleButton *button, void *data) {
     (void) data;
 
     if (cecup.rows_len <= 0) {
-        // TODO: Add a newline to this and the matching sort error. The log
-        // treats unterminated lines as transient and deletes them later.
-        LOG_ERROR(_("No files to filter. Click Analysis first"));
+        LOG_ERROR(_("No files to filter. Click Analysis first.\n"));
         return;
     }
 
@@ -364,7 +362,7 @@ on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
     (void)change;
 
     if (cecup.rows_len <= 0) {
-        LOG_ERROR(_("No files to sort. Click Analysis first"));
+        LOG_ERROR(_("No files to sort. Click Analysis first.\n"));
         return;
     }
 

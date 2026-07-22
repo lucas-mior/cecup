@@ -104,12 +104,14 @@ GENERATE_COMPARE_SIGNED_UNSIGNED(max, >)
 
 #undef GENERATE_COMPARE_SIGNED_UNSIGNED
 
-// TODO: Preserve unsigned results above LLONG_MAX. Converting the selected
-// ullong to llong is implementation-defined and can return a negative value.
 #define GENERATE_COMPARE_UNSIGNED_SIGNED(MODE, SYMBOL) \
 static llong \
 get_unsigned_signed_##MODE(ullong var1, llong var2) { \
     if (((-compare_sign_with_unsign(var2, var1)) SYMBOL 0)) { \
+        if (var1 > LLONG_MAX) { \
+            error2("You are working with a too large number.\n"); \
+            TRAP(); \
+        } \
         return (llong)var1; \
     } else { \
         return var2; \

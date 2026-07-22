@@ -90,6 +90,11 @@ _Static_assert(CAT(ENUM_PREFIX_, BIT_COUNT)
 
 _Static_assert((ENUM_UNDERLYING_TYPE)-1 > 0);
 
+// Note: passing numbers to the X macro second parameter is not allowed for the
+// BITFLAGS case. It will break the API. You can only passing composition of
+// previous enum values.
+//
+// Passing multiple ENUM names for the same value will break compilation.
 enum ENUM_NAME ENUM_UNDERLYING_TYPE_SPEC {
 #if ENUM_BITFLAGS == 0
     #define XENUM_DEF_1(e)    e,
@@ -115,7 +120,7 @@ static void
 CAT(ENUM_PREFIX_, str_free)(char *str) {
     (void)str;
 #if ENUM_BITFLAGS
-    free2(str, strlen32(str) + 1);
+    free2(str, optional_strlen32(str) + 1);
 #endif
     return;
 }
@@ -141,9 +146,9 @@ CAT(ENUM_PREFIX_, str)(enum ENUM_NAME val) {
             return "Invalid enum value";
     }
 #else
-    char buffer[CAT(ENUM_PREFIX_, BIT_COUNT)*256 + 1];
-    char *buffer_ptr = buffer;
-    char *buffer_end = buffer + sizeof(buffer);
+    char *buffer = NULL;
+    int32 buffer_len = 0;
+    int32 buffer_cap = 0;
     int32 is_first = 1;
 
     if (val == 0) {
@@ -166,25 +171,22 @@ CAT(ENUM_PREFIX_, str)(enum ENUM_NAME val) {
     #undef XENUM_EXACT
 
     #define XENUM(e) \
-        if ((val & e) == e) { \
+        if (val && ((val & e) == e)) { \
             char *name = #e; \
             int32 len = strlen32(name); \
+            int32 new_cap; \
+            new_cap = buffer_len + len + 1; \
             if (is_first == 0) { \
-                if (buffer_ptr < (buffer_end - 1)) { \
-                    *buffer_ptr = '|'; \
-                    buffer_ptr += 1; \
-                } else { \
-                    error2("Error: enum name is too long.\n"); \
-                    TRAP(); \
-                } \
+                new_cap += 1; \
             } \
-            if (len < (buffer_end - buffer_ptr)) { \
-                memcpy64(buffer_ptr, name, len); \
-                buffer_ptr += len; \
-            } else { \
-                error2("Error: enum name is too long.\n"); \
-                TRAP(); \
+            buffer = realloc2(buffer, buffer_cap, new_cap, SIZEOF(*buffer)); \
+            buffer_cap = new_cap; \
+            if (is_first == 0) { \
+                buffer[buffer_len] = '|'; \
+                buffer_len += 1; \
             } \
+            memcpy64(buffer + buffer_len, name, len); \
+            buffer_len += len; \
             is_first = 0; \
             val &= ~e; \
         }
@@ -201,22 +203,12 @@ CAT(ENUM_PREFIX_, str)(enum ENUM_NAME val) {
     #undef XENUM
 
     if (val) {
-        error2("Warning: bit flags enum contains invalid bit set.\n");
+        error2("Error: bit flags enum contains invalid bit set.\n");
         TRAP();
     }
 
-    *buffer_ptr = '\0';
-
-    {
-        int64 final_len = (int64)(buffer_ptr - buffer) + 1;
-        char *copy;
-
-        if ((copy = malloc2(final_len))) {
-            memcpy64(copy, buffer, final_len);
-        }
-
-        return copy;
-    }
+    buffer[buffer_len] = '\0';
+    return buffer;
 #endif
 }
 
@@ -326,6 +318,7 @@ CAT(ENUM_PREFIX_, parse)(char *string) {
 static inline void
 CAT(ENUM_PREFIX_, functions_sink)(void) {
     (void)CAT(ENUM_PREFIX_, str);
+    (void)CAT(ENUM_PREFIX_, str_free);
     (void)CAT(ENUM_PREFIX_, parse);
     return;
 }
@@ -362,14 +355,19 @@ main(void) {
 
     s = TEST_FLAGS_str(TEST_FLAGS_READ);
     ASSERT_EQUAL(s, "TEST_FLAGS_READ");
+    TEST_FLAGS_str_free(s);
 
     s = TEST_FLAGS_str(TEST_FLAGS_READ | TEST_FLAGS_EXEC);
     ASSERT_EQUAL(s, "TEST_FLAGS_READ|TEST_FLAGS_EXEC");
+    TEST_FLAGS_str_free(s);
 
     s = TEST_FLAGS_str(TEST_FLAGS_READ | TEST_FLAGS_WRITE | TEST_FLAGS_EXEC);
     ASSERT_EQUAL(s, "TEST_FLAGS_READ|TEST_FLAGS_WRITE|TEST_FLAGS_EXEC");
+    TEST_FLAGS_str_free(s);
 
-    ASSERT_EQUAL(TEST_FLAGS_str(0), "NONE");
+    s = TEST_FLAGS_str(0);
+    ASSERT_EQUAL(s, "NONE");
+    TEST_FLAGS_str_free(s);
 
     ASSERT_EQUAL((uint32)TEST_FLAGS_parse("TEST_FLAGS_READ"), TEST_FLAGS_READ);
     ASSERT_EQUAL((uint32)TEST_FLAGS_parse("TEST_FLAGS_READ | TEST_FLAGS_EXEC"),

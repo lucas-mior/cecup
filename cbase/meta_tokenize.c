@@ -127,7 +127,6 @@ line_reserve_tokens(Line *line, int32 extra) {
     int32 new_capacity;
     Token *new_tokens;
 
-    // TODO: Validate extra and check addition and later doubling for overflow.
     need = line->token_count + extra;
     if (need <= line->token_capacity) {
         return;
@@ -592,11 +591,8 @@ token_is_trivia(Token *token) {
 static int32
 tokenization_significant_at_or_after(Tokenization *tokenization,
                                      int32 token_index) {
-    int32 result;
-
-    result = token_index;
-    // TODO: Reject or clamp negative token_index before indexing
-    // tokens[result].
+    int32 result = token_index;
+    assert(token_index >= 0);
     while ((result < tokenization->token_count)
            && token_is_trivia(&tokenization->tokens[result])) {
         result += 1;

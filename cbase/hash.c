@@ -308,8 +308,6 @@ CAT(hash_destroy_, HASH_TYPE)(struct Map *map) {
 
 static void
 CAT(hash_resize_, HASH_TYPE)(struct Map *map) {
-    // TODO: Reject the maximum capacity before doubling. A 2^31-entry table
-    // wraps new_capacity to zero and corrupts all following size calculations.
     uint32 new_capacity = map->capacity*2;
     uint32 new_bitmask = (new_capacity - 1);
     int64 new_size = new_capacity*sizeof(Bucket);
@@ -321,6 +319,11 @@ CAT(hash_resize_, HASH_TYPE)(struct Map *map) {
     int64 old_slot_states_size = map->slot_states_size;
     uint32 old_capacity = map->capacity;
 
+    if (new_capacity < map->capacity) {
+        error("Hash table %s is too big.\n", map->name);
+        fatal(EXIT_FAILURE);
+    }
+
     memset64(new_slot_states, 0, new_capacity*sizeof(*new_slot_states));
 
     /* if (DEBUGGING) { */
@@ -331,11 +334,9 @@ CAT(hash_resize_, HASH_TYPE)(struct Map *map) {
     for (uint32 j = 0; j < old_capacity; j += 1) {
         Bucket *iterator = &old_array[j];
         int8 slot_state = old_slot_states[j];
-        // TODO: Initialize `rehash_base` and `rehash_probe` at declaration
-        // below to reduce uninitialized state branching.
         uint32 rehash_base;
         uint32 rehash_probe;
-        uint32 rehash_step = 0;
+        uint32 rehash_step;
 
         if (slot_state == HASH_SLOT_FREE) {
             continue;
@@ -346,6 +347,7 @@ CAT(hash_resize_, HASH_TYPE)(struct Map *map) {
 
         rehash_base = iterator->hash & new_bitmask;
         rehash_probe = rehash_base;
+        rehash_step = 0;
 
         while (rehash_step < new_capacity) {
             if (new_slot_states[rehash_probe] == HASH_SLOT_FREE) {
@@ -479,10 +481,9 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
     memcpy64(&target->key, key, sizeof(HASH_KEY_TYPE));
 #else
   #if HASH_DUPLICATE_KEYS
-    // TODO: Copy only key_length bytes, or explicitly require a terminator.
-    // The current length-based API reads one byte past an exact-size key.
     target->key = xarena_push(map->arena_keys, key_length + 1);
-    memcpy64(target->key, key, key_length + 1);
+    memcpy64(target->key, key, key_length);
+    ((char *)target->key)[key_length] = '\0';
   #else
     target->key = key;
   #endif
@@ -562,10 +563,9 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
     memcpy64(&target->key, key, sizeof(HASH_KEY_TYPE));
 #else
   #if HASH_DUPLICATE_KEYS
-    // TODO: Copy only key_length bytes, or explicitly require a terminator.
-    // The current length-based API reads one byte past an exact-size key.
     target->key = xarena_push(map->arena_keys, key_length + 1);
-    memcpy64(target->key, key, key_length + 1);
+    memcpy64(target->key, key, key_length);
+    ((char *)target->key)[key_length] = '\0';
   #else
     target->key = key;
   #endif
