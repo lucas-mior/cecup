@@ -2456,317 +2456,7 @@ warn(char *fmt, ...) {
     return;
 }
 
-typedef struct Command {
-    char **argv;
-    int32 *argvs_lens;
-    int32 argc;
-    int32 cap;
-} Command;
-
-typedef struct CommandResult {
-    char *output;
-    int32 output_len;
-    int32 status;
-} CommandResult;
-
-static void
-command_print(Command *command) {
-    printf(RED("%s"), command->argv[0]);
-    for (int32 i = 1; i < command->argc; i += 1) {
-        printf(" %s", command->argv[i]);
-    }
-    printf("\n");
-    return;
-}
-
-static char *
-command_str(Command *command, int32 *len) {
-    StrBuilder str_builder = {0};
-
-    for (int32 i = 0; i < command->argc; i += 1) {
-        if (i > 0) {
-            sb_append_byte(&str_builder, ' ');
-        }
-        SB_APPEND(&str_builder, command->argv[i], command->argvs_lens[i]);
-    }
-    return sb_steal_exact(&str_builder, len);
-}
-
-#if OS_UNIX
-static bool
-command_run_sync(Command *command, int *exit_status) {
-    pid_t child;
-    int32 len;
-    int status;
-
-    switch (child = fork()) {
-    case -1:
-        error("Error forking: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    case 0:
-        execvp(command->argv[0], command->argv);
-        error("Error executing "RED("%s")": %s.\n",
-              command_str(command, &len), strerror(errno));
-        _exit(EXIT_FAILURE);
-    default:
-        while (waitpid(child, &status, 0) < 0) {
-            if (errno != EINTR) {
-                error("Error waiting for child: %s.\n", strerror(errno));
-                return false;
-            }
-        }
-    }
-
-    if (exit_status) {
-        if (WIFEXITED(status)) {
-            *exit_status = WEXITSTATUS(status);
-        } else if (WIFSIGNALED(status)) {
-            *exit_status = 128 + WTERMSIG(status);
-        } else {
-            *exit_status = 127;
-        }
-    }
-
-    return true;
-}
-
-static CommandResult
-command_run_capture(Command *command, char *cwd) {
-    int32 pipefd[2];
-    pid_t pid;
-    char *output;
-    int64 len = 0;
-    int64 cap = 4096;
-    int32 status = 127;
-    CommandResult result;
-
-    xpipe(pipefd);
-
-    switch (pid = fork()) {
-    case -1:
-        XCLOSE(&pipefd[0]);
-        XCLOSE(&pipefd[1]);
-        error("Error forking: %s", strerror(errno));
-        fatal(EXIT_FAILURE);
-    case 0:
-        XCLOSE(&pipefd[0]);
-
-        if (cwd && chdir(cwd) != 0) {
-            perror("chdir");
-            _exit(127);
-        }
-
-        xdup2(pipefd[1], STDOUT_FILENO);
-        xdup2(pipefd[1], STDERR_FILENO);
-        XCLOSE(&pipefd[1]);
-
-        execvp(command->argv[0], command->argv);
-        error("Error executing %s: %s.\n", command->argv[0], strerror(errno));
-        _exit(127);
-    default:
-        XCLOSE(&pipefd[1]);
-        break;
-    }
-
-    output = malloc2(cap);
-    for (;;) {
-        int64 nread;
-
-        if (len >= (cap/2)) {
-            int64 old_cap = cap;
-
-            cap *= 2;
-            output = realloc2(output, old_cap, cap, SIZEOF(*output));
-        }
-
-        errno = 0;
-        if ((nread = read64(pipefd[0], output + len, cap - len - 1)) > 0) {
-            len += nread;
-            continue;
-        }
-        if (nread == 0) {
-            break;
-        }
-        if (errno == EINTR) {
-            continue;
-        }
-
-        free2(output, cap);
-        XCLOSE(&pipefd[0]);
-        error("read from child failed: %s", strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
-    output[len] = '\0';
-    if (len + 1 != cap) {
-        output = realloc2(output, cap, len + 1, SIZEOF(output[0]));
-    }
-    XCLOSE(&pipefd[0]);
-
-    while (waitpid(pid, &status, 0) < 0) {
-        free2(output, len + 1);
-        error("Error waiting for child: %s", strerror(errno));
-        if (errno == EINTR) {
-            continue;
-        }
-        fatal(EXIT_FAILURE);
-    }
-
-    if (WIFEXITED(status)) {
-        status = WEXITSTATUS(status);
-    } else if (WIFSIGNALED(status)) {
-        status = 128 + WTERMSIG(status);
-    } else {
-        status = 127;
-    }
-
-    if (len >= MAXOF(result.output_len)) {
-        error("Output is too long.\n");
-        fatal(EXIT_FAILURE);
-    }
-
-    return (CommandResult){
-        .output = output,
-        .output_len = (int32)len,
-        .status = status,
-    };
-}
-#endif
-
-static void
-command_result_free(CommandResult *result) {
-    if (result->output) {
-        free2(result->output, result->output_len + 1);
-    }
-
-    result->output = NULL;
-    result->output_len = 0;
-    result->status = 0;
-
-    return;
-}
-
-static void
-command_push(Command *command, char *argument, int32 argument_len) {
-    char *copy;
-
-    if (command->cap <= command->argc + 1) {
-        int32 oldcap = command->cap;
-
-        command->cap += 16;
-        command->argv = realloc2(command->argv,
-                                 oldcap, command->cap,
-                                 SIZEOF(*command->argv));
-        command->argvs_lens = realloc2(command->argvs_lens,
-                                       oldcap, command->cap,
-                                       SIZEOF(*command->argvs_lens));
-    }
-
-    copy = malloc2(argument_len + 1);
-    memcpy64(copy, argument, argument_len);
-    copy[argument_len] = '\0';
-
-    command->argv[command->argc] = copy;
-    command->argvs_lens[command->argc] = argument_len;
-    command->argc += 1;
-    command->argv[command->argc] = NULL;
-    return;
-}
-
-#define COMMAND_PUSH_2(A, B) \
-        command_push(A, B, strlen32(B))
-#define COMMAND_PUSH_3(A, B, B_LEN) \
-        command_push(A, B, B_LEN)
-#define COMMAND_PUSH(...) SELECT_ON_NUM_ARGS(COMMAND_PUSH_, __VA_ARGS__)
-
-static void
-command_push_split(Command *command, char *arguments, char *delimiters) {
-    char *argument = arguments;
-
-    for (;;) {
-        int64 delimiter_count;
-        int64 argument_len;
-        int32 argument_len32;
-
-        delimiter_count = (int64)strspn(argument, delimiters);
-        argument += delimiter_count;
-        if (*argument == '\0') {
-            break;
-        }
-
-        argument_len = (int64)strcspn(argument, delimiters);
-        if (argument_len >= MAXOF(argument_len32)) {
-            error("Command argument is too long.\n");
-            fatal(EXIT_FAILURE);
-        }
-        argument_len32 = (int32)argument_len;
-        command_push(command, argument, argument_len32);
-        argument += argument_len;
-    }
-    return;
-}
-
-static void
-command_argv0_set(Command *command, char *argument) {
-    int32 argument_len = strlen32(argument);
-
-    free2(command->argv[0], command->argvs_lens[0] + 1);
-    command->argv[0] = xstrdup(argument);
-    command->argvs_lens[0] = argument_len;
-    return;
-}
-
-static void
-command_reset(Command *command) {
-    for (int32 i = 0; i < command->argc; i += 1) {
-        free2(command->argv[i], command->argvs_lens[i] + 1);
-        command->argv[i] = NULL;
-        command->argvs_lens[i] = 0;
-    }
-    command->argc = 0;
-    return;
-}
-
-static void
-command_free(Command *command) {
-    command_reset(command);
-    free2(command->argv, command->cap*SIZEOF(*command->argv));
-    free2(command->argvs_lens,
-          command->cap*SIZEOF(*command->argvs_lens));
-
-    command->argv = NULL;
-    command->argvs_lens = NULL;
-    command->cap = 0;
-    return;
-}
-
-static void
-command_printf(Command *command, char *fmt, ...) {
-    va_list ap;
-    va_list ap2;
-    int32 n;
-    char *argument;
-
-    va_start(ap, fmt);
-    va_copy(ap2, ap);
-    n = vsnprintf(NULL, 0, fmt, ap);
-    va_end(ap);
-
-    if (n < 0) {
-        va_end(ap2);
-        error("Error formatting \"%s\".", fmt);
-        fatal(EXIT_FAILURE);
-    }
-
-    argument = malloc2(n + 1);
-    n = vsnprintf(argument, (size_t)n + 1, fmt, ap2);
-    va_end(ap2);
-
-    command_push(command, argument, n);
-
-    free2(argument, n + 1);
-
-    return;
-}
+#include "command.c"
 
 #define PARSE_OPTION(arg, name) \
     if (parse_option(&name, arg, #name)) { \
@@ -2785,7 +2475,19 @@ util_functions_sink(void) {
     (void)command_argv0_set;
     (void)command_free;
     (void)command_printf;
+    (void)command_push;
+    (void)command_push_length;
     (void)command_push_split;
+    (void)command_env_push;
+    (void)command_env_push_length;
+    (void)command_env_printf;
+    (void)command_env_clear;
+    (void)command_cwd_set;
+    (void)command_cwd_clear;
+    (void)command_run;
+    (void)command_run_async;
+    (void)command_run_capture_all;
+    (void)command_run_capture_combined;
     (void)util_segv_handler;
     (void)util_nthreads;
     (void)util_filename_from;
@@ -2811,6 +2513,9 @@ util_functions_sink(void) {
 #if OS_UNIX
     (void)command_run_capture;
     (void)command_run_sync;
+    (void)command_result_read_captured;
+    (void)command_signal;
+    (void)command_wait;
     (void)timezone_init;
 #endif
     (void)dirname2;
@@ -3201,7 +2906,6 @@ main(int argc, char **argv) {
 
     {
         Command cmd = {0};
-        CommandResult result;
         char *command_text;
         int32 len;
 
@@ -3302,22 +3006,122 @@ main(int argc, char **argv) {
 
         COMMAND_PUSH(&cmd, "sh");
         COMMAND_PUSH(&cmd, "-c");
+        COMMAND_PUSH(&cmd, "exit 7");
+        ASSERT(command_run_sync(&cmd, NULL));
+        ASSERT_EQUAL(cmd.result.status, 7);
+        ASSERT(cmd.result.exited);
+        ASSERT_EQUAL(cmd.result.exit_status, 7);
+
+        command_reset(&cmd);
+        ASSERT_EQUAL(cmd.argc, 0);
+
+        COMMAND_PUSH(&cmd, "sh");
+        COMMAND_PUSH(&cmd, "-c");
         COMMAND_PUSH(&cmd, "printf stdout; printf stderr >&2; exit 7");
-        result = command_run_capture(&cmd, NULL);
-        ASSERT_EQUAL(result.output, "stdoutstderr");
-        ASSERT_EQUAL(result.output_len, 12);
-        ASSERT_EQUAL(result.status, 7);
-        command_result_free(&result);
-        ASSERT_EQUAL(result.output, NULL);
-        ASSERT_EQUAL(result.output_len, 0);
-        ASSERT_EQUAL(result.status, 0);
+        ASSERT(command_run_capture_combined(&cmd));
+        ASSERT_EQUAL(cmd.result.output, "stdoutstderr");
+        ASSERT_EQUAL(cmd.result.stdout_output, "stdoutstderr");
+        ASSERT_EQUAL(cmd.result.stderr_output, "");
+        ASSERT_EQUAL(cmd.result.output_len, 12);
+        ASSERT_EQUAL(cmd.result.status, 7);
+
+        command_reset(&cmd);
+        ASSERT_EQUAL(cmd.argc, 0);
+
+        COMMAND_PUSH(&cmd, "sh");
+        COMMAND_PUSH(&cmd, "-c");
+        COMMAND_PUSH(&cmd, "printf stdout; printf stderr >&2; exit 6");
+        ASSERT(command_run_capture_all(&cmd));
+        ASSERT_EQUAL(cmd.result.stdout_output, "stdout");
+        ASSERT_EQUAL(cmd.result.stderr_output, "stderr");
+        ASSERT_EQUAL(cmd.result.stdout_len, 6);
+        ASSERT_EQUAL(cmd.result.stderr_len, 6);
+        ASSERT_EQUAL(cmd.result.status, 6);
+
+        command_reset(&cmd);
+        ASSERT_EQUAL(cmd.argc, 0);
+
+        command_cwd_set(&cmd, "/tmp");
+        COMMAND_PUSH(&cmd, "pwd");
+        ASSERT(command_run_capture(&cmd, COMMAND_FLAG_CAPTURE_STDOUT));
+        ASSERT_EQUAL(cmd.result.stdout_output, "/tmp\n");
+        command_cwd_clear(&cmd);
+
+        command_reset(&cmd);
+        ASSERT_EQUAL(cmd.argc, 0);
+
+        command_env_push(&cmd, "COMMAND_TEST_VALUE=works");
+        command_env_printf(&cmd, "COMMAND_TEST_NUMBER=%d", 42);
+        COMMAND_PUSH(&cmd, "sh");
+        COMMAND_PUSH(&cmd, "-c");
+        COMMAND_PUSH(&cmd,
+                     "printf %s:%s "
+                     "$COMMAND_TEST_VALUE "
+                     "$COMMAND_TEST_NUMBER");
+        ASSERT(command_run_capture(&cmd, COMMAND_FLAG_CAPTURE_STDOUT));
+        ASSERT_EQUAL(cmd.result.stdout_output, "works:42");
+        command_env_clear(&cmd);
+
+        command_reset(&cmd);
+        ASSERT_EQUAL(cmd.argc, 0);
+
+        {
+            char *flags_str;
+
+            flags_str = COMMAND_FLAG_str(COMMAND_FLAG_CAPTURE_STDOUT
+                                         |COMMAND_FLAG_CAPTURE_STDERR);
+            ASSERT_EQUAL(flags_str,
+                         "COMMAND_FLAG_CAPTURE_STDOUT"
+                         "|COMMAND_FLAG_CAPTURE_STDERR");
+            COMMAND_FLAG_str_free(flags_str);
+            ASSERT_EQUAL((uint32)COMMAND_FLAG_parse(
+                             "CAPTURE_STDOUT|CAPTURE_STDERR"),
+                         (uint32)(COMMAND_FLAG_CAPTURE_STDOUT
+                                  |COMMAND_FLAG_CAPTURE_STDERR));
+        }
+
+        COMMAND_PUSH(&cmd, "sh");
+        COMMAND_PUSH(&cmd, "-c");
+        COMMAND_PUSH(&cmd, "exit 9");
+        ASSERT(command_run_async(&cmd, COMMAND_FLAG_NEW_PROCESS_GROUP));
+        ASSERT_MORE(cmd.result.pid, 0);
+        ASSERT(command_wait(&cmd));
+        ASSERT_EQUAL(cmd.result.status, 9);
+
+        command_reset(&cmd);
+        ASSERT_EQUAL(cmd.argc, 0);
+
+        COMMAND_PUSH(&cmd, "sh");
+        COMMAND_PUSH(&cmd, "-c");
+        COMMAND_PUSH(&cmd, "printf asyncout; printf asyncerr >&2");
+        ASSERT(command_run_async(&cmd,
+                                 COMMAND_FLAG_CAPTURE_STDOUT
+                                 |COMMAND_FLAG_CAPTURE_STDERR));
+        ASSERT_MORE(cmd.result.pid, 0);
+        command_result_read_captured(&cmd);
+        ASSERT(command_wait(&cmd));
+        ASSERT_EQUAL(cmd.result.stdout_output, "asyncout");
+        ASSERT_EQUAL(cmd.result.stderr_output, "asyncerr");
+        ASSERT_EQUAL(cmd.result.status, 0);
+
+        command_reset(&cmd);
+        ASSERT_EQUAL(cmd.argc, 0);
+
+        COMMAND_PUSH(&cmd, "sh");
+        COMMAND_PUSH(&cmd, "-c");
+        COMMAND_PUSH(&cmd, "exit 0");
+        ASSERT(command_run(&cmd, COMMAND_FLAG_DETACHED));
+        ASSERT_EQUAL(cmd.result.status, 0);
 
         command_reset(&cmd);
         ASSERT_EQUAL(cmd.argc, 0);
         command_free(&cmd);
         ASSERT(cmd.argv == NULL);
         ASSERT(cmd.argvs_lens == NULL);
+        ASSERT(cmd.env == NULL);
+        ASSERT(cmd.env_lens == NULL);
         ASSERT_EQUAL(cmd.cap, 0);
+        ASSERT_EQUAL(cmd.env_cap, 0);
     }
 
     NCALLS(1);
