@@ -34,10 +34,8 @@ static void
 ignore_patterns_load(void) {
     FILE *file;
     char line_buffer[MAX_PATH_LENGTH];
-    int32 *capacity;
     int32 count;
-
-    capacity = &cecup.ignore_capacity;
+    int32 *capacity = &cecup.ignore_capacity;
 
     if (cecup.ignore_patterns == NULL) {
         *capacity = 16;
