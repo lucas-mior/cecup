@@ -9,6 +9,7 @@ static void __attribute__((format(printf, 4, 5)))
 error_impl(char *file, int32 line, char *func, char *format, ...);
 #define error(...) error_impl(__FILE__, __LINE__, (char *)__func__, __VA_ARGS__)
 static int32 snprintf2(char *buffer, int64 size, char *format, ...);
+static int32 optional_strlen32(char *string);
 
 static int32 random_ascii_string(char *buffer, int32 capacity, int32 min_len);
 
