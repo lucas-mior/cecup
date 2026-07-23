@@ -489,13 +489,14 @@ on_menu_diff(GtkWidget *widget, void *data) {
         char *path_src = malloc2(size_src);
         char *path_dst = malloc2(size_dst);
         Command command;
-
-        snprintf2(path_src, size_src, "%s/%s", cecup.src_base, task->path);
-        snprintf2(path_dst, size_dst, "%s/%s", cecup.dst_base, task->path);
+        int32 path_src_len = snprintf2(path_src, size_src,
+                                       "%s/%s", cecup.src_base, task->path);
+        int32 path_dst_len = snprintf2(path_dst, size_dst,
+                                       "%s/%s", cecup.dst_base, task->path);
 
         command = on_menu_diff_command(term_command, diff_tool);
-        command_push(&command, path_dst);
-        command_push(&command, path_src);
+        command_push_length(&command, path_dst, path_dst_len);
+        command_push_length(&command, path_src, path_src_len);
 
         switch (fork()) {
         case -1:
