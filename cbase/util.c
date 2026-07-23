@@ -2675,9 +2675,8 @@ command_push(Command *command, char *argument, int32 argument_len) {
 
 static void
 command_push_split(Command *command, char *arguments, char *delimiters) {
-    char *argument;
+    char *argument = arguments;
 
-    argument = arguments;
     for (;;) {
         int64 delimiter_count;
         int64 argument_len;
