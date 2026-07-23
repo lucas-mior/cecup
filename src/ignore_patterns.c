@@ -59,8 +59,6 @@ ignore_patterns_load(void) {
     }
 
     while (fgets(line_buffer, SIZEOF(line_buffer), file)) {
-        // TODO: Reject or consume a line that fills the buffer without a
-        // newline. Its continuation is currently parsed as another pattern.
         int32 line_len = strlen32(line_buffer);
         IgnorePattern *pattern;
 
