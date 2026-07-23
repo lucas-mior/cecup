@@ -242,23 +242,24 @@ cecup_get_dirs(void) {
         full_dst[full_dst_len] = '\0';
     }
 
-    {
-        // TODO: Both canonical paths already end in '/'. A prefix match is
-        // sufficient; checking the next byte misses non-root containment.
-        if ((full_src_len > full_dst_len) && !memcmp64(full_src, full_dst, full_dst_len)) {
-            if ((full_dst_len == 1 && full_dst[0] == '/') || (full_src[full_dst_len] == '/')) {
-                LOG_ERROR(_("Error: source directory is contained in the destination directory\n"));
-                cecup_reset_dir(L);
-                return false;
-            }
-        }
-        if ((full_dst_len > full_src_len) && !memcmp64(full_dst, full_src, full_src_len)) {
-            if ((full_src_len == 1 && full_src[0] == '/') || (full_dst[full_src_len] == '/')) {
-                LOG_ERROR(_("Error: destination directory is contained in the source directory\n"));
-                cecup_reset_dir(R);
-                return false;
-            }
-        }
+    if (STREQUAL(full_src, full_src_len, "/") || STREQUAL(full_dst, full_dst_len, "/")) {
+        LOG_ERROR(_("Error: directory can not be the root dir.\n"));
+        return false;
+    }
+
+    if ((full_src_len > full_dst_len)
+        && !memcmp64(full_src, full_dst, full_dst_len)) {
+        LOG_ERROR(_("Error: source directory is contained in the "
+                    "destination directory\n"));
+        cecup_reset_dir(L);
+        return false;
+    }
+    if ((full_dst_len > full_src_len)
+        && !memcmp64(full_dst, full_src, full_src_len)) {
+        LOG_ERROR(_("Error: destination directory is contained in the "
+                    "source directory\n"));
+        cecup_reset_dir(R);
+        return false;
     }
 
     if (cecup.src_base && cecup.dst_base) {
@@ -274,7 +275,6 @@ cecup_get_dirs(void) {
 
     return true;
 }
-
 static void
 config_bool_set(GKeyFile *key, char *section, char *name, GtkWidget *button) {
     gboolean state;
@@ -644,6 +644,35 @@ int main(void) {
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), "/tmp");
     ok = cecup_get_dirs();
     ASSERT(!ok); /* Same directory failure */
+
+    mkdir("/tmp/cecup_aux_parent", 0700);
+    mkdir("/tmp/cecup_aux_parent/child", 0700);
+    mkdir("/tmp/cecup_aux_parent2", 0700);
+
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]),
+                          "/tmp/cecup_aux_parent/child");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]),
+                          "/tmp/cecup_aux_parent");
+    ok = cecup_get_dirs();
+    ASSERT(!ok); /* Source inside destination failure */
+
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]),
+                          "/tmp/cecup_aux_parent");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]),
+                          "/tmp/cecup_aux_parent/child");
+    ok = cecup_get_dirs();
+    ASSERT(!ok); /* Destination inside source failure */
+
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]),
+                          "/tmp/cecup_aux_parent");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]),
+                          "/tmp/cecup_aux_parent2");
+    ok = cecup_get_dirs();
+    ASSERT(ok); /* Shared string prefix but not contained */
+
+    rmdir("/tmp/cecup_aux_parent/child");
+    rmdir("/tmp/cecup_aux_parent");
+    rmdir("/tmp/cecup_aux_parent2");
     remove("/tmp/cecup_test_config.ini");
 
     /* Test on_banner_response */
