@@ -107,7 +107,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
         return;
     }
 
-    if (fprintf(ignore_file, "\n%s", pattern) != (pattern_len + 1)) {
+    if (fprintf(ignore_file, "%s\n", pattern) != (pattern_len + 1)) {
         LOG_ERROR(_("Error appending ignore pattern \"%s\" to %s: %s.\n"),
                   pattern, cecup.ignore_path, strerror(errno));
         return;
