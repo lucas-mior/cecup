@@ -25,6 +25,7 @@
 #endif
 
 #include "util.h"
+#include "assert.c"
 
 #define ENUM_NAME CommandFlag
 #define ENUM_BITFLAGS 1
@@ -911,6 +912,9 @@ command_env_printf(Command *command, char *fmt, ...) {
 
 
 #if TESTING_command
+#include "util.c"
+#include "assert.c"
+
 int
 main(int argc, char **argv) {
     struct timespec t0;

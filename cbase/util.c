@@ -108,18 +108,6 @@ _Generic((VAR),               \
 #define CLAMP_TYPE int64
 #include "clamp.h"
 
-#if !defined(DEBUGGING)
-#define DEBUGGING 0
-#endif
-
-#ifndef RELEASING
-#define RELEASING 0
-#endif
-
-#if !defined(ERROR_NOTIFY)
-#define ERROR_NOTIFY 0
-#endif
-
 #if DEBUGGING || TESTING_util
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Wc11-extensions"
@@ -238,12 +226,6 @@ strequal2(char *a, int32 a_len, char *b, int32 b_len) {
 
     return true;
 }
-
-#define strequal2_3(A, A_LEN, B) \
-        strequal2(A, A_LEN, B, strlen32(B))
-#define strequal2_4(A, A_LEN, B, B_LEN) \
-        strequal2(A, A_LEN, B, B_LEN)
-#define STREQUAL(...) SELECT_ON_NUM_ARGS(strequal2_, __VA_ARGS__)
 
 INLINE void *
 memchr64(void *pointer, int32 value, int64 size) {

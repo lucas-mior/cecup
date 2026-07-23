@@ -1,9 +1,22 @@
 #if !defined(UTIL_H)
 #define UTIL_H
 
+#if !defined(DEBUGGING)
+#define DEBUGGING 0
+#endif
+
+#ifndef RELEASING
+#define RELEASING 0
+#endif
+
+#if !defined(ERROR_NOTIFY)
+#define ERROR_NOTIFY 0
+#endif
+
 #include <stdbool.h>
 #include <time.h>
 #include "primitives.h"
+#include "memory.h"
 
 static void __attribute__((format(printf, 4, 5)))
 error_impl(char *file, int32 line, char *func, char *format, ...);
@@ -35,8 +48,21 @@ static int memcmp64(void *left, void *right, int64 size);
 static void
 print_timings(char *file, int32 line, char *func,
               int64 nitems, struct timespec t0, struct timespec t1);
-
+static bool strequal(char *s1, char *s2);
+static bool strequal2(char *a, int32 a_len, char *b, int32 b_len);
 static void *xmalloc(int64 size, bool zero);
+static void xpthread_mutex_lock(pthread_mutex_t *mutex);
+static void xpthread_mutex_unlock(pthread_mutex_t *mutex);
+static void xpthread_cond_destroy(pthread_cond_t *cond);
+static void xpthread_mutex_destroy(pthread_mutex_t *mutex);
+static void xpthread_create(pthread_t *thread, pthread_attr_t *attr,
+                void *(*function)(void *), void *arg);
+static void xpthread_join(pthread_t *thread, void **thread_return);
+
+static void normalize(char *restrict path, int32 *restrict length);
+static bool write_entire_file(char *path, char *text, int64 text_len);
+
+INLINE void * memchr64(void *pointer, int32 value, int64 size);
 
 #define SNPRINTF(BUFFER, FORMAT, ...) \
     snprintf2(BUFFER, sizeof(BUFFER), FORMAT, __VA_ARGS__)
@@ -55,6 +81,12 @@ static void *xmalloc(int64 size, bool zero);
 #define SB_APPEND_3(BUILER, STRING, LEN) \
         sb_append(BUILER, STRING, (int32)LEN)
 #define SB_APPEND(...) SELECT_ON_NUM_ARGS(SB_APPEND_, __VA_ARGS__)
+
+#define strequal2_3(A, A_LEN, B) \
+        strequal2(A, A_LEN, B, strlen32(B))
+#define strequal2_4(A, A_LEN, B, B_LEN) \
+        strequal2(A, A_LEN, B, B_LEN)
+#define STREQUAL(...) SELECT_ON_NUM_ARGS(strequal2_, __VA_ARGS__)
 
 static void memcpy64(void *dest, void *source, int64 n);
 static void memmove64(void *dest, void *source, int64 n);
