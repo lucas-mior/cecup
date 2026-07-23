@@ -340,8 +340,8 @@ log_internal(char *file, int line, char *func, enum MsgType type, char *format, 
     n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
 
     if ((n < 0) || (n >= SIZEOF(buffer))) {
-        error_impl("%s:%d:%s Error in vsnprintf(%s) (n = %lld)\n",
-                   file, line, func, format, (llong)n);
+        error_impl(file, line, func, "Error in vsnprintf(\"%s\") (n = %lld)\n",
+                   format, (llong)n);
         fatal(EXIT_FAILURE);
     }
     va_end(va_args);
@@ -691,7 +691,7 @@ int main(void) {
 
     check_consistent_state(); /* Would fatal() if failed */
 
-    log_internal(__FILE__, __LINE__, __func__, 0, "Test log msg %d", 42);
+    log_internal(__FILE__, __LINE__, (char *)__func__, 0, "Test log msg %d", 42);
     g_main_context_iteration(NULL, FALSE);
 
     /* Cleanup testing memory to prevent leak sanitizers triggering */
@@ -703,6 +703,7 @@ int main(void) {
     free2(cecup.traversal[R].row_ids, 10 * SIZEOF(int32));
     free2(cecup.traversal[R].paths, 10 * SIZEOF(char*));
     free2(cecup.traversal[R].paths_lens, 10 * SIZEOF(int16));
+
     hash_destroy_fs_map(cecup.traversal[L].map);
     hash_destroy_fs_map(cecup.traversal[R].map);
 
