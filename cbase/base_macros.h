@@ -167,12 +167,6 @@ _Generic((SIZE), \
   #define UNREACHABLE() do { } while(0)
 #endif
 
-#if CC_CLANG
-#define ENUM_UNDERLYING_TYPE_ : uint32
-#else
-#define ENUM_UNDERLYING_TYPE_
-#endif
-
 #define FUNC__ (char *)__func__
 
 #endif /* BASE_MACROS_H */
