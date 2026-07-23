@@ -84,6 +84,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     char *pattern;
     int32 pattern_len;
     FILE *ignore_file;
+    int last_byte;
 
     (void)action;
     (void)data;
@@ -105,6 +106,20 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     if ((ignore_file = fopen(cecup.ignore_path, "a+")) == NULL) {
         LOG_ERROR(_("Error opening %s: %s.\n"), cecup.ignore_path, strerror(errno));
         return;
+    }
+
+    if (fseek(ignore_file, -1, SEEK_END) < 0) {
+        LOG_ERROR(_("Error seeking %s: %s.\n"), cecup.ignore_path, strerror(errno));
+        return;
+    }
+
+    last_byte = fgetc(ignore_file);
+    if (fseek(ignore_file, 0, SEEK_END) < 0) {
+        LOG_ERROR(_("Error seeking %s: %s.\n"), cecup.ignore_path, strerror(errno));
+        return;
+    }
+    if (last_byte != '\n' && last_byte != EOF) {
+        fprintf(ignore_file, "\n");
     }
 
     if (fprintf(ignore_file, "%s\n", pattern) != (pattern_len + 1)) {
