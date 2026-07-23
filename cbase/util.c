@@ -50,6 +50,7 @@
 #include "assert.c"
 #include "memory.c"
 #include "utf8.c"
+#include "command.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_util 1
@@ -2455,8 +2456,6 @@ warn(char *fmt, ...) {
 
     return;
 }
-
-#include "command.c"
 
 #define PARSE_OPTION(arg, name) \
     if (parse_option(&name, arg, #name)) { \
