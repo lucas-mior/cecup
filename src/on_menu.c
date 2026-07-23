@@ -465,6 +465,7 @@ on_menu_diff_command(char *term_command, char *diff_tool) {
     command_push_split(&command, term_command, " ");
     COMMAND_PUSH(&command, "-e");
     command_push_split(&command, diff_tool, " ");
+
     return command;
 }
 
@@ -591,9 +592,8 @@ main(void) {
     gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "true");
 
     {
-        Command command;
+        Command command = on_menu_diff_command("xterm --hold", "diff --color=always");
 
-        command = on_menu_diff_command("xterm --hold", "diff --color=always");
         COMMAND_PUSH(&command, "/destination");
         COMMAND_PUSH(&command, "/source");
 
