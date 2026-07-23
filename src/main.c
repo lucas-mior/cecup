@@ -824,9 +824,7 @@ main(int32 argc, char **argv) {
         locale_local_system = "/usr/local/share/locale/";
 
         if (setlocale(LC_ALL, "") == NULL) {
-            // TODO: setlocale is not required to set errno. strerror(errno)
-            // can therefore report an unrelated and misleading cause.
-            error("Error setting locale: %s.\n", strerror(errno));
+            error("Error setting locale.\n");
         }
 
         // TODO: Check for this application's catalog, not only the parent
