@@ -124,13 +124,14 @@ ignore_patterns_load(void) {
         count += 1;
     }
 
-    // TODO: Check ferror before installing count. A read failure silently
-    // activates a partial ignore-rule set.
-    cecup.ignore_count = count;
-
+    if (ferror(file)) {
+        LOG_ERROR(_("Warning: error while reading %s.\n"), cecup.ignore_path);
+    }
     if (fclose(file)) {
         LOG_ERROR(_("Error closing %s: %s.\n"), cecup.ignore_path, strerror(errno));
     }
+
+    cecup.ignore_count = count;
     return;
 }
 
