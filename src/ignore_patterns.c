@@ -199,16 +199,11 @@ ignore_patterns_match(char *path, int32 path_len,
 
 static bool
 ignore_pattern_match_single(IgnorePattern *pattern, char *path, int32 path_len, bool is_dir) {
-    // TODO: This early check makes a rule such as "build/" reject
-    // "build/main.o" before testing its directory prefix. Apply dir_only only
-    // to a full-path match, not to descendants of a matched directory.
-    if (pattern->dir_only && !is_dir) {
-        return false;
-    }
-
     if (pattern->has_slash) {
         if (work_match_pattern(pattern->match_str, path, path_len, true)) {
-            return true;
+            if (!pattern->dir_only || is_dir) {
+                return true;
+            }
         } else {
             for (int32 j = 0; j < path_len; j += 1) {
                 if (path[j] == '/') {
@@ -244,7 +239,9 @@ ignore_pattern_match_single(IgnorePattern *pattern, char *path, int32 path_len, 
                 comp = next + 1;
             } else {
                 if (work_match_pattern(pattern->match_str, comp, remaining, false)) {
-                    return true;
+                    if (!pattern->dir_only || is_dir) {
+                        return true;
+                    }
                 }
                 remaining = 0;
             }
@@ -366,8 +363,48 @@ main(void) {
     ASSERT(pattern != NULL);
     ASSERT(strcmp(pattern->str, "build") == 0);
 
-    // Testing the current expected behavior due to the 'dir_only' early exit logic
     pattern = ignore_patterns_match("build", 5, false, patterns, 1);
+    ASSERT_NULL(pattern);
+
+    pattern = ignore_patterns_match("build/main.o", 12, false, patterns, 1);
+    ASSERT(pattern != NULL);
+
+    pattern = ignore_patterns_match("src/build/main.o", 16, false, patterns, 1);
+    ASSERT(pattern != NULL);
+
+    pattern = ignore_patterns_match("src/build", 9, false, patterns, 1);
+    ASSERT_NULL(pattern);
+
+    pattern = ignore_patterns_match("src/build/", 10, true, patterns, 1);
+    ASSERT(pattern != NULL);
+    free2(patterns[0].str, patterns[0].len + 1);
+
+    test_pattern_init(&patterns[0], "foo/build/");
+    pattern = ignore_patterns_match("foo/build/main.o", 16, false, patterns, 1);
+    ASSERT(pattern != NULL);
+
+    pattern = ignore_patterns_match("foo/build", 9, false, patterns, 1);
+    ASSERT_NULL(pattern);
+
+    pattern = ignore_patterns_match("foo/build/", 10, true, patterns, 1);
+    ASSERT(pattern != NULL);
+    free2(patterns[0].str, patterns[0].len + 1);
+
+    test_pattern_init(&patterns[0], "/foo/build/");
+    pattern = ignore_patterns_match("foo/build/main.o", 16, false, patterns, 1);
+    ASSERT(pattern != NULL);
+
+    pattern = ignore_patterns_match("x/foo/build/main.o", 18, false,
+                                    patterns, 1);
+    ASSERT_NULL(pattern);
+    free2(patterns[0].str, patterns[0].len + 1);
+
+    test_pattern_init(&patterns[0], "build*/");
+    pattern = ignore_patterns_match("src/build-cache/main.o", 22, false,
+                                    patterns, 1);
+    ASSERT(pattern != NULL);
+
+    pattern = ignore_patterns_match("src/build-cache", 15, false, patterns, 1);
     ASSERT_NULL(pattern);
     free2(patterns[0].str, patterns[0].len + 1);
 
