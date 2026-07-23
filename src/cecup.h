@@ -470,9 +470,6 @@ static struct {
     pid_t child_pid;
     pthread_t work_thread;
 
-    // TODO: This flag is read and written by multiple threads without one
-    // synchronization mechanism. volatile does not prevent a C data race; use
-    // an atomic flag or lock every access.
     volatile bool stop_working;
     pthread_mutex_t stop_lock;
 
