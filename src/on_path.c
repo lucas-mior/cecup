@@ -209,6 +209,7 @@ on_path_edited(GtkEditable *editable, void *data) {
         // TODO: Detect FTS_DNR, fts_read errno, and
         // fts_close failure. A partial walk leaves the model inconsistent after
         // the filesystem rename; force a complete preview instead.
+        errno = 0;
         while ((entry = fts_read(fts_handle))) {
             char *child_rel_new;
             char child_rel_old[MAX_PATH_LENGTH];
@@ -257,6 +258,10 @@ on_path_edited(GtkEditable *editable, void *data) {
             work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, side,
                                    child_rel_old, child_rel_old_len,
                                    child_rel_new, child_rel_new_len);
+            errno = 0;
+        }
+        if (errno) {
+            LOG_ERROR(_("Error in fts_read(%s): %s.\n"), new_full, strerror(errno));
         }
         if (fts_close(fts_handle) < 0) {
             LOG_ERROR(_("Error in fts_close(%s): %s.\n"), new_full, strerror(errno));
