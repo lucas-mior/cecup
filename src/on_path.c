@@ -252,7 +252,7 @@ on_path_edited(GtkEditable *editable, void *data) {
                                    child_rel_new, child_rel_new_len);
         }
         if (fts_close(fts_handle) < 0) {
-            LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
+            LOG_ERROR(_("Error in fts_close(%s): %s.\n"), new_full, strerror(errno));
         }
     }
 
