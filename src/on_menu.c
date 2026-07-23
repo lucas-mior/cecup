@@ -82,6 +82,7 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
 static void
 on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     char *pattern;
+    int32 pattern_len;
     FILE *ignore_file;
 
     (void)action;
@@ -91,9 +92,14 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
         error("Error: GVariant *parameter is NULL.\n");
         fatal(EXIT_FAILURE);
     }
+
     if ((pattern = (char *)g_variant_get_string(parameter, NULL)) == NULL) {
         error("Ignore pattern is NULL.\n");
         fatal(EXIT_FAILURE);
+    }
+    if ((pattern_len = strlen32(pattern)) >= MAX_PATH_LENGTH) {
+        LOG_ERROR(_("Error appending pattern %.*s ... Pattern is too long.\n"), 50, pattern);
+        return;
     }
 
     if ((ignore_file = fopen(cecup.ignore_path, "a")) == NULL) {
@@ -101,9 +107,12 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
         return;
     }
 
-    // TODO: Check fprintf and fclose before scheduling MSG_IGNORE_PATTERN.
-    // A failed append currently reloads the old file as if the rule was added.
-    fprintf(ignore_file, "\n%s", pattern);
+    if (fprintf(ignore_file, "\n%s", pattern) != (pattern_len + 1)) {
+        LOG_ERROR(_("Error appending ignore pattern \"%s\" to %s: %s.\n"),
+                  pattern, cecup.ignore_path, strerror(errno));
+        return;
+    }
+
     if (fclose(ignore_file)) {
         LOG_ERROR(_("Error closing %s: %s.\n"), cecup.ignore_path, strerror(errno));
     }
