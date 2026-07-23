@@ -340,7 +340,8 @@ log_internal(char *file, int line, char *func, enum MsgType type, char *format, 
     n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
 
     if ((n < 0) || (n >= SIZEOF(buffer))) {
-        error("%s:%d: Error in vsnprintf(%s) (n = %lld)\n", file, line, format, (llong)n);
+        error_impl("%s:%d:%s Error in vsnprintf(%s) (n = %lld)\n",
+                   file, line, func, format, (llong)n);
         fatal(EXIT_FAILURE);
     }
     va_end(va_args);
@@ -351,7 +352,7 @@ log_internal(char *file, int line, char *func, enum MsgType type, char *format, 
     if (RELEASING) {
         m = SNPRINTF(fileline, "%s", "");
     } else {
-        m = SNPRINTF(fileline, "%s:%d: ", file, line);
+        m = SNPRINTF(fileline, "%s:%d:%s ", file, line, func);
     }
 
     message->text_len = n + m;
@@ -691,7 +692,7 @@ int main(void) {
     check_consistent_state(); /* Would fatal() if failed */
 
     /* Test log_internal */
-    log_internal(__FILE__, __LINE__, 0, "Test log msg %d", 42);
+    log_internal(__FILE__, __LINE__, __func__, 0, "Test log msg %d", 42);
     g_main_context_iteration(NULL, FALSE);
 
     /* Cleanup testing memory to prevent leak sanitizers triggering */
