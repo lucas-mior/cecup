@@ -64,7 +64,11 @@ ignore_patterns_load(void) {
         int32 line_len = strlen32(line_buffer);
         IgnorePattern *pattern;
 
-        if ((line_len > 0) && (line_buffer[line_len - 1] == '\n')) {
+        if (line_buffer[line_len - 1] != '\n') {
+            error("Too long line on patterns file.\n");
+            fatal(EXIT_FAILURE);
+        }
+        if (line_len > 0) {
             line_buffer[line_len - 1] = '\0';
             line_len -= 1;
         }
