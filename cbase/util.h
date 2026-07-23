@@ -10,7 +10,10 @@ error_impl(char *file, int32 line, char *func, char *format, ...);
 #define error(...) error_impl(__FILE__, __LINE__, (char *)__func__, __VA_ARGS__)
 static int32 snprintf2(char *buffer, int64 size, char *format, ...);
 static int32 optional_strlen32(char *string);
-INLINE int strncmp32(char *left, char *right, int64 size);
+static int strncmp32(char *left, char *right, int64 size);
+
+static bool is_ident_start_char(char c);
+static bool is_ident_char(char c);
 
 static int32 random_ascii_string(char *buffer, int32 capacity, int32 min_len);
 
