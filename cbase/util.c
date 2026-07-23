@@ -1612,7 +1612,7 @@ bytes_pretty(char *buffer, int64 raw) {
 }
 
 static void
-normalize(char *path, int32 *length) {
+normalize(char *restrict path, int32 *restrict length) {
     char *p;
     int64 off = 0;
 
