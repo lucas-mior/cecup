@@ -691,7 +691,6 @@ int main(void) {
 
     check_consistent_state(); /* Would fatal() if failed */
 
-    /* Test log_internal */
     log_internal(__FILE__, __LINE__, __func__, 0, "Test log msg %d", 42);
     g_main_context_iteration(NULL, FALSE);
 
