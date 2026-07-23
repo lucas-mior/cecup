@@ -39,6 +39,10 @@ static void *xmalloc(int64 size, bool zero);
 #define STRUCT_ARRAY_SIZE(struct_object, ArrayType, array_length) \
     (int64)(SIZEOF(*(struct_object)) + ((array_length)*SIZEOF(ArrayType)))
 
+#define XCLOSE_1(FD) xclose(__FILE__, __LINE__, FD, #FD, NULL)
+#define XCLOSE_2(FD, NAME) xclose(__FILE__, __LINE__, FD, #FD, NAME)
+#define XCLOSE(...) SELECT_ON_NUM_ARGS(XCLOSE_, __VA_ARGS__)
+
 static void memcpy64(void *dest, void *source, int64 n);
 static void memmove64(void *dest, void *source, int64 n);
 
