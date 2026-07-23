@@ -61,9 +61,6 @@ work_finalize(bool preview_clean) {
     pthread_exit(NULL);
 }
 
-// TODO: Return traversal success separately from file_count. Logging FTS
-// errors and continuing produces partial trees; a partial source tree can make
-// valid destination files look deletable.
 static int32
 work_traverse_fs(Traversal *traversal) {
     int64 file_count = 0;
