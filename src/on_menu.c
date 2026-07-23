@@ -79,12 +79,80 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     return;
 }
 
+static bool
+on_menu_append_ignore_pattern(char *pattern, int32 pattern_len) {
+    FILE *ignore_file;
+    int64 ignore_file_len;
+    int32 last_byte = '\n';
+    bool appended = false;
+
+    if (pattern_len >= MAX_PATH_LENGTH) {
+        LOG_ERROR(_("Error appending pattern %.*s ... Pattern is too long.\n"),
+                  50, pattern);
+        return false;
+    }
+
+    if ((ignore_file = fopen(cecup.ignore_path, "a+")) == NULL) {
+        LOG_ERROR(_("Error opening %s: %s.\n"),
+                  cecup.ignore_path, strerror(errno));
+        return false;
+    }
+
+    if (fseek(ignore_file, 0, SEEK_END) != 0) {
+        LOG_ERROR(_("Error seeking %s: %s.\n"),
+                  cecup.ignore_path, strerror(errno));
+        goto close_file;
+    }
+    if ((ignore_file_len = ftell(ignore_file)) < 0) {
+        LOG_ERROR(_("Error getting the size of %s: %s.\n"),
+                  cecup.ignore_path, strerror(errno));
+        goto close_file;
+    }
+
+    if (ignore_file_len > 0) {
+        if (fseek(ignore_file, -1, SEEK_END) != 0) {
+            LOG_ERROR(_("Error seeking %s: %s.\n"),
+                      cecup.ignore_path, strerror(errno));
+            goto close_file;
+        }
+        if ((last_byte = fgetc(ignore_file)) == EOF) {
+            LOG_ERROR(_("Error reading %s: %s.\n"),
+                      cecup.ignore_path, strerror(errno));
+            goto close_file;
+        }
+        if (fseek(ignore_file, 0, SEEK_END) != 0) {
+            LOG_ERROR(_("Error seeking %s: %s.\n"),
+                      cecup.ignore_path, strerror(errno));
+            goto close_file;
+        }
+    }
+
+    if ((last_byte != '\n') && (fputc('\n', ignore_file) == EOF)) {
+        LOG_ERROR(_("Error appending a newline to %s: %s.\n"),
+                  cecup.ignore_path, strerror(errno));
+        goto close_file;
+    }
+    if (fprintf(ignore_file, "%s\n", pattern) != (pattern_len + 1)) {
+        LOG_ERROR(_("Error appending ignore pattern \"%s\" to %s: %s.\n"),
+                  pattern, cecup.ignore_path, strerror(errno));
+        goto close_file;
+    }
+
+    appended = true;
+
+close_file:
+    if (fclose(ignore_file)) {
+        LOG_ERROR(_("Error closing %s: %s.\n"),
+                  cecup.ignore_path, strerror(errno));
+        appended = false;
+    }
+    return appended;
+}
+
 static void
 on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     char *pattern;
     int32 pattern_len;
-    FILE *ignore_file;
-    int last_byte;
 
     (void)action;
     (void)data;
@@ -98,38 +166,9 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
         error("Ignore pattern is NULL.\n");
         fatal(EXIT_FAILURE);
     }
-    if ((pattern_len = strlen32(pattern)) >= MAX_PATH_LENGTH) {
-        LOG_ERROR(_("Error appending pattern %.*s ... Pattern is too long.\n"), 50, pattern);
+    pattern_len = strlen32(pattern);
+    if (!on_menu_append_ignore_pattern(pattern, pattern_len)) {
         return;
-    }
-
-    if ((ignore_file = fopen(cecup.ignore_path, "a+")) == NULL) {
-        LOG_ERROR(_("Error opening %s: %s.\n"), cecup.ignore_path, strerror(errno));
-        return;
-    }
-
-    if (fseek(ignore_file, -1, SEEK_END) < 0) {
-        LOG_ERROR(_("Error seeking %s: %s.\n"), cecup.ignore_path, strerror(errno));
-        return;
-    }
-
-    last_byte = fgetc(ignore_file);
-    if (fseek(ignore_file, 0, SEEK_END) < 0) {
-        LOG_ERROR(_("Error seeking %s: %s.\n"), cecup.ignore_path, strerror(errno));
-        return;
-    }
-    if (last_byte != '\n' && last_byte != EOF) {
-        fprintf(ignore_file, "\n");
-    }
-
-    if (fprintf(ignore_file, "%s\n", pattern) != (pattern_len + 1)) {
-        LOG_ERROR(_("Error appending ignore pattern \"%s\" to %s: %s.\n"),
-                  pattern, cecup.ignore_path, strerror(errno));
-        return;
-    }
-
-    if (fclose(ignore_file)) {
-        LOG_ERROR(_("Error closing %s: %s.\n"), cecup.ignore_path, strerror(errno));
     }
 
     {
@@ -560,7 +599,6 @@ clipboard_read_callback(GObject *source, GAsyncResult *result, void *data) {
 
 int
 main(void) {
-    GVariant *param;
     FILE *file;
     char buffer[256];
     int64 read_bytes;
@@ -601,10 +639,7 @@ main(void) {
     ASSERT(file != NULL);
     fclose(file);
 
-    param = g_variant_new_string("*.test_ext");
-    g_variant_ref_sink(param);
-
-    on_menu_ignore_action(NULL, param, NULL);
+    ASSERT(on_menu_append_ignore_pattern(STRLIT_ARGS("*.test_ext")));
 
     file = fopen(cecup.ignore_path, "r");
     ASSERT(file != NULL);
@@ -613,10 +648,9 @@ main(void) {
     read_bytes = fread64(buffer, 1, SIZEOF(buffer) - 1, file);
     fclose(file);
 
-    ASSERT_MORE(read_bytes, 0);
-    ASSERT_EQUAL(buffer, "\n*.test_ext");
+    ASSERT_EQUAL(read_bytes, STRLIT_LEN("*.test_ext\n"));
+    ASSERT_EQUAL(buffer, "*.test_ext\n");
 
-    g_variant_unref(param);
     remove(cecup.ignore_path);
 
     cecup.rows_visible_len = 0;
