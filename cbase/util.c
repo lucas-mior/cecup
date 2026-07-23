@@ -2656,13 +2656,18 @@ command_push(Command *command, char *argument, int32 argument_len) {
         command->argv = realloc2(command->argv,
                                  oldcap, command->cap,
                                  SIZEOF(*command->argv));
+        command->argvs_lens = realloc2(command->argvs_lens,
+                                       oldcap, command->cap,
+                                       SIZEOF(*command->argvs_lens));
     }
 
     copy = malloc2(argument_len + 1);
     memcpy64(copy, argument, argument_len);
     copy[argument_len] = '\0';
 
-    command->argv[command->argc++] = copy;
+    command->argv[command->argc] = copy;
+    command->argvs_lens[command->argc] = argument_len;
+    command->argc += 1;
     command->argv[command->argc] = NULL;
     return;
 }
@@ -2702,8 +2707,11 @@ command_push_split(Command *command, char *arguments, char *delimiters) {
 
 static void
 command_argv0_set(Command *command, char *argument) {
-    free2(command->argv[0], strlen32(command->argv[0]) + 1);
+    int32 argument_len = strlen32(argument);
+
+    free2(command->argv[0], command->argvs_lens[0] + 1);
     command->argv[0] = xstrdup(argument);
+    command->argvs_lens[0] = argument_len;
     return;
 }
 
@@ -2711,6 +2719,8 @@ static void
 command_reset(Command *command) {
     for (int32 i = 0; i < command->argc; i += 1) {
         free2(command->argv[i], command->argvs_lens[i] + 1);
+        command->argv[i] = NULL;
+        command->argvs_lens[i] = 0;
     }
     command->argc = 0;
     return;
@@ -2720,6 +2730,12 @@ static void
 command_free(Command *command) {
     command_reset(command);
     free2(command->argv, command->cap*SIZEOF(*command->argv));
+    free2(command->argvs_lens,
+          command->cap*SIZEOF(*command->argvs_lens));
+
+    command->argv = NULL;
+    command->argvs_lens = NULL;
+    command->cap = 0;
     return;
 }
 
@@ -3197,6 +3213,15 @@ main(int argc, char **argv) {
         ASSERT_EQUAL(cmd.argv[0], "echo");
         ASSERT_EQUAL(cmd.argv[1], "--val=123");
         ASSERT_EQUAL(cmd.argv[2], "test");
+        ASSERT_EQUAL(cmd.argvs_lens[0], 4);
+        ASSERT_EQUAL(cmd.argvs_lens[1], 9);
+        ASSERT_EQUAL(cmd.argvs_lens[2], 4);
+
+        command_argv0_set(&cmd, "printf");
+        ASSERT_EQUAL(cmd.argv[0], "printf");
+        ASSERT_EQUAL(cmd.argvs_lens[0], 6);
+        command_argv0_set(&cmd, "echo");
+
         command_text = command_str(&cmd, &len);
         ASSERT_EQUAL(command_text, "echo --val=123 test");
         free2(command_text, len + 1);
@@ -3204,6 +3229,7 @@ main(int argc, char **argv) {
 
         command_reset(&cmd);
         ASSERT_EQUAL(cmd.argc, 0);
+        ASSERT_EQUAL(cmd.argv[0], NULL);
 
         command_push_split(&cmd, "  alpha beta  gamma ", " ");
         ASSERT_EQUAL(cmd.argc, 3);
@@ -3289,6 +3315,9 @@ main(int argc, char **argv) {
         command_reset(&cmd);
         ASSERT_EQUAL(cmd.argc, 0);
         command_free(&cmd);
+        ASSERT(cmd.argv == NULL);
+        ASSERT(cmd.argvs_lens == NULL);
+        ASSERT_EQUAL(cmd.cap, 0);
     }
 
     NCALLS(1);
