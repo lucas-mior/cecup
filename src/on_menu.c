@@ -314,9 +314,6 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
             if (realpath(path_relative, path_full) == NULL) {
                 LOG_ERROR(_("Error resolving full path of %s:%s. Copying relative path instead.\n"),           path_relative, strerror(errno));
                 SNPRINTF(path_full, "%s", path_relative);
-                // TODO: Do not continue after preparing the fallback. This
-                // branch promises to copy it but skips the item entirely.
-                continue;
             }
             path = path_full;
             path_len = strlen32(path_full);
@@ -521,6 +518,22 @@ on_menu_functions_sink(void) {
 #include "assert.c"
 #include "list_model.c"
 
+typedef struct ClipboardResult {
+    bool done;
+    char *text;
+} ClipboardResult;
+
+static void
+clipboard_read_callback(GObject *source, GAsyncResult *result, void *data) {
+    ClipboardResult *clipboard_result;
+
+    clipboard_result = data;
+    clipboard_result->text = gdk_clipboard_read_text_finish(
+        GDK_CLIPBOARD(source), result, NULL);
+    clipboard_result->done = true;
+    return;
+}
+
 int
 main(void) {
     GVariant *param;
@@ -531,6 +544,7 @@ main(void) {
     GtkWidget *tree;
     GtkSelectionModel *sel;
     CecupListModel *store;
+    ClipboardResult clipboard_result;
 
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
@@ -607,13 +621,37 @@ main(void) {
     g_object_set_data(G_OBJECT(tree), "variant", "file");
     on_menu_open_item(tree, msg);
 
-    msg = malloc2(SIZEOF(*msg));
-    memset64(msg, 0, SIZEOF(*msg));
-    msg->side = L;
-    msg->src_path = xstrdup("test.txt");
-    msg->src_path_len = 8;
-    g_object_set_data(G_OBJECT(tree), "variant", "absolute");
-    on_menu_copy_path(tree, msg);
+    {
+        char expected[MAX_PATH_LENGTH];
+        char missing_full[MAX_PATH_LENGTH];
+        char missing_path[MAX_PATH_LENGTH];
+
+        SNPRINTF(missing_path, "cecup-on-menu-missing-%d", getpid());
+        SNPRINTF(missing_full, "/tmp/%s", missing_path);
+        SNPRINTF(expected, "%s\n", missing_full);
+        remove(missing_full);
+
+        msg = malloc2(SIZEOF(*msg));
+        memset64(msg, 0, SIZEOF(*msg));
+        msg->side = L;
+        msg->src_path = xstrdup(missing_path);
+        msg->src_path_len = strlen32(missing_path);
+        g_object_set_data(G_OBJECT(tree), "variant", "absolute");
+        on_menu_copy_path(tree, msg);
+
+        clipboard_result.done = false;
+        clipboard_result.text = NULL;
+        gdk_clipboard_read_text_async(
+            gdk_display_get_clipboard(gdk_display_get_default()),
+            NULL, clipboard_read_callback, &clipboard_result);
+        while (!clipboard_result.done) {
+            g_main_context_iteration(NULL, true);
+        }
+
+        ASSERT(clipboard_result.text != NULL);
+        ASSERT_EQUAL(clipboard_result.text, expected);
+        g_free(clipboard_result.text);
+    }
 
     {
         TaskList *tasks;
