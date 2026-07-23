@@ -463,7 +463,7 @@ on_menu_diff_command(char *term_command, char *diff_tool) {
     Command command = {0};
 
     command_push_split(&command, term_command, " ");
-    command_push(&command, "-e");
+    COMMAND_PUSH(&command, "-e");
     command_push_split(&command, diff_tool, " ");
     return command;
 }
@@ -495,8 +495,8 @@ on_menu_diff(GtkWidget *widget, void *data) {
                                        "%s/%s", cecup.dst_base, task->path);
 
         command = on_menu_diff_command(term_command, diff_tool);
-        command_push_length(&command, path_dst, path_dst_len);
-        command_push_length(&command, path_src, path_src_len);
+        COMMAND_PUSH(&command, path_dst, path_dst_len);
+        COMMAND_PUSH(&command, path_src, path_src_len);
 
         switch (fork()) {
         case -1:
@@ -594,8 +594,8 @@ main(void) {
         Command command;
 
         command = on_menu_diff_command("xterm --hold", "diff --color=always");
-        command_push(&command, "/destination");
-        command_push(&command, "/source");
+        COMMAND_PUSH(&command, "/destination");
+        COMMAND_PUSH(&command, "/source");
 
         ASSERT_EQUAL(command.argc, 7);
         ASSERT_EQUAL(command.argv[0], "xterm");
@@ -606,6 +606,7 @@ main(void) {
         ASSERT_EQUAL(command.argv[5], "/destination");
         ASSERT_EQUAL(command.argv[6], "/source");
         ASSERT_EQUAL(command.argv[command.argc], NULL);
+
         command_free(&command);
     }
 

@@ -2646,7 +2646,7 @@ command_result_free(CommandResult *result) {
 }
 
 static void
-command_push_length(Command *command, char *argument, int32 argument_len) {
+command_push(Command *command, char *argument, int32 argument_len) {
     char *copy;
 
     if (command->cap <= command->argc + 1) {
@@ -2667,11 +2667,11 @@ command_push_length(Command *command, char *argument, int32 argument_len) {
     return;
 }
 
-static void
-command_push(Command *command, char *argument) {
-    command_push_length(command, argument, strlen32(argument));
-    return;
-}
+#define COMMAND_PUSH_2(A, B) \
+        command_push(A, B, strlen32(B))
+#define COMMAND_PUSH_3(A, B, B_LEN) \
+        command_push(A, B, B_LEN)
+#define COMMAND_PUSH(...) SELECT_ON_NUM_ARGS(COMMAND_PUSH_, __VA_ARGS__)
 
 static void
 command_push_split(Command *command, char *arguments, char *delimiters) {
@@ -2695,7 +2695,7 @@ command_push_split(Command *command, char *arguments, char *delimiters) {
             fatal(EXIT_FAILURE);
         }
         argument_len32 = (int32)argument_len;
-        command_push_length(command, argument, argument_len32);
+        command_push(command, argument, argument_len32);
         argument += argument_len;
     }
     return;
@@ -2743,10 +2743,10 @@ command_printf(Command *command, char *fmt, ...) {
     }
 
     argument = malloc2(n + 1);
-    vsnprintf(argument, (size_t)n + 1, fmt, ap2);
+    n = vsnprintf(argument, (size_t)n + 1, fmt, ap2);
     va_end(ap2);
 
-    command_push(command, argument);
+    command_push(command, argument, n);
 
     free2(argument, n + 1);
 
@@ -3190,9 +3190,9 @@ main(int argc, char **argv) {
         char *command_text;
         int32 len;
 
-        command_push(&cmd, "echo");
+        COMMAND_PUSH(&cmd, "echo");
         command_printf(&cmd, "--val=%d", 123);
-        command_push(&cmd, "test");
+        COMMAND_PUSH(&cmd, "test");
 
         ASSERT_EQUAL(cmd.argc, 3);
         ASSERT_EQUAL(cmd.argv[0], "echo");
@@ -3233,10 +3233,10 @@ main(int argc, char **argv) {
             diff_arguments[SIZEOF(diff_arguments) - 1] = '\0';
 
             command_push_split(&cmd, terminal_arguments, " ");
-            command_push(&cmd, "-e");
+            COMMAND_PUSH(&cmd, "-e");
             command_push_split(&cmd, diff_arguments, " ");
-            command_push(&cmd, "/destination");
-            command_push(&cmd, "/source");
+            COMMAND_PUSH(&cmd, "/destination");
+            COMMAND_PUSH(&cmd, "/source");
 
             ASSERT_EQUAL(cmd.argc, 131);
             ASSERT_EQUAL(cmd.argv[63], "t");
@@ -3264,7 +3264,7 @@ main(int argc, char **argv) {
 
             memset64(long_argument, 'x', SIZEOF(long_argument) - 1);
             long_argument[SIZEOF(long_argument) - 1] = '\0';
-            command_push(&cmd, long_argument);
+            COMMAND_PUSH(&cmd, long_argument);
 
             command_text = command_str(&cmd, &len);
             ASSERT_EQUAL(len, SIZEOF(long_argument) - 1);
@@ -3275,9 +3275,9 @@ main(int argc, char **argv) {
         command_reset(&cmd);
         ASSERT_EQUAL(cmd.argc, 0);
 
-        command_push(&cmd, "sh");
-        command_push(&cmd, "-c");
-        command_push(&cmd, "printf stdout; printf stderr >&2; exit 7");
+        COMMAND_PUSH(&cmd, "sh");
+        COMMAND_PUSH(&cmd, "-c");
+        COMMAND_PUSH(&cmd, "printf stdout; printf stderr >&2; exit 7");
         result = command_run_capture(&cmd, NULL);
         ASSERT_EQUAL(result.output, "stdoutstderr");
         ASSERT_EQUAL(result.output_len, 12);
