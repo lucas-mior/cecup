@@ -156,6 +156,12 @@ typedef struct HardLinks {
 
 // TODO: Inodes are unique only within a device. FTS can cross mount points,
 // so this key must include both st_dev and st_ino to avoid merging files.
+
+typedef struct FileID {
+    dev_t device;
+    ino_t inode;
+} FileID;
+
 #define HASH_KEY_TYPE ino_t
 #define HASH_KEY_FIXED_LEN 1
 #define HASH_VALUE_TYPE HardLinks
