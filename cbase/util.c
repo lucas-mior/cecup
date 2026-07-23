@@ -2481,9 +2481,15 @@ command_print(Command *command) {
 
 static char *
 command_str(Command *command, int32 *len) {
-    char buffer[4096];
-    *len = STRING_FROM_ARRAY(buffer, " ", command->argv, command->argc);
-    return xmemdup(buffer, *len + 1);
+    StrBuilder str_builder = {0};
+
+    for (int32 i = 0; i < command->argc; i += 1) {
+        if (i > 0) {
+            sb_append_byte(&str_builder, ' ');
+        }
+        SB_APPEND(&str_builder, command->argv[i]);
+    }
+    return sb_steal_exact(&str_builder, len);
 }
 
 #if OS_UNIX
@@ -2640,7 +2646,8 @@ command_result_free(CommandResult *result) {
 }
 
 static void
-command_push(Command *command, char *argument) {
+command_push_length(Command *command, char *argument, int32 argument_len) {
+    char *copy;
 
     if (command->cap <= command->argc + 1) {
         int32 oldcap = command->cap;
@@ -2650,8 +2657,47 @@ command_push(Command *command, char *argument) {
                                  oldcap, command->cap,
                                  SIZEOF(*command->argv));
     }
-    command->argv[command->argc++] = xstrdup(argument);
+
+    copy = malloc2(argument_len + 1);
+    memcpy64(copy, argument, argument_len);
+    copy[argument_len] = '\0';
+
+    command->argv[command->argc++] = copy;
     command->argv[command->argc] = NULL;
+    return;
+}
+
+static void
+command_push(Command *command, char *argument) {
+    command_push_length(command, argument, strlen32(argument));
+    return;
+}
+
+static void
+command_push_split(Command *command, char *arguments, char *delimiters) {
+    char *argument;
+
+    argument = arguments;
+    for (;;) {
+        int64 delimiter_count;
+        int64 argument_len;
+        int32 argument_len32;
+
+        delimiter_count = (int64)strspn(argument, delimiters);
+        argument += delimiter_count;
+        if (*argument == '\0') {
+            break;
+        }
+
+        argument_len = (int64)strcspn(argument, delimiters);
+        if (argument_len >= MAXOF(argument_len32)) {
+            error("Command argument is too long.\n");
+            fatal(EXIT_FAILURE);
+        }
+        argument_len32 = (int32)argument_len;
+        command_push_length(command, argument, argument_len32);
+        argument += argument_len;
+    }
     return;
 }
 
@@ -2724,6 +2770,7 @@ util_functions_sink(void) {
     (void)command_argv0_set;
     (void)command_free;
     (void)command_printf;
+    (void)command_push_split;
     (void)util_segv_handler;
     (void)util_nthreads;
     (void)util_filename_from;
@@ -3140,6 +3187,7 @@ main(int argc, char **argv) {
     {
         Command cmd = {0};
         CommandResult result;
+        char *command_text;
         int32 len;
 
         command_push(&cmd, "echo");
@@ -3150,8 +3198,79 @@ main(int argc, char **argv) {
         ASSERT_EQUAL(cmd.argv[0], "echo");
         ASSERT_EQUAL(cmd.argv[1], "--val=123");
         ASSERT_EQUAL(cmd.argv[2], "test");
-        ASSERT_EQUAL(command_str(&cmd, &len), "echo --val=123 test");
+        command_text = command_str(&cmd, &len);
+        ASSERT_EQUAL(command_text, "echo --val=123 test");
+        free2(command_text, len + 1);
         command_print(&cmd);
+
+        command_reset(&cmd);
+        ASSERT_EQUAL(cmd.argc, 0);
+
+        command_push_split(&cmd, "  alpha beta  gamma ", " ");
+        ASSERT_EQUAL(cmd.argc, 3);
+        ASSERT_EQUAL(cmd.argv[0], "alpha");
+        ASSERT_EQUAL(cmd.argv[1], "beta");
+        ASSERT_EQUAL(cmd.argv[2], "gamma");
+        ASSERT_EQUAL(cmd.argv[cmd.argc], NULL);
+
+        command_reset(&cmd);
+        ASSERT_EQUAL(cmd.argc, 0);
+
+        {
+            enum {
+                COMMAND_PART_ARGUMENT_COUNT = 64,
+            };
+            char terminal_arguments[COMMAND_PART_ARGUMENT_COUNT*2];
+            char diff_arguments[COMMAND_PART_ARGUMENT_COUNT*2];
+
+            for (int32 i = 0; i < COMMAND_PART_ARGUMENT_COUNT; i += 1) {
+                terminal_arguments[i*2] = 't';
+                terminal_arguments[i*2 + 1] = ' ';
+                diff_arguments[i*2] = 'd';
+                diff_arguments[i*2 + 1] = ' ';
+            }
+            terminal_arguments[SIZEOF(terminal_arguments) - 1] = '\0';
+            diff_arguments[SIZEOF(diff_arguments) - 1] = '\0';
+
+            command_push_split(&cmd, terminal_arguments, " ");
+            command_push(&cmd, "-e");
+            command_push_split(&cmd, diff_arguments, " ");
+            command_push(&cmd, "/destination");
+            command_push(&cmd, "/source");
+
+            ASSERT_EQUAL(cmd.argc, 131);
+            ASSERT_EQUAL(cmd.argv[63], "t");
+            ASSERT_EQUAL(cmd.argv[64], "-e");
+            ASSERT_EQUAL(cmd.argv[65], "d");
+            ASSERT_EQUAL(cmd.argv[128], "d");
+            ASSERT_EQUAL(cmd.argv[129], "/destination");
+            ASSERT_EQUAL(cmd.argv[130], "/source");
+            ASSERT_MORE(cmd.cap, cmd.argc);
+            ASSERT_EQUAL(cmd.argv[cmd.argc], NULL);
+
+            command_text = command_str(&cmd, &len);
+            ASSERT_EQUAL(len, 279);
+            free2(command_text, len + 1);
+        }
+
+        command_reset(&cmd);
+        ASSERT_EQUAL(cmd.argc, 0);
+
+        {
+            enum {
+                LONG_COMMAND_ARGUMENT_SIZE = 5000,
+            };
+            char long_argument[LONG_COMMAND_ARGUMENT_SIZE];
+
+            memset64(long_argument, 'x', SIZEOF(long_argument) - 1);
+            long_argument[SIZEOF(long_argument) - 1] = '\0';
+            command_push(&cmd, long_argument);
+
+            command_text = command_str(&cmd, &len);
+            ASSERT_EQUAL(len, SIZEOF(long_argument) - 1);
+            ASSERT_EQUAL(command_text, long_argument);
+            free2(command_text, len + 1);
+        }
 
         command_reset(&cmd);
         ASSERT_EQUAL(cmd.argc, 0);
@@ -3170,10 +3289,7 @@ main(int argc, char **argv) {
 
         command_reset(&cmd);
         ASSERT_EQUAL(cmd.argc, 0);
-
-        if (cmd.cap > 0) {
-            free2(cmd.argv, cmd.cap * SIZEOF(*cmd.argv));
-        }
+        command_free(&cmd);
     }
 
     NCALLS(1);

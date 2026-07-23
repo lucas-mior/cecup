@@ -458,52 +458,28 @@ on_menu_delete(GtkWidget *widget, void *data) {
     return;
 }
 
+static Command
+on_menu_diff_command(char *term_command, char *diff_tool) {
+    Command command = {0};
+
+    command_push_split(&command, term_command, " ");
+    command_push(&command, "-e");
+    command_push_split(&command, diff_tool, " ");
+    return command;
+}
+
 static void
 on_menu_diff(GtkWidget *widget, void *data) {
     Message *message = data;
     TaskList *tasks;
-    char *term_cmd_raw;
-    char *diff_tool_raw;
+    char *term_command;
     char *diff_tool;
-    char *term_cmd;
-    int32 term_cmd_len;
-    int32 diff_tool_len;
-    // TODO: Each parser can fill all 64 entries before writing a NULL at
-    // index 64, and the combined vector can require 132 entries. Reserve the
-    // terminators and bounds-check every combined append.
-    char *term_arguments[64];
-    char *diff_arguments[64];
-    char *token;
-    int32 term_argument_count = 0;
-    int32 diff_argument_count = 0;
 
     (void)widget;
 
-    term_cmd_raw = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry));
-    diff_tool_raw = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry));
-
-    term_cmd_len = strlen32(term_cmd_raw);
-    diff_tool_len = strlen32(diff_tool_raw);
-
-    term_cmd = malloc2(term_cmd_len + 1);
-    memcpy64(term_cmd, term_cmd_raw, term_cmd_len + 1);
-    diff_tool = malloc2(diff_tool_len + 1);
-    memcpy64(diff_tool, diff_tool_raw, diff_tool_len + 1);
-
-    token = strtok(term_cmd, " ");
-    while (token != NULL && term_argument_count < LENGTH(term_arguments)) {
-        term_arguments[term_argument_count++] = token;
-        token = strtok(NULL, " ");
-    }
-    term_arguments[term_argument_count] = NULL;
-
-    token = strtok(diff_tool, " ");
-    while (token != NULL && diff_argument_count < LENGTH(diff_arguments)) {
-        diff_arguments[diff_argument_count++] = token;
-        token = strtok(NULL, " ");
-    }
-    diff_arguments[diff_argument_count] = NULL;
-
+    term_command = (char *)gtk_editable_get_text(
+        GTK_EDITABLE(cecup.term_entry));
+    diff_tool = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry));
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
     for (int32 i = 0; i < tasks->count; i += 1) {
@@ -512,6 +488,14 @@ on_menu_diff(GtkWidget *widget, void *data) {
         int32 size_dst = strlen32(cecup.dst_base) + strlen32(task->path) + 2;
         char *path_src = malloc2(size_src);
         char *path_dst = malloc2(size_dst);
+        Command command;
+
+        snprintf2(path_src, size_src, "%s/%s", cecup.src_base, task->path);
+        snprintf2(path_dst, size_dst, "%s/%s", cecup.dst_base, task->path);
+
+        command = on_menu_diff_command(term_command, diff_tool);
+        command_push(&command, path_dst);
+        command_push(&command, path_src);
 
         switch (fork()) {
         case -1:
@@ -522,36 +506,21 @@ on_menu_diff(GtkWidget *widget, void *data) {
                 error("Error in setsid: %s.\n", strerror(errno));
             }
 
-            snprintf2(path_src, size_src, "%s/%s", cecup.src_base, task->path);
-            snprintf2(path_dst, size_dst, "%s/%s", cecup.dst_base, task->path);
-
+            execvp(command.argv[0], command.argv);
             {
-                char cmd[MAX_PATH_LENGTH*2];
-                char *combined_arguments[128];
-                int32 k = 0;
+                char *command_text;
+                int32 command_text_len;
 
-                for (int32 j = 0; j < term_argument_count; j += 1) {
-                    combined_arguments[k++] = term_arguments[j];
-                }
-
-                combined_arguments[k++] = "-e";
-
-                for (int32 j = 0; j < diff_argument_count; j += 1) {
-                    combined_arguments[k++] = diff_arguments[j];
-                }
-
-                combined_arguments[k++] = path_dst;
-                combined_arguments[k++] = path_src;
-                combined_arguments[k++] = NULL;
-
-                execvp(combined_arguments[0], combined_arguments);
-                STRING_FROM_ARRAY(cmd, " ", combined_arguments, k);
-                error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
-                _exit(EXIT_FAILURE);
+                command_text = command_str(&command, &command_text_len);
+                error("Error executing\n%s\n%s.\n",
+                      command_text, strerror(errno));
+                free2(command_text, command_text_len + 1);
             }
+            _exit(EXIT_FAILURE);
         default:
             // TODO: Retain and reap the child PID. Without waitpid or a
             // child watch, a completed diff process can remain a zombie.
+            command_free(&command);
             free2(path_src, size_src);
             free2(path_dst, size_dst);
             break;
@@ -560,8 +529,6 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
     task_list_free(tasks);
     free_message(message);
-    free2(term_cmd, term_cmd_len + 1);
-    free2(diff_tool, diff_tool_len + 1);
     return;
 }
 
@@ -621,6 +588,25 @@ main(void) {
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "diff");
     gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "true");
+
+    {
+        Command command;
+
+        command = on_menu_diff_command("xterm --hold", "diff --color=always");
+        command_push(&command, "/destination");
+        command_push(&command, "/source");
+
+        ASSERT_EQUAL(command.argc, 7);
+        ASSERT_EQUAL(command.argv[0], "xterm");
+        ASSERT_EQUAL(command.argv[1], "--hold");
+        ASSERT_EQUAL(command.argv[2], "-e");
+        ASSERT_EQUAL(command.argv[3], "diff");
+        ASSERT_EQUAL(command.argv[4], "--color=always");
+        ASSERT_EQUAL(command.argv[5], "/destination");
+        ASSERT_EQUAL(command.argv[6], "/source");
+        ASSERT_EQUAL(command.argv[command.argc], NULL);
+        command_free(&command);
+    }
 
     cecup.src_base = xstrdup("/tmp");
     cecup.src_base_len = strlen32(cecup.src_base);
