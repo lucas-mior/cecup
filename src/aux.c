@@ -230,8 +230,9 @@ cecup_get_dirs(void) {
     normalize(full_src, &full_src_len);
     normalize(full_dst, &full_dst_len);
 
-    // TODO: realpath can fill PATH_MAX - 1 bytes. Appending '/' and '\0'
-    // can write one byte past either stack buffer; reserve two bytes.
+    ASSERT_LESS(full_dst_len, PATH_MAX - 2);
+    ASSERT_LESS(full_src_len, PATH_MAX - 2);
+
     if (full_src[full_src_len - 1] != '/') {
         full_src_len += 1;
         full_src[full_src_len - 1] = '/';
