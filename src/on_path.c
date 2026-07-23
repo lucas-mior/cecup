@@ -251,7 +251,9 @@ on_path_edited(GtkEditable *editable, void *data) {
                                    child_rel_old, child_rel_old_len,
                                    child_rel_new, child_rel_new_len);
         }
-        fts_close(fts_handle);
+        if (fts_close(fts_handle) < 0) {
+            LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
+        }
     }
 
     work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, side,
