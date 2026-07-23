@@ -19,7 +19,6 @@
 #define COMMAND_C
 
 #define ENUM_NAME CommandFlag
-#define ENUM_UNDERLYING_TYPE uint32
 #define ENUM_BITFLAGS 1
 #define ENUM_PREFIX_ COMMAND_FLAG_
 #define ENUM_FIELDS \
