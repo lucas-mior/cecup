@@ -207,9 +207,9 @@ on_menu_open_item(GtkWidget *widget, void *data) {
     variant = get_variant(widget, "variant");
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
-    if (!strcmp(variant, "folder")) {
+    if (strequal(variant, "folder")) {
         folder = true;
-    } else if (!strcmp(variant, "file")) {
+    } else if (strequal(variant, "file")) {
         folder = false;
     } else {
         error("Error: "
