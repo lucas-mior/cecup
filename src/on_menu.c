@@ -312,9 +312,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
             SNPRINTF(path_relative, "%s/%s", base_path, task->path);
 
             if (realpath(path_relative, path_full) == NULL) {
-                LOG_ERROR(_("Error resolving full path of %s:"
-                            "%s. Copying relative path instead.\n"),
-                          path_relative, strerror(errno));
+                LOG_ERROR(_("Error resolving full path of %s:%s. Copying relative path instead.\n"),           path_relative, strerror(errno));
                 SNPRINTF(path_full, "%s", path_relative);
                 // TODO: Do not continue after preparing the fallback. This
                 // branch promises to copy it but skips the item entirely.
