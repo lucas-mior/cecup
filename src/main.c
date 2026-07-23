@@ -51,6 +51,54 @@ free_text_info(void *data) {
     return;
 }
 
+static bool
+main_key_file_error_is_missing(GError *key_error) {
+    return g_error_matches(key_error, G_KEY_FILE_ERROR,
+                           G_KEY_FILE_ERROR_KEY_NOT_FOUND)
+           || g_error_matches(key_error, G_KEY_FILE_ERROR,
+                              G_KEY_FILE_ERROR_GROUP_NOT_FOUND);
+}
+
+static char *
+main_key_file_get_string(GKeyFile *key, char *group, char *name) {
+    GError *key_error = NULL;
+    char *value;
+
+    value = g_key_file_get_string(key, group, name, &key_error);
+    if (key_error) {
+        if (!main_key_file_error_is_missing(key_error)) {
+            error("Error reading configuration key [%s] %s: %s.\n",
+                  group, name, key_error->message);
+        }
+        g_clear_error(&key_error);
+    }
+    return value;
+}
+
+static bool
+main_key_file_get_boolean(
+    GKeyFile *key,
+    char *group,
+    char *name,
+    bool *value
+) {
+    GError *key_error = NULL;
+    gboolean result;
+
+    result = g_key_file_get_boolean(key, group, name, &key_error);
+    if (key_error) {
+        if (!main_key_file_error_is_missing(key_error)) {
+            error("Error reading configuration key [%s] %s: %s.\n",
+                  group, name, key_error->message);
+        }
+        g_clear_error(&key_error);
+        return false;
+    }
+
+    *value = result;
+    return true;
+}
+
 static void
 main_setup_tree_columns(GtkWidget *tree) {
     GActionMap *action_map = G_ACTION_MAP(cecup.application);
@@ -655,77 +703,94 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     }
 
     do {
+        GError *key_error = NULL;
         GKeyFile *key;
         char *value;
+        bool boolean_value;
 
         key = g_key_file_new();
-        // TODO: Capture GError and ignore only a missing file. Malformed or
-        // unreadable configuration is currently discarded without a message.
-        if (!g_key_file_load_from_file(key, cecup.config_path, G_KEY_FILE_NONE, NULL)) {
+        if (!g_key_file_load_from_file(key, cecup.config_path,
+                                       G_KEY_FILE_NONE, &key_error)) {
+            if (!g_error_matches(key_error, G_FILE_ERROR,
+                                 G_FILE_ERROR_NOENT)) {
+                error("Error loading configuration file %s: %s.\n",
+                      cecup.config_path, key_error->message);
+            }
+            g_clear_error(&key_error);
             g_key_file_free(key);
             break;
         }
 
-        if ((value = g_key_file_get_string(key, "Paths", "src", NULL))) {
+        value = main_key_file_get_string(key, "Paths", "src");
+        if (value) {
             gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), value);
             g_free(value);
         }
-        if ((value = g_key_file_get_string(key, "Paths", "dst", NULL))) {
+
+        value = main_key_file_get_string(key, "Paths", "dst");
+        if (value) {
             gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), value);
             g_free(value);
         }
-        if ((value = g_key_file_get_string(key, "Tools", "diff", NULL))) {
+
+        value = main_key_file_get_string(key, "Tools", "diff");
+        if (value) {
             gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), value);
             g_free(value);
         }
-        if ((value = g_key_file_get_string(key, "Tools", "term", NULL))) {
+
+        value = main_key_file_get_string(key, "Tools", "term");
+        if (value) {
             gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), value);
             g_free(value);
         }
 
-        // TODO: Pass GError to the typed getters. Invalid boolean text
-        // silently becomes false and changes saved options.
-        if (g_key_file_has_key(key, "Filters", "new", NULL)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_new),
-                                         g_key_file_get_boolean(key, "Filters", "new", NULL));
+        if (main_key_file_get_boolean(key, "Filters", "new",
+                                      &boolean_value)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_new), boolean_value);
         }
-        if (g_key_file_has_key(key, "Filters", "hard", NULL)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_link),
-                                         g_key_file_get_boolean(key, "Filters", "hard", NULL));
+        if (main_key_file_get_boolean(key, "Filters", "hard",
+                                      &boolean_value)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_link), boolean_value);
         }
-        if (g_key_file_has_key(key, "Filters", "update", NULL)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_update),
-                                         g_key_file_get_boolean(key, "Filters", "update", NULL));
+        if (main_key_file_get_boolean(key, "Filters", "update",
+                                      &boolean_value)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_update), boolean_value);
         }
-        if (g_key_file_has_key(key, "Filters", "equal", NULL)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal),
-                                         g_key_file_get_boolean(key, "Filters", "equal", NULL));
+        if (main_key_file_get_boolean(key, "Filters", "equal",
+                                      &boolean_value)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_equal), boolean_value);
         }
-        if (g_key_file_has_key(key, "Filters", "delete", NULL)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete),
-                                         g_key_file_get_boolean(key, "Filters", "delete", NULL));
+        if (main_key_file_get_boolean(key, "Filters", "delete",
+                                      &boolean_value)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_delete), boolean_value);
         }
-        if (g_key_file_has_key(key, "Filters", "ignore", NULL)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore),
-                                         g_key_file_get_boolean(key, "Filters", "ignore", NULL));
+        if (main_key_file_get_boolean(key, "Filters", "ignore",
+                                      &boolean_value)) {
+            gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(cecup.filter_ignore), boolean_value);
         }
-        if (g_key_file_has_key(key, "Options", "check_fs", NULL)) {
-            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.check_fs_button),
-                                        g_key_file_get_boolean(key, "Options", "check_fs", NULL));
+        if (main_key_file_get_boolean(key, "Options", "check_fs",
+                                      &boolean_value)) {
+            gtk_check_button_set_active(
+                GTK_CHECK_BUTTON(cecup.check_fs_button), boolean_value);
         }
-        if (g_key_file_has_key(key, "Options", "delete_ignored", NULL)) {
-            bool val;
-
-            val = g_key_file_get_boolean(key, "Options", "delete_ignored", NULL);
-            cecup.delete_ignored = val;
-            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_ignored_button), val);
+        if (main_key_file_get_boolean(key, "Options", "delete_ignored",
+                                      &boolean_value)) {
+            cecup.delete_ignored = boolean_value;
+            gtk_check_button_set_active(
+                GTK_CHECK_BUTTON(cecup.delete_ignored_button), boolean_value);
         }
-        if (g_key_file_has_key(key, "Options", "delete_after", NULL)) {
-            bool val;
-
-            val = g_key_file_get_boolean(key, "Options", "delete_after", NULL);
-            cecup.delete_after = val;
-            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after_button), val);
+        if (main_key_file_get_boolean(key, "Options", "delete_after",
+                                      &boolean_value)) {
+            cecup.delete_after = boolean_value;
+            gtk_check_button_set_active(
+                GTK_CHECK_BUTTON(cecup.delete_after_button), boolean_value);
         }
 
         g_key_file_free(key);
