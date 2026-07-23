@@ -249,9 +249,6 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
     mtime = item_mtime_side(row_id, text_info->side);
 
     if (text_info->type == COLUMN_MTIME) {
-        // TODO: Timestamp zero and valid pre-epoch values are rendered blank.
-        // Distinguish a missing row from a timestamp by its index, not by its
-        // sign.
         if (mtime > 0) {
             struct tm time_information;
             time_t unix_timestamp = (time_t)mtime + timezone_offset;
