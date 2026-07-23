@@ -370,9 +370,6 @@ static void
 free_message(void *data) {
     Message *message;
 
-    // NOTE: free(pointer, size)
-    //       only uses size for verbose logging
-    //       and pointer == NULL is ignored, so we don't need to check NULL here.
     if ((message = data)) {
         free2(message->text, message->text_len + 1);
         if (message->dst_path != message->src_path) {
