@@ -102,7 +102,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
         return;
     }
 
-    if ((ignore_file = fopen(cecup.ignore_path, "a")) == NULL) {
+    if ((ignore_file = fopen(cecup.ignore_path, "a+")) == NULL) {
         LOG_ERROR(_("Error opening %s: %s.\n"), cecup.ignore_path, strerror(errno));
         return;
     }
