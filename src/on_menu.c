@@ -282,9 +282,9 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     space = buffer_size - 1;
     variant = get_variant(widget, __func__);
 
-    if (!strcmp(variant, "absolute")) {
+    if (strequal(variant, "absolute")) {
         absolute = true;
-    } else if (!strcmp(variant, "relative")) {
+    } else if (strequal(variant, "relative")) {
         absolute = false;
     } else {
         error("Error: "
