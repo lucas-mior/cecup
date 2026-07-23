@@ -169,10 +169,12 @@ on_path_edited(GtkEditable *editable, void *data) {
     memcpy64(relative_new, new_text, new_length + 1);
     normalize(relative_new, &new_length);
 
-    // TODO: Reject ".." path components and verify the resolved destination
-    // remains below base_path. normalize does not remove parent traversal.
     if (BEGINS_WITH(relative_new, new_length, "/")) {
         LOG_ERROR(_("Invalid rename: %s starts with a slash.\n"), relative_new);
+        return;
+    }
+    if (BEGINS_WITH(relative_new, new_length, "..")) {
+        LOG_ERROR(_("Invalid rename: %s starts with ..\n"), relative_new);
         return;
     }
 
