@@ -11,6 +11,7 @@ error_impl(char *file, int32 line, char *func, char *format, ...);
 static int32 snprintf2(char *buffer, int64 size, char *format, ...);
 static int32 optional_strlen32(char *string);
 static int strncmp32(char *left, char *right, int64 size);
+static int xclose(char *file, int line, int *fd, char *fd_var_name, char *filename);
 
 static bool is_ident_start_char(char c);
 static bool is_ident_char(char c);
