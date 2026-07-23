@@ -292,8 +292,7 @@ item_get_actions_reasons(int32 row_id,
         is_hardlink = item_hardlink_side(row_id, L, &hard_links_src) && (hard_links_src.count > 1);
         item_hardlink_side(row_id, R, &hard_links_dst);
 
-        // TODO: Also reject destination hard-link topology when the source has
-        // one name. Extra destination links are currently accepted as equal.
+        // Note: extra hard links in the destination are accepted silently.
 
         if (pattern_src) {
             *action_src = ACTION_IGNORE;
