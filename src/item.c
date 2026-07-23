@@ -218,8 +218,7 @@ item_get_actions_reasons(int32 row_id,
     *reason = 0;
 
     if (src_idx < 0) {
-        char *matched_dst;
-        matched_dst = cecup.traversal[R].patterns[dst_idx];
+        char *matched_dst = cecup.traversal[R].patterns[dst_idx];
         *reason |= REASON_MISSING;
 
         if (matched_dst) {
