@@ -192,8 +192,6 @@ cecup_get_dirs(void) {
     tmp_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
     tmp_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R]));
 
-    // TODO: Do not persist entry text until both paths are validated.
-    // Analysis currently saves invalid or noncanonical paths before checks.
     save_config();
 
     if (strlen32(tmp_src) <= 0) {
