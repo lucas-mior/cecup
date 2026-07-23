@@ -254,9 +254,8 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
         // sign.
         if (mtime > 0) {
             struct tm time_information;
-            time_t unix_timestamp;
+            time_t unix_timestamp = (time_t)mtime + timezone_offset;
 
-            unix_timestamp = (time_t)mtime + timezone_offset;
             // TODO: Use localtime_r for each timestamp and check its result.
             // A startup-time offset is wrong across DST, and gmtime_r failure
             // leaves time_information unusable for strftime.
