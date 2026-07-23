@@ -39,7 +39,7 @@ ignore_patterns_load(void) {
 
     if (cecup.ignore_patterns == NULL) {
         *capacity = 16;
-        cecup.ignore_patterns = malloc2(*capacity * SIZEOF(*cecup.ignore_patterns));
+        cecup.ignore_patterns = malloc2(*capacity*SIZEOF(*cecup.ignore_patterns));
         cecup.ignore_count = 0;
     }
 
@@ -408,7 +408,7 @@ main(void) {
     for (int32 i = 0; i < cecup.ignore_count; i += 1) {
         free2(cecup.ignore_patterns[i].str, cecup.ignore_patterns[i].len + 1);
     }
-    free2(cecup.ignore_patterns, cecup.ignore_capacity * SIZEOF(IgnorePattern));
+    free2(cecup.ignore_patterns, cecup.ignore_capacity*SIZEOF(IgnorePattern));
 
     exit(EXIT_SUCCESS);
 }
