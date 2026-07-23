@@ -206,7 +206,7 @@ on_path_edited(GtkEditable *editable, void *data) {
             return;
         }
 
-        // TODO: Detect FTS_ERR, FTS_DNR, FTS_NS, fts_read errno, and
+        // TODO: Detect FTS_DNR, fts_read errno, and
         // fts_close failure. A partial walk leaves the model inconsistent after
         // the filesystem rename; force a complete preview instead.
         while ((entry = fts_read(fts_handle))) {
