@@ -89,7 +89,8 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
         if (action == ACTION_HARDLINK) {
             idx = cecup.rows[side][row_id];
-            task->inode = cecup.traversal[side].stats[idx].st_ino;
+            task->file_id = file_id_from_stat(
+                &cecup.traversal[side].stats[idx]);
         }
 
         task->action = action;
@@ -115,8 +116,10 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         memcpy64(task->path, clicked_path, task->path_len + 1);
 
         if (clicked_action == ACTION_HARDLINK) {
-            if (hash_lookup_fs_map(cecup.traversal[side].map, task->path, task->path_len, &idx)) {
-                task->inode = cecup.traversal[side].stats[idx].st_ino;
+            if (hash_lookup_fs_map(cecup.traversal[side].map, task->path,
+                                   task->path_len, &idx)) {
+                task->file_id = file_id_from_stat(
+                    &cecup.traversal[side].stats[idx]);
             }
         }
 
@@ -175,6 +178,7 @@ main(void) {
             t->paths[i] = malloc2(20);
             snprintf(t->paths[i], 20, "file_%d.txt", i);
             t->paths_lens[i] = (int16)strlen32(t->paths[i]);
+            t->stats[i].st_dev = (dev_t)side;
             t->stats[i].st_ino = (ino_t)(100 + i);
             t->stats[i].st_mode = S_IFREG | 0644;
             hash_insert_fs_map(t->map, t->paths[i], t->paths_lens[i], i);
@@ -199,20 +203,21 @@ main(void) {
         cecup.rows_selected[i] = false;
     }
 
-    // Test successful inode lookup in fallback
+    // Test successful file-id lookup in fallback
     {
         char *path_to_find = cecup.traversal[L].paths[0];
         tasks = get_target_tasks(L, path_to_find, ACTION_HARDLINK);
         ASSERT_EQUAL(tasks->count, 1);
         ASSERT(tasks->items[0]->action == ACTION_HARDLINK);
-        ASSERT_EQUAL(tasks->items[0]->inode, 100);
+        ASSERT_EQUAL((int32)tasks->items[0]->file_id.device, L);
+        ASSERT_EQUAL((int32)tasks->items[0]->file_id.inode, 100);
         task_list_free(tasks);
     }
 
-    // Test fallback with path not in map (inode remains 0)
+    // Test fallback with path not in map (file id remains zero)
     tasks = get_target_tasks(L, "missing.txt", ACTION_HARDLINK);
     ASSERT_EQUAL(tasks->count, 1);
-    ASSERT_EQUAL(tasks->items[0]->inode, 0);
+    ASSERT_EQUAL((int32)tasks->items[0]->file_id.inode, 0);
     task_list_free(tasks);
 
     // 4. Cleanup

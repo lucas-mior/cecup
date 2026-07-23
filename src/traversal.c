@@ -201,11 +201,17 @@ traversal_symlink_get(Traversal *traversal, char *path, char **symlink_target) {
 }
 
 static void
-traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
+traversal_add_link(
+    Traversal *traversal,
+    struct stat stat,
+    char *path,
+    int32 path_len
+) {
+    FileID file_id = file_id_from_stat(&stat);
     HardLinks hard_links;
     rapidhash128_t name_hash = rapidhash128(path, (size_t)path_len);
 
-    if ((hash_lookup_inode_map(traversal->inode_map, &stat.st_ino, &hard_links))) {
+    if ((hash_lookup_inode_map(traversal->inode_map, &file_id, &hard_links))) {
         int32 old_capacity;
 
         hard_links.aggregate_hash_lo ^= name_hash.lo;
@@ -226,18 +232,20 @@ traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 pat
         hard_links.names_lens[hard_links.count] = path_len;
         hard_links.count += 1;
 
-        hash_overwrite_inode_map(traversal->inode_map, &stat.st_ino, hard_links);
+        hash_overwrite_inode_map(traversal->inode_map, &file_id, hard_links);
     } else {
         hard_links.aggregate_hash_lo = name_hash.lo;
         hard_links.aggregate_hash_hi = name_hash.hi;
         hard_links.count = 1;
         hard_links.capacity = 4;
-        hard_links.names = malloc2(hard_links.capacity*SIZEOF(*(hard_links.names)));
-        hard_links.names_lens = malloc2(hard_links.capacity*SIZEOF(*(hard_links.names_lens)));
+        hard_links.names = malloc2(
+            hard_links.capacity*SIZEOF(*(hard_links.names)));
+        hard_links.names_lens = malloc2(
+            hard_links.capacity*SIZEOF(*(hard_links.names_lens)));
         hard_links.names[0] = path;
         hard_links.names_lens[0] = path_len;
 
-        hash_insert_inode_map(traversal->inode_map, &stat.st_ino, hard_links);
+        hash_insert_inode_map(traversal->inode_map, &file_id, hard_links);
     }
 
     return;
@@ -247,11 +255,11 @@ static void
 traversal_unlink(Traversal *traversal, int32 idx) {
     char *path = traversal->paths[idx];
     int32 path_len = traversal->paths_lens[idx];
+    FileID file_id = file_id_from_stat(&traversal->stats[idx]);
     HardLinks hard_links;
     rapidhash128_t name_hash;
-    ino_t *inode = &traversal->stats[idx].st_ino;
 
-    if ((hash_lookup_inode_map(traversal->inode_map, inode, &hard_links))) {
+    if ((hash_lookup_inode_map(traversal->inode_map, &file_id, &hard_links))) {
         int32 found_idx = -1;
 
         name_hash = rapidhash128(path, (size_t)path_len);
@@ -276,11 +284,14 @@ traversal_unlink(Traversal *traversal, int32 idx) {
             hard_links.aggregate_hash_hi ^= name_hash.hi;
 
             if (hard_links.count == 0) {
-                free2(hard_links.names,      hard_links.capacity*SIZEOF(*(hard_links.names)));
-                free2(hard_links.names_lens, hard_links.capacity*SIZEOF(*(hard_links.names_lens)));
-                hash_remove_inode_map(traversal->inode_map, inode);
+                free2(hard_links.names,
+                      hard_links.capacity*SIZEOF(*(hard_links.names)));
+                free2(hard_links.names_lens,
+                      hard_links.capacity*SIZEOF(*(hard_links.names_lens)));
+                hash_remove_inode_map(traversal->inode_map, &file_id);
             } else {
-                hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);
+                hash_overwrite_inode_map(traversal->inode_map,
+                                         &file_id, hard_links);
             }
         }
     }
@@ -372,6 +383,8 @@ traversal_symlink_target_side(int32 idx, int32 side) {
 
 static bool
 traversal_hardlink_side(int32 idx, int32 side, HardLinks *hard_links) {
+    FileID file_id;
+
     if (idx < 0) {
         return false;
     }
@@ -380,8 +393,9 @@ traversal_hardlink_side(int32 idx, int32 side, HardLinks *hard_links) {
         return false;
     }
 
+    file_id = file_id_from_stat(&cecup.traversal[side].stats[idx]);
     if (!hash_lookup_inode_map(cecup.traversal[side].inode_map,
-                               &cecup.traversal[side].stats[idx].st_ino, hard_links)) {
+                               &file_id, hard_links)) {
         return false;
     }
 
@@ -425,6 +439,8 @@ main(void) {
     uint64 first_hi;
     int32 link_idx;
     rapidhash128_t hash_b;
+    FileID link_file_id;
+    FileID other_file_id;
 
     memset64(&test_traversal, 0, SIZEOF(test_traversal));
     memset64(&dummy_stat, 0, SIZEOF(dummy_stat));
@@ -461,7 +477,9 @@ main(void) {
     ASSERT(strcmp(symlink_target, "dummy_target.txt") == 0);
     remove("test_symlink");
 
-    symlink_len = traversal_symlink_get(&test_traversal, "non_existent_symlink", &symlink_target);
+    symlink_len = traversal_symlink_get(&test_traversal,
+                                         "non_existent_symlink",
+                                         &symlink_target);
     ASSERT_EQUAL(symlink_len, 0);
     ASSERT_NULL(symlink_target);
 
@@ -470,10 +488,11 @@ main(void) {
     link_stat.st_ino = 999;
     link_stat.st_mode = S_IFREG | 0644;
     link_stat.st_nlink = 2;
+    link_file_id = file_id_from_stat(&link_stat);
 
     /* Add first link */
     traversal_add_link(&test_traversal, link_stat, "link_a", 6);
-    ASSERT(hash_lookup_inode_map(test_traversal.inode_map, &link_stat.st_ino, &hl));
+    ASSERT(hash_lookup_inode_map(test_traversal.inode_map, &link_file_id, &hl));
     ASSERT_EQUAL(hl.count, 1);
 
     first_lo = hl.aggregate_hash_lo;
@@ -481,20 +500,36 @@ main(void) {
 
     /* Add second link and verify XOR sum changed */
     traversal_add_link(&test_traversal, link_stat, "link_b", 6);
-    hash_lookup_inode_map(test_traversal.inode_map, &link_stat.st_ino, &hl);
+    hash_lookup_inode_map(test_traversal.inode_map, &link_file_id, &hl);
     ASSERT_EQUAL(hl.count, 2);
     ASSERT(hl.aggregate_hash_lo != first_lo);
     ASSERT(hl.aggregate_hash_hi != first_hi);
 
+    {
+        struct stat other_stat = link_stat;
+        HardLinks other_hl;
+
+        other_stat.st_dev += 1;
+        other_file_id = file_id_from_stat(&other_stat);
+        traversal_add_link(&test_traversal, other_stat, "link_other", 10);
+
+        ASSERT(hash_lookup_inode_map(test_traversal.inode_map,
+                                     &other_file_id, &other_hl));
+        ASSERT_EQUAL(other_hl.count, 1);
+        hash_lookup_inode_map(test_traversal.inode_map, &link_file_id, &hl);
+        ASSERT_EQUAL(hl.count, 2);
+    }
+
     /* 4. Test traversal_unlink 128-bit restoration */
     /* Manually push link_a to the traversal arrays so unlink can find it */
-    link_idx = traversal_push(&test_traversal, &link_stat, "link_a", 6, NULL, 0, NULL, 0);
+    link_idx = traversal_push(&test_traversal, &link_stat,
+                              "link_a", 6, NULL, 0, NULL, 0);
 
     traversal_unlink(&test_traversal, link_idx);
 
-    /* After unlinking 'link_a', the hash should return to its state after 'link_b' alone */
-    /* (Because A ^ B ^ A = B) */
-    hash_lookup_inode_map(test_traversal.inode_map, &link_stat.st_ino, &hl);
+    /* After unlinking 'link_a', the hash should return to its state after */
+    /* 'link_b' alone, because A ^ B ^ A = B. */
+    hash_lookup_inode_map(test_traversal.inode_map, &link_file_id, &hl);
     ASSERT_EQUAL(hl.count, 1);
 
     hash_b = rapidhash128("link_b", 6);

@@ -486,15 +486,18 @@ update_row_rename(char *old_path, int32 old_path_len,
                                  p_match_str, p_match_len);
     }
 
-    if (S_ISREG(traversal->stats[idx].st_mode) && (traversal->stats[idx].st_nlink > 1)) {
+    if (S_ISREG(traversal->stats[idx].st_mode)
+        && (traversal->stats[idx].st_nlink > 1)) {
+        FileID file_id = file_id_from_stat(&traversal->stats[idx]);
         HardLinks hard_links;
-        ino_t *inode = &traversal->stats[idx].st_ino;
 
-        if (hash_lookup_inode_map(traversal->inode_map, inode, &hard_links)) {
+        if (hash_lookup_inode_map(traversal->inode_map,
+                                  &file_id, &hard_links)) {
             hard_link_replace_node(&hard_links,
                                    old_path, old_path_len,
                                    new_path_alloc, new_path_len);
-            hash_overwrite_inode_map(traversal->inode_map, inode, hard_links);
+            hash_overwrite_inode_map(traversal->inode_map,
+                                     &file_id, hard_links);
         }
     }
 
