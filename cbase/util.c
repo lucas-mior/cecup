@@ -1964,29 +1964,30 @@ read_entire_file(char *path, int32 *file_len) {
     return data;
 }
 
-static void
+static bool
 write_entire_file(char *path, char *text, int64 text_len) {
     FILE *file;
 
     if (text_len < 0) {
         error("Error writing negative length %lld to %s.",
               (llong)text_len, path);
-        fatal(EXIT_FAILURE);
+        return false;
     }
 
     if ((file = fopen(path, "wb")) == NULL) {
         error("Error opening %s for writing: %s", path, strerror(errno));
-        fatal(EXIT_FAILURE);
+        return false;
     }
 
     if ((text_len > 0) && (fwrite64(text, 1, text_len, file) != text_len)) {
         error("Error writing %lld bytes to %s: %s.",
               (llong)text_len, path, strerror(errno));
-        fatal(EXIT_FAILURE);
+        XFCLOSE(file, path);
+        return false;
     }
 
     XFCLOSE(file, path);
-    return;
+    return true;
 }
 
 #define STR_BUILDER_INITIAL_CAPACITY 16
