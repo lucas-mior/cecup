@@ -521,18 +521,18 @@ static gboolean update_ui_handler(void * user_data);
 static void task_list_free(TaskList *tasks);
 static void save_config(void);
 static void aux_protect_interface_from_user(bool state);
-static void log_internal(char *file, int line,
+static void log_internal(char *file, int line, char *func,
                          enum MsgType type, char *format, ...);
 static int32 item_add(int32 src_idx, int32 dst_idx);
 
 #pragma clang diagnostic pop
 
 #define LOG(...)        \
-    log_internal(__FILE__, __LINE__, MSG_LOG, __VA_ARGS__)
+    log_internal(__FILE__, __LINE__, (char *)__func__, MSG_LOG, __VA_ARGS__)
 #define LOG_ERROR(...)  \
-    log_internal(__FILE__, __LINE__, MSG_LOG_ERROR, __VA_ARGS__)
+    log_internal(__FILE__, __LINE__, (char *)__func__, MSG_LOG_ERROR, __VA_ARGS__)
 #define LOG_CMD(...)    \
-    log_internal(__FILE__, __LINE__, MSG_LOG_CMD, __VA_ARGS__)
+    log_internal(__FILE__, __LINE__, (char *)__func__, MSG_LOG_CMD, __VA_ARGS__)
 
 enum RsyncCharAction {
     RSYNC_CHAR0_ACTION_SEND = '<',
