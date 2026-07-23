@@ -274,6 +274,7 @@ cecup_get_dirs(void) {
 
     return true;
 }
+
 static void
 config_bool_set(GKeyFile *key, char *section, char *name, GtkWidget *button) {
     gboolean state;
