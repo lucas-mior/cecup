@@ -2171,12 +2171,6 @@ sb_append_byte(StrBuilder *str_builder, char byte) {
     return;
 }
 
-#define SB_APPEND_2(BUILER, STRING) \
-        sb_append(BUILER, STRING, strlen32(STRING))
-#define SB_APPEND_3(BUILER, STRING, LEN) \
-        sb_append(BUILER, STRING, (int32)LEN)
-#define SB_APPEND(...) SELECT_ON_NUM_ARGS(SB_APPEND_, __VA_ARGS__)
-
 static void
 sb_printf(StrBuilder *str_builder, char *fmt, ...) {
     va_list ap;

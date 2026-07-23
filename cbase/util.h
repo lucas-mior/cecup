@@ -13,6 +13,12 @@ static int32 optional_strlen32(char *string);
 static int strncmp32(char *left, char *right, int64 size);
 static int xclose(char *file, int line, int *fd, char *fd_var_name, char *filename);
 
+static int64 read64(int fd, void *buf, int64 n);
+static int64 write64(int fd, void *buf, int64 n);
+static void xpipe(int array[2]);
+static void xdup2(int fd1, int fd2);
+static void xkill(pid_t pid, int signum);
+
 static bool is_ident_start_char(char c);
 static bool is_ident_char(char c);
 
@@ -43,6 +49,12 @@ static void *xmalloc(int64 size, bool zero);
 #define XCLOSE_1(FD) xclose(__FILE__, __LINE__, FD, #FD, NULL)
 #define XCLOSE_2(FD, NAME) xclose(__FILE__, __LINE__, FD, #FD, NAME)
 #define XCLOSE(...) SELECT_ON_NUM_ARGS(XCLOSE_, __VA_ARGS__)
+
+#define SB_APPEND_2(BUILER, STRING) \
+        sb_append(BUILER, STRING, strlen32(STRING))
+#define SB_APPEND_3(BUILER, STRING, LEN) \
+        sb_append(BUILER, STRING, (int32)LEN)
+#define SB_APPEND(...) SELECT_ON_NUM_ARGS(SB_APPEND_, __VA_ARGS__)
 
 static void memcpy64(void *dest, void *source, int64 n);
 static void memmove64(void *dest, void *source, int64 n);

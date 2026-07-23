@@ -24,6 +24,8 @@
 #define TESTING_command 0
 #endif
 
+#include "util.h"
+
 #define ENUM_NAME CommandFlag
 #define ENUM_BITFLAGS 1
 #define ENUM_PREFIX_ COMMAND_FLAG_
