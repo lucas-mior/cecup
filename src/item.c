@@ -280,14 +280,21 @@ item_get_actions_reasons(int32 row_id,
         HardLinks hard_links_dst = {0};
         bool is_hardlink;
 
-        // TODO: Compare st_mode & S_IFMT before metadata. Different node types
-        // with matching attributes can otherwise be marked equal.
         bool is_symlink = S_ISLNK(stat_src->st_mode);
         bool is_dir = S_ISDIR(stat_src->st_mode);
+        bool type_differs;
         bool equal = false;
         bool attributes_differ = false;
 
-        is_hardlink = item_hardlink_side(row_id, L, &hard_links_src) && (hard_links_src.count > 1);
+        type_differs = ((stat_src->st_mode & S_IFMT)
+                        != (stat_dst->st_mode & S_IFMT));
+        if (type_differs) {
+            *reason |= REASON_TYPE;
+            attributes_differ = true;
+        }
+
+        is_hardlink = item_hardlink_side(row_id, L, &hard_links_src)
+                      && (hard_links_src.count > 1);
         item_hardlink_side(row_id, R, &hard_links_dst);
 
         // TODO: Also reject destination hard-link topology when the source has
@@ -729,6 +736,22 @@ main(void) {
     ASSERT(action_src == ACTION_UPDATE);
     ASSERT(action_dst == ACTION_UPDATE);
     ASSERT((rsn & REASON_SIZE) != 0);
+
+    cecup.traversal[R].stats[0].st_size = 100;
+    cecup.traversal[R].stats[0].st_mode = S_IFDIR | 0644;
+    item_get_actions_reasons(0, &action_src, &action_dst, &rsn);
+    ASSERT(action_src == ACTION_UPDATE);
+    ASSERT(action_dst == ACTION_UPDATE);
+    ASSERT((rsn & REASON_EQUAL) == 0);
+    ASSERT((rsn & REASON_TYPE) != 0);
+
+    cecup.traversal[L].stats[0].st_mode = S_IFDIR | 0644;
+    cecup.traversal[R].stats[0].st_mode = S_IFREG | 0644;
+    item_get_actions_reasons(0, &action_src, &action_dst, &rsn);
+    ASSERT(action_src == ACTION_UPDATE);
+    ASSERT(action_dst == ACTION_UPDATE);
+    ASSERT((rsn & REASON_EQUAL) == 0);
+    ASSERT((rsn & REASON_TYPE) != 0);
 
     /* Memory Cleanup */
     free2(cecup.rows[L], 10 * SIZEOF(int32));

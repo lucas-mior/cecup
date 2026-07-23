@@ -79,6 +79,7 @@ _Static_assert((!R) == L, "!R must be L");
     X(REASON_OWNER)            \
     X(REASON_GROUP)            \
     X(REASON_PERM)             \
+    X(REASON_TYPE)             \
     X(REASON_HARDLINK)         \
     X(REASON_SYMLINK)          \
     X(REASON_SYMLINK_NOT)       \
@@ -296,6 +297,7 @@ static char *reason_strings_file[] = {
     [REASON_OWNER_BIT_IDX]                 = N_("Owners differ"),
     [REASON_GROUP_BIT_IDX]                 = N_("Groups differ"),
     [REASON_PERM_BIT_IDX]                  = N_("Permissions differ"),
+    [REASON_TYPE_BIT_IDX]                  = N_("Item types differ"),
 };
 
 static char *reason_strings_dir[] = {
@@ -318,6 +320,7 @@ static char *reason_strings_dir[] = {
     [REASON_OWNER_BIT_IDX]                 = N_("Owners differ"),
     [REASON_GROUP_BIT_IDX]                 = N_("Groups differ"),
     [REASON_PERM_BIT_IDX]                  = N_("Permissions differ"),
+    [REASON_TYPE_BIT_IDX]                  = N_("Item types differ"),
 };
 
 static char *colors[] = {
