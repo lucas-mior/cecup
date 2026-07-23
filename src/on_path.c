@@ -221,8 +221,15 @@ on_path_edited(GtkEditable *editable, void *data) {
             if (entry->fts_level == 0) {
                 continue;
             }
-            if (entry->fts_info == FTS_D) {
+            switch (entry->fts_info) {
+            case FTS_D:
+                    continue;
+            case FTS_ERR:
+            case FTS_NS:
+                error("FTS error on %s: %s.\n", entry->fts_path, strerror(entry->fts_errno));
                 continue;
+            default:
+                break;
             }
             is_dir = entry->fts_info == FTS_DP;
 
