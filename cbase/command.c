@@ -18,6 +18,8 @@
 #if !defined(COMMAND_C)
 #define COMMAND_C
 
+#include "util.h"
+
 #define ENUM_NAME CommandFlag
 #define ENUM_BITFLAGS 1
 #define ENUM_PREFIX_ COMMAND_FLAG_
