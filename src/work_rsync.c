@@ -626,7 +626,9 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
                 }
             }
         }
-        fts_close(fts_handle);
+        if (fts_close(fts_handle) < 0) {
+            LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
+        }
         // TODO: Log full removal only after every operation and fts_close
         // succeed. This message is printed after errors or cancellation.
         LOG("Removed directory tree %s...\n", full_path);
