@@ -281,13 +281,10 @@ item_get_actions_reasons(int32 row_id,
 
         bool is_symlink = S_ISLNK(stat_src->st_mode);
         bool is_dir = S_ISDIR(stat_src->st_mode);
-        bool type_differs;
         bool equal = false;
         bool attributes_differ = false;
 
-        type_differs = ((stat_src->st_mode & S_IFMT)
-                        != (stat_dst->st_mode & S_IFMT));
-        if (type_differs) {
+        if ((stat_src->st_mode & S_IFMT) != (stat_dst->st_mode & S_IFMT)) {
             *reason |= REASON_TYPE;
             attributes_differ = true;
         }
