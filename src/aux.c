@@ -317,10 +317,8 @@ save_config(void) {
     config_bool_set(key, "Options", "delete_after",   cecup.delete_after_button);
     config_bool_set(key, "Options", "delete_ignored", cecup.delete_ignored_button);
 
-    // TODO: Check both GError results. Serialization, permission, and
-    // disk-full failures are currently silent.
     out = g_key_file_to_data(key, &len, NULL);
-    g_file_set_contents(cecup.config_path, out, (gssize)len, NULL);
+    write_entire_file(cecup.config_path, out, (gssize)len);
 
     g_free(out);
     g_key_file_free(key);
