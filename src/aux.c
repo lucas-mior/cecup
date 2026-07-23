@@ -394,16 +394,11 @@ static void
 check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
                                 char *which_traversal, char *which_rows) {
     for (int32 idx = 0; idx < traversal->nfiles; idx += 1) {
-        int32 row_id;
-        char *path;
-        int32 path_len;
-        bool lookup;
         int32 idx_lookup;
-
-        row_id = traversal->row_ids[idx];
-        path = traversal->paths[idx];
-        path_len = (int32)traversal->paths_lens[idx];
-        lookup = hash_lookup_fs_map(traversal->map, path, path_len, &idx_lookup);
+        int32 row_id = traversal->row_ids[idx];
+        char *path = traversal->paths[idx];
+        int32 path_len = (int32)traversal->paths_lens[idx];
+        bool lookup = hash_lookup_fs_map(traversal->map, path, path_len, &idx_lookup);
 
         if (row_id != -1) {
             if (row_id >= cecup.rows_len) {
