@@ -2710,7 +2710,7 @@ command_argv0_set(Command *command, char *argument) {
 static void
 command_reset(Command *command) {
     for (int32 i = 0; i < command->argc; i += 1) {
-        free2(command->argv[i], strlen32(command->argv[i]) + 1);
+        free2(command->argv[i], command->argvs_lens[i] + 1);
     }
     command->argc = 0;
     return;
