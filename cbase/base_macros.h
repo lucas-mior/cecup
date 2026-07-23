@@ -173,4 +173,6 @@ _Generic((SIZE), \
 #define ENUM_UNDERLYING_TYPE_
 #endif
 
+#define FUNC__ (char *)__func__
+
 #endif /* BASE_MACROS_H */

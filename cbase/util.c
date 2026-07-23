@@ -809,7 +809,7 @@ xfopen(char *file, int32 line, char *func, char *filename, char *mode) {
 }
 
 #define XFOPEN(FILENAME, MODE) \
-    xfopen(__FILE__, __LINE__, (char *)__func__, FILENAME, MODE)
+    xfopen(__FILE__, __LINE__, FUNC__, FILENAME, MODE)
 
 static int
 xfclose(char *file, int32 line, char *func, FILE *f, char *filename) {
@@ -822,7 +822,7 @@ xfclose(char *file, int32 line, char *func, FILE *f, char *filename) {
 }
 
 #define XFCLOSE(F, FILENAME) \
-    xfclose(__FILE__, __LINE__, (char *)__func__, F, FILENAME)
+    xfclose(__FILE__, __LINE__, FUNC__, F, FILENAME)
 
 static int
 xclosedir(DIR *dir, char *dirname) {
@@ -1904,7 +1904,7 @@ timezone_init(void) {
 #define GETENV(VAR) do { \
     if ((VAR = getenv(#VAR)) == NULL) { \
         if (DEBUGGING) { \
-            error_impl(__FILE__, __LINE__, (char *)__func__, \
+            error_impl(__FILE__, __LINE__, FUNC__, \
                        RED("%s") " is not defined.", #VAR); \
         } \
     } else { \
