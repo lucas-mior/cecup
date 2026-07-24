@@ -89,6 +89,11 @@ item_path_get(int32 row_id) {
         fatal(EXIT_FAILURE);
     }
 
+    if (path == NULL) {
+        error("Error: row_id=%d points to a NULL path.\n", row_id);
+        fatal(EXIT_FAILURE);
+    }
+
     return path;
 }
 

@@ -35,6 +35,8 @@
 
 static bool
 aux_is_root(char *path) {
+    ASSERT(path != NULL);
+
     if (path[0] == '.') {
         if (path[1] == '\0') {
             return true;
