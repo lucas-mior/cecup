@@ -34,12 +34,6 @@ else
     measure=""
 fi
 
-if command -v ccache; then
-    ccache=$(which ccache)
-else
-    ccache=""
-fi
-
 if [ -n "$BASH_VERSION" ]; then
     # shellcheck disable=SC3044
     shopt -s expand_aliases
@@ -283,7 +277,7 @@ case "$target" in
 "fast_feedback")
     generate_welcome_h
     trace_on
-    $ccache $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && "$exe"
+    $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && "$exe"
     trace_off
     ;;
 "build"|"debug"|"run"|"release"|"valgrind"|"callgrind"|"perf"|"profile"|"cross")
@@ -307,7 +301,7 @@ case "$target" in
     elif [ "$CC" = "cproc" ]; then
         with_other cproc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
     else
-        $measure $ccache $CC          $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
+        $measure $CC          $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
     fi
 
     if [ $target = "debug" ]; then
@@ -353,7 +347,7 @@ case "$target" in
 "assembly")
     generate_welcome_h
     trace_on
-    $ccache $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "src/$main"
+    $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "src/$main"
     trace_off
     exit
     ;;
@@ -390,16 +384,13 @@ case "$target" in
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 -DTESTING=1"
             cmdline="$cmdline $flags -o $test_exe $src"
         else
-            cmdline="$ccache $CC $CPPFLAGS $CFLAGS"
+            cmdline="$CC $CPPFLAGS $CFLAGS"
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 -DTESTING=1 $LDFLAGS"
             cmdline="$cmdline $flags -o $test_exe $src"
         fi
 
         if [ "$CC" = "chibicc" ] || [ "$CC" = "cproc" ]; then
             cmdline_no_cc=$(option_remove "$cmdline" "$CC")
-            if [ -n "$ccache" ]; then
-                cmdline_no_cc=$(option_remove "$cmdline_no_cc" "$ccache")
-            fi
             trace_on
             if with_other "$CC" "$cmdline_no_cc"; then
                 /tmp/${name}_test
