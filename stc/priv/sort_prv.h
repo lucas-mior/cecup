@@ -30,35 +30,35 @@
   #define i_at_mut(self, idx) _c_MEMB(_at_mut)(self, idx)
 #endif
 
-STC_API void _c_MEMB(_sort_lowhigh)(Self* self, isize_t lo, isize_t hi);
+STC_API void _c_MEMB(_sort_lowhigh)(Self* self, int64 lo, int64 hi);
 
 #ifdef _i_is_array
-STC_API isize_t _c_MEMB(_lower_bound_range)(Self* self, _m_raw raw, isize_t start, isize_t end);
-STC_API isize_t _c_MEMB(_binary_search_range)(Self* self, _m_raw raw, isize_t start, isize_t end);
+STC_API int64 _c_MEMB(_lower_bound_range)(Self* self, _m_raw raw, int64 start, int64 end);
+STC_API int64 _c_MEMB(_binary_search_range)(Self* self, _m_raw raw, int64 start, int64 end);
 
-static inline void _c_MEMB(_sort)(Self* arr, isize_t n)
+static inline void _c_MEMB(_sort)(Self* arr, int64 n)
     { _c_MEMB(_sort_lowhigh)(arr, 0, n - 1); }
 
-static inline isize_t // c_NPOS = not found
-_c_MEMB(_lower_bound)(Self* arr, _m_raw raw, isize_t n)
+static inline int64 // c_NPOS = not found
+_c_MEMB(_lower_bound)(Self* arr, _m_raw raw, int64 n)
     { return _c_MEMB(_lower_bound_range)(arr, raw, 0, n); }
 
-static inline isize_t // c_NPOS = not found
-_c_MEMB(_binary_search)(Self* arr, _m_raw raw, isize_t n)
+static inline int64 // c_NPOS = not found
+_c_MEMB(_binary_search)(Self* arr, _m_raw raw, int64 n)
     { return _c_MEMB(_binary_search_range)(arr, raw, 0, n); }
 
 #elif !defined _i_is_list
-STC_API isize_t _c_MEMB(_lower_bound_range)(Self* self, _m_raw raw, isize_t start, isize_t end);
-STC_API isize_t _c_MEMB(_binary_search_range)(Self* self, _m_raw raw, isize_t start, isize_t end);
+STC_API int64 _c_MEMB(_lower_bound_range)(Self* self, _m_raw raw, int64 start, int64 end);
+STC_API int64 _c_MEMB(_binary_search_range)(Self* self, _m_raw raw, int64 start, int64 end);
 
 static inline void _c_MEMB(_sort)(Self* self)
     { _c_MEMB(_sort_lowhigh)(self, 0, _c_MEMB(_size)(self) - 1); }
 
-static inline isize_t // c_NPOS = not found
+static inline int64 // c_NPOS = not found
 _c_MEMB(_lower_bound)(Self* self, _m_raw raw)
     { return _c_MEMB(_lower_bound_range)(self, raw, 0, _c_MEMB(_size)(self)); }
 
-static inline isize_t // c_NPOS = not found
+static inline int64 // c_NPOS = not found
 _c_MEMB(_binary_search)(Self* self, _m_raw raw)
     { return _c_MEMB(_binary_search_range)(self, raw, 0, _c_MEMB(_size)(self)); }
 #endif
@@ -66,8 +66,8 @@ _c_MEMB(_binary_search)(Self* self, _m_raw raw)
 /* -------------------------- IMPLEMENTATION ------------------------- */
 #if defined i_implement
 
-static void _c_MEMB(_insertsort_lowhigh)(Self* self, isize_t lo, isize_t hi) {
-    for (isize_t j = lo, i = lo + 1; i <= hi; j = i, ++i) {
+static void _c_MEMB(_insertsort_lowhigh)(Self* self, int64 lo, int64 hi) {
+    for (int64 j = lo, i = lo + 1; i <= hi; j = i, ++i) {
         _m_value x = *i_at(self, i);
         _m_raw rx = i_keytoraw((&x));
         while (j >= 0) {
@@ -80,10 +80,10 @@ static void _c_MEMB(_insertsort_lowhigh)(Self* self, isize_t lo, isize_t hi) {
     }
 }
 
-STC_DEF void _c_MEMB(_sort_lowhigh)(Self* self, isize_t lo, isize_t hi) {
-    isize_t i = lo, j;
+STC_DEF void _c_MEMB(_sort_lowhigh)(Self* self, int64 lo, int64 hi) {
+    int64 i = lo, j;
     while (lo < hi) {
-        _m_raw pivot = i_keytoraw(i_at(self, (isize_t)(lo + (hi - lo)*7LL/16))), rx;
+        _m_raw pivot = i_keytoraw(i_at(self, (int64)(lo + (hi - lo)*7LL/16))), rx;
         j = hi;
         do {
             do { rx = i_keytoraw(i_at(self, i)); } while ((i_less((&rx), (&pivot))) && ++i);
@@ -104,9 +104,9 @@ STC_DEF void _c_MEMB(_sort_lowhigh)(Self* self, isize_t lo, isize_t hi) {
 }
 
 #ifndef _i_is_list
-STC_DEF isize_t // c_NPOS = not found
-_c_MEMB(_lower_bound_range)(Self* self, _m_raw raw, isize_t start, isize_t end) {
-    isize_t count = end - start, step = count/2;
+STC_DEF int64 // c_NPOS = not found
+_c_MEMB(_lower_bound_range)(Self* self, _m_raw raw, int64 start, int64 end) {
+    int64 count = end - start, step = count/2;
     while (count > 0) {
         _m_raw rx = i_keytoraw(i_at(self, start + step));
         if (i_less((&rx), (&raw))) {
@@ -121,9 +121,9 @@ _c_MEMB(_lower_bound_range)(Self* self, _m_raw raw, isize_t start, isize_t end) 
     return start >= end ? c_NPOS : start;
 }
 
-STC_DEF isize_t // c_NPOS = not found
-_c_MEMB(_binary_search_range)(Self* self, _m_raw raw, isize_t start, isize_t end) {
-    isize_t res = _c_MEMB(_lower_bound_range)(self, raw, start, end);
+STC_DEF int64 // c_NPOS = not found
+_c_MEMB(_binary_search_range)(Self* self, _m_raw raw, int64 start, int64 end) {
+    int64 res = _c_MEMB(_lower_bound_range)(self, raw, start, end);
     if (res != c_NPOS) {
         _m_raw rx = i_keytoraw(i_at(self, res));
         if (i_less((&raw), (&rx))) res = c_NPOS;
