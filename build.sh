@@ -462,7 +462,7 @@ case "$target" in
     ;;
 "check")
     CC=gcc CFLAGS="-fanalyzer" ./build.sh
-    scan-build --view -analyze-headers --status-bugs ./build.sh
+    CC=clang CFLAGS="--analyze --analyzer-output=text -Xclang -analyzer-opt-analyze-headers -Wno-unused-command-line-argument" ./build.sh
     exit
     ;;
 "perf")
