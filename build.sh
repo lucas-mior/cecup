@@ -175,7 +175,7 @@ case "$target" in
     ;;
 "check")
     CC=gcc
-    CFLAGS="$CFLAGS $GNUSOURCE -DDEBUGGING=1 -fanalyzer"
+    CFLAGS="$CFLAGS $GNUSOURCE -DDEBUGGING=1 -fanalyzer -fdiagnostics-color=never"
     ;;
 "build"|"run")
     CFLAGS="$CFLAGS $GNUSOURCE -O2 -flto -march=native -ftree-vectorize"
@@ -461,12 +461,13 @@ case "$target" in
     exit
     ;;
 "check")
-    CC=gcc CFLAGS="-fanalyzer" ./build.sh
+    NOCOLORS=1 CC=gcc CFLAGS="-fanalyzer -fdiagnostics-color=never" ./build.sh
     CFLAGS="--analyze -Xanalyzer -analyzer-output=text"
     CFLAGS="$CFLAGS -Xanalyzer -analyzer-werror"
     CFLAGS="$CFLAGS -Xanalyzer -analyzer-opt-analyze-headers"
     CFLAGS="$CFLAGS -Wno-unused-command-line-argument"
-    CC=clang CFLAGS="$CFLAGS" ./build.sh
+    CFLAGS="$CFLAGS -fno-color-diagnostics"
+    NOCOLORS=1 CC=clang CFLAGS="$CFLAGS" ./build.sh
     exit
     ;;
 "perf")
