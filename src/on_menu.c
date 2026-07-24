@@ -308,14 +308,20 @@ on_menu_open_item(GtkWidget *widget, void *data) {
 
         {
             char cmd[MAX_PATH_LENGTH];
-            char *command[] = {
+            char *argv[] = {
                 "xdg-open",
                 full_path,
                 NULL,
             };
-            STRING_FROM_ARRAY(cmd, " ", command, LENGTH(command) - 1);
+            Command command = {0};
+
+            STRING_FROM_ARRAY(cmd, " ", argv, LENGTH(argv) - 1);
             LOG(_("Launching %s...\n"), cmd);
-            util_command_launch(LENGTH(command), command);
+            command_push_array(&command, LENGTH(argv), argv);
+            (void)command_run(&command,
+                              COMMAND_FLAG_DETACHED
+                              |COMMAND_FLAG_NEW_SESSION);
+            command_free(&command);
         }
     }
 
