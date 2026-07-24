@@ -60,15 +60,37 @@ traversal_allocate(Traversal *traversal, int32 side) {
 }
 
 static void
+hard_links_free(HardLinks *hard_links) {
+    free2(hard_links->names,
+          hard_links->capacity*SIZEOF(*(hard_links->names)));
+    free2(hard_links->names_lens,
+          hard_links->capacity*SIZEOF(*(hard_links->names_lens)));
+    return;
+}
+
+static void
+traversal_inode_map_clear(Traversal *traversal) {
+    for (uint32 i = 0; i < traversal->inode_map->capacity; i += 1) {
+        Bucket_inode_map *bucket = &traversal->inode_map->array[i];
+        int8 slot_state = traversal->inode_map->slot_states[i];
+
+        if (slot_state != HASH_SLOT_USED) {
+            continue;
+        }
+
+        hard_links_free(&bucket->value);
+    }
+
+    hash_zero_inode_map(traversal->inode_map);
+    return;
+}
+
+static void
 traversal_clean(Traversal *traversal) {
 
+    traversal_inode_map_clear(traversal);
     arena_reset(traversal->arena);
     hash_zero_fs_map(traversal->map);
-
-    // TODO: Free each used HardLinks names/names_lens allocation before
-    // zeroing the map. hash_zero_inode_map discards those pointers and leaks
-    // every hard-link group.
-    hash_zero_inode_map(traversal->inode_map);
 
     traversal->file_count = 0;
     traversal->nfiles = 0;
@@ -80,19 +102,7 @@ static void
 traversal_free(Traversal *traversal) {
     int32 capacity = traversal->capacity;
 
-    for (uint32 i = 0; i < traversal->inode_map->capacity; i += 1) {
-        Bucket_inode_map *bucket = &traversal->inode_map->array[i];
-        HardLinks hard_links = bucket->value;
-        int8 slot_state = traversal->inode_map->slot_states[i];
-
-        if (slot_state != HASH_SLOT_USED) {
-            continue;
-        }
-
-        free2(hard_links.names,      hard_links.capacity*SIZEOF(*(hard_links.names)));
-        free2(hard_links.names_lens, hard_links.capacity*SIZEOF(*(hard_links.names_lens)));
-    }
-
+    traversal_inode_map_clear(traversal);
     hash_destroy_fs_map(traversal->map);
     hash_destroy_inode_map(traversal->inode_map);
 
@@ -245,7 +255,8 @@ traversal_add_link(
         hard_links.names[0] = path;
         hard_links.names_lens[0] = path_len;
 
-        hash_insert_inode_map(traversal->inode_map, &file_id, hard_links);
+        ASSERT(hash_insert_inode_map(traversal->inode_map,
+                                     &file_id, hard_links));
     }
 
     return;
@@ -284,11 +295,8 @@ traversal_unlink(Traversal *traversal, int32 idx) {
             hard_links.aggregate_hash_hi ^= name_hash.hi;
 
             if (hard_links.count == 0) {
-                free2(hard_links.names,
-                      hard_links.capacity*SIZEOF(*(hard_links.names)));
-                free2(hard_links.names_lens,
-                      hard_links.capacity*SIZEOF(*(hard_links.names_lens)));
-                hash_remove_inode_map(traversal->inode_map, &file_id);
+                ASSERT(hash_remove_inode_map(traversal->inode_map, &file_id));
+                hard_links_free(&hard_links);
             } else {
                 hash_overwrite_inode_map(traversal->inode_map,
                                          &file_id, hard_links);
