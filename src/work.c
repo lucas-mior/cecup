@@ -532,14 +532,10 @@ work_functions_sink(void) {
 #endif
 
 #if TESTING_work
+#define CBASE_IMPLEMENT
+#include "cbase.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <sys/stat.h>
 #include <sys/time.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <pthread.h>
 
 #include "assert.c"
 #include "arena.c"

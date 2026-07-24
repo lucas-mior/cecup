@@ -22,7 +22,9 @@
 #include "i18n.h"
 
 #include "cecup.h"
-#include "util.c"
+#define CBASE_IMPLEMENT
+#include "cbase.h"
+
 #include "on.c"
 #include "columns.c"
 

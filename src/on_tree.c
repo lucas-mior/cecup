@@ -525,9 +525,11 @@ on_tree_functions_sink(void) {
 #endif
 
 #if TESTING_on_tree
+#define CBASE_IMPLEMENT
+#include "cbase.h"
+
 #include "on.c"
 #include "list_model.c"
-#include "assert.c"
 
 int
 main(void) {

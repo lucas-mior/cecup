@@ -862,7 +862,8 @@ on_functions_sink(void) {
 #endif
 
 #if TESTING_on
-#include "assert.c"
+#define CBASE_IMPLEMENT
+#include "cbase.h"
 
 #define MOCK_WIDGET(var, constructor) do { \
     var = constructor; \

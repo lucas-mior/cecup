@@ -441,6 +441,8 @@ list_model_functions_sink(void) {
 #endif
 
 #if TESTING_list_model
+#define CBASE_IMPLEMENT
+#include "cbase.h"
 
 #include "update.c"
 #include "work.c"

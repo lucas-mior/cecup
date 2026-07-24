@@ -145,8 +145,10 @@ on_log_functions_sink(void) {
 #endif
 
 #if TESTING_on_log
+#define CBASE_IMPLEMENT
+#include "cbase.h"
+
 #include "on.c"
-#include "assert.c"
 
 typedef struct ClipResult {
     bool done;

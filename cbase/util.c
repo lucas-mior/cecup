@@ -1,19 +1,5 @@
-/*
- * Copyright (C) 2025 Mior, Lucas;
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the*License,
- * or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// SPDX-License-Identifier: AGPL
+// Copyright (c) 2026 Lucas Mior
 
 #if !defined(UTIL_C)
 #define UTIL_C
@@ -43,20 +29,15 @@
 #include <ctype.h>
 
 #include "platform_detection.h"
-
-#include "generic.c"
-#include "minmax.c"
 #include "base_macros.h"
-#include "assert.c"
-#include "memory.c"
-#include "utf8.c"
-#include "command.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_util 1
 #elif !defined(TESTING_util)
 #define TESTING_util 0
 #endif
+
+#include "cbase.h"
 
 #if defined(__EMSCRIPTEN__)
 #include <emscripten/emscripten.h>
@@ -68,15 +49,35 @@ static char *program;
 static char *program = __FILE__;
 #endif
 static int32 program_len UNUSED;
+static ullong here_counter;
+
+static void
+here_impl(char *file, int32 line, char *func) {
+#if OS_UNIX
+    char buffer[4096];
+#endif
+
+    fprintf(stderr, "\n===== HERE(%llu): %s:%d (%s)\n",
+            here_counter++, file, line, func);
+#if OS_UNIX
+    SNPRINTF(buffer, "%s:%d:%s\n", file, line, func);
+    switch (fork()) {
+    case -1:
+        error("Error forking: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    case 0:
+        execlp("dunstify", "dunstify", program, buffer, NULL);
+        error("Error executing dunstify: %s.\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    default:
+        break;
+    }
+#endif
+    return;
+}
 
 static bool timezone_initialized = false;
 static time_t timezone_offset = 0;
-
-#define STRING_FROM_ARRAY(BUFFER, SEP, ARRAY, LENGTH) \
-_Generic((ARRAY), \
-    double *: string_from_doubles, \
-    char **: string_from_strings \
-)(BUFFER, sizeof(BUFFER), SEP, ARRAY, LENGTH)
 
 #define SFA_TYPE char *
 #define SFA_NAME strings
@@ -87,20 +88,6 @@ _Generic((ARRAY), \
 #define SFA_NAME doubles
 #define SFA_FORMAT "%f"
 #include "sfa.h"
-
-#define CLAMP(VAR, VMIN, VMAX) \
-_Generic((VAR),                \
-    float: clamp_double,       \
-    double: clamp_double,      \
-    default: clamp_int64       \
-)(VAR, VMIN, VMAX)
-
-#define SQUARE(VAR)           \
-_Generic((VAR),               \
-    float: square_double,     \
-    double: square_double,    \
-    default: square_int64     \
-)(VAR)
 
 #define CLAMP_TYPE double
 #include "clamp.h"
@@ -118,15 +105,6 @@ _Generic((VAR),               \
 #endif
 
 static char *notifiers[2] = {"dunstify", "notify-send"};
-
-static void error_async_safe(char *message);
-static void fatal(int) __attribute__((noreturn));
-static void util_segv_handler(int32) __attribute__((noreturn));
-static int32 itoa2(char *, int32, llong);
-static long atoi2(char *);
-INLINE void *memchr64(void *pointer, int32 value, int64 size);
-INLINE int memcmp64(void *left, void *right, int64 size);
-static char *basename2(char *path, int32 *full_length, int32 *base_len);
 
 #if OS_WINDOWS
 static void *
@@ -203,12 +181,6 @@ memmem64(void *haystack, int64 hay_len, void *needle, int64 needle_len) {
     result = memmem(haystack, (size_t)hay_len, needle, (size_t)needle_len);
     return result;
 }
-
-#define MEMMEM_3(LONG, LONG_LEN, SHORT) \
-        memmem64(LONG, LONG_LEN, SHORT, strlen32(SHORT))
-#define MEMMEM_4(LONG, LONG_LEN, SHORT, LEN) \
-        memmem64(LONG, LONG_LEN, SHORT, LEN)
-#define MEMMEM(...) SELECT_ON_NUM_ARGS(MEMMEM_, __VA_ARGS__)
 
 INLINE bool
 strequal(char *s1, char *s2) {
@@ -312,12 +284,6 @@ begins_with(char *string, int32 string_len, char *literal, int32 length) {
     }
 }
 
-#define BEGINS_WITH_3(STRING, STRING_LEN, PREFIX) \
-        begins_with(STRING, STRING_LEN, PREFIX, strlen32(PREFIX))
-#define BEGINS_WITH_4(STRING, STRING_LEN, PREFIX, PREFIX_LEN) \
-        begins_with(STRING, STRING_LEN, PREFIX, PREFIX_LEN)
-#define BEGINS_WITH(...) SELECT_ON_NUM_ARGS(BEGINS_WITH_, __VA_ARGS__)
-
 INLINE char *
 ends_with(char *string, int32 string_len, char *literal, int32 length) {
     if (string_len < length) {
@@ -330,12 +296,6 @@ ends_with(char *string, int32 string_len, char *literal, int32 length) {
         return NULL;
     }
 }
-
-#define ENDS_WITH_3(STRING, STRING_LEN, SUFFIX) \
-        ends_with(STRING, STRING_LEN, SUFFIX, strlen32(SUFFIX))
-#define ENDS_WITH_4(STRING, STRING_LEN, SUFFIX, SUFFIX_LEN) \
-        ends_with(STRING, STRING_LEN, SUFFIX, SUFFIX_LEN)
-#define ENDS_WITH(...) SELECT_ON_NUM_ARGS(ENDS_WITH_, __VA_ARGS__)
 
 INLINE int
 memcmp64(void *left, void *right, int64 size) {
@@ -489,10 +449,6 @@ util_nthreads(void) {
 }
 #endif
 
-#if OS_WINDOWS || OS_MAC
-#define basename basename2
-#endif
-
 static void
 xpthread_mutex_lock(pthread_mutex_t *mutex) {
     int err;
@@ -615,8 +571,6 @@ itoa2(char *str, int32 size, llong num) {
 
     return i;
 }
-
-#define ITOA(buffer, num) itoa2(buffer, sizeof(buffer), num)
 
 long
 atoi2(char *str) {
@@ -746,10 +700,6 @@ xclose(char *file, int line, int *fd, char *fd_var_name, char *filename) {
     return 0;
 }
 
-#define XCLOSE_1(FD) xclose(__FILE__, __LINE__, FD, #FD, NULL)
-#define XCLOSE_2(FD, NAME) xclose(__FILE__, __LINE__, FD, #FD, NAME)
-#define XCLOSE(...) SELECT_ON_NUM_ARGS(XCLOSE_, __VA_ARGS__)
-
 static int
 xunlink(char *filename) {
     if (unlink(filename) < 0) {
@@ -791,9 +741,6 @@ xfopen(char *file, int32 line, char *func, char *filename, char *mode) {
     return f;
 }
 
-#define XFOPEN(FILENAME, MODE) \
-    xfopen(__FILE__, __LINE__, FUNC__, FILENAME, MODE)
-
 static int
 xfclose(char *file, int32 line, char *func, FILE *f, char *filename) {
     if (fclose(f)) {
@@ -803,9 +750,6 @@ xfclose(char *file, int32 line, char *func, FILE *f, char *filename) {
     }
     return 0;
 }
-
-#define XFCLOSE(F, FILENAME) \
-    xfclose(__FILE__, __LINE__, FUNC__, F, FILENAME)
 
 static int
 xclosedir(DIR *dir, char *dirname) {
@@ -1194,17 +1138,6 @@ util_copy_file_sync(char *destination, char *source) {
     XCLOSE(&destination_fd, destination);
     return 0;
 }
-
-#if !defined(MAX_FILES_COPY)
-#define MAX_FILES_COPY 256
-#endif
-
-typedef struct UtilCopyFilesAsync {
-    struct pollfd pipes[MAX_FILES_COPY];
-    int dests[MAX_FILES_COPY];
-    int32 nfds;
-    int32 unused;
-} UtilCopyFilesAsync;
 
 static int32
 util_copy_file_async(char *destination, char *source, int *dest_fd) {
@@ -1884,20 +1817,6 @@ timezone_init(void) {
 }
 #endif
 
-#define GETENV(VAR) do { \
-    if ((VAR = getenv(#VAR)) == NULL) { \
-        if (DEBUGGING) { \
-            error_impl(__FILE__, __LINE__, FUNC__, \
-                       RED("%s") " is not defined.", #VAR); \
-        } \
-    } else { \
-        int32 len = strlen32(VAR); \
-        char *copy = malloc2(len + 1); \
-        memcpy64(copy, VAR, len + 1); \
-        VAR = copy; \
-    } \
-} while (0)
-
 static char *
 read_entire_file(char *path, int32 *file_len) {
     FILE *fp;
@@ -2433,11 +2352,6 @@ warn(char *fmt, ...) {
     return;
 }
 
-#define PARSE_OPTION(arg, name) \
-    if (parse_option(&name, arg, #name)) { \
-        continue; \
-    }
-
 #if 0 == TESTING_util
 static inline void
 util_functions_sink(void) {
@@ -2538,6 +2452,8 @@ util_functions_sink(void) {
 #endif
 
 #if TESTING_util
+#define CBASE_IMPLEMENT
+#include "cbase.h"
 
 #define ENUM_NAME WeekDay
 #define ENUM_BITFLAGS 0
@@ -2579,7 +2495,9 @@ write_file(char *path, void *data, int64 len) {
     XCLOSE(&fd, path);
     return;
 }
-#define WRITE_FILE(PATH, STRING) write_file(PATH, STRING, strlen32(STRING))
+
+#define WRITE_FILE(PATH, STRING) \
+    write_file(PATH, STRING, strlen32(STRING))
 
 static sig_atomic_t received_signal = false;
 static void

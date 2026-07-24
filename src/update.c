@@ -965,10 +965,10 @@ update_functions_sink(void) {
 #endif
 
 #if TESTING_update
-#include <assert.h>
-#include <string.h>
+#define CBASE_IMPLEMENT
+#include "cbase.h"
+
 #include "work.c"
-#include "assert.c"
 
 #define MOCK_WIDGET(var, constructor) do { \
     var = constructor; \

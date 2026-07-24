@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL
+// Copyright (c) 2026 Lucas Mior
+
 #if !defined(BASE_MACROS_H)
 #define BASE_MACROS_H
 
@@ -168,5 +171,22 @@ _Generic((SIZE), \
 #endif
 
 #define FUNC__ (char *)__func__
+#define FUNC FUNC__
+
+#if !defined(TESTING)
+#define TESTING 0
+#endif
+
+#if TESTING
+  #define TRAP(...) raise(SIGILL)
+#else
+  #if defined(__GNUC__) || defined(__clang__)
+    #define TRAP(...) __builtin_trap()
+  #elif defined(_MSC_VER)
+    #define TRAP(...) __debugbreak()
+  #else
+    #define TRAP(...) *(int *)0 = 0
+  #endif
+#endif
 
 #endif /* BASE_MACROS_H */

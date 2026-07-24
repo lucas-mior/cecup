@@ -545,9 +545,11 @@ on_menu_functions_sink(void) {
 #endif
 
 #if TESTING_on_menu
+#define CBASE_IMPLEMENT
+#include "cbase.h"
+
 #include "work.c"
 #include "on.c"
-#include "assert.c"
 #include "list_model.c"
 
 typedef struct ClipboardResult {

@@ -520,6 +520,8 @@ item_functions_sink(void) {
 #endif
 
 #if TESTING_item
+#define CBASE_IMPLEMENT
+#include "cbase.h"
 
 #include "list_model.c"
 #include "update.c"

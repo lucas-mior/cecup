@@ -420,11 +420,10 @@ traversal_functions_sink(void) {
 #endif
 
 #if TESTING_traversal
-#include <assert.h>
-#include <string.h>
-#include <unistd.h>
+#define CBASE_IMPLEMENT
+#include "cbase.h"
+
 #include "work.c"
-#include "assert.c"
 
 int
 main(void) {

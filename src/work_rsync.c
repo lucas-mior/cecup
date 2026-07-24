@@ -814,15 +814,16 @@ work_rsync_functions_sink(void) {
 #endif
 
 #if TESTING_work_rsync
+#define CBASE_IMPLEMENT
+#include "cbase.h"
+
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 #include "work.c"
 #include "tasks.c"
-#include "assert.c"
 
 int
 main(void) {

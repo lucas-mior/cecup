@@ -1,19 +1,5 @@
-/*
- * Copyright (C) 2025 Mior, Lucas;
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the*License,
- * or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// SPDX-License-Identifier: AGPL
+// Copyright (c) 2026 Lucas Mior
 
 #if !defined(COMMAND_C)
 #define COMMAND_C
@@ -24,68 +10,7 @@
 #define TESTING_command 0
 #endif
 
-#include "util.h"
-#include "assert.c"
-
-#define ENUM_NAME CommandFlag
-#define ENUM_BITFLAGS 1
-#define ENUM_PREFIX_ COMMAND_FLAG_
-#define ENUM_FIELDS \
-    X(COMMAND_FLAG_CAPTURE_STDOUT)      \
-    X(COMMAND_FLAG_CAPTURE_STDERR)      \
-    X(COMMAND_FLAG_MERGE_STDERR)        \
-    X(COMMAND_FLAG_ASYNC)               \
-    X(COMMAND_FLAG_DETACHED)            \
-    X(COMMAND_FLAG_NEW_SESSION)         \
-    X(COMMAND_FLAG_NEW_PROCESS_GROUP)   \
-    X(COMMAND_FLAG_STDIN_TTY)           \
-    X(COMMAND_FLAG_CLOSE_STDIN)
-#include "xenums.c"
-
-typedef struct CommandResult {
-    char *output;
-    char *stdout_output;
-    char *stderr_output;
-
-    int64 pid;
-
-    int32 output_len;
-    int32 stdout_len;
-    int32 stderr_len;
-    int32 status;
-    int32 error_status;
-    int32 exit_status;
-    int32 term_signal;
-    int32 stdout_fd;
-    int32 stderr_fd;
-
-    bool exited;
-    bool signaled;
-    bool stdout_fd_open;
-    bool stderr_fd_open;
-} CommandResult;
-
-typedef struct Command {
-    char **argv;
-    char **env;
-    char *cwd;
-
-    int32 *argvs_lens;
-    int32 *env_lens;
-    int32 cwd_len;
-    int32 argc;
-    int32 env_len;
-    int32 cap;
-    int32 env_cap;
-    int32 error_status;
-
-    CommandResult result;
-} Command;
-
-static void command_result_free(CommandResult *result);
-static char *command_str(Command *command, int32 *len);
-static void command_error_set(Command *command, int32 error_status);
-static bool command_wait(Command *command);
+#include "cbase.h"
 
 static void
 command_result_init(CommandResult *result) {
@@ -446,9 +371,7 @@ command_start(Command *command, enum CommandFlag flags) {
         fatal(EXIT_FAILURE);
     case 0:
         if (flags & COMMAND_FLAG_DETACHED) {
-            pid_t detached_pid;
-
-            switch (detached_pid = fork()) {
+            switch (fork()) {
             case -1:
                 error("Error forking detached child: %s.\n", strerror(errno));
                 _exit(127);
@@ -705,12 +628,6 @@ command_push(Command *command, char *argument) {
     return;
 }
 
-#define COMMAND_PUSH_2(A, B) \
-        command_push(A, B)
-#define COMMAND_PUSH_3(A, B, B_LEN) \
-        command_push_length(A, B, B_LEN)
-#define COMMAND_PUSH(...) SELECT_ON_NUM_ARGS(COMMAND_PUSH_, __VA_ARGS__)
-
 static void
 command_env_push_length(
     Command *command,
@@ -731,12 +648,6 @@ command_env_push(Command *command, char *assignment) {
     command_env_push_length(command, assignment, strlen32(assignment));
     return;
 }
-
-#define COMMAND_ENV_PUSH_2(A, B) \
-        command_env_push(A, B)
-#define COMMAND_ENV_PUSH_3(A, B, B_LEN) \
-        command_env_push_length(A, B, B_LEN)
-#define COMMAND_ENV_PUSH(...) SELECT_ON_NUM_ARGS(COMMAND_ENV_PUSH_, __VA_ARGS__)
 
 static void
 command_push_split(Command *command, char *arguments, char *delimiters) {
@@ -910,10 +821,9 @@ command_env_printf(Command *command, char *fmt, ...) {
     return;
 }
 
-
 #if TESTING_command
-#include "util.c"
-#include "assert.c"
+#define CBASE_IMPLEMENT
+#include "cbase.h"
 
 int
 main(int argc, char **argv) {
@@ -1063,11 +973,23 @@ main(int argc, char **argv) {
         command_reset(&cmd);
         ASSERT_EQUAL(cmd.argc, 0);
 
-        command_cwd_set(&cmd, "/tmp");
-        COMMAND_PUSH(&cmd, "pwd");
-        ASSERT(command_run_capture(&cmd, COMMAND_FLAG_CAPTURE_STDOUT));
-        ASSERT_EQUAL(cmd.result.stdout_output, "/tmp\n");
-        command_cwd_clear(&cmd);
+        {
+            char expected_cwd[PATH_MAX];
+            int32 expected_cwd_len;
+
+            ASSERT(realpath("/tmp", expected_cwd) != NULL);
+            expected_cwd_len = strlen32(expected_cwd);
+            ASSERT_LESS(expected_cwd_len + 1, SIZEOF(expected_cwd));
+            expected_cwd[expected_cwd_len] = '\n';
+            expected_cwd[expected_cwd_len + 1] = '\0';
+
+            command_cwd_set(&cmd, "/tmp");
+            COMMAND_PUSH(&cmd, "pwd");
+            COMMAND_PUSH(&cmd, "-P");
+            ASSERT(command_run_capture(&cmd, COMMAND_FLAG_CAPTURE_STDOUT));
+            ASSERT_EQUAL(cmd.result.stdout_output, expected_cwd);
+            command_cwd_clear(&cmd);
+        }
 
         command_reset(&cmd);
         ASSERT_EQUAL(cmd.argc, 0);

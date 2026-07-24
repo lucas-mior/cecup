@@ -1,5 +1,16 @@
+// SPDX-License-Identifier: AGPL
+// Copyright (c) 2026 Lucas Mior
+
 #if !defined(MEMORY_C)
 #define MEMORY_C
+
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_memory 1
+#elif !defined(TESTING_memory)
+#define TESTING_memory 0
+#endif
+
+#include "cbase.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +23,6 @@
 #include "base_macros.h"
 #include "primitives.h"
 #include "rapidhash.h"
-#include "util.h"
 
 static int64 memory_page_size = 0;
 
@@ -829,10 +839,11 @@ memory_functions_sink(void) {
 #endif
 
 #if TESTING_memory
+#define CBASE_IMPLEMENT
+#include "cbase.h"
 // flags: -lm
 #include <signal.h>
 #include <setjmp.h>
-#include "util.c"
 
 static sigjmp_buf test_jump_env;
 static bool caught_expected_fail = false;

@@ -298,6 +298,8 @@ columns_functions_sink(void) {
 #endif
 
 #if TESTING_columns
+#define CBASE_IMPLEMENT
+#include "cbase.h"
 
 #include "util.c"
 #include "aux.c"

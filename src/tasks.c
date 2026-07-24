@@ -143,8 +143,9 @@ tasks_functions_sink(void) {
 #endif
 
 #if TESTING_tasks
-#include <assert.h>
-#include <string.h>
+#define CBASE_IMPLEMENT
+#include "cbase.h"
+
 #include "work.c"
 #include "assert.c"
 

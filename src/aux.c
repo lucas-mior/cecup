@@ -532,6 +532,9 @@ aux_functions_sink(void) {
 #endif
 
 #if TESTING_aux
+#define CBASE_IMPLEMENT
+#include "cbase.h"
+
 #include "update.c"
 #include "work.c"
 #include "on.c"

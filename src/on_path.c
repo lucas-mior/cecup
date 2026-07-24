@@ -306,12 +306,13 @@ on_path_functions_sink(void) {
 #endif
 
 #if TESTING_on_path
+#define CBASE_IMPLEMENT
+#include "cbase.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "work.c"
-#include "assert.c"
 
 int
 main(void) {

@@ -260,7 +260,8 @@ ignore_patterns_functions_sink(void) {
 #endif
 
 #if TESTING_ignore_patterns
-#include "assert.c"
+#define CBASE_IMPLEMENT
+#include "cbase.h"
 
 #include "aux.c"
 #include "update.c"
