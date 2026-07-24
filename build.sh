@@ -461,7 +461,7 @@ case "$target" in
     exit
     ;;
 "check")
-    # CC=gcc CFLAGS="-fanalyzer" ./build.sh
+    CC=gcc CFLAGS="-fanalyzer" ./build.sh
     CFLAGS="--analyze -Xanalyzer -analyzer-output=text"
     CFLAGS="$CFLAGS -Xanalyzer -analyzer-werror"
     CFLAGS="$CFLAGS -Xanalyzer -analyzer-opt-analyze-headers"
