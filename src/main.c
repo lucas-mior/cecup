@@ -967,45 +967,17 @@ main(int32 argc, char **argv) {
         // TODO: Verify an existing config_base is a directory. Also check
         // mkdir and cp results before treating setup as a successful first run.
         if (access(config_base, F_OK) < 0) {
-            pid_t child_cp;
+            Command command = {0};
 
             g_mkdir_with_parents(config_base, 0755);
             is_first_run = true;
 
-            switch (child_cp = fork()) {
-            case -1:
-                error("Error forking: %s.\n", strerror(errno));
-                fatal(EXIT_FAILURE);
-            case 0:
-            {
-                char cmd[MAX_PATH_LENGTH];
-                char *args_cp[] = {
-                    "cp",
-                    "-r",
-                    "/etc/cecup/.",
-                    config_base,
-                    NULL,
-                };
-
-                execvp(args_cp[0], args_cp);
-                STRING_FROM_ARRAY(cmd, " ", args_cp, LENGTH(args_cp) - 1);
-                error("Error executing\n"
-                      "%s\n"
-                      "to copy configuration files: %s.\n", cmd, strerror(errno));
-                _exit(EXIT_FAILURE);
-            }
-            default:
-                // TODO: Capture and validate the child status. waitpid success
-                // does not mean cp exited successfully.
-                while (waitpid(child_cp, NULL, 0) < 0) {
-                    if (errno == EINTR) {
-                        continue;
-                    }
-                    error("Error waiting for cp: %s.\n", strerror(errno));
-                    break;
-                }
-                break;
-            }
+            command_push(&command, "cp");
+            command_push(&command, "-r");
+            command_push(&command, "/etc/cecup/.");
+            command_push(&command, config_base);
+            (void)command_run(&command, COMMAND_FLAG_NONE);
+            command_free(&command);
         }
 
         SNPRINTF(cecup.ignore_path, "%s/ignore.conf", config_base);

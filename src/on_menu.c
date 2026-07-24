@@ -500,34 +500,12 @@ on_menu_diff(GtkWidget *widget, void *data) {
         COMMAND_PUSH(&command, path_dst, path_dst_len);
         COMMAND_PUSH(&command, path_src, path_src_len);
 
-        switch (fork()) {
-        case -1:
-            error("Error forking: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        case 0:
-            if (setsid() < 0) {
-                error("Error in setsid: %s.\n", strerror(errno));
-            }
-
-            execvp(command.argv[0], command.argv);
-            {
-                char *command_text;
-                int32 command_text_len;
-
-                command_text = command_str(&command, &command_text_len);
-                error("Error executing\n%s\n%s.\n",
-                      command_text, strerror(errno));
-                free2(command_text, command_text_len + 1);
-            }
-            _exit(EXIT_FAILURE);
-        default:
-            // TODO: Retain and reap the child PID. Without waitpid or a
-            // child watch, a completed diff process can remain a zombie.
-            command_free(&command);
-            free2(path_src, size_src);
-            free2(path_dst, size_dst);
-            break;
-        }
+        (void)command_run_async(&command, COMMAND_FLAG_NEW_SESSION);
+        // TODO: Retain and reap the child PID. Without waitpid or a child
+        // watch, a completed diff process can remain a zombie.
+        command_free(&command);
+        free2(path_src, size_src);
+        free2(path_dst, size_dst);
     }
 
     task_list_free(tasks);

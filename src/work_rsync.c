@@ -231,15 +231,11 @@ work_rsync_itemize_skip(char *buf_output, int32 line_len) {
 static bool
 work_rsync_run(char *files_from_filename, int32 nfiles_total,
                bool checksum, MessageBatch **batch_ptr) {
-    char *rsync_args[64];
+    Command command = {0};
     char buf_error[MAX_PATH_LENGTH*2];
     char buf_output[MAX_PATH_LENGTH*2];
-    char cmd[MAX_PATH_LENGTH*2];
     char dst_base_with_slash[MAX_PATH_LENGTH];
     char src_base_with_slash[MAX_PATH_LENGTH];
-    int32 pipe_stderr[2];
-    int32 pipe_stdout[2];
-    int32 rsync_args_len = 0;
     int32 buf_output_pos = 0;
     struct pollfd pipes[2];
     int32 nfiles_checksummed = 0;
@@ -256,80 +252,62 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     SNPRINTF(src_base_with_slash, "%s/", cecup.src_base);
     SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
 
-    rsync_args_len = 0;
-    rsync_args[rsync_args_len++] = "rsync";
-    rsync_args[rsync_args_len++] = "--verbose";
-    rsync_args[rsync_args_len++] = "--verbose";
+    command_push(&command, "rsync");
+    command_push(&command, "--verbose");
+    command_push(&command, "--verbose");
 
     if (!delete_after) {
-        rsync_args[rsync_args_len++] = "--update";
+        command_push(&command, "--update");
     }
 
     // these 2 options are implied by --files-from
-    rsync_args[rsync_args_len++] = "--dirs";
-    rsync_args[rsync_args_len++] = "--relative";
+    command_push(&command, "--dirs");
+    command_push(&command, "--relative");
 
-    rsync_args[rsync_args_len++] = "--partial";
-    rsync_args[rsync_args_len++] = "--progress";
-    rsync_args[rsync_args_len++] = "--info=progress2";
-    rsync_args[rsync_args_len++] = "--links";
-    rsync_args[rsync_args_len++] = "--hard-links";
+    command_push(&command, "--partial");
+    command_push(&command, "--progress");
+    command_push(&command, "--info=progress2");
+    command_push(&command, "--links");
+    command_push(&command, "--hard-links");
     if (checksum) {
-        rsync_args[rsync_args_len++] = "--checksum";
+        command_push(&command, "--checksum");
     }
-    rsync_args[rsync_args_len++] = "--perms";
-    rsync_args[rsync_args_len++] = "--times";
-    rsync_args[rsync_args_len++] = "--owner";
-    rsync_args[rsync_args_len++] = "--group";
-    rsync_args[rsync_args_len++] = "--itemize-changes";
+    command_push(&command, "--perms");
+    command_push(&command, "--times");
+    command_push(&command, "--owner");
+    command_push(&command, "--group");
+    command_push(&command, "--itemize-changes");
     // TODO: Add --from0 and write NUL delimiters. Newline mode treats root
     // paths beginning with '#' or ';' as comments and silently skips them.
-    rsync_args[rsync_args_len++] = "--files-from";
-    rsync_args[rsync_args_len++] = files_from_filename;
-    rsync_args[rsync_args_len++] = "--iconv=.,.";
+    command_push(&command, "--files-from");
+    command_push(&command, files_from_filename);
+    command_push(&command, "--iconv=.,.");
 
-    rsync_args[rsync_args_len++] = src_base_with_slash;
-    rsync_args[rsync_args_len++] = dst_base_with_slash;
-    rsync_args[rsync_args_len++] = NULL;
+    command_push(&command, src_base_with_slash);
+    command_push(&command, dst_base_with_slash);
+    command_env_push(&command, "LC_ALL=C.UTF-8");
 
     LOG(_("Running sync...\n"));
-    STRING_FROM_ARRAY(cmd, " ", rsync_args, rsync_args_len - 1);
-    LOG_CMD("%s\n", cmd);
+    {
+        char *cmd;
+        int32 cmd_len;
 
-    xpipe(pipe_stdout);
-    xpipe(pipe_stderr);
-
-    switch (cecup.child_pid = fork()) {
-    case -1:
-        error("Error forking: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
-    case 0:
-        if (setpgid(0, 0) < 0) {
-            error("Error setpgid: %s.\n", strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
-        putenv("LC_ALL=C.UTF-8");
-
-        XCLOSE(&pipe_stderr[0]);
-        XCLOSE(&pipe_stdout[0]);
-
-        xdup2(pipe_stdout[1], STDOUT_FILENO);
-        xdup2(pipe_stderr[1], STDERR_FILENO);
-
-        XCLOSE(&pipe_stderr[1]);
-        XCLOSE(&pipe_stdout[1]);
-
-        execvp(rsync_args[0], rsync_args);
-        error("Error executing\n%s\n%s.\n", cmd, strerror(errno));
-        _exit(EXIT_FAILURE);
-    default:
-        XCLOSE(&pipe_stderr[1]);
-        XCLOSE(&pipe_stdout[1]);
-        break;
+        cmd = command_str(&command, &cmd_len);
+        LOG_CMD("%s\n", cmd);
+        free2(cmd, cmd_len + 1);
     }
 
-    pipes[0].fd = pipe_stdout[0];
-    pipes[1].fd = pipe_stderr[0];
+    if (!command_run_async(&command,
+                           COMMAND_FLAG_CAPTURE_STDOUT
+                           |COMMAND_FLAG_CAPTURE_STDERR
+                           |COMMAND_FLAG_NEW_PROCESS_GROUP)) {
+        command_free(&command);
+        return false;
+    }
+
+    cecup.child_pid = (pid_t)command.result.pid;
+    pipes[0].fd = command.result.stdout_fd;
+    pipes[1].fd = command.result.stderr_fd;
     pipes[0].events = POLLIN;
     pipes[1].events = POLLIN;
 
@@ -370,8 +348,9 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             goto read_error_pipe;
         }
 
-        r = read64(pipe_stdout[0],
-                   buf_output + buf_output_pos, SIZEOF(buf_output) - buf_output_pos - 1);
+        r = read64(pipes[0].fd,
+                   buf_output + buf_output_pos,
+                   SIZEOF(buf_output) - buf_output_pos - 1);
 
         if (r <= 0) {
             if (r < 0) {
@@ -486,7 +465,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             continue;
         }
 
-        r = read64(pipe_stderr[0], buf_error, SIZEOF(buf_error) - 1);
+        r = read64(pipes[1].fd, buf_error, SIZEOF(buf_error) - 1);
         if (r <= 0) {
             if (r < 0) {
                 LOG_ERROR(_("Error reading stderr pipe: %s.\n"), strerror(errno));
@@ -503,27 +482,28 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     // TODO: Capture and validate child status. A successful wait currently
-    // hides rsync exec failures, nonzero exits, and signals, and may continue
-    // into checksum verification after a failed transfer.
-    while (waitpid(cecup.child_pid, NULL, 0) < 0) {
-        LOG_ERROR(_("Error waiting for child process: %s.\n"), strerror(errno));
-        if (errno == EINTR) {
+    // hides rsync nonzero exits and signals, and may continue into checksum
+    // verification after a failed transfer.
+    while (!command_wait(&command)) {
+        LOG_ERROR(_("Error waiting for child process: %s.\n"),
+                  strerror(command.error_status));
+        if (command.error_status == EINTR) {
             continue;
         }
         // TODO: This message claims SIGKILL was sent even when it was not.
         // Distinguish wait errors and add bounded SIGTERM-to-SIGKILL
         // escalation.
         LOG_ERROR(_("Killing the child process with SIGKILL..."));
-        if (errno == EAGAIN) {
+        if (command.error_status == EAGAIN) {
             xkill(-cecup.child_pid, SIGKILL);
         }
         cecup.child_pid = 0;
+        command_free(&command);
         return false;
     }
 
     cecup.child_pid = 0;
-    XCLOSE(&pipe_stderr[0]);
-    XCLOSE(&pipe_stdout[0]);
+    command_free(&command);
     return true;
 }
 
