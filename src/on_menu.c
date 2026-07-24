@@ -307,17 +307,12 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         XCLOSE(&fd);
 
         {
-            char cmd[MAX_PATH_LENGTH];
-            char *argv[] = {
-                "xdg-open",
-                full_path,
-                NULL,
-            };
             Command command = {0};
 
-            STRING_FROM_ARRAY(cmd, " ", argv, LENGTH(argv) - 1);
-            LOG(_("Launching %s...\n"), cmd);
-            command_push_array(&command, LENGTH(argv), argv);
+            command_push(&command, "xdg-open");
+            command_push(&command, full_path);
+            LOG(_("Launching...\n"));
+            command_print(&command);
             (void)command_run(&command,
                               COMMAND_FLAG_DETACHED
                               |COMMAND_FLAG_NEW_SESSION);
