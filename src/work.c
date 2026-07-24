@@ -107,8 +107,6 @@ work_traverse_fs(Traversal *traversal) {
         case FTS_DC:
             continue;
         case FTS_DEFAULT:
-            // TODO: Special files are silently omitted. Either support them or
-            // abort so their opposite-side paths are not treated as extra.
             continue;
         case FTS_DOT:
             continue;
@@ -268,8 +266,6 @@ work_traverse_fs(Traversal *traversal) {
         }
     }
 
-    // TODO: Check the terminal fts_read errno before fts_close. A read error
-    // is otherwise indistinguishable from normal end-of-tree.
     if (fts_close(fts_handle) < 0) {
         LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
     }
@@ -285,7 +281,6 @@ work_traverse_fs(Traversal *traversal) {
 
         qsort64(hard_links.names, hard_links.count, SIZEOF(char *), compare_names);
         for (int32 k = 0; k < hard_links.count; k += 1) {
-            // TODO: Use a better sorting method to avoid recalculating the lengths.
             hard_links.names_lens[k] = strlen32(hard_links.names[k]);
         }
     }
@@ -334,8 +329,6 @@ work_preview(void *user_data) {
     struct timespec t1_work;
 
     (void)user_data;
-    // TODO: Use a value captured in ThreadData on the main thread. Accessing a
-    // GTK widget from this worker thread is not safe.
     check_different_fs = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
 
     update_progress_info(_("Analyzing changes"),

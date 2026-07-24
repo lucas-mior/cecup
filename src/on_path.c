@@ -206,9 +206,6 @@ on_path_edited(GtkEditable *editable, void *data) {
             return;
         }
 
-        // TODO: Detect FTS_DNR and fts_close failure.
-        // A partial walk leaves the model inconsistent after
-        // the filesystem rename; force a complete preview instead.
         errno = 0;
         while ((entry = fts_read(fts_handle))) {
             char *child_rel_new;
@@ -284,12 +281,8 @@ on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
     is_editing = gtk_editable_label_get_editing(GTK_EDITABLE_LABEL(object));
 
     if (is_editing) {
-        // TODO: This ref leaks. Transfer a ref into SelectionData and release
-        // it in the idle callback after the selection is applied.
         on_path_editing_started(GTK_EDITABLE(g_object_ref(object)), data);
     } else {
-        // TODO: This synchronous call needs no extra ref. The current ref leaks
-        // every time editing finishes.
         on_path_edited(GTK_EDITABLE(g_object_ref(object)), data);
     }
 

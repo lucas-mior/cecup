@@ -207,8 +207,6 @@ on_delete_after_toggled(GtkCheckButton *button, void *data) {
         aux_invalidate_preview();
     }
 
-    // TODO: Invalidate when disabling this option too. Otherwise an old
-    // destructive preview remains enabled after delete-after is turned off.
     cecup.delete_after = active;
     save_config();
     return;
@@ -220,8 +218,6 @@ on_delete_ignored_toggled(GtkCheckButton *button, void *data) {
 
     cecup.delete_ignored = gtk_check_button_get_active(button);
 
-    // TODO: This changes item actions and deletions, so the current preview
-    // must be invalidated before Sync can use it.
     save_config();
     return;
 }
@@ -271,9 +267,6 @@ on_preview_clicked(GtkWidget *button, void *data) {
     }
 
     {
-        // TODO: Add the captured check_fs setting to ThreadData. This
-        // allocation is also leaked because work_preview exits through
-        // work_finalize.
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
 
@@ -570,8 +563,6 @@ on_ignore_response(GtkDialog *dialog, int32 response_id, void *data) {
 
         gtk_text_buffer_get_bounds(buffer, &start, &end);
         content = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
-        // TODO: Check GError and keep the preview invalidation disabled if the
-        // ignore file could not be written. The current failure is silent.
         g_file_set_contents(cecup.ignore_path, content, -1, NULL);
         g_free(content);
         aux_invalidate_preview();
@@ -605,8 +596,6 @@ on_ignore_clicked(GtkWidget *button, void *data) {
 
     buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 
-    // TODO: Capture GError and suppress only a missing file. Other read
-    // failures silently show an empty editor that can overwrite existing rules.
     if (g_file_get_contents(cecup.ignore_path, &text, NULL, NULL)) {
         gtk_text_buffer_set_text(buffer, text, -1);
         g_free(text);
@@ -659,8 +648,6 @@ on_browse_response_src(GtkDialog *dialog, int32 response_id, void *data) {
         char *path;
 
         file = gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog));
-        // TODO: g_file_get_path returns NULL for non-native selections. Reject
-        // remote GFiles before passing path to gtk_editable_set_text.
         path = g_file_get_path(file);
         gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), path);
         g_free(path);
@@ -695,8 +682,6 @@ on_browse_response_dst(GtkDialog *dialog, int32 response_id, void *data) {
         char *path;
 
         file = gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog));
-        // TODO: g_file_get_path returns NULL for non-native selections. Reject
-        // remote GFiles before passing path to gtk_editable_set_text.
         path = g_file_get_path(file);
         gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), path);
         g_free(path);
@@ -786,9 +771,6 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
     (void)user_data;
 
     stop_working(true);
-    // TODO: Terminate and reap the child before joining the worker. If rsync
-    // does not exit after the worker sends SIGTERM, this join blocks the main
-    // thread forever and the SIGKILL fallback below is never reached.
     if (cecup.work_thread) {
         error("Joining thread...\n");
         xpthread_join(&cecup.work_thread, NULL);

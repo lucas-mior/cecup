@@ -66,8 +66,6 @@ column_bind_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, 
     gtk_check_button_set_active(GTK_CHECK_BUTTON(check), (bool)cecup.rows_selected[row_id]);
     g_signal_handlers_unblock_by_func(check, on_cell_toggled, data);
 
-    // TODO: Set an explicit checkbox column type. With no "cecup-col", the
-    // tooltip code converts NULL to COLUMN_ACTION and shows an unrelated tip.
     g_object_set_data(G_OBJECT(check), "cecup-row-id", GINT_TO_POINTER(row_id + 1));
     g_object_set_data(G_OBJECT(check), "cecup-pos", GUINT_TO_POINTER(position + 1));
     return;
@@ -253,9 +251,6 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
             struct tm time_information;
             time_t unix_timestamp = (time_t)mtime + timezone_offset;
 
-            // TODO: Use localtime_r for each timestamp and check its result.
-            // A startup-time offset is wrong across DST, and gmtime_r failure
-            // leaves time_information unusable for strftime.
             gmtime_r(&unix_timestamp, &time_information);
             STRFTIME(text_buf, "%Y-%m-%d %H:%M:%S", &time_information);
         }

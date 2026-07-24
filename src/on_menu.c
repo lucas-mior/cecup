@@ -501,8 +501,6 @@ on_menu_diff(GtkWidget *widget, void *data) {
         COMMAND_PUSH(&command, path_src, path_src_len);
 
         (void)command_run_async(&command, COMMAND_FLAG_NEW_SESSION);
-        // TODO: Retain and reap the child PID. Without waitpid or a child
-        // watch, a completed diff process can remain a zombie.
         command_free(&command);
         free2(path_src, size_src);
         free2(path_dst, size_dst);

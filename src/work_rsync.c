@@ -277,8 +277,6 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     command_push(&command, "--owner");
     command_push(&command, "--group");
     command_push(&command, "--itemize-changes");
-    // TODO: Add --from0 and write NUL delimiters. Newline mode treats root
-    // paths beginning with '#' or ';' as comments and silently skips them.
     command_push(&command, "--files-from");
     command_push(&command, files_from_filename);
     command_push(&command, "--iconv=.,.");
@@ -318,8 +316,6 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         pipes[1].revents = 0;
 
         if (cecup.stop_working) {
-            // TODO: Establish the child process group in the parent too. Stop
-            // can race the child's setpgid, making this signal miss rsync.
             xkill(-cecup.child_pid, SIGTERM);
             break;
         }
@@ -481,18 +477,12 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
-    // TODO: Capture and validate child status. A successful wait currently
-    // hides rsync nonzero exits and signals, and may continue into checksum
-    // verification after a failed transfer.
     while (!command_wait(&command)) {
         LOG_ERROR(_("Error waiting for child process: %s.\n"),
                   strerror(command.error_status));
         if (command.error_status == EINTR) {
             continue;
         }
-        // TODO: This message claims SIGKILL was sent even when it was not.
-        // Distinguish wait errors and add bounded SIGTERM-to-SIGKILL
-        // escalation.
         LOG_ERROR(_("Killing the child process with SIGKILL..."));
         if (command.error_status == EAGAIN) {
             xkill(-cecup.child_pid, SIGKILL);
@@ -507,8 +497,6 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     return true;
 }
 
-// TODO: Return success and propagate unlink, rmdir, FTS, cancellation, and
-// fts_close failures. The caller currently finishes after partial deletion.
 static void
 work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     char full_path[MAX_PATH_LENGTH];
@@ -609,8 +597,6 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         if (fts_close(fts_handle) < 0) {
             LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
         }
-        // TODO: Log full removal only after every operation and fts_close
-        // succeed. This message is printed after errors or cancellation.
         LOG("Removed directory tree %s...\n", full_path);
     }
 
@@ -633,8 +619,6 @@ work_rsync(void *user_data) {
             free2(thread_data, SIZEOF(*thread_data));
             work_finalize(false);
         } else {
-            // TODO: Set this from ntransfers only. A deletion-only full sync
-            // currently runs two rsync passes with an empty file list.
             has_transfers = true;
             nfiles_total = cecup.ntransfers;
         }
@@ -644,9 +628,6 @@ work_rsync(void *user_data) {
         nfiles_total = tasks->count;
     }
 
-    // TODO: Collapse descendants under deleted directories or use ordered,
-    // nonrecursive removals. A parent can remove children that later produce
-    // misleading ENOENT errors from duplicate deletion entries.
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ndeletions); i += 1) {
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
@@ -663,8 +644,6 @@ work_rsync(void *user_data) {
         Task *task = tasks->items[i];
 
         if (task->action != ACTION_DELETE) {
-            // TODO: ACTION_EQUAL and ACTION_IGNORE are skipped below and must
-            // not trigger empty rsync runs.
             has_transfers = true;
             continue;
         }
@@ -693,9 +672,6 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
-    // TODO: Use one write-all helper for every path and newline. Short
-    // writes, EINTR, zero-byte writes, and unchecked task writes can silently
-    // truncate this list and sync only part of the requested set.
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
         char *file = cecup.transfers[i];
         int64 left = cecup.transfers_lens[i];
@@ -777,8 +753,6 @@ work_rsync(void *user_data) {
 
     work_batch_flush(&batch);
     task_list_free(tasks);
-    // TODO: Free thread_data before work_finalize. work_finalize calls
-    // pthread_exit, so the current free and pthread_exit are unreachable.
     work_finalize(false);
     free2(thread_data, SIZEOF(*thread_data));
     pthread_exit(NULL);
