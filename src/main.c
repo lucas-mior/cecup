@@ -964,7 +964,7 @@ main(int32 argc, char **argv) {
             command_push(&command, "-r");
             command_push(&command, "/etc/cecup/.");
             command_push(&command, config_base);
-            (void)command_run(&command, COMMAND_FLAG_NONE);
+            (void)command_run(&command, COMMAND_NONE);
             command_free(&command);
         }
 

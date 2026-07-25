@@ -296,9 +296,9 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     }
 
     if (!command_run_async(&command,
-                           COMMAND_FLAG_CAPTURE_STDOUT
-                           |COMMAND_FLAG_CAPTURE_STDERR
-                           |COMMAND_FLAG_NEW_PROCESS_GROUP)) {
+                           COMMAND_CAPTURE_STDOUT
+                           |COMMAND_CAPTURE_STDERR
+                           |COMMAND_NEW_PROCESS_GROUP)) {
         command_free(&command);
         return false;
     }

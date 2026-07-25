@@ -314,8 +314,8 @@ on_menu_open_item(GtkWidget *widget, void *data) {
             LOG(_("Launching...\n"));
             command_print(&command);
             (void)command_run(&command,
-                              COMMAND_FLAG_DETACHED
-                              |COMMAND_FLAG_NEW_SESSION);
+                              COMMAND_DETACHED
+                              |COMMAND_NEW_SESSION);
             command_free(&command);
         }
     }
@@ -500,7 +500,7 @@ on_menu_diff(GtkWidget *widget, void *data) {
         COMMAND_PUSH(&command, path_dst, path_dst_len);
         COMMAND_PUSH(&command, path_src, path_src_len);
 
-        (void)command_run_async(&command, COMMAND_FLAG_NEW_SESSION);
+        (void)command_run_async(&command, COMMAND_NEW_SESSION);
         command_free(&command);
         free2(path_src, size_src);
         free2(path_dst, size_dst);
