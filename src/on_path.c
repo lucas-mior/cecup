@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL
 // Copyright (c) 2026 Lucas Mior
 
-#if !defined (ON_PATH_C)
+#if !defined(ON_PATH_C)
 #define ON_PATH_C
 
 #include "gtk_include.h"

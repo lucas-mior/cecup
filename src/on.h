@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL
 // Copyright (c) 2026 Lucas Mior
 
-#if !defined (ON_H)
+#if !defined(ON_H)
 #define ON_H
 
 #include "cecup.h"
