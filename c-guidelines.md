@@ -108,8 +108,10 @@ typeof(var)  // good
 - Clean exit: use `exit(EXIT_SUCCESS)`
 
 ## Enums, structs, and unions
-
-- Use include-based `xenums.c` for creating enums.
+- Enums that don't need the `_str` and `_parse` functions, and arent bit flags,
+  don't need xenums.c. Define the enum manually.
+- But do use include-based `xenums.c` for creating enums if it is a bit flag
+  enum, or if we need the `_str` or the `_parse` functions.
   * It will give automatic bit flags if needed with `#define ENUM_BITFLAGS 1`.
   * It will give automatic `_str` and `_parse` functions.
   * It will give automatic `_LAST` value. Use it for iterating on the enum:
@@ -118,6 +120,8 @@ typeof(var)  // good
         printf("x = %s.\n", MY_ENUM_str(x));
     }
     ```
+- The moment that you find that an existing enum ends up needing `_str`, or
+  `_parse`, then it is time to define it using `xenums.c`.
 - Always typedef structs:
   ```c
   typedef struct MyStruct {
