@@ -879,7 +879,6 @@ main(void) {
 
         cecup.ignore_patterns = NULL;
         cecup.ignore_count = 0;
-        cecup.check_fs_button = gtk_check_button_new();
         cecup.progress_bar = gtk_progress_bar_new();
         cecup.stop_working = false;
 
