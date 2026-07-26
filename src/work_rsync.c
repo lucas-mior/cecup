@@ -671,28 +671,17 @@ work_rsync(void *user_data) {
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
         char *file = cecup.transfers[i];
         int64 left = cecup.transfers_lens[i];
-        int64 w;
         int64 written = 0;
 
         if (left > 1) {
+            // rsync interprets slashes at the end of dir names differently
             if (file[left - 1] == '/') {
                 left -= 1;
             }
         }
 
-        while ((w = write64(files_from_fd, &file[written], left)) > 0) {
-            written += w;
-            left -= w;
-            if (left <= 0) {
-                break;
-            }
-        }
-        if (w < 0) {
-            error("Error writing to %s: %s.\n", files_from_filename, strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
-
-        write64(files_from_fd, "\n", 1);
+        write_all(files_from_fd, &file[written], left);
+        write_all(files_from_fd, "\n", 1);
     }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
