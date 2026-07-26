@@ -459,6 +459,8 @@ static struct {
     pid_t child_pid;
     pthread_t work_thread;
 
+    // TODO: Make this atomic or lock every read and write. volatile does not
+    // synchronize this flag between GTK and worker threads.
     volatile bool stop_working;
     pthread_mutex_t stop_lock;
 

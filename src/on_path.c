@@ -266,6 +266,8 @@ on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
     (void)pspec;
     is_editing = gtk_editable_label_get_editing(GTK_EDITABLE_LABEL(object));
 
+    // TODO: Balance both g_object_ref() calls. No path below releases the
+    // extra reference, including the deferred selection callback.
     if (is_editing) {
         on_path_editing_started(GTK_EDITABLE(g_object_ref(object)), data);
     } else {

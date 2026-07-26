@@ -70,6 +70,7 @@ work_traverse_fs(Traversal *traversal) {
         return 0;
     }
 
+    // TODO: Detect an fts_read() error instead of treating it as normal EOF.
     while ((ent = fts_read(fts_handle))) {
         char *d_name;
         int32 name_len;
@@ -98,6 +99,8 @@ work_traverse_fs(Traversal *traversal) {
             continue;
         case FTS_DP:
             continue;
+        // TODO: Abort after these traversal failures. Continuing with an
+        // incomplete source map can make delete-after remove valid backups.
         case FTS_ERR:
             LOG_ERROR(_("Error while traversing file system: %s.\n"), strerror(ent->fts_errno));
             continue;
@@ -315,6 +318,8 @@ work_preview(void *user_data) {
     struct timespec t1_work;
 
     (void)user_data;
+    // TODO: Capture this option on the GTK thread before starting the worker.
+    // GTK widgets must not be accessed from this background thread.
     check_different_fs = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
 
     update_progress_info(_("Analyzing changes"),

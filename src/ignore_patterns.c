@@ -46,6 +46,8 @@ ignore_patterns_load(void) {
         int32 line_len = strlen32(line_buffer);
         IgnorePattern *pattern;
 
+        // TODO: Accept a final EOF-terminated line without '\n'. Only report
+        // an overlong line when more input remains after the buffer fills.
         if (line_buffer[line_len - 1] != '\n') {
             error("Too long line on patterns file: %s.\n", line_buffer);
             fatal(EXIT_FAILURE);

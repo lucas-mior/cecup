@@ -253,6 +253,8 @@ on_preview_clicked(GtkWidget *button, void *data) {
     }
 
     {
+        // TODO: Do not allocate ThreadData here unless work_preview frees it.
+        // The worker currently ignores this allocation, leaking every preview.
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
 
@@ -549,6 +551,8 @@ on_ignore_response(GtkDialog *dialog, int32 response_id, void *data) {
 
         gtk_text_buffer_get_bounds(buffer, &start, &end);
         content = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+        // TODO: Check the return value and report the GError. A failed save is
+        // currently treated as successful and still invalidates the preview.
         g_file_set_contents(cecup.ignore_path, content, -1, NULL);
         g_free(content);
         aux_invalidate_preview();
@@ -757,6 +761,8 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
     (void)user_data;
 
     stop_working(true);
+    // TODO: Arrange the child timeout and SIGKILL fallback before this join.
+    // A stuck child keeps the worker alive, so the fallback is unreachable.
     if (cecup.work_thread) {
         error("Joining thread...\n");
         xpthread_join(&cecup.work_thread, NULL);

@@ -478,6 +478,8 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         return false;
     }
 
+    // TODO: Check command.result.status before freeing the command.
+    // command_wait() only confirms waitpid() succeeded, not rsync itself.
     cecup.child_pid = 0;
     command_free(&command);
     return true;
@@ -498,6 +500,8 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
 
     ASSERT_MORE(path_len, 0);
 
+    // TODO: Reject "." and "./" here. The delete action can target the root
+    // row and recursively remove the configured source or destination tree.
     if (path[path_len - 1] != '/') {
         if (unlink(full_path) < 0) {
             error("Error in unlink(%s): %s.\n", full_path, strerror(errno));
@@ -583,6 +587,8 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         if (fts_close(fts_handle) < 0) {
             LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
         }
+        // TODO: Only log success if traversal completed and every removal
+        // succeeded. Cancellation and per-entry errors currently reach here.
         LOG("Removed directory tree %s...\n", full_path);
     }
 
@@ -629,6 +635,8 @@ work_rsync(void *user_data) {
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
 
+        // TODO: Do not count ACTION_EQUAL or ACTION_IGNORE as transfers. Both
+        // actions are skipped while writing the files-from list below.
         if (task->action != ACTION_DELETE) {
             has_transfers = true;
             continue;
@@ -658,6 +666,8 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
+    // TODO: Use a checked write-all helper for every path and newline below.
+    // write64() can fail, be interrupted, or write only part of a record.
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
         char *file = cecup.transfers[i];
         int64 left = cecup.transfers_lens[i];
@@ -739,6 +749,8 @@ work_rsync(void *user_data) {
 
     work_batch_flush(&batch);
     task_list_free(tasks);
+    // TODO: Free thread_data before work_finalize(). The call exits the
+    // thread, so the free below is unreachable on successful completion.
     work_finalize(false);
     free2(thread_data, SIZEOF(*thread_data));
     pthread_exit(NULL);
