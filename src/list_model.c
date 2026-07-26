@@ -231,7 +231,7 @@ cecup_list_model_update(CecupListModel *self, int32 old_count, int32 new_count) 
 
     (void)new_count;
 
-    if (self->idle_id != 0) {
+    if (self->idle_id) {
         g_source_remove(self->idle_id);
         self->idle_id = 0;
     }

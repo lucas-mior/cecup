@@ -150,7 +150,7 @@ on_search_changed(GtkEditable *editable, void *data) {
     cecup.search_query = xmemdup(text, len + 1);
     cecup.search_query_len = len;
 
-    if (cecup.search_timeout_id != 0) {
+    if (cecup.search_timeout_id) {
         g_source_remove(cecup.search_timeout_id);
     }
 
@@ -796,7 +796,7 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
         }
     }
 
-    if (cecup.search_timeout_id != 0) {
+    if (cecup.search_timeout_id) {
         g_source_remove(cecup.search_timeout_id);
         cecup.search_timeout_id = 0;
     }
