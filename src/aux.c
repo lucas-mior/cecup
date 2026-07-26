@@ -341,11 +341,7 @@ log_internal(char *file, int line, char *func, enum MsgType type, char *format, 
     message = malloc2(SIZEOF(*message));
     memset64(message, 0, SIZEOF(*message));
 
-    if (RELEASING) {
-        m = SNPRINTF(fileline, "%s", "");
-    } else {
-        m = SNPRINTF(fileline, "%s:%d:%s ", file, line, func);
-    }
+    m = SNPRINTF(fileline, "%s:%d:%s ", file, line, func);
 
     message->text_len = n + m;
     message->text = malloc2(n + m + 1);
