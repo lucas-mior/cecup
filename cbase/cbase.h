@@ -445,8 +445,6 @@ typedef struct CommandResult {
 
     bool exited;
     bool signaled;
-    bool stdout_fd_open;
-    bool stderr_fd_open;
 } CommandResult;
 
 typedef struct Command {
