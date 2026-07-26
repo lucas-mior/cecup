@@ -244,12 +244,15 @@ work_traverse_fs(Traversal *traversal) {
 
         if ((file_count % 4096) == 0) {
             struct timespec time_now;
+            int64 seconds;
+            int64 nanos;
 
             clock_gettime(CLOCK_MONOTONIC_COARSE, &time_now);
-            if (((time_now.tv_sec - time_last_report.tv_sec) > 1)
-                    || ((time_now.tv_nsec - time_last_report.tv_nsec) > 1000*1000*100)) {
-                LOG("Found %lld files... %s\r", (llong)file_count, ent->fts_path);
+            seconds = time_now.tv_sec - time_last_report.tv_sec;
+            nanos = time_now.tv_nsec - time_last_report.tv_nsec;
 
+            if ((seconds >= 1) || (nanos > MILLIS_AS_NANOS(100))) {
+                LOG("Found %lld files... %s\r", (llong)file_count, ent->fts_path);
                 clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_report);
             }
         }
