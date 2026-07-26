@@ -889,7 +889,9 @@ main(void) {
         cecup.progress_bar = gtk_progress_bar_new();
         cecup.stop_working = false;
 
-        xpthread_create(&cecup.work_thread, NULL, work_preview, NULL);
+        ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
+
+        xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
         xpthread_join(&cecup.work_thread, NULL);
 
         ASSERT_MORE(cecup.traversal[L].file_count, 0);
@@ -900,7 +902,9 @@ main(void) {
         cecup.stop_working = true;
         cecup.ntransfers = 42;
 
-        xpthread_create(&cecup.work_thread, NULL, work_preview, NULL);
+        ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
+
+        xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
         xpthread_join(&cecup.work_thread, NULL);
 
         ASSERT_EQUAL(cecup.ntransfers, 0); 
