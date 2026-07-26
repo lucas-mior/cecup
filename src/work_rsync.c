@@ -711,6 +711,7 @@ work_rsync(void *user_data) {
                     char *link_name = hardlinks.names[j];
                     
                     if ((write_len = hardlinks.names_lens[j]) > 1) {
+                        // rsync interprets slashes at the end of dir names differently
                         if (link_name[write_len - 1] == '/') {
                             write_len -= 1;
                         }
