@@ -520,8 +520,7 @@ snprintf2(char *buffer, int64 size, char *format, ...) {
     va_end(args);
 
     if ((n < 0) || (n >= size)) {
-        fprintf(stderr, "Error in vsnprintf(\"%s\") (n = %lld)\n",
-                        format, n);
+        fprintf(stderr, "Error in vsnprintf(\"%s\") (n = %d)\n", format, n);
         fatal(EXIT_FAILURE);
     }
     return n;
@@ -1027,7 +1026,7 @@ util_copy_file_async_parsed(UtilCopyFilesAsync *copy_files) {
             continue;
         }
         if (n < 0) {
-            error("Error in poll(nfds=%lld): %s.\n",
+            error("Error in poll(nfds=%d): %s.\n",
                   copy_files->nfds, strerror(errno));
             break;
         }
