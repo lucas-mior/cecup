@@ -89,6 +89,9 @@ aux_invalidate_preview(void) {
 
 static void
 aux_protect_interface_from_user(bool state) {
+    // this function is called everytime a thread is spawn.
+    // question: is this enough to avoid race conditions?
+
     gtk_widget_set_sensitive(cecup.preview_button, !state);
     gtk_widget_set_sensitive(cecup.ignore_button, !state);
     gtk_widget_set_sensitive(cecup.dir_entry[L], !state);
