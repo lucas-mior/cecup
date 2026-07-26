@@ -65,77 +65,31 @@
 #define ERROR_NOTIFY 0
 #endif
 
-#include <assert.h>
-#include <ctype.h>
-#include <dirent.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <float.h>
-#include <limits.h>
-#include <pthread.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
-
 #include "platform_detection.h"
-
-#if OS_WINDOWS
-#include <windows.h>
-#endif
-
-#if OS_UNIX
-#include <sys/mman.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <poll.h>
-#endif
-
-#if OS_MAC
-#include <sys/param.h>
-#undef MIN
-#undef MAX
-#endif
-
 #include "primitives.h"
 #include "base_macros.h"
 
-#if !defined(FLAGS_HUGE_PAGES)
-#if defined(MAP_HUGETLB) && defined(MAP_HUGE_2MB)
-#define FLAGS_HUGE_PAGES MAP_HUGETLB | MAP_HUGE_2MB
-#else
-#define FLAGS_HUGE_PAGES 0
-#endif
-#endif
+#define error(...) \
+    error_impl(__FILE__, __LINE__, (char *)__func__, __VA_ARGS__)
+#define error2(...) fprintf(stderr, __VA_ARGS__)
+static int32 optional_strlen32(char *);
+static int32 strlen32(char *);
+static void fatal(int32) __attribute__((noreturn));
+static void error_impl(char *, int32, char *, char *, ...)
+    __attribute__((format(printf, 4, 5)));
+static int memcmp64(void *, void *, int64);
+static void *memmem64(void *, int64, void *, int64);
+static void *memrchr64(void *, int32, int64);
 
-#if !defined(MAP_POPULATE)
-#define MAP_POPULATE 0
-#endif
-
-#if !defined(MAP_ANON) && defined(MAP_ANONYMOUS)
-#define MAP_ANON MAP_ANONYMOUS
-#elif !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
-#define MAP_ANONYMOUS MAP_ANON
-#elif !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
-#define MAP_ANON 0
-#define MAP_ANONYMOUS 0
-#endif
-
+#include "libc.h"
 #include "i18n.h"
 #include "memory.h"
+#include "arena.h"
 
+#include "assert.c"
 #include "generic.c"
 #include "minmax.c"
-#include "assert.c"
 
-#include "arena.h"
 #define UTF_INVALID 0xFFFD
 
 static int32 random_utf8_string(char *, int32, int32);
@@ -186,9 +140,6 @@ static void util_copy_file_async_parsed(UtilCopyFilesAsync *);
 static void *util_copy_file_async_thread(void *);
 #endif
 
-static void error_impl(char *, int32, char *, char *, ...)
-    __attribute__((format(printf, 4, 5)));
-static void fatal(int32) __attribute__((noreturn));
 static void util_segv_handler(int32) __attribute__((noreturn));
 static int32 itoa2(char *, int32, llong);
 static long atoi2(char *);
@@ -203,11 +154,7 @@ static void error_async_safe(char *);
 static bool is_ident_char(char);
 static bool is_ident_start_char(char);
 static void *memchr64(void *, int32, int64);
-static int memcmp64(void *, void *, int64);
-static void *memmem64(void *, int64, void *, int64);
-static void *memrchr64(void *, int32, int64);
 static void normalize(char *restrict, int32 *restrict);
-static int32 optional_strlen32(char *);
 static bool parse_option(char **, char *, char *);
 static char *path_basename(char *, int32);
 static void print_timings(
@@ -255,7 +202,6 @@ static int64 square_int64(int64);
 static bool strequal(char *, char *);
 static bool strequal2(char *, int32, char *, int32);
 static int64 strftime2(char *, int64, char *, struct tm *);
-static int32 strlen32(char *);
 static int strncmp32(char *, char *, int64);
 static char *strncpy32(char *, char *, int64);
 static double timediff(struct timespec, struct timespec);
@@ -295,10 +241,6 @@ static void xpthread_mutex_lock(pthread_mutex_t *);
 static void xpthread_mutex_unlock(pthread_mutex_t *);
 static int xunlink(char *);
 static void here_impl(char *, int32, char *);
-
-#define error(...) \
-    error_impl(__FILE__, __LINE__, (char *)__func__, __VA_ARGS__)
-#define error2(...) fprintf(stderr, __VA_ARGS__)
 
 #define STRING_FROM_ARRAY(BUFFER, SEP, ARRAY, LENGTH) \
 _Generic((ARRAY), \
@@ -378,10 +320,6 @@ _Generic((VAR), \
     ncalls_ncalls += 1; \
 } while (0)
 
-#define MEM_FREED 0xDC
-#define MEM_MALLOCED_UNINITIALIZED 0xCD
-#define MEM_DONT_READ 0xBD
-
 #define PRINT_TIMINGS_3(N, T0, T1) \
     print_timings(__FILE__, __LINE__, (char *)__func__, N, T0, T1)
 #define PRINT_TIMINGS_4(N, T0, T1, NAME) \
@@ -445,6 +383,7 @@ typedef struct CommandResult {
 
     bool exited;
     bool signaled;
+    int16 padding;
 } CommandResult;
 
 typedef struct Command {

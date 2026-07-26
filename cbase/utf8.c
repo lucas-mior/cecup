@@ -4,12 +4,6 @@
 #if !defined(UTF8_C)
 #define UTF8_C
 
-#include <stdlib.h>
-#include <wchar.h>
-#include <wctype.h>
-#include "primitives.h"
-#include "base_macros.h"
-
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_utf8 1
 #elif !defined(TESTING_utf8)
@@ -439,10 +433,6 @@ utf8_functions_sink(void) {
 #if TESTING_utf8
 #define CBASE_IMPLEMENT
 #include "cbase.h"
-
-#include <wchar.h>
-#include <wctype.h>
-#include <string.h>
 
 int
 main(void) {

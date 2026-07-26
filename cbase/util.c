@@ -4,35 +4,6 @@
 #if !defined(UTIL_C)
 #define UTIL_C
 
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#endif
-
-#include <ctype.h>
-#include <dirent.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <float.h>
-#include <fts.h>
-#include <libgen.h>
-#include <limits.h>
-#include <pthread.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
-
-#include "platform_detection.h"
-#include "base_macros.h"
-
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_util 1
 #elif !defined(TESTING_util)
@@ -40,10 +11,6 @@
 #endif
 
 #include "cbase.h"
-
-#if defined(__EMSCRIPTEN__)
-#include <emscripten/emscripten.h>
-#endif
 
 #if !TESTING_util
 static char *program;
@@ -96,15 +63,6 @@ static time_t timezone_offset = 0;
 
 #define CLAMP_TYPE int64
 #include "clamp.h"
-
-#if DEBUGGING || TESTING_util
-#if defined(__clang__)
-#pragma clang diagnostic ignored "-Wc11-extensions"
-#pragma clang diagnostic ignored "-Wformat"
-#pragma clang diagnostic ignored "-Wdouble-promotion"
-#endif
-
-#endif
 
 static char *notifiers[2] = {"dunstify", "notify-send"};
 
@@ -1075,7 +1033,6 @@ util_copy_file_async_thread(void *arg) {
 #endif
 
 #if OS_LINUX
-#include <dirent.h>
 static void
 send_signal(char *executable, int32 signal_number) {
     DIR *processes;
@@ -2684,10 +2641,6 @@ main(int argc, char **argv) {
     exit(EXIT_SUCCESS);
 }
 
-#endif
-
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic pop
 #endif
 
 #endif /* UTIL_C */
