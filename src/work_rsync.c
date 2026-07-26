@@ -519,6 +519,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             return;
         }
 
+        errno = 0;
         while ((entry = fts_read(fts_handle))) {
             char *path_tmp;
             int32 rel_path_len;
@@ -583,13 +584,23 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
                     work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, rel_path, rel_path_len);
                 }
             }
+            errno = 0;
+        }
+
+        if (errno) {
+            LOG_ERROR(_("Error in fts_read(%s): %s.\n"), full_path, strerror(errno));
         }
         if (fts_close(fts_handle) < 0) {
             LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
         }
-        // TODO: Only log success if traversal completed and every removal
-        // succeeded. Cancellation and per-entry errors currently reach here.
-        LOG("Removed directory tree %s...\n", full_path);
+
+        // TODO: Only log success if every removal succeeded.
+        // per-entry errors currently reach here.
+        if (cecup.stop_working) {
+            LOG_ERROR("Stop requested. Cancelled recursive removal.\n");
+        } else {
+            LOG("Removed directory tree %s...\n", full_path);
+        }
     }
 
     return;
