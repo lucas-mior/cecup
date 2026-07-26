@@ -4,6 +4,8 @@
 #if !defined(WORK_C)
 #define WORK_C
 
+#include "cbase.h"
+
 #include "cecup.h"
 #include "util.c"
 #include "update.c"
