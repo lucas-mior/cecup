@@ -883,13 +883,13 @@ main(void) {
     }
 
     {
+        ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
+
         cecup.ignore_patterns = NULL;
         cecup.ignore_count = 0;
         cecup.check_fs_button = gtk_check_button_new();
         cecup.progress_bar = gtk_progress_bar_new();
         cecup.stop_working = false;
-
-        ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
 
         xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
         xpthread_join(&cecup.work_thread, NULL);
@@ -899,10 +899,10 @@ main(void) {
     }
 
     {
+        ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
+
         cecup.stop_working = true;
         cecup.ntransfers = 42;
-
-        ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
 
         xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
         xpthread_join(&cecup.work_thread, NULL);
