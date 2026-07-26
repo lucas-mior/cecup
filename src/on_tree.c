@@ -145,6 +145,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                     if (extension && (extension != name)) {
                         SNPRINTF(label, _("by extension (*%s)"), extension);
                         SNPRINTF(pattern, "*%s", extension);
+
                         m_item = g_menu_item_new(label, NULL);
                         g_menu_item_set_action_and_target(m_item, "app.ignore", "s", pattern);
                         g_menu_append_item(submenu, m_item);
@@ -154,6 +155,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                     if (!aux_is_root(directory)) {
                         SNPRINTF(label, _("📁 Dir (/%s/)"), directory);
                         SNPRINTF(pattern, "/%s/", directory);
+
                         m_item = g_menu_item_new(label, NULL);
                         g_menu_item_set_action_and_target(m_item, "app.ignore", "s", pattern);
                         g_menu_append_item(submenu, m_item);
@@ -165,7 +167,9 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                     } else {
                         SNPRINTF(label, _("This file only (/%s)"), filepath);
                     }
+
                     SNPRINTF(pattern, "/%s", filepath);
+
                     m_item = g_menu_item_new(label, NULL);
                     g_menu_item_set_action_and_target(m_item, "app.ignore", "s", pattern);
                     g_menu_append_item(submenu, m_item);
@@ -173,6 +177,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
 
                     SNPRINTF(label, _("This filename on any folder (*/%s)"), name);
                     SNPRINTF(pattern, "*/%s", name);
+
                     m_item = g_menu_item_new(label, NULL);
                     g_menu_item_set_action_and_target(m_item, "app.ignore", "s", pattern);
                     g_menu_append_item(submenu, m_item);
