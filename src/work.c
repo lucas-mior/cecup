@@ -4,17 +4,6 @@
 #if !defined(WORK_C)
 #define WORK_C
 
-#include <ctype.h>
-#include <sys/wait.h>
-#include <dirent.h>
-#include <poll.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <string.h>
-#include <errno.h>
-#include <fts.h>
-#include <pthread.h>
-
 #include "cecup.h"
 #include "util.c"
 #include "update.c"
