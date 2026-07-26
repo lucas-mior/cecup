@@ -875,6 +875,7 @@ main(void) {
 
     {
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
+        memset64(thread_data, 0, SIZEOF(*thread_data));
 
         cecup.ignore_patterns = NULL;
         cecup.ignore_count = 0;
@@ -891,6 +892,7 @@ main(void) {
 
     {
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
+        memset64(thread_data, 0, SIZEOF(*thread_data));
 
         cecup.stop_working = true;
         cecup.ntransfers = 42;
