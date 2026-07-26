@@ -177,12 +177,13 @@ on_menu_apply(GtkWidget *widget, void *data) {
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
     if (tasks->count > 0) {
-        ThreadData *thread_data;
+        ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
+        memset64(thread_data, 0, SIZEOF(*thread_data));
 
         aux_protect_interface_from_user(true);
-        thread_data = malloc2(SIZEOF(*thread_data));
-        memset64(thread_data, 0, SIZEOF(*thread_data));
         thread_data->tasks = tasks;
+        thread_data->check_different_fs
+            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
 
         xpthread_create(&cecup.work_thread, NULL, work_rsync, thread_data);
     } else {

@@ -328,11 +328,6 @@ work_preview(void *user_data) {
     struct timespec t1_work;
     ThreadData *thread_data = user_data;
 
-    // TODO: Capture this option on the GTK thread before starting the worker.
-    // GTK widgets must not be accessed from this background thread.
-    thread_data->check_different_fs
-        = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
-
     update_progress_info(_("Analyzing changes"),
                          _("Traversing file systems for differences..."));
 
