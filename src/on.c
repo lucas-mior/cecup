@@ -137,18 +137,18 @@ on_search_timeout(void *data) {
 static void
 on_search_changed(GtkEditable *editable, void *data) {
     char *text;
-    int32 len;
+    int32 text_len;
     (void)data;
 
     text = (char *)gtk_editable_get_text(editable);
-    len = strlen32(text);
+    text_len = strlen32(text);
 
     if (cecup.search_query) {
         free2(cecup.search_query, cecup.search_query_len + 1);
     }
 
-    cecup.search_query = xmemdup(text, len + 1);
-    cecup.search_query_len = len;
+    cecup.search_query = xmemdup(text, text_len + 1);
+    cecup.search_query_len = text_len;
 
     if (cecup.search_timeout_id) {
         g_source_remove(cecup.search_timeout_id);
