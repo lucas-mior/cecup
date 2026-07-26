@@ -180,10 +180,10 @@ That means to also avoid calling `strlen32`:
   for C string literals.
 - `STRLIT_LEN("literal")` is also to be avoided. Only use it if you need to pass
   the length of a string literal, but not the string literal itself (which would
-  be very weird). It is also in the `STRLIT_ARGS` definition.
+  be very weird). It is also in the `STRLIT` definition.
   * Never to stupid shit like: `my_function("literal", STRLIT_LEN("literal")`
-    + Instead, to `my_function(STRLIT_ARGS("literal"))`
-- `STRLIT_ARGS("literal")` can be used to pass the string literal and its length
+    + Instead, to `my_function(STRLIT("literal"))`
+- `STRLIT("literal")` can be used to pass the string literal and its length
   in an "don't repeat yourself" way, that also does not depend on the compiler
   to optimize the strlen32 away, since it uses `sizeof` to get the length of the
   literal.

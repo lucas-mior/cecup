@@ -926,10 +926,12 @@ main(int32 argc, char **argv) {
         char xdg_buffer[MAX_PATH_LENGTH];
         char config_base[MAX_PATH_LENGTH];
         char *XDG_CONFIG_HOME;
+        int32 XDG_CONFIG_HOME_len;
 
         GETENV(XDG_CONFIG_HOME);
         if (XDG_CONFIG_HOME == NULL) {
             char *HOME;
+            int32 HOME_len;
 
             GETENV(HOME);
             if (HOME == NULL) {
@@ -937,8 +939,14 @@ main(int32 argc, char **argv) {
             }
             SNPRINTF(xdg_buffer, "%s/.config", HOME);
             XDG_CONFIG_HOME = xdg_buffer;
+
+            free2(HOME, HOME_len + 1);
         }
         SNPRINTF(config_base, "%s/cecup", XDG_CONFIG_HOME);
+
+        if (XDG_CONFIG_HOME_len > 0) {
+            free2(XDG_CONFIG_HOME, XDG_CONFIG_HOME_len + 1);
+        }
 
         if (access(config_base, F_OK) < 0) {
             Command command = {0};
