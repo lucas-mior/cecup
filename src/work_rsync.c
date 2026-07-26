@@ -636,8 +636,7 @@ work_rsync(void *user_data) {
     if (tasks == NULL) {
         if ((cecup.ntransfers <= 0) && (cecup.ndeletions <= 0)) {
             LOG_ERROR(_("There are no operations to make.\n"));
-            free2(thread_data, SIZEOF(*thread_data));
-            work_finalize(false);
+            work_finalize(thread_data, false);
         } else {
             has_transfers = true;
             nfiles_total = cecup.ntransfers;
@@ -653,8 +652,7 @@ work_rsync(void *user_data) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);
             work_batch_flush(&batch);
-            free2(thread_data, SIZEOF(*thread_data));
-            work_finalize(false);
+            work_finalize(thread_data, false);
         }
 
         work_remove(&batch, cecup.deletions[i], cecup.deletions_lens[i], R);
@@ -674,8 +672,7 @@ work_rsync(void *user_data) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);
             work_batch_flush(&batch);
-            free2(thread_data, SIZEOF(*thread_data));
-            work_finalize(false);
+            work_finalize(thread_data, false);
         }
 
         work_remove(&batch, task->path, task->path_len, task->side);
@@ -684,9 +681,8 @@ work_rsync(void *user_data) {
     if (!has_transfers) {
         LOG_ERROR(_("No transfers to make.\n"));
         work_batch_flush(&batch);
-        free2(thread_data, SIZEOF(*thread_data));
         task_list_free(tasks);
-        work_finalize(false);
+        work_finalize(thread_data, false);
     }
 
     if ((files_from_fd = mkstemp(files_from_filename)) < 0) {
@@ -764,8 +760,7 @@ work_rsync(void *user_data) {
 
     work_batch_flush(&batch);
     task_list_free(tasks);
-    free2(thread_data, SIZEOF(*thread_data));
-    work_finalize(false);
+    work_finalize(thread_data, false);
     pthread_exit(NULL);
 }
 

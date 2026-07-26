@@ -604,12 +604,12 @@ static char *filename_problems[] = {
     RSYNC_SHOW_PRE_DIR,
 };
 
-static void work_finalize(bool preview_clean);
+static void work_finalize(ThreadData *thread_data, bool preview_clean);
 static int32 work_traverse_fs(Traversal *traversal);
 static void *work_traverse_fs_thread(void *user_data);
 static void traversal_clean(Traversal *traversal);
 static void work_cleanup(void);
-static void __attribute__((noreturn)) work_preview_cancel_and_reset(void);
+static void __attribute__((noreturn)) work_preview_cancel_and_reset(ThreadData *thread_data);
 static void *work_preview(void *user_data);
 static char *work_rsync_itemize_skip(char *buf_output, int32 line_len);
 static bool work_rsync_run(char *files_from_filename, int32 nfiles_total,

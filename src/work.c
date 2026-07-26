@@ -32,7 +32,7 @@
 #endif
 
 static void __attribute__((noreturn))
-work_finalize(bool preview_clean) {
+work_finalize(ThreadData *thread_data, bool preview_clean) {
     update_progress_bar(1.0);
 
     {
@@ -44,6 +44,8 @@ work_finalize(bool preview_clean) {
 
         g_idle_add(update_ui_handler, message);
     }
+
+    free2(thread_data, SIZEOF(*thread_data));
     pthread_exit(NULL);
 }
 
@@ -312,9 +314,9 @@ work_cleanup(void) {
 }
 
 static void __attribute__((noreturn))
-work_preview_cancel_and_reset(void) {
+work_preview_cancel_and_reset(ThreadData *thread_data) {
     work_cleanup();
-    work_finalize(false);
+    work_finalize(thread_data, false);
 }
 
 static void *
@@ -325,8 +327,6 @@ work_preview(void *user_data) {
     struct timespec t0_work;
     struct timespec t1_work;
     ThreadData *thread_data = user_data;
-
-    free2(thread_data, SIZEOF(*thread_data));
 
     // TODO: Capture this option on the GTK thread before starting the worker.
     // GTK widgets must not be accessed from this background thread.
@@ -346,12 +346,12 @@ work_preview(void *user_data) {
         if (stat(cecup.src_base, &stat_src) < 0) {
             LOG_ERROR(_("Error getting directory info from %s: %s.\n"),
                       cecup.src_base, strerror(errno));
-            work_preview_cancel_and_reset();
+            work_preview_cancel_and_reset(thread_data);
         }
         if (stat(cecup.dst_base, &stat_dst) < 0) {
             LOG_ERROR(_("Error getting directory info from %s: %s.\n"),
                       cecup.dst_base, strerror(errno));
-            work_preview_cancel_and_reset();
+            work_preview_cancel_and_reset(thread_data);
         }
 
         same_fs = (stat_src.st_dev == stat_dst.st_dev);
@@ -363,7 +363,7 @@ work_preview(void *user_data) {
                     "To force backup on a folder in the same device, uncheck"
                     " option \"Protect same drive sync\".\n"));
 
-        work_preview_cancel_and_reset();
+        work_preview_cancel_and_reset(thread_data);
     }
 
     ignore_patterns_load();
@@ -391,7 +391,7 @@ work_preview(void *user_data) {
 
     if (cecup.stop_working) {
         LOG_ERROR(_("Stop requested.\n"));
-        work_preview_cancel_and_reset();
+        work_preview_cancel_and_reset(thread_data);
     }
 
     LOG(_("File system traversal finished.\n"));
@@ -514,7 +514,7 @@ work_preview(void *user_data) {
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
     PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
-    work_finalize(true);
+    work_finalize(thread_data, true);
 }
 
 #if 0 == TESTING_work
