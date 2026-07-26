@@ -53,6 +53,15 @@ For formatting-only style rules, see `c-format.md`.
 
   result = (int32)value;
   ```
+- unsigned integers: avoid, prefer signed integers
+  * use unsigned integers for bit flags and other bit-wise operated values.
+  * when interfacing a stupid library that receives unsigned integers where a
+    signed integer is used on our side of the code, write a wrapper. The
+    wrapper checks if the signed value is less than zero before converting.
+  * when interfacing a stupid library that returns unsigned integers where a
+    signed integer is used on our side of the code, write a wrapper. The
+    wrapper checks if the received value fits in the positive range of our
+    signed integer type. Use `MAXOF()` macro defined in cbase/.
 
 ## Expressions and control flow
 
