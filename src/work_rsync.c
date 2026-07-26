@@ -709,12 +709,13 @@ work_rsync(void *user_data) {
             if ((hash_lookup_inode_map(traversal->inode_map, &task->file_id, &hardlinks))) {
                 for (int32 j = 0; j < hardlinks.count; j += 1) {
                     char *link_name = hardlinks.names[j];
-                    write_len = hardlinks.names_lens[j];
-                    if (write_len > 1) {
+                    
+                    if ((write_len = hardlinks.names_lens[j]) > 1) {
                         if (link_name[write_len - 1] == '/') {
                             write_len -= 1;
                         }
                     }
+
                     write64(files_from_fd, link_name, write_len);
                     write64(files_from_fd, "\n", 1);
                 }
