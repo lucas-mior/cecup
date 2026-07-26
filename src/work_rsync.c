@@ -666,8 +666,6 @@ work_rsync(void *user_data) {
         fatal(EXIT_FAILURE);
     }
 
-    // TODO: Use a checked write-all helper for every path and newline below.
-    // write64() can fail, be interrupted, or write only part of a record.
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
         char *file = cecup.transfers[i];
         int64 left = cecup.transfers_lens[i];
