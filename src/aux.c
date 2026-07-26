@@ -97,6 +97,8 @@ aux_protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.dir_entry[L], !state);
     gtk_widget_set_sensitive(cecup.dir_entry[R], !state);
     gtk_widget_set_sensitive(cecup.invert_button, !state);
+
+    // stop is the only button that remains clickable
     gtk_widget_set_sensitive(cecup.stop_button, state);
 
     gtk_widget_set_sensitive(cecup.delete_after_button, !state);
