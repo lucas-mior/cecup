@@ -722,8 +722,7 @@ work_rsync(void *user_data) {
             }
         }
 
-        write_len = task->path_len;
-        if (write_len > 1) {
+        if ((write_len = task->path_len) > 1) {
             if (task->path[write_len - 1] == '/') {
                 write_len -= 1;
             }
