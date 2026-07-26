@@ -769,11 +769,6 @@ work_rsync_functions_sink(void) {
 #define CBASE_IMPLEMENT
 #include "cbase.h"
 
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <unistd.h>
-
 #include "work.c"
 #include "tasks.c"
 
