@@ -252,7 +252,7 @@ work_traverse_fs(Traversal *traversal) {
             nanos = time_now.tv_nsec - time_last_report.tv_nsec;
 
             if ((seconds >= 1) || (nanos > MILLIS_AS_NANOS(100))) {
-                LOG("Found %lld files... %s\r", (llong)file_count, ent->fts_path);
+                LOG("Found %lld files... %s\r", file_count, ent->fts_path);
                 clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_report);
             }
         }
@@ -397,7 +397,7 @@ work_preview(void *user_data) {
     LOG(_("File system traversal finished.\n"));
 
     nfiles_total = cecup.traversal[L].file_count + cecup.traversal[R].file_count;
-    LOG(_("Found %lld files to analyse...\n"), (llong)nfiles_total);
+    LOG(_("Found %lld files to analyse...\n"), nfiles_total);
 
     for (uint32 i = 0; i < cecup.traversal[L].map->capacity; i += 1) {
         Bucket_fs_map *bucket_src = &(cecup.traversal[L].map->array[i]);
