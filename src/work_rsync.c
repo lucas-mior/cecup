@@ -706,8 +706,8 @@ work_rsync(void *user_data) {
                         }
                     }
 
-                    write64(files_from_fd, link_name, write_len);
-                    write64(files_from_fd, "\n", 1);
+                    write_all(files_from_fd, link_name, write_len);
+                    write_all(files_from_fd, "\n", 1);
                 }
             }
         }
@@ -717,8 +717,8 @@ work_rsync(void *user_data) {
                 write_len -= 1;
             }
         }
-        write64(files_from_fd, task->path, write_len);
-        write64(files_from_fd, "\n", 1);
+        write_all(files_from_fd, task->path, write_len);
+        write_all(files_from_fd, "\n", 1);
     }
 
     XCLOSE(&files_from_fd);
