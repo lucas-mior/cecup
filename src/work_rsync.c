@@ -736,10 +736,8 @@ work_rsync(void *user_data) {
 
     work_batch_flush(&batch);
     task_list_free(tasks);
-    // TODO: Free thread_data before work_finalize(). The call exits the
-    // thread, so the free below is unreachable on successful completion.
-    work_finalize(false);
     free2(thread_data, SIZEOF(*thread_data));
+    work_finalize(false);
     pthread_exit(NULL);
 }
 
