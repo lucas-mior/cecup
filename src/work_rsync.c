@@ -478,8 +478,25 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         return false;
     }
 
-    // TODO: Check command.result.status before freeing the command.
-    // command_wait() only confirms waitpid() succeeded, not rsync itself.
+    if (command.result.status != 0) {
+        if (cecup.stop_working) {
+            LOG_ERROR(_("Stop requested. Cancelled sync.\n"));
+        } else if (command.result.signaled) {
+            LOG_ERROR(_("rsync terminated by signal %d.\n"),
+                      command.result.term_signal);
+        } else if (command.result.exited) {
+            LOG_ERROR(_("rsync exited with status %d.\n"),
+                      command.result.exit_status);
+        } else {
+            LOG_ERROR(_("rsync returned status %d.\n"),
+                      command.result.status);
+        }
+
+        cecup.child_pid = 0;
+        command_free(&command);
+        return false;
+    }
+
     cecup.child_pid = 0;
     command_free(&command);
     return true;
