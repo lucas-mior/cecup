@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
 #include <libgen.h>
 #include <pthread.h>
 #include <limits.h>
