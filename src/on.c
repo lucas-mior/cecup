@@ -539,22 +539,26 @@ on_select_all_visible_clicked(GtkWidget *button, void *data) {
 
 static void
 on_ignore_response(GtkDialog *dialog, int32 response_id, void *data) {
-    GtkTextBuffer *buffer;
+    GtkTextBuffer *buffer = data;
 
-    buffer = data;
     if (response_id == GTK_RESPONSE_ACCEPT) {
         GtkTextIter start;
         GtkTextIter end;
         char *content;
+        int32 content_len;
 
         gtk_text_buffer_get_bounds(buffer, &start, &end);
         content = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
-        // TODO: Check the return value and report the GError. A failed save is
-        // currently treated as successful and still invalidates the preview.
-        g_file_set_contents(cecup.ignore_path, content, -1, NULL);
+        content_len = strlen32(content);
+
+        if (write_entire_file(cecup.ignore_path, content, content_len)) {
+            LOG_ERROR("Error writing ignore file.\n");
+        }
+
         g_free(content);
         aux_invalidate_preview();
     }
+
     gtk_window_destroy(GTK_WINDOW(dialog));
     return;
 }
