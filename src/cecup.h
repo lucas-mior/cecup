@@ -504,6 +504,7 @@ typedef struct RowCache {
 
 typedef struct ThreadData {
     TaskList *tasks;
+    bool check_different_fs;
 } ThreadData;
 
 typedef struct CecupMenuItem {
