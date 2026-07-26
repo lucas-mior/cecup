@@ -70,7 +70,7 @@ work_traverse_fs(Traversal *traversal) {
         return 0;
     }
 
-    // TODO: Detect an fts_read() error instead of treating it as normal EOF.
+    errno = 0;
     while ((ent = fts_read(fts_handle))) {
         char *d_name;
         int32 name_len;
@@ -253,8 +253,14 @@ work_traverse_fs(Traversal *traversal) {
                 clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_report);
             }
         }
+
+        errno = 0;
     }
 
+    if (errno) {
+        LOG_ERROR(_("Error in fts_read(%s): %s.\n"),
+                  traversal->base_path, strerror(errno));
+    }
     if (fts_close(fts_handle) < 0) {
         LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
     }
