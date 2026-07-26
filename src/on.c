@@ -253,8 +253,6 @@ on_preview_clicked(GtkWidget *button, void *data) {
     }
 
     {
-        // TODO: Do not allocate ThreadData here unless work_preview frees it.
-        // The worker currently ignores this allocation, leaking every preview.
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
         memset64(thread_data, 0, SIZEOF(*thread_data));
 

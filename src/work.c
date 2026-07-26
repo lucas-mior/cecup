@@ -316,8 +316,10 @@ work_preview(void *user_data) {
     bool check_different_fs;
     struct timespec t0_work;
     struct timespec t1_work;
+    ThreadData *thread_data = user_data;
 
-    (void)user_data;
+    free2(thread_data, SIZEOF(*thread_data));
+
     // TODO: Capture this option on the GTK thread before starting the worker.
     // GTK widgets must not be accessed from this background thread.
     check_different_fs = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
