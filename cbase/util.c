@@ -797,7 +797,7 @@ error_impl(char *file, int32 line, char *func, char *format, ...) {
 
     if ((n < 0) || (n >= m)) {
         fprintf(stderr,
-                "%s:%d %s(): Error in vsnprintf(\"%s\") (n = %lld).\n",
+                "%s:%d %s(): Error in vsnprintf(\"%s\") (n = %d).\n",
                 file, line, func, format, n);
         fatal(EXIT_FAILURE);
     }
