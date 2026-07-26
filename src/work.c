@@ -4,7 +4,6 @@
 #if !defined(WORK_C)
 #define WORK_C
 
-#include "gtk_include.h"
 #include <ctype.h>
 #include <sys/wait.h>
 #include <dirent.h>
@@ -525,10 +524,7 @@ work_functions_sink(void) {
 #define CBASE_IMPLEMENT
 #include "cbase.h"
 
-#include <sys/time.h>
-
-#include "assert.c"
-#include "arena.c"
+#include "gtk_include.h"
 
 typedef struct TestEntry {
     char *name;
