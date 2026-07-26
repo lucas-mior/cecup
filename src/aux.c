@@ -327,8 +327,8 @@ log_internal(char *file, int line, char *func, enum MsgType type, char *format, 
     n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
 
     if ((n < 0) || (n >= SIZEOF(buffer))) {
-        error_impl(file, line, func, "Error in vsnprintf(\"%s\") (n = %lld)\n",
-                   format, (llong)n);
+        error_impl(file, line, func,
+                   "Error in vsnprintf(\"%s\") (n = %d)\n", format, n);
         fatal(EXIT_FAILURE);
     }
     va_end(va_args);
