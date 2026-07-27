@@ -36,6 +36,7 @@ work_finalize(ThreadData *thread_data, bool preview_clean) {
     }
 
     free2(thread_data, SIZEOF(*thread_data));
+    work_thread_done_set(true);
     pthread_exit(NULL);
 }
 
@@ -946,6 +947,7 @@ main(void) {
         cecup.ignore_count = 0;
         cecup.progress_bar = gtk_progress_bar_new();
         stop_working(false);
+        work_thread_done_set(false);
 
         xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
         xpthread_join(&cecup.work_thread, NULL);
@@ -959,6 +961,7 @@ main(void) {
         *thread_data = (ThreadData){0};
 
         stop_working(true);
+        work_thread_done_set(false);
         cecup.ntransfers = 42;
 
         xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);

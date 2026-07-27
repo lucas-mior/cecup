@@ -472,6 +472,7 @@ static struct {
     // this is only needed for killing rsync when the window is destroyed
     atomic_int child_pid;
     pthread_t work_thread;
+    atomic_bool work_thread_done;
 
     atomic_bool stop_working;
 
@@ -629,6 +630,8 @@ static void *work_rsync(void *user_data);
 
 static void stop_working(bool state);
 static bool work_should_stop(void);
+static void work_thread_done_set(bool state);
+static bool work_thread_is_done(void);
 static void child_pid_set(pid_t pid);
 static pid_t child_pid_get(void);
 static void child_pid_signal(int32 signal_number);

@@ -46,6 +46,17 @@ work_should_stop(void) {
 }
 
 static void
+work_thread_done_set(bool state) {
+    atomic_store_explicit(&cecup.work_thread_done, state, memory_order_release);
+    return;
+}
+
+static bool
+work_thread_is_done(void) {
+    return atomic_load_explicit(&cecup.work_thread_done, memory_order_acquire);
+}
+
+static void
 child_pid_set(pid_t pid) {
     atomic_store_explicit(&cecup.child_pid, (int)pid, memory_order_relaxed);
     return;
@@ -142,6 +153,7 @@ aux_protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.filter_ignore, !state);
 
     if (state) {
+        work_thread_done_set(false);
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
     } else if (cecup.preview_dirty) {
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);

@@ -149,6 +149,7 @@ on_search_changed(GtkEditable *editable, void *data) {
     cecup.search_query = xmemdup(text, text_len + 1);
     cecup.search_query_len = text_len;
 
+cleanup_search_timeout:
     if (cecup.search_timeout_id) {
         g_source_remove(cecup.search_timeout_id);
     }
@@ -759,47 +760,35 @@ on_path_click_pressed(GtkGestureClick *gesture,
     return;
 }
 
+static bool
+on_work_thread_wait_done(void) {
+    int32 waited_usec = 0;
+    int32 timeout_usec = 2*1000*1000;
+    int32 step_usec = 100*1000;
+
+    while (!work_thread_is_done() && (waited_usec < timeout_usec)) {
+        g_usleep(step_usec);
+        waited_usec += step_usec;
+    }
+
+    return work_thread_is_done();
+}
+
 static void
 on_window_destroy(GtkWidget *widget, void *user_data) {
     (void)widget;
     (void)user_data;
 
     stop_working(true);
-    // TODO: Arrange the child timeout and SIGKILL fallback before this join.
-    // A stuck child keeps the worker alive, so the fallback is unreachable.
+    child_pid_signal(SIGTERM);
+
     if (cecup.work_thread) {
+        if (!on_work_thread_wait_done()) {
+            child_pid_signal(SIGKILL);
+        }
+
         error("Joining thread...\n");
         xpthread_join(&cecup.work_thread, NULL);
-    }
-
-    {
-        pid_t child_pid;
-        int32 waited;
-        int32 waited_count = 0;
-
-        child_pid = child_pid_get();
-        if (child_pid > 0) {
-            xkill(-child_pid, SIGTERM);
-
-            while ((waited = waitpid(child_pid, NULL, 0)) < 0) {
-                if (errno == EINTR) {
-                    continue;
-                }
-                if (errno == ECHILD) {
-                    break;
-                }
-                waited_count += 1;
-                if (waited_count >= 10) {
-                    break;
-                }
-                error("Error waiting for child: %s.\n", strerror(errno));
-                sleep(1);
-            }
-
-            if ((waited < 0) && (errno != ECHILD)) {
-                xkill(-child_pid, SIGKILL);
-            }
-        }
     }
 
     if (cecup.search_timeout_id) {
