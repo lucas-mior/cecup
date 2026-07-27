@@ -149,7 +149,6 @@ on_search_changed(GtkEditable *editable, void *data) {
     cecup.search_query = xmemdup(text, text_len + 1);
     cecup.search_query_len = text_len;
 
-cleanup_search_timeout:
     if (cecup.search_timeout_id) {
         g_source_remove(cecup.search_timeout_id);
     }
