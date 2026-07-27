@@ -461,6 +461,11 @@ work_preview(void *user_data) {
         enum Action action_dst;
         enum Reason reason;
 
+        if (work_should_stop()) {
+            LOG_ERROR(_("Stop requested.\n"));
+            work_preview_cancel_and_reset(thread_data);
+        }
+
         if ((bucket_src->key == (char *)HASH_SLOT_FREE)
             || (bucket_src->key == (char *)HASH_SLOT_DELETED)) {
             continue;
@@ -527,6 +532,11 @@ work_preview(void *user_data) {
         int32 dst_idx;
         int32 src_idx;
         int32 path_len;
+
+        if (work_should_stop()) {
+            LOG_ERROR(_("Stop requested.\n"));
+            work_preview_cancel_and_reset(thread_data);
+        }
 
         if ((bucket_dst->key == (char *)HASH_SLOT_FREE)
             || (bucket_dst->key == (char *)HASH_SLOT_DELETED)) {
