@@ -1726,10 +1726,7 @@ sb_init(StrBuilder *str_builder) {
 
 CBASE_API_DEF void
 sb_free(StrBuilder *str_builder) {
-    if (str_builder->data) {
-        free2(str_builder->data, str_builder->cap);
-    }
-
+    free2(str_builder->data, str_builder->cap);
     sb_init(str_builder);
     return;
 }
