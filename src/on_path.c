@@ -31,10 +31,19 @@ on_path_selection_idle(void *data) {
     SelectionData *selection_data = data;
 
     gtk_editable_select_region(selection_data->editable,
-                               selection_data->start_pos, selection_data->end_pos);
+                               selection_data->start_pos,
+                               selection_data->end_pos);
 
-    free2(selection_data, sizeof(*selection_data));
     return G_SOURCE_REMOVE;
+}
+
+static void
+on_path_selection_data_free(void *data) {
+    SelectionData *selection_data = data;
+
+    g_object_unref(selection_data->editable);
+    free2(selection_data, SIZEOF(*selection_data));
+    return;
 }
 
 static void
@@ -88,11 +97,14 @@ on_path_editing_started(GtkEditable *editable, void *data) {
             SelectionData *selection_data = malloc2(SIZEOF(*selection_data));
             memset64(selection_data, 0, SIZEOF(*selection_data));
 
-            selection_data->editable = editable;
+            selection_data->editable = GTK_EDITABLE(g_object_ref(editable));
             selection_data->start_pos = start_pos;
             selection_data->end_pos = end_pos;
 
-            g_idle_add(on_path_selection_idle, selection_data);
+            g_idle_add_full(G_PRIORITY_DEFAULT_IDLE,
+                            on_path_selection_idle,
+                            selection_data,
+                            on_path_selection_data_free);
         }
     }
 
@@ -261,12 +273,10 @@ on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
     (void)pspec;
     is_editing = gtk_editable_label_get_editing(GTK_EDITABLE_LABEL(object));
 
-    // TODO: Balance both g_object_ref() calls. No path below releases the
-    // extra reference, including the deferred selection callback.
     if (is_editing) {
-        on_path_editing_started(GTK_EDITABLE(g_object_ref(object)), data);
+        on_path_editing_started(GTK_EDITABLE(object), data);
     } else {
-        on_path_edited(GTK_EDITABLE(g_object_ref(object)), data);
+        on_path_edited(GTK_EDITABLE(object), data);
     }
 
     return;
