@@ -505,13 +505,16 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     char full_path[MAX_PATH_LENGTH];
     int32 base_path_len;
 
+    ASSERT_MORE(path_len, 0);
+
+    if (aux_is_root(path)) {
+        LOG_ERROR(_("Refusing to remove configured root path %s.\n"), path);
+        return;
+    }
+
     SNPRINTF(full_path, "%s/%s", cecup.base[side], path);
     base_path_len = cecup.base_len[side];
 
-    ASSERT_MORE(path_len, 0);
-
-    // TODO: Reject "." and "./" here. The delete action can target the root
-    // row and recursively remove the configured source or destination tree.
     if (path[path_len - 1] != '/') {
         if (unlink(full_path) < 0) {
             error("Error in unlink(%s): %s.\n", full_path, strerror(errno));
@@ -870,6 +873,19 @@ main(void) {
     ASSERT(strcmp(batch->dst_paths[0], "new.txt") == 0);
     work_batch_flush(&batch);
     ASSERT(batch == NULL);
+
+    /* Test work_remove refuses to remove configured root */
+    fd = open("/tmp/cecup_test_dst/root_guard.txt", O_CREAT | O_WRONLY, 0644);
+    close(fd);
+    ASSERT(access("/tmp/cecup_test_dst/root_guard.txt", F_OK) == 0);
+    work_remove(&batch, ".", 1, R);
+    ASSERT(access("/tmp/cecup_test_dst/root_guard.txt", F_OK) == 0);
+    ASSERT(batch == NULL);
+    work_remove(&batch, "./", 2, R);
+    ASSERT(access("/tmp/cecup_test_dst/root_guard.txt", F_OK) == 0);
+    ASSERT(access("/tmp/cecup_test_dst", F_OK) == 0);
+    ASSERT(batch == NULL);
+    unlink("/tmp/cecup_test_dst/root_guard.txt");
 
     /* Test work_remove on file */
     fd = open("/tmp/cecup_test_dst/rm_test.txt", O_CREAT | O_WRONLY, 0644);
