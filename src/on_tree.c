@@ -30,6 +30,10 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
     int32 button;
 
     (void)data;
+    if (work_thread_is_active()) {
+        return;
+    }
+
     widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
 
     gtk_widget_grab_focus(widget);
@@ -284,6 +288,9 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     (void)k;
     (void)d;
 
+    if (work_thread_is_active()) {
+        return FALSE;
+    }
     if ((child = gtk_widget_pick(w, (double)x, (double)y, GTK_PICK_DEFAULT)) == NULL) {
         return FALSE;
     }
@@ -468,6 +475,10 @@ on_tree_key_press(GtkEventControllerKey *controller,
 
     (void)data;
     (void)keycode;
+
+    if (work_thread_is_active()) {
+        return FALSE;
+    }
 
     widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
     selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));

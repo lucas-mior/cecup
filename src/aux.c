@@ -56,6 +56,11 @@ work_thread_is_done(void) {
     return atomic_load_explicit(&cecup.work_thread_done, memory_order_acquire);
 }
 
+static bool
+work_thread_is_active(void) {
+    return cecup.work_thread_started && !cecup.work_thread_joined;
+}
+
 static void
 work_thread_join_once(void) {
     if (!cecup.work_thread_started || cecup.work_thread_joined) {
@@ -159,8 +164,12 @@ aux_invalidate_preview(void) {
 
 static void
 aux_protect_interface_from_user(bool state) {
-    // this function is called everytime a thread is spawn.
-    // question: is this enough to avoid race conditions?
+    if (state && cecup.search_timeout_id) {
+        g_source_remove(cecup.search_timeout_id);
+        cecup.search_timeout_id = 0;
+        gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
+                                          GTK_ENTRY_ICON_SECONDARY, NULL);
+    }
 
     gtk_widget_set_sensitive(cecup.preview_button, !state);
     gtk_widget_set_sensitive(cecup.ignore_button, !state);
@@ -177,12 +186,10 @@ aux_protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.diff_entry, !state);
     gtk_widget_set_sensitive(cecup.term_entry, !state);
     gtk_widget_set_sensitive(cecup.search_entry, !state);
-
-    gtk_widget_set_sensitive(cecup.browse_button[L], !state);
-    gtk_widget_set_sensitive(cecup.browse_button[R], !state);
     gtk_widget_set_sensitive(cecup.tree[L], !state);
     gtk_widget_set_sensitive(cecup.tree[R], !state);
-
+    gtk_widget_set_sensitive(cecup.browse_button[L], !state);
+    gtk_widget_set_sensitive(cecup.browse_button[R], !state);
     gtk_widget_set_sensitive(cecup.select_visible_button, !state);
     gtk_widget_set_sensitive(cecup.unselect_button, !state);
 
@@ -190,8 +197,8 @@ aux_protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.filter_new,    !state);
     gtk_widget_set_sensitive(cecup.filter_delete, !state);
     gtk_widget_set_sensitive(cecup.filter_link,   !state);
+    gtk_widget_set_sensitive(cecup.filter_equal,  !state);
     gtk_widget_set_sensitive(cecup.filter_ignore, !state);
-    gtk_widget_set_sensitive(cecup.filter_equal, !state);
 
     if (state) {
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
@@ -587,6 +594,7 @@ aux_functions_sink(void) {
     (void)get_target_tasks;
     (void)task_list_free;
     (void)free_message;
+    (void)work_thread_is_active;
     (void)work_thread_join_once;
     (void)work_thread_start;
     (void)aux_protect_interface_from_user;

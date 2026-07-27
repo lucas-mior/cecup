@@ -635,6 +635,7 @@ static void stop_working(bool state);
 static bool work_should_stop(void);
 static void work_thread_done_set(bool state);
 static bool work_thread_is_done(void);
+static bool work_thread_is_active(void);
 static void work_thread_join_once(void);
 static void work_thread_start(void *(*function)(void *), void *data);
 static void child_pid_set(pid_t pid);

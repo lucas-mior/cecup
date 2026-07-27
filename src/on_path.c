@@ -54,6 +54,9 @@ on_path_editing_started(GtkEditable *editable, void *data) {
     void *row_id_ptr;
     char *relative;
 
+    if (work_thread_is_active()) {
+        return;
+    }
     if (!GTK_IS_EDITABLE(editable) || (tree == NULL)) {
         return;
     }
@@ -128,6 +131,10 @@ on_path_edited(GtkEditable *editable, void *data) {
     char relative_new[MAX_PATH_LENGTH];
     int32 old_length;
     int32 new_full_length;
+
+    if (work_thread_is_active()) {
+        return;
+    }
 
     side = (int8)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
 
@@ -271,6 +278,10 @@ on_path_editing_notify(GObject *object, GParamSpec *pspec, void *data) {
     gboolean is_editing;
 
     (void)pspec;
+    if (work_thread_is_active()) {
+        return;
+    }
+
     is_editing = gtk_editable_label_get_editing(GTK_EDITABLE_LABEL(object));
 
     if (is_editing) {

@@ -56,6 +56,9 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
     if (menu_item == NULL) {
         return;
     }
+    if (work_thread_is_active()) {
+        return;
+    }
 
     selection = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
     side = (int8)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(tree), "side"));
@@ -125,6 +128,9 @@ on_search_timeout(void *data) {
     (void)data;
 
     cecup.search_timeout_id = 0;
+    if (work_thread_is_active()) {
+        return G_SOURCE_REMOVE;
+    }
     if (cecup.rows_len <= 0) {
         return G_SOURCE_REMOVE;
     }
@@ -139,7 +145,12 @@ static void
 on_search_changed(GtkEditable *editable, void *data) {
     char *text;
     int32 text_len;
+
     (void)data;
+
+    if (work_thread_is_active()) {
+        return;
+    }
 
     text = (char *)gtk_editable_get_text(editable);
     text_len = strlen32(text);
@@ -319,8 +330,11 @@ static void
 on_filter_toggled(GtkToggleButton *button, void *data) {
     enum UpdateRowsType change = UPDATE_ROWS_FILTER_OUT;
 
-    (void) data;
+    (void)data;
 
+    if (work_thread_is_active()) {
+        return;
+    }
     if (cecup.rows_len <= 0) {
         LOG_ERROR(_("No files to filter. Click Analysis first.\n"));
         return;
@@ -345,6 +359,9 @@ on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
     (void)sorter;
     (void)change;
 
+    if (work_thread_is_active()) {
+        return;
+    }
     if (cecup.rows_len <= 0) {
         LOG_ERROR(_("No files to sort. Click Analysis first.\n"));
         return;
@@ -413,6 +430,9 @@ on_cell_toggled(GtkCheckButton *renderer, void *user_data) {
     int64 total_size_bytes = 0;
     bool toggled_is_root;
 
+    if (work_thread_is_active()) {
+        return;
+    }
     if (in_update) {
         return;
     }
@@ -514,6 +534,10 @@ on_unselect_all_clicked(GtkWidget *button, void *data) {
     (void)button;
     (void)data;
 
+    if (work_thread_is_active()) {
+        return;
+    }
+
     for (int32 i = 0; i < cecup.rows_len; i += 1) {
         cecup.rows_selected[i] = false;
     }
@@ -528,6 +552,10 @@ static void
 on_select_all_visible_clicked(GtkWidget *button, void *data) {
     (void)button;
     (void)data;
+
+    if (work_thread_is_active()) {
+        return;
+    }
 
     for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
         int32 row_id;
@@ -726,6 +754,10 @@ on_path_click_pressed(GtkGestureClick *gesture,
 
     (void)x;
     (void)y;
+
+    if (work_thread_is_active()) {
+        return;
+    }
 
     editable = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
     tree = data;

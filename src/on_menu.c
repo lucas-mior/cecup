@@ -30,6 +30,13 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     (void)action;
     (void)data;
 
+    if (work_thread_is_active()) {
+        message = g_object_steal_data(G_OBJECT(cecup.application),
+                                      "active_message");
+        free_message(message);
+        return;
+    }
+
     if ((tree = g_object_get_data(G_OBJECT(cecup.application), "active_tree")) == NULL) {
         error("Error: Can't get \"active_tree\" from the application widget.\n");
     }
@@ -143,6 +150,9 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
     (void)action;
     (void)data;
 
+    if (work_thread_is_active()) {
+        return;
+    }
     if (parameter == NULL) {
         error("Error: GVariant *parameter is NULL.\n");
         fatal(EXIT_FAILURE);
