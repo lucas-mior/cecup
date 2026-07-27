@@ -36,10 +36,13 @@ aux_is_root(char *path) {
 
 static void
 stop_working(bool state) {
-    xpthread_mutex_lock(&cecup.stop_lock);
-    cecup.stop_working = state;
-    xpthread_mutex_unlock(&cecup.stop_lock);
+    atomic_store_explicit(&cecup.stop_working, state, memory_order_relaxed);
     return;
+}
+
+static bool
+work_should_stop(void) {
+    return atomic_load_explicit(&cecup.stop_working, memory_order_relaxed);
 }
 
 static void
@@ -532,7 +535,6 @@ int main(void) {
     GtkWidget *paned;
     GtkWidget *info;
 
-    pthread_mutex_init(&cecup.stop_lock, NULL);
     pthread_mutex_init(&cecup.arena_mutex, NULL);
 
     /* Test aux_is_root */
@@ -573,9 +575,9 @@ int main(void) {
     free_message(msg);
 
     stop_working(true);
-    ASSERT(cecup.stop_working == true);
+    ASSERT(work_should_stop());
     stop_working(false);
-    ASSERT(cecup.stop_working == false);
+    ASSERT(!work_should_stop());
 
     if (!gtk_init_check()) {
         exit(EXIT_FAILURE);

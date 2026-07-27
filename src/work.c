@@ -99,7 +99,7 @@ work_traverse_fs(Traversal *traversal) {
     FTSENT *ent;
     struct timespec time_last_report = {0};
 
-    if (cecup.stop_working) {
+    if (work_should_stop()) {
         return 0;
     }
 
@@ -107,7 +107,7 @@ work_traverse_fs(Traversal *traversal) {
     paths[1] = NULL;
 
     if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
-        if (cecup.stop_working == false) {
+        if (!work_should_stop()) {
             LOG_ERROR(_("Error walking directory %s: %s.\n"), paths[0], strerror(errno));
         }
         traversal_root_unknown_record(traversal);
@@ -127,7 +127,7 @@ work_traverse_fs(Traversal *traversal) {
         char *matched_pattern = NULL;
         int32 matched_pattern_len = 0;
 
-        if (cecup.stop_working) {
+        if (work_should_stop()) {
             break;
         }
 
@@ -232,7 +232,7 @@ work_traverse_fs(Traversal *traversal) {
             stop_working(true);
         }
 
-        if (cecup.stop_working) {
+        if (work_should_stop()) {
             break;
         }
 
@@ -436,7 +436,7 @@ work_preview(void *user_data) {
         work_traverse_fs_thread(&cecup.traversal[R]);
     }
 
-    if (cecup.stop_working) {
+    if (work_should_stop()) {
         LOG_ERROR(_("Stop requested.\n"));
         work_preview_cancel_and_reset(thread_data);
     }
@@ -945,7 +945,7 @@ main(void) {
         cecup.ignore_patterns = NULL;
         cecup.ignore_count = 0;
         cecup.progress_bar = gtk_progress_bar_new();
-        cecup.stop_working = false;
+        stop_working(false);
 
         xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
         xpthread_join(&cecup.work_thread, NULL);
@@ -958,7 +958,7 @@ main(void) {
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
         *thread_data = (ThreadData){0};
 
-        cecup.stop_working = true;
+        stop_working(true);
         cecup.ntransfers = 42;
 
         xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);

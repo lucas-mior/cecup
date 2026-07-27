@@ -888,7 +888,6 @@ main(int32 argc, char **argv) {
 
     cecup.arena = arena_create(SIZEMB(64), "cecup.arena");
     pthread_mutex_init(&cecup.arena_mutex, NULL);
-    pthread_mutex_init(&cecup.stop_lock, NULL);
 
     cecup.rows_len = 0;
     cecup.rows_capacity = INITIAL_CAPACITY;
@@ -987,7 +986,6 @@ main(int32 argc, char **argv) {
     traversal_free(&cecup.traversal[R]);
 
     xpthread_mutex_destroy(&cecup.arena_mutex);
-    xpthread_mutex_destroy(&cecup.stop_lock);
 
     exit(status);
 }

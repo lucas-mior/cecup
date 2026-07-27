@@ -5,6 +5,7 @@
 #define CECUP_H
 
 #include "gtk_include.h"
+#include <stdatomic.h>
 #include <sys/stat.h>
 #include "generic.c"
 #include "arena.c"
@@ -470,10 +471,7 @@ static struct {
     pid_t child_pid;
     pthread_t work_thread;
 
-    // TODO: Make this atomic or lock every read and write. volatile does not
-    // synchronize this flag between GTK and worker threads.
-    volatile bool stop_working;
-    pthread_mutex_t stop_lock;
+    atomic_bool stop_working;
 
     IgnorePattern *ignore_patterns;
     int32 ignore_count;
@@ -628,6 +626,7 @@ static bool work_rsync_run(char *files_from_filename, int32 nfiles_total,
 static void *work_rsync(void *user_data);
 
 static void stop_working(bool state);
+static bool work_should_stop(void);
 
 static gboolean update_ui_handler(void *data);
 

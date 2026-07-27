@@ -312,7 +312,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         pipes[0].revents = 0;
         pipes[1].revents = 0;
 
-        if (cecup.stop_working) {
+        if (work_should_stop()) {
             xkill(-cecup.child_pid, SIGTERM);
             break;
         }
@@ -490,7 +490,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     }
 
     if (command.result.status != 0) {
-        if (cecup.stop_working) {
+        if (work_should_stop()) {
             LOG_ERROR(_("Stop requested. Cancelled sync.\n"));
         } else if (command.result.signaled) {
             LOG_ERROR(_("rsync terminated by signal %d.\n"),
@@ -553,7 +553,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             int32 is_dir = false;
             char rel_path[MAX_PATH_LENGTH];
 
-            if (cecup.stop_working) {
+            if (work_should_stop()) {
                 break;
             }
 
@@ -626,7 +626,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             had_errors = true;
         }
 
-        if (cecup.stop_working) {
+        if (work_should_stop()) {
             LOG_ERROR("Stop requested. Cancelled recursive removal.\n");
         } else if (had_errors) {
             LOG_ERROR(_("Partially removed directory tree %s. "
@@ -662,7 +662,7 @@ work_rsync(void *user_data) {
     }
 
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ndeletions); i += 1) {
-        if (cecup.stop_working) {
+        if (work_should_stop()) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);
             work_batch_flush(&batch);
@@ -685,7 +685,7 @@ work_rsync(void *user_data) {
             continue;
         }
 
-        if (cecup.stop_working) {
+        if (work_should_stop()) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);
             work_batch_flush(&batch);
@@ -764,7 +764,7 @@ work_rsync(void *user_data) {
 
     do {
         if (work_rsync_run(files_from_filename, nfiles_total, false, &batch)) {
-            if (cecup.stop_working) {
+            if (work_should_stop()) {
                 LOG_ERROR(_("Stop requested.\n"));
                 break;
             }
@@ -864,7 +864,7 @@ main(void) {
     cecup.base[R] = xstrdup("/tmp/cecup_test_dst");
     cecup.base_len[R] = strlen32(cecup.base[R]);
     cecup.delete_after = false;
-    cecup.stop_working = false;
+    stop_working(false);
     cecup.child_pid = 0;
     cecup.ntransfers = 0;
     cecup.ndeletions = 0;
