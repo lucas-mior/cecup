@@ -321,23 +321,23 @@ main(void) {
     close(open(src_file_full, O_CREAT | O_RDWR, 0644));
 
     cecup.rows_len = n;
-    cecup.rows[L] = malloc2(n * SIZEOF(int32));
+    cecup.rows[L] = malloc2(n*SIZEOF(int32));
     cecup.rows[L][0] = 0;
 
     {
         Traversal *t = &cecup.traversal[L];
         t->nfiles = n;
-        t->paths = malloc2(n * SIZEOF(char *));
-        t->paths_lens = malloc2(n * SIZEOF(int16));
+        t->paths = malloc2(n*SIZEOF(char *));
+        t->paths_lens = malloc2(n*SIZEOF(int16));
         t->paths[0] = xmemdup(file_rel, strlen32(file_rel) + 1);
         t->paths_lens[0] = (int16)strlen32(file_rel);
 
-        t->stats = malloc2(n * SIZEOF(struct stat));
-        t->patterns = malloc2(n * SIZEOF(char *));
-        t->symlink_targets = malloc2(n * SIZEOF(char *));
-        memset64(t->stats, 0, n * SIZEOF(struct stat));
-        memset64(t->patterns, 0, n * SIZEOF(char *));
-        memset64(t->symlink_targets, 0, n * SIZEOF(char *));
+        t->stats = malloc2(n*SIZEOF(struct stat));
+        t->patterns = malloc2(n*SIZEOF(char *));
+        t->symlink_targets = malloc2(n*SIZEOF(char *));
+        memset64(t->stats, 0, n*SIZEOF(struct stat));
+        memset64(t->patterns, 0, n*SIZEOF(char *));
+        memset64(t->symlink_targets, 0, n*SIZEOF(char *));
         t->map = hash_create_fs_map(INITIAL_CAPACITY, "t->map");
     }
 
@@ -392,14 +392,17 @@ main(void) {
     // 5. Cleanup
     {
         Traversal *t = &cecup.traversal[L];
+
         free2(t->paths[0], strlen32(t->paths[0]) + 1);
-        free2(t->paths, n * SIZEOF(char *));
-        free2(t->paths_lens, n * SIZEOF(int16));
-        free2(t->stats, n * SIZEOF(struct stat));
-        free2(t->patterns, n * SIZEOF(char *));
-        free2(t->symlink_targets, n * SIZEOF(char *));
+        free2(t->paths, n*SIZEOF(char *));
+        free2(t->paths_lens, n*SIZEOF(int16));
+        free2(t->stats, n*SIZEOF(struct stat));
+        free2(t->patterns, n*SIZEOF(char *));
+        free2(t->symlink_targets, n*SIZEOF(char *));
+
         hash_destroy_fs_map(t->map);
-        free2(cecup.rows[L], n * SIZEOF(int32));
+
+        free2(cecup.rows[L], n*SIZEOF(int32));
         free2(cecup.src_base, cecup.src_base_len + 1);
     }
 
