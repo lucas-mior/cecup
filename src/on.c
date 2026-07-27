@@ -1069,9 +1069,7 @@ main(void) {
     g_object_unref(cecup.tree[R]);
     g_object_unref(cecup.store);
 
-    if (cecup.search_query) {
-        free2(cecup.search_query, cecup.search_query_len + 1);
-    }
+    free2(cecup.search_query, cecup.search_query_len + 1);
 
     free2(cecup.rows[L], num_test_rows*SIZEOF(int32));
     free2(cecup.rows[R], num_test_rows*SIZEOF(int32));

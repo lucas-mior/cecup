@@ -32,10 +32,8 @@ work_batch_flush(MessageBatch **batch_ptr) {
         g_idle_add(update_ui_handler, batch);
     } else {
         error("Called work_batch_flush without count!\n");
-        if (batch->paths != NULL) {
-            free2(batch->paths, batch->capacity * SIZEOF(*(batch->paths)));
-            free2(batch->paths_lens, batch->capacity * SIZEOF(*(batch->paths_lens)));
-        }
+        free2(batch->paths, batch->capacity * SIZEOF(*(batch->paths)));
+        free2(batch->paths_lens, batch->capacity * SIZEOF(*(batch->paths_lens)));
         free2(batch, SIZEOF(*batch));
     }
 

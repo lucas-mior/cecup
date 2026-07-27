@@ -1997,9 +1997,7 @@ str_builder_array_destroy(StrBuilderArray *array) {
     }
 
     str_builder_array_clear(array);
-    if (array->items) {
-        free2(array->items, array->cap*SIZEOF(*array->items));
-    }
+    free2(array->items, array->cap*SIZEOF(*array->items));
     str_builder_array_init(array);
     return;
 }
