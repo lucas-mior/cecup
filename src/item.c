@@ -187,17 +187,6 @@ item_hardlink_side(int32 row_id, int32 side, HardLinks *hard_links) {
     return true;
 }
 
-static int32
-item_symlink_target_len_side(int32 row_id, int32 side) {
-    int32 idx;
-
-    if ((idx = cecup.rows[side][row_id]) >= 0) {
-        return (int32)cecup.traversal[side].symlink_targets_lens[idx];
-    } else {
-        return 0;
-    }
-}
-
 static void
 item_get_actions_reasons(int32 row_id,
                          enum Action *action_src, enum Action *action_dst, enum Reason *reason) {
@@ -693,7 +682,6 @@ main(void) {
     ASSERT_NULL(item_ignore_pattern_side(0, L));
     ASSERT_EQUAL(item_path_len_side(0, R), 6);
     ASSERT(strcmp(item_symlink_target_side(0, L), "tgtL") == 0);
-    ASSERT_EQUAL(item_symlink_target_len_side(0, R), 4);
 
     memset64(&dump_hl, 0, SIZEOF(dump_hl));
     ASSERT(!item_hardlink_side(0, L, &dump_hl));

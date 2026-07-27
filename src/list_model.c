@@ -261,108 +261,6 @@ cecup_list_model_update(CecupListModel *self, int32 old_count, int32 new_count) 
     return;
 }
 
-static void
-cecup_list_model_row_removed(CecupListModel *self, int32 index) {
-    int32 items_to_move;
-
-    if (index < 0 || index >= cecup.rows_visible_len) {
-        return;
-    }
-
-    if (self->proxies) {
-        int32 proxies_to_move;
-
-        if (index < self->proxies_capacity && self->proxies[index]) {
-            g_object_unref(self->proxies[index]);
-            self->proxies[index] = NULL;
-        }
-
-        proxies_to_move = (int32)MIN(cecup.rows_visible_len, self->proxies_capacity) - 1 - index;
-        if (proxies_to_move > 0) {
-            memmove64(&self->proxies[index], &self->proxies[index + 1], proxies_to_move*SIZEOF(CecupItemProxy *));
-        }
-
-        if (cecup.rows_visible_len - 1 < self->proxies_capacity) {
-            self->proxies[cecup.rows_visible_len - 1] = NULL;
-        }
-    }
-
-    items_to_move = cecup.rows_visible_len - 1 - index;
-    if (items_to_move > 0) {
-        memmove64(&cecup.rows_visible[index], &cecup.rows_visible[index + 1], items_to_move*SIZEOF(int32));
-    }
-    cecup.rows_visible_len -= 1;
-
-    if (index < self->reported_count) {
-        self->reported_count -= 1;
-        g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 0);
-    }
-
-    return;
-}
-
-static void
-cecup_list_model_row_added(CecupListModel *self, int32 row_index, int32 position) {
-    int32 rows_to_move;
-
-    if (position < 0 || position > cecup.rows_visible_len) {
-        position = cecup.rows_visible_len;
-    }
-
-    if (self->proxies) {
-        int32 limit;
-        int32 proxies_to_move;
-
-        limit = (int32)MIN(cecup.rows_visible_len, self->proxies_capacity - 1);
-
-        if (self->proxies[limit]) {
-            g_object_unref(self->proxies[limit]);
-            self->proxies[limit] = NULL;
-        }
-
-        proxies_to_move = limit - position;
-        if (proxies_to_move > 0) {
-            memmove64(&self->proxies[position + 1], &self->proxies[position], proxies_to_move*SIZEOF(CecupItemProxy *));
-        }
-
-        if (position < self->proxies_capacity) {
-            self->proxies[position] = NULL;
-        }
-    }
-
-    rows_to_move = cecup.rows_visible_len - position;
-    if (rows_to_move > 0) {
-        memmove64(&cecup.rows_visible[position + 1], &cecup.rows_visible[position], rows_to_move*SIZEOF(int32));
-    }
-    cecup.rows_visible[position] = row_index;
-    cecup.rows_visible_len += 1;
-
-    if (position <= self->reported_count) {
-        self->reported_count += 1;
-        g_list_model_items_changed(G_LIST_MODEL(self), (guint)position, 0, 1);
-    }
-
-    return;
-}
-
-static void
-cecup_list_model_row_changed(CecupListModel *self, int32 index) {
-    if (index < 0 || index >= cecup.rows_visible_len) {
-        return;
-    }
-
-    if ((index < self->proxies_capacity) && self->proxies[index]) {
-        g_object_unref(self->proxies[index]);
-        self->proxies[index] = NULL;
-    }
-
-    if (index < self->reported_count) {
-        g_list_model_items_changed(G_LIST_MODEL(self), (guint)index, 1, 1);
-    }
-
-    return;
-}
-
 static int32
 item_add(int32 src_idx, int32 dst_idx) {
     int32 index;
@@ -418,10 +316,7 @@ list_model_functions_sink(void) {
     (void)list_model_functions_sink;
     (void)cecup_list_model_new;
     (void)cecup_list_model_update;
-    (void)cecup_list_model_row_removed;
-    (void)cecup_list_model_row_changed;
     (void)cecup_item_proxy_get_index;
-    (void)cecup_list_model_row_added;
     return;
 }
 #endif
@@ -508,19 +403,6 @@ main(void) {
 
     item = g_list_model_get_item(G_LIST_MODEL(model), 10);
     ASSERT_NULL(item);
-
-    cecup_list_model_row_changed(model, 1);
-
-    cecup_list_model_row_added(model, 99, 1);
-    ASSERT_EQUAL(cecup.rows_visible_len, 4);
-    ASSERT_EQUAL(cecup.rows_visible[1], 99);
-    ASSERT_EQUAL(cecup.rows_visible[2], 1);
-    ASSERT_EQUAL(model->reported_count, 4);
-
-    cecup_list_model_row_removed(model, 1);
-    ASSERT_EQUAL(cecup.rows_visible_len, 3);
-    ASSERT_EQUAL(cecup.rows_visible[1], 1);
-    ASSERT_EQUAL(model->reported_count, 3);
 
     g_object_unref(model);
 

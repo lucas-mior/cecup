@@ -308,19 +308,6 @@ traversal_path_get(int32 src_idx, int32 dst_idx) {
     return path;
 }
 
-static int32
-traversal_path_len_get(int32 src_idx, int32 dst_idx) {
-    if (src_idx >= 0) {
-        return cecup.traversal[L].paths_lens[src_idx];
-    }
-    if (dst_idx >= 0) {
-        return cecup.traversal[R].paths_lens[dst_idx];
-    } else {
-        error("Error: both source and destination have invalid indices.\n");
-        fatal(EXIT_FAILURE);
-    }
-}
-
 INLINE char *
 traversal_path_side(int32 idx, int32 side) {
     if (idx >= 0) {
@@ -343,63 +330,6 @@ static int64
 traversal_mtime_side(int32 idx, int32 side) {
     if (idx >= 0) {
         return cecup.traversal[side].stats[idx].st_mtime;
-    } else {
-        return 0;
-    }
-}
-
-static char *
-traversal_ignore_pattern_side(int32 idx, int32 side) {
-    if (idx >= 0) {
-        return cecup.traversal[side].patterns[idx];
-    } else {
-        return NULL;
-    }
-}
-
-static int32
-traversal_path_len_side(int32 idx, int32 side) {
-    if (idx >= 0) {
-        return (int32)cecup.traversal[side].paths_lens[idx];
-    } else {
-        return 0;
-    }
-}
-
-static char *
-traversal_symlink_target_side(int32 idx, int32 side) {
-    if (idx >= 0) {
-        return cecup.traversal[side].symlink_targets[idx];
-    } else {
-        return NULL;
-    }
-}
-
-static bool
-traversal_hardlink_side(int32 idx, int32 side, HardLinks *hard_links) {
-    FileID file_id;
-
-    if (idx < 0) {
-        return false;
-    }
-
-    if (cecup.traversal[side].stats[idx].st_nlink <= 1) {
-        return false;
-    }
-
-    file_id = file_id_from_stat(&cecup.traversal[side].stats[idx]);
-    if (!hash_lookup_inode_map(cecup.traversal[side].inode_map,
-                               &file_id, hard_links)) {
-        return false;
-    }
-
-    return true;
-}
-
-static int32
-traversal_symlink_target_len_side(int32 idx, int32 side) {
-    if (idx >= 0) {
-        return (int32)cecup.traversal[side].symlink_targets_lens[idx];
     } else {
         return 0;
     }
