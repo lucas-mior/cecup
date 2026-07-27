@@ -130,7 +130,8 @@ on_search_timeout(void *data) {
     }
 
     update_list_from_rows(UPDATE_ROWS_COMPLETE);
-    gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry), GTK_ENTRY_ICON_SECONDARY, NULL);
+    gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
+                                      GTK_ENTRY_ICON_SECONDARY, NULL);
     return G_SOURCE_REMOVE;
 }
 
