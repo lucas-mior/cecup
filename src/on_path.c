@@ -317,7 +317,6 @@ main(void) {
     }
 
     // 1. Setup Global State and Filesystem
-    memset64(&cecup, 0, SIZEOF(cecup));
     cecup.base[L] = xmemdup(src_dir, strlen32(src_dir) + 1);
     cecup.base_len[L] = strlen32(src_dir);
 

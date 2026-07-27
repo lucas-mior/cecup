@@ -133,14 +133,11 @@ tasks_functions_sink(void) {
 #include "cbase.h"
 
 #include "work.c"
-#include "assert.c"
 
 int
 main(void) {
     TaskList *tasks;
     int32 n = 3;
-
-    memset64(&cecup, 0, SIZEOF(cecup));
 
     // 1. Setup Mock Environment
     cecup.rows_len = n;

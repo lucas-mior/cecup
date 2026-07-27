@@ -886,8 +886,6 @@ main(int32 argc, char **argv) {
         textdomain(QUOTE(GETTEXT_PACKAGE));
     }
 
-    memset64(&cecup, 0, SIZEOF(cecup));
-
     cecup.arena = arena_create(SIZEMB(64), "cecup.arena");
     pthread_mutex_init(&cecup.arena_mutex, NULL);
     pthread_mutex_init(&cecup.stop_lock, NULL);

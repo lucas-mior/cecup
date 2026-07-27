@@ -494,7 +494,7 @@ static struct {
     int32 deletions_capacity;
 
     bool preview_dirty;
-} cecup;
+} cecup = {0};
 
 enum UpdateRowsType {
     UPDATE_ROWS_COMPLETE,
