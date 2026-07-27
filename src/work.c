@@ -551,7 +551,7 @@ work_preview(void *user_data) {
                 if (cecup.delete_after) {
                     if ((cecup.ndeletions + 1) >= cecup.deletions_capacity) {
                         int32 old_capacity = cecup.deletions_capacity;
-                        if (cecup.deletions_capacity == 0) {
+                        if (cecup.deletions_capacity <= 0) {
                             cecup.deletions_capacity = INITIAL_CAPACITY;
                         }
                         cecup.deletions_capacity *= 2;
