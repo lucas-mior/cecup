@@ -674,10 +674,6 @@ work_rsync(void *user_data) {
             continue;
         }
 
-        if (task->action != ACTION_DELETE) {
-            continue;
-        }
-
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);
@@ -685,7 +681,9 @@ work_rsync(void *user_data) {
             work_finalize(thread_data, false);
         }
 
-        work_remove(&batch, task->path, task->path_len, task->side);
+        if (task->action == ACTION_DELETE) {
+            work_remove(&batch, task->path, task->path_len, task->side);
+        }
     }
 
     if (!has_transfers) {
