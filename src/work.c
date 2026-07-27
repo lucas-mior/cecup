@@ -555,14 +555,12 @@ work_preview(void *user_data) {
                             cecup.deletions_capacity = INITIAL_CAPACITY;
                         }
                         cecup.deletions_capacity *= 2;
-                        cecup.deletions = realloc2(
-                            cecup.deletions,
-                            old_capacity, cecup.deletions_capacity,
-                            SIZEOF(*cecup.deletions));
-                        cecup.deletions_lens = realloc2(
-                            cecup.deletions_lens,
-                            old_capacity, cecup.deletions_capacity,
-                            SIZEOF(*cecup.deletions_lens));
+                        cecup.deletions = realloc2(cecup.deletions,
+                                                   old_capacity, cecup.deletions_capacity,
+                                                   SIZEOF(*cecup.deletions));
+                        cecup.deletions_lens = realloc2(cecup.deletions_lens,
+                                                        old_capacity, cecup.deletions_capacity,
+                                                        SIZEOF(*cecup.deletions_lens));
                     }
 
                     if (hash_insert_actions_set(cecup.actions_set,
