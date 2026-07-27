@@ -26,8 +26,11 @@ static char *
 side_name(int32 side) {
     if (side == L) {
         return "L";
-    } else {
+    } else if (side == R) {
         return "R";
+    } else {
+        error("side must be L=%d or R=%d, but it is side=%d\n", L, R, side);
+        fatal(EXIT_FAILURE);
     }
 }
 
