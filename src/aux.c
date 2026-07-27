@@ -140,9 +140,7 @@ cecup_reset_dir(int32 side) {
 static void
 cecup_set_dirs(char *new_src, int32 new_src_len, char *new_dst, int32 new_dst_len) {
     if (new_src) {
-        if (cecup.src_base) {
-            free2(cecup.src_base, cecup.src_base_len + 1);
-        }
+        free2(cecup.src_base, cecup.src_base_len + 1);
         cecup.src_base = malloc2(new_src_len + 1);
         memcpy64(cecup.src_base, new_src, new_src_len + 1);
         cecup.src_base_len = new_src_len;
