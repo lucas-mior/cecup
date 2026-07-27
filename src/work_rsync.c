@@ -313,37 +313,35 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     SNPRINTF(src_base_with_slash, "%s/", cecup.base[L]);
     SNPRINTF(dst_base_with_slash, "%s/", cecup.base[R]);
 
-    command_push(&command, "rsync");
-    command_push(&command, "--verbose");
-    command_push(&command, "--verbose");
+    COMMAND_PUSH(&command, "rsync", "--verbose", "--verbose");
 
     if (!delete_after) {
-        command_push(&command, "--update");
+        COMMAND_PUSH(&command, "--update");
     }
 
     // these 2 options are implied by --files-from
-    command_push(&command, "--dirs");
-    command_push(&command, "--relative");
+    COMMAND_PUSH(&command, "--dirs", "--relative");
 
-    command_push(&command, "--partial");
-    command_push(&command, "--progress");
-    command_push(&command, "--info=progress2");
-    command_push(&command, "--links");
-    command_push(&command, "--hard-links");
+    COMMAND_PUSH(&command,
+                 "--partial",
+                 "--progress",
+                 "--info=progress2",
+                 "--links",
+                 "--hard-links");
     if (checksum) {
-        command_push(&command, "--checksum");
+        COMMAND_PUSH(&command, "--checksum");
     }
-    command_push(&command, "--perms");
-    command_push(&command, "--times");
-    command_push(&command, "--owner");
-    command_push(&command, "--group");
-    command_push(&command, "--itemize-changes");
-    command_push(&command, "--files-from");
-    command_push(&command, files_from_filename);
-    command_push(&command, "--iconv=.,.");
+    COMMAND_PUSH(&command,
+                 "--perms",
+                 "--times",
+                 "--owner",
+                 "--group",
+                 "--itemize-changes",
+                 "--files-from",
+                 files_from_filename,
+                 "--iconv=.,.");
 
-    command_push(&command, src_base_with_slash);
-    command_push(&command, dst_base_with_slash);
+    COMMAND_PUSH(&command, src_base_with_slash, dst_base_with_slash);
     command_env_push(&command, "LC_ALL=C.UTF-8");
 
     LOG(_("Running sync...\n"));

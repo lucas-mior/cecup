@@ -302,8 +302,7 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         {
             Command command = {0};
 
-            command_push(&command, "xdg-open");
-            command_push(&command, full_path);
+            COMMAND_PUSH(&command, "xdg-open", full_path);
             LOG(_("Launching...\n"));
             command_print(&command);
             (void)command_run(&command,
@@ -487,8 +486,7 @@ on_menu_diff(GtkWidget *widget, void *data) {
                                        "%s/%s", cecup.base[R], task->path);
 
         command = on_menu_diff_command(term_command, diff_tool);
-        COMMAND_PUSH(&command, path_dst, path_dst_len);
-        COMMAND_PUSH(&command, path_src, path_src_len);
+        COMMAND_PUSH(&command, path_dst, path_src);
 
         (void)command_run_async(&command, COMMAND_NEW_SESSION);
         command_free(&command);
@@ -563,8 +561,7 @@ main(void) {
     {
         Command command = on_menu_diff_command("xterm --hold", "diff --color=always");
 
-        COMMAND_PUSH(&command, "/destination");
-        COMMAND_PUSH(&command, "/source");
+        COMMAND_PUSH(&command, "/destination", "/source");
 
         ASSERT_EQUAL(command.argc, 7);
         ASSERT_EQUAL(command.argv[0], "xterm");
