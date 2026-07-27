@@ -147,9 +147,7 @@ cecup_set_dirs(char *new_src, int32 new_src_len, char *new_dst, int32 new_dst_le
     }
 
     if (new_dst) {
-        if (cecup.dst_base) {
-            free2(cecup.dst_base, cecup.dst_base_len + 1);
-        }
+        free2(cecup.dst_base, cecup.dst_base_len + 1);
         cecup.dst_base = malloc2(new_dst_len + 1);
         memcpy64(cecup.dst_base, new_dst, new_dst_len + 1);
         cecup.dst_base_len = new_dst_len;
