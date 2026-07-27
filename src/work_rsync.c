@@ -327,11 +327,10 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     if (checksum) {
         COMMAND_PUSH(&command, "--checksum");
     }
-    COMMAND_PUSH(&command,
-                 "--perms", "--times", "--owner", "--group",
-                 "--itemize-changes",
-                 "--files-from", files_from_filename,
-                 "--iconv=.,.");
+    COMMAND_PUSH(&command, "--perms", "--times", "--owner", "--group");
+    COMMAND_PUSH(&command, "--itemize-changes");
+    COMMAND_PUSH(&command, "--files-from", files_from_filename);
+    COMMAND_PUSH(&command, "--iconv=.,.");
 
     COMMAND_PUSH(&command, src_base_with_slash, dst_base_with_slash);
     command_env_push(&command, "LC_ALL=C.UTF-8");
