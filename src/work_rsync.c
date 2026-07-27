@@ -505,13 +505,8 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     char full_path[MAX_PATH_LENGTH];
     int32 base_path_len;
 
-    if (side == L) {
-        SNPRINTF(full_path, "%s/%s", cecup.base[L], path);
-        base_path_len = cecup.base_len[L];
-    } else {
-        SNPRINTF(full_path, "%s/%s", cecup.base[R], path);
-        base_path_len = cecup.base_len[R];
-    }
+    SNPRINTF(full_path, "%s/%s", cecup.base[side], path);
+    base_path_len = cecup.base_len[side];
 
     ASSERT_MORE(path_len, 0);
 

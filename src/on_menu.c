@@ -275,11 +275,7 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         int32 n;
         int fd;
 
-        if (message->side == L) {
-            base_path = cecup.base[L];
-        } else {
-            base_path = cecup.base[R];
-        }
+        base_path = cecup.base[message->side];
         n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
 
         if (folder) {
@@ -344,11 +340,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
         fatal(EXIT_FAILURE);
     }
 
-    if (message->side == L) {
-        base_path = cecup.base[L];
-    } else {
-        base_path = cecup.base[R];
-    }
+    base_path = cecup.base[message->side];
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
     for (int32 i = 0; i < tasks->count; i += 1) {

@@ -127,13 +127,8 @@ on_path_edited(GtkEditable *editable, void *data) {
     new_text = (char *)gtk_editable_get_text(editable);
     relative_old = item_path_side(row_id, side);
 
-    if (side == L) {
-        base_path = cecup.base[L];
-        base_path_len = cecup.base_len[L];
-    } else {
-        base_path = cecup.base[R];
-        base_path_len = cecup.base_len[R];
-    }
+    base_path = cecup.base[side];
+    base_path_len = cecup.base_len[side];
 
     if (relative_old == NULL || (strcmp(relative_old, new_text) == 0)) {
         return;
