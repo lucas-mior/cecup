@@ -50,7 +50,7 @@ CPPFLAGS="$CPPFLAGS -I$dir/$cbase"
 CPPFLAGS="$CPPFLAGS -I."
 
 cd "$dir" || exit
-program=$(basename "$(readlink -f "$dir")")
+program=$(basename "$(readlink -f "$(dirname "$0")")")
 script=$(basename "$0")
 
 LANGS="pt_BR"
