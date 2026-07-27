@@ -224,8 +224,10 @@ on_reset_clicked(GtkWidget *button, void *data) {
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.diff_entry), "diff");
     gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "xterm");
+
     save_config();
     aux_invalidate_preview();
+
     return;
 }
 
