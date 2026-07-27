@@ -398,10 +398,8 @@ static struct {
     GtkWidget *dir_entry[2];
     GtkWidget *browse_button[2];
     ulong entry_id[2];
-    char *src_base;
-    char *dst_base;
-    int32 src_base_len;
-    int32 dst_base_len;
+    char *base[2];
+    int32 base_len[2];
 
     GtkWidget *diff_entry;
     GtkWidget *term_entry;
