@@ -322,23 +322,15 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     // these 2 options are implied by --files-from
     COMMAND_PUSH(&command, "--dirs", "--relative");
 
-    COMMAND_PUSH(&command,
-                 "--partial",
-                 "--progress",
-                 "--info=progress2",
-                 "--links",
-                 "--hard-links");
+    COMMAND_PUSH(&command, "--partial", "--progress", "--info=progress2");
+    COMMAND_PUSH(&command, "--links", "--hard-links");
     if (checksum) {
         COMMAND_PUSH(&command, "--checksum");
     }
     COMMAND_PUSH(&command,
-                 "--perms",
-                 "--times",
-                 "--owner",
-                 "--group",
+                 "--perms", "--times", "--owner", "--group",
                  "--itemize-changes",
-                 "--files-from",
-                 files_from_filename,
+                 "--files-from", files_from_filename,
                  "--iconv=.,.");
 
     COMMAND_PUSH(&command, src_base_with_slash, dst_base_with_slash);
