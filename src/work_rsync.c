@@ -158,6 +158,19 @@ work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
     return;
 }
 
+static bool
+work_rsync_action_is_transfer(enum Action action) {
+    switch (action) {
+    case ACTION_NEW:
+    case ACTION_UPDATE:
+    case ACTION_HARDLINK:
+    case ACTION_SYMLINK:
+        return true;
+    default:
+        return false;
+    }
+}
+
 static char *
 work_rsync_itemize_skip(char *buf_output, int32 line_len) {
     if (line_len <= strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)) {
@@ -639,8 +652,6 @@ work_rsync(void *user_data) {
         }
         tasks = malloc2(sizeof(*tasks));
         memset64(tasks, 0, sizeof(*tasks));
-    } else {
-        nfiles_total = tasks->count;
     }
 
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ndeletions); i += 1) {
@@ -657,10 +668,13 @@ work_rsync(void *user_data) {
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
 
-        // TODO: Do not count ACTION_EQUAL or ACTION_IGNORE as transfers. Both
-        // actions are skipped while writing the files-from list below.
-        if (task->action != ACTION_DELETE) {
+        if (work_rsync_action_is_transfer(task->action)) {
             has_transfers = true;
+            nfiles_total += 1;
+            continue;
+        }
+
+        if (task->action != ACTION_DELETE) {
             continue;
         }
 
@@ -708,7 +722,7 @@ work_rsync(void *user_data) {
         int32 write_len;
         HardLinks hardlinks;
 
-        if ((task->action == ACTION_EQUAL) || (task->action == ACTION_IGNORE)) {
+        if (!work_rsync_action_is_transfer(task->action)) {
             continue;
         }
 
@@ -847,6 +861,16 @@ main(void) {
     cecup.child_pid = 0;
     cecup.ntransfers = 0;
     cecup.ndeletions = 0;
+
+    /* Test transfer-action classification */
+    ASSERT(work_rsync_action_is_transfer(ACTION_NEW));
+    ASSERT(work_rsync_action_is_transfer(ACTION_UPDATE));
+    ASSERT(work_rsync_action_is_transfer(ACTION_HARDLINK));
+    ASSERT(work_rsync_action_is_transfer(ACTION_SYMLINK));
+    ASSERT(!work_rsync_action_is_transfer(ACTION_EQUAL));
+    ASSERT(!work_rsync_action_is_transfer(ACTION_DELETED));
+    ASSERT(!work_rsync_action_is_transfer(ACTION_DELETE));
+    ASSERT(!work_rsync_action_is_transfer(ACTION_IGNORE));
 
     /* Test work_batch_push and work_batch_flush */
     batch = NULL;
