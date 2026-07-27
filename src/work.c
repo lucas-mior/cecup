@@ -108,9 +108,7 @@ work_traverse_fs(Traversal *traversal) {
     paths[1] = NULL;
 
     if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
-        if (!work_should_stop()) {
-            LOG_ERROR(_("Error walking directory %s: %s.\n"), paths[0], strerror(errno));
-        }
+        LOG_ERROR(_("Error walking directory %s: %s.\n"), paths[0], strerror(errno));
         traversal_root_unknown_record(traversal);
         return 0;
     }
