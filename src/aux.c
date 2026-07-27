@@ -145,6 +145,8 @@ aux_protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.term_entry, !state);
     gtk_widget_set_sensitive(cecup.browse_button[L], !state);
     gtk_widget_set_sensitive(cecup.browse_button[R], !state);
+    gtk_widget_set_sensitive(cecup.select_visible_button, !state);
+    gtk_widget_set_sensitive(cecup.unselect_button, !state);
 
     gtk_widget_set_sensitive(cecup.filter_update, !state);
     gtk_widget_set_sensitive(cecup.filter_new,    !state);
