@@ -332,6 +332,9 @@ work_traverse_fs(Traversal *traversal) {
 
         qsort64(hard_links.names, hard_links.count, SIZEOF(char *), compare_names);
         for (int32 k = 0; k < hard_links.count; k += 1) {
+            // TODO: use smarter sorting mechanism so that we don't have to call strlen32
+            // on every link (we already know the lengths, but they are out of sync after
+            // qsort64 with compare_names().
             hard_links.names_lens[k] = strlen32(hard_links.names[k]);
         }
     }
