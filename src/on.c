@@ -218,6 +218,7 @@ on_reset_clicked(GtkWidget *button, void *data) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal), FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete), TRUE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore), TRUE);
+
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.check_fs_button), FALSE);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_ignored_button), FALSE);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.delete_after_button), FALSE);
