@@ -677,6 +677,20 @@ Don't reimplement root finding, minimization and integrating algorithms.
 When you need one of those, make use of the algorithms implemented in
 `cy_roots.c`, `cy_minimize.c` and `cy_methods.c`.
 
+## Testing
+Every .c file (except the main program) must have a testing block:
+```c
+#if TESTING_file_prefix`
+
+#define CBASE_IMPLEMENT
+#include "cbase.h"
+
+int main(void) {
+    // tests most of the file
+}
+#endif /* TESTING_file_prefix */
+```
+
 ## Missing cases
 
 If these guides miss some case, decide based on the files in `cbase/`. If you
