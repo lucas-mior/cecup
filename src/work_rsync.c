@@ -604,11 +604,11 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
         }
 
-        // TODO: Only log success if every removal succeeded.
-        // per-entry errors currently reach here.
         if (cecup.stop_working) {
             LOG_ERROR("Stop requested. Cancelled recursive removal.\n");
         } else {
+            // TODO: Only log success if every removal succeeded.
+            // per-entry errors currently reach here.
             LOG("Removed directory tree %s...\n", full_path);
         }
     }
