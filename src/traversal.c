@@ -39,9 +39,13 @@ traversal_allocate(Traversal *traversal, int32 side) {
     traversal->symlink_targets_lens = malloc2(capacity*SIZEOF(*(traversal->symlink_targets_lens)));
     traversal->patterns_lens = malloc2(capacity*SIZEOF(*(traversal->patterns_lens)));
     traversal->row_ids = malloc2(capacity*SIZEOF(*(traversal->row_ids)));
+    traversal->states = malloc2(capacity*SIZEOF(*(traversal->states)));
 
     traversal->capacity = capacity;
+    traversal->file_count = 0;
+    traversal->unknown_count = 0;
     traversal->nfiles = 0;
+    traversal->root_unknown = false;
     return;
 }
 
@@ -79,7 +83,9 @@ traversal_clean(Traversal *traversal) {
     hash_zero_fs_map(traversal->map);
 
     traversal->file_count = 0;
+    traversal->unknown_count = 0;
     traversal->nfiles = 0;
+    traversal->root_unknown = false;
 
     return;
 }
@@ -103,6 +109,7 @@ traversal_free(Traversal *traversal) {
     free2(traversal->patterns_lens,        capacity*SIZEOF(*(traversal->patterns_lens)));
 
     free2(traversal->row_ids, capacity*SIZEOF(*(traversal->row_ids)));
+    free2(traversal->states, capacity*SIZEOF(*(traversal->states)));
 
     arena_destroy(traversal->arena);
 
@@ -110,12 +117,23 @@ traversal_free(Traversal *traversal) {
 }
 
 static int32
-traversal_push(Traversal *traversal, struct stat *stat,
-               char *path, int32 path_len,
-               char *symlink_target, int32 symlink_target_len,
-               char *matched_pattern, int32 matched_pattern_len) {
-    struct stat stat_copy = *stat;
+traversal_push_with_state(
+    Traversal *traversal,
+    struct stat *stat,
+    char *path,
+    int32 path_len,
+    char *symlink_target,
+    int32 symlink_target_len,
+    char *matched_pattern,
+    int32 matched_pattern_len,
+    enum TraversalState state
+) {
+    struct stat stat_copy = {0};
     int32 idx;
+
+    if (stat) {
+        stat_copy = *stat;
+    }
 
     if (traversal->nfiles >= traversal->capacity) {
         int32 old_capacity = traversal->capacity;
@@ -148,9 +166,13 @@ traversal_push(Traversal *traversal, struct stat *stat,
         traversal->row_ids = realloc2(traversal->row_ids,
                                       old_capacity, traversal->capacity,
                                       SIZEOF(*(traversal->row_ids)));
+        traversal->states = realloc2(traversal->states,
+                                     old_capacity, traversal->capacity,
+                                     SIZEOF(*(traversal->states)));
 
         for (int32 i = old_capacity; i < traversal->capacity; i += 1) {
             traversal->row_ids[i] = -1;
+            traversal->states[i] = TRAVERSAL_STATE_PRESENT;
         }
     }
 
@@ -166,12 +188,134 @@ traversal_push(Traversal *traversal, struct stat *stat,
     traversal->patterns[idx] = matched_pattern;
     traversal->patterns_lens[idx] = (int16)matched_pattern_len;
     traversal->row_ids[idx] = -1;
+    traversal->states[idx] = (int8)state;
+
+    if (state != TRAVERSAL_STATE_PRESENT) {
+        traversal->unknown_count += 1;
+    }
 
     if (traversal->map) {
         hash_insert_fs_map(traversal->map, path, path_len, idx);
     }
 
     return idx;
+}
+
+static int32
+traversal_push(Traversal *traversal, struct stat *stat,
+               char *path, int32 path_len,
+               char *symlink_target, int32 symlink_target_len,
+               char *matched_pattern, int32 matched_pattern_len) {
+    return traversal_push_with_state(traversal, stat,
+                                     path, path_len,
+                                     symlink_target, symlink_target_len,
+                                     matched_pattern, matched_pattern_len,
+                                     TRAVERSAL_STATE_PRESENT);
+}
+
+static bool
+traversal_unknown_path_covers(char *unknown, int32 unknown_len,
+                              char *path, int32 path_len) {
+    if (path_len < unknown_len) {
+        if ((unknown_len > 1)
+            && (unknown[unknown_len - 1] == '/')
+            && (path_len == (unknown_len - 1))
+            && (memcmp64(path, unknown, path_len) == 0)) {
+            return true;
+        }
+
+        return false;
+    }
+    if (memcmp64(path, unknown, unknown_len) != 0) {
+        return false;
+    }
+    if (path_len == unknown_len) {
+        return true;
+    }
+    if (unknown[unknown_len - 1] == '/') {
+        return true;
+    }
+    if (path[unknown_len] == '/') {
+        return true;
+    }
+
+    return false;
+}
+
+static bool
+traversal_path_is_unknown(Traversal *traversal, char *path, int32 path_len) {
+    int32 idx;
+
+    if (traversal->unknown_count <= 0) {
+        return false;
+    }
+
+    if (traversal->root_unknown) {
+        return true;
+    }
+
+    if (hash_lookup_fs_map(traversal->map, path, path_len, &idx)) {
+        if (traversal->states[idx] != TRAVERSAL_STATE_PRESENT) {
+            return true;
+        }
+    }
+
+    for (int32 i = 0; i < traversal->nfiles; i += 1) {
+        if (traversal->states[i] != TRAVERSAL_STATE_UNKNOWN_SUBTREE) {
+            continue;
+        }
+        if (traversal_unknown_path_covers(traversal->paths[i],
+                                         traversal->paths_lens[i],
+                                         path, path_len)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void
+traversal_root_unknown_record(Traversal *traversal) {
+    if (!traversal->root_unknown) {
+        traversal->unknown_count += 1;
+    }
+
+    traversal->root_unknown = true;
+    return;
+}
+
+static void
+traversal_unknown_record(
+    Traversal *traversal,
+    char *path,
+    int32 path_len,
+    enum TraversalState state
+) {
+    int32 idx;
+
+    ASSERT(state != TRAVERSAL_STATE_PRESENT);
+
+    if (hash_lookup_fs_map(traversal->map, path, path_len, &idx)) {
+        if (traversal->states[idx] == TRAVERSAL_STATE_PRESENT) {
+            traversal->unknown_count += 1;
+        }
+        traversal->states[idx] = (int8)state;
+        return;
+    }
+
+    {
+        char *path_alloc;
+
+        path_alloc = xarena_push(traversal->arena, path_len + 1);
+        memcpy64(path_alloc, path, path_len + 1);
+
+        traversal_push_with_state(traversal, NULL,
+                                  path_alloc, path_len,
+                                  NULL, 0,
+                                  NULL, 0,
+                                  state);
+    }
+    return;
 }
 
 static int32
@@ -370,6 +514,31 @@ main(void) {
 
     traversal_allocate(&test_traversal, L);
     ASSERT(test_traversal.capacity == INITIAL_CAPACITY);
+
+    traversal_unknown_record(&test_traversal,
+                             STRLIT("private"),
+                             TRAVERSAL_STATE_UNKNOWN_SUBTREE);
+    ASSERT(traversal_path_is_unknown(&test_traversal,
+                                     STRLIT("private")));
+    ASSERT(traversal_path_is_unknown(&test_traversal,
+                                     STRLIT("private/file.txt")));
+    ASSERT(!traversal_path_is_unknown(&test_traversal,
+                                      STRLIT("private2/file.txt")));
+
+    traversal_unknown_record(&test_traversal,
+                             STRLIT("sealed/"),
+                             TRAVERSAL_STATE_UNKNOWN_SUBTREE);
+    ASSERT(traversal_path_is_unknown(&test_traversal, STRLIT("sealed")));
+
+    traversal_unknown_record(&test_traversal,
+                             STRLIT("leaf"),
+                             TRAVERSAL_STATE_UNKNOWN);
+    ASSERT(traversal_path_is_unknown(&test_traversal, STRLIT("leaf")));
+    ASSERT(!traversal_path_is_unknown(&test_traversal, STRLIT("leaf/file")));
+
+    traversal_clean(&test_traversal);
+    ASSERT(!traversal_path_is_unknown(&test_traversal,
+                                      STRLIT("private/file.txt")));
 
     dummy_stat.st_ino = 100;
     dummy_stat.st_mode = S_IFREG | 0644;

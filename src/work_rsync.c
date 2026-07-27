@@ -539,6 +539,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         char *paths[] = {full_path, NULL};
         FTS *fts_handle;
         FTSENT *entry;
+        bool had_errors = false;
 
         if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
             error("Error in fts_open(%s): %s.\n", paths[0], strerror(errno));
@@ -569,6 +570,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             case FTS_ERR:
             case FTS_NS:
                 error("FTS error on %s: %s.\n", entry->fts_path, strerror(entry->fts_errno));
+                had_errors = true;
                 continue;
             default:
                 continue;
@@ -600,12 +602,14 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             if (is_dir) {
                 if (rmdir(entry->fts_accpath) < 0) {
                     error("Error in rmdir(%s): %s.\n", entry->fts_accpath, strerror(errno));
+                    had_errors = true;
                 } else {
                     work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, rel_path, rel_path_len);
                 }
             } else {
                 if (unlink(entry->fts_accpath) < 0) {
                     error("Error in unlink(%s): %s.\n", entry->fts_accpath, strerror(errno));
+                    had_errors = true;
                 } else {
                     work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, rel_path, rel_path_len);
                 }
@@ -615,16 +619,19 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
 
         if (errno) {
             LOG_ERROR(_("Error in fts_read(%s): %s.\n"), full_path, strerror(errno));
+            had_errors = true;
         }
         if (fts_close(fts_handle) < 0) {
             LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
+            had_errors = true;
         }
 
         if (cecup.stop_working) {
             LOG_ERROR("Stop requested. Cancelled recursive removal.\n");
+        } else if (had_errors) {
+            LOG_ERROR(_("Partially removed directory tree %s. "
+                        "Some entries could not be removed.\n"), full_path);
         } else {
-            // TODO: Only log success if every removal succeeded.
-            // per-entry errors currently reach here.
             LOG("Removed directory tree %s...\n", full_path);
         }
     }
@@ -674,6 +681,10 @@ work_rsync(void *user_data) {
             continue;
         }
 
+        if (task->action != ACTION_DELETE) {
+            continue;
+        }
+
         if (cecup.stop_working) {
             LOG_ERROR(_("Stop requested.\n"));
             task_list_free(tasks);
@@ -681,9 +692,7 @@ work_rsync(void *user_data) {
             work_finalize(thread_data, false);
         }
 
-        if (task->action == ACTION_DELETE) {
-            work_remove(&batch, task->path, task->path_len, task->side);
-        }
+        work_remove(&batch, task->path, task->path_len, task->side);
     }
 
     if (!has_transfers) {

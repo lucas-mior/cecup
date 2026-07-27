@@ -39,6 +39,57 @@ work_finalize(ThreadData *thread_data, bool preview_clean) {
     pthread_exit(NULL);
 }
 
+static void
+work_traverse_unknown_record(
+    Traversal *traversal,
+    FTSENT *ent,
+    enum TraversalState state,
+    bool known_dir
+) {
+    char *path_tmp;
+    int32 path_len;
+    char path[MAX_PATH_LENGTH];
+
+    if (ent->fts_pathlen >= MAX_PATH_LENGTH) {
+        LOG_ERROR(_("Traversal error path is too long: %s.\n"),
+                  ent->fts_path);
+        traversal_root_unknown_record(traversal);
+        return;
+    }
+
+    path_tmp = ent->fts_path + traversal->base_path_len;
+    path_len = (int32)ent->fts_pathlen - traversal->base_path_len;
+
+    if (path_tmp[0] == '/') {
+        path_tmp += 1;
+        path_len -= 1;
+    }
+
+    if (path_len == 0) {
+        traversal_root_unknown_record(traversal);
+        return;
+    }
+
+    memcpy64(path, path_tmp, path_len + 1);
+    normalize(path, &path_len);
+
+    if (known_dir && (path[path_len - 1] != '/')) {
+        if ((path_len + 1) >= MAX_PATH_LENGTH) {
+            LOG_ERROR(_("Traversal error path is too long: %s.\n"),
+                      ent->fts_path);
+            traversal_root_unknown_record(traversal);
+            return;
+        }
+
+        path_len += 1;
+        path[path_len - 1] = '/';
+        path[path_len] = '\0';
+    }
+
+    traversal_unknown_record(traversal, path, path_len, state);
+    return;
+}
+
 static int32
 work_traverse_fs(Traversal *traversal) {
     int64 file_count = 0;
@@ -59,6 +110,7 @@ work_traverse_fs(Traversal *traversal) {
         if (cecup.stop_working == false) {
             LOG_ERROR(_("Error walking directory %s: %s.\n"), paths[0], strerror(errno));
         }
+        traversal_root_unknown_record(traversal);
         return 0;
     }
 
@@ -91,17 +143,25 @@ work_traverse_fs(Traversal *traversal) {
             continue;
         case FTS_DP:
             continue;
-        // TODO: Abort after these traversal failures. Continuing with an
-        // incomplete source map can make delete-after remove valid backups.
         case FTS_ERR:
-            LOG_ERROR(_("Error while traversing file system: %s.\n"), strerror(ent->fts_errno));
+            LOG_ERROR(_("Error while traversing file system: %s.\n"),
+                      strerror(ent->fts_errno));
+            work_traverse_unknown_record(traversal, ent,
+                                         TRAVERSAL_STATE_UNKNOWN_SUBTREE,
+                                         false);
             continue;
         case FTS_DNR:
             LOG_ERROR(_("Directory '%s' is unreadable.\n"), ent->fts_path);
+            work_traverse_unknown_record(traversal, ent,
+                                         TRAVERSAL_STATE_UNKNOWN_SUBTREE,
+                                         true);
             continue;
         case FTS_NS:
             LOG_ERROR(_("Failed to get file information for %s: %s.\n"),
                       ent->fts_path, strerror(ent->fts_errno));
+            work_traverse_unknown_record(traversal, ent,
+                                         TRAVERSAL_STATE_UNKNOWN_SUBTREE,
+                                         false);
             continue;
         case FTS_F:
             break;
@@ -255,9 +315,11 @@ work_traverse_fs(Traversal *traversal) {
     if (errno) {
         LOG_ERROR(_("Error in fts_read(%s): %s.\n"),
                   traversal->base_path, strerror(errno));
+        traversal_root_unknown_record(traversal);
     }
     if (fts_close(fts_handle) < 0) {
         LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
+        traversal_root_unknown_record(traversal);
     }
 
     for (uint32 i = 0; i < traversal->inode_map->capacity; i += 1) {
@@ -380,6 +442,10 @@ work_preview(void *user_data) {
     }
 
     LOG(_("File system traversal finished.\n"));
+    if (cecup.delete_after && (cecup.traversal[L].unknown_count > 0)) {
+        LOG_ERROR(_("Some source paths could not be fully traversed. "
+                    "Delete-after will preserve matching backup paths.\n"));
+    }
 
     nfiles_total = cecup.traversal[L].file_count + cecup.traversal[R].file_count;
     LOG(_("Found %lld files to analyse...\n"), nfiles_total);
@@ -400,6 +466,9 @@ work_preview(void *user_data) {
         }
 
         src_idx = bucket_src->value;
+        if (cecup.traversal[L].states[src_idx] != TRAVERSAL_STATE_PRESENT) {
+            continue;
+        }
         path_len = cecup.traversal[L].paths_lens[src_idx];
 
         if (!(hash_lookup_fs_map(cecup.traversal[R].map, bucket_src->key, path_len, &dst_idx))) {
@@ -466,27 +535,34 @@ work_preview(void *user_data) {
         dst_idx = bucket_dst->value;
         path_len = cecup.traversal[R].paths_lens[dst_idx];
 
-        if (!hash_lookup_fs_map(cecup.traversal[L].map, bucket_dst->key, path_len, &src_idx)) {
-            item_add(-1, dst_idx);
-            if (cecup.delete_after) {
-                if ((cecup.ndeletions + 1) >= cecup.deletions_capacity) {
-                    int32 old_capacity = cecup.deletions_capacity;
-                    if (cecup.deletions_capacity == 0) {
-                        cecup.deletions_capacity = INITIAL_CAPACITY;
+        if (!hash_lookup_fs_map(cecup.traversal[L].map,
+                                bucket_dst->key, path_len, &src_idx)) {
+            if (!traversal_path_is_unknown(&cecup.traversal[L],
+                                           bucket_dst->key, path_len)) {
+                item_add(-1, dst_idx);
+                if (cecup.delete_after) {
+                    if ((cecup.ndeletions + 1) >= cecup.deletions_capacity) {
+                        int32 old_capacity = cecup.deletions_capacity;
+                        if (cecup.deletions_capacity == 0) {
+                            cecup.deletions_capacity = INITIAL_CAPACITY;
+                        }
+                        cecup.deletions_capacity *= 2;
+                        cecup.deletions = realloc2(
+                            cecup.deletions,
+                            old_capacity, cecup.deletions_capacity,
+                            SIZEOF(*cecup.deletions));
+                        cecup.deletions_lens = realloc2(
+                            cecup.deletions_lens,
+                            old_capacity, cecup.deletions_capacity,
+                            SIZEOF(*cecup.deletions_lens));
                     }
-                    cecup.deletions_capacity *= 2;
-                    cecup.deletions = realloc2(cecup.deletions,
-                                               old_capacity, cecup.deletions_capacity,
-                                               SIZEOF(*cecup.deletions));
-                    cecup.deletions_lens = realloc2(cecup.deletions_lens,
-                                                    old_capacity, cecup.deletions_capacity,
-                                                    SIZEOF(*cecup.deletions_lens));
-                }
 
-                if (hash_insert_actions_set(cecup.actions_set, bucket_dst->key, path_len)) {
-                    cecup.deletions[cecup.ndeletions] = bucket_dst->key;
-                    cecup.deletions_lens[cecup.ndeletions] = path_len;
-                    cecup.ndeletions += 1;
+                    if (hash_insert_actions_set(cecup.actions_set,
+                                                bucket_dst->key, path_len)) {
+                        cecup.deletions[cecup.ndeletions] = bucket_dst->key;
+                        cecup.deletions_lens[cecup.ndeletions] = path_len;
+                        cecup.ndeletions += 1;
+                    }
                 }
             }
         }

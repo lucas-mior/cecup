@@ -56,6 +56,12 @@ _Static_assert((!R) == L, "!R must be L");
     X(ACTION_IGNORE)
 #include "xenums.c"
 
+enum TraversalState {
+    TRAVERSAL_STATE_PRESENT,
+    TRAVERSAL_STATE_UNKNOWN,
+    TRAVERSAL_STATE_UNKNOWN_SUBTREE,
+};
+
 #define ENUM_BITFLAGS 1
 #define ENUM_NAME Reason
 #define ENUM_PREFIX_ REASON_
@@ -177,6 +183,9 @@ typedef struct Traversal {
     char *base_path;
     int32 base_path_len;
     int32 file_count;
+    int32 unknown_count;
+
+    bool root_unknown;
 
     struct Hash_fs_map *map;
     struct Hash_inode_map *inode_map;
@@ -194,6 +203,7 @@ typedef struct Traversal {
     int16 *patterns_lens;
 
     int32 *row_ids;
+    int8 *states;
 } Traversal;
 
 typedef struct TextInfo {
