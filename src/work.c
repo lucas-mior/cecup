@@ -328,14 +328,14 @@ work_preview(void *user_data) {
         struct stat stat_src;
         struct stat stat_dst;
 
-        if (stat(cecup.src_base, &stat_src) < 0) {
+        if (stat(cecup.base[L], &stat_src) < 0) {
             LOG_ERROR(_("Error getting directory info from %s: %s.\n"),
-                      cecup.src_base, strerror(errno));
+                      cecup.base[L], strerror(errno));
             work_preview_cancel_and_reset(thread_data);
         }
-        if (stat(cecup.dst_base, &stat_dst) < 0) {
+        if (stat(cecup.base[R], &stat_dst) < 0) {
             LOG_ERROR(_("Error getting directory info from %s: %s.\n"),
-                      cecup.dst_base, strerror(errno));
+                      cecup.base[R], strerror(errno));
             work_preview_cancel_and_reset(thread_data);
         }
 
@@ -353,11 +353,11 @@ work_preview(void *user_data) {
 
     ignore_patterns_load();
 
-    cecup.traversal[L].base_path = cecup.src_base;
-    cecup.traversal[L].base_path_len = cecup.src_base_len;
+    cecup.traversal[L].base_path = cecup.base[L];
+    cecup.traversal[L].base_path_len = cecup.base_len[L];
 
-    cecup.traversal[R].base_path = cecup.dst_base;
-    cecup.traversal[R].base_path_len = cecup.dst_base_len;
+    cecup.traversal[R].base_path = cecup.base[R];
+    cecup.traversal[R].base_path_len = cecup.base_len[R];
 
     LOG(_("Traversing file systems...\n"));
     if (!same_fs) {
@@ -783,10 +783,10 @@ main(void) {
     cecup.ignore_patterns = &pattern;
     cecup.ignore_count = 1;
 
-    cecup.src_base = src_dir;
-    cecup.src_base_len = strlen32(src_dir);
-    cecup.dst_base = dst_dir;
-    cecup.dst_base_len = strlen32(dst_dir);
+    cecup.base[L] = src_dir;
+    cecup.base_len[L] = strlen32(src_dir);
+    cecup.base[R] = dst_dir;
+    cecup.base_len[R] = strlen32(dst_dir);
 
     traversal_allocate(&cecup.traversal[L], L);
     cecup.traversal[L].base_path = src_dir;

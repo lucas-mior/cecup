@@ -233,8 +233,8 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                              _("Transferring data and updating metadata..."));
     }
 
-    SNPRINTF(src_base_with_slash, "%s/", cecup.src_base);
-    SNPRINTF(dst_base_with_slash, "%s/", cecup.dst_base);
+    SNPRINTF(src_base_with_slash, "%s/", cecup.base[L]);
+    SNPRINTF(dst_base_with_slash, "%s/", cecup.base[R]);
 
     command_push(&command, "rsync");
     command_push(&command, "--verbose");
@@ -506,11 +506,11 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     int32 base_path_len;
 
     if (side == L) {
-        SNPRINTF(full_path, "%s/%s", cecup.src_base, path);
-        base_path_len = cecup.src_base_len;
+        SNPRINTF(full_path, "%s/%s", cecup.base[L], path);
+        base_path_len = cecup.base_len[L];
     } else {
-        SNPRINTF(full_path, "%s/%s", cecup.dst_base, path);
-        base_path_len = cecup.dst_base_len;
+        SNPRINTF(full_path, "%s/%s", cecup.base[R], path);
+        base_path_len = cecup.base_len[R];
     }
 
     ASSERT_MORE(path_len, 0);
@@ -840,10 +840,10 @@ main(void) {
     mkdir("/tmp/cecup_test_src", 0755);
     mkdir("/tmp/cecup_test_dst", 0755);
 
-    cecup.src_base = xstrdup("/tmp/cecup_test_src");
-    cecup.src_base_len = strlen32(cecup.src_base);
-    cecup.dst_base = xstrdup("/tmp/cecup_test_dst");
-    cecup.dst_base_len = strlen32(cecup.dst_base);
+    cecup.base[L] = xstrdup("/tmp/cecup_test_src");
+    cecup.base_len[L] = strlen32(cecup.base[L]);
+    cecup.base[R] = xstrdup("/tmp/cecup_test_dst");
+    cecup.base_len[R] = strlen32(cecup.base[R]);
     cecup.delete_after = false;
     cecup.stop_working = false;
     cecup.child_pid = 0;
@@ -931,8 +931,8 @@ main(void) {
 
     /* Teardown */
     system("rm -rf /tmp/cecup_test_src /tmp/cecup_test_dst /tmp/cecup_test_files_from");
-    free2(cecup.src_base, cecup.src_base_len + 1);
-    free2(cecup.dst_base, cecup.dst_base_len + 1);
+    free2(cecup.base[L], cecup.base_len[L] + 1);
+    free2(cecup.base[R], cecup.base_len[R] + 1);
 
     exit(EXIT_SUCCESS);
 }

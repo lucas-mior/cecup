@@ -276,9 +276,9 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         int fd;
 
         if (message->side == L) {
-            base_path = cecup.src_base;
+            base_path = cecup.base[L];
         } else {
-            base_path = cecup.dst_base;
+            base_path = cecup.base[R];
         }
         n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
 
@@ -345,9 +345,9 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     }
 
     if (message->side == L) {
-        base_path = cecup.src_base;
+        base_path = cecup.base[L];
     } else {
-        base_path = cecup.dst_base;
+        base_path = cecup.base[R];
     }
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
@@ -474,15 +474,15 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
-        int32 size_src = strlen32(cecup.src_base) + strlen32(task->path) + 2;
-        int32 size_dst = strlen32(cecup.dst_base) + strlen32(task->path) + 2;
+        int32 size_src = strlen32(cecup.base[L]) + strlen32(task->path) + 2;
+        int32 size_dst = strlen32(cecup.base[R]) + strlen32(task->path) + 2;
         char *path_src = malloc2(size_src);
         char *path_dst = malloc2(size_dst);
         Command command;
         int32 path_src_len = snprintf2(path_src, size_src,
-                                       "%s/%s", cecup.src_base, task->path);
+                                       "%s/%s", cecup.base[L], task->path);
         int32 path_dst_len = snprintf2(path_dst, size_dst,
-                                       "%s/%s", cecup.dst_base, task->path);
+                                       "%s/%s", cecup.base[R], task->path);
 
         command = on_menu_diff_command(term_command, diff_tool);
         COMMAND_PUSH(&command, path_dst, path_dst_len);
@@ -577,10 +577,10 @@ main(void) {
         command_free(&command);
     }
 
-    cecup.src_base = xstrdup("/tmp");
-    cecup.src_base_len = strlen32(cecup.src_base);
-    cecup.dst_base = xstrdup("/tmp");
-    cecup.dst_base_len = strlen32(cecup.dst_base);
+    cecup.base[L] = xstrdup("/tmp");
+    cecup.base_len[L] = strlen32(cecup.base[L]);
+    cecup.base[R] = xstrdup("/tmp");
+    cecup.base_len[R] = strlen32(cecup.base[R]);
 
     store = cecup_list_model_new();
     sel = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(store)));
@@ -707,8 +707,8 @@ main(void) {
         g_variant_unref(idx_param);
     }
 
-    free2(cecup.src_base, cecup.src_base_len + 1);
-    free2(cecup.dst_base, cecup.dst_base_len + 1);
+    free2(cecup.base[L], cecup.base_len[L] + 1);
+    free2(cecup.base[R], cecup.base_len[R] + 1);
     free2(cecup.rows_selected, 10 * SIZEOF(uint8));
 
     g_object_unref(tree);

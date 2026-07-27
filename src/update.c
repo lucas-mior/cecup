@@ -337,7 +337,7 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
         return false;
     }
 
-    SNPRINTF(full_path, "%s/%s", cecup.dst_base, path_transfered);
+    SNPRINTF(full_path, "%s/%s", cecup.base[R], path_transfered);
     if (lstat(full_path, &stat) < 0) {
         error("Error in stat('%s'): %s.\n", full_path, strerror(errno));
         if (DEBUGGING) {
@@ -1075,10 +1075,10 @@ main(void) {
         }
     }
 
-    cecup.src_base_len = 5;
-    cecup.src_base = xmemdup("/src/", 6);
-    cecup.dst_base_len = 5;
-    cecup.dst_base = xmemdup("/dst/", 6);
+    cecup.base_len[L] = 5;
+    cecup.base[L] = xmemdup("/src/", 6);
+    cecup.base_len[R] = 5;
+    cecup.base[R] = xmemdup("/dst/", 6);
 
     /* --- Test update_row_remove --- */
     msg.type = MSG_BATCH_ROW_REMOVE;
@@ -1250,8 +1250,8 @@ main(void) {
     free2(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
     free2(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
 
-    free2(cecup.src_base, 6);
-    free2(cecup.dst_base, 6);
+    free2(cecup.base[L], 6);
+    free2(cecup.base[R], 6);
 
     ASSERT(true);
     exit(EXIT_SUCCESS);

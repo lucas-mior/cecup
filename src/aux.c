@@ -140,27 +140,27 @@ cecup_reset_dir(int32 side) {
 static void
 cecup_set_dirs(char *new_src, int32 new_src_len, char *new_dst, int32 new_dst_len) {
     if (new_src) {
-        free2(cecup.src_base, cecup.src_base_len + 1);
-        cecup.src_base = malloc2(new_src_len + 1);
-        memcpy64(cecup.src_base, new_src, new_src_len + 1);
-        cecup.src_base_len = new_src_len;
+        free2(cecup.base[L], cecup.base_len[L] + 1);
+        cecup.base[L] = malloc2(new_src_len + 1);
+        memcpy64(cecup.base[L], new_src, new_src_len + 1);
+        cecup.base_len[L] = new_src_len;
     }
 
     if (new_dst) {
-        free2(cecup.dst_base, cecup.dst_base_len + 1);
-        cecup.dst_base = malloc2(new_dst_len + 1);
-        memcpy64(cecup.dst_base, new_dst, new_dst_len + 1);
-        cecup.dst_base_len = new_dst_len;
+        free2(cecup.base[R], cecup.base_len[R] + 1);
+        cecup.base[R] = malloc2(new_dst_len + 1);
+        memcpy64(cecup.base[R], new_dst, new_dst_len + 1);
+        cecup.base_len[R] = new_dst_len;
     }
 
     g_signal_handler_block(cecup.dir_entry[L], cecup.entry_id[L]);
     g_signal_handler_block(cecup.dir_entry[R], cecup.entry_id[R]);
 
-    if (cecup.src_base) {
-        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), cecup.src_base);
+    if (cecup.base[L]) {
+        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), cecup.base[L]);
     }
-    if (cecup.dst_base) {
-        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), cecup.dst_base);
+    if (cecup.base[R]) {
+        gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), cecup.base[R]);
     }
 
     g_signal_handler_unblock(cecup.dir_entry[L], cecup.entry_id[L]);
@@ -251,8 +251,8 @@ cecup_get_dirs(void) {
         return false;
     }
 
-    if (cecup.src_base && cecup.dst_base) {
-        if (strequal(cecup.src_base, full_src) && strequal(cecup.dst_base, full_dst)) {
+    if (cecup.base[L] && cecup.base[R]) {
+        if (strequal(cecup.base[L], full_src) && strequal(cecup.base[R], full_dst)) {
             cecup_set_dirs(NULL, 0, NULL, 0);
             return true;
         }

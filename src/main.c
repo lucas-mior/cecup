@@ -980,8 +980,8 @@ main(int32 argc, char **argv) {
     free2(cecup.deletions, cecup.deletions_capacity*SIZEOF(*(cecup.deletions)));
     free2(cecup.deletions_lens, cecup.deletions_capacity*SIZEOF(*(cecup.deletions_lens)));
 
-    free2(cecup.src_base, cecup.src_base_len + 1);
-    free2(cecup.dst_base, cecup.dst_base_len + 1);
+    free2(cecup.base[L], cecup.base_len[L] + 1);
+    free2(cecup.base[R], cecup.base_len[R] + 1);
 
     arena_destroy(cecup.arena);
 

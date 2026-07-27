@@ -128,11 +128,11 @@ on_path_edited(GtkEditable *editable, void *data) {
     relative_old = item_path_side(row_id, side);
 
     if (side == L) {
-        base_path = cecup.src_base;
-        base_path_len = cecup.src_base_len;
+        base_path = cecup.base[L];
+        base_path_len = cecup.base_len[L];
     } else {
-        base_path = cecup.dst_base;
-        base_path_len = cecup.dst_base_len;
+        base_path = cecup.base[R];
+        base_path_len = cecup.base_len[R];
     }
 
     if (relative_old == NULL || (strcmp(relative_old, new_text) == 0)) {
@@ -313,8 +313,8 @@ main(void) {
 
     // 1. Setup Global State and Filesystem
     memset64(&cecup, 0, SIZEOF(cecup));
-    cecup.src_base = xmemdup(src_dir, strlen32(src_dir) + 1);
-    cecup.src_base_len = strlen32(src_dir);
+    cecup.base[L] = xmemdup(src_dir, strlen32(src_dir) + 1);
+    cecup.base_len[L] = strlen32(src_dir);
 
     mkdir(src_dir, 0755);
     SNPRINTF(src_file_full, "%s/%s", src_dir, file_rel);
@@ -403,7 +403,7 @@ main(void) {
         hash_destroy_fs_map(t->map);
 
         free2(cecup.rows[L], n*SIZEOF(int32));
-        free2(cecup.src_base, cecup.src_base_len + 1);
+        free2(cecup.base[L], cecup.base_len[L] + 1);
     }
 
     g_object_unref(label);
