@@ -1185,10 +1185,9 @@ main(void) {
 
     /* --- Test update_rows (Batch processing) --- */
     {
-        MessageBatch *batch;
-
-        batch = malloc2(SIZEOF(*batch));
+        MessageBatch *batch = malloc2(SIZEOF(*batch));
         memset64(batch, 0, SIZEOF(*batch));
+
         batch->type = MSG_BATCH_ROW_REMOVE;
         batch->count = 0;
         batch->capacity = 0;
