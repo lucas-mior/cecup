@@ -34,24 +34,24 @@ aux_is_root(char *path) {
     return false;
 }
 
-static void
+INLINE void
 stop_working(bool state) {
     atomic_store_explicit(&cecup.stop_working, state, memory_order_relaxed);
     return;
 }
 
-static bool
+INLINE bool
 work_should_stop(void) {
     return atomic_load_explicit(&cecup.stop_working, memory_order_relaxed);
 }
 
-static void
+INLINE void
 work_thread_done_set(bool state) {
     atomic_store_explicit(&cecup.work_thread_done, state, memory_order_release);
     return;
 }
 
-static bool
+INLINE bool
 work_thread_is_done(void) {
     return atomic_load_explicit(&cecup.work_thread_done, memory_order_acquire);
 }
