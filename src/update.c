@@ -896,7 +896,7 @@ update_progress_bar(double fraction) {
 
     {
         Message *message = malloc2(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
+        *message = (Message){0};
 
         message->type = MSG_PROGRESS;
         message->fraction = fraction;
@@ -909,7 +909,7 @@ update_progress_bar(double fraction) {
 static void
 update_progress_info(char *text, char *tooltip) {
     Message *message = malloc2(SIZEOF(*message));
-    memset64(message, 0, SIZEOF(*message));
+    *message = (Message){0};
 
     message->type = MSG_PROGRESS;
     message->fraction = -1.0;
@@ -1146,28 +1146,28 @@ main(void) {
         Message *ui_msg;
 
         ui_msg = malloc2(SIZEOF(*ui_msg));
-        memset64(ui_msg, 0, SIZEOF(*ui_msg));
+        *ui_msg = (Message){0};
         ui_msg->type = MSG_LOG;
         ui_msg->text = xmemdup("Test log\r", 10);
         ui_msg->text_len = 9;
         update_ui_handler(ui_msg);
 
         ui_msg = malloc2(SIZEOF(*ui_msg));
-        memset64(ui_msg, 0, SIZEOF(*ui_msg));
+        *ui_msg = (Message){0};
         ui_msg->type = MSG_LOG_ERROR;
         ui_msg->text = xmemdup("Test error\n", 12);
         ui_msg->text_len = 11;
         update_ui_handler(ui_msg);
 
         ui_msg = malloc2(SIZEOF(*ui_msg));
-        memset64(ui_msg, 0, SIZEOF(*ui_msg));
+        *ui_msg = (Message){0};
         ui_msg->type = MSG_LOG_CMD;
         ui_msg->text = xmemdup("Test cmd\n", 10);
         ui_msg->text_len = 9;
         update_ui_handler(ui_msg);
 
         ui_msg = malloc2(SIZEOF(*ui_msg));
-        memset64(ui_msg, 0, SIZEOF(*ui_msg));
+        *ui_msg = (Message){0};
         ui_msg->type = MSG_PROGRESS;
         ui_msg->fraction = 0.8;
         ui_msg->text = xmemdup("Progress...", 12);
@@ -1177,7 +1177,7 @@ main(void) {
         update_ui_handler(ui_msg);
 
         ui_msg = malloc2(SIZEOF(*ui_msg));
-        memset64(ui_msg, 0, SIZEOF(*ui_msg));
+        *ui_msg = (Message){0};
         ui_msg->type = MSG_CLEAR_TREES;
         update_ui_handler(ui_msg);
         ASSERT_EQUAL(cecup.rows_len, 0);
@@ -1186,7 +1186,7 @@ main(void) {
     /* --- Test update_rows (Batch processing) --- */
     {
         MessageBatch *batch = malloc2(SIZEOF(*batch));
-        memset64(batch, 0, SIZEOF(*batch));
+        *batch = (MessageBatch){0};
 
         batch->type = MSG_BATCH_ROW_REMOVE;
         batch->count = 0;

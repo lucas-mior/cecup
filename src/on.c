@@ -87,7 +87,7 @@ execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item) {
         enum Action actions[2];
         enum Reason reason;
         Message *message = malloc2(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
+        *message = (Message){0};
 
         if (filepath) {
             message->src_path_len = path_len;
@@ -245,7 +245,7 @@ on_preview_clicked(GtkWidget *button, void *data) {
 
     {
         Message *message = malloc2(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
+        *message = (Message){0};
 
         message->type = MSG_CLEAR_TREES;
         update_ui_handler(message);
@@ -253,7 +253,7 @@ on_preview_clicked(GtkWidget *button, void *data) {
 
     {
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
-        memset64(thread_data, 0, SIZEOF(*thread_data));
+        *thread_data = (ThreadData){0};
 
         thread_data->check_different_fs
             = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
@@ -278,7 +278,7 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     aux_protect_interface_from_user(true);
 
     thread_data = malloc2(SIZEOF(*thread_data));
-    memset64(thread_data, 0, SIZEOF(*thread_data));
+    *thread_data = (ThreadData){0};
 
     xpthread_create(&cecup.work_thread, NULL, work_rsync, thread_data);
     return;

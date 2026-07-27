@@ -335,7 +335,7 @@ log_internal(char *file, int line, char *func, enum MsgType type, char *format, 
     va_end(va_args);
 
     message = malloc2(SIZEOF(*message));
-    memset64(message, 0, SIZEOF(*message));
+    *message = (Message){0};
 
     m = SNPRINTF(fileline, "%s:%d:%s ", file, line, func);
 
@@ -543,7 +543,7 @@ int main(void) {
 
     /* Test free_message - Separate paths */
     msg = malloc2(SIZEOF(*msg));
-    memset64(msg, 0, SIZEOF(*msg));
+    *msg = (Message){0};
     msg->text = malloc2(10);
     msg->text_len = 9;
     msg->src_path = malloc2(10);
@@ -554,7 +554,7 @@ int main(void) {
 
     /* Test free_message - Shared paths */
     msg = malloc2(SIZEOF(*msg));
-    memset64(msg, 0, SIZEOF(*msg));
+    *msg = (Message){0};
     msg->text = malloc2(5);
     msg->text_len = 4;
     msg->src_path = malloc2(5);
@@ -564,7 +564,7 @@ int main(void) {
 
     /* Test free_message - NULL dst_path */
     msg = malloc2(SIZEOF(*msg));
-    memset64(msg, 0, SIZEOF(*msg));
+    *msg = (Message){0};
     msg->text = malloc2(5);
     msg->text_len = 4;
     msg->src_path = malloc2(5);

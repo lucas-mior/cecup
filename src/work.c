@@ -27,7 +27,7 @@ work_finalize(ThreadData *thread_data, bool preview_clean) {
 
     {
         Message *message = malloc2(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
+        *message = (Message){0};
 
         message->type = MSG_WORK_FINISHED;
         message->preview_clean = preview_clean;
@@ -940,7 +940,7 @@ main(void) {
 
     {
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
-        memset64(thread_data, 0, SIZEOF(*thread_data));
+        *thread_data = (ThreadData){0};
 
         cecup.ignore_patterns = NULL;
         cecup.ignore_count = 0;
@@ -956,7 +956,7 @@ main(void) {
 
     {
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
-        memset64(thread_data, 0, SIZEOF(*thread_data));
+        *thread_data = (ThreadData){0};
 
         cecup.stop_working = true;
         cecup.ntransfers = 42;

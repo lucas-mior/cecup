@@ -52,7 +52,7 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side, char *p
 
     if (batch == NULL) {
         batch = malloc2(SIZEOF(*batch));
-        memset64(batch, 0, SIZEOF(*batch));
+        *batch = (MessageBatch){0};
 
         batch->type = type;
         batch->side = (int8)side;
@@ -112,7 +112,7 @@ work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
 
     if (batch == NULL) {
         batch = malloc2(SIZEOF(*batch));
-        memset64(batch, 0, SIZEOF(*batch));
+        *batch = (MessageBatch){0};
 
         batch->type = type;
         batch->side = side;
@@ -658,7 +658,7 @@ work_rsync(void *user_data) {
             nfiles_total = cecup.ntransfers;
         }
         tasks = malloc2(sizeof(*tasks));
-        memset64(tasks, 0, sizeof(*tasks));
+        *tasks = (TaskList){0};
     }
 
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ndeletions); i += 1) {
@@ -954,9 +954,9 @@ main(void) {
         task_list = malloc2(SIZEOF(*task_list) + 1*SIZEOF(Task*));
         task = malloc2(SIZEOF(*task));
 
-        memset64(thread_data, 0, SIZEOF(*thread_data));
-        memset64(task_list,   0, SIZEOF(*task_list) + 1*SIZEOF(Task*));
-        memset64(task,        0, SIZEOF(*task));
+        *thread_data = (ThreadData){0};
+        *task_list = (TaskList){0};
+        *task = (Task){0};
 
         task->action = ACTION_UPDATE;
         task->side = R;

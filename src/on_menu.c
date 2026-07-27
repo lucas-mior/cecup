@@ -159,7 +159,7 @@ on_menu_ignore_action(GSimpleAction *action, GVariant *parameter, void *data) {
 
     {
         Message *message = malloc2(SIZEOF(*message));
-        memset64(message, 0, SIZEOF(*message));
+        *message = (Message){0};
 
         message->type = MSG_IGNORE_PATTERN;
         g_idle_add(update_ui_handler, message);
@@ -178,7 +178,7 @@ on_menu_apply(GtkWidget *widget, void *data) {
 
     if (tasks->count > 0) {
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
-        memset64(thread_data, 0, SIZEOF(*thread_data));
+        *thread_data = (ThreadData){0};
 
         aux_protect_interface_from_user(true);
         thread_data->tasks = tasks;
@@ -393,7 +393,7 @@ on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
 
     if (response_id == GTK_RESPONSE_YES) {
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
-        memset64(thread_data, 0, SIZEOF(*thread_data));
+        *thread_data = (ThreadData){0};
 
         aux_protect_interface_from_user(true);
         thread_data->tasks = tasks;
@@ -605,7 +605,7 @@ main(void) {
     cecup.rows_selected[0] = false;
 
     msg = malloc2(SIZEOF(*msg));
-    memset64(msg, 0, SIZEOF(*msg));
+    *msg = (Message){0};
     msg->side = L;
     msg->action = ACTION_NEW;
     msg->src_path = xstrdup("test.txt");
@@ -613,13 +613,13 @@ main(void) {
     on_menu_apply(tree, msg);
 
     msg = malloc2(SIZEOF(*msg));
-    memset64(msg, 0, SIZEOF(*msg));
+    *msg = (Message){0};
     msg->src_path = xstrdup("test.txt");
     msg->src_path_len = 8;
     on_menu_rename(tree, msg);
 
     msg = malloc2(SIZEOF(*msg));
-    memset64(msg, 0, SIZEOF(*msg));
+    *msg = (Message){0};
     msg->side = L;
     msg->src_path = xstrdup("test.txt");
     msg->src_path_len = 8;
@@ -637,7 +637,7 @@ main(void) {
         remove(missing_full);
 
         msg = malloc2(SIZEOF(*msg));
-        memset64(msg, 0, SIZEOF(*msg));
+        *msg = (Message){0};
         msg->side = L;
         msg->src_path = xstrdup(missing_path);
         msg->src_path_len = strlen32(missing_path);
@@ -669,14 +669,14 @@ main(void) {
     }
 
     msg = malloc2(SIZEOF(*msg));
-    memset64(msg, 0, SIZEOF(*msg));
+    *msg = (Message){0};
     msg->side = L;
     msg->src_path = xstrdup("test.txt");
     msg->src_path_len = 8;
     on_menu_delete(tree, msg);
 
     msg = malloc2(SIZEOF(*msg));
-    memset64(msg, 0, SIZEOF(*msg));
+    *msg = (Message){0};
     msg->side = L;
     msg->src_path = xstrdup("test.txt");
     msg->src_path_len = 8;
@@ -686,7 +686,7 @@ main(void) {
         GVariant *idx_param;
 
         msg = malloc2(SIZEOF(*msg));
-        memset64(msg, 0, SIZEOF(*msg));
+        *msg = (Message){0};
         msg->side = L;
         msg->action = ACTION_NEW;
         msg->src_path = xstrdup("test.txt");

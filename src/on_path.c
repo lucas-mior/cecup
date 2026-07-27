@@ -95,7 +95,7 @@ on_path_editing_started(GtkEditable *editable, void *data) {
 
         if (end_pos > start_pos) {
             SelectionData *selection_data = malloc2(SIZEOF(*selection_data));
-            memset64(selection_data, 0, SIZEOF(*selection_data));
+            *selection_data = (SelectionData){0};
 
             selection_data->editable = GTK_EDITABLE(g_object_ref(editable));
             selection_data->start_pos = start_pos;

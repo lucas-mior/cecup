@@ -93,7 +93,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
 
         {
             Message *message = malloc2(SIZEOF(*message));
-            memset64(message, 0, SIZEOF(*message));
+            *message = (Message){0};
 
             if (filepath) {
                 message->src_path_len = item_path_len_side(row_id, side);

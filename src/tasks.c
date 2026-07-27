@@ -42,7 +42,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
     tasks_size = STRUCT_ARRAY_SIZE(tasks, Task *, cecup.rows_len);
     count = 0;
     tasks = malloc2(tasks_size);
-    memset64(tasks, 0, tasks_size);
+    *tasks = (TaskList){0};
 
     for (int32 row_id = 0; row_id < cecup.rows_len; row_id += 1) {
         char *filepath;
@@ -67,7 +67,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         }
 
         task = malloc2(SIZEOF(*task));
-        memset64(task, 0, SIZEOF(*task));
+        *task = (Task){0};
 
         task->path_len = path_len;
         task->path = malloc2(path_len + 1);
@@ -95,7 +95,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         tasks->count = count;
 
         task = malloc2(SIZEOF(*task));
-        memset64(task, 0, SIZEOF(*task));
+        *task = (Task){0};
 
         task->path_len = strlen32(clicked_path);
         task->path = malloc2(task->path_len + 1);
