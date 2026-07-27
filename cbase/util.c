@@ -815,9 +815,7 @@ error_impl(char *file, int32 line, char *func, char *format, ...) {
     }
 #endif
 
-    if (big_buffer) {
-        free2(big_buffer, m);
-    }
+    free2(big_buffer, m);
     return;
 }
 
