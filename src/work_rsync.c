@@ -171,6 +171,70 @@ work_rsync_action_is_transfer(enum Action action) {
     }
 }
 
+static bool
+work_rsync_wait_nohang(Command *command, bool *done) {
+    int status;
+    pid_t pid;
+    pid_t result;
+
+    ASSERT(command->result.pid > 0);
+
+    pid = (pid_t)command->result.pid;
+    *done = false;
+
+    do {
+        result = waitpid(pid, &status, WNOHANG);
+    } while ((result < 0) && (errno == EINTR));
+
+    if (result == 0) {
+        return true;
+    }
+    if (result == pid) {
+        command_status_from_wait(status, &command->result);
+        *done = true;
+        return true;
+    }
+
+    command_error_set(command, errno);
+    error("Error waiting for child: %s.\n", strerror(errno));
+    return false;
+}
+
+static bool
+work_rsync_wait_child(Command *command) {
+    bool done;
+    bool stopping = false;
+    int32 waited_usec = 0;
+    int32 timeout_usec = 2*1000*1000;
+    int32 step_usec = 100*1000;
+
+    while (true) {
+        if (!work_rsync_wait_nohang(command, &done)) {
+            return false;
+        }
+        if (done) {
+            return true;
+        }
+
+        if (work_should_stop()) {
+            if (!stopping) {
+                LOG_ERROR(_("Stop requested. Terminating rsync...\n"));
+                child_pid_signal(SIGTERM);
+                stopping = true;
+                waited_usec = 0;
+            } else if (waited_usec >= timeout_usec) {
+                LOG_ERROR(_("Killing the child process with SIGKILL...\n"));
+                child_pid_signal(SIGKILL);
+                return command_wait(command);
+            }
+
+            waited_usec += step_usec;
+        }
+
+        g_usleep(step_usec);
+    }
+}
+
 static char *
 work_rsync_itemize_skip(char *buf_output, int32 line_len) {
     if (line_len <= strlen32(RSYNC_ITEMIZE_PLACEHOLDERS)) {
@@ -313,7 +377,6 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         pipes[1].revents = 0;
 
         if (work_should_stop()) {
-            child_pid_signal(SIGTERM);
             break;
         }
 
@@ -474,16 +537,9 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
-    while (!command_wait(&command)) {
+    if (!work_rsync_wait_child(&command)) {
         LOG_ERROR(_("Error waiting for child process: %s.\n"),
                   strerror(command.error_status));
-        if (command.error_status == EINTR) {
-            continue;
-        }
-        LOG_ERROR(_("Killing the child process with SIGKILL..."));
-        if (command.error_status == EAGAIN) {
-            child_pid_signal(SIGKILL);
-        }
         child_pid_set((pid_t)0);
         command_free(&command);
         return false;
