@@ -25,3 +25,4 @@ filelist.txt
 abackup
 temp_delete_me
 *.cmd
+*.o
