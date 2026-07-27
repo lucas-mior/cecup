@@ -149,6 +149,7 @@ on_search_changed(GtkEditable *editable, void *data) {
     cecup.search_query = xmemdup(text, text_len + 1);
     cecup.search_query_len = text_len;
 
+cleanup_search_timeout:
     if (cecup.search_timeout_id) {
         g_source_remove(cecup.search_timeout_id);
     }
@@ -772,29 +773,33 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
         xpthread_join(&cecup.work_thread, NULL);
     }
 
-    if (cecup.child_pid > 0) {
+    {
+        pid_t child_pid;
         int32 waited;
         int32 waited_count = 0;
 
-        xkill(-cecup.child_pid, SIGTERM);
+        child_pid = child_pid_get();
+        if (child_pid > 0) {
+            xkill(-child_pid, SIGTERM);
 
-        while ((waited = waitpid(cecup.child_pid, NULL, 0)) < 0) {
-            if (errno == EINTR) {
-                continue;
+            while ((waited = waitpid(child_pid, NULL, 0)) < 0) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                if (errno == ECHILD) {
+                    break;
+                }
+                waited_count += 1;
+                if (waited_count >= 10) {
+                    break;
+                }
+                error("Error waiting for child: %s.\n", strerror(errno));
+                sleep(1);
             }
-            if (errno == ECHILD) {
-                break;
-            }
-            waited_count += 1;
-            if (waited_count >= 10) {
-                break;
-            }
-            error("Error waiting for child: %s.\n", strerror(errno));
-            sleep(1);
-        }
 
-        if ((waited < 0) && (errno != ECHILD)) {
-            xkill(-cecup.child_pid, SIGKILL);
+            if ((waited < 0) && (errno != ECHILD)) {
+                xkill(-child_pid, SIGKILL);
+            }
         }
     }
 
@@ -1031,7 +1036,7 @@ main(void) {
 
         on_path_click_pressed(GTK_GESTURE_CLICK(mock_gesture), 0, 0, 0, NULL);
 
-        cecup.child_pid = 0;
+        child_pid_set((pid_t)0);
         memset64(&cecup.work_thread, 0, SIZEOF(cecup.work_thread));
         on_window_destroy(NULL, NULL);
 

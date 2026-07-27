@@ -300,7 +300,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         return false;
     }
 
-    cecup.child_pid = (pid_t)command.result.pid;
+    child_pid_set((pid_t)command.result.pid);
     pipes[0].fd = command.result.stdout_fd;
     pipes[1].fd = command.result.stderr_fd;
     pipes[0].events = POLLIN;
@@ -313,7 +313,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         pipes[1].revents = 0;
 
         if (work_should_stop()) {
-            xkill(-cecup.child_pid, SIGTERM);
+            child_pid_signal(SIGTERM);
             break;
         }
 
@@ -482,9 +482,9 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         }
         LOG_ERROR(_("Killing the child process with SIGKILL..."));
         if (command.error_status == EAGAIN) {
-            xkill(-cecup.child_pid, SIGKILL);
+            child_pid_signal(SIGKILL);
         }
-        cecup.child_pid = 0;
+        child_pid_set((pid_t)0);
         command_free(&command);
         return false;
     }
@@ -503,12 +503,12 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                       command.result.status);
         }
 
-        cecup.child_pid = 0;
+        child_pid_set((pid_t)0);
         command_free(&command);
         return false;
     }
 
-    cecup.child_pid = 0;
+    child_pid_set((pid_t)0);
     command_free(&command);
     return true;
 }
@@ -865,7 +865,7 @@ main(void) {
     cecup.base_len[R] = strlen32(cecup.base[R]);
     cecup.delete_after = false;
     stop_working(false);
-    cecup.child_pid = 0;
+    child_pid_set((pid_t)0);
     cecup.ntransfers = 0;
     cecup.ndeletions = 0;
 

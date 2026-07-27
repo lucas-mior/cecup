@@ -46,6 +46,29 @@ work_should_stop(void) {
 }
 
 static void
+child_pid_set(pid_t pid) {
+    atomic_store_explicit(&cecup.child_pid, (int)pid, memory_order_relaxed);
+    return;
+}
+
+static pid_t
+child_pid_get(void) {
+    return (pid_t)atomic_load_explicit(&cecup.child_pid,
+                                       memory_order_relaxed);
+}
+
+static void
+child_pid_signal(int32 signal_number) {
+    pid_t child_pid = child_pid_get();
+
+    if (child_pid > 0) {
+        xkill(-child_pid, signal_number);
+    }
+
+    return;
+}
+
+static void
 on_banner_response(GtkInfoBar *info_bar, int32 response_id, void *data) {
     (void)response_id;
     (void)data;
@@ -578,6 +601,11 @@ int main(void) {
     ASSERT(work_should_stop());
     stop_working(false);
     ASSERT(!work_should_stop());
+
+    child_pid_set((pid_t)1234);
+    ASSERT_EQUAL(child_pid_get(), (pid_t)1234);
+    child_pid_set((pid_t)0);
+    ASSERT_EQUAL(child_pid_get(), (pid_t)0);
 
     if (!gtk_init_check()) {
         exit(EXIT_FAILURE);

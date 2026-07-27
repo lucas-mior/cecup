@@ -37,6 +37,8 @@ side_name(int32 side) {
 
 _Static_assert((!L) == R, "!L must be R");
 _Static_assert((!R) == L, "!R must be L");
+_Static_assert(SIZEOF(pid_t) <= SIZEOF(atomic_int),
+               "pid_t must fit in atomic_int");
 
 #define MAX_PATH_LENGTH 2048
 #define MAX_NAME_LENGTH 256
@@ -468,7 +470,7 @@ static struct {
     pthread_mutex_t arena_mutex;
 
     // this is only needed for killing rsync when the window is destroyed
-    pid_t child_pid;
+    atomic_int child_pid;
     pthread_t work_thread;
 
     atomic_bool stop_working;
@@ -627,6 +629,9 @@ static void *work_rsync(void *user_data);
 
 static void stop_working(bool state);
 static bool work_should_stop(void);
+static void child_pid_set(pid_t pid);
+static pid_t child_pid_get(void);
+static void child_pid_signal(int32 signal_number);
 
 static gboolean update_ui_handler(void *data);
 
