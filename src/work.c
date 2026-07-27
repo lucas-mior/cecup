@@ -546,8 +546,7 @@ work_preview(void *user_data) {
 
         if (!hash_lookup_fs_map(cecup.traversal[L].map,
                                 bucket_dst->key, path_len, &src_idx)) {
-            if (!traversal_path_is_unknown(&cecup.traversal[L],
-                                           bucket_dst->key, path_len)) {
+            if (!traversal_path_is_unknown(&cecup.traversal[L], bucket_dst->key, path_len)) {
                 item_add(-1, dst_idx);
                 if (cecup.delete_after) {
                     if ((cecup.ndeletions + 1) >= cecup.deletions_capacity) {
