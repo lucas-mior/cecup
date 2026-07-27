@@ -149,6 +149,7 @@ on_search_changed(GtkEditable *editable, void *data) {
     cecup.search_query = xmemdup(text, text_len + 1);
     cecup.search_query_len = text_len;
 
+cleanup_search_timeout:
     if (cecup.search_timeout_id) {
         g_source_remove(cecup.search_timeout_id);
     }
@@ -258,7 +259,7 @@ on_preview_clicked(GtkWidget *button, void *data) {
         thread_data->check_different_fs
             = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
 
-        xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
+        work_thread_start(work_preview, thread_data);
     }
 
     return;
@@ -280,7 +281,7 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     thread_data = malloc2(SIZEOF(*thread_data));
     *thread_data = (ThreadData){0};
 
-    xpthread_create(&cecup.work_thread, NULL, work_rsync, thread_data);
+    work_thread_start(work_rsync, thread_data);
     return;
 }
 
@@ -778,16 +779,16 @@ on_window_destroy(GtkWidget *widget, void *user_data) {
     (void)widget;
     (void)user_data;
 
+    cecup.window_destroying = true;
     stop_working(true);
     child_pid_signal(SIGTERM);
 
-    if (cecup.work_thread) {
+    if (cecup.work_thread_started && !cecup.work_thread_joined) {
         if (!on_work_thread_wait_done()) {
             child_pid_signal(SIGKILL);
         }
 
-        error("Joining thread...\n");
-        xpthread_join(&cecup.work_thread, NULL);
+        work_thread_join_once();
     }
 
     if (cecup.search_timeout_id) {

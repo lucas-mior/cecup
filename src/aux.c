@@ -57,6 +57,39 @@ work_thread_is_done(void) {
 }
 
 static void
+work_thread_join_once(void) {
+    if (!cecup.work_thread_started || cecup.work_thread_joined) {
+        return;
+    }
+
+    error("Joining work thread...\n");
+    xpthread_join(&cecup.work_thread, NULL);
+    cecup.work_thread_joined = true;
+    cecup.work_thread_started = false;
+    return;
+}
+
+static void
+work_thread_start(void *(*function)(void *), void *data) {
+    if (cecup.window_destroying) {
+        error("Internal error: cannot start work while window is "
+              "destroying.\n");
+        fatal(EXIT_FAILURE);
+    }
+    if (cecup.work_thread_started && !cecup.work_thread_joined) {
+        error("Internal error: work thread already started.\n");
+        fatal(EXIT_FAILURE);
+    }
+
+    stop_working(false);
+    work_thread_done_set(false);
+    cecup.work_thread_started = true;
+    cecup.work_thread_joined = false;
+    xpthread_create(&cecup.work_thread, NULL, function, data);
+    return;
+}
+
+static void
 child_pid_set(pid_t pid) {
     atomic_store_explicit(&cecup.child_pid, (int)pid, memory_order_relaxed);
     return;
@@ -155,7 +188,6 @@ aux_protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.filter_ignore, !state);
 
     if (state) {
-        work_thread_done_set(false);
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
     } else if (cecup.preview_dirty) {
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
@@ -164,7 +196,6 @@ aux_protect_interface_from_user(bool state) {
         gtk_widget_set_sensitive(cecup.sync_button, TRUE);
         gtk_widget_set_tooltip_text(cecup.sync_button, _("Start copying and updating all files"));
     }
-    stop_working(false);
     return;
 }
 
@@ -550,6 +581,8 @@ aux_functions_sink(void) {
     (void)get_target_tasks;
     (void)task_list_free;
     (void)free_message;
+    (void)work_thread_join_once;
+    (void)work_thread_start;
     (void)aux_protect_interface_from_user;
     (void)aux_invalidate_preview;
     return;

@@ -204,9 +204,9 @@ static bool
 work_rsync_wait_child(Command *command) {
     bool done;
     bool stopping = false;
-    int32 waited_usec = 0;
-    int32 timeout_usec = 2*1000*1000;
-    int32 step_usec = 100*1000;
+    int64 waited_usec = 0;
+    int64 timeout_usec = 2*1000*1000;
+    int64 step_usec = 100*1000;
 
     while (true) {
         if (!work_rsync_wait_nohang(command, &done)) {
@@ -231,7 +231,7 @@ work_rsync_wait_child(Command *command) {
             waited_usec += step_usec;
         }
 
-        g_usleep(step_usec);
+        g_usleep((ulong)step_usec);
     }
 }
 

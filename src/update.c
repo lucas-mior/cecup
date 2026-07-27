@@ -42,6 +42,51 @@ static bool update_row_transfer(char *path, int32 path_len);
 static bool update_row_rename(char *path, int32 path_len,
                               char *dst_path, int32 dst_path_len, int32 side);
 
+static bool
+update_message_is_batch(enum MsgType type) {
+    switch (type) {
+    case MSG_BATCH_ROW_REMOVE:
+    case MSG_BATCH_ROW_TRANSFER:
+    case MSG_BATCH_ROW_RENAME:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static void
+update_message_batch_free(MessageBatch *batch, bool paths_owned) {
+    if (paths_owned) {
+        for (int32 i = 0; i < batch->count; i += 1) {
+            free2(batch->paths[i], batch->paths_lens[i] + 1);
+            if (batch->type == MSG_BATCH_ROW_RENAME) {
+                free2(batch->dst_paths[i], batch->dst_paths_lens[i] + 1);
+            }
+        }
+    }
+
+    free2(batch->paths, batch->capacity*SIZEOF(*(batch->paths)));
+    free2(batch->paths_lens, batch->capacity*SIZEOF(*(batch->paths_lens)));
+    free2(batch->dst_paths, batch->capacity*SIZEOF(*(batch->dst_paths)));
+    free2(batch->dst_paths_lens,
+          batch->capacity*SIZEOF(*(batch->dst_paths_lens)));
+    free2(batch, SIZEOF(*batch));
+    return;
+}
+
+static void
+update_message_drop(void *data) {
+    Message *message = data;
+
+    if (update_message_is_batch(message->type)) {
+        update_message_batch_free(data, true);
+    } else {
+        free_message(message);
+    }
+
+    return;
+}
+
 static gboolean
 update_ui_handler(void *data) {
     Message *message = data;
@@ -58,6 +103,15 @@ update_ui_handler(void *data) {
         error("Handling message: %s\n", MSG_str(message->type));
     }
 
+    if (cecup.window_destroying) {
+        if (message->type == MSG_WORK_FINISHED) {
+            work_thread_join_once();
+        }
+
+        update_message_drop(data);
+        return G_SOURCE_REMOVE;
+    }
+
     switch (message->type) {
     case MSG_BATCH_ROW_REMOVE:
     case MSG_BATCH_ROW_TRANSFER:
@@ -69,11 +123,7 @@ update_ui_handler(void *data) {
         if (update_rows(batch)) {
             update_list_needed = true;
         }
-        free2(batch->paths,          batch->capacity*SIZEOF(*(batch->paths)));
-        free2(batch->paths_lens,     batch->capacity*SIZEOF(*(batch->paths_lens)));
-        free2(batch->dst_paths,      batch->capacity*SIZEOF(*(batch->dst_paths)));
-        free2(batch->dst_paths_lens, batch->capacity*SIZEOF(*(batch->dst_paths_lens)));
-        free2(batch, SIZEOF(*batch));
+        update_message_batch_free(batch, false);
         break;
     }
     case MSG_LOG:
@@ -163,8 +213,7 @@ update_ui_handler(void *data) {
             check_consistent_state();
         }
 
-        error("Waiting for thread to join...\n");
-        xpthread_join(&cecup.work_thread, NULL);
+        work_thread_join_once();
         break;
     case MSG_CLEAR_TREES:
         xpthread_mutex_lock(&cecup.arena_mutex);

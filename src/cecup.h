@@ -473,6 +473,9 @@ static struct {
     atomic_int child_pid;
     pthread_t work_thread;
     atomic_bool work_thread_done;
+    bool work_thread_started;
+    bool work_thread_joined;
+    bool window_destroying;
 
     atomic_bool stop_working;
 
@@ -632,6 +635,8 @@ static void stop_working(bool state);
 static bool work_should_stop(void);
 static void work_thread_done_set(bool state);
 static bool work_thread_is_done(void);
+static void work_thread_join_once(void);
+static void work_thread_start(void *(*function)(void *), void *data);
 static void child_pid_set(pid_t pid);
 static pid_t child_pid_get(void);
 static void child_pid_signal(int32 signal_number);
