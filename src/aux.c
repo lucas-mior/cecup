@@ -176,8 +176,13 @@ aux_protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.check_fs_button, !state);
     gtk_widget_set_sensitive(cecup.diff_entry, !state);
     gtk_widget_set_sensitive(cecup.term_entry, !state);
+    gtk_widget_set_sensitive(cecup.search_entry, !state);
+
     gtk_widget_set_sensitive(cecup.browse_button[L], !state);
     gtk_widget_set_sensitive(cecup.browse_button[R], !state);
+    gtk_widget_set_sensitive(cecup.tree[L], !state);
+    gtk_widget_set_sensitive(cecup.tree[R], !state);
+
     gtk_widget_set_sensitive(cecup.select_visible_button, !state);
     gtk_widget_set_sensitive(cecup.unselect_button, !state);
 
@@ -186,6 +191,7 @@ aux_protect_interface_from_user(bool state) {
     gtk_widget_set_sensitive(cecup.filter_delete, !state);
     gtk_widget_set_sensitive(cecup.filter_link,   !state);
     gtk_widget_set_sensitive(cecup.filter_ignore, !state);
+    gtk_widget_set_sensitive(cecup.filter_equal, !state);
 
     if (state) {
         gtk_widget_set_sensitive(cecup.sync_button, FALSE);
