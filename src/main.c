@@ -943,11 +943,7 @@ main(int32 argc, char **argv) {
             g_mkdir_with_parents(config_base, 0755);
             is_first_run = true;
 
-            COMMAND_PUSH(&command,
-                         "cp",
-                         "-r",
-                         "/etc/cecup/.",
-                         config_base);
+            COMMAND_PUSH(&command, "cp", "-r", "/etc/cecup/.", config_base);
             (void)command_run(&command, COMMAND_NONE);
             command_free(&command);
         }
