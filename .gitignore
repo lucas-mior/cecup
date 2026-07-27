@@ -24,3 +24,4 @@ gtk3/
 filelist.txt
 abackup
 temp_delete_me
+*.cmd
