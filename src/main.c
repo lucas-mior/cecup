@@ -2,10 +2,6 @@
 // Copyright (c) 2026 Lucas Mior
 
 #include "gtk_include.h"
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include "i18n.h"
 
 #include "cecup.h"
 #define CBASE_IMPLEMENT

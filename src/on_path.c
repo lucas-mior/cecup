@@ -306,9 +306,6 @@ on_path_functions_sink(void) {
 #define CBASE_IMPLEMENT
 #include "cbase.h"
 
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include "work.c"
 
 int

@@ -6,10 +6,8 @@
 
 #include "gtk_include.h"
 #include <glib/gmain.h>
-#include <stdlib.h>
 
-#include "util.c"
-#include "i18n.h"
+#include "cbase.h"
 
 #include "cecup.h"
 #include "aux.c"
@@ -49,6 +47,14 @@ update_message_is_batch(enum MsgType type) {
     case MSG_BATCH_ROW_TRANSFER:
     case MSG_BATCH_ROW_RENAME:
         return true;
+    case MSG_LOG:
+    case MSG_LOG_ERROR:
+    case MSG_LOG_CMD:
+    case MSG_IGNORE_PATTERN:
+    case MSG_WORK_FINISHED:
+    case MSG_CLEAR_TREES:
+    case MSG_PROGRESS:
+    case MSG_LAST:
     default:
         return false;
     }

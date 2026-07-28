@@ -4,10 +4,7 @@
 #if !defined(WORK_RSYNC)
 #define WORK_RSYNC
 
-#include <ctype.h>
-#include <fts.h>
-#include <stdatomic.h>
-
+#include "cbase.h"
 #include "cecup.h"
 #include "update.c"
 

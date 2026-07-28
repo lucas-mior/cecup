@@ -5,11 +5,7 @@
 #define CECUP_H
 
 #include "gtk_include.h"
-#include <stdatomic.h>
-#include <sys/stat.h>
-#include "generic.c"
-#include "arena.c"
-#include "i18n.h"
+#include "cbase.h"
 
 #define EMOJI_NEW "➕"
 #define EMOJI_LINK "🔗"

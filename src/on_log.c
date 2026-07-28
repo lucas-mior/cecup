@@ -5,8 +5,6 @@
 #define ON_LOG_C
 
 #include "gtk_include.h"
-#include <string.h>
-#include "util.c"
 #include "cecup.h"
 #include "on.h"
 
