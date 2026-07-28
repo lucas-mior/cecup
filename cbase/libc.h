@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <float.h>
+#include <ftw.h>
 #include <getopt.h>
 #include <inttypes.h>
 #include <libgen.h>
