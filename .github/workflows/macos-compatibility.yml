@@ -1,0 +1,66 @@
+name: macOS compatibility
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  darwin-cross:
+    name: Darwin cross compile (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-macos
+          - aarch64-macos
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+
+      - name: Install current Linux build inputs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gettext \
+            libgtk-4-dev \
+            pkg-config
+
+      - name: Cross compile
+        run: ./build.sh cross ${{ matrix.target }}
+
+  native-macos:
+    name: Native macOS build and tests
+    runs-on: macos-latest
+    continue-on-error: true
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install macOS build inputs
+        run: |
+          brew update
+          brew install gettext gtk4 pkg-config
+
+      - name: Build
+        run: |
+          export PATH="/opt/homebrew/opt/gettext/bin:$PATH"
+          export PATH="/usr/local/opt/gettext/bin:$PATH"
+          ./build.sh build
+
+      - name: Run tests
+        run: |
+          export PATH="/opt/homebrew/opt/gettext/bin:$PATH"
+          export PATH="/usr/local/opt/gettext/bin:$PATH"
+          ./build.sh test
