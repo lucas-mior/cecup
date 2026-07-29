@@ -157,7 +157,7 @@ work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
 }
 
 static bool
-work_rsync_action_is_transfer(enum Action action) {
+work_transfer_action_is_transfer(enum Action action) {
     switch (action) {
     case ACTION_NEW:
     case ACTION_UPDATE:
@@ -167,6 +167,11 @@ work_rsync_action_is_transfer(enum Action action) {
     default:
         return false;
     }
+}
+
+static bool
+work_rsync_action_is_transfer(enum Action action) {
+    return work_transfer_action_is_transfer(action);
 }
 
 static bool
@@ -688,14 +693,670 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     return;
 }
 
-static void *
-work_rsync(void *user_data) {
-    ThreadData *thread_data = user_data;
-    TaskList *tasks = thread_data->tasks;
-    bool has_transfers = false;
+typedef struct ManualHardLink {
+    FileID file_id;
+    char *dst_path;
+    int32 dst_path_len;
+} ManualHardLink;
+
+typedef struct ManualTransferState {
+    ManualHardLink *hardlinks;
+    MessageBatch **batch;
+
+    int32 hardlinks_count;
+    int32 hardlinks_capacity;
+    int32 nfiles_done;
+    int32 nfiles_total;
+
+    bool had_errors;
+} ManualTransferState;
+
+static char *
+work_transfer_backend_name(enum TransferBackend backend) {
+    switch (backend) {
+    case TRANSFER_BACKEND_RSYNC:
+        return "rsync";
+    case TRANSFER_BACKEND_MANUAL:
+        return "manual";
+    default:
+        return "unknown";
+    }
+}
+
+static enum TransferBackend
+work_transfer_backend_default(void) {
+#if OS_LINUX
+    return TRANSFER_BACKEND_RSYNC;
+#else
+    return TRANSFER_BACKEND_MANUAL;
+#endif
+}
+
+static enum TransferBackend
+work_transfer_backend_current(void) {
+    char *backend;
+
+    backend = getenv("CECUP_TRANSFER_BACKEND");
+    if (backend == NULL) {
+        return work_transfer_backend_default();
+    }
+
+    if (strequal(backend, "rsync")) {
+        return TRANSFER_BACKEND_RSYNC;
+    }
+    if (strequal(backend, "manual")) {
+        return TRANSFER_BACKEND_MANUAL;
+    }
+
+    {
+        enum TransferBackend default_backend;
+
+        default_backend = work_transfer_backend_default();
+        LOG_ERROR(_("Unknown transfer backend '%s'. Using %s instead.\n"),
+                  backend, work_transfer_backend_name(default_backend));
+        return default_backend;
+    }
+}
+
+static void
+work_transfer_trim_rsync_path(char *path, int64 *path_len) {
+    if (*path_len > 1) {
+        // rsync interprets slashes at the end of dir names differently
+        if (path[*path_len - 1] == '/') {
+            *path_len -= 1;
+        }
+    }
+
+    return;
+}
+
+static bool
+work_rsync_write_path(int32 fd, char *path, int32 path_len) {
+    int64 write_len;
+
+    write_len = path_len;
+    work_transfer_trim_rsync_path(path, &write_len);
+
+    write_all(fd, path, write_len);
+    write_all(fd, "\n", 1);
+    return true;
+}
+
+static bool
+work_rsync_backend_run(
+    TaskList *tasks,
+    int32 nfiles_total,
+    MessageBatch **batch
+) {
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
     int files_from_fd;
+    bool success = false;
+
+    if ((files_from_fd = mkstemp(files_from_filename)) < 0) {
+        error("Error in mkstemp: %s.\n", strerror(errno));
+        fatal(EXIT_FAILURE);
+    }
+
+    for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
+        work_rsync_write_path(files_from_fd,
+                              cecup.transfers[i], cecup.transfers_lens[i]);
+    }
+
+    for (int32 i = 0; i < tasks->count; i += 1) {
+        Task *task = tasks->items[i];
+        Traversal *traversal = &cecup.traversal[task->side];
+        HardLinks hardlinks;
+
+        if (!work_transfer_action_is_transfer(task->action)) {
+            continue;
+        }
+
+        if (task->action == ACTION_HARDLINK) {
+            if ((hash_lookup_inode_map(traversal->inode_map,
+                                       &task->file_id, &hardlinks))) {
+                for (int32 j = 0; j < hardlinks.count; j += 1) {
+                    work_rsync_write_path(files_from_fd,
+                                          hardlinks.names[j],
+                                          hardlinks.names_lens[j]);
+                }
+            }
+        }
+
+        work_rsync_write_path(files_from_fd, task->path, task->path_len);
+    }
+
+    XCLOSE(&files_from_fd);
+
+    do {
+        if (work_rsync_run(files_from_filename, nfiles_total, false, batch)) {
+            if (work_should_stop()) {
+                LOG_ERROR(_("Stop requested.\n"));
+                break;
+            }
+            success = work_rsync_run(files_from_filename,
+                                     nfiles_total, true, batch);
+        }
+    } while (0);
+
+    if (!DEBUGGING) {
+        xunlink(files_from_filename);
+    }
+
+    return success;
+}
+
+static bool
+work_transfer_full_path(
+    char *full_path,
+    int32 side,
+    char *path,
+    int32 path_len
+) {
+    if (path_len <= 0) {
+        LOG_ERROR(_("Refusing empty transfer path.\n"));
+        return false;
+    }
+
+    if (aux_is_root(path) || ((path_len == 1) && (path[0] == '.'))) {
+        SNPRINTF(full_path, "%s", cecup.base[side]);
+    } else {
+        SNPRINTF(full_path, "%s/%s", cecup.base[side], path);
+    }
+
+    return true;
+}
+
+static bool
+work_manual_make_parent_dirs(char *path) {
+    int32 base_len = cecup.base_len[R];
+
+    for (int32 i = base_len + 1; path[i] != '\0'; i += 1) {
+        if (path[i] != '/') {
+            continue;
+        }
+
+        path[i] = '\0';
+        if ((mkdir(path, 0777) < 0) && (errno != EEXIST)) {
+            LOG_ERROR(_("Error creating parent directory %s: %s.\n"),
+                      path, strerror(errno));
+            path[i] = '/';
+            return false;
+        }
+        path[i] = '/';
+    }
+
+    return true;
+}
+
+static bool
+work_manual_remove_destination(
+    ManualTransferState *state,
+    char *path,
+    int32 path_len,
+    char *dst_path
+) {
+    struct stat dst_stat;
+
+    if (lstat(dst_path, &dst_stat) < 0) {
+        if (errno == ENOENT) {
+            return true;
+        }
+        LOG_ERROR(_("Error checking destination %s: %s.\n"),
+                  dst_path, strerror(errno));
+        state->had_errors = true;
+        return false;
+    }
+
+    work_remove(state->batch, path, path_len, R);
+    return !work_should_stop();
+}
+
+static bool
+work_manual_remove_type_conflict(
+    ManualTransferState *state,
+    char *path,
+    int32 path_len,
+    char *dst_path,
+    struct stat *src_stat
+) {
+    struct stat dst_stat;
+
+    if (lstat(dst_path, &dst_stat) < 0) {
+        if (errno == ENOENT) {
+            return true;
+        }
+        LOG_ERROR(_("Error checking destination %s: %s.\n"),
+                  dst_path, strerror(errno));
+        state->had_errors = true;
+        return false;
+    }
+
+    if ((dst_stat.st_mode & S_IFMT) == (src_stat->st_mode & S_IFMT)) {
+        return true;
+    }
+
+    LOG(_("Removing destination type conflict %s...\n"), dst_path);
+    work_remove(state->batch, path, path_len, R);
+    return !work_should_stop();
+}
+
+static void
+work_manual_preserve_metadata(char *dst_path, struct stat *src_stat) {
+    struct utimbuf times;
+
+    if (chmod(dst_path, src_stat->st_mode & 07777) < 0) {
+        LOG_ERROR(_("Error setting permissions on %s: %s.\n"),
+                  dst_path, strerror(errno));
+    }
+
+    times.actime = src_stat->st_atime;
+    times.modtime = src_stat->st_mtime;
+    if (utime(dst_path, &times) < 0) {
+        LOG_ERROR(_("Error setting timestamps on %s: %s.\n"),
+                  dst_path, strerror(errno));
+    }
+
+    return;
+}
+
+static int32
+work_manual_hardlink_find(ManualTransferState *state, FileID *file_id) {
+    for (int32 i = 0; i < state->hardlinks_count; i += 1) {
+        ManualHardLink *hardlink = &state->hardlinks[i];
+
+        if ((hardlink->file_id.device == file_id->device)
+            && (hardlink->file_id.inode == file_id->inode)) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+static void
+work_manual_hardlink_remember(
+    ManualTransferState *state,
+    FileID *file_id,
+    char *dst_path
+) {
+    ManualHardLink *hardlink;
+    int32 dst_path_len;
+
+    if (work_manual_hardlink_find(state, file_id) >= 0) {
+        return;
+    }
+
+    if (state->hardlinks_count >= state->hardlinks_capacity) {
+        int32 old_capacity;
+
+        old_capacity = state->hardlinks_capacity;
+        if (state->hardlinks_capacity == 0) {
+            state->hardlinks_capacity = INITIAL_CAPACITY;
+        } else {
+            state->hardlinks_capacity *= 2;
+        }
+        state->hardlinks = realloc2(state->hardlinks,
+                                    old_capacity, state->hardlinks_capacity,
+                                    SIZEOF(*(state->hardlinks)));
+    }
+
+    hardlink = &state->hardlinks[state->hardlinks_count];
+    *hardlink = (ManualHardLink){0};
+
+    dst_path_len = strlen32(dst_path);
+    hardlink->file_id = *file_id;
+    hardlink->dst_path = malloc2(dst_path_len + 1);
+    memcpy64(hardlink->dst_path, dst_path, dst_path_len + 1);
+    hardlink->dst_path_len = dst_path_len;
+
+    state->hardlinks_count += 1;
+    return;
+}
+
+static void
+work_manual_hardlinks_free(ManualTransferState *state) {
+    for (int32 i = 0; i < state->hardlinks_count; i += 1) {
+        ManualHardLink *hardlink = &state->hardlinks[i];
+
+        free2(hardlink->dst_path, hardlink->dst_path_len + 1);
+    }
+
+    free2(state->hardlinks,
+          state->hardlinks_capacity * SIZEOF(*(state->hardlinks)));
+    return;
+}
+
+static void
+work_manual_item_done(
+    ManualTransferState *state,
+    char *path,
+    int32 path_len
+) {
+    state->nfiles_done += 1;
+    work_batch_push(state->batch, MSG_BATCH_ROW_TRANSFER, R, path, path_len);
+
+    if (state->nfiles_total > 0) {
+        update_progress_bar((double)state->nfiles_done
+                            / (double)state->nfiles_total);
+    }
+
+    return;
+}
+
+static bool
+work_manual_copy_regular_contents(char *dst_path, char *src_path, mode_t mode) {
+    char buffer[BUFSIZ];
+    int32 src_fd;
+    int32 dst_fd;
+    int64 bytes_read;
+
+    src_fd = open(src_path, O_RDONLY);
+    if (src_fd < 0) {
+        LOG_ERROR(_("Error opening %s for reading: %s.\n"),
+                  src_path, strerror(errno));
+        return false;
+    }
+
+    dst_fd = open(dst_path, O_WRONLY | O_CREAT | O_TRUNC, mode & 07777);
+    if (dst_fd < 0) {
+        LOG_ERROR(_("Error opening %s for writing: %s.\n"),
+                  dst_path, strerror(errno));
+        XCLOSE(&src_fd, src_path);
+        return false;
+    }
+
+    while ((bytes_read = read64(src_fd, buffer, SIZEOF(buffer))) > 0) {
+        int64 bytes_written;
+
+        bytes_written = write64(dst_fd, buffer, bytes_read);
+        if (bytes_written != bytes_read) {
+            LOG_ERROR(_("Error writing %s: %s.\n"),
+                      dst_path, strerror(errno));
+            XCLOSE(&src_fd, src_path);
+            XCLOSE(&dst_fd, dst_path);
+            return false;
+        }
+    }
+
+    if (bytes_read < 0) {
+        LOG_ERROR(_("Error reading %s: %s.\n"), src_path, strerror(errno));
+        XCLOSE(&src_fd, src_path);
+        XCLOSE(&dst_fd, dst_path);
+        return false;
+    }
+
+    XCLOSE(&src_fd, src_path);
+    XCLOSE(&dst_fd, dst_path);
+    return true;
+}
+
+static bool
+work_manual_copy_regular(
+    ManualTransferState *state,
+    char *src_path,
+    char *dst_path,
+    char *path,
+    int32 path_len,
+    struct stat *src_stat
+) {
+    FileID file_id;
+    int32 hardlink_idx;
+
+    if (!work_manual_make_parent_dirs(dst_path)) {
+        state->had_errors = true;
+        return false;
+    }
+    if (!work_manual_remove_type_conflict(state, path, path_len,
+                                          dst_path, src_stat)) {
+        state->had_errors = true;
+        return false;
+    }
+
+    file_id = file_id_from_stat(src_stat);
+    hardlink_idx = -1;
+    if (src_stat->st_nlink > 1) {
+        hardlink_idx = work_manual_hardlink_find(state, &file_id);
+    }
+
+    if (hardlink_idx >= 0) {
+        ManualHardLink *hardlink = &state->hardlinks[hardlink_idx];
+
+        if (STREQUAL(hardlink->dst_path, hardlink->dst_path_len,
+                     dst_path, strlen32(dst_path))) {
+            return true;
+        }
+
+        if (!work_manual_remove_destination(state, path, path_len, dst_path)) {
+            state->had_errors = true;
+            return false;
+        }
+        if (link(hardlink->dst_path, dst_path) == 0) {
+            LOG(_("Created hardlink %s -> %s.\n"),
+                dst_path, hardlink->dst_path);
+            work_manual_item_done(state, path, path_len);
+            return true;
+        }
+
+        LOG_ERROR(_("Error creating hardlink %s -> %s: %s. Copying instead.\n"),
+                  dst_path, hardlink->dst_path, strerror(errno));
+    }
+
+    if (!work_manual_copy_regular_contents(dst_path, src_path,
+                                           src_stat->st_mode)) {
+        state->had_errors = true;
+        return false;
+    }
+
+    work_manual_preserve_metadata(dst_path, src_stat);
+    if (src_stat->st_nlink > 1) {
+        work_manual_hardlink_remember(state, &file_id, dst_path);
+    }
+
+    LOG(_("Copied %s -> %s.\n"), src_path, dst_path);
+    work_manual_item_done(state, path, path_len);
+    return true;
+}
+
+static bool
+work_manual_copy_symlink(
+    ManualTransferState *state,
+    char *src_path,
+    char *dst_path,
+    char *path,
+    int32 path_len
+) {
+    char target[MAX_PATH_LENGTH];
+    int64 target_len;
+
+    target_len = readlink(src_path, target, SIZEOF(target) - 1);
+    if (target_len < 0) {
+        LOG_ERROR(_("Error reading symlink %s: %s.\n"),
+                  src_path, strerror(errno));
+        state->had_errors = true;
+        return false;
+    }
+    target[target_len] = '\0';
+
+    if (!work_manual_make_parent_dirs(dst_path)) {
+        state->had_errors = true;
+        return false;
+    }
+    if (!work_manual_remove_destination(state, path, path_len, dst_path)) {
+        state->had_errors = true;
+        return false;
+    }
+
+    if (symlink(target, dst_path) < 0) {
+        LOG_ERROR(_("Error creating symlink %s -> %s: %s.\n"),
+                  dst_path, target, strerror(errno));
+        state->had_errors = true;
+        return false;
+    }
+
+    LOG(_("Created symlink %s -> %s.\n"), dst_path, target);
+    work_manual_item_done(state, path, path_len);
+    return true;
+}
+
+static bool
+work_manual_copy_dir(
+    ManualTransferState *state,
+    char *dst_path,
+    char *path,
+    int32 path_len,
+    struct stat *src_stat
+) {
+    if (!work_manual_make_parent_dirs(dst_path)) {
+        state->had_errors = true;
+        return false;
+    }
+    if (!work_manual_remove_type_conflict(state, path, path_len,
+                                          dst_path, src_stat)) {
+        state->had_errors = true;
+        return false;
+    }
+
+    if ((mkdir(dst_path, src_stat->st_mode & 07777) < 0) && (errno != EEXIST)) {
+        LOG_ERROR(_("Error creating directory %s: %s.\n"),
+                  dst_path, strerror(errno));
+        state->had_errors = true;
+        return false;
+    }
+
+    work_manual_preserve_metadata(dst_path, src_stat);
+    LOG(_("Created directory %s.\n"), dst_path);
+    work_manual_item_done(state, path, path_len);
+    return true;
+}
+
+static bool
+work_manual_copy_path(
+    ManualTransferState *state,
+    char *path,
+    int32 path_len
+) {
+    char src_path[MAX_PATH_LENGTH];
+    char dst_path[MAX_PATH_LENGTH];
+    struct stat src_stat;
+
+    if (!work_transfer_full_path(src_path, L, path, path_len)) {
+        state->had_errors = true;
+        return false;
+    }
+    if (!work_transfer_full_path(dst_path, R, path, path_len)) {
+        state->had_errors = true;
+        return false;
+    }
+
+    if (lstat(src_path, &src_stat) < 0) {
+        LOG_ERROR(_("Error checking source %s: %s.\n"),
+                  src_path, strerror(errno));
+        state->had_errors = true;
+        return false;
+    }
+
+    if (S_ISDIR(src_stat.st_mode)) {
+        return work_manual_copy_dir(state, dst_path,
+                                    path, path_len, &src_stat);
+    }
+    if (S_ISLNK(src_stat.st_mode)) {
+        return work_manual_copy_symlink(state, src_path, dst_path,
+                                        path, path_len);
+    }
+    if (S_ISREG(src_stat.st_mode)) {
+        return work_manual_copy_regular(state, src_path, dst_path,
+                                        path, path_len, &src_stat);
+    }
+
+    LOG_ERROR(_("Manual copier does not support special file %s.\n"),
+              src_path);
+    state->had_errors = true;
+    return false;
+}
+
+static void
+work_manual_copy_hardlink_task(ManualTransferState *state, Task *task) {
+    Traversal *traversal = &cecup.traversal[task->side];
+    HardLinks hardlinks;
+
+    if ((hash_lookup_inode_map(traversal->inode_map,
+                               &task->file_id, &hardlinks))) {
+        for (int32 j = 0; j < hardlinks.count; j += 1) {
+            if (work_should_stop()) {
+                return;
+            }
+            work_manual_copy_path(state,
+                                  hardlinks.names[j],
+                                  hardlinks.names_lens[j]);
+        }
+    }
+
+    return;
+}
+
+static bool
+work_manual_backend_run(
+    TaskList *tasks,
+    int32 nfiles_total,
+    MessageBatch **batch
+) {
+    ManualTransferState state = {0};
+
+    state.batch = batch;
+    state.nfiles_total = nfiles_total;
+
+    update_progress_info(
+        _("Copying files"),
+        _("Copying files with the manual recursive copier...")
+    );
+    LOG(_("Running manual transfer backend...\n"));
+
+    for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
+        if (work_should_stop()) {
+            break;
+        }
+        work_manual_copy_path(&state,
+                              cecup.transfers[i], cecup.transfers_lens[i]);
+    }
+
+    for (int32 i = 0; i < tasks->count; i += 1) {
+        Task *task = tasks->items[i];
+
+        if (work_should_stop()) {
+            break;
+        }
+        if (!work_transfer_action_is_transfer(task->action)) {
+            continue;
+        }
+
+        if (task->action == ACTION_HARDLINK) {
+            work_manual_copy_hardlink_task(&state, task);
+        }
+        work_manual_copy_path(&state, task->path, task->path_len);
+    }
+
+    work_manual_hardlinks_free(&state);
+
+    if (work_should_stop()) {
+        LOG_ERROR(_("Stop requested. Cancelled manual transfer.\n"));
+        return false;
+    }
+    if (state.had_errors) {
+        LOG_ERROR(_("Manual transfer finished with errors.\n"));
+        return false;
+    }
+
+    return true;
+}
+
+static void *
+work_transfer(void *user_data) {
+    ThreadData *thread_data = user_data;
+    TaskList *tasks = thread_data->tasks;
+    enum TransferBackend backend;
     MessageBatch *batch = NULL;
+    bool has_transfers = false;
+    bool success = true;
     int32 nfiles_total = 0;
 
     if (tasks == NULL) {
@@ -703,10 +1364,10 @@ work_rsync(void *user_data) {
             LOG_ERROR(_("There are no operations to make.\n"));
             work_finalize(thread_data, false);
         } else {
-            has_transfers = true;
+            has_transfers = cecup.ntransfers > 0;
             nfiles_total = cecup.ntransfers;
         }
-        tasks = malloc2(sizeof(*tasks));
+        tasks = malloc2(SIZEOF(*tasks));
         *tasks = (TaskList){0};
     }
 
@@ -724,7 +1385,7 @@ work_rsync(void *user_data) {
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
 
-        if (work_rsync_action_is_transfer(task->action)) {
+        if (work_transfer_action_is_transfer(task->action)) {
             has_transfers = true;
             nfiles_total += 1;
             continue;
@@ -751,77 +1412,24 @@ work_rsync(void *user_data) {
         work_finalize(thread_data, false);
     }
 
-    if ((files_from_fd = mkstemp(files_from_filename)) < 0) {
-        error("Error in mkstemp: %s.\n", strerror(errno));
-        fatal(EXIT_FAILURE);
+    backend = work_transfer_backend_current();
+    LOG(_("Using %s transfer backend.\n"), work_transfer_backend_name(backend));
+
+    switch (backend) {
+    case TRANSFER_BACKEND_RSYNC:
+        success = work_rsync_backend_run(tasks, nfiles_total, &batch);
+        break;
+    case TRANSFER_BACKEND_MANUAL:
+        success = work_manual_backend_run(tasks, nfiles_total, &batch);
+        break;
+    default:
+        LOG_ERROR(_("Invalid transfer backend.\n"));
+        success = false;
+        break;
     }
 
-    for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
-        char *file = cecup.transfers[i];
-        int64 left = cecup.transfers_lens[i];
-        int64 written = 0;
-
-        if (left > 1) {
-            // rsync interprets slashes at the end of dir names differently
-            if (file[left - 1] == '/') {
-                left -= 1;
-            }
-        }
-
-        write_all(files_from_fd, &file[written], left);
-        write_all(files_from_fd, "\n", 1);
-    }
-
-    for (int32 i = 0; i < tasks->count; i += 1) {
-        Task *task = tasks->items[i];
-        Traversal *traversal = &cecup.traversal[task->side];
-        int32 write_len;
-        HardLinks hardlinks;
-
-        if (!work_rsync_action_is_transfer(task->action)) {
-            continue;
-        }
-
-        if (task->action == ACTION_HARDLINK) {
-            if ((hash_lookup_inode_map(traversal->inode_map, &task->file_id, &hardlinks))) {
-                for (int32 j = 0; j < hardlinks.count; j += 1) {
-                    char *link_name = hardlinks.names[j];
-                    
-                    if ((write_len = hardlinks.names_lens[j]) > 1) {
-                        // rsync interprets slashes at the end of dir names differently
-                        if (link_name[write_len - 1] == '/') {
-                            write_len -= 1;
-                        }
-                    }
-
-                    write_all(files_from_fd, link_name, write_len);
-                    write_all(files_from_fd, "\n", 1);
-                }
-            }
-        }
-
-        if ((write_len = task->path_len) > 1) {
-            if (task->path[write_len - 1] == '/') {
-                write_len -= 1;
-            }
-        }
-        write_all(files_from_fd, task->path, write_len);
-        write_all(files_from_fd, "\n", 1);
-    }
-
-    XCLOSE(&files_from_fd);
-
-    do {
-        if (work_rsync_run(files_from_filename, nfiles_total, false, &batch)) {
-            if (work_should_stop()) {
-                LOG_ERROR(_("Stop requested.\n"));
-                break;
-            }
-            work_rsync_run(files_from_filename, nfiles_total, true, &batch);
-        }
-    } while (0);
-    if (!DEBUGGING) {
-        xunlink(files_from_filename);
+    if (!success && !work_should_stop()) {
+        LOG_ERROR(_("Transfer backend failed.\n"));
     }
 
     work_batch_flush(&batch);
@@ -830,12 +1438,19 @@ work_rsync(void *user_data) {
     pthread_exit(NULL);
 }
 
+static void *
+work_rsync(void *user_data) {
+    return work_transfer(user_data);
+}
+
 #if 0 == TESTING_work_rsync
 static inline void
 work_rsync_functions_sink(void) {
     (void)work_rsync_functions_sink;
     (void)work_rsync;
     (void)work_rsync_run;
+    (void)work_rsync_action_is_transfer;
+    (void)work_transfer;
 }
 #endif
 

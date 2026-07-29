@@ -294,7 +294,7 @@ on_sync_response(GtkDialog *dialog, int32 response_id, void *data) {
     thread_data = malloc2(SIZEOF(*thread_data));
     *thread_data = (ThreadData){0};
 
-    work_thread_start(work_rsync, thread_data);
+    work_thread_start(work_transfer, thread_data);
     return;
 }
 

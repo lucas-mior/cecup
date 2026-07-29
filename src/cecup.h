@@ -465,7 +465,7 @@ static struct {
     Arena *arena;
     pthread_mutex_t arena_mutex;
 
-    // this is only needed for killing rsync when the window is destroyed
+    // this is only needed for killing child transfers when the window is destroyed
     atomic_int child_pid;
     pthread_t work_thread;
     atomic_bool work_thread_done;
@@ -517,6 +517,11 @@ typedef struct ThreadData {
     TaskList *tasks;
     bool check_different_fs;
 } ThreadData;
+
+enum TransferBackend {
+    TRANSFER_BACKEND_RSYNC,
+    TRANSFER_BACKEND_MANUAL,
+};
 
 typedef struct CecupMenuItem {
     char *label;
@@ -622,6 +627,10 @@ static void traversal_clean(Traversal *traversal);
 static void work_cleanup(void);
 static void __attribute__((noreturn)) work_preview_cancel_and_reset(ThreadData *thread_data);
 static void *work_preview(void *user_data);
+static bool work_transfer_action_is_transfer(enum Action action);
+static char *work_transfer_backend_name(enum TransferBackend backend);
+static enum TransferBackend work_transfer_backend_current(void);
+static void *work_transfer(void *user_data);
 static char *work_rsync_itemize_skip(char *buf_output, int32 line_len);
 static bool work_rsync_run(char *files_from_filename, int32 nfiles_total,
                            bool checksum, MessageBatch **batch_ptr);

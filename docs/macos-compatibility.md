@@ -152,3 +152,38 @@ For Linux, macOS, and BSD targets with `CBASE_HAS_FTS`, `FsWalk` is currently a
 small adapter over `fts_open`, `fts_read`, `fts_set(FTS_SKIP)`, and
 `fts_close`. Targets without usable `fts` now have a single place where an
 `opendir`/`readdir`/`lstat` fallback can be added later.
+
+## Transfer backend baseline
+
+Transfer execution is now selected through a small backend layer.
+
+The default backend policy is:
+
+- Linux: `rsync`.
+- non-Linux Unix targets: `manual`.
+
+The backend can be overridden for testing with `CECUP_TRANSFER_BACKEND=rsync` or
+`CECUP_TRANSFER_BACKEND=manual`.
+
+The rsync backend keeps the previous command construction, output parsing,
+checksum verification pass, and progress parsing. Deletion handling and task
+selection now happen before backend dispatch so they can be shared by all
+transfer implementations.
+
+The manual backend is intentionally conservative. It copies from the original
+side to the backup side using the task list already computed by preview. It
+currently supports:
+
+- directories;
+- regular files;
+- symlinks;
+- hardlinks when multiple source paths with the same file identity are copied in
+  the same transfer operation;
+- mode and mtime preservation for regular files and directories;
+- cancellation between copied items.
+
+The manual backend is not meant to be metadata-equivalent to rsync yet. It does
+not preserve owner/group, ACLs, extended attributes, Finder metadata, resource
+forks, or special files. That is acceptable for this step because the goal is to
+introduce the backend boundary and a usable non-rsync copy path before adding
+macOS-specific metadata policy and CI coverage.

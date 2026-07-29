@@ -43,6 +43,7 @@
 
 #if OS_UNIX
 #include <pthread.h>
+#include <utime.h>
 #endif
 
 #if OS_UNIX
