@@ -1524,60 +1524,6 @@ timediff(struct timespec t0, struct timespec t1) {
 }
 
 CBASE_API_DEF void
-time_monotonic_precise(struct timespec *time) {
-    int32 status;
-
-#if defined(CLOCK_MONOTONIC_RAW)
-    status = clock_gettime(CLOCK_MONOTONIC_RAW, time);
-#elif defined(CLOCK_MONOTONIC)
-    status = clock_gettime(CLOCK_MONOTONIC, time);
-#else
-    struct timeval timeval;
-
-    status = gettimeofday(&timeval, NULL);
-    if (status == 0) {
-        time->tv_sec = timeval.tv_sec;
-        time->tv_nsec = timeval.tv_usec*1000;
-    }
-#endif
-
-    if (status < 0) {
-        error("Error reading precise monotonic clock: %s.\n",
-              strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
-    return;
-}
-
-CBASE_API_DEF void
-time_monotonic_coarse(struct timespec *time) {
-    int32 status;
-
-#if defined(CLOCK_MONOTONIC_COARSE)
-    status = clock_gettime(CLOCK_MONOTONIC_COARSE, time);
-#elif defined(CLOCK_MONOTONIC)
-    status = clock_gettime(CLOCK_MONOTONIC, time);
-#elif defined(CLOCK_MONOTONIC_RAW)
-    status = clock_gettime(CLOCK_MONOTONIC_RAW, time);
-#else
-    struct timeval timeval;
-
-    status = gettimeofday(&timeval, NULL);
-    if (status == 0) {
-        time->tv_sec = timeval.tv_sec;
-        time->tv_nsec = timeval.tv_usec*1000;
-    }
-#endif
-
-    if (status < 0) {
-        error("Error reading coarse monotonic clock: %s.\n",
-              strerror(errno));
-        fatal(EXIT_FAILURE);
-    }
-    return;
-}
-
-CBASE_API_DEF void
 catfile(int where, char *file) {
     int fd;
     char buffer[4096];
@@ -2359,8 +2305,6 @@ util_functions_sink(void) {
     (void)deg2rad;
     (void)path_basename;
     (void)timediff;
-    (void)time_monotonic_coarse;
-    (void)time_monotonic_precise;
     (void)catfile;
     (void)parse_option;
     (void)command_print;
@@ -2470,7 +2414,7 @@ main(int argc, char **argv) {
         sb_free(&builder);
     }
 
-    time_monotonic_precise(&t0);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
 #if OS_UNIX
     timezone_init();
 #endif
@@ -2749,7 +2693,7 @@ main(int argc, char **argv) {
     (void)fread64;
     (void)program_len;
 
-    time_monotonic_precise(&t1);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
     PRINT_TIMINGS(1, t0, t1);
     exit(EXIT_SUCCESS);
 }

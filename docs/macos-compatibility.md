@@ -91,3 +91,26 @@ that would prevent macOS CI from reaching the C portability work:
 
 This does not make the macOS build pass by itself. It only removes build-script
 barriers so later steps can address source-level portability failures.
+
+## Platform feature-gate baseline
+
+The first source-level portability layer now uses named feature gates instead of
+assuming that every Unix target is Linux/glibc:
+
+- `CBASE_HAS_FTS` controls whether `<fts.h>` is included;
+- `CBASE_HAS_PROCFS` keeps `/proc` process scanning Linux-specific;
+- `CBASE_HAS_F_GETPATH` detects the macOS `fcntl(F_GETPATH)` feature from the
+  actual headers;
+- `CBASE_DIRENT_HAS_D_TYPE` gates direct use of `struct dirent.d_type`;
+- `CBASE_HAS_SYSTEM_MEMMEM` keeps the GNU `memmem` dependency optional and uses
+  the project fallback otherwise;
+- `CBASE_HAS_GETTEXT` makes gettext support explicit, with no-op fallbacks when
+  the platform/build does not provide libintl.
+
+The build script also defines `_XOPEN_SOURCE=700` for non-Windows targets and
+`_DARWIN_C_SOURCE` for Darwin targets so POSIX and Darwin declarations are
+available before system headers are parsed.
+
+This step still does not make the complete macOS build pass. The next
+expected failures are Linux-specific clock constants and higher-level runtime
+assumptions.
