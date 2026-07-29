@@ -9,6 +9,7 @@
 #include "util.c"
 #include "update.c"
 #include "cecup.h"
+#include "traversal.c"
 #include "work_rsync.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
@@ -195,19 +196,19 @@ on_path_edited(GtkEditable *editable, void *data) {
     }
 
     if (relative_new[new_length - 1] == '/') {
-        char *paths[] = {new_full, NULL};
-        FTS *fts_handle;
-        FTSENT *entry;
+        FsWalk fs_walk;
+        FsWalkEntry *entry;
 
-        if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
-            error("Error in fts_open(%s): %s.\n", paths[0], strerror(errno));
+        if (!fs_walk_open(&fs_walk, new_full)) {
+            error("Error in fs_walk_open(%s): %s.\n",
+                  new_full, strerror(errno));
             aux_invalidate_preview();
             work_batch_flush(&batch);
             return;
         }
 
         errno = 0;
-        while ((entry = fts_read(fts_handle))) {
+        while ((entry = fs_walk_read(&fs_walk))) {
             char *child_rel_new;
             char child_rel_old[MAX_PATH_LENGTH];
             int32 child_rel_new_len;
@@ -216,23 +217,24 @@ on_path_edited(GtkEditable *editable, void *data) {
             bool is_dir;
 
             /* Skip the root directory itself as it's already pushed */
-            if (entry->fts_level == 0) {
+            if (entry->level == 0) {
                 continue;
             }
-            switch (entry->fts_info) {
-            case FTS_D:
-                    continue;
-            case FTS_ERR:
-            case FTS_NS:
-                error("FTS error on %s: %s.\n", entry->fts_path, strerror(entry->fts_errno));
+            switch (entry->info) {
+            case FS_WALK_PRE_DIR:
+                continue;
+            case FS_WALK_ERROR:
+            case FS_WALK_STAT_ERROR:
+                error("FsWalk error on %s: %s.\n",
+                      entry->path, strerror(entry->error));
                 continue;
             default:
                 break;
             }
-            is_dir = entry->fts_info == FTS_DP;
+            is_dir = entry->info == FS_WALK_POST_DIR;
 
-            child_rel_new = entry->fts_path + base_path_len;
-            child_rel_new_len = (int32)entry->fts_pathlen - base_path_len;
+            child_rel_new = entry->path + base_path_len;
+            child_rel_new_len = entry->path_len - base_path_len;
             if (child_rel_new[0] == '/') {
                 child_rel_new += 1;
                 child_rel_new_len -= 1;
@@ -242,7 +244,8 @@ on_path_edited(GtkEditable *editable, void *data) {
             suffix_len = child_rel_new_len - new_length;
             child_rel_old_len = old_length + suffix_len;
             memcpy64(child_rel_old, relative_old, old_length);
-            memcpy64(child_rel_old + old_length, child_rel_new + new_length, suffix_len + 1);
+            memcpy64(child_rel_old + old_length,
+                     child_rel_new + new_length, suffix_len + 1);
 
             normalize(child_rel_old, &child_rel_old_len);
 
@@ -258,10 +261,12 @@ on_path_edited(GtkEditable *editable, void *data) {
             errno = 0;
         }
         if (errno) {
-            LOG_ERROR(_("Error in fts_read(%s): %s.\n"), new_full, strerror(errno));
+            LOG_ERROR(_("Error in fs_walk_read(%s): %s.\n"),
+                      new_full, strerror(errno));
         }
-        if (fts_close(fts_handle) < 0) {
-            LOG_ERROR(_("Error in fts_close(%s): %s.\n"), new_full, strerror(errno));
+        if (fs_walk_close(&fs_walk) < 0) {
+            LOG_ERROR(_("Error in fs_walk_close(%s): %s.\n"),
+                      new_full, strerror(errno));
         }
     }
 

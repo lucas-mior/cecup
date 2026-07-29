@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "cecup.h"
 #include "update.c"
+#include "traversal.c"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_work_rsync 1
@@ -578,18 +579,18 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             LOG("Removed %s...\n", full_path);
         }
     } else {
-        char *paths[] = {full_path, NULL};
-        FTS *fts_handle;
-        FTSENT *entry;
+        FsWalk fs_walk;
+        FsWalkEntry *entry;
         bool had_errors = false;
 
-        if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
-            error("Error in fts_open(%s): %s.\n", paths[0], strerror(errno));
+        if (!fs_walk_open(&fs_walk, full_path)) {
+            error("Error in fs_walk_open(%s): %s.\n",
+                  full_path, strerror(errno));
             return;
         }
 
         errno = 0;
-        while ((entry = fts_read(fts_handle))) {
+        while ((entry = fs_walk_read(&fs_walk))) {
             char *path_tmp;
             int32 rel_path_len;
             int32 is_dir = false;
@@ -599,27 +600,28 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
                 break;
             }
 
-            switch (entry->fts_info) {
-            case FTS_F:
-            case FTS_SL:
-            case FTS_SLNONE:
-            case FTS_DEFAULT:
+            switch (entry->info) {
+            case FS_WALK_FILE:
+            case FS_WALK_SYMLINK:
+            case FS_WALK_SYMLINK_BROKEN:
+            case FS_WALK_DEFAULT:
                 break;
-            case FTS_DP:
+            case FS_WALK_POST_DIR:
                 is_dir = true;
                 break;
-            case FTS_DNR:
-            case FTS_ERR:
-            case FTS_NS:
-                error("FTS error on %s: %s.\n", entry->fts_path, strerror(entry->fts_errno));
+            case FS_WALK_DIR_UNREADABLE:
+            case FS_WALK_ERROR:
+            case FS_WALK_STAT_ERROR:
+                error("FsWalk error on %s: %s.\n",
+                      entry->path, strerror(entry->error));
                 had_errors = true;
                 continue;
             default:
                 continue;
             }
 
-            path_tmp = entry->fts_path + base_path_len;
-            rel_path_len = (int32)entry->fts_pathlen - base_path_len;
+            path_tmp = entry->path + base_path_len;
+            rel_path_len = entry->path_len - base_path_len;
 
             if (path_tmp[0] == '/') {
                 path_tmp += 1;
@@ -631,7 +633,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
                 rel_path_len = 1;
             }
 
-            ASSERT_LESS(entry->fts_pathlen, MAX_PATH_LENGTH);
+            ASSERT_LESS(entry->path_len, MAX_PATH_LENGTH);
             memcpy64(rel_path, path_tmp, rel_path_len + 1);
             normalize(rel_path, &rel_path_len);
 
@@ -642,29 +644,34 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             }
 
             if (is_dir) {
-                if (rmdir(entry->fts_accpath) < 0) {
-                    error("Error in rmdir(%s): %s.\n", entry->fts_accpath, strerror(errno));
+                if (rmdir(entry->access_path) < 0) {
+                    error("Error in rmdir(%s): %s.\n",
+                          entry->access_path, strerror(errno));
                     had_errors = true;
                 } else {
-                    work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, rel_path, rel_path_len);
+                    work_batch_push(batch, MSG_BATCH_ROW_REMOVE,
+                                    side, rel_path, rel_path_len);
                 }
             } else {
-                if (unlink(entry->fts_accpath) < 0) {
-                    error("Error in unlink(%s): %s.\n", entry->fts_accpath, strerror(errno));
+                if (unlink(entry->access_path) < 0) {
+                    error("Error in unlink(%s): %s.\n",
+                          entry->access_path, strerror(errno));
                     had_errors = true;
                 } else {
-                    work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, rel_path, rel_path_len);
+                    work_batch_push(batch, MSG_BATCH_ROW_REMOVE,
+                                    side, rel_path, rel_path_len);
                 }
             }
             errno = 0;
         }
 
         if (errno) {
-            LOG_ERROR(_("Error in fts_read(%s): %s.\n"), full_path, strerror(errno));
+            LOG_ERROR(_("Error in fs_walk_read(%s): %s.\n"),
+                      full_path, strerror(errno));
             had_errors = true;
         }
-        if (fts_close(fts_handle) < 0) {
-            LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
+        if (fs_walk_close(&fs_walk) < 0) {
+            LOG_ERROR(_("Error in fs_walk_close: %s.\n"), strerror(errno));
             had_errors = true;
         }
 
@@ -967,7 +974,7 @@ main(void) {
     work_remove(&batch, "rm_test.txt", 11, R);
     ASSERT(access("/tmp/cecup_test_dst/rm_test.txt", F_OK) != 0);
 
-    /* Test work_remove on directory using FTS */
+    /* Test work_remove on directory using FsWalk */
     mkdir("/tmp/cecup_test_dst/rm_dir/", 0755);
     fd = open("/tmp/cecup_test_dst/rm_dir/file.txt", O_CREAT | O_WRONLY, 0644);
     close(fd);

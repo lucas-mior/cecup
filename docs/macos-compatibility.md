@@ -133,3 +133,22 @@ the Linux-specific clock IDs are unavailable.
 This removes the expected macOS compile failure from direct uses of
 `CLOCK_MONOTONIC_COARSE` while keeping the caller intent visible at every call
 site.
+
+## Traversal facade baseline
+
+Direct `FTS` usage in application code has been moved behind the `FsWalk`
+interface. The first backend is still intentionally thin and keeps the current
+`fts(3)` behavior:
+
+- physical traversal, so symlinks are not followed;
+- no implicit current-working-directory changes;
+- pre-order directory entries for scanning and post-order directory entries for
+  recursive removal/rename bookkeeping;
+- directory skip support for ignored subtrees;
+- path, access path, file name, stat pointer, level, and entry error fields are
+  exposed through project-owned names.
+
+For Linux, macOS, and BSD targets with `CBASE_HAS_FTS`, `FsWalk` is currently a
+small adapter over `fts_open`, `fts_read`, `fts_set(FTS_SKIP)`, and
+`fts_close`. Targets without usable `fts` now have a single place where an
+`opendir`/`readdir`/`lstat` fallback can be added later.

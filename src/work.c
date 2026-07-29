@@ -43,7 +43,7 @@ work_finalize(ThreadData *thread_data, bool preview_clean) {
 static void
 work_traverse_unknown_record(
     Traversal *traversal,
-    FTSENT *ent,
+    FsWalkEntry *entry,
     enum TraversalState state,
     bool known_dir
 ) {
@@ -51,15 +51,15 @@ work_traverse_unknown_record(
     int32 path_len;
     char path[MAX_PATH_LENGTH];
 
-    if (ent->fts_pathlen >= MAX_PATH_LENGTH) {
+    if (entry->path_len >= MAX_PATH_LENGTH) {
         LOG_ERROR(_("Traversal error path is too long: %s.\n"),
-                  ent->fts_path);
+                  entry->path);
         traversal_root_unknown_record(traversal);
         return;
     }
 
-    path_tmp = ent->fts_path + traversal->base_path_len;
-    path_len = (int32)ent->fts_pathlen - traversal->base_path_len;
+    path_tmp = entry->path + traversal->base_path_len;
+    path_len = (int32)entry->path_len - traversal->base_path_len;
 
     if (path_tmp[0] == '/') {
         path_tmp += 1;
@@ -77,7 +77,7 @@ work_traverse_unknown_record(
     if (known_dir && (path[path_len - 1] != '/')) {
         if ((path_len + 1) >= MAX_PATH_LENGTH) {
             LOG_ERROR(_("Traversal error path is too long: %s.\n"),
-                      ent->fts_path);
+                      entry->path);
             traversal_root_unknown_record(traversal);
             return;
         }
@@ -95,26 +95,23 @@ static int32
 work_traverse_fs(Traversal *traversal) {
     int64 file_count = 0;
     int32 file_count_return = 0;
-    char *paths[2];
-    FTS *fts_handle;
-    FTSENT *ent;
+    FsWalk fs_walk;
+    FsWalkEntry *entry;
     struct timespec time_last_report = {0};
 
     if (work_should_stop()) {
         return 0;
     }
 
-    paths[0] = traversal->base_path;
-    paths[1] = NULL;
-
-    if ((fts_handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL)) == NULL) {
-        LOG_ERROR(_("Error walking directory %s: %s.\n"), paths[0], strerror(errno));
+    if (!fs_walk_open(&fs_walk, traversal->base_path)) {
+        LOG_ERROR(_("Error walking directory %s: %s.\n"),
+                  traversal->base_path, strerror(errno));
         traversal_root_unknown_record(traversal);
         return 0;
     }
 
     errno = 0;
-    while ((ent = fts_read(fts_handle))) {
+    while ((entry = fs_walk_read(&fs_walk))) {
         char *d_name;
         int32 name_len;
         int32 old_full_len;
@@ -130,61 +127,61 @@ work_traverse_fs(Traversal *traversal) {
             break;
         }
 
-        switch (ent->fts_info) {
-        case FTS_D:
+        switch (entry->info) {
+        case FS_WALK_PRE_DIR:
             is_dir = true;
             break;
-        case FTS_DC:
+        case FS_WALK_CYCLE:
             continue;
-        case FTS_DEFAULT:
+        case FS_WALK_DEFAULT:
             continue;
-        case FTS_DOT:
+        case FS_WALK_DOT:
             continue;
-        case FTS_DP:
+        case FS_WALK_POST_DIR:
             continue;
-        case FTS_ERR:
+        case FS_WALK_ERROR:
             LOG_ERROR(_("Error while traversing file system: %s.\n"),
-                      strerror(ent->fts_errno));
-            work_traverse_unknown_record(traversal, ent,
+                      strerror(entry->error));
+            work_traverse_unknown_record(traversal, entry,
                                          TRAVERSAL_STATE_UNKNOWN_SUBTREE,
                                          false);
             continue;
-        case FTS_DNR:
-            LOG_ERROR(_("Directory '%s' is unreadable.\n"), ent->fts_path);
-            work_traverse_unknown_record(traversal, ent,
+        case FS_WALK_DIR_UNREADABLE:
+            LOG_ERROR(_("Directory '%s' is unreadable.\n"), entry->path);
+            work_traverse_unknown_record(traversal, entry,
                                          TRAVERSAL_STATE_UNKNOWN_SUBTREE,
                                          true);
             continue;
-        case FTS_NS:
+        case FS_WALK_STAT_ERROR:
             LOG_ERROR(_("Failed to get file information for %s: %s.\n"),
-                      ent->fts_path, strerror(ent->fts_errno));
-            work_traverse_unknown_record(traversal, ent,
+                      entry->path, strerror(entry->error));
+            work_traverse_unknown_record(traversal, entry,
                                          TRAVERSAL_STATE_UNKNOWN_SUBTREE,
                                          false);
             continue;
-        case FTS_F:
+        case FS_WALK_FILE:
             break;
-        case FTS_INIT:
+        case FS_WALK_INIT:
             continue;
-        case FTS_NSOK:
+        case FS_WALK_STAT_OK:
             continue;
-        case FTS_SL:
+        case FS_WALK_SYMLINK:
             break;
-        case FTS_SLNONE:
+        case FS_WALK_SYMLINK_BROKEN:
             continue;
-        case FTS_W:
+        case FS_WALK_WHITEOUT:
             continue;
         default:
             continue;
         }
 
-        d_name = ent->fts_name;
-        name_len = (int32)ent->fts_namelen;
-        old_full_len = (int32)ent->fts_pathlen;
+        d_name = entry->name;
+        name_len = entry->name_len;
+        old_full_len = entry->path_len;
 
         if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
             LOG_ERROR(_("Error: file path is too long:\n"));
-            LOG_ERROR("%s\n", ent->fts_path);
+            LOG_ERROR("%s\n", entry->path);
             LOG_ERROR(_("Please fix your file system.\n"));
             stop_working(true);
             break;
@@ -193,7 +190,7 @@ work_traverse_fs(Traversal *traversal) {
         if (name_len > 0) {
             if (isspace((uchar)d_name[0])) {
                 LOG_ERROR(_("Error: there is a space in the start of the filename:\n"));
-                LOG_ERROR("'%s'\n", ent->fts_path);
+                LOG_ERROR("'%s'\n", entry->path);
                 LOG_ERROR(_("Please fix your file system.\n"));
                 stop_working(true);
                 break;
@@ -201,7 +198,7 @@ work_traverse_fs(Traversal *traversal) {
 
             if (isspace((uchar)d_name[name_len - 1])) {
                 LOG_ERROR(_("Error: there is space in the end of the filename:\n"));
-                LOG_ERROR("'%s'\n", ent->fts_path);
+                LOG_ERROR("'%s'\n", entry->path);
                 LOG_ERROR(_("Please fix your file system.\n"));
                 stop_working(true);
                 break;
@@ -217,7 +214,7 @@ work_traverse_fs(Traversal *traversal) {
 
             if (memmem64(d_name, name_len, problem, problem_len)) {
                 LOG_ERROR(_("Error: filename contains problematic characters/patterns:\n"));
-                LOG_ERROR("'%s'\n", ent->fts_path);
+                LOG_ERROR("'%s'\n", entry->path);
                 LOG_ERROR(_("Please fix your file system.\n"));
                 stop_working(true);
                 break;
@@ -238,7 +235,7 @@ work_traverse_fs(Traversal *traversal) {
         {
             char *path_tmp;
 
-            path_tmp = ent->fts_path + traversal->base_path_len;
+            path_tmp = entry->path + traversal->base_path_len;
             path_len = old_full_len - traversal->base_path_len;
 
             if (path_tmp[0] == '/') {
@@ -265,30 +262,32 @@ work_traverse_fs(Traversal *traversal) {
             IgnorePattern *pattern;
 
             pattern = ignore_patterns_match(path, path_len, is_dir,
-                                            cecup.ignore_patterns, cecup.ignore_count);
+                                            cecup.ignore_patterns,
+                                            cecup.ignore_count);
             if (pattern) {
                 matched_pattern = pattern->str;
                 matched_pattern_len = pattern->len;
                 if (is_dir) {
-                    if (fts_set(fts_handle, ent, FTS_SKIP) < 0) {
-                        error("Error in fts_set(FTS_SKIP): %s.\n", strerror(errno));
+                    if (fs_walk_skip(&fs_walk, entry) < 0) {
+                        error("Error in fs_walk_skip: %s.\n", strerror(errno));
                         fatal(EXIT_FAILURE);
                     }
                 }
             }
         }
 
-        if ((ent->fts_info == FTS_SL) || (ent->fts_info == FTS_SLNONE)) {
-            symlink_target_len = traversal_symlink_get(traversal, ent->fts_path, &symlink_target);
+        if (entry->info == FS_WALK_SYMLINK) {
+            symlink_target_len = traversal_symlink_get(traversal, entry->path,
+                                                        &symlink_target);
         }
 
-        if ((ent->fts_info == FTS_F)
-             && (ent->fts_statp->st_nlink > 1)
+        if ((entry->info == FS_WALK_FILE)
+             && (entry->stat->st_nlink > 1)
              && !matched_pattern) {
-            traversal_add_link(traversal, *(ent->fts_statp), path, path_len);
+            traversal_add_link(traversal, *(entry->stat), path, path_len);
         }
 
-        traversal_push(traversal, ent->fts_statp,
+        traversal_push(traversal, entry->stat,
                        path, path_len,
                        symlink_target, symlink_target_len,
                        matched_pattern, matched_pattern_len);
@@ -303,7 +302,7 @@ work_traverse_fs(Traversal *traversal) {
             nanos = time_now.tv_nsec - time_last_report.tv_nsec;
 
             if ((seconds >= 1) || (nanos > MILLIS_AS_NANOS(100))) {
-                LOG("Found %lld files... %s\r", file_count, ent->fts_path);
+                LOG("Found %lld files... %s\r", file_count, entry->path);
                 time_monotonic_coarse(&time_last_report);
             }
         }
@@ -312,12 +311,12 @@ work_traverse_fs(Traversal *traversal) {
     }
 
     if (errno) {
-        LOG_ERROR(_("Error in fts_read(%s): %s.\n"),
+        LOG_ERROR(_("Error in fs_walk_read(%s): %s.\n"),
                   traversal->base_path, strerror(errno));
         traversal_root_unknown_record(traversal);
     }
-    if (fts_close(fts_handle) < 0) {
-        LOG_ERROR(_("Error in fts_close: %s.\n"), strerror(errno));
+    if (fs_walk_close(&fs_walk) < 0) {
+        LOG_ERROR(_("Error in fs_walk_close: %s.\n"), strerror(errno));
         traversal_root_unknown_record(traversal);
     }
 

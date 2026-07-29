@@ -15,6 +15,169 @@
 #define TESTING 0
 #endif
 
+enum FsWalkInfo {
+    FS_WALK_PRE_DIR,
+    FS_WALK_POST_DIR,
+    FS_WALK_FILE,
+    FS_WALK_SYMLINK,
+    FS_WALK_SYMLINK_BROKEN,
+    FS_WALK_DEFAULT,
+    FS_WALK_DOT,
+    FS_WALK_CYCLE,
+    FS_WALK_DIR_UNREADABLE,
+    FS_WALK_STAT_ERROR,
+    FS_WALK_ERROR,
+    FS_WALK_INIT,
+    FS_WALK_STAT_OK,
+    FS_WALK_WHITEOUT,
+};
+
+typedef struct FsWalkEntry {
+    char *path;
+    char *access_path;
+    char *name;
+    int32 path_len;
+    int32 name_len;
+    int32 level;
+    int32 error;
+    enum FsWalkInfo info;
+    struct stat *stat;
+    void *native_entry;
+} FsWalkEntry;
+
+typedef struct FsWalk {
+    FsWalkEntry entry;
+#if CBASE_HAS_FTS
+    FTS *handle;
+#endif
+} FsWalk;
+
+static int32
+fs_walk_len_cast(int64 length) {
+    int32 result;
+
+    if (length >= MAXOF(result)) {
+        error("Path length is too large for FsWalk: %lld.\n", length);
+        fatal(EXIT_FAILURE);
+    }
+
+    result = (int32)length;
+    return result;
+}
+
+#if CBASE_HAS_FTS
+static enum FsWalkInfo
+fs_walk_info_from_fts(int32 info) {
+    switch (info) {
+    case FTS_D:
+        return FS_WALK_PRE_DIR;
+    case FTS_DP:
+        return FS_WALK_POST_DIR;
+    case FTS_F:
+        return FS_WALK_FILE;
+    case FTS_SL:
+        return FS_WALK_SYMLINK;
+    case FTS_SLNONE:
+        return FS_WALK_SYMLINK_BROKEN;
+    case FTS_DEFAULT:
+        return FS_WALK_DEFAULT;
+    case FTS_DOT:
+        return FS_WALK_DOT;
+    case FTS_DC:
+        return FS_WALK_CYCLE;
+    case FTS_DNR:
+        return FS_WALK_DIR_UNREADABLE;
+    case FTS_NS:
+        return FS_WALK_STAT_ERROR;
+    case FTS_ERR:
+        return FS_WALK_ERROR;
+    case FTS_INIT:
+        return FS_WALK_INIT;
+    case FTS_NSOK:
+        return FS_WALK_STAT_OK;
+    case FTS_W:
+        return FS_WALK_WHITEOUT;
+    default:
+        return FS_WALK_DEFAULT;
+    }
+}
+#endif
+
+static bool
+fs_walk_open(FsWalk *walk, char *path) {
+#if CBASE_HAS_FTS
+    char *paths[2];
+
+    memset64(walk, 0, SIZEOF(*walk));
+
+    paths[0] = path;
+    paths[1] = NULL;
+
+    walk->handle = fts_open(paths, FTS_PHYSICAL | FTS_NOCHDIR, NULL);
+    return walk->handle != NULL;
+#else
+    memset64(walk, 0, SIZEOF(*walk));
+    (void)path;
+    errno = ENOSYS;
+    return false;
+#endif
+}
+
+static FsWalkEntry *
+fs_walk_read(FsWalk *walk) {
+#if CBASE_HAS_FTS
+    FTSENT *entry;
+
+    entry = fts_read(walk->handle);
+    if (entry == NULL) {
+        return NULL;
+    }
+
+    walk->entry.path = entry->fts_path;
+    walk->entry.access_path = entry->fts_accpath;
+    walk->entry.name = entry->fts_name;
+    walk->entry.path_len = fs_walk_len_cast((int64)entry->fts_pathlen);
+    walk->entry.name_len = fs_walk_len_cast((int64)entry->fts_namelen);
+    walk->entry.level = fs_walk_len_cast((int64)entry->fts_level);
+    walk->entry.error = entry->fts_errno;
+    walk->entry.info = fs_walk_info_from_fts(entry->fts_info);
+    walk->entry.stat = entry->fts_statp;
+    walk->entry.native_entry = entry;
+
+    return &walk->entry;
+#else
+    (void)walk;
+    return NULL;
+#endif
+}
+
+static int32
+fs_walk_skip(FsWalk *walk, FsWalkEntry *entry) {
+#if CBASE_HAS_FTS
+    if (entry->native_entry == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return fts_set(walk->handle, (FTSENT *)entry->native_entry, FTS_SKIP);
+#else
+    (void)walk;
+    (void)entry;
+    errno = ENOSYS;
+    return -1;
+#endif
+}
+
+static int32
+fs_walk_close(FsWalk *walk) {
+#if CBASE_HAS_FTS
+    return fts_close(walk->handle);
+#else
+    (void)walk;
+    return 0;
+#endif
+}
+
 static void
 traversal_allocate(Traversal *traversal, int32 side) {
     int32 capacity = INITIAL_CAPACITY;
