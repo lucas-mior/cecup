@@ -73,3 +73,21 @@ manual recursive copier backend. The manual backend should be tested in CI and
 should make its metadata preservation limits visible instead of pretending to be
 identical to rsync.
 
+
+## Build-script portability baseline
+
+The build script now avoids the first layer of Linux/GNU-userland assumptions
+that would prevent macOS CI from reaching the C portability work:
+
+- script directory discovery no longer depends on `readlink -f`;
+- GTK `pkg-config` compile flags and link flags are collected separately;
+- pthread flags are selected by target operating system;
+- Linux-only release flags such as `-march=native`, `-flto`, and
+  `-ftree-vectorize` are only added for Linux targets;
+- developer helpers such as `ctags`, `vtags.sed`, `msgfmt`, `gdb`, and `xsel`
+  are optional or replaced with portable fallbacks;
+- installation no longer depends on GNU `install -D`;
+- test executables use `${TMPDIR:-/tmp}` instead of hardcoding `/tmp`.
+
+This does not make the macOS build pass by itself. It only removes build-script
+barriers so later steps can address source-level portability failures.

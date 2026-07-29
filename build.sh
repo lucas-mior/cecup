@@ -3,33 +3,44 @@
 # shellcheck disable=SC2086
 
 if [ "${1:-}" != "--parsed" ]; then
-    # Filter out lines starting with '+' followed by '[' or '[['
+    # Filter out lines starting with '+' followed by '[' or '[['.
     pattern="^\+ \[.+\]"
+    status_file="${TMPDIR:-/tmp}/cecup-build-status.$$"
 
-    # 1. Open FD 3 and point it to the current stdout (1).
-    # 2. Redirect the command's stderr (2) to stdout (1) so it enters the pipe.
-    # 3. Redirect the command's stdout (1) to FD 3 so it bypasses the pipe.
-    # 4. The pipe now only contains the original stderr.
-    # 5. grep filters the stream and sends it back to stderr (2).
-    { "$0" --parsed "$@" 2>&1 1>&3 | grep -Ev "$pattern" >&2; } 3>&1
+    trap 'rm -f "$status_file"' EXIT HUP INT TERM
+    set +e
+    {
+        "$0" --parsed "$@" 2>&1 1>&3
+        command_status=$?
+        printf '%s\n' "$command_status" > "$status_file"
+    } 3>&1 | grep -Ev "$pattern" >&2
+    grep_status=$?
+    set -e
 
-    # Note: In POSIX, $? here will be the exit code of grep, not $0.
-    exit $?
+    if [ ! -f "$status_file" ]; then
+        exit "$grep_status"
+    fi
+
+    exit "$(cat "$status_file")"
 fi
 shift
 
 set -e
 
 error () {
-    >&2 printf "$@"
+    >&2 printf '%s\n' "$*"
     return
+}
+
+command_exists () {
+    command -v "$1" > /dev/null 2>&1
 }
 
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
 
-if command -v measure; then
-    measure=$(which measure)
+if command_exists measure; then
+    measure=$(command -v measure)
 else
     measure=""
 fi
@@ -44,44 +55,93 @@ export XDG_DATA_DIRS=""
 
 # export LC_ALL=C
 
-dir=$(dirname "$(readlink -f "$0")")
+script_path=$0
+case "$script_path" in
+*/*)
+    script_dir=${script_path%/*}
+    ;;
+*)
+    script_dir=.
+    ;;
+esac
+
+dir=$(CDPATH= cd "$script_dir" && pwd -P)
 cbase="cbase"
 CPPFLAGS="$CPPFLAGS -I$dir/$cbase"
 CPPFLAGS="$CPPFLAGS -I."
 
 cd "$dir" || exit
-program=$(basename "$(readlink -f "$(dirname "$0")")")
+program=$(basename "$dir")
 script=$(basename "$0")
 
 LANGS="pt_BR"
 
 . ./targets
 target="${1:-build}"
+cross="${2:-}"
 
-if ! grep -q "$target" ./targets; then
+target_line=$target
+if [ "$target" = "cross" ]; then
+    target_line="$target $cross"
+fi
+if ! printf '%s\n' "$targets" | awk -v wanted="$target_line" '
+    {
+        line = $0
+        sub(/^# /, "", line)
+    }
+    line == wanted { found = 1 }
+    END { exit !found }
+'; then
     echo "usage: $script <targets>"
     cat targets
     exit 1
 fi
 
-printf "\n${script} ${RED}${1} ${2}$RES\n"
+printf "\n${script} ${RED}${1:-} ${2:-}$RES\n"
 
 PREFIX="${PREFIX:-/usr/local}"
-DESTDIR="${DESTDIR:-/}"
+DESTDIR="${DESTDIR:-}"
+BINDIR="${BINDIR:-$PREFIX/bin}"
+MANDIR="${MANDIR:-$PREFIX/man}"
+DATADIR="${DATADIR:-$PREFIX/share}"
+SYSCONFDIR="${SYSCONFDIR:-/etc}"
+APPDIR="${APPDIR:-$DATADIR/applications}"
 
 main="main.c"
 exe="bin/$program"
 mkdir -p "$(dirname "$exe")"
 
-if [ "$target" = "test" ] && [ -z "$CC" ] && command tcc; then
+if [ "$target" = "test" ] && [ -z "$CC" ] && command_exists tcc; then
     CC=tcc
 else
     CC="${CC:-cc}"
 fi
 
+host_os=$(uname -s 2> /dev/null || printf unknown)
+target_os=$host_os
+if [ "$target" = "cross" ]; then
+    case "$cross" in
+    *macos*)
+        target_os=Darwin
+        ;;
+    *windows*)
+        target_os=Windows
+        ;;
+    *freebsd*)
+        target_os=FreeBSD
+        ;;
+    *netbsd*)
+        target_os=NetBSD
+        ;;
+    *linux*)
+        target_os=Linux
+        ;;
+    esac
+fi
+
 CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
 CPPFLAGS="$CPPFLAGS -DGETTEXT_PACKAGE=$program"
-CPPFLAGS="$CPPFLAGS -DLOCALEDIR=$PREFIX/share/locale"
+CPPFLAGS="$CPPFLAGS -DLOCALEDIR=\"$PREFIX/share/locale\""
 
 CFLAGS="$CFLAGS -std=c11"
 CFLAGS="$CFLAGS -Wfatal-errors"
@@ -98,18 +158,71 @@ CFLAGS="$CFLAGS -Wno-unknown-pragmas"
 CFLAGS="$CFLAGS -Wno-format-security"
 CFLAGS="$CFLAGS -Wno-undef"
 
-LDFLAGS="$LDFLAGS $(pkg-config --cflags --libs gtk4) -lpthread"
-LDFLAGS="$LDFLAGS -lm"
-OS=$(uname -a)
+PKG_CONFIG="${PKG_CONFIG:-pkg-config}"
+if ! command_exists "$PKG_CONFIG"; then
+    error "$PKG_CONFIG not found"
+    exit 1
+fi
+GTK_CFLAGS="${GTK_CFLAGS:-$($PKG_CONFIG --cflags gtk4)}"
+GTK_LIBS="${GTK_LIBS:-$($PKG_CONFIG --libs gtk4)}"
+CFLAGS="$CFLAGS $GTK_CFLAGS"
+LDFLAGS="$LDFLAGS $GTK_LIBS"
 
-if echo "$OS" | grep -q "Linux"; then
-    if echo "$OS" | grep -q "GNU"; then
+case "$target_os" in
+Darwin)
+    ;;
+Windows)
+    LDFLAGS="$LDFLAGS -lpthread"
+    ;;
+*)
+    CFLAGS="$CFLAGS -pthread"
+    LDFLAGS="$LDFLAGS -pthread"
+    ;;
+esac
+LDFLAGS="$LDFLAGS -lm"
+
+GNUSOURCE=""
+if [ "$target_os" = "Linux" ]; then
+    if uname -a 2> /dev/null | grep -q GNU; then
         GNUSOURCE="-D_GNU_SOURCE"
     fi
 fi
 
 option_remove() {
-    echo "$1" | sed -E "s| *$2 +| |g"
+    remove=$2
+    result=""
+
+    for option in $1; do
+        if [ "$option" = "$remove" ]; then
+            continue
+        fi
+
+        if [ -z "$result" ]; then
+            result=$option
+        else
+            result="$result $option"
+        fi
+    done
+
+    printf '%s\n' "$result"
+}
+
+install_file() {
+    mode=$1
+    src=$2
+    dst=$3
+    dst_dir=$(dirname "$dst")
+
+    mkdir -p "$dst_dir"
+    install -m "$mode" "$src" "$dst"
+}
+
+install_dir() {
+    mode=$1
+    dst=$2
+
+    mkdir -p "$dst"
+    chmod "$mode" "$dst"
 }
 
 generate_welcome_h() {
@@ -157,16 +270,25 @@ case "$target" in
     exe="bin/${program}_debug"
     ;;
 "perf")
-    CFLAGS="$CFLAGS -g -O2 -flto"
+    CFLAGS="$CFLAGS -g -O2"
+    if [ "$target_os" = "Linux" ]; then
+        CFLAGS="$CFLAGS -flto"
+    fi
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     exe="bin/${program}_perf"
     ;;
 "valgrind")
-    CFLAGS="$CFLAGS -g3 -O0 -ftree-vectorize"
+    CFLAGS="$CFLAGS -g3 -O0"
+    if [ "$target_os" = "Linux" ]; then
+        CFLAGS="$CFLAGS -ftree-vectorize"
+    fi
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     ;;
 "callgrind")
-    CFLAGS="$CFLAGS -g3 -O2 -ftree-vectorize"
+    CFLAGS="$CFLAGS -g3 -O2"
+    if [ "$target_os" = "Linux" ]; then
+        CFLAGS="$CFLAGS -ftree-vectorize"
+    fi
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     ;;
 "test")
@@ -177,10 +299,16 @@ case "$target" in
     CFLAGS="$CFLAGS $GNUSOURCE -DDEBUGGING=1 -fanalyzer -fdiagnostics-color=never"
     ;;
 "build"|"run")
-    CFLAGS="$CFLAGS $GNUSOURCE -O2 -flto -march=native -ftree-vectorize"
+    CFLAGS="$CFLAGS $GNUSOURCE -O2"
+    if [ "$target_os" = "Linux" ]; then
+        CFLAGS="$CFLAGS -flto -march=native -ftree-vectorize"
+    fi
     ;;
 "release")
-    CFLAGS="$CFLAGS $GNUSOURCE -O2 -flto -march=native -ftree-vectorize"
+    CFLAGS="$CFLAGS $GNUSOURCE -O2"
+    if [ "$target_os" = "Linux" ]; then
+        CFLAGS="$CFLAGS -flto -march=native -ftree-vectorize"
+    fi
     ;;
 "fast_feedback")
     CC=clang
@@ -217,26 +345,25 @@ case "$target" in
     ;;
 esac
 
+cross_compile_only=0
 if [ "$target" = "cross" ]; then
-    cross="$2"
+    if ! command_exists zig; then
+        error "zig not found"
+        exit 1
+    fi
     CC="zig cc"
     CFLAGS="$CFLAGS -target $cross"
     CFLAGS=$(option_remove "$CFLAGS" "-D_GNU_SOURCE")
 
-    case $cross in
-    "x86_64-macos"|"aarch64-macos")
+    case "$cross" in
+    *macos*)
         CFLAGS="$CFLAGS -fno-lto"
-        LDFLAGS="$LDFLAGS -lpthread"
+        cross_compile_only="${CROSS_COMPILE_ONLY:-1}"
         ;;
     *windows*)
         exe="bin/$program.exe"
         ;;
-    *)
-        LDFLAGS="$LDFLAGS -lpthread"
-        ;;
     esac
-else
-    LDFLAGS="$LDFLAGS -lpthread"
 fi
 
 if [ "$CC" = "clang" ]; then
@@ -283,37 +410,52 @@ case "$target" in
     generate_welcome_h
     trace_on
 
-    if [ ! -d "po" ]; then
-        return
-    fi
-    for lang in $LANGS; do
-        if [ -f "po/$lang.po" ]; then
-            mkdir -p "po/$lang/LC_MESSAGES"
-            msgfmt "po/$lang.po" -o "po/$lang/LC_MESSAGES/$program.mo"
+    if [ -d "po" ]; then
+        if command_exists msgfmt; then
+            for lang in $LANGS; do
+                if [ -f "po/$lang.po" ]; then
+                    mkdir -p "po/$lang/LC_MESSAGES"
+                    msgfmt "po/$lang.po" -o "po/$lang/LC_MESSAGES/$program.mo"
+                fi
+            done
+        else
+            printf '%s\n' "msgfmt not found; skipping message catalogs"
         fi
-    done
+    fi
 
-    ctags --kinds-C=+l+d cbase/*.c src/*.h src/*.c  2> /dev/null || true
-    vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
+    if command_exists ctags; then
+        ctags --kinds-C=+l+d cbase/*.c src/*.h src/*.c 2> /dev/null || true
+    fi
+    if command_exists vtags.sed && [ -f tags ]; then
+        vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
+    fi
     if [ "$CC" = "chibicc" ]; then
         with_other chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
     elif [ "$CC" = "cproc" ]; then
         with_other cproc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
+    elif [ "$cross_compile_only" = "1" ]; then
+        $measure $CC $CPPFLAGS $CFLAGS -fsyntax-only src/main.c
     else
-        $measure $CC          $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
+        $measure $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
     fi
 
-    if [ $target = "debug" ]; then
+    if [ "$target" = "debug" ]; then
         # reactivate fatal_warnings after solving:
         # (cecup_debug:9237):
         # Gtk-WARNING **:
         # Trying to snapshot GtkGizmo 0x555555c69fd0 without a current allocation
 
         # G_DEBUG=fatal_warnings \
-            gdb $exe -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
+            if command_exists gdb; then
+                gdb "$exe" -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
+            elif command_exists lldb; then
+                lldb --one-line run "$exe" 2>&1 | tee "lldb_output_$(date +%s).txt"
+            else
+                "$exe"
+            fi
     fi
-    if [ $target = "run" ]; then
-        $exe
+    if [ "$target" = "run" ]; then
+        "$exe"
     fi
 
     trace_off
@@ -321,24 +463,27 @@ case "$target" in
 "install")
     trace_on
     $0 release
-    install -Dm755 bin/${program}   ${DESTDIR}${PREFIX}/bin/${program}
-    install -Dm644 ${program}.1     ${DESTDIR}${PREFIX}/man/man1/${program}.1
+    install_file 755 "bin/${program}" "${DESTDIR}${BINDIR}/${program}"
+    install_file 644 "${program}.1" "${DESTDIR}${MANDIR}/man1/${program}.1"
 
     for lang in $LANGS; do
         if [ -f "po/$lang/LC_MESSAGES/$program.mo" ]; then
-            install -Dm644 "po/$lang/LC_MESSAGES/$program.mo" \
-                "${DESTDIR}${PREFIX}/share/locale/$lang/LC_MESSAGES/$program.mo"
+            install_file \
+                644 \
+                "po/$lang/LC_MESSAGES/$program.mo" \
+                "${DESTDIR}${DATADIR}/locale/$lang/LC_MESSAGES/$program.mo"
         fi
     done
 
     if [ -d "etc" ]; then
-        install -dm755 "$DESTDIR/etc/$program"
-        cp -rp etc/* "$DESTDIR/etc/$program/"
+        install_dir 755 "$DESTDIR$SYSCONFDIR/$program"
+        cp -Rp etc/. "$DESTDIR$SYSCONFDIR/$program/"
     fi
     if [ -f "$program.desktop" ]; then
-        install -Dm755 \
+        install_file \
+            755 \
             "$program.desktop" \
-            "$DESTDIR/usr/share/applications/$program.desktop"
+            "$DESTDIR$APPDIR/$program.desktop"
     fi
     trace_off
     exit
@@ -367,12 +512,12 @@ case "$target" in
         fi
 
         name=$(echo "$name" | sed 's/\.c//')
-        test_exe="/tmp/${name}_test"
+        test_exe="${TMPDIR:-/tmp}/${name}_test"
 
         printf "\nTesting ${RED}${src}${RES} ...\n"
 
         flags="$(awk '/\/\/ flags:/ { $1=$2=""; print $0 }' "$src")"
-        if [ $src = "src/windows_functions.c" ]; then
+        if [ "$src" = "src/windows_functions.c" ]; then
             if ! zig version; then
                 continue
             fi
@@ -392,17 +537,25 @@ case "$target" in
             cmdline_no_cc=$(option_remove "$cmdline" "$CC")
             trace_on
             if with_other "$CC" "$cmdline_no_cc"; then
-                /tmp/${name}_test
+                "$test_exe"
             else
                 exit 1
             fi
         else
             trace_on
             if $cmdline; then
-                if ! $test_exe; then
-                    gdb --quiet \
-                        -ex run -ex backtrace -ex quit \
-                        $test_exe 2>&1 | xsel -b
+                if ! "$test_exe"; then
+                    if command_exists gdb; then
+                        gdb --quiet \
+                            -ex run -ex backtrace -ex quit \
+                            "$test_exe" 2>&1 || true
+                    elif command_exists lldb; then
+                        lldb \
+                            --batch \
+                            --one-line run \
+                            --one-line bt \
+                            "$test_exe" 2>&1 || true
+                    fi
                     exit 1
                 fi
             else
@@ -414,13 +567,13 @@ case "$target" in
     exit
     ;;
 "uninstall")
-    rm -vf  "${DESTDIR}${PREFIX}/bin/${program:?}"
-    rm -vf  "${DESTDIR}${PREFIX}/man/man1/${program:?}.1"
+    rm -vf  "${DESTDIR}${BINDIR}/${program:?}"
+    rm -vf  "${DESTDIR}${MANDIR}/man1/${program:?}.1"
     for lang in $LANGS; do
-        rm -vf "${DESTDIR}${PREFIX}/share/locale/$lang/LC_MESSAGES/$program.mo"
+        rm -vf "${DESTDIR}${DATADIR}/locale/$lang/LC_MESSAGES/$program.mo"
     done
-    rm -rvf "$DESTDIR/etc/${program:?}/"
-    rm -vf  "$DESTDIR/usr/share/applications/${program:?}.desktop"
+    rm -rvf "$DESTDIR$SYSCONFDIR/${program:?}/"
+    rm -vf  "$DESTDIR$APPDIR/${program:?}.desktop"
     exit
     ;;
 esac
