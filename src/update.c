@@ -693,7 +693,7 @@ update_list_from_rows(enum UpdateRowsType change) {
 
     current_store_count = (int32)g_list_model_get_n_items(cecup.store);
 
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t0_rows_loop);
+    time_monotonic_precise(&t0_rows_loop);
 
     cache_rows = realloc2(cache_rows, cache_rows_capacity, cecup.rows_len, SIZEOF(*cache_rows));
     if (cache_rows_capacity == 0) {
@@ -853,13 +853,13 @@ update_list_from_rows(enum UpdateRowsType change) {
         }
     }
 
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t1_rows_loop);
+    time_monotonic_precise(&t1_rows_loop);
     PRINT_TIMINGS(limit, t0_rows_loop, t1_rows_loop, "rows loop");
 
     if ((change != UPDATE_ROWS_SELECT) && (cecup.rows_visible_len > 0)) {
         struct timespec t0_sort;
         struct timespec t1_sort;
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t0_sort);
+        time_monotonic_precise(&t0_sort);
 
         sort_item_functions[cecup.sort_col](cache_rows, (int64)cecup.rows_visible_len);
 
@@ -870,7 +870,7 @@ update_list_from_rows(enum UpdateRowsType change) {
             cecup.rows_visible[k] = cache_rows[k].row_id;
         }
 
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t1_sort);
+        time_monotonic_precise(&t1_sort);
         PRINT_TIMINGS(cecup.rows_visible_len, t0_sort, t1_sort, "sorting");
     }
 
@@ -903,12 +903,12 @@ update_list_from_rows(enum UpdateRowsType change) {
     {
         struct timespec t0;
         struct timespec t1;
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
+        time_monotonic_precise(&t0);
 
         cecup_list_model_update(CECUP_LIST_MODEL(cecup.store),
                                 (int32)current_store_count, cecup.rows_visible_len);
 
-        clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
+        time_monotonic_precise(&t1);
         PRINT_TIMINGS(cecup.rows_visible_len, t0, t1, "cecup_list_model_update");
     }
     return;

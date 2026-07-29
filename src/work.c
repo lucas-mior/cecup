@@ -298,13 +298,13 @@ work_traverse_fs(Traversal *traversal) {
             int64 seconds;
             int64 nanos;
 
-            clock_gettime(CLOCK_MONOTONIC_COARSE, &time_now);
+            time_monotonic_coarse(&time_now);
             seconds = time_now.tv_sec - time_last_report.tv_sec;
             nanos = time_now.tv_nsec - time_last_report.tv_nsec;
 
             if ((seconds >= 1) || (nanos > MILLIS_AS_NANOS(100))) {
                 LOG("Found %lld files... %s\r", file_count, ent->fts_path);
-                clock_gettime(CLOCK_MONOTONIC_COARSE, &time_last_report);
+                time_monotonic_coarse(&time_last_report);
             }
         }
 
@@ -385,7 +385,7 @@ work_preview(void *user_data) {
     update_progress_info(_("Analyzing changes"),
                          _("Traversing file systems for differences..."));
 
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t0_work);
+    time_monotonic_precise(&t0_work);
     work_cleanup();
 
     {
@@ -582,7 +582,7 @@ work_preview(void *user_data) {
         }
     }
 
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t1_work);
+    time_monotonic_precise(&t1_work);
     PRINT_TIMINGS(nfiles_total, t0_work, t1_work);
     work_finalize(thread_data, true);
 }

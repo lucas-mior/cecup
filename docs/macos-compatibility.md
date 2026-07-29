@@ -114,3 +114,22 @@ available before system headers are parsed.
 This step still does not make the complete macOS build pass. The next
 expected failures are Linux-specific clock constants and higher-level runtime
 assumptions.
+
+## Time API baseline
+
+The code no longer calls Linux clock constants directly outside the cbase time
+wrapper.
+
+Use these helpers for elapsed-time measurements:
+
+- `time_monotonic_precise()` for performance timings and total elapsed work;
+- `time_monotonic_coarse()` for periodic UI/progress throttling.
+
+On Linux, the wrapper still prefers `CLOCK_MONOTONIC_RAW` for precise timing and
+`CLOCK_MONOTONIC_COARSE` for cheap progress checks when the headers expose those
+constants. On macOS and BSD, the wrapper falls back to `CLOCK_MONOTONIC` when
+the Linux-specific clock IDs are unavailable.
+
+This removes the expected macOS compile failure from direct uses of
+`CLOCK_MONOTONIC_COARSE` while keeping the caller intent visible at every call
+site.

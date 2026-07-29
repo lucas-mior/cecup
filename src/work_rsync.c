@@ -57,7 +57,7 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side, char *p
         batch->paths = malloc2(batch->capacity * SIZEOF(*(batch->paths)));
         batch->paths_lens = malloc2(batch->capacity * SIZEOF(*(batch->paths_lens)));
 
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &batch->time_last_flush);
+        time_monotonic_coarse(&batch->time_last_flush);
         *batch_ptr = batch;
     }
 
@@ -85,7 +85,7 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side, char *p
         struct timespec time_this_push;
         int64 time_diff;
 
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &time_this_push);
+        time_monotonic_coarse(&time_this_push);
         time_diff = (int64)(time_this_push.tv_sec - batch->time_last_flush.tv_sec);
 
         if (time_diff > 1) {
@@ -119,7 +119,7 @@ work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
         batch->dst_paths = malloc2(batch->capacity * SIZEOF(*(batch->dst_paths)));
         batch->dst_paths_lens = malloc2(batch->capacity * SIZEOF(*(batch->dst_paths_lens)));
 
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &batch->time_last_flush);
+        time_monotonic_coarse(&batch->time_last_flush);
         *batch_ptr = batch;
     }
 
