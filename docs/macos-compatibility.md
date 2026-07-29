@@ -1,0 +1,75 @@
+# macOS compatibility plan
+
+macOS support is developed as a CI-first target because the project is not
+currently tested on a local macOS machine.
+
+## Current policy
+
+Linux remains the supported platform. macOS is an experimental compatibility
+target until the native macOS CI jobs compile and pass the portable test set.
+
+The first compatibility signal has two parts:
+
+- Darwin cross-compilation from Linux for `x86_64-macos` and `aarch64-macos`.
+- Native GitHub Actions macOS builds using Homebrew-provided dependencies.
+
+The CI jobs are intentionally non-blocking while the portability work is in
+progress. A red experimental macOS job should be treated as a macOS
+porting task, not as evidence that the Linux build is broken.
+
+## Scope of the first macOS target
+
+The first macOS target should prove these things in CI:
+
+- the source can be compiled by a Darwin-targeting compiler;
+- the source can be compiled by Apple Clang on a GitHub macOS runner;
+- GTK 4 can be found through `pkg-config` on macOS;
+- the non-GUI tests can run on macOS once the test runner is portable;
+- filesystem behavior is tested on a real macOS filesystem.
+
+Interactive GTK validation is deferred until a real Mac is available. CI can
+prove compilation, unit behavior, process behavior, and filesystem behavior, but
+it cannot fully prove that the application feels correct when used as a desktop
+program.
+
+## Cross-compilation role
+
+Cross-compilation is a fast portability check. It is useful for finding missing
+headers, wrong platform guards, Linux-only constants, and unsupported compiler
+flags.
+
+It is not the source of truth for macOS support. The native GitHub Actions macOS
+runner is the source of truth because it uses real macOS headers, libraries,
+filesystem behavior, process behavior, and Homebrew packages.
+
+## Native macOS CI role
+
+The native macOS CI job should eventually run:
+
+- `./build.sh build`
+- `./build.sh test`
+- focused filesystem integration tests
+- a conservative GTK startup smoke test
+
+At this stage, the workflow only establishes the target. The next portability
+steps are expected to make these jobs pass.
+
+## `fts` policy
+
+macOS provides the `fts(3)` API through `<fts.h>`. The macOS port should keep
+using `fts` first, then validate the expected traversal behavior in CI.
+
+The project should still hide traversal behind a small project-owned interface
+before adding more non-Linux platforms. That keeps the current Linux/macOS/BSD
+implementation simple while preserving an escape hatch for platforms that do not
+have usable `fts`.
+
+## Transfer backend policy
+
+Linux keeps using the current rsync backend by default.
+
+For macOS and other non-Linux Unix targets, the project should add an optional
+manual recursive copier backend. The manual backend should be tested in CI and
+should make its metadata preservation limits visible instead of pretending to be
+identical to rsync.
+

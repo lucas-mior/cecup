@@ -25,6 +25,13 @@ which cecup doesn't.  However it does not support hard links. Rsync does support
 everything imaginable, but it has no GUI for this use case, while also being too
 overwhelming for the average user.
 
+## Portability
+
+Linux is the supported platform today. macOS compatibility is tracked as an
+experimental CI-first target using Darwin cross-compilation and native GitHub
+Actions macOS runners. See `docs/macos-compatibility.md` for the policy and
+current scope.
+
 ## Features
 - Search files and optionally select them
   * useful if you want to backup only parts of the source.
