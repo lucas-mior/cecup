@@ -180,6 +180,7 @@ CFLAGS="$CFLAGS -Wno-unknown-pragmas"
 CFLAGS="$CFLAGS -Wno-format-security"
 CFLAGS="$CFLAGS -Wno-undef"
 CFLAGS="$CFLAGS -Wno-bad-function-cast"
+CFLAGS="$CFLAGS -Wno-unused-function"
 
 cross_compile_only=0
 if [ "$target" = "cross" ]; then
