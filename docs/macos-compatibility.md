@@ -292,3 +292,34 @@ the legacy `work_rsync()` thread entry point.
 The native macOS CI job now forces `CECUP_TRANSFER_BACKEND=manual` for tests so
 macOS portability does not depend on the platform rsync implementation while the
 manual backend is being developed.
+
+## CI/build verification baseline
+
+The macOS workflow is now a real compatibility gate instead of a non-blocking
+placeholder. It has three jobs:
+
+- build-script syntax checks on Linux, using `sh`, `bash`, and `dash`;
+- Darwin syntax checks from Linux with Zig for `x86_64-macos` and
+  `aarch64-macos`;
+- native macOS build, portable tests, and staged install verification on the
+  GitHub-hosted `macos-latest` runner.
+
+The Darwin cross jobs intentionally run in syntax-only mode. They catch target
+preprocessor, header, and declaration problems, but they do not try to link
+against a Darwin GTK sysroot from Linux. The native macOS job is the source of
+truth for real compilation and runtime test behavior.
+
+The native macOS job installs GTK 4, gettext, and pkg-config through Homebrew,
+then verifies:
+
+- `./build.sh build`;
+- the generated `bin/cecup` executable exists and links as a Mach-O binary;
+- `./build.sh test` with `CECUP_TRANSFER_BACKEND=manual`;
+- `./build.sh install` into a temporary `DESTDIR`;
+- Darwin install layout uses `$PREFIX/etc/cecup` for default configuration;
+- the Linux `.desktop` file is not installed on Darwin.
+
+The workflow uploads the built executable, generated message catalogs, and
+staged install files as diagnostic artifacts when available. Interactive GUI
+validation is still outside CI scope and remains a manual release check for a
+future macOS package.

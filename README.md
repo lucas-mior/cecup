@@ -27,10 +27,10 @@ overwhelming for the average user.
 
 ## Portability
 
-Linux is the supported platform today. macOS compatibility is tracked as an
-experimental CI-first target using Darwin cross-compilation and native GitHub
-Actions macOS runners. See `docs/macos-compatibility.md` for the policy and
-current scope.
+Linux is the supported platform today. macOS compatibility is tracked as a
+CI-first target using Darwin cross-compilation and native GitHub Actions macOS
+runners. See `docs/macos-compatibility.md` for the policy, current scope, and
+manual validation limits.
 
 ## Features
 - Search files and optionally select them
