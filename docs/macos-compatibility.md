@@ -13,9 +13,9 @@ The first compatibility signal has two parts:
 - Darwin cross-compilation from Linux for `x86_64-macos` and `aarch64-macos`.
 - Native GitHub Actions macOS builds using Homebrew-provided dependencies.
 
-The CI jobs are intentionally non-blocking while the portability work is in
-progress. A red experimental macOS job should be treated as a macOS
-porting task, not as evidence that the Linux build is broken.
+The CI jobs are now blocking compatibility gates. A red macOS job should be
+treated as a portability regression or as evidence that the macOS porting layer
+needs another targeted fix.
 
 ## Scope of the first macOS target
 
@@ -34,13 +34,18 @@ program.
 
 ## Cross-compilation role
 
-Cross-compilation is a fast portability check. It is useful for finding missing
-headers, wrong platform guards, Linux-only constants, and unsupported compiler
-flags.
+Cross-compilation is a fast portability check. It is useful for finding wrong
+platform guards, Linux-only constants, and unsupported compiler flags in the
+portable core.
 
-It is not the source of truth for macOS support. The native GitHub Actions macOS
-runner is the source of truth because it uses real macOS headers, libraries,
-filesystem behavior, process behavior, and Homebrew packages.
+The Linux-hosted Darwin cross job intentionally does not include Linux GTK or
+GLib headers while targeting Darwin. Host GTK headers contain Linux-specific
+configuration headers and architecture flags, so mixing them with a Darwin
+compiler target produces false failures. The cross job therefore uses a small
+cbase syntax-check translation unit. The native GitHub Actions macOS runner is
+the source of truth for the full GTK application build because it uses real
+macOS headers, libraries, filesystem behavior, process behavior, and Homebrew
+packages.
 
 ## Native macOS CI role
 
@@ -51,8 +56,8 @@ The native macOS CI job should eventually run:
 - focused filesystem integration tests
 - a conservative GTK startup smoke test
 
-At this stage, the workflow only establishes the target. The next portability
-steps are expected to make these jobs pass.
+This job is now blocking and is expected to pass as part of the macOS
+compatibility gate.
 
 ## `fts` policy
 
@@ -304,10 +309,11 @@ placeholder. It has three jobs:
 - native macOS build, portable tests, and staged install verification on the
   GitHub-hosted `macos-latest` runner.
 
-The Darwin cross jobs intentionally run in syntax-only mode. They catch target
-preprocessor, header, and declaration problems, but they do not try to link
-against a Darwin GTK sysroot from Linux. The native macOS job is the source of
-truth for real compilation and runtime test behavior.
+The Darwin cross jobs intentionally run in syntax-only mode against a small
+portable-core translation unit. They catch target preprocessor and cbase
+portability problems without mixing Linux GTK/GLib headers into a Darwin target.
+The native macOS job is the source of truth for the full GTK build and runtime
+test behavior.
 
 The native macOS job installs GTK 4, gettext, and pkg-config through Homebrew,
 then verifies:

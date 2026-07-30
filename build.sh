@@ -180,13 +180,27 @@ CFLAGS="$CFLAGS -Wno-unknown-pragmas"
 CFLAGS="$CFLAGS -Wno-format-security"
 CFLAGS="$CFLAGS -Wno-undef"
 
-PKG_CONFIG="${PKG_CONFIG:-pkg-config}"
-if ! command_exists "$PKG_CONFIG"; then
-    error "$PKG_CONFIG not found"
-    exit 1
+cross_compile_only=0
+if [ "$target" = "cross" ]; then
+    case "$cross" in
+    *macos*)
+        cross_compile_only="${CROSS_COMPILE_ONLY:-1}"
+        ;;
+    esac
 fi
-GTK_CFLAGS="${GTK_CFLAGS:-$($PKG_CONFIG --cflags gtk4)}"
-GTK_LIBS="${GTK_LIBS:-$($PKG_CONFIG --libs gtk4)}"
+
+PKG_CONFIG="${PKG_CONFIG:-pkg-config}"
+if [ "$cross_compile_only" = "1" ]; then
+    GTK_CFLAGS="${GTK_CFLAGS:-}"
+    GTK_LIBS="${GTK_LIBS:-}"
+else
+    if ! command_exists "$PKG_CONFIG"; then
+        error "$PKG_CONFIG not found"
+        exit 1
+    fi
+    GTK_CFLAGS="${GTK_CFLAGS:-$($PKG_CONFIG --cflags gtk4)}"
+    GTK_LIBS="${GTK_LIBS:-$($PKG_CONFIG --libs gtk4)}"
+fi
 CFLAGS="$CFLAGS $GTK_CFLAGS"
 LDFLAGS="$LDFLAGS $GTK_LIBS"
 
@@ -367,7 +381,7 @@ case "$target" in
     ;;
 esac
 
-cross_compile_only=0
+cross_syntax_src=src/cross_syntax_check.c
 if [ "$target" = "cross" ]; then
     if ! command_exists zig; then
         error "zig not found"
@@ -380,7 +394,6 @@ if [ "$target" = "cross" ]; then
     case "$cross" in
     *macos*)
         CFLAGS="$CFLAGS -fno-lto"
-        cross_compile_only="${CROSS_COMPILE_ONLY:-1}"
         ;;
     *windows*)
         exe="bin/$program.exe"
@@ -413,6 +426,8 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-comma"
     CFLAGS="$CFLAGS -Wno-constant-logical-operand"
     CFLAGS="$CFLAGS -Wno-format-pedantic"
+    CFLAGS="$CFLAGS -Wno-poison-system-directories"
+    CFLAGS="$CFLAGS -Wno-allocator-wrappers"
 
     # to avoid using -Wno-unused-function
     CFLAGS="$CFLAGS -Wno-unneeded-internal-declaration"
@@ -456,7 +471,7 @@ case "$target" in
     elif [ "$CC" = "cproc" ]; then
         with_other cproc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
     elif [ "$cross_compile_only" = "1" ]; then
-        $measure $CC $CPPFLAGS $CFLAGS -fsyntax-only src/main.c
+        $measure $CC $CPPFLAGS $CFLAGS -fsyntax-only "$cross_syntax_src"
     else
         $measure $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
     fi

@@ -81,6 +81,10 @@ CBASE_API_DECL void *memmem64(void *, int64, void *, int64);
 CBASE_API_DECL void *memrchr64(void *, int32, int64);
 
 #include "libc.h"
+#if defined(ALIGN)
+#undef ALIGN
+#endif
+#define ALIGN(x) ALIGN_POWER_OF_2(x, ALIGNMENT)
 #include "i18n.h"
 #include "memory.h"
 #include "arena.h"

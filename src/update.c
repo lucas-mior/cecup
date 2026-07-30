@@ -549,7 +549,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     }
 
     if (merge_row_id >= 0) {
-        /* Since we use renameat2(RENAME_NOREPLACE),
+        /* Since we use a no-replace rename helper,
          * the new path should not exist on this side prior to the rename.
          * of course, someone else could have renamed the file,
          * but that is true of the whole program */

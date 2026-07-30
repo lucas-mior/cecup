@@ -115,6 +115,30 @@ on_path_editing_started(GtkEditable *editable, void *data) {
     return;
 }
 
+static int32
+on_path_rename_no_replace(char *old_full, char *new_full) {
+#if OS_LINUX && defined(SYS_renameat2) && defined(RENAME_NOREPLACE)
+    return (int32)syscall(SYS_renameat2,
+                          AT_FDCWD,
+                          old_full,
+                          AT_FDCWD,
+                          new_full,
+                          RENAME_NOREPLACE);
+#else
+    struct stat statbuf;
+
+    if (lstat(new_full, &statbuf) == 0) {
+        errno = EEXIST;
+        return -1;
+    }
+    if (errno != ENOENT) {
+        return -1;
+    }
+
+    return rename(old_full, new_full);
+#endif
+}
+
 static void
 on_path_edited(GtkEditable *editable, void *data) {
     GtkWidget *tree = data;
@@ -182,8 +206,9 @@ on_path_edited(GtkEditable *editable, void *data) {
     new_full_length = SNPRINTF(new_full, "%s/%s", base_path, relative_new);
     normalize(new_full, &new_full_length);
 
-    if (renameat2(AT_FDCWD, old_full, AT_FDCWD, new_full, RENAME_NOREPLACE) < 0) {
-        LOG_ERROR(_("Error renaming %s to %s: %s\n"), old_full, new_full, strerror(errno));
+    if (on_path_rename_no_replace(old_full, new_full) < 0) {
+        LOG_ERROR(_("Error renaming %s to %s: %s\n"),
+                  old_full, new_full, strerror(errno));
         return;
     }
 
