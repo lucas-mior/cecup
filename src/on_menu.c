@@ -257,6 +257,32 @@ on_menu_rename(GtkWidget *tree, void *data) {
     return;
 }
 
+static bool
+on_menu_open_path(char *path) {
+    GError *launch_error = NULL;
+    char *uri;
+
+    uri = g_filename_to_uri(path, NULL, &launch_error);
+    if (uri == NULL) {
+        LOG_ERROR(_("Error preparing %s for opening: %s.\n"),
+                  path, launch_error->message);
+        g_clear_error(&launch_error);
+        return false;
+    }
+
+    LOG(_("Launching %s...\n"), path);
+    if (!g_app_info_launch_default_for_uri(uri, NULL, &launch_error)) {
+        LOG_ERROR(_("Error opening %s: %s.\n"),
+                  path, launch_error->message);
+        g_clear_error(&launch_error);
+        g_free(uri);
+        return false;
+    }
+
+    g_free(uri);
+    return true;
+}
+
 static void
 on_menu_open_item(GtkWidget *widget, void *data) {
     Message *message = data;
@@ -299,17 +325,7 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         }
         XCLOSE(&fd);
 
-        {
-            Command command = {0};
-
-            COMMAND_PUSH(&command, "xdg-open", full_path);
-            LOG(_("Launching...\n"));
-            command_print(&command);
-            (void)command_run(&command,
-                              COMMAND_DETACHED
-                              |COMMAND_NEW_SESSION);
-            command_free(&command);
-        }
+        (void)on_menu_open_path(full_path);
     }
 
     task_list_free(tasks);

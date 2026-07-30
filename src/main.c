@@ -83,6 +83,216 @@ main_key_file_get_boolean(
     return true;
 }
 
+#if !defined(CECUP_SYSTEM_CONFIG_DIR)
+#define CECUP_SYSTEM_CONFIG_DIR ""
+#endif
+
+#if !defined(LOCALEDIR)
+#define LOCALEDIR ""
+#endif
+
+static bool
+main_dir_exists(char *path) {
+    if (path == NULL) {
+        return false;
+    }
+    if (path[0] == '\0') {
+        return false;
+    }
+    return g_file_test(path, G_FILE_TEST_IS_DIR);
+}
+
+static void
+main_store_path(char *destination, char *path, char *description) {
+    int32 path_len;
+
+    path_len = strlen32(path);
+    if (path_len >= MAX_PATH_LENGTH) {
+        error("Error: %s path is too long: %s.\n", description, path);
+        fatal(EXIT_FAILURE);
+    }
+
+    memcpy64(destination, path, path_len + 1);
+    return;
+}
+
+static char *
+main_strdup_existing_dir(char *path) {
+    if (main_dir_exists(path)) {
+        return g_strdup(path);
+    }
+    return NULL;
+}
+
+static char *
+main_default_config_dir(void) {
+    char *env_dir;
+    char *candidate;
+    char **system_dirs;
+
+    env_dir = getenv("CECUP_DEFAULT_CONFIG_DIR");
+    candidate = main_strdup_existing_dir(env_dir);
+    if (candidate != NULL) {
+        return candidate;
+    }
+
+    candidate = main_strdup_existing_dir(CECUP_SYSTEM_CONFIG_DIR);
+    if (candidate != NULL) {
+        return candidate;
+    }
+
+    system_dirs = (char **)g_get_system_config_dirs();
+    for (int32 i = 0; system_dirs[i] != NULL; i += 1) {
+        candidate = g_build_filename(system_dirs[i], "cecup", NULL);
+        if (main_dir_exists(candidate)) {
+            return candidate;
+        }
+        g_free(candidate);
+    }
+
+    candidate = main_strdup_existing_dir("etc");
+    if (candidate != NULL) {
+        return candidate;
+    }
+
+    return NULL;
+}
+
+static void
+main_copy_default_config_file(
+    char *config_base,
+    char *default_config_dir,
+    char *filename
+) {
+    GError *file_error = NULL;
+    char *src_path;
+    char *dst_path;
+    char *contents;
+    gsize contents_len;
+
+    dst_path = g_build_filename(config_base, filename, NULL);
+    if (g_file_test(dst_path, G_FILE_TEST_EXISTS)) {
+        g_free(dst_path);
+        return;
+    }
+    if (default_config_dir == NULL) {
+        g_free(dst_path);
+        return;
+    }
+
+    src_path = g_build_filename(default_config_dir, filename, NULL);
+    contents = NULL;
+    contents_len = 0;
+
+    if (!g_file_get_contents(src_path, &contents, &contents_len, &file_error)) {
+        if ((file_error != NULL)
+            && !g_error_matches(file_error, G_FILE_ERROR,
+                                G_FILE_ERROR_NOENT)) {
+            error("Error reading default configuration file %s: %s.\n",
+                  src_path, file_error->message);
+        }
+        g_clear_error(&file_error);
+        g_free(src_path);
+        g_free(dst_path);
+        return;
+    }
+
+    if (!g_file_set_contents(dst_path, contents, (gssize)contents_len,
+                             &file_error)) {
+        error("Error writing user configuration file %s: %s.\n",
+              dst_path, file_error->message);
+        g_clear_error(&file_error);
+    }
+
+    g_free(contents);
+    g_free(src_path);
+    g_free(dst_path);
+    return;
+}
+
+static void
+main_seed_config_dir(char *config_base) {
+    char *default_config_dir;
+
+    default_config_dir = main_default_config_dir();
+    if (default_config_dir == NULL) {
+        error("Could not find default configuration directory."
+              " Starting with built-in defaults.\n");
+    }
+
+    main_copy_default_config_file(config_base, default_config_dir,
+                                  "ignore.conf");
+    main_copy_default_config_file(config_base, default_config_dir,
+                                  "cecup.conf");
+
+    g_free(default_config_dir);
+    return;
+}
+
+static void
+main_setup_config_paths(void) {
+    char *config_base;
+    char *ignore_path;
+    char *config_path;
+    bool config_dir_missing;
+
+    config_base = g_build_filename(g_get_user_config_dir(), "cecup", NULL);
+    config_dir_missing = !g_file_test(config_base, G_FILE_TEST_IS_DIR);
+
+    if (g_mkdir_with_parents(config_base, 0755) < 0) {
+        error("Error creating configuration directory %s: %s.\n",
+              config_base, strerror(errno));
+        g_free(config_base);
+        fatal(EXIT_FAILURE);
+    }
+
+    if (config_dir_missing) {
+        is_first_run = true;
+    }
+    main_seed_config_dir(config_base);
+
+    ignore_path = g_build_filename(config_base, "ignore.conf", NULL);
+    config_path = g_build_filename(config_base, "cecup.conf", NULL);
+
+    main_store_path(cecup.ignore_path, ignore_path, "ignore configuration");
+    main_store_path(cecup.config_path, config_path, "configuration");
+
+    g_free(ignore_path);
+    g_free(config_path);
+    g_free(config_base);
+    return;
+}
+
+static void
+main_setup_locale(void) {
+    char *locale_env;
+    char *locale_dir;
+
+    if (setlocale(LC_ALL, "") == NULL) {
+        error("Error setting locale.\n");
+    }
+
+    locale_dir = NULL;
+    locale_env = getenv("CECUP_LOCALEDIR");
+    if (main_dir_exists(locale_env)) {
+        locale_dir = locale_env;
+    } else if (main_dir_exists("./po")) {
+        locale_dir = "./po";
+    } else if (main_dir_exists(LOCALEDIR)) {
+        locale_dir = LOCALEDIR;
+    }
+
+    if (locale_dir != NULL) {
+        bindtextdomain(QUOTE(GETTEXT_PACKAGE), locale_dir);
+    } else {
+        error("Could not find locale directory. Using untranslated strings.\n");
+    }
+
+    bind_textdomain_codeset(QUOTE(GETTEXT_PACKAGE), "UTF-8");
+    textdomain(QUOTE(GETTEXT_PACKAGE));
+    return;
+}
+
 static void
 main_setup_tree_columns(GtkWidget *tree) {
     GActionMap *action_map = G_ACTION_MAP(cecup.application);
@@ -855,32 +1065,7 @@ main(int32 argc, char **argv) {
 
     disable_dbus_warning();
 
-    {
-        char *locale_devel;
-        char *locale_system;
-        char *locale_local_system;
-
-        locale_devel = "./po";
-        locale_system = "/usr/share/locale/";
-        locale_local_system = "/usr/local/share/locale/";
-
-        if (setlocale(LC_ALL, "") == NULL) {
-            error("Error setting locale.\n");
-        }
-
-        if (access(locale_devel, F_OK) == 0) {
-            bindtextdomain("cecup", locale_devel);
-        } else if (access(locale_system, F_OK) == 0) {
-            bindtextdomain("cecup", locale_system);
-        } else if (access(locale_local_system, F_OK) == 0) {
-            bindtextdomain("cecup", locale_local_system);
-        } else {
-            error("Can't find any locale directory available.\n");
-        }
-
-        bind_textdomain_codeset(QUOTE(GETTEXT_PACKAGE), "UTF-8");
-        textdomain(QUOTE(GETTEXT_PACKAGE));
-    }
+    main_setup_locale();
 
     cecup.arena = arena_create(SIZEMB(64), "cecup.arena");
     pthread_mutex_init(&cecup.arena_mutex, NULL);
@@ -915,38 +1100,7 @@ main(int32 argc, char **argv) {
     cecup.sort_col = COL_SRC_PATH;
     cecup.sort_order = GTK_SORT_ASCENDING;
 
-    {
-        char xdg_buffer[MAX_PATH_LENGTH];
-        char config_base[MAX_PATH_LENGTH];
-        char *XDG_CONFIG_HOME;
-
-        GETENV(XDG_CONFIG_HOME);
-        if (XDG_CONFIG_HOME == NULL) {
-            char *HOME;
-
-            GETENV(HOME);
-            if (HOME == NULL) {
-                fatal(EXIT_FAILURE);
-            }
-            SNPRINTF(xdg_buffer, "%s/.config", HOME);
-            XDG_CONFIG_HOME = xdg_buffer;
-        }
-        SNPRINTF(config_base, "%s/cecup", XDG_CONFIG_HOME);
-
-        if (access(config_base, F_OK) < 0) {
-            Command command = {0};
-
-            g_mkdir_with_parents(config_base, 0755);
-            is_first_run = true;
-
-            COMMAND_PUSH(&command, "cp", "-r", "/etc/cecup/.", config_base);
-            (void)command_run(&command, COMMAND_NONE);
-            command_free(&command);
-        }
-
-        SNPRINTF(cecup.ignore_path, "%s/ignore.conf", config_base);
-        SNPRINTF(cecup.config_path, "%s/cecup.conf", config_base);
-    }
+    main_setup_config_paths();
 
     cecup.store = G_LIST_MODEL(cecup_list_model_new());
     stop_working(false);

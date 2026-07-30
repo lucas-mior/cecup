@@ -225,3 +225,41 @@ starts. That makes the selected behavior visible in the UI log and in CI logs.
 The future macOS-specific improvement path is to add an optional richer copier,
 probably using Apple `copyfile(3)`, and then widen the manual backend policy
 only after tests prove the metadata is actually preserved.
+
+## Desktop and configuration portability baseline
+
+Linux-specific desktop/configuration assumptions have been moved behind GLib or
+build-time paths.
+
+Runtime configuration now uses GLib's user configuration directory instead of
+manually reading `XDG_CONFIG_HOME` and falling back to `$HOME/.config`. The
+application creates a `cecup` directory below `g_get_user_config_dir()` and
+keeps `cecup.conf` and `ignore.conf` there.
+
+Default configuration seeding no longer shells out to `cp -r` and no longer
+hardcodes `/etc/cecup` in the application. At startup, missing user config files
+are copied with GLib file APIs from the first available default directory in
+this order:
+
+- `CECUP_DEFAULT_CONFIG_DIR`, for tests and local overrides;
+- `CECUP_SYSTEM_CONFIG_DIR`, provided by the build script;
+- `g_get_system_config_dirs()` plus `cecup`;
+- `./etc`, for build-tree development runs.
+
+The build script now defines `CECUP_SYSTEM_CONFIG_DIR` from the selected
+installation prefix. Linux keeps `/etc/cecup` by default. Darwin and BSD targets
+use `$PREFIX/etc/cecup` by default, matching Homebrew and ports-style layouts.
+Install-time config copying now installs individual files with `install` instead
+of recursively invoking `cp`.
+
+Locale lookup now uses `CECUP_LOCALEDIR`, `./po` for build-tree runs, and the
+compiled `LOCALEDIR` macro. The application no longer hardcodes
+`/usr/share/locale` or `/usr/local/share/locale`.
+
+The "open file/folder" menu action now uses GIO's default URI launcher instead
+of invoking `xdg-open`. Linux, macOS, and BSD desktop environments can therefore
+use their platform/default application handlers through GLib/GIO.
+
+The `.desktop` file is still installed for non-Darwin Unix desktop targets. It
+is skipped by default on Darwin; a future packaging step should add a proper
+macOS `.app` bundle instead.

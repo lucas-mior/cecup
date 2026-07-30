@@ -104,8 +104,8 @@ DESTDIR="${DESTDIR:-}"
 BINDIR="${BINDIR:-$PREFIX/bin}"
 MANDIR="${MANDIR:-$PREFIX/man}"
 DATADIR="${DATADIR:-$PREFIX/share}"
-SYSCONFDIR="${SYSCONFDIR:-/etc}"
-APPDIR="${APPDIR:-$DATADIR/applications}"
+SYSCONFDIR="${SYSCONFDIR:-}"
+APPDIR="${APPDIR:-}"
 
 main="main.c"
 exe="bin/$program"
@@ -146,8 +146,24 @@ fi
 if [ "$target_os" = "Darwin" ]; then
     CPPFLAGS="$CPPFLAGS -D_DARWIN_C_SOURCE"
 fi
+
+if [ -z "$SYSCONFDIR" ]; then
+    case "$target_os" in
+    Darwin|FreeBSD|NetBSD|OpenBSD|DragonFly)
+        SYSCONFDIR="$PREFIX/etc"
+        ;;
+    *)
+        SYSCONFDIR="/etc"
+        ;;
+    esac
+fi
+if [ -z "$APPDIR" ]; then
+    APPDIR="$DATADIR/applications"
+fi
+
 CPPFLAGS="$CPPFLAGS -DGETTEXT_PACKAGE=$program"
-CPPFLAGS="$CPPFLAGS -DLOCALEDIR=\"$PREFIX/share/locale\""
+CPPFLAGS="$CPPFLAGS -DLOCALEDIR=\"$DATADIR/locale\""
+CPPFLAGS="$CPPFLAGS -DCECUP_SYSTEM_CONFIG_DIR=\"$SYSCONFDIR/$program\""
 
 CFLAGS="$CFLAGS -std=c11"
 CFLAGS="$CFLAGS -Wfatal-errors"
@@ -483,11 +499,18 @@ case "$target" in
 
     if [ -d "etc" ]; then
         install_dir 755 "$DESTDIR$SYSCONFDIR/$program"
-        cp -Rp etc/. "$DESTDIR$SYSCONFDIR/$program/"
+        for file in etc/*; do
+            if [ -f "$file" ]; then
+                install_file \
+                    644 \
+                    "$file" \
+                    "$DESTDIR$SYSCONFDIR/$program/$(basename "$file")"
+            fi
+        done
     fi
-    if [ -f "$program.desktop" ]; then
+    if [ "$target_os" != "Darwin" ] && [ -f "$program.desktop" ]; then
         install_file \
-            755 \
+            644 \
             "$program.desktop" \
             "$DESTDIR$APPDIR/$program.desktop"
     fi
