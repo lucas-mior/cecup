@@ -869,21 +869,42 @@ work_rsync_backend_run(
 static bool
 work_transfer_full_path(
     char *full_path,
+    int64 full_path_size,
     int32 side,
     char *path,
     int32 path_len
 ) {
+    int32 base_len = cecup.base_len[side];
+    int32 full_path_len;
+
     if (path_len <= 0) {
         LOG_ERROR(_("Refusing empty transfer path.\n"));
         return false;
     }
 
     if (aux_is_root(path) || ((path_len == 1) && (path[0] == '.'))) {
-        SNPRINTF(full_path, "%s", cecup.base[side]);
-    } else {
-        SNPRINTF(full_path, "%s/%s", cecup.base[side], path);
+        full_path_len = base_len;
+        if (full_path_len >= full_path_size) {
+            LOG_ERROR(_("Transfer path is too long: %s.\n"), cecup.base[side]);
+            return false;
+        }
+
+        memcpy64(full_path, cecup.base[side], full_path_len);
+        full_path[full_path_len] = '\0';
+        return true;
     }
 
+    full_path_len = base_len + 1 + path_len;
+    if (full_path_len >= full_path_size) {
+        LOG_ERROR(_("Transfer path is too long: %s/%.*s.\n"),
+                  cecup.base[side], path_len, path);
+        return false;
+    }
+
+    memcpy64(full_path, cecup.base[side], base_len);
+    full_path[base_len] = '/';
+    memcpy64(full_path + base_len + 1, path, path_len);
+    full_path[full_path_len] = '\0';
     return true;
 }
 
@@ -1260,11 +1281,13 @@ work_manual_copy_path(
     char dst_path[MAX_PATH_LENGTH];
     struct stat src_stat;
 
-    if (!work_transfer_full_path(src_path, L, path, path_len)) {
+    if (!work_transfer_full_path(src_path, SIZEOF(src_path),
+                                 L, path, path_len)) {
         state->had_errors = true;
         return false;
     }
-    if (!work_transfer_full_path(dst_path, R, path, path_len)) {
+    if (!work_transfer_full_path(dst_path, SIZEOF(dst_path),
+                                 R, path, path_len)) {
         state->had_errors = true;
         return false;
     }
