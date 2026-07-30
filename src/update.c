@@ -1019,6 +1019,8 @@ main(void) {
         exit(EXIT_SUCCESS);
     }
 
+    pthread_mutex_init(&cecup.arena_mutex, NULL);
+
     /* 1. Setup global infrastructure to prevent crashes in sub-calls */
     MOCK_WIDGET(cecup.gtk_window, gtk_window_new());
     MOCK_WIDGET(cecup.stop_button, gtk_button_new());
@@ -1307,6 +1309,8 @@ main(void) {
 
     free2(cecup.base[L], 6);
     free2(cecup.base[R], 6);
+
+    xpthread_mutex_destroy(&cecup.arena_mutex);
 
     ASSERT(true);
     exit(EXIT_SUCCESS);

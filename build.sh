@@ -270,6 +270,31 @@ generate_welcome_h() {
     fi
 }
 
+generate_cross_syntax_src() {
+    cross_syntax_src="${TMPDIR:-/tmp}/cecup-cross-syntax-$$.c"
+    cat > "$cross_syntax_src" <<'EOF'
+#include "platform_detection.h"
+
+#if !OS_MAC
+#error "Darwin cross syntax check must target macOS"
+#endif
+#if !OS_UNIX
+#error "macOS must be detected as Unix"
+#endif
+#if CBASE_HAS_PROCFS
+#error "macOS must not enable procfs helpers"
+#endif
+#if OS_WINDOWS || OS_LINUX || OS_BSD || OS_WASM
+#error "macOS target must not enable another OS family"
+#endif
+
+int
+main(void) {
+    return 0;
+}
+EOF
+}
+
 with_other () {
     compiler="$1"
     compiler_macro=$(echo "$compiler" | tr '[:lower:]' '[:upper:]')
@@ -382,7 +407,7 @@ case "$target" in
     ;;
 esac
 
-cross_syntax_src=src/cross_syntax_check.c
+cross_syntax_src=""
 if [ "$target" = "cross" ]; then
     if ! command_exists zig; then
         error "zig not found"
@@ -395,6 +420,7 @@ if [ "$target" = "cross" ]; then
     case "$cross" in
     *macos*)
         CFLAGS="$CFLAGS -fno-lto"
+        generate_cross_syntax_src
         ;;
     *windows*)
         exe="bin/$program.exe"
@@ -430,11 +456,14 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-poison-system-directories"
     CFLAGS="$CFLAGS -Wno-allocator-wrappers"
 
-    # to avoid using -Wno-unused-function
+    # only for the LSP and unity-test builds. They include helper functions
+    # that are intentionally unused in some translation units.
     CFLAGS="$CFLAGS -Wno-unneeded-internal-declaration"
-
-    # only for the LSP. It does not understand unity builds
     CFLAGS="$CFLAGS -Wno-undefined-internal"
+
+    if [ "$target" = "test" ]; then
+        CFLAGS="$CFLAGS -Wno-unused-function"
+    fi
 fi
 
 case "$target" in
@@ -472,7 +501,12 @@ case "$target" in
     elif [ "$CC" = "cproc" ]; then
         with_other cproc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
     elif [ "$cross_compile_only" = "1" ]; then
+        if [ -z "$cross_syntax_src" ]; then
+            error "internal error: cross syntax source was not generated"
+            exit 1
+        fi
         $measure $CC $CPPFLAGS $CFLAGS -fsyntax-only "$cross_syntax_src"
+        rm -f "$cross_syntax_src"
     else
         $measure $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
     fi
@@ -600,9 +634,9 @@ case "$target" in
                     elif command_exists lldb; then
                         lldb \
                             --batch \
-                            --one-line run \
-                            --one-line bt \
-                            "$test_exe" 2>&1 || true
+                            --one-line "run" \
+                            --one-line "bt" \
+                            -- "$test_exe" 2>&1 || true
                     fi
                     exit 1
                 fi
