@@ -10,7 +10,7 @@ target until the native macOS CI jobs compile and pass the portable test set.
 
 The first compatibility signal has two parts:
 
-- Darwin cross-compilation from Linux for `x86_64-macos` and `aarch64-macos`.
+- Darwin platform-gate checks from Linux for `x86_64-macos` and `aarch64-macos`.
 - Native GitHub Actions macOS builds using Homebrew-provided dependencies.
 
 The CI jobs are now blocking compatibility gates. A red macOS job should be
@@ -41,11 +41,17 @@ portable core.
 The Linux-hosted Darwin cross job intentionally does not include Linux GTK or
 GLib headers while targeting Darwin. Host GTK headers contain Linux-specific
 configuration headers and architecture flags, so mixing them with a Darwin
-compiler target produces false failures. The cross job therefore uses a small
-cbase syntax-check translation unit. The native GitHub Actions macOS runner is
-the source of truth for the full GTK application build because it uses real
-macOS headers, libraries, filesystem behavior, process behavior, and Homebrew
-packages.
+compiler target produces false failures.
+
+The Linux-hosted Darwin target is now a simulated platform-gate probe instead
+of a Zig Darwin compiler invocation. Zig can fail before reaching project code
+when it cannot find the Darwin SDK/libc pieces in the Linux runner, producing
+opaque `FileNotFound` diagnostics even for a one-line generated C file. The
+probe therefore compiles a self-contained source with the Darwin target macros
+simulated and checks that `platform_detection.h` selects the expected macOS
+feature gates. The native GitHub Actions macOS runner is the source of truth for
+the full GTK application build because it uses real macOS headers, libraries,
+filesystem behavior, process behavior, and Homebrew packages.
 
 ## Native macOS CI role
 

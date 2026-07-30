@@ -179,7 +179,6 @@ CFLAGS="$CFLAGS -Wno-deprecated-declarations"
 CFLAGS="$CFLAGS -Wno-unknown-pragmas"
 CFLAGS="$CFLAGS -Wno-format-security"
 CFLAGS="$CFLAGS -Wno-undef"
-CFLAGS="$CFLAGS -Wno-bad-function-cast"
 
 cross_compile_only=0
 if [ "$target" = "cross" ]; then
@@ -274,11 +273,37 @@ generate_cross_syntax_src() {
     mkdir -p .cache
     cross_syntax_src=".cache/cecup-cross-syntax-$$.c"
 
-    # Keep this source in the work tree instead of /tmp. Zig's Darwin
-    # frontend has produced opaque FileNotFound diagnostics for temporary
-    # absolute source paths in CI, and copying the self-contained platform
-    # header avoids any quoted-include path ambiguity.
-    cat cbase/platform_detection.h > "$cross_syntax_src"
+    # Keep this probe independent from Zig's Darwin SDK discovery. Native
+    # macOS CI is the real full compiler gate; this Linux-hosted probe only
+    # validates that the project platform feature gates select the expected
+    # Darwin branch when the target macros are simulated.
+    cat > "$cross_syntax_src" <<'EOF'
+#if defined(__linux__)
+#undef __linux__
+#endif
+#if defined(__FreeBSD__)
+#undef __FreeBSD__
+#endif
+#if defined(__NetBSD__)
+#undef __NetBSD__
+#endif
+#if defined(__OpenBSD__)
+#undef __OpenBSD__
+#endif
+#if defined(_WIN32)
+#undef _WIN32
+#endif
+#if defined(_WIN64)
+#undef _WIN64
+#endif
+#if defined(__wasm__)
+#undef __wasm__
+#endif
+
+#define __APPLE__ 1
+#define __MACH__ 1
+EOF
+    cat cbase/platform_detection.h >> "$cross_syntax_src"
     cat >> "$cross_syntax_src" <<'EOF'
 
 #if !OS_MAC
@@ -415,19 +440,24 @@ esac
 
 cross_syntax_src=""
 if [ "$target" = "cross" ]; then
-    if ! command_exists zig; then
-        error "zig not found"
-        exit 1
-    fi
-    CC="zig cc"
-    CFLAGS="$CFLAGS -target $cross"
     CFLAGS=$(option_remove "$CFLAGS" "-D_GNU_SOURCE")
 
     case "$cross" in
     *macos*)
-        CFLAGS="$CFLAGS -fno-lto"
+        CC="${HOST_CC:-${CC:-cc}}"
         generate_cross_syntax_src
         ;;
+    *)
+        if ! command_exists zig; then
+            error "zig not found"
+            exit 1
+        fi
+        CC="zig cc"
+        CFLAGS="$CFLAGS -target $cross"
+        ;;
+    esac
+
+    case "$cross" in
     *windows*)
         exe="bin/$program.exe"
         ;;
