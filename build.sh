@@ -171,7 +171,7 @@ CFLAGS="$CFLAGS -Wall -Wextra"
 if [ -z "$NOCOLORS" ]; then
     CFLAGS="$CFLAGS -fdiagnostics-color=always"
 fi
-# CFLAGS="$CFLAGS -Werror"
+CFLAGS="$CFLAGS -Werror"
 CFLAGS="$CFLAGS -Wno-unused-macros"
 CFLAGS="$CFLAGS -Wno-float-equal"
 CFLAGS="$CFLAGS -Wno-cast-qual"
