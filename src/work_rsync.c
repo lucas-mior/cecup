@@ -725,37 +725,58 @@ work_transfer_backend_name(enum TransferBackend backend) {
 
 static enum TransferBackend
 work_transfer_backend_default(void) {
-#if OS_LINUX
-    return TRANSFER_BACKEND_RSYNC;
-#else
-    return TRANSFER_BACKEND_MANUAL;
-#endif
+    return transfer_backend_platform_default();
 }
 
 static enum TransferBackend
 work_transfer_backend_current(void) {
+    enum TransferBackend selected_backend;
     char *backend;
 
     backend = getenv("CECUP_TRANSFER_BACKEND");
-    if (backend == NULL) {
-        return work_transfer_backend_default();
+    if (transfer_backend_parse(backend, &selected_backend)) {
+        return selected_backend;
     }
 
-    if (strequal(backend, "rsync")) {
-        return TRANSFER_BACKEND_RSYNC;
-    }
-    if (strequal(backend, "manual")) {
-        return TRANSFER_BACKEND_MANUAL;
-    }
-
-    {
-        enum TransferBackend default_backend;
-
-        default_backend = work_transfer_backend_default();
+    selected_backend = work_transfer_backend_default();
+    if (backend != NULL) {
         LOG_ERROR(_("Unknown transfer backend '%s'. Using %s instead.\n"),
-                  backend, work_transfer_backend_name(default_backend));
-        return default_backend;
+                  backend, work_transfer_backend_name(selected_backend));
     }
+
+    return selected_backend;
+}
+
+static void
+work_transfer_log_metadata_policy(enum TransferBackend backend) {
+    TransferMetadataPolicy policy;
+
+    policy = transfer_metadata_policy_for_backend(backend);
+
+    if (policy.preserve_mtime && policy.preserve_perm
+        && policy.preserve_symlink && policy.preserve_hardlink) {
+        LOG(_("Metadata policy: preserving file contents, mtimes, "
+              "permissions, symlinks, and hardlinks.\n"));
+    }
+
+    if (policy.preserve_owner && policy.preserve_group) {
+        LOG(_("Metadata policy: preserving owner and group.\n"));
+    } else {
+        LOG(_("Metadata policy: owner, group, and directory ctime "
+              "differences are ignored by this backend.\n"));
+    }
+
+    if (!policy.preserve_extended) {
+        LOG(_("Metadata policy: ACLs, extended attributes, Finder "
+              "metadata, and resource forks are not preserved.\n"));
+    }
+
+    if (!policy.preserve_special) {
+        LOG(_("Metadata policy: special files are not copied by this "
+              "backend.\n"));
+    }
+
+    return;
 }
 
 static void
@@ -1414,6 +1435,7 @@ work_transfer(void *user_data) {
 
     backend = work_transfer_backend_current();
     LOG(_("Using %s transfer backend.\n"), work_transfer_backend_name(backend));
+    work_transfer_log_metadata_policy(backend);
 
     switch (backend) {
     case TRANSFER_BACKEND_RSYNC:

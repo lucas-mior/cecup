@@ -187,3 +187,41 @@ not preserve owner/group, ACLs, extended attributes, Finder metadata, resource
 forks, or special files. That is acceptable for this step because the goal is to
 introduce the backend boundary and a usable non-rsync copy path before adding
 macOS-specific metadata policy and CI coverage.
+
+## Metadata semantics baseline
+
+Metadata handling is now tied to the selected transfer backend instead of being
+left implicit.
+
+The active backend is selected with the same policy used by transfer execution:
+
+- Linux defaults to `rsync`.
+- macOS and other non-Linux Unix targets default to `manual`.
+- `CECUP_TRANSFER_BACKEND=rsync` and `CECUP_TRANSFER_BACKEND=manual` override
+  the default for testing.
+
+The rsync backend keeps the previous preview semantics. The preview compares
+owner, group, permissions, directory ctime, file size, file mtime, file type,
+symlink targets, and hardlink groups. The transfer command asks rsync to
+preserve owner, group, permissions, times, symlinks, and hardlinks.
+
+The manual backend has narrower semantics by design. The preview still compares
+file type, regular-file size, mtime, permissions, symlink targets, and hardlink
+groups, because the manual backend currently tries to preserve those. The
+preview ignores owner, group, and directory ctime differences because the manual
+backend does not preserve them. This avoids repeatedly reporting differences
+that the selected backend cannot fix.
+
+Both backends currently treat these as unsupported metadata:
+
+- ACLs;
+- extended attributes;
+- Finder metadata;
+- resource forks;
+- device nodes, sockets, FIFOs, and other special files.
+
+The transfer log now prints the selected metadata policy before the backend
+starts. That makes the selected behavior visible in the UI log and in CI logs.
+The future macOS-specific improvement path is to add an optional richer copier,
+probably using Apple `copyfile(3)`, and then widen the manual backend policy
+only after tests prove the metadata is actually preserved.

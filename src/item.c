@@ -257,6 +257,7 @@ item_get_actions_reasons(int32 row_id,
         char *symlink_target_dst = cecup.traversal[R].symlink_targets[dst_idx];
         HardLinks hard_links_src = {0};
         HardLinks hard_links_dst = {0};
+        TransferMetadataPolicy metadata_policy;
         bool is_hardlink;
 
         bool is_symlink = S_ISLNK(stat_src->st_mode);
@@ -264,12 +265,15 @@ item_get_actions_reasons(int32 row_id,
         bool equal = false;
         bool attributes_differ = false;
 
+        metadata_policy = transfer_metadata_policy_current();
+
         if ((stat_src->st_mode & S_IFMT) != (stat_dst->st_mode & S_IFMT)) {
             *reason |= REASON_TYPE;
             attributes_differ = true;
         }
 
-        is_hardlink = item_hardlink_side(row_id, L, &hard_links_src) && (hard_links_src.count > 1);
+        is_hardlink = item_hardlink_side(row_id, L, &hard_links_src)
+                      && (hard_links_src.count > 1);
         item_hardlink_side(row_id, R, &hard_links_dst);
 
         // Note: extra hard links in the destination are accepted silently.
@@ -331,24 +335,28 @@ item_get_actions_reasons(int32 row_id,
                 }
             }
 
-            if (is_dir) {
+            if (metadata_policy.compare_dir_ctime && is_dir) {
                 if (stat_src->st_ctime > stat_dst->st_ctime) {
                     *reason |= REASON_CTIME;
                     attributes_differ = true;
                 }
             }
 
-            if (stat_src->st_uid != stat_dst->st_uid) {
+            if (metadata_policy.compare_owner
+                && (stat_src->st_uid != stat_dst->st_uid)) {
                 *reason |= REASON_OWNER;
                 attributes_differ = true;
             }
 
-            if (stat_src->st_gid != stat_dst->st_gid) {
+            if (metadata_policy.compare_group
+                && (stat_src->st_gid != stat_dst->st_gid)) {
                 *reason |= REASON_GROUP;
                 attributes_differ = true;
             }
 
-            if ((stat_src->st_mode & 07777) != (stat_dst->st_mode & 07777)) {
+            if (metadata_policy.compare_perm
+                && ((stat_src->st_mode & 07777)
+                    != (stat_dst->st_mode & 07777))) {
                 *reason |= REASON_PERM;
                 attributes_differ = true;
             }

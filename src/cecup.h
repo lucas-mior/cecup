@@ -523,6 +523,95 @@ enum TransferBackend {
     TRANSFER_BACKEND_MANUAL,
 };
 
+typedef struct TransferMetadataPolicy {
+    bool compare_dir_ctime;
+    bool compare_owner;
+    bool compare_group;
+    bool compare_perm;
+
+    bool preserve_mtime;
+    bool preserve_owner;
+    bool preserve_group;
+    bool preserve_perm;
+    bool preserve_symlink;
+    bool preserve_hardlink;
+    bool preserve_special;
+    bool preserve_extended;
+} TransferMetadataPolicy;
+
+static bool
+transfer_backend_parse(char *backend, enum TransferBackend *result) {
+    if (backend == NULL) {
+        return false;
+    }
+
+    if (strequal(backend, "rsync")) {
+        *result = TRANSFER_BACKEND_RSYNC;
+        return true;
+    }
+    if (strequal(backend, "manual")) {
+        *result = TRANSFER_BACKEND_MANUAL;
+        return true;
+    }
+
+    return false;
+}
+
+static enum TransferBackend
+transfer_backend_platform_default(void) {
+#if OS_LINUX
+    return TRANSFER_BACKEND_RSYNC;
+#else
+    return TRANSFER_BACKEND_MANUAL;
+#endif
+}
+
+static enum TransferBackend
+transfer_backend_selected_silent(void) {
+    enum TransferBackend backend;
+    char *backend_name;
+
+    backend_name = getenv("CECUP_TRANSFER_BACKEND");
+    if (transfer_backend_parse(backend_name, &backend)) {
+        return backend;
+    }
+
+    return transfer_backend_platform_default();
+}
+
+static TransferMetadataPolicy
+transfer_metadata_policy_for_backend(enum TransferBackend backend) {
+    TransferMetadataPolicy policy = {0};
+
+    policy.compare_perm = true;
+    policy.preserve_mtime = true;
+    policy.preserve_perm = true;
+    policy.preserve_symlink = true;
+    policy.preserve_hardlink = true;
+
+    switch (backend) {
+    case TRANSFER_BACKEND_RSYNC:
+        policy.compare_dir_ctime = true;
+        policy.compare_owner = true;
+        policy.compare_group = true;
+        policy.preserve_owner = true;
+        policy.preserve_group = true;
+        break;
+    case TRANSFER_BACKEND_MANUAL:
+        break;
+    }
+
+    return policy;
+}
+
+static TransferMetadataPolicy
+transfer_metadata_policy_current(void) {
+    enum TransferBackend backend;
+
+    backend = transfer_backend_selected_silent();
+    return transfer_metadata_policy_for_backend(backend);
+}
+
 typedef struct CecupMenuItem {
     char *label;
     uint32 keyval;
