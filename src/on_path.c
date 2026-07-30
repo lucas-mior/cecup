@@ -228,6 +228,18 @@ on_path_edited(GtkEditable *editable, void *data) {
                 error("FsWalk error on %s: %s.\n",
                       entry->path, strerror(entry->error));
                 continue;
+            case FS_WALK_POST_DIR:
+            case FS_WALK_FILE:
+            case FS_WALK_SYMLINK:
+            case FS_WALK_SYMLINK_BROKEN:
+            case FS_WALK_DEFAULT:
+            case FS_WALK_DOT:
+            case FS_WALK_CYCLE:
+            case FS_WALK_DIR_UNREADABLE:
+            case FS_WALK_INIT:
+            case FS_WALK_STAT_OK:
+            case FS_WALK_WHITEOUT:
+                break;
             default:
                 break;
             }

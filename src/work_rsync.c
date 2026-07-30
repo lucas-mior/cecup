@@ -164,6 +164,11 @@ work_transfer_action_is_transfer(enum Action action) {
     case ACTION_HARDLINK:
     case ACTION_SYMLINK:
         return true;
+    case ACTION_EQUAL:
+    case ACTION_DELETED:
+    case ACTION_DELETE:
+    case ACTION_IGNORE:
+    case ACTION_LAST:
     default:
         return false;
     }
@@ -620,6 +625,13 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
                 error("FsWalk error on %s: %s.\n",
                       entry->path, strerror(entry->error));
                 had_errors = true;
+                continue;
+            case FS_WALK_PRE_DIR:
+            case FS_WALK_DOT:
+            case FS_WALK_CYCLE:
+            case FS_WALK_INIT:
+            case FS_WALK_STAT_OK:
+            case FS_WALK_WHITEOUT:
                 continue;
             default:
                 continue;

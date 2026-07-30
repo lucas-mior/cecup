@@ -72,6 +72,7 @@ static time_t timezone_offset = 0;
 
 static char *notifiers[2] = {"dunstify", "notify-send"};
 
+#if !CBASE_HAS_SYSTEM_MEMMEM
 static void *
 cbase_memmem_fallback(
     void *haystack,
@@ -112,6 +113,7 @@ cbase_memmem_fallback(
 
     return NULL;
 }
+#endif
 
 CBASE_API_DEF void *
 memrchr64(void *pointer, int32 value, int64 size) {

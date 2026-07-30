@@ -599,6 +599,9 @@ transfer_metadata_policy_for_backend(enum TransferBackend backend) {
         break;
     case TRANSFER_BACKEND_MANUAL:
         break;
+    default:
+        error("Invalid transfer backend %u.\n", backend);
+        break;
     }
 
     return policy;
