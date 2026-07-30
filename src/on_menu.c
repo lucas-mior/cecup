@@ -558,12 +558,15 @@ main(void) {
     GtkSelectionModel *sel;
     CecupListModel *store;
     ClipboardResult clipboard_result;
+    char temp_dir[MAX_PATH_LENGTH];
 
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
     }
 
-    cecup.application = gtk_application_new("com.cecup.test.on_menu", G_APPLICATION_NON_UNIQUE);
+    cecup.application = gtk_application_new("com.cecup.test.on_menu",
+                                             G_APPLICATION_NON_UNIQUE);
+    test_make_temp_dir(temp_dir, SIZEOF(temp_dir), "on_menu");
     cecup.gtk_window = gtk_window_new();
 
     cecup.stop_button = gtk_button_new();
@@ -574,7 +577,8 @@ main(void) {
     gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "true");
 
     {
-        Command command = on_menu_diff_command("xterm --hold", "diff --color=always");
+        Command command = on_menu_diff_command("xterm --hold",
+                                               "diff --color=always");
 
         COMMAND_PUSH(&command, "/destination", "/source");
 
@@ -591,9 +595,9 @@ main(void) {
         command_free(&command);
     }
 
-    cecup.base[L] = xstrdup("/tmp");
+    cecup.base[L] = xstrdup(temp_dir);
     cecup.base_len[L] = strlen32(cecup.base[L]);
-    cecup.base[R] = xstrdup("/tmp");
+    cecup.base[R] = xstrdup(temp_dir);
     cecup.base_len[R] = strlen32(cecup.base[R]);
 
     store = cecup_list_model_new();
@@ -603,7 +607,7 @@ main(void) {
 
     g_object_set_data(G_OBJECT(cecup.application), "active_tree", tree);
 
-    SNPRINTF(cecup.ignore_path, "%s", "test_ignore_temp.txt");
+    SNPRINTF(cecup.ignore_path, "%s/cecup_on_menu_ignore.conf", temp_dir);
     file = fopen(cecup.ignore_path, "w");
     ASSERT(file != NULL);
     fclose(file);
@@ -654,7 +658,7 @@ main(void) {
         char missing_path[MAX_PATH_LENGTH];
 
         SNPRINTF(missing_path, "cecup-on-menu-missing-%d", getpid());
-        SNPRINTF(missing_full, "/tmp/%s", missing_path);
+        SNPRINTF(missing_full, "%s/%s", temp_dir, missing_path);
         SNPRINTF(expected, "%s\n", missing_full);
         remove(missing_full);
 
@@ -713,7 +717,8 @@ main(void) {
         msg->action = ACTION_NEW;
         msg->src_path = xstrdup("test.txt");
         msg->src_path_len = 8;
-        g_object_set_data_full(G_OBJECT(cecup.application), "active_message", msg, free_message);
+        g_object_set_data_full(G_OBJECT(cecup.application),
+                               "active_message", msg, free_message);
 
         idx_param = g_variant_new_int32(0);
         g_variant_ref_sink(idx_param);
@@ -728,6 +733,7 @@ main(void) {
     g_object_unref(tree);
     g_object_unref(cecup.application);
     gtk_window_destroy(GTK_WINDOW(cecup.gtk_window));
+    test_remove_tree(temp_dir);
 
     ASSERT(true);
     exit(EXIT_SUCCESS);

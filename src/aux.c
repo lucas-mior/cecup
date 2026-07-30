@@ -618,6 +618,11 @@ int main(void) {
     GtkWidget *box;
     GtkWidget *paned;
     GtkWidget *info;
+    char temp_dir[MAX_PATH_LENGTH];
+    char config_path[MAX_PATH_LENGTH];
+    char parent_path[MAX_PATH_LENGTH];
+    char child_path[MAX_PATH_LENGTH];
+    char other_path[MAX_PATH_LENGTH];
 
     pthread_mutex_init(&cecup.arena_mutex, NULL);
 
@@ -687,8 +692,16 @@ int main(void) {
     cecup.dir_entry[L] = gtk_entry_new();
     cecup.dir_entry[R] = gtk_entry_new();
 
-    cecup.entry_id[L] = g_signal_connect(cecup.dir_entry[L], "changed", G_CALLBACK(gtk_widget_show), NULL);
-    cecup.entry_id[R] = g_signal_connect(cecup.dir_entry[R], "changed", G_CALLBACK(gtk_widget_show), NULL);
+    test_make_temp_dir(temp_dir, SIZEOF(temp_dir), "aux");
+    SNPRINTF(config_path, "%s/cecup_test_config.ini", temp_dir);
+    SNPRINTF(parent_path, "%s/parent", temp_dir);
+    SNPRINTF(child_path, "%s/parent/child", temp_dir);
+    SNPRINTF(other_path, "%s/other", temp_dir);
+
+    cecup.entry_id[L] = g_signal_connect(cecup.dir_entry[L], "changed",
+                                          G_CALLBACK(gtk_widget_show), NULL);
+    cecup.entry_id[R] = g_signal_connect(cecup.dir_entry[R], "changed",
+                                          G_CALLBACK(gtk_widget_show), NULL);
 
     cecup.filter_new = gtk_check_button_new();
     cecup.filter_link = gtk_check_button_new();
@@ -712,47 +725,38 @@ int main(void) {
     ASSERT(gtk_widget_get_sensitive(cecup.stop_button) == FALSE);
 
     /* Test cecup_get_dirs, cecup_reset_dir, save_config, config_bool_set */
-    SNPRINTF(cecup.config_path, "%s", "/tmp/cecup_test_config.ini");
+    SNPRINTF(cecup.config_path, "%s", config_path);
 
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), "/tmp");
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), "/var");
+    mkdir(parent_path, 0700);
+    mkdir(child_path, 0700);
+    mkdir(other_path, 0700);
+
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), parent_path);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), other_path);
     ok = cecup_get_dirs();
     ASSERT(ok);
 
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), "/tmp");
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), "/tmp");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), temp_dir);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), temp_dir);
     ok = cecup_get_dirs();
     ASSERT(!ok); /* Same directory failure */
 
-    mkdir("/tmp/cecup_aux_parent", 0700);
-    mkdir("/tmp/cecup_aux_parent/child", 0700);
-    mkdir("/tmp/cecup_aux_parent2", 0700);
-
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]),
-                          "/tmp/cecup_aux_parent/child");
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]),
-                          "/tmp/cecup_aux_parent");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), child_path);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), parent_path);
     ok = cecup_get_dirs();
     ASSERT(!ok); /* Source inside destination failure */
 
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]),
-                          "/tmp/cecup_aux_parent");
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]),
-                          "/tmp/cecup_aux_parent/child");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), parent_path);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), child_path);
     ok = cecup_get_dirs();
     ASSERT(!ok); /* Destination inside source failure */
 
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]),
-                          "/tmp/cecup_aux_parent");
-    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]),
-                          "/tmp/cecup_aux_parent2");
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), parent_path);
+    gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), other_path);
     ok = cecup_get_dirs();
     ASSERT(ok); /* Shared string prefix but not contained */
 
-    rmdir("/tmp/cecup_aux_parent/child");
-    rmdir("/tmp/cecup_aux_parent");
-    rmdir("/tmp/cecup_aux_parent2");
-    remove("/tmp/cecup_test_config.ini");
+    test_remove_tree(temp_dir);
 
     /* Test on_banner_response */
     info = gtk_info_bar_new();

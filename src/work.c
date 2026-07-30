@@ -640,10 +640,11 @@ create_test_file(char *path, char *content) {
 
 int
 main(void) {
-    char temp_dir[] = "/tmp/cecup_work_test_XXXXXX";
+    char temp_dir[MAX_PATH_LENGTH];
     char src_dir[MAX_PATH_LENGTH];
     char dst_dir[MAX_PATH_LENGTH];
     IgnorePattern pattern;
+    bool supports_symlink;
     static TestEntry test_entries[] = {
         {
             .name = "equal_file.txt",
@@ -736,7 +737,8 @@ main(void) {
         exit(EXIT_SUCCESS);
     }
 
-    ASSERT(mkdtemp(temp_dir));
+    test_make_temp_dir(temp_dir, SIZEOF(temp_dir), "work");
+    supports_symlink = test_symlink_supported(temp_dir);
 
     SNPRINTF(src_dir, "%s/src", temp_dir);
     SNPRINTF(dst_dir, "%s/dst", temp_dir);
@@ -750,6 +752,10 @@ main(void) {
         char path_dst[MAX_PATH_LENGTH];
 
         entry = &test_entries[i];
+        if (!supports_symlink && (entry->src_symlink || entry->dst_symlink)) {
+            continue;
+        }
+
         SNPRINTF(path_src, "%s/%s", src_dir, entry->name);
         SNPRINTF(path_dst, "%s/%s", dst_dir, entry->name);
 
@@ -893,6 +899,10 @@ main(void) {
         enum Reason reason;
 
         entry = &test_entries[i];
+        if (!supports_symlink && (entry->src_symlink || entry->dst_symlink)) {
+            continue;
+        }
+
         src_idx = -1;
         dst_idx = -1;
 
@@ -974,7 +984,7 @@ main(void) {
         xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
         xpthread_join(&cecup.work_thread, NULL);
 
-        ASSERT_EQUAL(cecup.ntransfers, 0); 
+        ASSERT_EQUAL(cecup.ntransfers, 0);
     }
 
     if (cecup.transfers_capacity > 0) {
@@ -993,20 +1003,16 @@ main(void) {
     traversal_free(&cecup.traversal[R]);
 
     if (cecup.rows_capacity > 0) {
-        free2(cecup.rows[L], cecup.rows_capacity*SIZEOF(*(cecup.rows[L])));
-        free2(cecup.rows[R], cecup.rows_capacity*SIZEOF(*(cecup.rows[R])));
-        free2(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
-        free2(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
+        free2(cecup.rows[L], cecup.rows_capacity * SIZEOF(*(cecup.rows[L])));
+        free2(cecup.rows[R], cecup.rows_capacity * SIZEOF(*(cecup.rows[R])));
+        free2(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
+        free2(cecup.rows_visible,
+              cecup.rows_capacity * SIZEOF(*(cecup.rows_visible)));
     }
 
     arena_destroy(cecup.arena);
 
-    {
-        char cmd[MAX_PATH_LENGTH];
-
-        SNPRINTF(cmd, "rm -rf %s", temp_dir);
-        system(cmd);
-    }
+    test_remove_tree(temp_dir);
 
     exit(EXIT_SUCCESS);
 }

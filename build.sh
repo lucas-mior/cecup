@@ -526,6 +526,9 @@ case "$target" in
     ;;
 "test")
     generate_welcome_h
+    CECUP_TEST_TMPDIR="${CECUP_TEST_TMPDIR:-${TMPDIR:-/tmp}}"
+    mkdir -p "$CECUP_TEST_TMPDIR"
+    export CECUP_TEST_TMPDIR
     find . -iname "*.c" | sort | while read -r src; do
         trace_off
         name=$(basename "$src")
@@ -541,7 +544,7 @@ case "$target" in
         fi
 
         name=$(echo "$name" | sed 's/\.c//')
-        test_exe="${TMPDIR:-/tmp}/${name}_test"
+        test_exe="$CECUP_TEST_TMPDIR/${name}_test"
 
         printf "\nTesting ${RED}${src}${RES} ...\n"
 

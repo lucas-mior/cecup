@@ -1483,12 +1483,171 @@ work_rsync_functions_sink(void) {
 #include "work.c"
 #include "tasks.c"
 
+static bool
+test_rsync_backend_supported(void) {
+    Command command = {0};
+    bool supported;
+
+    if (!test_command_exists("rsync")) {
+        return false;
+    }
+
+    COMMAND_PUSH(&command,
+                 "rsync", "--info=progress2", "--iconv=.,.", "--version");
+    supported = command_run_capture(&command, COMMAND_CAPTURE_STDOUT)
+                && (command.result.status == 0);
+    command_free(&command);
+    return supported;
+}
+
+static TaskList *
+test_task_list_create(int32 count) {
+    TaskList *tasks;
+
+    tasks = malloc2(SIZEOF(*tasks) + count*SIZEOF(Task *));
+    *tasks = (TaskList){0};
+    tasks->count = count;
+    return tasks;
+}
+
+static Task *
+test_task_create(enum Action action, char *path) {
+    Task *task;
+
+    task = malloc2(SIZEOF(*task));
+    *task = (Task){0};
+    task->action = action;
+    task->side = L;
+    task->path_len = strlen32(path);
+    task->path = xstrdup(path);
+    return task;
+}
+
+static void
+test_write_file(char *path, char *contents) {
+    int32 fd;
+    int32 len;
+
+    len = strlen32(contents);
+    fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    ASSERT_MORE_EQUAL(fd, 0);
+    write64(fd, contents, len);
+    XCLOSE(&fd, path);
+    return;
+}
+
+static void
+test_manual_copy_regular_and_dir(MessageBatch **batch) {
+    TaskList *tasks;
+    char src_file[MAX_PATH_LENGTH];
+    char dst_file[MAX_PATH_LENGTH];
+    char src_dir[MAX_PATH_LENGTH];
+    char src_nested[MAX_PATH_LENGTH];
+    char dst_dir[MAX_PATH_LENGTH];
+    char dst_nested[MAX_PATH_LENGTH];
+
+    SNPRINTF(src_file, "%s/manual_file.txt", cecup.base[L]);
+    SNPRINTF(dst_file, "%s/manual_file.txt", cecup.base[R]);
+    SNPRINTF(src_dir, "%s/manual_dir", cecup.base[L]);
+    SNPRINTF(src_nested, "%s/manual_dir/nested.txt", cecup.base[L]);
+    SNPRINTF(dst_dir, "%s/manual_dir", cecup.base[R]);
+    SNPRINTF(dst_nested, "%s/manual_dir/nested.txt", cecup.base[R]);
+
+    test_write_file(src_file, "file-data");
+    mkdir(src_dir, 0755);
+    test_write_file(src_nested, "nested-data");
+
+    tasks = test_task_list_create(3);
+    tasks->items[0] = test_task_create(ACTION_NEW, "manual_file.txt");
+    tasks->items[1] = test_task_create(ACTION_NEW, "manual_dir/");
+    tasks->items[2] = test_task_create(ACTION_NEW, "manual_dir/nested.txt");
+
+    ASSERT(work_manual_backend_run(tasks, tasks->count, batch));
+    ASSERT(access(dst_dir, F_OK) == 0);
+    ASSERT(util_equal_files(src_file, dst_file));
+    ASSERT(util_equal_files(src_nested, dst_nested));
+
+    work_batch_flush(batch);
+    task_list_free(tasks);
+    return;
+}
+
+static void
+test_manual_copy_symlink(MessageBatch **batch) {
+    TaskList *tasks;
+    char src_link[MAX_PATH_LENGTH];
+    char dst_link[MAX_PATH_LENGTH];
+    char target[PATH_MAX];
+    int32 target_len;
+
+    if (!test_symlink_supported(cecup.base[L])) {
+        return;
+    }
+
+    SNPRINTF(src_link, "%s/manual_link", cecup.base[L]);
+    SNPRINTF(dst_link, "%s/manual_link", cecup.base[R]);
+    ASSERT(symlink("manual_target.txt", src_link) == 0);
+
+    tasks = test_task_list_create(1);
+    tasks->items[0] = test_task_create(ACTION_SYMLINK, "manual_link");
+
+    ASSERT(work_manual_backend_run(tasks, tasks->count, batch));
+    target_len = readlink(dst_link, target, SIZEOF(target) - 1);
+    ASSERT_MORE(target_len, 0);
+    target[target_len] = '\0';
+    ASSERT_EQUAL(target, "manual_target.txt");
+
+    work_batch_flush(batch);
+    task_list_free(tasks);
+    return;
+}
+
+static void
+test_manual_copy_hardlinks(MessageBatch **batch) {
+    TaskList *tasks;
+    char src_a[MAX_PATH_LENGTH];
+    char src_b[MAX_PATH_LENGTH];
+    char dst_a[MAX_PATH_LENGTH];
+    char dst_b[MAX_PATH_LENGTH];
+    struct stat stat_a;
+    struct stat stat_b;
+
+    if (!test_hardlink_supported(cecup.base[L])) {
+        return;
+    }
+
+    SNPRINTF(src_a, "%s/manual_hard_a", cecup.base[L]);
+    SNPRINTF(src_b, "%s/manual_hard_b", cecup.base[L]);
+    SNPRINTF(dst_a, "%s/manual_hard_a", cecup.base[R]);
+    SNPRINTF(dst_b, "%s/manual_hard_b", cecup.base[R]);
+
+    test_write_file(src_a, "hardlink-data");
+    ASSERT(link(src_a, src_b) == 0);
+
+    tasks = test_task_list_create(2);
+    tasks->items[0] = test_task_create(ACTION_NEW, "manual_hard_a");
+    tasks->items[1] = test_task_create(ACTION_NEW, "manual_hard_b");
+
+    ASSERT(work_manual_backend_run(tasks, tasks->count, batch));
+    ASSERT(lstat(dst_a, &stat_a) == 0);
+    ASSERT(lstat(dst_b, &stat_b) == 0);
+    ASSERT_EQUAL(stat_a.st_ino, stat_b.st_ino);
+    ASSERT_EQUAL(stat_a.st_dev, stat_b.st_dev);
+
+    work_batch_flush(batch);
+    task_list_free(tasks);
+    return;
+}
+
 int
 main(void) {
     char *result;
     MessageBatch *batch;
     int32 fd;
     pthread_t thread;
+    char temp_dir[MAX_PATH_LENGTH];
+    char files_from[MAX_PATH_LENGTH];
+    char path[MAX_PATH_LENGTH];
 
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
@@ -1540,15 +1699,17 @@ main(void) {
         ASSERT(result == NULL);
     }
 
-    /* Initialize System State for IO Tests */
-    system("rm -rf /tmp/cecup_test_src /tmp/cecup_test_dst /tmp/cecup_test_files_from");
-    mkdir("/tmp/cecup_test_src", 0755);
-    mkdir("/tmp/cecup_test_dst", 0755);
-
-    cecup.base[L] = xstrdup("/tmp/cecup_test_src");
+    test_make_temp_dir(temp_dir, SIZEOF(temp_dir), "work_rsync");
+    SNPRINTF(path, "%s/src", temp_dir);
+    mkdir(path, 0755);
+    cecup.base[L] = xstrdup(path);
     cecup.base_len[L] = strlen32(cecup.base[L]);
-    cecup.base[R] = xstrdup("/tmp/cecup_test_dst");
+
+    SNPRINTF(path, "%s/dst", temp_dir);
+    mkdir(path, 0755);
+    cecup.base[R] = xstrdup(path);
     cecup.base_len[R] = strlen32(cecup.base[R]);
+
     cecup.delete_after = false;
     stop_working(false);
     child_pid_set((pid_t)0);
@@ -1583,7 +1744,11 @@ main(void) {
     ASSERT(batch == NULL);
 
     /* Test work_batch_push_rename */
-    work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, L, "old.txt", 7, "new.txt", 7);
+    work_batch_push_rename(&batch,
+                           MSG_BATCH_ROW_RENAME,
+                           L,
+                           "old.txt", 7,
+                           "new.txt", 7);
     ASSERT(batch != NULL);
     ASSERT_EQUAL(batch->count, 1);
     ASSERT(strcmp(batch->paths[0], "old.txt") == 0);
@@ -1592,73 +1757,84 @@ main(void) {
     ASSERT(batch == NULL);
 
     /* Test work_remove refuses to remove configured root */
-    fd = open("/tmp/cecup_test_dst/root_guard.txt", O_CREAT | O_WRONLY, 0644);
+    SNPRINTF(path, "%s/root_guard.txt", cecup.base[R]);
+    fd = open(path, O_CREAT | O_WRONLY, 0644);
     close(fd);
-    ASSERT(access("/tmp/cecup_test_dst/root_guard.txt", F_OK) == 0);
+    ASSERT(access(path, F_OK) == 0);
     work_remove(&batch, ".", 1, R);
-    ASSERT(access("/tmp/cecup_test_dst/root_guard.txt", F_OK) == 0);
+    ASSERT(access(path, F_OK) == 0);
     ASSERT(batch == NULL);
     work_remove(&batch, "./", 2, R);
-    ASSERT(access("/tmp/cecup_test_dst/root_guard.txt", F_OK) == 0);
-    ASSERT(access("/tmp/cecup_test_dst", F_OK) == 0);
+    ASSERT(access(path, F_OK) == 0);
+    ASSERT(access(cecup.base[R], F_OK) == 0);
     ASSERT(batch == NULL);
-    unlink("/tmp/cecup_test_dst/root_guard.txt");
+    unlink(path);
 
     /* Test work_remove on file */
-    fd = open("/tmp/cecup_test_dst/rm_test.txt", O_CREAT | O_WRONLY, 0644);
+    SNPRINTF(path, "%s/rm_test.txt", cecup.base[R]);
+    fd = open(path, O_CREAT | O_WRONLY, 0644);
     close(fd);
-    ASSERT(access("/tmp/cecup_test_dst/rm_test.txt", F_OK) == 0);
+    ASSERT(access(path, F_OK) == 0);
     work_remove(&batch, "rm_test.txt", 11, R);
-    ASSERT(access("/tmp/cecup_test_dst/rm_test.txt", F_OK) != 0);
+    ASSERT(access(path, F_OK) != 0);
 
     /* Test work_remove on directory using FsWalk */
-    mkdir("/tmp/cecup_test_dst/rm_dir/", 0755);
-    fd = open("/tmp/cecup_test_dst/rm_dir/file.txt", O_CREAT | O_WRONLY, 0644);
+    SNPRINTF(path, "%s/rm_dir", cecup.base[R]);
+    mkdir(path, 0755);
+    SNPRINTF(path, "%s/rm_dir/file.txt", cecup.base[R]);
+    fd = open(path, O_CREAT | O_WRONLY, 0644);
     close(fd);
     work_remove(&batch, "rm_dir/", 7, R);
-    ASSERT(access("/tmp/cecup_test_dst/rm_dir", F_OK) != 0);
+    SNPRINTF(path, "%s/rm_dir", cecup.base[R]);
+    ASSERT(access(path, F_OK) != 0);
 
-    /* Test work_rsync_run */
-    fd = open("/tmp/cecup_test_src/sync_test.txt", O_CREAT | O_WRONLY, 0644);
-    write64(fd, "data", 4);
-    close(fd);
+    test_manual_copy_regular_and_dir(&batch);
+    test_manual_copy_symlink(&batch);
+    test_manual_copy_hardlinks(&batch);
 
-    fd = open("/tmp/cecup_test_files_from", O_CREAT | O_WRONLY, 0644);
-    write64(fd, "sync_test.txt\n", 14);
-    close(fd);
+    if (test_rsync_backend_supported()) {
+        SNPRINTF(path, "%s/sync_test.txt", cecup.base[L]);
+        test_write_file(path, "data");
 
-    ASSERT(work_rsync_run("/tmp/cecup_test_files_from", 1, false, &batch));
-    ASSERT(access("/tmp/cecup_test_dst/sync_test.txt", F_OK) == 0);
+        SNPRINTF(files_from, "%s/files_from", temp_dir);
+        fd = open(files_from, O_CREAT | O_WRONLY, 0644);
+        ASSERT_MORE_EQUAL(fd, 0);
+        write64(fd, "sync_test.txt\n", 14);
+        close(fd);
 
-    /* Test work_rsync (Thread Runner) */
+        ASSERT(work_rsync_run(files_from, 1, false, &batch));
+        SNPRINTF(path, "%s/sync_test.txt", cecup.base[R]);
+        ASSERT(access(path, F_OK) == 0);
+        work_batch_flush(&batch);
+    }
+
+    /* Test work_rsync compatibility wrapper with the portable backend. */
     {
         ThreadData *thread_data;
         TaskList *task_list;
         Task *task;
 
+        SNPRINTF(path, "%s/thread_test.txt", cecup.base[L]);
+        test_write_file(path, "thread-data");
+
         thread_data = malloc2(SIZEOF(*thread_data));
-        task_list = malloc2(SIZEOF(*task_list) + 1*SIZEOF(Task*));
-        task = malloc2(SIZEOF(*task));
+        task_list = test_task_list_create(1);
+        task = test_task_create(ACTION_UPDATE, "thread_test.txt");
+        task_list->items[0] = task;
 
         *thread_data = (ThreadData){0};
-        *task_list = (TaskList){0};
-        *task = (Task){0};
-
-        task->action = ACTION_UPDATE;
-        task->side = R;
-        task->path = xstrdup("sync_test.txt");
-        task->path_len = 13;
-
-        task_list->count = 1;
-        task_list->items[0] = task;
         thread_data->tasks = task_list;
 
+        ASSERT(setenv("CECUP_TRANSFER_BACKEND", "manual", true) == 0);
         xpthread_create(&thread, NULL, work_rsync, thread_data);
         xpthread_join(&thread, NULL);
+        unsetenv("CECUP_TRANSFER_BACKEND");
+
+        SNPRINTF(path, "%s/thread_test.txt", cecup.base[R]);
+        ASSERT(access(path, F_OK) == 0);
     }
 
-    /* Teardown */
-    system("rm -rf /tmp/cecup_test_src /tmp/cecup_test_dst /tmp/cecup_test_files_from");
+    test_remove_tree(temp_dir);
     free2(cecup.base[L], cecup.base_len[L] + 1);
     free2(cecup.base[R], cecup.base_len[R] + 1);
 

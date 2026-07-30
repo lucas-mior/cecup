@@ -671,9 +671,11 @@ main(void) {
     rapidhash128_t hash_b;
     FileID link_file_id;
     FileID other_file_id;
+    char temp_dir[PATH_MAX];
 
     memset64(&test_traversal, 0, SIZEOF(test_traversal));
     memset64(&dummy_stat, 0, SIZEOF(dummy_stat));
+    test_make_temp_dir(temp_dir, SIZEOF(temp_dir), "traversal");
 
     traversal_allocate(&test_traversal, L);
     ASSERT(test_traversal.capacity == INITIAL_CAPACITY);
@@ -707,7 +709,8 @@ main(void) {
     dummy_stat.st_mode = S_IFREG | 0644;
     dummy_stat.st_size = 1024;
 
-    idx = traversal_push(&test_traversal, &dummy_stat, "file_1", 6, NULL, 0, NULL, 0);
+    idx = traversal_push(&test_traversal, &dummy_stat,
+                         "file_1", 6, NULL, 0, NULL, 0);
     ASSERT_EQUAL(idx, 0);
     ASSERT_EQUAL(test_traversal.nfiles, 1);
     ASSERT_EQUAL((int32)test_traversal.stats[0].st_ino, 100);
@@ -715,7 +718,8 @@ main(void) {
     for (int32 i = 1; i < (INITIAL_CAPACITY + 5); i += 1) {
         char *name = xarena_push(test_traversal.arena, 16);
         snprintf(name, 16, "file_%d", i);
-        traversal_push(&test_traversal, &dummy_stat, name, strlen32(name), NULL, 0, NULL, 0);
+        traversal_push(&test_traversal, &dummy_stat, name,
+                       strlen32(name), NULL, 0, NULL, 0);
     }
     ASSERT(test_traversal.capacity > INITIAL_CAPACITY);
     ASSERT_EQUAL(test_traversal.nfiles, INITIAL_CAPACITY + 5);
@@ -724,13 +728,19 @@ main(void) {
     symlink_target = NULL;
     symlink_len = 0;
 
-    symlink("dummy_target.txt", "test_symlink");
-    symlink_len = traversal_symlink_get(&test_traversal, "test_symlink", &symlink_target);
-    ASSERT(symlink_len > 0);
-    ASSERT_EQUAL(symlink_len, strlen32("dummy_target.txt"));
-    ASSERT(symlink_target != NULL);
-    ASSERT(strcmp(symlink_target, "dummy_target.txt") == 0);
-    remove("test_symlink");
+    if (test_symlink_supported(temp_dir)) {
+        char link_path[PATH_MAX];
+
+        SNPRINTF(link_path, "%s/test_symlink", temp_dir);
+        ASSERT(symlink("dummy_target.txt", link_path) == 0);
+        symlink_len = traversal_symlink_get(&test_traversal,
+                                            link_path, &symlink_target);
+        ASSERT(symlink_len > 0);
+        ASSERT_EQUAL(symlink_len, strlen32("dummy_target.txt"));
+        ASSERT(symlink_target != NULL);
+        ASSERT(strcmp(symlink_target, "dummy_target.txt") == 0);
+        remove(link_path);
+    }
 
     symlink_len = traversal_symlink_get(&test_traversal,
                                          "non_existent_symlink",
@@ -796,6 +806,7 @@ main(void) {
     ASSERT_EQUAL(test_traversal.nfiles, 0);
 
     traversal_free(&test_traversal);
+    test_remove_tree(temp_dir);
 
     ASSERT(true);
     exit(EXIT_SUCCESS);

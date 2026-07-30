@@ -87,7 +87,8 @@ that would prevent macOS CI from reaching the C portability work:
 - developer helpers such as `ctags`, `vtags.sed`, `msgfmt`, `gdb`, and `xsel`
   are optional or replaced with portable fallbacks;
 - installation no longer depends on GNU `install -D`;
-- test executables use `${TMPDIR:-/tmp}` instead of hardcoding `/tmp`.
+- test executables use `CECUP_TEST_TMPDIR`, defaulting to `${TMPDIR:-/tmp}`,
+  instead of hardcoding `/tmp`.
 
 This does not make the macOS build pass by itself. It only removes build-script
 barriers so later steps can address source-level portability failures.
@@ -263,3 +264,31 @@ use their platform/default application handlers through GLib/GIO.
 The `.desktop` file is still installed for non-Darwin Unix desktop targets. It
 is skipped by default on Darwin; a future packaging step should add a proper
 macOS `.app` bundle instead.
+
+## Portable test baseline
+
+The test runner and the filesystem-heavy unit tests now avoid the most obvious
+Linux-only test assumptions.
+
+The `test` target exports `CECUP_TEST_TMPDIR`, defaulting to `${TMPDIR:-/tmp}`,
+and writes test executables below that directory. C tests that need temporary
+filesystem state now use shared helpers for creating temporary directories and
+removing directory trees instead of hardcoding `/tmp` paths or invoking
+`rm -rf`.
+
+The shared test helpers also probe symlink and hardlink support before running
+feature-dependent checks. This matters for macOS CI because filesystem support
+can vary by runner volume, permissions, and future sandboxing choices. Tests
+that need these features can now skip only that feature-specific assertion path
+instead of failing the whole test binary.
+
+The `work_rsync` test now separates rsync-specific coverage from transfer
+backend coverage. It still tests rsync output parsing unconditionally, but it
+only runs the real rsync command when the installed `rsync` accepts the required
+options. The manual recursive copier has dedicated tests for regular files,
+directories, symlinks, hardlinks, recursive deletion, root-removal guards, and
+the legacy `work_rsync()` thread entry point.
+
+The native macOS CI job now forces `CECUP_TRANSFER_BACKEND=manual` for tests so
+macOS portability does not depend on the platform rsync implementation while the
+manual backend is being developed.

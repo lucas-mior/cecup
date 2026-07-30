@@ -320,7 +320,8 @@ main(void) {
     GParamSpec *pspec;
     GtkWidget *box_parent;
     GtkWidget *paned;
-    char *src_dir = "/tmp/cecup_test_src";
+    char temp_dir[MAX_PATH_LENGTH];
+    char src_dir[MAX_PATH_LENGTH];
     char *file_rel = "test_file.txt";
     char src_file_full[MAX_PATH_LENGTH];
     int32 n = 1;
@@ -328,6 +329,9 @@ main(void) {
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
     }
+
+    test_make_temp_dir(temp_dir, SIZEOF(temp_dir), "on_path");
+    SNPRINTF(src_dir, "%s/src", temp_dir);
 
     // 1. Setup Global State and Filesystem
     cecup.base[L] = xmemdup(src_dir, strlen32(src_dir) + 1);
@@ -430,8 +434,7 @@ main(void) {
     g_object_unref(box_parent);
     g_param_spec_unref(pspec);
 
-    unlink("/tmp/cecup_test_src/renamed_file.txt");
-    rmdir(src_dir);
+    test_remove_tree(temp_dir);
 
     exit(EXIT_SUCCESS);
 }
