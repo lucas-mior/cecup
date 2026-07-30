@@ -1614,6 +1614,7 @@ test_manual_copy_symlink(MessageBatch **batch) {
     char dst_link[MAX_PATH_LENGTH];
     char target[PATH_MAX];
     int32 target_len;
+    ssize_t target_len_api;
 
     if (!test_symlink_supported(cecup.base[L])) {
         return;
@@ -1627,8 +1628,12 @@ test_manual_copy_symlink(MessageBatch **batch) {
     tasks->items[0] = test_task_create(ACTION_SYMLINK, "manual_link");
 
     ASSERT(work_manual_backend_run(tasks, tasks->count, batch));
-    target_len = readlink(dst_link, target, SIZEOF(target) - 1);
+
+    target_len_api = readlink(dst_link, target, SIZEOF(target) - 1);
+    ASSERT_LESS(target_len_api, MAXOF(target_len));
+    target_len = (int32)target_len_api;
     ASSERT_MORE(target_len, 0);
+
     target[target_len] = '\0';
     ASSERT_EQUAL(target, "manual_target.txt");
 
