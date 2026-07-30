@@ -271,9 +271,15 @@ generate_welcome_h() {
 }
 
 generate_cross_syntax_src() {
-    cross_syntax_src="${TMPDIR:-/tmp}/cecup-cross-syntax-$$.c"
-    cat > "$cross_syntax_src" <<'EOF'
-#include "platform_detection.h"
+    mkdir -p .cache
+    cross_syntax_src=".cache/cecup-cross-syntax-$$.c"
+
+    # Keep this source in the work tree instead of /tmp. Zig's Darwin
+    # frontend has produced opaque FileNotFound diagnostics for temporary
+    # absolute source paths in CI, and copying the self-contained platform
+    # header avoids any quoted-include path ambiguity.
+    cat cbase/platform_detection.h > "$cross_syntax_src"
+    cat >> "$cross_syntax_src" <<'EOF'
 
 #if !OS_MAC
 #error "Darwin cross syntax check must target macOS"
