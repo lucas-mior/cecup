@@ -96,7 +96,7 @@ typeof(var)  // good
 ## Memory allocation
 
 - Avoid `malloc`, `calloc`, `realloc`, and `free`.
-  * Use wrappers that track allocations in debug builds:
+  * Use wrappers that track allocations in debug builds instead:
     + `malloc2(size)`
     + `free2(pointer, size)`
     + `realloc2(pointer, old_array_capacity, new_array_capacity, obj_size)`
@@ -104,6 +104,8 @@ typeof(var)  // good
     + `realloc2(size) + memset64(pointer, 0, size)` instead of `calloc`.
   * The wrappers above never fail: if out of memory, they exit the program. No
     need to check if they succeded or not.
+  * `free2` already checks if the passed pointer is NULL. Don't check if the
+    pointer is NULL before calling `free2`.
 - Choose what is best in each situation:
   * Use traditional `malloc2`, `realloc2`, and `free2`.
   * Use the `arena.c` bump allocator for groups of allocations with the same
@@ -139,6 +141,14 @@ typeof(var)  // good
   ```
 - Never typedef enums and unions.
 - Never typedef pointers.
+
+## Function declarations
+Most functions don't need to have an extra declaration, only the definition will
+suffice. Order the functions in a file properly so that extra declarations
+aren't needed. Functions that do need an extra pre declaration, put the
+declaration in a project-wide header file or in the header file associated with
+the C file itself. Avoid declaring functions defined in a C file, in another C
+file. 
 
 ## Struct declarations
 
@@ -185,7 +195,7 @@ That means to also avoid calling `strlen32`:
     + Instead, to `my_function(STRLIT("literal"))`
 - `STRLIT("literal")` can be used to pass the string literal and its length
   in an "don't repeat yourself" way, that also does not depend on the compiler
-  to optimize the strlen32 away, since it uses `sizeof` to get the length of the
+  to optimize the `strlen32`, since it uses `sizeof` to get the length of the
   literal.
 
 Exceptions to this rule are:
@@ -381,7 +391,7 @@ for (int32 i = 0; i < LENGTH(some_array); i += 1) {
 ### Return value for errors
 - Functions that return an index, or another form of non negative integer,
   can use -1 to indicate that the function failed.
-- Functions that return pointer to allocated memory can return NULL in case they  fail
+- Functions that return pointer to allocated memory can return NULL in case they fail
 - Other functions can return a `bool`: `true` means that the functions succeded,
   `false` means that the function failed. If information about the error could
   be useful, organize the function to have a struct pointer parameter that fills
@@ -543,7 +553,14 @@ default:
   * Don't use `memset(&my_struct, 0, SIZEOF(my_struct));`
 - To initialize a stack array to zero, use `MyType array[ARRAY_SIZE] = {0};`
   * Don't use `memset(&array, 0, SIZEOF(array));`
-- Try to keep the scope of variables reduced.
+- Try to keep the scope of variables reduced. Use of artificial blocks is
+  sometimes useful:
+  ```c
+  {
+      // this var only exists here and can't leak where it is not needed
+      int32 x;
+  }
+  ```
 - Prefer to declare variable at the top of blocks
   * Avoid mixing declarations and code (`-Wdeclaration-after-statement`)
   * Unless doing code generation / meta programming:
@@ -551,15 +568,6 @@ default:
 - Variable that have a "default return" value, or a "stub" value, shall be
   initialized:
   ```c
-  // good
-  static bool function(void *parameters) {
-      bool result = false;
-
-      // do stuff that might change result
-
-      return result;
-  }
-
   // bad
   static bool function(void *parameters) {
       bool result;
@@ -570,23 +578,19 @@ default:
 
       return result;
   }
+
+  // good
+  static bool function(void *parameters) {
+      bool result = false;
+
+      // do stuff that might change result
+
+      return result;
+  }
   ```
   * But initializing an "ORing" or "summing" variable is better done before the
     "ORing"/"summing" loop:
     ```c
-    // good (this makes it clear how the variable works)
-    static uint32
-    function(void *params) {
-        uint32 mask;
-        double other_var;
-
-        mask = 0;
-        for (uint32 i = 0; i < N; i += 1) {
-            mask |= some_function(params, i);
-        }
-        return mask;
-    }
-
     // bad (this obscures the fact that 0 is not a dummy return, it is a valid
     //      temporary state of the variable)
     static uint32
@@ -599,7 +603,49 @@ default:
         }
         return mask;
     }
+
+    // better (this makes it clear how the variable works)
+    // prefer this only when there are many variables, which can confuse the
+    // reader. When there are fewer variables, use the // even better version
+    static uint32
+    function(void *params) {
+        uint32 mask;
+        double other_var;
+
+        mask = 0;
+        for (uint32 i = 0; i < N; i += 1) {
+            mask |= some_function(params, i);
+        }
+        return mask;
+    }
+
+    // even better (now the important variable is initialized near the loop)
+    static uint32
+    function(void *params) {
+        double other_var;
+        uint32 mask = 0;
+
+        for (uint32 i = 0; i < N; i += 1) {
+            mask |= some_function(params, i);
+        }
+        return mask;
+    }
     ```
+- Variables that are aliases/copies, shall be declared and initialized in the
+  same line:
+  ```c
+  // bad
+  void my_function(ProgramOptions *options) {
+      char *name;
+
+      name = options->name;
+  }
+
+  // good
+  void my_function(ProgramOptions *options) {
+      char *name = options->name;
+  }
+  ```
 
 ## Utilities
 Use the following available functions from `cbase/util.c` for common programming
@@ -620,7 +666,7 @@ tasks rather than writing stupid implementations.
 
 | Function     | Description                                                        |
 | ------------ | ------------------------------------------------------------------ |
-| `sb_append`  | Appends a string of a known length to the builder.                 |
+| `SB_APPEND`  | Appends a string to the builder. Optionally pass the length of the string. |
 | `sb_printf`  | Appends formatted text directly into the builder.                  |
 | `sb_reserve` | Pre-allocates memory capacity to avoid frequent reallocations.     |
 | `sb_steal`   | Extracts the built string and frees the builder's internal memory. |
@@ -681,9 +727,10 @@ When you need one of those, make use of the algorithms implemented in
 Every .c file (except the main program) must have a testing block:
 ```c
 #if TESTING_file_prefix`
-
 #define CBASE_IMPLEMENT
 #include "cbase.h"
+
+#include "other_needed_file.c"
 
 int main(void) {
     // tests most of the file

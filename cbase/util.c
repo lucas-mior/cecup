@@ -12,12 +12,6 @@
 
 #include "cbase.h"
 
-#if !TESTING_util
-static char *program;
-#else
-static char *program = __FILE__;
-#endif
-static int32 program_len UNUSED;
 static ullong here_counter;
 
 CBASE_API_DEF void
@@ -749,7 +743,6 @@ xclosedir(DIR *dir, char *dirname) {
     }
     return 0;
 }
-
 
 CBASE_API_DEF void __attribute__((format(printf, 4, 5)))
 error_impl(char *file, int32 line, char *func, char *format, ...) {
@@ -1698,53 +1691,84 @@ timezone_init(void) {
 }
 #endif
 
-CBASE_API_DEF char *
-read_entire_file(char *path, int32 *file_len) {
-    FILE *fp;
-    int64 len;
-    char *data;
-    int64 r;
+CBASE_API_DEF bool
+path_missing(char *path) {
+    if (path == NULL) {
+        return true;
+    }
+    if (path[0] == '\0') {
+        return true;
+    }
 
-    if ((fp = fopen(path, "rb")) == NULL) {
+    return false;
+}
+
+CBASE_API_DEF bool
+read_entire_file(char *path, char **file_bytes, int32 *file_len) {
+    FILE *file;
+    int64 len;
+    int64 read_len;
+    char *bytes;
+
+    if (file_bytes) {
+        *file_bytes = NULL;
+    }
+    if (file_len) {
+        *file_len = 0;
+    }
+    if (path_missing(path)
+        || (file_bytes == NULL)
+        || (file_len == NULL)) {
+        error("Error reading file: invalid arguments.\n");
+        return false;
+    }
+
+    if ((file = fopen(path, "rb")) == NULL) {
         error("Error opening "RED("%s")" for reading: %s",
               path, strerror(errno));
-        fatal(EXIT_FAILURE);
+        return false;
     }
-    if (fseek(fp, 0, SEEK_END)) {
+    if (fseek(file, 0, SEEK_END) != 0) {
         error("Error seeking end of %s: %s.\n", path, strerror(errno));
-        fclose(fp);
-        fatal(EXIT_FAILURE);
+        XFCLOSE(file, path);
+        return false;
     }
-    if ((len = ftell(fp)) < 0) {
+    if ((len = ftell(file)) < 0) {
         error("Error in ftell(%s): %s.\n", path, strerror(errno));
-        fclose(fp);
-        fatal(EXIT_FAILURE);
+        XFCLOSE(file, path);
+        return false;
     }
-    if (fseek(fp, 0, SEEK_SET)) {
-        error("Error rewinding %s: %s.\n", path, strerror(errno));
-        fclose(fp);
-        fatal(EXIT_FAILURE);
-    }
-
-    data = malloc2(len + 1);
-    if (len > 0) {
-        r = fread64(data, 1, len, fp);
-        if (r != len) {
-            error("Error reading "RED("%s")": %s.\n", path, strerror(errno));
-            fatal(EXIT_FAILURE);
-        }
-    } else {
-        r = 0;
-    }
-    data[r] = '\0';
-    XFCLOSE(fp, path);
-
-    if (r >= MAXOF(*file_len)) {
+    if (len >= MAXOF(*file_len)) {
         error("Only files up to 2GB are supported.\n");
-        fatal(EXIT_FAILURE);
+        XFCLOSE(file, path);
+        return false;
     }
-    *file_len = (int32)r;
-    return data;
+    if (fseek(file, 0, SEEK_SET) != 0) {
+        error("Error rewinding %s: %s.\n", path, strerror(errno));
+        XFCLOSE(file, path);
+        return false;
+    }
+
+    bytes = malloc2(len + 1);
+    read_len = 0;
+    if (len > 0) {
+        read_len = fread64(bytes, 1, len, file);
+    }
+    if (read_len != len) {
+        error("Error reading "RED("%s")": %s.\n", path, strerror(errno));
+        free2(bytes, (len + 1)*SIZEOF(*bytes));
+        XFCLOSE(file, path);
+        return false;
+    }
+    bytes[read_len] = '\0';
+    if (XFCLOSE(file, path) != 0) {
+        free2(bytes, (len + 1)*SIZEOF(*bytes));
+        return false;
+    }
+
+    *file_bytes = bytes;
+    *file_len = (int32)read_len;
+    return true;
 }
 
 CBASE_API_DEF bool
@@ -2276,6 +2300,7 @@ CBASE_API_DEF void
 util_functions_sink(void) {
     (void)here_counter;
     (void)strequal;
+    (void)path_missing;
     (void)read_entire_file;
     (void)write_entire_file;
     (void)sb_printf;
@@ -2417,6 +2442,22 @@ test_command_exists(char *command) {
     }
 
     return false;
+}
+
+CBASE_API_DEF void
+test_join_path(
+    char *buffer,
+    int64 buffer_len,
+    char *dir,
+    char *name
+) {
+    int32 len;
+
+    len = snprintf2(buffer, buffer_len, "%s/%s", dir, name);
+    ASSERT(len > 0);
+    ASSERT(len < buffer_len);
+
+    return;
 }
 
 CBASE_API_DEF void
@@ -2564,13 +2605,13 @@ test_hardlink_supported(char *dir) {
 #define ENUM_BITFLAGS 0
 #define ENUM_PREFIX_ WEEK_DAY_
 #define ENUM_FIELDS \
-    X(WEEK_DAY_SUNDAY, 0)          \
-    X(WEEK_DAY_MONDAY)             \
-    X(WEEK_DAY_TUESDAY, 10)        \
-    X(WEEK_DAY_WEDNESDAY)          \
-    X(WEEK_DAY_THURSDAY)           \
-    X(WEEK_DAY_FRIDAY, 5)          \
-    X(WEEK_DAY_SATURDAY, 20)
+    X(WEEK_DAY_SUNDAY, sunday)    \
+    X(WEEK_DAY_MONDAY, monday)    \
+    X(WEEK_DAY_TUESDAY, tuesday)  \
+    X(WEEK_DAY_WEDNESDAY)         \
+    X(WEEK_DAY_THURSDAY)          \
+    X(WEEK_DAY_FRIDAY, friday)    \
+    X(WEEK_DAY_SATURDAY, saturday)
 #include "xenums.c"
 
 #define ENUM_NAME PowerOfTwo
