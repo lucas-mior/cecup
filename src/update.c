@@ -166,8 +166,10 @@ update_ui_handler(void *data) {
 
         table = gtk_text_buffer_get_tag_table(cecup.log_buffer);
 
+#if CC_CLANG
         #pragma clang diagnostic push
         #pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
         switch (message->type) {
         case MSG_LOG_ERROR:
             if (gtk_text_tag_table_lookup(table, "err_red") == NULL) {
@@ -187,7 +189,9 @@ update_ui_handler(void *data) {
             gtk_text_buffer_insert(cecup.log_buffer, &end, message->text, -1);
             break;
         }
+#if CC_CLANG
         #pragma clang diagnostic pop
+#endif
 
         gtk_text_buffer_get_end_iter(cecup.log_buffer, &end);
         gtk_text_buffer_place_cursor(cecup.log_buffer, &end);
@@ -274,8 +278,10 @@ update_rows(MessageBatch *batch) {
 
     for (int32 i = 0; i < batch->count; i += 1) {
 
+#if CC_CLANG
         #pragma clang diagnostic push
         #pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
         switch (batch->type) {
         case MSG_BATCH_ROW_REMOVE:
             if (update_row_remove(batch->paths[i], batch->paths_lens[i], batch->side)) {
@@ -301,7 +307,9 @@ update_rows(MessageBatch *batch) {
         default:
             TRAP();
         }
+#if CC_CLANG
         #pragma clang diagnostic pop
+#endif
     }
 
     return changed;
