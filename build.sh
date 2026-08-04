@@ -491,6 +491,8 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-format-pedantic"
     CFLAGS="$CFLAGS -Wno-poison-system-directories"
     CFLAGS="$CFLAGS -Wno-allocator-wrappers"
+    CFLAGS="$CFLAGS -Wno-missing-prototypes"
+    CFLAGS="$CFLAGS -Wno-cast-align"
 
     # only for the LSP and unity-test builds. They include helper functions
     # that are intentionally unused in some translation units.
