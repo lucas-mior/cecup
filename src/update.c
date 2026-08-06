@@ -1189,7 +1189,7 @@ main(void) {
 
         /* file_c is currently at row_id 1 after the previous shifts */
         ASSERT(cecup.traversal[L].patterns[cecup.rows[L][1]] != NULL);
-        ASSERT(strcmp(cecup.traversal[L].patterns[cecup.rows[L][1]], "file_c") == 0);
+        ASSERT_EQUAL(cecup.traversal[L].patterns[cecup.rows[L][1]], "file_c");
     }
 
     /* --- Test update_list_from_rows (UI filtering logic) --- */
