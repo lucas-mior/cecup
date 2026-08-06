@@ -402,11 +402,8 @@ item_get_actions_reasons(int32 row_id,
 
 static int
 compare_names(void *a, void *b) {
-    char *name_a;
-    char *name_b;
-
-    name_a = *(char **)a;
-    name_b = *(char **)b;
+    char *name_a = *(char **)a;
+    char *name_b = *(char **)b;
 
     return strcmp(name_a, name_b);
 }
