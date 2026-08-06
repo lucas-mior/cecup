@@ -434,9 +434,9 @@ INLINE int32
 cecup_item_compare_int_key(void *a, void *b) {
     RowCache *entry_a = (RowCache *)a;
     RowCache *entry_b = (RowCache *)b;
-    int32 result;
     int64 key_a = entry_a->key.i64;
     int64 key_b = entry_b->key.i64;
+    int32 result;
 
     if (key_a > key_b) {
         result = 1;
