@@ -330,10 +330,10 @@ main(void) {
     ignore_patterns_load();
 
     ASSERT_EQUAL(cecup.ignore_count, 4);
-    ASSERT(strcmp(cecup.ignore_patterns[0].str, "*.c") == 0);
+    ASSERT_EQUAL(cecup.ignore_patterns[0].str, "*.c");
     ASSERT(cecup.ignore_patterns[1].dir_only == true);
     ASSERT(cecup.ignore_patterns[2].has_slash == true);
-    ASSERT(strcmp(cecup.ignore_patterns[3].str, "a?b") == 0);
+    ASSERT_EQUAL(cecup.ignore_patterns[3].str, "a?b");
 
     remove("test_ignore.conf");
 
@@ -341,13 +341,13 @@ main(void) {
     test_pattern_init(&patterns[0], "*.c");
     pattern = ignore_patterns_match("main.c", 6, false, patterns, 1);
     ASSERT(pattern != NULL);
-    ASSERT(strcmp(pattern->str, "*.c") == 0);
+    ASSERT_EQUAL(pattern->str, "*.c");
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "build/");
     pattern = ignore_patterns_match("build", 5, true, patterns, 1);
     ASSERT(pattern != NULL);
-    ASSERT(strcmp(pattern->str, "build") == 0);
+    ASSERT_EQUAL(pattern->str, "build");
 
     pattern = ignore_patterns_match("build", 5, false, patterns, 1);
     ASSERT_NULL(pattern);
@@ -397,13 +397,13 @@ main(void) {
     test_pattern_init(&patterns[0], "obj");
     pattern = ignore_patterns_match("src/obj/main.o", 14, false, patterns, 1);
     ASSERT(pattern != NULL);
-    ASSERT(strcmp(pattern->str, "obj") == 0);
+    ASSERT_EQUAL(pattern->str, "obj");
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "/src");
     pattern = ignore_patterns_match("src/main.c", 10, false, patterns, 1);
     ASSERT(pattern != NULL);
-    ASSERT(strcmp(pattern->match_str, "src") == 0);
+    ASSERT_EQUAL(pattern->match_str, "src");
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "/src");
@@ -414,7 +414,7 @@ main(void) {
     test_pattern_init(&patterns[0], "foo/bar");
     pattern = ignore_patterns_match("foo/bar/baz.c", 13, false, patterns, 1);
     ASSERT(pattern != NULL);
-    ASSERT(strcmp(pattern->str, "foo/bar") == 0);
+    ASSERT_EQUAL(pattern->str, "foo/bar");
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "*.h");
@@ -422,7 +422,7 @@ main(void) {
     test_pattern_init(&patterns[2], "*.o");
     pattern = ignore_patterns_match("src/main.o", 10, false, patterns, 3);
     ASSERT(pattern != NULL);
-    ASSERT(strcmp(pattern->str, "*.o") == 0);
+    ASSERT_EQUAL(pattern->str, "*.o");
 
     free2(patterns[0].str, patterns[0].len + 1);
     free2(patterns[1].str, patterns[1].len + 1);

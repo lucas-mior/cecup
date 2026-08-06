@@ -958,8 +958,8 @@ main(void) {
     text_src = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[L]));
     text_dst = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.dir_entry[R]));
 
-    ASSERT(strcmp(text_src, "/mnt/backup/dst") == 0);
-    ASSERT(strcmp(text_dst, "/home/user/src") == 0);
+    ASSERT_EQUAL(text_src, "/mnt/backup/dst");
+    ASSERT_EQUAL(text_dst, "/home/user/src");
 
     /* --- Test on_search_changed query allocation --- */
     gtk_editable_set_text(GTK_EDITABLE(cecup.search_entry), "test_query");
@@ -967,7 +967,7 @@ main(void) {
 
     ASSERT(cecup.search_query != NULL);
     ASSERT_EQUAL(cecup.search_query_len, 10);
-    ASSERT(strcmp(cecup.search_query, "test_query") == 0);
+    ASSERT_EQUAL(cecup.search_query, "test_query");
 
     /* --- Test on_unselect_all_clicked bulk logic --- */
     on_unselect_all_clicked(NULL, NULL);
