@@ -1699,7 +1699,7 @@ main(void) {
         result = work_rsync_itemize_skip(line, strlen32(line));
         ASSERT(result != NULL);
         ASSERT_EQUAL(result, line + 12);
-        ASSERT(strcmp(result, "some/file.txt") == 0);
+        ASSERT_EQUAL(result, "some/file.txt");
     }
 
     /* Test valid directory itemization */
@@ -1708,7 +1708,7 @@ main(void) {
         result = work_rsync_itemize_skip(line, strlen32(line));
         ASSERT(result != NULL);
         ASSERT_EQUAL(result, line + 12);
-        ASSERT(strcmp(result, "some/dir/") == 0);
+        ASSERT_EQUAL(result, "some/dir/");
     }
 
     /* Test invalid first character (unknown action) */
@@ -1771,14 +1771,14 @@ main(void) {
     work_batch_push(&batch, MSG_BATCH_ROW_TRANSFER, L, "file.txt", 8);
     ASSERT(batch != NULL);
     ASSERT_EQUAL(batch->count, 1);
-    ASSERT(strcmp(batch->paths[0], "file.txt") == 0);
+    ASSERT_EQUAL(batch->paths[0], "file.txt");
 
     /* Push different type to force a flush */
     work_batch_push(&batch, MSG_BATCH_ROW_REMOVE, L, "other.txt", 9);
     ASSERT(batch != NULL);
     ASSERT_EQUAL(batch->count, 1);
     ASSERT_EQUAL((uint32)batch->type, (uint32)MSG_BATCH_ROW_REMOVE);
-    ASSERT(strcmp(batch->paths[0], "other.txt") == 0);
+    ASSERT_EQUAL(batch->paths[0], "other.txt");
 
     work_batch_flush(&batch);
     ASSERT(batch == NULL);
@@ -1791,8 +1791,8 @@ main(void) {
                            "new.txt", 7);
     ASSERT(batch != NULL);
     ASSERT_EQUAL(batch->count, 1);
-    ASSERT(strcmp(batch->paths[0], "old.txt") == 0);
-    ASSERT(strcmp(batch->dst_paths[0], "new.txt") == 0);
+    ASSERT_EQUAL(batch->paths[0], "old.txt");
+    ASSERT_EQUAL(batch->dst_paths[0], "new.txt");
     work_batch_flush(&batch);
     ASSERT(batch == NULL);
 
