@@ -296,7 +296,7 @@ item_get_actions_reasons(int32 row_id,
 
             if (S_ISLNK(stat_dst->st_mode)) {
                 if (symlink_target_src && symlink_target_dst) {
-                    if (strcmp(symlink_target_src, symlink_target_dst) == 0) {
+                    if (strequal(symlink_target_src, symlink_target_dst)) {
                         equal = true;
                     } else {
                         *reason |= REASON_SYMLINK_NOT_MATCH;
@@ -580,7 +580,7 @@ main(void) {
     hard_link_replace_node(&hl3, "file2.txt", names_lens[1], "new_file.txt", 12);
 
     ASSERT_EQUAL(hl3.count, 3);
-    ASSERT(strcmp(hl3.names[1], "new_file.txt") == 0);
+    ASSERT_EQUAL(hl3.names[1], "new_file.txt");
     ASSERT_EQUAL(hl3.names_lens[1], 12);
 
     /* Verify 128-bit hash consistency after replacement */
@@ -678,10 +678,10 @@ main(void) {
     cecup.traversal[R].patterns[2] = NULL;
 
     /* Assert Basic Getters */
-    ASSERT(strcmp(item_path_get(0), "left0") == 0);
+    ASSERT_EQUAL(item_path_get(0), "left0");
     ASSERT_EQUAL(item_path_len_get(0), 5);
-    ASSERT(strcmp(item_path_side(0, L), "left0") == 0);
-    ASSERT(strcmp(item_path_side(0, R), "right0") == 0);
+    ASSERT_EQUAL(item_path_side(0, L), "left0");
+    ASSERT_EQUAL(item_path_side(0, R), "right0");
     ASSERT_EQUAL(item_size_side(0, L), 100);
     ASSERT_EQUAL(item_size_side(0, R), 100);
     ASSERT_EQUAL(item_size_side(1, R), -1);
@@ -689,7 +689,7 @@ main(void) {
     ASSERT_EQUAL(item_mtime_side(1, R), 0);
     ASSERT_NULL(item_ignore_pattern_side(0, L));
     ASSERT_EQUAL(item_path_len_side(0, R), 6);
-    ASSERT(strcmp(item_symlink_target_side(0, L), "tgtL") == 0);
+    ASSERT_EQUAL(item_symlink_target_side(0, L), "tgtL");
 
     memset64(&dump_hl, 0, SIZEOF(dump_hl));
     ASSERT(!item_hardlink_side(0, L, &dump_hl));
