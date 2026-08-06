@@ -738,7 +738,7 @@ main(void) {
         ASSERT(symlink_len > 0);
         ASSERT_EQUAL(symlink_len, strlen32("dummy_target.txt"));
         ASSERT(symlink_target != NULL);
-        ASSERT(strcmp(symlink_target, "dummy_target.txt") == 0);
+        ASSERT_EQUAL(symlink_target, "dummy_target.txt");
         remove(link_path);
     }
 

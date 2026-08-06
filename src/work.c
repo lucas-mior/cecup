@@ -916,14 +916,14 @@ main(void) {
         }
 
         for (int32 j = 0; j < cecup.traversal[L].nfiles; j += 1) {
-            if (strcmp(cecup.traversal[L].paths[j], expected_path) == 0) {
+            if (strequal(cecup.traversal[L].paths[j], expected_path)) {
                 src_idx = j;
                 break;
             }
         }
 
         for (int32 j = 0; j < cecup.traversal[R].nfiles; j += 1) {
-            if (strcmp(cecup.traversal[R].paths[j], expected_path) == 0) {
+            if (strequal(cecup.traversal[R].paths[j], expected_path)) {
                 dst_idx = j;
                 break;
             }

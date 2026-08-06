@@ -29,9 +29,9 @@ on_log_copy(GSimpleAction *action, GVariant *parameter, void *data) {
 
     (void)action;
 
-    if (strcmp(which, "all") == 0) {
+    if (strequal(which, "all")) {
         gtk_text_buffer_get_bounds(cecup.log_buffer, &text_start, &text_end);
-    } else if (strcmp(which, "line") == 0) {
+    } else if (strequal(which, "line")) {
         if (parameter == NULL) {
             error("Error: GVariant *parameter is NULL.\n");
             return;

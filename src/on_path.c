@@ -174,7 +174,7 @@ on_path_edited(GtkEditable *editable, void *data) {
     base_path = cecup.base[side];
     base_path_len = cecup.base_len[side];
 
-    if (relative_old == NULL || (strcmp(relative_old, new_text) == 0)) {
+    if (relative_old == NULL || strequal(relative_old, new_text)) {
         return;
     }
 
