@@ -411,17 +411,6 @@ compare_names(void *a, void *b) {
     return strcmp(name_a, name_b);
 }
 
-#define COMPARE(A, B) \
-    do { \
-        if (A > B) { \
-            result = 1; \
-        } else if (A < B) { \
-            result = -1; \
-        } else { \
-            result = 0; \
-        } \
-    } while (0)
-
 INLINE int32
 cecup_item_compare_string_key(void *a, void *b) {
     RowCache *entry_a = (RowCache *)a;
@@ -445,11 +434,17 @@ INLINE int32
 cecup_item_compare_int_key(void *a, void *b) {
     RowCache *entry_a = (RowCache *)a;
     RowCache *entry_b = (RowCache *)b;
-    int32 result = 0;
+    int32 result;
     int64 key_a = entry_a->key.i64;
     int64 key_b = entry_b->key.i64;
 
-    COMPARE(key_a, key_b);
+    if (key_a > key_b) {
+        result = 1;
+    } else if (key_a < key_b) {
+        result = -1;
+    } else {
+        result = 0;
+    }
 
     if (cecup.sort_order == GTK_SORT_DESCENDING) {
         result *= -1;
@@ -457,8 +452,6 @@ cecup_item_compare_int_key(void *a, void *b) {
 
     return result;
 }
-
-#undef COMPARE
 
 typedef void(*SortFunction)(RowCache *a, int64);
 typedef int(*CompareFunction)(void *a, void *b);
