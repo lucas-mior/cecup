@@ -1056,6 +1056,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 int32
 main(int32 argc, char **argv) {
     int32 status;
+    Arena *arena;
 
     program = argv[0];
     timezone_init();
@@ -1067,8 +1068,10 @@ main(int32 argc, char **argv) {
 
     main_setup_locale();
 
-    cecup.arena = arena_create(SIZEMB(64), "cecup.arena");
-    pthread_mutex_init(&cecup.arena_mutex, NULL);
+    xpthread_mutex_init(&cecup.arena_mutex, NULL);
+    arena = arena_create(SIZEMB(64), "cecup.arena");
+    ASSERT(arena);
+    cecup.arena = arena;
 
     cecup.rows_len = 0;
     cecup.rows_capacity = INITIAL_CAPACITY;
@@ -1127,7 +1130,7 @@ main(int32 argc, char **argv) {
     free2(cecup.base[L], cecup.base_len[L] + 1);
     free2(cecup.base[R], cecup.base_len[R] + 1);
 
-    arena_destroy(cecup.arena);
+    arena_destroy(arena);
 
     traversal_free(&cecup.traversal[L]);
     traversal_free(&cecup.traversal[R]);

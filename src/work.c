@@ -851,8 +851,8 @@ main(void) {
         }
     }
 
+    xpthread_mutex_init(&cecup.arena_mutex, NULL);
     cecup.arena = arena_create(SIZEMB(64), "cecup.arena");
-    pthread_mutex_init(&cecup.arena_mutex, NULL);
 
     cecup.actions_set = hash_create_actions_set(1024, "cecup.actions_set");
 

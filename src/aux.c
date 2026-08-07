@@ -624,7 +624,7 @@ int main(void) {
     char child_path[MAX_PATH_LENGTH];
     char other_path[MAX_PATH_LENGTH];
 
-    pthread_mutex_init(&cecup.arena_mutex, NULL);
+    xpthread_mutex_init(&cecup.arena_mutex, NULL);
 
     /* Test aux_is_root */
     ASSERT(aux_is_root("."));

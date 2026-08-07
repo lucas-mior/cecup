@@ -353,7 +353,7 @@ main(void) {
 
     g_object_unref(proxy);
 
-    pthread_mutex_init(&cecup.arena_mutex, NULL);
+    xpthread_mutex_init(&cecup.arena_mutex, NULL);
 
     cecup.rows_capacity = 0;
     cecup.rows_len = 0;
