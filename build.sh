@@ -2,29 +2,6 @@
 
 # shellcheck disable=SC2086
 
-if [ "${1:-}" != "--parsed" ]; then
-    # Filter out lines starting with '+' followed by '[' or '[['.
-    pattern="^\+ \[.+\]"
-    status_file="${TMPDIR:-/tmp}/cecup-build-status.$$"
-
-    trap 'rm -f "$status_file"' EXIT HUP INT TERM
-    set +e
-    {
-        "$0" --parsed "$@" 2>&1 1>&3
-        command_status=$?
-        printf '%s\n' "$command_status" > "$status_file"
-    } 3>&1 | grep -Ev "$pattern" >&2
-    grep_status=$?
-    set -e
-
-    if [ ! -f "$status_file" ]; then
-        exit "$grep_status"
-    fi
-
-    exit "$(cat "$status_file")"
-fi
-shift
-
 set -e
 
 error () {
