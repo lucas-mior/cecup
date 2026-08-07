@@ -21,12 +21,6 @@ command_exists () {
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
 
-if command_exists measure; then
-    measure=$(command -v measure)
-else
-    measure=""
-fi
-
 # gtk might not work correctly if you have stuff here
 export XDG_DATA_DIRS=""
 
@@ -547,10 +541,10 @@ case "$target" in
             error "internal error: cross syntax source was not generated"
             exit 1
         fi
-        $measure $CC $CPPFLAGS $CFLAGS -fsyntax-only "$cross_syntax_src"
+        $CC $CPPFLAGS $CFLAGS -fsyntax-only "$cross_syntax_src"
         rm -f "$cross_syntax_src"
     else
-        $measure $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
+        $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
     fi
 
     if [ "$target" = "debug" ]; then
