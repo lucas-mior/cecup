@@ -453,11 +453,13 @@ cecup_item_compare_int_key(void *a, void *b) {
 typedef void(*SortFunction)(RowCache *a, int64);
 typedef int(*CompareFunction)(void *a, void *b);
 
+#define i_opt 0
 #define i_key RowCache
 #define i_cmp(a,b) cecup_item_compare_string_key(a,b)
 #define T row_compare_string
 #include "stc/sort.h"
 
+#define i_opt 0
 #define i_key RowCache
 #define i_cmp(a,b) cecup_item_compare_int_key(a,b)
 #define T row_compare_int
