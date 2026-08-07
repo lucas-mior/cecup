@@ -507,10 +507,11 @@ build|debug|run|release|callgrind|perf|profile|cross)
     fi
 
     if command_exists ctags; then
-        ctags --kinds-C=+l+d cbase/*.c src/*.h src/*.c 2> /dev/null || true
+        find . -iname "*.[ch]" -print0 \
+            | xargs --verbose -0 ctags --kinds-C=+l+d || true
     fi
     if command_exists vtags.sed && [ -f tags ]; then
-        vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
+        vtags.sed tags | sort | uniq > .tags.vim      || true
     fi
     if [ "$CC" = "chibicc" ]; then
         with_other chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
