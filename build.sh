@@ -4,6 +4,11 @@
 
 set -e
 
+if [ -n "$BASH_VERSION" ]; then
+    # shellcheck disable=SC3044
+    shopt -s expand_aliases
+fi
+
 error () {
     >&2 printf '%s\n' "$*"
     return
@@ -20,11 +25,6 @@ if command_exists measure; then
     measure=$(command -v measure)
 else
     measure=""
-fi
-
-if [ -n "$BASH_VERSION" ]; then
-    # shellcheck disable=SC3044
-    shopt -s expand_aliases
 fi
 
 # gtk might not work correctly if you have stuff here
