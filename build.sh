@@ -21,7 +21,7 @@ export XDG_DATA_DIRS=""
 # export LC_ALL=C
 
 cd "$dir" || exit
-program=$(basename "$(readlink -f "$(dirname "$0")")")
+program=$(get_program "$0")
 CPPFLAGS="$CPPFLAGS -I$dir/cbase"
 CPPFLAGS="$CPPFLAGS -I."
 script=$(basename "$0")
