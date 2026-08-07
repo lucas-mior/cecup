@@ -352,7 +352,6 @@ callgrind)
     ;;
 test)
     CFLAGS="$CFLAGS -g3 $GNUSOURCE -DDEBUGGING=1 -fsanitize=undefined"
-    CFLAGS="$CFLAGS -Wno-address -Wno-unused-function"
     ;;
 check)
     CFLAGS="$CFLAGS $GNUSOURCE -DDEBUGGING=1 -fanalyzer -fdiagnostics-color=never"
