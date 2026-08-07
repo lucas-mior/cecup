@@ -36,12 +36,11 @@ case "$script_path" in
     ;;
 esac
 
-dir=$(CDPATH= cd "$script_dir" && pwd -P)
+dir=$(dirname "$(readlink -f "$0")")
+cd "$dir" || exit
+program=$(basename "$(readlink -f "$(dirname "$0")")")
 CPPFLAGS="$CPPFLAGS -I$dir/cbase"
 CPPFLAGS="$CPPFLAGS -I."
-
-cd "$dir" || exit
-program=$(basename "$dir")
 script=$(basename "$0")
 
 LANGS="pt_BR"
