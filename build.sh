@@ -26,16 +26,6 @@ export XDG_DATA_DIRS=""
 
 # export LC_ALL=C
 
-script_path=$0
-case "$script_path" in
-*/*)
-    script_dir=${script_path%/*}
-    ;;
-*)
-    script_dir=.
-    ;;
-esac
-
 dir=$(dirname "$(readlink -f "$0")")
 cd "$dir" || exit
 program=$(basename "$(readlink -f "$(dirname "$0")")")
