@@ -37,8 +37,7 @@ case "$script_path" in
 esac
 
 dir=$(CDPATH= cd "$script_dir" && pwd -P)
-cbase="cbase"
-CPPFLAGS="$CPPFLAGS -I$dir/$cbase"
+CPPFLAGS="$CPPFLAGS -I$dir/cbase"
 CPPFLAGS="$CPPFLAGS -I."
 
 cd "$dir" || exit
