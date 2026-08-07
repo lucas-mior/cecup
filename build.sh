@@ -63,7 +63,7 @@ cross x86_64-windows-gnu
 EOF_TARGETS
 )
 fi
-target="${1:-build}"
+target="${1:-debug}"
 cross="${2:-}"
 
 target_line=$target
