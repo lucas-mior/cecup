@@ -39,6 +39,11 @@ command_exists () {
 alias trace_on='set -x'
 alias trace_off='{ set +x; } 2>/dev/null'
 
+cbase_pre_compile () {
+    cbase_pre_compile_dir="${cbase:-cbase}"
+    "$cbase_pre_compile_dir/pre-compile.sh" "$CC" $CPPFLAGS $CFLAGS
+}
+
 if command_exists measure; then
     measure=$(command -v measure)
 else
@@ -387,7 +392,7 @@ with_other () {
 case "$target" in
 "debug")
     CFLAGS="$CFLAGS -g3 -fsanitize=undefined"
-    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
+    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1 -DCBASE_IMPLEMENT=0"
     exe="bin/${program}_debug"
     ;;
 "perf")
@@ -403,7 +408,7 @@ case "$target" in
     if [ "$target_os" = "Linux" ]; then
         CFLAGS="$CFLAGS -ftree-vectorize"
     fi
-    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
+    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1 -DCBASE_IMPLEMENT=0"
     ;;
 "callgrind")
     CFLAGS="$CFLAGS -g3 -O2"
@@ -562,10 +567,15 @@ case "$target" in
     if command_exists vtags.sed && [ -f tags ]; then
         vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
     fi
+    cbase_obj=
+    if [ "$target" = "debug" ]; then
+        cbase_obj=$(cbase_pre_compile)
+    fi
+
     if [ "$CC" = "chibicc" ]; then
-        with_other chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
+        with_other chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe             $cbase_obj $LDFLAGS
     elif [ "$CC" = "cproc" ]; then
-        with_other cproc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
+        with_other cproc $CPPFLAGS $CFLAGS src/main.c -o $exe             $cbase_obj $LDFLAGS
     elif [ "$cross_compile_only" = "1" ]; then
         if [ -z "$cross_syntax_src" ]; then
             error "internal error: cross syntax source was not generated"
@@ -574,7 +584,7 @@ case "$target" in
         $measure $CC $CPPFLAGS $CFLAGS -fsyntax-only "$cross_syntax_src"
         rm -f "$cross_syntax_src"
     else
-        $measure $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
+        $measure $CC $CPPFLAGS $CFLAGS src/main.c $cbase_obj -o "$exe"             $LDFLAGS
     fi
 
     if [ "$target" = "debug" ]; then
@@ -665,20 +675,33 @@ case "$target" in
         printf "\nTesting ${RED}${src}${RES} ...\n"
 
         flags="$(awk '/\/\/ flags:/ { $1=$2=""; print $0 }' "$src")"
+        cbase_obj=
+        cbase_test_cppflags=
+        case "$src" in
+        ./cbase/*|cbase/*)
+            ;;
+        *)
+            cbase_obj=$(cbase_pre_compile)
+            cbase_test_cppflags="-DCBASE_IMPLEMENT=0"
+            ;;
+        esac
+
         if [ "$src" = "src/windows_functions.c" ]; then
+            cbase_obj=
+            cbase_test_cppflags=
             if ! zig version; then
                 continue
             fi
             CC="zig cc"
-            cmdline="zig cc $CPPFLAGS $CFLAGS"
+            cmdline="zig cc $CPPFLAGS $cbase_test_cppflags $CFLAGS"
             cmdline=$(option_remove "$cmdline" "-D_GNU_SOURCE")
             cmdline="$cmdline -target x86_64-windows-gnu"
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 -DTESTING=1"
-            cmdline="$cmdline $flags -o $test_exe $src"
+            cmdline="$cmdline $flags -o $test_exe $src $cbase_obj"
         else
-            cmdline="$CC $CPPFLAGS $CFLAGS"
+            cmdline="$CC $CPPFLAGS $cbase_test_cppflags $CFLAGS"
             cmdline="$cmdline -Wno-unused-variable -DTESTING_$name=1 -DTESTING=1 $LDFLAGS"
-            cmdline="$cmdline $flags -o $test_exe $src"
+            cmdline="$cmdline $flags -o $test_exe $src $cbase_obj"
         fi
 
         if [ "$CC" = "chibicc" ] || [ "$CC" = "cproc" ]; then
