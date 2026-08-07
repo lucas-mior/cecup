@@ -348,12 +348,12 @@ with_other () {
 }
 
 case "$target" in
-"debug")
+debug)
     CFLAGS="$CFLAGS -g3 -fsanitize=undefined"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     exe="bin/${program}_debug"
     ;;
-"perf")
+perf)
     CFLAGS="$CFLAGS -g -O2"
     if [ "$target_os" = "Linux" ]; then
         CFLAGS="$CFLAGS -flto"
@@ -361,25 +361,25 @@ case "$target" in
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     exe="bin/${program}_perf"
     ;;
-"valgrind")
+valgrind)
     CFLAGS="$CFLAGS -g3 -O0"
     if [ "$target_os" = "Linux" ]; then
         CFLAGS="$CFLAGS -ftree-vectorize"
     fi
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     ;;
-"callgrind")
+callgrind)
     CFLAGS="$CFLAGS -g3 -O2"
     if [ "$target_os" = "Linux" ]; then
         CFLAGS="$CFLAGS -ftree-vectorize"
     fi
     CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     ;;
-"test")
+test)
     CFLAGS="$CFLAGS -g3 $GNUSOURCE -DDEBUGGING=1 -fsanitize=undefined"
     CFLAGS="$CFLAGS -Wno-address -Wno-unused-function"
     ;;
-"check")
+check)
     CFLAGS="$CFLAGS $GNUSOURCE -DDEBUGGING=1 -fanalyzer -fdiagnostics-color=never"
     ;;
 "build"|"run")
@@ -388,16 +388,16 @@ case "$target" in
         CFLAGS="$CFLAGS -flto -march=native -ftree-vectorize"
     fi
     ;;
-"release")
+release)
     CFLAGS="$CFLAGS $GNUSOURCE -O2"
     if [ "$target_os" = "Linux" ]; then
         CFLAGS="$CFLAGS -flto -march=native -ftree-vectorize"
     fi
     ;;
-"fast_feedback")
+fast_feedback)
     CFLAGS="$CFLAGS $GNUSOURCE -Werror"
     ;;
-"po")
+po)
     generate_welcome_h
     mkdir -p po
 
@@ -501,7 +501,7 @@ if [ "$CC" = "clang" ]; then
 fi
 
 case "$target" in
-"fast_feedback")
+fast_feedback)
     generate_welcome_h
     trace_on
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && "$exe"
@@ -566,7 +566,7 @@ case "$target" in
 
     trace_off
     ;;
-"install")
+install)
     trace_on
     $0 release
     install_file 755 "bin/${program}" "${DESTDIR}${BINDIR}/${program}"
@@ -601,14 +601,14 @@ case "$target" in
     trace_off
     exit
     ;;
-"assembly")
+assembly)
     generate_welcome_h
     trace_on
     $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "src/$main"
     trace_off
     exit
     ;;
-"test")
+test)
     generate_welcome_h
     CECUP_TEST_TMPDIR="${CECUP_TEST_TMPDIR:-${TMPDIR:-/tmp}}"
     mkdir -p "$CECUP_TEST_TMPDIR"
@@ -683,7 +683,7 @@ case "$target" in
     done
     exit
     ;;
-"uninstall")
+uninstall)
     rm -vf  "${DESTDIR}${BINDIR}/${program:?}"
     rm -vf  "${DESTDIR}${MANDIR}/man1/${program:?}.1"
     for lang in $LANGS; do
@@ -696,7 +696,7 @@ case "$target" in
 esac
 
 case "$target" in
-"valgrind")
+valgrind)
     vg_flags="$vg_flags --error-exitcode=1"
     vg_flags="$vg_flags --leak-check=no"
     # vg_flags="$vg_flags --show-leak-kinds=definite"
@@ -713,7 +713,7 @@ case "$target" in
     trace_off
     exit
     ;;
-"callgrind")
+callgrind)
     out="callgrind_$(date +%s).callgrind"
     trace_on
     valgrind --tool=callgrind --callgrind-out-file="$out" bin/$program
@@ -721,7 +721,7 @@ case "$target" in
     trace_off
     exit
     ;;
-"cachegrind")
+cachegrind)
     out="cachegrind_$(date +%s).callgrind"
     trace_on
     valgrind --tool=cachegrind --cachegrind-out-file="$out" bin/$program
@@ -729,7 +729,7 @@ case "$target" in
     trace_off
     exit
     ;;
-"check")
+check)
     NOCOLORS=1 CC=gcc CFLAGS="-fanalyzer -fdiagnostics-color=never" ./build.sh
     CFLAGS="--analyze -Xanalyzer -analyzer-output=text"
     CFLAGS="$CFLAGS -Xanalyzer -analyzer-werror"
@@ -739,7 +739,7 @@ case "$target" in
     NOCOLORS=1 CC=clang CFLAGS="$CFLAGS" ./build.sh
     exit
     ;;
-"perf")
+perf)
     trace_on
     perf record -F 999 -g --call-graph dwarf -o bin/perf.data "$exe"
     perf report -n -g --input bin/perf.data
