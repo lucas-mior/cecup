@@ -422,6 +422,10 @@ fast_feedback)
     ;;
 esac
 
+if ! command -v "$CC" > /dev/null 2>&1; then
+    CC=cc
+fi
+
 cross_syntax_src=""
 if [ "$target" = "cross" ]; then
     CFLAGS=$(option_remove "$CFLAGS" "-D_GNU_SOURCE")
