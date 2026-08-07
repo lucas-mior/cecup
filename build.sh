@@ -527,21 +527,6 @@ build|debug|run|release|callgrind|perf|profile|cross)
         $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
     fi
 
-    if [ "$target" = "debug" ]; then
-        # reactivate fatal_warnings after solving:
-        # (cecup_debug:9237):
-        # Gtk-WARNING **:
-        # Trying to snapshot GtkGizmo 0x555555c69fd0 without a current allocation
-
-        # G_DEBUG=fatal_warnings \
-            if command_exists gdb; then
-                gdb "$exe" -ex run 2>&1 | tee "gdb_output_$(date +%s).txt"
-            elif command_exists lldb; then
-                lldb --one-line run "$exe" 2>&1 | tee "lldb_output_$(date +%s).txt"
-            else
-                "$exe"
-            fi
-    fi
     if [ "$target" = "run" ]; then
         "$exe"
     fi
