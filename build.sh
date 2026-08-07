@@ -76,7 +76,35 @@ script=$(basename "$0")
 
 LANGS="pt_BR"
 
-. ./targets
+if [ -f ./targets ]; then
+    . ./targets
+else
+    targets=$(cat <<'EOF_TARGETS'
+build
+debug
+fast_feedback
+install
+uninstall
+test
+check
+release
+run
+po
+profile
+assembly
+perf
+valgrind
+callgrind
+cachegrind
+test_all
+cross x86_64-linux
+cross aarch64-linux
+cross x86_64-macos
+cross aarch64-macos
+cross x86_64-windows-gnu
+EOF_TARGETS
+)
+fi
 target="${1:-build}"
 cross="${2:-}"
 
