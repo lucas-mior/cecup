@@ -577,6 +577,7 @@ xrealloc(void *old, int64 old_size, int64 new_size) {
         fatal(EXIT_FAILURE);
     }
 
+    ASSERT(p);
     return p;
 }
 
@@ -786,6 +787,7 @@ realloc_debug(char *file, int32 line, char *func,
         allocations_unlock();
     }
 
+    ASSERT(p);
     return p;
 }
 
