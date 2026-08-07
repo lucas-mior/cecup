@@ -2,12 +2,9 @@
 
 # shellcheck disable=SC2086,SC2089,SC2090
 
-set -e
-
-if [ -n "$BASH_VERSION" ]; then
-    # shellcheck disable=SC3044
-    shopt -s expand_aliases
-fi
+dir=$(dirname "$(readlink -f "$0")")
+# shellcheck source=/dev/null
+. "$dir/cbase/common.sh"
 
 error () {
     >&2 printf '%s\n' "$*"
@@ -18,15 +15,11 @@ command_exists () {
     command -v "$1" > /dev/null 2>&1
 }
 
-alias trace_on='set -x'
-alias trace_off='{ set +x; } 2>/dev/null'
-
 # gtk might not work correctly if you have stuff here
 export XDG_DATA_DIRS=""
 
 # export LC_ALL=C
 
-dir=$(dirname "$(readlink -f "$0")")
 cd "$dir" || exit
 program=$(basename "$(readlink -f "$(dirname "$0")")")
 CPPFLAGS="$CPPFLAGS -I$dir/cbase"
