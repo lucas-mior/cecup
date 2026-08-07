@@ -507,7 +507,7 @@ fast_feedback)
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && "$exe"
     trace_off
     ;;
-"build"|"debug"|"run"|"release"|"valgrind"|"callgrind"|"perf"|"profile"|"cross")
+build|debug|run|release|valgrind|callgrind|perf|profile|cross)
     generate_welcome_h
     trace_on
 
