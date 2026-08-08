@@ -179,7 +179,6 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-pedantic"
     CFLAGS="$CFLAGS -Wno-poison-system-directories"
     CFLAGS="$CFLAGS -Wno-pre-c11-compat"
-    CFLAGS="$CFLAGS -Wno-unknown-warning-option"
     CFLAGS="$CFLAGS -Wno-unsafe-buffer-usage"
     CFLAGS="$CFLAGS -Wno-used-but-marked-unused"
 
