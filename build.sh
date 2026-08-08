@@ -179,7 +179,6 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-double-promotion"
     CFLAGS="$CFLAGS -Wno-format-nonliteral"
     CFLAGS="$CFLAGS -Wno-format-pedantic"
-    CFLAGS="$CFLAGS -Wno-gnu-union-cast"
     CFLAGS="$CFLAGS -Wno-implicit-int-enum-cast"
     CFLAGS="$CFLAGS -Wno-implicit-void-ptr-cast"
     CFLAGS="$CFLAGS -Wno-missing-prototypes"
