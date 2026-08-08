@@ -219,7 +219,9 @@ else
         error "$PKG_CONFIG not found"
         exit 1
     fi
-    GTK_CFLAGS="${GTK_CFLAGS:-$($PKG_CONFIG --cflags gtk4)}"
+    GTK_INCLUDES=$($PKG_CONFIG --cflags-only-I gtk4 | sed 's/-I/-isystem /g')
+    GTK_OTHER_CFLAGS=$($PKG_CONFIG --cflags-only-other gtk4)
+    GTK_CFLAGS="${GTK_CFLAGS:-$GTK_INCLUDES $GTK_OTHER_CFLAGS}"
     GTK_LIBS="${GTK_LIBS:-$($PKG_CONFIG --libs gtk4)}"
 fi
 CFLAGS="$CFLAGS $GTK_CFLAGS"
