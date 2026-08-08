@@ -84,6 +84,22 @@ main="main.c"
 exe="bin/$program"
 mkdir -p "$(dirname "$exe")"
 
+case "$target" in
+debug|test)
+    CC="${CC:-tcc}"
+    ;;
+fast_feedback)
+    CC="${CC:-clang}"
+    ;;
+*)
+    CC="${CC:-cc}"
+    ;;
+esac
+
+if ! command -v "$CC" > /dev/null 2>&1; then
+    CC=cc
+fi
+
 host_os=$(uname -s 2> /dev/null || printf unknown)
 target_os=$host_os
 if [ "$target" = "cross" ]; then
@@ -137,10 +153,7 @@ CPPFLAGS="$CPPFLAGS -DCECUP_SYSTEM_CONFIG_DIR=\"$SYSCONFDIR/$program\""
 
 CFLAGS="$CFLAGS -std=c11"
 CFLAGS="$CFLAGS -Wfatal-errors"
-CFLAGS="$CFLAGS -Wall -Wextra"
-if [ -z "$NOCOLORS" ]; then
-    CFLAGS="$CFLAGS -fdiagnostics-color=always"
-fi
+CFLAGS="$CFLAGS -Wextra -Wall"
 CFLAGS="$CFLAGS -Werror=all -Werror=extra"
 # CFLAGS="$CFLAGS -Werror"  # Only uncomment occasionally, keep this line
 CFLAGS="$CFLAGS -Wno-cast-qual"
@@ -149,6 +162,45 @@ CFLAGS="$CFLAGS -Wno-float-equal"
 CFLAGS="$CFLAGS -Wno-format-security"
 CFLAGS="$CFLAGS -Wno-unknown-pragmas"
 CFLAGS="$CFLAGS -Wno-unused-macros"
+
+if [ "$CC" = "clang" ]; then
+    CFLAGS="$CFLAGS -Weverything"
+    CFLAGS="$CFLAGS -Wno-allocator-wrappers"
+    CFLAGS="$CFLAGS -Wno-assign-enum"
+    CFLAGS="$CFLAGS -Wno-c++-keyword"
+    CFLAGS="$CFLAGS -Wno-cast-align"
+    CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
+    CFLAGS="$CFLAGS -Wno-comma"
+    CFLAGS="$CFLAGS -Wno-constant-logical-operand"
+    CFLAGS="$CFLAGS -Wno-covered-switch-default"
+    CFLAGS="$CFLAGS -Wno-disabled-macro-expansion"
+    CFLAGS="$CFLAGS -Wno-documentation"
+    CFLAGS="$CFLAGS -Wno-documentation-unknown-command"
+    CFLAGS="$CFLAGS -Wno-double-promotion"
+    CFLAGS="$CFLAGS -Wno-format-nonliteral"
+    CFLAGS="$CFLAGS -Wno-format-pedantic"
+    CFLAGS="$CFLAGS -Wno-gnu-union-cast"
+    CFLAGS="$CFLAGS -Wno-implicit-int-enum-cast"
+    CFLAGS="$CFLAGS -Wno-implicit-void-ptr-cast"
+    CFLAGS="$CFLAGS -Wno-missing-prototypes"
+    CFLAGS="$CFLAGS -Wno-padded"
+    CFLAGS="$CFLAGS -Wno-pedantic"
+    CFLAGS="$CFLAGS -Wno-poison-system-directories"
+    CFLAGS="$CFLAGS -Wno-pre-c11-compat"
+    CFLAGS="$CFLAGS -Wno-reserved-identifier"  # because of __GTK_H_INSIDE__
+    CFLAGS="$CFLAGS -Wno-unknown-warning-option"
+    CFLAGS="$CFLAGS -Wno-unsafe-buffer-usage"
+    CFLAGS="$CFLAGS -Wno-used-but-marked-unused"
+
+    # only for the LSP and unity-test builds. They include helper functions
+    # that are intentionally unused in some translation units.
+    CFLAGS="$CFLAGS -Wno-unneeded-internal-declaration"
+    CFLAGS="$CFLAGS -Wno-undefined-internal"
+fi
+
+if [ -z "$NOCOLORS" ]; then
+    CFLAGS="$CFLAGS -fdiagnostics-color=always"
+fi
 
 cross_compile_only=0
 if [ "$target" = "cross" ]; then
@@ -275,22 +327,6 @@ po)
     ;;
 esac
 
-case "$target" in
-debug|test)
-    CC="${CC:-tcc}"
-    ;;
-fast_feedback)
-    CC="${CC:-clang}"
-    ;;
-*)
-    CC="${CC:-cc}"
-    ;;
-esac
-
-if ! command -v "$CC" > /dev/null 2>&1; then
-    CC=cc
-fi
-
 cross_syntax_src=""
 if [ "$target" = "cross" ]; then
     CFLAGS=$(option_remove "$CFLAGS" "-D_GNU_SOURCE")
@@ -369,42 +405,6 @@ EOF
         exe="bin/$program.exe"
         ;;
     esac
-fi
-
-if [ "$CC" = "clang" ]; then
-    CFLAGS="$CFLAGS -Weverything"
-    CFLAGS="$CFLAGS -Wno-allocator-wrappers"
-    CFLAGS="$CFLAGS -Wno-assign-enum"
-    CFLAGS="$CFLAGS -Wno-c++-keyword"
-    CFLAGS="$CFLAGS -Wno-cast-align"
-    CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
-    CFLAGS="$CFLAGS -Wno-comma"
-    CFLAGS="$CFLAGS -Wno-constant-logical-operand"
-    CFLAGS="$CFLAGS -Wno-covered-switch-default"
-    CFLAGS="$CFLAGS -Wno-disabled-macro-expansion"
-    CFLAGS="$CFLAGS -Wno-documentation"
-    CFLAGS="$CFLAGS -Wno-documentation-unknown-command"
-    CFLAGS="$CFLAGS -Wno-double-promotion"
-    CFLAGS="$CFLAGS -Wno-format-nonliteral"
-    CFLAGS="$CFLAGS -Wno-format-pedantic"
-    CFLAGS="$CFLAGS -Wno-gnu-union-cast"
-    CFLAGS="$CFLAGS -Wno-implicit-int-enum-cast"
-    CFLAGS="$CFLAGS -Wno-implicit-void-ptr-cast"
-    CFLAGS="$CFLAGS -Wno-missing-prototypes"
-    CFLAGS="$CFLAGS -Wno-padded"
-    CFLAGS="$CFLAGS -Wno-pedantic"
-    CFLAGS="$CFLAGS -Wno-poison-system-directories"
-    CFLAGS="$CFLAGS -Wno-pre-c11-compat"
-    CFLAGS="$CFLAGS -Wno-reserved-identifier"  # because of __GTK_H_INSIDE__
-    CFLAGS="$CFLAGS -Wno-unknown-warning-option"
-    CFLAGS="$CFLAGS -Wno-unsafe-buffer-usage"
-    CFLAGS="$CFLAGS -Wno-used-but-marked-unused"
-
-    # only for the LSP and unity-test builds. They include helper functions
-    # that are intentionally unused in some translation units.
-    CFLAGS="$CFLAGS -Wno-unneeded-internal-declaration"
-    CFLAGS="$CFLAGS -Wno-undefined-internal"
-
 fi
 
 case "$target" in
