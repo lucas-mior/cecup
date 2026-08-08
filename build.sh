@@ -78,7 +78,6 @@ DATADIR="${DATADIR:-$PREFIX/share}"
 SYSCONFDIR="${SYSCONFDIR:-}"
 APPDIR="${APPDIR:-}"
 
-main="main.c"
 exe="bin/$program"
 mkdir -p "$(dirname "$exe")"
 
@@ -468,7 +467,7 @@ test)
         if [ -n "$2" ] && [ "$name" != "$2" ]; then
             continue
         fi
-        if [ "$name" = "$main" ]; then
+        if [ "$name" = "main.c" ]; then
             continue
         fi
         if echo "$src" | grep -q "stc/"; then
