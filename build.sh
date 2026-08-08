@@ -37,7 +37,6 @@ release
 run
 po
 profile
-assembly
 perf
 callgrind
 cachegrind
@@ -463,13 +462,6 @@ install)
             "$program.desktop" \
             "$DESTDIR$APPDIR/$program.desktop"
     fi
-    trace_off
-    exit
-    ;;
-assembly)
-    generate_welcome_h
-    trace_on
-    $CC $CPPFLAGS $CFLAGS -S $LDFLAGS -o ${program}_$CC.S "src/$main"
     trace_off
     exit
     ;;
