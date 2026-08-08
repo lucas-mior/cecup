@@ -5,6 +5,7 @@
 #define GTK_INCLUDE_H
 
 #include "platform_detection.h"
+
 #if CC_CLANG
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreserved-identifier" 
