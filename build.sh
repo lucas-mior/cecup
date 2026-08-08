@@ -171,7 +171,6 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-constant-logical-operand"
     CFLAGS="$CFLAGS -Wno-covered-switch-default"
     CFLAGS="$CFLAGS -Wno-disabled-macro-expansion"
-    CFLAGS="$CFLAGS -Wno-double-promotion"
     CFLAGS="$CFLAGS -Wno-float-equal"
     CFLAGS="$CFLAGS -Wno-format-nonliteral"
     CFLAGS="$CFLAGS -Wno-implicit-int-enum-cast"
