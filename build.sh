@@ -37,7 +37,6 @@ release
 run
 po
 profile
-perf
 callgrind
 cachegrind
 test_all
@@ -236,14 +235,6 @@ debug)
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     exe="bin/${program}_debug"
     ;;
-perf)
-    CFLAGS="$CFLAGS -g -O2"
-    if [ "$target_os" = "Linux" ]; then
-        CFLAGS="$CFLAGS -flto"
-    fi
-    CPPFLAGS="$CPPFLAGS $GNUSOURCE"
-    exe="bin/${program}_perf"
-    ;;
 callgrind)
     CFLAGS="$CFLAGS -g3 -O2"
     if [ "$target_os" = "Linux" ]; then
@@ -390,7 +381,7 @@ fast_feedback)
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && "$exe"
     trace_off
     ;;
-build|debug|run|release|callgrind|perf|profile|cross)
+build|debug|run|release|callgrind|profile|cross)
     generate_welcome_h
     trace_on
 
@@ -577,13 +568,6 @@ check)
     CFLAGS="$CFLAGS -Wno-unused-command-line-argument"
     CFLAGS="$CFLAGS -fno-color-diagnostics"
     NOCOLORS=1 CC=clang CFLAGS="$CFLAGS" ./build.sh
-    exit
-    ;;
-perf)
-    trace_on
-    perf record -F 999 -g --call-graph dwarf -o bin/perf.data "$exe"
-    perf report -n -g --input bin/perf.data
-    trace_off
     exit
     ;;
 esac
