@@ -327,7 +327,6 @@ list_model_functions_sink(void) {
 
 #include "update.c"
 #include "work.c"
-#include "assert.c"
 
 int
 main(void) {

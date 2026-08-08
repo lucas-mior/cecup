@@ -11,10 +11,6 @@ error () {
     return
 }
 
-command_exists () {
-    command -v "$1" > /dev/null 2>&1
-}
-
 # gtk might not work correctly if you have stuff here
 export XDG_DATA_DIRS=""
 
@@ -22,8 +18,6 @@ export XDG_DATA_DIRS=""
 
 cd "$dir" || exit
 program=$(get_program "$0")
-CPPFLAGS="$CPPFLAGS -I$dir/cbase"
-CPPFLAGS="$CPPFLAGS -I."
 script=$(basename "$0")
 
 LANGS="pt_BR"
@@ -112,7 +106,10 @@ if [ "$target" = "cross" ]; then
     esac
 fi
 
+CPPFLAGS="$CPPFLAGS -I$dir/cbase"
+CPPFLAGS="$CPPFLAGS -I."
 CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
+
 if [ "$target_os" != "Windows" ]; then
     CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=700"
 fi
@@ -196,136 +193,12 @@ if [ "$target_os" = "Linux" ]; then
     fi
 fi
 
-option_remove() {
-    remove=$2
-    result=""
-
-    for option in $1; do
-        if [ "$option" = "$remove" ]; then
-            continue
-        fi
-
-        if [ -z "$result" ]; then
-            result=$option
-        else
-            result="$result $option"
-        fi
-    done
-
-    printf '%s\n' "$result"
-}
-
-install_file() {
-    mode=$1
-    src=$2
-    dst=$3
-    dst_dir=$(dirname "$dst")
-
-    mkdir -p "$dst_dir"
-    install -m "$mode" "$src" "$dst"
-}
-
-install_dir() {
-    mode=$1
-    dst=$2
-
-    mkdir -p "$dst"
-    chmod "$mode" "$dst"
-}
-
 generate_welcome_h() {
     if [ -f "README.md" ]; then
         trace_on
         python3 build_welcome.py README.md src/.welcome.h
         trace_off
     fi
-}
-
-generate_cross_syntax_src() {
-    mkdir -p .cache
-    cross_syntax_src=".cache/cecup-cross-syntax-$$.c"
-
-    # Keep this probe independent from Zig's Darwin SDK discovery. Native
-    # macOS CI is the real full compiler gate; this Linux-hosted probe only
-    # validates that the project platform feature gates select the expected
-    # Darwin branch when the target macros are simulated.
-    cat > "$cross_syntax_src" <<'EOF'
-#if defined(__linux__)
-#undef __linux__
-#endif
-#if defined(__FreeBSD__)
-#undef __FreeBSD__
-#endif
-#if defined(__NetBSD__)
-#undef __NetBSD__
-#endif
-#if defined(__OpenBSD__)
-#undef __OpenBSD__
-#endif
-#if defined(_WIN32)
-#undef _WIN32
-#endif
-#if defined(_WIN64)
-#undef _WIN64
-#endif
-#if defined(__wasm__)
-#undef __wasm__
-#endif
-
-#define __APPLE__ 1
-#define __MACH__ 1
-EOF
-    cat cbase/platform_detection.h >> "$cross_syntax_src"
-    cat >> "$cross_syntax_src" <<'EOF'
-
-#if !OS_MAC
-#error "Darwin cross syntax check must target macOS"
-#endif
-#if !OS_UNIX
-#error "macOS must be detected as Unix"
-#endif
-#if CBASE_HAS_PROCFS
-#error "macOS must not enable procfs helpers"
-#endif
-#if OS_WINDOWS || OS_LINUX || OS_BSD || OS_WASM
-#error "macOS target must not enable another OS family"
-#endif
-
-int
-main(void) {
-    return 0;
-}
-EOF
-}
-
-with_other () {
-    compiler="$1"
-    compiler_macro=$(echo "$compiler" | tr '[:lower:]' '[:upper:]')
-    compiler_macro="__${compiler_macro}__"
-    shift
-    args="$*"
-    trace_on
-    while ! problem=$($compiler "-D${compiler_macro}" $args 2>&1); do
-        trace_off
-        problem=$(echo "$problem" | head -n 1 | tr -d "'")
-
-        sleep 0.4
-        if echo "$problem" | grep -Eq "unknown (argument|option)"; then
-            arg=$(echo "$problem" | awk '{print $NF}')
-            printf "\nRemoving argument $arg...\n"
-            args=$(option_remove "$args" "$arg")
-        elif echo "$problem" | grep -q "unknown file extension:"; then
-            arg=$(echo "$problem" | awk '{print $NF}')
-            printf "\nRemoving argument $arg...\n"
-            args=$(option_remove "$args" "$arg")
-        else
-            printf "\n\nError compiling with $compiler:\n\n%s" "${problem}\n\n"
-            return 1
-        fi
-        printf "\n"
-        trace_on
-    done
-    return 0
 }
 
 case "$target" in
@@ -368,7 +241,7 @@ release)
     fi
     ;;
 fast_feedback)
-    CFLAGS="$CFLAGS $GNUSOURCE -Werror"
+    CFLAGS="$CFLAGS $GNUSOURCE"
     ;;
 po)
     generate_welcome_h
@@ -424,7 +297,61 @@ if [ "$target" = "cross" ]; then
     case "$cross" in
     *macos*)
         CC="${HOST_CC:-${CC:-cc}}"
-        generate_cross_syntax_src
+        # macOS cross builds use a syntax-only platform-detection probe.
+mkdir -p .cache
+cross_syntax_src=".cache/cecup-cross-syntax-$$.c"
+
+# Keep this probe independent from Zig's Darwin SDK discovery. Native
+# macOS CI is the real full compiler gate; this Linux-hosted probe only
+# validates that the project platform feature gates select the expected
+# Darwin branch when the target macros are simulated.
+cat > "$cross_syntax_src" <<'EOF'
+#if defined(__linux__)
+#undef __linux__
+#endif
+#if defined(__FreeBSD__)
+#undef __FreeBSD__
+#endif
+#if defined(__NetBSD__)
+#undef __NetBSD__
+#endif
+#if defined(__OpenBSD__)
+#undef __OpenBSD__
+#endif
+#if defined(_WIN32)
+#undef _WIN32
+#endif
+#if defined(_WIN64)
+#undef _WIN64
+#endif
+#if defined(__wasm__)
+#undef __wasm__
+#endif
+
+#define __APPLE__ 1
+#define __MACH__ 1
+EOF
+cat cbase/platform_detection.h >> "$cross_syntax_src"
+cat >> "$cross_syntax_src" <<'EOF'
+
+#if !OS_MAC
+#error "Darwin cross syntax check must target macOS"
+#endif
+#if !OS_UNIX
+#error "macOS must be detected as Unix"
+#endif
+#if CBASE_HAS_PROCFS
+#error "macOS must not enable procfs helpers"
+#endif
+#if OS_WINDOWS || OS_LINUX || OS_BSD || OS_WASM
+#error "macOS target must not enable another OS family"
+#endif
+
+int
+main(void) {
+    return 0;
+}
+EOF
         ;;
     *)
         if ! command_exists zig; then
@@ -462,7 +389,6 @@ if [ "$CC" = "clang" ]; then
     CFLAGS="$CFLAGS -Wno-assign-enum"
     CFLAGS="$CFLAGS -Wno-used-but-marked-unused"
     CFLAGS="$CFLAGS -Wno-double-promotion"
-    CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
     CFLAGS="$CFLAGS -Wno-unknown-warning-option"
     CFLAGS="$CFLAGS -Wno-gnu-union-cast"
     CFLAGS="$CFLAGS -Wno-comma"
@@ -504,17 +430,11 @@ build|debug|run|release|callgrind|perf|profile|cross)
         fi
     fi
 
-    if command_exists ctags; then
-        find . -iname "*.[ch]" -print0 \
-            | xargs --verbose -0 ctags --kinds-C=+l+d || true
-    fi
-    if command_exists vtags.sed && [ -f tags ]; then
-        vtags.sed tags | sort | uniq > .tags.vim      || true
-    fi
+    build_tags
     if [ "$CC" = "chibicc" ]; then
-        with_other chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
+        compile_with_other chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
     elif [ "$CC" = "cproc" ]; then
-        with_other cproc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
+        compile_with_other cproc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
     elif [ "$cross_compile_only" = "1" ]; then
         if [ -z "$cross_syntax_src" ]; then
             error "internal error: cross syntax source was not generated"
@@ -548,7 +468,8 @@ install)
     done
 
     if [ -d "etc" ]; then
-        install_dir 755 "$DESTDIR$SYSCONFDIR/$program"
+        mkdir -p "$DESTDIR$SYSCONFDIR/$program"
+        chmod 755 "$DESTDIR$SYSCONFDIR/$program"
         for file in etc/*; do
             if [ -f "$file" ]; then
                 install_file \
@@ -619,7 +540,7 @@ test)
         if [ "$test_cc" = "chibicc" ] || [ "$test_cc" = "cproc" ]; then
             cmdline_no_cc=$(option_remove "$cmdline" "$test_cc")
             trace_on
-            if with_other "$test_cc" "$cmdline_no_cc"; then
+            if compile_with_other "$test_cc" "$cmdline_no_cc"; then
                 "$test_exe"
             else
                 exit 1

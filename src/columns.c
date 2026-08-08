@@ -286,7 +286,6 @@ columns_functions_sink(void) {
 #include "aux.c"
 #include "list_model.c"
 #include "work.c"
-#include "assert.c"
 
 int
 main(void) {

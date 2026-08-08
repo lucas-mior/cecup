@@ -610,7 +610,6 @@ aux_functions_sink(void) {
 #include "update.c"
 #include "work.c"
 #include "on.c"
-#include "assert.c"
 
 int main(void) {
     Message *msg;
