@@ -844,7 +844,7 @@ error_async_safe(char *message) {
     return;
 }
 
-CBASE_API_DEF void __attribute((noreturn))
+CBASE_API_DEF noreturn void
 fatal(int status) {
 #if defined(__EMSCRIPTEN__)
     char stack[8192];
@@ -894,7 +894,7 @@ util_string_int32(int32 *number, char *string) {
     }
 }
 
-CBASE_API_DEF void __attribute__((noreturn))
+CBASE_API_DEF noreturn void
 util_die_notify(char *program_name, char *format, ...) {
     int32 n;
     va_list args;
@@ -1132,9 +1132,9 @@ send_signal(char *executable, int32 signal_number) {
 #elif OS_UNIX
 CBASE_API_DEF void
 send_signal(char *executable, int32 signal_number) {
+    pid_t child;
     char signal_string[14];
     SNPRINTF(signal_string, "%d", signal_number);
-    pid_t child;
 
     switch (child = fork()) {
     case -1:

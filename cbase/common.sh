@@ -184,6 +184,90 @@ option_remove() {
     printf '%s\n' "$result"
 }
 
+gcc_flags_to_msvc() {
+    result=""
+    next_is_linker_flag=0
+
+    for flag do
+        if [ "$next_is_linker_flag" -eq 1 ]; then
+            next_is_linker_flag=0
+        else
+            case "$flag" in
+            -I*)
+                path=${flag#-I}
+                if command_exists cygpath; then
+                    path=$(cygpath -m "$path" 2>/dev/null || printf '%s\n' "$path")
+                fi
+                flag="/clang:-I$path"
+                ;;
+            -D*)
+                flag="/D${flag#-D}"
+                ;;
+            -U*)
+                flag="/U${flag#-U}"
+                ;;
+            -std=*)
+                flag="/std:${flag#-std=}"
+                ;;
+            -g|-g[0-9]*)
+                flag="/Z7"
+                ;;
+            -O0)
+                flag="/clang:-O0"
+                ;;
+            -Og)
+                flag="/clang:-Og"
+                ;;
+            -O1)
+                flag="/clang:-O1"
+                ;;
+            -O2|-O3|-Ofast)
+                flag="/clang:-O2"
+                ;;
+            -Os|-Oz)
+                flag="/clang:$flag"
+                ;;
+            -Wall)
+                flag="/W4 /clang:-Wno-constant-logical-operand"
+                ;;
+            -Wextra|-Wpedantic)
+                continue
+                ;;
+            -Wfatal-errors|-Wno-*|-W*)
+                flag="/clang:$flag"
+                ;;
+            -fsanitize=undefined)
+                continue
+                ;;
+            -flto|-march=*|-ftree-vectorize)
+                flag="/clang:$flag"
+                ;;
+            -lm|-lpthread)
+                case "$CLANG_CL_TARGET" in
+                *linux*|*darwin*|*bsd*)
+                    flag="-Xlinker $flag"
+                    ;;
+                *)
+                    continue
+                    ;;
+                esac
+                ;;
+            -Xlinker)
+                next_is_linker_flag=1
+                ;;
+            esac
+        fi
+
+        if [ -z "$result" ]; then
+            result=$flag
+        else
+            result="$result $flag"
+        fi
+    done
+
+    printf '%s\n' "$result"
+}
+
 
 test_run_binary () {
     test_exe=$1
@@ -296,6 +380,10 @@ test_compile_and_run_source () {
     test_exe=$(test_executable_path "$test_module")
     test_flags=$(awk '/flags:/ { $1=$2=""; print $0 }' "$test_src")
     test_cc=$CC
+    test_cmd_flags="$CPPFLAGS $TEST_CPPFLAGS $CFLAGS $TEST_CFLAGS"
+    test_added_flags=""
+    test_ldflags="$TEST_LDFLAGS"
+    test_tail_ldflags="$LDFLAGS"
     test_run_after_compile=1
 
     mkdir -p "$(dirname "$test_exe")"
@@ -309,29 +397,53 @@ test_compile_and_run_source () {
         fi
 
         test_cc="zig cc"
-        test_cmdline="$test_cc $CPPFLAGS $TEST_CPPFLAGS $CFLAGS $TEST_CFLAGS"
+        test_cmdline="$test_cc $test_cmd_flags"
         test_cmdline=$(option_remove "$test_cmdline" "-D_GNU_SOURCE")
         test_cmdline="$test_cmdline -target x86_64-windows-gnu"
         test_run_after_compile=${TEST_WINDOWS_RUN:-1}
     else
-        test_cmdline="$test_cc $CPPFLAGS $TEST_CPPFLAGS $CFLAGS $TEST_CFLAGS"
+        case "$test_cc" in
+        clang-cl|*/clang-cl)
+            if [ -z "$CLANG_CL_TARGET" ]; then
+                case "$(uname -a)" in
+                *Linux*|*Darwin*|*BSD*)
+                    CLANG_CL_TARGET=$(cc -dumpmachine 2>/dev/null || true)
+                    ;;
+                esac
+            fi
+            if [ -n "$CLANG_CL_TARGET" ]; then
+                test_cmd_flags="$test_cmd_flags --target=$CLANG_CL_TARGET"
+            fi
+            test_cmd_flags=$(gcc_flags_to_msvc $test_cmd_flags)
+            ;;
+        esac
+        test_cmdline="$test_cc $test_cmd_flags"
     fi
 
     if [ "${TEST_DISABLE_UNUSED_VARIABLE_WARNING:-1}" != 0 ]; then
-        test_cmdline="$test_cmdline -Wno-unused-variable"
+        test_added_flags="$test_added_flags -Wno-unused-variable"
     fi
 
     if [ "${TEST_DEFINE_MODULE:-1}" != 0 ]; then
-        test_cmdline="$test_cmdline -DTESTING_$test_module=1"
+        test_added_flags="$test_added_flags -DTESTING_$test_module=1"
     fi
 
     if [ "${TEST_DEFINE_TESTING:-1}" != 0 ]; then
-        test_cmdline="$test_cmdline -DTESTING=1"
+        test_added_flags="$test_added_flags -DTESTING=1"
     fi
 
-    test_cmdline="$test_cmdline $TEST_EXTRA_DEFS"
+    test_added_flags="$test_added_flags $TEST_EXTRA_DEFS"
+    case "$test_cc" in
+    clang-cl|*/clang-cl)
+        test_added_flags=$(gcc_flags_to_msvc $test_added_flags)
+        test_flags=$(gcc_flags_to_msvc $test_flags)
+        test_ldflags=$(gcc_flags_to_msvc $test_ldflags)
+        test_tail_ldflags=$(gcc_flags_to_msvc $test_tail_ldflags)
+        ;;
+    esac
+    test_cmdline="$test_cmdline $test_added_flags"
     test_cmdline="$test_cmdline -o $test_exe $test_src"
-    test_cmdline="$test_cmdline $TEST_LDFLAGS $test_flags $LDFLAGS"
+    test_cmdline="$test_cmdline $test_ldflags $test_flags $test_tail_ldflags"
 
     trace_on
     if $test_cmdline; then

@@ -31,80 +31,120 @@
   #define _NETBSD_SOURCE
 #endif
 
+#if OS_OPENBSD && !defined(_BSD_SOURCE)
+  #define _BSD_SOURCE
+#endif
+
 #if CC_CLANG
   #pragma clang diagnostic pop
 #endif
 
+#if defined(__has_include)
+#define HAS_INCLUDE(header) __has_include(header)
+#else
+#define HAS_INCLUDE(header) 1
+#endif
+
+// mandatory C11 headers
 #include <assert.h>
 #include <ctype.h>
-#include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
+#include <fenv.h>
 #include <float.h>
-#include <ftw.h>
-#include <getopt.h>
 #include <inttypes.h>
-#include <libgen.h>
 #include <limits.h>
 #include <locale.h>
 #include <math.h>
 #include <setjmp.h>
 #include <signal.h>
+#include <stdalign.h>
 #include <stdarg.h>
-#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdnoreturn.h>
 #include <string.h>
+#if !defined(_MSC_VER)
+#include <tgmath.h>
+#endif
+#include <time.h>
+#include <wchar.h>
+#include <wctype.h>
+
+// optional C11 headers
+#if !defined(_MSC_VER) && !defined(__STDC_NO_COMPLEX__)
+#include <complex.h>
+#endif
+
+#if !OS_WINDOWS && !defined(__STDC_NO_THREADS__)
+#include <threads.h>
+#endif
+
+#if !defined(__STDC_NO_ATOMICS__)
+#include <stdatomic.h>
+#endif
+
+// POSIX headers that may work on windows using minGW or Cygwin
+#if OS_UNIX || OS_WINDOWS
+#include <dirent.h>
+#include <fcntl.h>
+#include <ftw.h>
+#include <getopt.h>
+#include <libgen.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
-#include <wchar.h>
-#include <wctype.h>
+#endif
 
 #if OS_WINDOWS
 #include <windows.h>
 #endif
 
+// POSIX headers
 #if OS_UNIX
+#define TRY_INCLUDE_WHICH <arpa/inet.h>
+#include "try_include.h"
+#define TRY_INCLUDE_WHICH <fnmatch.h>
+#include "try_include.h"
+#define TRY_INCLUDE_WHICH <glob.h>
+#include "try_include.h"
+#define TRY_INCLUDE_WHICH <grp.h>
+#include "try_include.h"
 #include <netdb.h>
 #include <netinet/in.h>
 #include <poll.h>
 #include <pthread.h>
+#define TRY_INCLUDE_WHICH <pwd.h>
+#include "try_include.h"
+#define TRY_INCLUDE_WHICH <regex.h>
+#include "try_include.h"
+#define TRY_INCLUDE_WHICH <spawn.h>
+#include "try_include.h"
+#define TRY_INCLUDE_WHICH <strings.h>
+#include "try_include.h"
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#define TRY_INCLUDE_WHICH <sys/resource.h>
+#include "try_include.h"
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#define TRY_INCLUDE_WHICH <sys/uio.h>
+#include "try_include.h"
+#define TRY_INCLUDE_WHICH <sys/utsname.h>
+#include "try_include.h"
 #include <sys/wait.h>
+#define TRY_INCLUDE_WHICH <termios.h>
+#include "try_include.h"
 #include <utime.h>
-#endif
-
-#if !defined(CBASE_HAS_FTS)
-#if OS_UNIX
-  #if defined(__has_include)
-    #if __has_include(<fts.h>)
-      #define CBASE_HAS_FTS 1
-    #else
-      #define CBASE_HAS_FTS 0
-    #endif
-  #elif defined(__GLIBC__) || OS_MAC || OS_BSD
-    #define CBASE_HAS_FTS 1
-  #else
-    #define CBASE_HAS_FTS 0
-  #endif
-#else
-  #define CBASE_HAS_FTS 0
-#endif
-#endif
-
-#if CBASE_HAS_FTS
-#include <fts.h>
+#define TRY_INCLUDE_WHICH <wordexp.h>
+#include "try_include.h"
+#define TRY_INCLUDE_WHICH <fts.h>
+#include "try_include.h"
 #endif
 
 #if OS_MAC || OS_BSD
@@ -156,13 +196,17 @@
 #define MAP_POPULATE 0
 #endif
 
+#if OS_UNIX
 #if !defined(MAP_ANON) && defined(MAP_ANONYMOUS)
 #define MAP_ANON MAP_ANONYMOUS
 #elif !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
 #define MAP_ANONYMOUS MAP_ANON
+#elif OS_FREEBSD
+#define MAP_ANON 0x1000
+#define MAP_ANONYMOUS MAP_ANON
 #elif !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
-#define MAP_ANON 0
-#define MAP_ANONYMOUS 0
+#error "Anonymous mmap is unsupported on this platform"
+#endif
 #endif
 
 #endif /* LIBC_H */

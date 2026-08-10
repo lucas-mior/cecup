@@ -19,7 +19,7 @@
 #define TESTING 0
 #endif
 
-static void __attribute__((noreturn))
+static noreturn void
 work_finalize(ThreadData *thread_data, bool preview_clean) {
     update_progress_bar(1.0);
 
@@ -364,7 +364,7 @@ work_cleanup(void) {
     return;
 }
 
-static void __attribute__((noreturn))
+static noreturn void
 work_preview_cancel_and_reset(ThreadData *thread_data) {
     work_cleanup();
     work_finalize(thread_data, false);

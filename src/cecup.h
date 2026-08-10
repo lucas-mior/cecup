@@ -721,7 +721,7 @@ static int32 work_traverse_fs(Traversal *traversal);
 static void *work_traverse_fs_thread(void *user_data);
 static void traversal_clean(Traversal *traversal);
 static void work_cleanup(void);
-static void __attribute__((noreturn)) work_preview_cancel_and_reset(ThreadData *thread_data);
+static noreturn void work_preview_cancel_and_reset(ThreadData *thread_data);
 static void *work_preview(void *user_data);
 static bool work_transfer_action_is_transfer(enum Action action);
 static char *work_transfer_backend_name(enum TransferBackend backend);
