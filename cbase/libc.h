@@ -10,6 +10,14 @@
 
 #include "platform_detection.h"
 
+#if CBASE_CRT_MSVC && !defined(_CRT_SECURE_NO_WARNINGS)
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+#if CBASE_CRT_MSVC && !defined(_CRT_NONSTDC_NO_WARNINGS)
+#define _CRT_NONSTDC_NO_WARNINGS
+#endif
+
 #if CC_CLANG
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wreserved-identifier"
@@ -64,7 +72,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#if !defined(_MSC_VER)
 #include <stdnoreturn.h>
+#endif
 #include <string.h>
 #if !defined(_MSC_VER)
 #include <tgmath.h>
@@ -86,22 +96,46 @@
 #include <stdatomic.h>
 #endif
 
-// POSIX headers that may work on windows using minGW or Cygwin
-#if OS_UNIX || OS_WINDOWS
+// POSIX-like headers provided by Unix and some Windows CRTs.
+#if CBASE_HAS_DIRENT_H
 #include <dirent.h>
+#endif
+#if CBASE_HAS_FCNTL_H
 #include <fcntl.h>
+#endif
+#if CBASE_HAS_FTW_H
 #include <ftw.h>
+#endif
+#if CBASE_HAS_GETOPT_H
 #include <getopt.h>
+#endif
+#if CBASE_HAS_IO_H
+#include <io.h>
+#endif
+#if CBASE_HAS_LIBGEN_H
 #include <libgen.h>
+#endif
+#if CBASE_HAS_SYS_FILE_H
 #include <sys/file.h>
+#endif
+#if CBASE_HAS_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#if CBASE_HAS_SYS_TIME_H
 #include <sys/time.h>
+#endif
+#if CBASE_HAS_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#if CBASE_HAS_UNISTD_H
 #include <unistd.h>
 #endif
 
 #if OS_WINDOWS
 #include <windows.h>
+#if defined(_MSC_VER) && !defined(noreturn)
+#define noreturn __declspec(noreturn)
+#endif
 #endif
 
 // POSIX headers

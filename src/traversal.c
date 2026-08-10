@@ -48,7 +48,7 @@ typedef struct FsWalkEntry {
 
 typedef struct FsWalk {
     FsWalkEntry entry;
-#if CBASE_HAS_FTS
+#if HAS_INCLUDE(<fts.h>)
     FTS *handle;
 #endif
 } FsWalk;
@@ -66,7 +66,7 @@ fs_walk_len_cast(int64 length) {
     return result;
 }
 
-#if CBASE_HAS_FTS
+#if HAS_INCLUDE(<fts.h>)
 static enum FsWalkInfo
 fs_walk_info_from_fts(int32 info) {
     switch (info) {
@@ -106,7 +106,7 @@ fs_walk_info_from_fts(int32 info) {
 
 static bool
 fs_walk_open(FsWalk *walk, char *path) {
-#if CBASE_HAS_FTS
+#if HAS_INCLUDE(<fts.h>)
     char *paths[2];
 
     memset64(walk, 0, SIZEOF(*walk));
@@ -126,7 +126,7 @@ fs_walk_open(FsWalk *walk, char *path) {
 
 static FsWalkEntry *
 fs_walk_read(FsWalk *walk) {
-#if CBASE_HAS_FTS
+#if HAS_INCLUDE(<fts.h>)
     FTSENT *entry;
 
     entry = fts_read(walk->handle);
@@ -154,7 +154,7 @@ fs_walk_read(FsWalk *walk) {
 
 static int32
 fs_walk_skip(FsWalk *walk, FsWalkEntry *entry) {
-#if CBASE_HAS_FTS
+#if HAS_INCLUDE(<fts.h>)
     if (entry->native_entry == NULL) {
         errno = EINVAL;
         return -1;
@@ -171,7 +171,7 @@ fs_walk_skip(FsWalk *walk, FsWalkEntry *entry) {
 
 static int32
 fs_walk_close(FsWalk *walk) {
-#if CBASE_HAS_FTS
+#if HAS_INCLUDE(<fts.h>)
     return fts_close(walk->handle);
 #else
     (void)walk;

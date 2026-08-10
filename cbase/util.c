@@ -745,6 +745,7 @@ xfclose(char *file, int32 line, char *func, FILE *f, char *filename) {
     return 0;
 }
 
+#if CBASE_HAS_DIRENT_H
 CBASE_API_DEF int
 xclosedir(DIR *dir, char *dirname) {
     if (closedir(dir)) {
@@ -753,6 +754,7 @@ xclosedir(DIR *dir, char *dirname) {
     }
     return 0;
 }
+#endif
 
 CBASE_API_DEF void __attribute__((format(printf, 4, 5)))
 error_impl(char *file, int32 line, char *func, char *format, ...) {
@@ -1607,6 +1609,7 @@ catfile(int where, char *file) {
 
 #if !OS_WINDOWS
 
+#if OS_UNIX
 #define XSIGNAL(NAME) [NAME] = #NAME
 static char *signal_names[] = {
     XSIGNAL(SIGABRT),
@@ -1668,6 +1671,8 @@ xkill(pid_t pid, int signum) {
     }
     return;
 }
+
+#endif /* OS_UNIX */
 
 #endif /* !OS_WINDOWS */
 
@@ -2351,7 +2356,9 @@ util_functions_sink(void) {
     (void)util_die_notify;
     (void)remove_escape_sequences;
     (void)xfclose;
+#if CBASE_HAS_DIRENT_H
     (void)xclosedir;
+#endif
 #if OS_UNIX
     (void)util_copy_file_sync;
     (void)util_copy_file_async;
@@ -2994,9 +3001,11 @@ main(int argc, char **argv) {
     (void)free2_;
 
     (void)xmmap_commit;
+#if OS_UNIX
     (void)xkill;
     (void)xdup2;
     (void)xpipe;
+#endif
     (void)xunlink;
 
     (void)fwrite64;
