@@ -40,9 +40,6 @@ here_impl(char *file, int32 line, char *func) {
     return;
 }
 
-static bool timezone_initialized = false;
-static time_t timezone_offset = 0;
-
 #define SFA_LINKAGE CBASE_API_DEF
 #define SFA_SNPRINTF_LINKAGE CBASE_API_DECL
 #define SFA_TYPE char *
