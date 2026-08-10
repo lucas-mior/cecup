@@ -6,6 +6,7 @@
 
 #include "gtk_include.h"
 
+#include "cbase.h"
 #include "cecup.h"
 #include "update.c"
 #include "on_menu.c"

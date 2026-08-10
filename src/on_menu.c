@@ -5,7 +5,7 @@
 #define ON_MENU_C
 
 #include "gtk_include.h"
-
+#include "cbase.h"
 #include "cecup.h"
 #include "util.c"
 #include "on.h"

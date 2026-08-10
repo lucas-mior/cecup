@@ -4,8 +4,8 @@
 #if !defined(WORK_RSYNC)
 #define WORK_RSYNC
 
-#include "cecup.h"
 #include "cbase.h"
+#include "cecup.h"
 #include "update.c"
 #include "traversal.c"
 

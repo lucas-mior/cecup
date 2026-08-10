@@ -4,6 +4,7 @@
 #if !defined(TASKS_C)
 #define TASKS_C
 
+#include "cbase.h"
 #include "cecup.h"
 #include "item.c"
 

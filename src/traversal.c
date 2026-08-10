@@ -4,6 +4,7 @@
 #if !defined(TRAVERSAL_C)
 #define TRAVERSAL_C
 
+#include "cbase.h"
 #include "cecup.h"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)

@@ -5,7 +5,8 @@
 #define ON_TREE_C
 
 #include "gtk_include.h"
-#include "util.c"
+
+#include "cbase.h"
 #include "cecup.h"
 #include "on.h"
 #include "item.c"
