@@ -398,11 +398,7 @@ build|debug|run|release|callgrind|profile|cross)
     fi
 
     build_tags
-    if [ "$CC" = "chibicc" ]; then
-        compile_with_other chibicc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
-    elif [ "$CC" = "cproc" ]; then
-        compile_with_other cproc $CPPFLAGS $CFLAGS src/main.c -o $exe $LDFLAGS
-    elif [ "$cross_compile_only" = "1" ]; then
+    if [ "$cross_compile_only" = "1" ]; then
         if [ -z "$cross_syntax_src" ]; then
             error "internal error: cross syntax source was not generated"
             exit 1
