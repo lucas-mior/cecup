@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL
 // Copyright (c) 2026 Lucas Mior
 
-#include "gtk_include.h"
-
-#include "cecup.h"
 #define CBASE_IMPLEMENT
 #include "cbase.h"
+
+#include "gtk_include.h"
+#include "cecup.h"
 
 #include "on.c"
 #include "columns.c"

@@ -594,10 +594,9 @@ work_functions_sink(void) {
 #endif
 
 #if TESTING_work
-#include "gtk_include.h"
-
 #define CBASE_IMPLEMENT
 #include "cbase.h"
+#include "gtk_include.h"
 
 typedef struct TestEntry {
     char *name;

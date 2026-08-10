@@ -5,10 +5,34 @@
 // other files include them by `#include "cbase.h"` or `#include "libc.h"`
 // Avoid including system headers in other files.
 
+#if !defined(LIBC_H)
+#define LIBC_H
+
 #include "platform_detection.h"
 
-#if OS_LINUX && defined(__GLIBC__)
-#define _GNU_SOURCE
+#if CC_CLANG
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wreserved-identifier"
+#endif
+
+#if OS_UNIX && !defined(_XOPEN_SOURCE)
+  #define _XOPEN_SOURCE 700
+#endif
+
+#if OS_UNIX && !defined(_DEFAULT_SOURCE)
+  #define _DEFAULT_SOURCE
+#endif
+
+#if OS_LINUX && !defined(_GNU_SOURCE)
+  #define _GNU_SOURCE
+#endif
+
+#if defined(__NetBSD__) && !defined(_NETBSD_SOURCE)
+  #define _NETBSD_SOURCE
+#endif
+
+#if CC_CLANG
+  #pragma clang diagnostic pop
 #endif
 
 #include <assert.h>
@@ -88,6 +112,7 @@
 
 #if OS_MAC || OS_BSD
 #include <sys/param.h>
+#include <sys/sysctl.h>
 #endif
 
 #if OS_LINUX
@@ -142,3 +167,5 @@
 #define MAP_ANON 0
 #define MAP_ANONYMOUS 0
 #endif
+
+#endif /* LIBC_H */

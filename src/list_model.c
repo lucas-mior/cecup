@@ -4,9 +4,8 @@
 #if !defined(LIST_MODEL_C)
 #define LIST_MODEL_C
 
-#include "gtk_include.h"
-
 #include "cbase.h"
+#include "gtk_include.h"
 #include "cecup.h"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)

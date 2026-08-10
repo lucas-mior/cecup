@@ -4,9 +4,8 @@
 #if !defined(AUX_C)
 #define AUX_C
 
-#include "gtk_include.h"
-
 #include "cbase.h"
+#include "gtk_include.h"
 #include "cecup.h"
 #include "item.c"
 #include "tasks.c"

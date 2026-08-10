@@ -26,10 +26,8 @@
 #ifdef _MSC_VER
     #pragma warning(disable: 4116 4996) // unnamed type definition in parentheses
 #endif
-#include <inttypes.h>
-#include <stdbool.h>
-#include <string.h>
-#include <assert.h>
+
+#include "libc.h"
 
 #ifndef ISIZE_MAX
     typedef int64_t     isize_t;

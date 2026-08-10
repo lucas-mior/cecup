@@ -4,8 +4,8 @@
 #if !defined(ON_LOG_C)
 #define ON_LOG_C
 
-#include "gtk_include.h"
 #include "cbase.h"
+#include "gtk_include.h"
 #include "cecup.h"
 #include "on.h"
 

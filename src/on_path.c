@@ -4,9 +4,8 @@
 #if !defined(ON_PATH_C)
 #define ON_PATH_C
 
-#include "gtk_include.h"
-
 #include "cbase.h"
+#include "gtk_include.h"
 #include "cecup.h"
 #include "update.c"
 #include "traversal.c"

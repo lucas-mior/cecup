@@ -4,9 +4,8 @@
 #if !defined(COLUMNS_C)
 #define COLUMNS_C
 
-#include "gtk_include.h"
-
 #include "cbase.h"
+#include "gtk_include.h"
 #include "cecup.h"
 #include "on.c"
 

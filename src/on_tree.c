@@ -4,9 +4,8 @@
 #if !defined(ON_TREE_C)
 #define ON_TREE_C
 
-#include "gtk_include.h"
-
 #include "cbase.h"
+#include "gtk_include.h"
 #include "cecup.h"
 #include "on.h"
 #include "item.c"

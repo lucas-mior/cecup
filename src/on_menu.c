@@ -4,8 +4,8 @@
 #if !defined(ON_MENU_C)
 #define ON_MENU_C
 
-#include "gtk_include.h"
 #include "cbase.h"
+#include "gtk_include.h"
 #include "cecup.h"
 #include "on.h"
 #include "aux.c"

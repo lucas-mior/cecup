@@ -4,8 +4,8 @@
 #if !defined(CECUP_H)
 #define CECUP_H
 
-#include "gtk_include.h"
 #include "cbase.h"
+#include "gtk_include.h"
 
 #define EMOJI_NEW "➕"
 #define EMOJI_LINK "🔗"

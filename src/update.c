@@ -4,10 +4,9 @@
 #if !defined(UPDATE_C)
 #define UPDATE_C
 
+#include "cbase.h"
 #include "gtk_include.h"
 #include <glib/gmain.h>
-
-#include "cbase.h"
 
 #include "cecup.h"
 #include "aux.c"

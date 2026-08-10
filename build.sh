@@ -107,11 +107,7 @@ fi
 
 CPPFLAGS="$CPPFLAGS -I$dir/cbase"
 CPPFLAGS="$CPPFLAGS -I."
-CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
 
-if [ "$target_os" != "Windows" ]; then
-    CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=700"
-fi
 if [ "$target_os" = "Darwin" ]; then
     CPPFLAGS="$CPPFLAGS -D_DARWIN_C_SOURCE"
 fi
