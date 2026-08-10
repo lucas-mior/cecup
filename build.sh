@@ -175,29 +175,15 @@ if [ -z "$NOCOLORS" ]; then
     CFLAGS="$CFLAGS -fdiagnostics-color=always"
 fi
 
-cross_compile_only=0
-if [ "$target" = "cross" ]; then
-    case "$cross" in
-    *macos*)
-        cross_compile_only="${CROSS_COMPILE_ONLY:-1}"
-        ;;
-    esac
-fi
-
 PKG_CONFIG="${PKG_CONFIG:-pkg-config}"
-if [ "$cross_compile_only" = "1" ]; then
-    GTK_CFLAGS="${GTK_CFLAGS:-}"
-    GTK_LIBS="${GTK_LIBS:-}"
-else
-    if ! command_exists "$PKG_CONFIG"; then
-        error "$PKG_CONFIG not found"
-        exit 1
-    fi
-    GTK_INCLUDES=$($PKG_CONFIG --cflags-only-I gtk4 | sed 's/-I/-isystem /g')
-    GTK_OTHER_CFLAGS=$($PKG_CONFIG --cflags-only-other gtk4)
-    GTK_CFLAGS="${GTK_CFLAGS:-$GTK_INCLUDES $GTK_OTHER_CFLAGS}"
-    GTK_LIBS="${GTK_LIBS:-$($PKG_CONFIG --libs gtk4)}"
+if ! command_exists "$PKG_CONFIG"; then
+    error "$PKG_CONFIG not found"
+    exit 1
 fi
+GTK_INCLUDES=$($PKG_CONFIG --cflags-only-I gtk4 | sed 's/-I/-isystem /g')
+GTK_OTHER_CFLAGS=$($PKG_CONFIG --cflags-only-other gtk4)
+GTK_CFLAGS="${GTK_CFLAGS:-$GTK_INCLUDES $GTK_OTHER_CFLAGS}"
+GTK_LIBS="${GTK_LIBS:-$($PKG_CONFIG --libs gtk4)}"
 CFLAGS="$CFLAGS $GTK_CFLAGS"
 LDFLAGS="$LDFLAGS $GTK_LIBS"
 
@@ -294,78 +280,15 @@ po)
     ;;
 esac
 
-cross_syntax_src=""
 if [ "$target" = "cross" ]; then
     CFLAGS=$(option_remove "$CFLAGS" "-D_GNU_SOURCE")
 
-    case "$cross" in
-    *macos*)
-        CC="${HOST_CC:-${CC:-cc}}"
-        # macOS cross builds use a syntax-only platform-detection probe.
-mkdir -p .cache
-cross_syntax_src=".cache/cecup-cross-syntax-$$.c"
-
-# Keep this probe independent from Zig's Darwin SDK discovery. Native
-# macOS CI is the real full compiler gate; this Linux-hosted probe only
-# validates that the project platform feature gates select the expected
-# Darwin branch when the target macros are simulated.
-cat > "$cross_syntax_src" <<'EOF'
-#if defined(__linux__)
-#undef __linux__
-#endif
-#if defined(__FreeBSD__)
-#undef __FreeBSD__
-#endif
-#if defined(__NetBSD__)
-#undef __NetBSD__
-#endif
-#if defined(__OpenBSD__)
-#undef __OpenBSD__
-#endif
-#if defined(_WIN32)
-#undef _WIN32
-#endif
-#if defined(_WIN64)
-#undef _WIN64
-#endif
-#if defined(__wasm__)
-#undef __wasm__
-#endif
-
-#define __APPLE__ 1
-#define __MACH__ 1
-EOF
-cat cbase/platform_detection.h >> "$cross_syntax_src"
-cat >> "$cross_syntax_src" <<'EOF'
-
-#if !OS_MAC
-#error "Darwin cross syntax check must target macOS"
-#endif
-#if !OS_UNIX
-#error "macOS must be detected as Unix"
-#endif
-#if CBASE_HAS_PROCFS
-#error "macOS must not enable procfs helpers"
-#endif
-#if OS_WINDOWS || OS_LINUX || OS_BSD || OS_WASM
-#error "macOS target must not enable another OS family"
-#endif
-
-int
-main(void) {
-    return 0;
-}
-EOF
-        ;;
-    *)
-        if ! command_exists zig; then
-            error "zig not found"
-            exit 1
-        fi
-        CC="zig cc"
-        CFLAGS="$CFLAGS -target $cross"
-        ;;
-    esac
+    if ! command_exists zig; then
+        error "zig not found"
+        exit 1
+    fi
+    CC="zig cc"
+    CFLAGS="$CFLAGS -target $cross"
 
     case "$cross" in
     *windows*)
@@ -399,16 +322,7 @@ build|debug|run|release|callgrind|profile|cross)
     fi
 
     build_tags
-    if [ "$cross_compile_only" = "1" ]; then
-        if [ -z "$cross_syntax_src" ]; then
-            error "internal error: cross syntax source was not generated"
-            exit 1
-        fi
-        $CC $CPPFLAGS $CFLAGS -fsyntax-only "$cross_syntax_src"
-        rm -f "$cross_syntax_src"
-    else
-        $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
-    fi
+    $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
 
     if [ "$target" = "run" ]; then
         "$exe"
