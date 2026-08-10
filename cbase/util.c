@@ -12,8 +12,6 @@
 
 #include "cbase.h"
 
-static int64 here_counter = 0;
-
 CBASE_API_DEF void
 here_impl(char *file, int32 line, char *func) {
 #if OS_UNIX
