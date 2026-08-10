@@ -108,6 +108,7 @@ def main():
         processed = process_markdown(lines)
 
         with open(out_file, 'w', encoding='utf-8') as f:
+            f.write('#include "cbase.h"\n\n')
             f.write('static char *cecup_welcome_text = N_(\n')
             f.write('\n'.join(processed))
             f.write('\n);\n')

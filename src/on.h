@@ -5,6 +5,7 @@
 #define ON_H
 
 #include "cecup.h"
+#include "cbase.h"
 
 static void on_popover_closed(GtkWidget *popover, void *data);
 static void execute_menu_item_from_key_press(GtkWidget *tree, CecupMenuItem *menu_item);

@@ -18,4 +18,6 @@
 #pragma clang diagnostic pop
 #endif
 
+#include "cbase.h"
+
 #endif
