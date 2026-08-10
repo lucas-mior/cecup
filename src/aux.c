@@ -6,6 +6,7 @@
 
 #include "gtk_include.h"
 
+#include "cbase.h"
 #include "cecup.h"
 #include "item.c"
 #include "tasks.c"

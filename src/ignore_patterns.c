@@ -4,6 +4,7 @@
 #if !defined(IGNORE_PATTERNS_C)
 #define IGNORE_PATTERNS_C
 
+#include "cbase.h"
 #include "cecup.h"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)

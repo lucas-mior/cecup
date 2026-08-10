@@ -6,9 +6,9 @@
 
 #include "gtk_include.h"
 
-#include "util.c"
-#include "update.c"
+#include "cbase.h"
 #include "cecup.h"
+#include "update.c"
 #include "traversal.c"
 #include "work_rsync.c"
 

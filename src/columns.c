@@ -6,6 +6,7 @@
 
 #include "gtk_include.h"
 
+#include "cbase.h"
 #include "cecup.h"
 #include "on.c"
 
@@ -282,7 +283,6 @@ columns_functions_sink(void) {
 #define CBASE_IMPLEMENT
 #include "cbase.h"
 
-#include "util.c"
 #include "aux.c"
 #include "list_model.c"
 #include "work.c"

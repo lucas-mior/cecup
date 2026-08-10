@@ -7,7 +7,6 @@
 #include "gtk_include.h"
 #include "cbase.h"
 #include "cecup.h"
-#include "util.c"
 #include "on.h"
 #include "aux.c"
 

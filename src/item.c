@@ -4,6 +4,7 @@
 #if !defined(ITEM_C)
 #define ITEM_C
 
+#include "cbase.h"
 #include "cecup.h"
 #include "rapidhash.h"
 
