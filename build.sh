@@ -200,13 +200,6 @@ Windows)
 esac
 LDFLAGS="$LDFLAGS -lm"
 
-GNUSOURCE=""
-if [ "$target_os" = "Linux" ]; then
-    if uname -a 2> /dev/null | grep -q GNU; then
-        GNUSOURCE="-D_GNU_SOURCE"
-    fi
-fi
-
 generate_welcome_h() {
     if [ -f "README.md" ]; then
         trace_on
@@ -218,7 +211,7 @@ generate_welcome_h() {
 case "$target" in
 debug)
     CFLAGS="$CFLAGS -g3 -fsanitize=undefined"
-    CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
+    CPPFLAGS="$CPPFLAGS -DDEBUGGING=1"
     exe="bin/${program}_debug"
     ;;
 callgrind)
@@ -226,28 +219,26 @@ callgrind)
     if [ "$target_os" = "Linux" ]; then
         CFLAGS="$CFLAGS -ftree-vectorize"
     fi
-    CPPFLAGS="$CPPFLAGS $GNUSOURCE"
     ;;
 test)
-    CFLAGS="$CFLAGS -g3 $GNUSOURCE -DDEBUGGING=1 -fsanitize=undefined"
+    CFLAGS="$CFLAGS -g3 -DDEBUGGING=1 -fsanitize=undefined"
     ;;
 check)
-    CFLAGS="$CFLAGS $GNUSOURCE -DDEBUGGING=1 -fanalyzer -fdiagnostics-color=never"
+    CFLAGS="$CFLAGS -DDEBUGGING=1 -fanalyzer -fdiagnostics-color=never"
     ;;
 build|run)
-    CFLAGS="$CFLAGS $GNUSOURCE -O2"
+    CFLAGS="$CFLAGS -O2"
     if [ "$target_os" = "Linux" ]; then
         CFLAGS="$CFLAGS -flto -march=native -ftree-vectorize"
     fi
     ;;
 release)
-    CFLAGS="$CFLAGS $GNUSOURCE -O2"
+    CFLAGS="$CFLAGS -O2"
     if [ "$target_os" = "Linux" ]; then
         CFLAGS="$CFLAGS -flto -march=native -ftree-vectorize"
     fi
     ;;
 fast_feedback)
-    CFLAGS="$CFLAGS $GNUSOURCE"
     ;;
 po)
     generate_welcome_h
@@ -281,8 +272,6 @@ po)
 esac
 
 if [ "$target" = "cross" ]; then
-    CFLAGS=$(option_remove "$CFLAGS" "-D_GNU_SOURCE")
-
     if ! command_exists zig; then
         error "zig not found"
         exit 1

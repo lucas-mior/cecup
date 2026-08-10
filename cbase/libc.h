@@ -7,6 +7,10 @@
 
 #include "platform_detection.h"
 
+#if OS_LINUX && defined(__GLIBC__)
+#define _GNU_SOURCE
+#endif
+
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
