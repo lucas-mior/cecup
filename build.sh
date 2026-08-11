@@ -386,13 +386,17 @@ cachegrind)
     exit
     ;;
 check)
+    set +e
+
     NOCOLORS=1 CC=gcc CFLAGS="-fanalyzer -fdiagnostics-color=never" ./build.sh
+
     CFLAGS="--analyze -Xanalyzer -analyzer-output=text"
     CFLAGS="$CFLAGS -Xanalyzer -analyzer-werror"
     CFLAGS="$CFLAGS -Xanalyzer -analyzer-opt-analyze-headers"
     CFLAGS="$CFLAGS -Wno-unused-command-line-argument"
     CFLAGS="$CFLAGS -fno-color-diagnostics"
     NOCOLORS=1 CC=clang CFLAGS="$CFLAGS" ./build.sh
+
     exit
     ;;
 esac
