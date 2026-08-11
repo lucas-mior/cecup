@@ -32,42 +32,6 @@ jobs:
           bash -n build.sh
           dash -n build.sh
 
-  darwin-cross-syntax:
-    name: Darwin cross syntax check (${{ matrix.target }})
-    runs-on: ubuntu-latest
-    needs: build-script-check
-
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - x86_64-macos
-          - aarch64-macos
-
-    env:
-      CROSS_COMPILE_ONLY: 1
-      NOCOLORS: 1
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Install Zig
-        uses: mlugg/setup-zig@v2
-
-      - name: Install Linux-hosted syntax-check inputs
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gettext
-
-      - name: Print tool versions
-        run: |
-          zig version
-          msgfmt --version | head -n 1
-
-      - name: Run Darwin syntax check
-        run: ./build.sh cross ${{ matrix.target }}
-
   native-macos:
     name: Native macOS build and tests
     runs-on: macos-latest
