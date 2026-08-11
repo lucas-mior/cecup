@@ -108,10 +108,6 @@ fi
 CPPFLAGS="$CPPFLAGS -I$dir/cbase"
 CPPFLAGS="$CPPFLAGS -I."
 
-if [ "$target_os" = "Darwin" ]; then
-    CPPFLAGS="$CPPFLAGS -D_DARWIN_C_SOURCE"
-fi
-
 if [ -z "$SYSCONFDIR" ]; then
     case "$target_os" in
     Darwin|FreeBSD|NetBSD|OpenBSD|DragonFly)
