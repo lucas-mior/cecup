@@ -29,12 +29,16 @@ get_compiler() {
     fast_feedback)
         CC="${CC:-clang}"
         ;;
+    cross)
+        CC="zig cc"
+        ;;
     *)
         CC="${CC:-cc}"
         ;;
     esac
 
-    if ! command -v "$CC" > /dev/null 2>&1; then
+    executable=$(echo "$CC" | awk '{print $1}')
+    if ! command -v "$executable" > /dev/null 2>&1; then
         CC=cc
     fi
 
@@ -185,8 +189,16 @@ option_remove() {
 }
 
 gcc_flags_to_msvc() {
+    compiler=clang-cl
     result=""
     next_is_linker_flag=0
+
+    case "${1:-}" in
+    clang-cl|cl)
+        compiler=$1
+        shift
+        ;;
+    esac
 
     for flag do
         if [ "$next_is_linker_flag" -eq 1 ]; then
@@ -198,7 +210,14 @@ gcc_flags_to_msvc() {
                 if command_exists cygpath; then
                     path=$(cygpath -m "$path" 2>/dev/null || printf '%s\n' "$path")
                 fi
-                flag="/clang:-I$path"
+                case "$compiler" in
+                clang-cl)
+                    flag="/clang:-I$path"
+                    ;;
+                cl)
+                    flag="/I$path"
+                    ;;
+                esac
                 ;;
             -D*)
                 flag="/D${flag#-D}"
@@ -213,41 +232,72 @@ gcc_flags_to_msvc() {
                 flag="/Z7"
                 ;;
             -O0)
-                flag="/clang:-O0"
+                case "$compiler" in
+                clang-cl) flag="/clang:-O0" ;;
+                cl) flag="/Od" ;;
+                esac
                 ;;
             -Og)
-                flag="/clang:-Og"
+                case "$compiler" in
+                clang-cl) flag="/clang:-Og" ;;
+                cl) flag="/Od" ;;
+                esac
                 ;;
             -O1)
-                flag="/clang:-O1"
+                case "$compiler" in
+                clang-cl) flag="/clang:-O1" ;;
+                cl) flag="/O1" ;;
+                esac
                 ;;
             -O2|-O3|-Ofast)
-                flag="/clang:-O2"
+                case "$compiler" in
+                clang-cl) flag="/clang:-O2" ;;
+                cl) flag="/O2" ;;
+                esac
                 ;;
             -Os|-Oz)
-                flag="/clang:$flag"
+                case "$compiler" in
+                clang-cl) flag="/clang:$flag" ;;
+                cl) flag="/O1" ;;
+                esac
                 ;;
             -Wall)
-                flag="/W4 /clang:-Wno-constant-logical-operand"
+                case "$compiler" in
+                clang-cl) flag="/W4 /clang:-Wno-constant-logical-operand" ;;
+                cl) flag="/W4" ;;
+                esac
                 ;;
             -Wextra|-Wpedantic)
                 continue
                 ;;
             -Wfatal-errors|-Wno-*|-W*)
-                flag="/clang:$flag"
+                case "$compiler" in
+                clang-cl) flag="/clang:$flag" ;;
+                cl) continue ;;
+                esac
                 ;;
             -fsanitize=undefined)
                 continue
                 ;;
             -flto|-march=*|-ftree-vectorize)
-                flag="/clang:$flag"
+                case "$compiler" in
+                clang-cl) flag="/clang:$flag" ;;
+                cl) continue ;;
+                esac
                 ;;
             -lm|-lpthread)
-                case "$CLANG_CL_TARGET" in
-                *linux*|*darwin*|*bsd*)
-                    flag="-Xlinker $flag"
+                case "$compiler" in
+                clang-cl)
+                    case "$CLANG_CL_TARGET" in
+                    *linux*|*darwin*|*bsd*)
+                        flag="-Xlinker $flag"
+                        ;;
+                    *)
+                        continue
+                        ;;
+                    esac
                     ;;
-                *)
+                cl)
                     continue
                     ;;
                 esac
@@ -275,7 +325,7 @@ test_run_binary () {
     if [ -n "${TEST_STDIN:-}" ]; then
         "$test_exe" < "$TEST_STDIN"
     else
-        "$test_exe"
+        "$test_exe" < /dev/null
     fi
 }
 
@@ -285,13 +335,13 @@ test_debugger () {
     if command_exists gdb; then
         gdb --quiet \
             -ex run -ex backtrace -ex quit \
-            "$test_exe" 2>&1 || true
+            "$test_exe" < /dev/null 2>&1 || true
     elif command_exists lldb; then
         lldb \
             --batch \
             --one-line "run" \
             --one-line "bt" \
-            -- "$test_exe" 2>&1 || true
+            -- "$test_exe" < /dev/null 2>&1 || true
     fi
 
     return 0
@@ -364,11 +414,41 @@ test_executable_path () {
     if [ "${TEST_EXE_SUFFIX+set}" = set ]; then
         test_exe_suffix=$TEST_EXE_SUFFIX
     else
-        test_exe_suffix=_test
+        case "${CC:-}" in
+        clang-cl|*/clang-cl)
+            test_exe_suffix=_test.exe
+            ;;
+        cl|*/cl|cl.exe|*/cl.exe)
+            test_exe_suffix=_test.exe
+            ;;
+        *)
+            test_exe_suffix=_test
+            ;;
+        esac
+    fi
+
+    if [ "${TEST_TMPDIR+set}" = set ]; then
+        test_tmpdir=$TEST_TMPDIR
+    else
+        case "${CC:-}" in
+        clang-cl|*/clang-cl|cl|*/cl|cl.exe|*/cl.exe)
+            case "$(uname -a)" in
+            *MINGW*|*MSYS*|*CYGWIN*)
+                test_tmpdir=.test-tmp
+                ;;
+            *)
+                test_tmpdir=${TMPDIR:-/tmp}
+                ;;
+            esac
+            ;;
+        *)
+            test_tmpdir=${TMPDIR:-/tmp}
+            ;;
+        esac
     fi
 
     printf '%s/%s%s\n' \
-        "${TEST_TMPDIR:-${TMPDIR:-/tmp}}" \
+        "$test_tmpdir" \
         "$test_module" \
         "$test_exe_suffix"
 }
@@ -385,6 +465,7 @@ test_compile_and_run_source () {
     test_ldflags="$TEST_LDFLAGS"
     test_tail_ldflags="$LDFLAGS"
     test_run_after_compile=1
+    test_msvc_compiler=
 
     mkdir -p "$(dirname "$test_exe")"
 
@@ -404,6 +485,7 @@ test_compile_and_run_source () {
     else
         case "$test_cc" in
         clang-cl|*/clang-cl)
+            test_msvc_compiler=clang-cl
             if [ -z "$CLANG_CL_TARGET" ]; then
                 case "$(uname -a)" in
                 *Linux*|*Darwin*|*BSD*)
@@ -414,7 +496,11 @@ test_compile_and_run_source () {
             if [ -n "$CLANG_CL_TARGET" ]; then
                 test_cmd_flags="$test_cmd_flags --target=$CLANG_CL_TARGET"
             fi
-            test_cmd_flags=$(gcc_flags_to_msvc $test_cmd_flags)
+            test_cmd_flags=$(gcc_flags_to_msvc "$test_msvc_compiler" $test_cmd_flags)
+            ;;
+        cl|*/cl|cl.exe|*/cl.exe)
+            test_msvc_compiler=cl
+            test_cmd_flags=$(gcc_flags_to_msvc "$test_msvc_compiler" $test_cmd_flags)
             ;;
         esac
         test_cmdline="$test_cc $test_cmd_flags"
@@ -433,20 +519,22 @@ test_compile_and_run_source () {
     fi
 
     test_added_flags="$test_added_flags $TEST_EXTRA_DEFS"
-    case "$test_cc" in
-    clang-cl|*/clang-cl)
-        test_added_flags=$(gcc_flags_to_msvc $test_added_flags)
-        test_flags=$(gcc_flags_to_msvc $test_flags)
-        test_ldflags=$(gcc_flags_to_msvc $test_ldflags)
-        test_tail_ldflags=$(gcc_flags_to_msvc $test_tail_ldflags)
-        ;;
-    esac
+    if [ -n "$test_msvc_compiler" ]; then
+        test_added_flags=$(gcc_flags_to_msvc "$test_msvc_compiler" $test_added_flags)
+        test_flags=$(gcc_flags_to_msvc "$test_msvc_compiler" $test_flags)
+        test_ldflags=$(gcc_flags_to_msvc "$test_msvc_compiler" $test_ldflags)
+        test_tail_ldflags=$(gcc_flags_to_msvc "$test_msvc_compiler" $test_tail_ldflags)
+    fi
     test_cmdline="$test_cmdline $test_added_flags"
-    test_cmdline="$test_cmdline -o $test_exe $test_src"
+    if [ "$test_msvc_compiler" = cl ]; then
+        test_cmdline="$test_cmdline /Fe$test_exe $test_src"
+    else
+        test_cmdline="$test_cmdline -o $test_exe $test_src"
+    fi
     test_cmdline="$test_cmdline $test_ldflags $test_flags $test_tail_ldflags"
 
     trace_on
-    if $test_cmdline; then
+    if $test_cmdline < /dev/null; then
         if [ "$test_run_after_compile" != 0 ] \
                 && ! test_run_binary "$test_exe"; then
             test_debugger "$test_exe"

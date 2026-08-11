@@ -40,7 +40,7 @@
   #undef OS_LINUX
   #define OS_LINUX 1
 #elif defined(__APPLE__) && defined(__MACH__)
-  #undef OS_MAX
+  #undef OS_MAC
   #define OS_MAC 1
 #elif defined(__FreeBSD__)
   #undef OS_FREEBSD
@@ -72,6 +72,10 @@
 
 #if !defined(CBASE_HAS_DIRENT_H)
 #define CBASE_HAS_DIRENT_H CBASE_HAS_POSIX_LIKE_HEADERS
+#endif
+
+#if !defined(CBASE_HAS_DIRECT_H)
+#define CBASE_HAS_DIRECT_H CBASE_CRT_MSVC
 #endif
 
 #if !defined(CBASE_HAS_FCNTL_H)

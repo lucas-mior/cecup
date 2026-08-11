@@ -39,7 +39,7 @@ CBASE_API_DECL void *memrchr64(void *, int32, int64);
 #include "memory.h"
 #include "arena.h"
 
-#include "assertions.c"
+#include "assertions.h"
 #include "generic.c"
 #include "minmax.c"
 
@@ -238,13 +238,15 @@ CBASE_API_DECL void xpthread_mutex_lock(pthread_mutex_t *);
 CBASE_API_DECL void xpthread_mutex_unlock(pthread_mutex_t *);
 #endif
 CBASE_API_DECL int xunlink(char *);
-#if TESTING && OS_UNIX
+#if TESTING
+CBASE_API_DECL void test_make_temp_dir(char *, int32, char *);
+CBASE_API_DECL void test_remove_tree(char *);
+CBASE_API_DECL void test_join_path(char *, int64, char *, char *);
+#if OS_UNIX
 CBASE_API_DECL bool test_command_exists(char *);
 CBASE_API_DECL bool test_hardlink_supported(char *);
 CBASE_API_DECL bool test_symlink_supported(char *);
-CBASE_API_DECL void test_join_path(char *, int64, char *, char *);
-CBASE_API_DECL void test_make_temp_dir(char *, int32, char *);
-CBASE_API_DECL void test_remove_tree(char *);
+#endif
 #endif
 CBASE_API_DECL void here_impl(char *, int32, char *);
 
@@ -495,13 +497,20 @@ CBASE_API_DECL bool command_wait(Command *);
 #endif
 
 // Note: it is fine to typedef union in this case
+#if CBASE_CRT_MSVC
+#pragma warning(push)
+#pragma warning(disable: 4324)
+#endif
 typedef union GenericArrayHeader {
     struct {
         int32 count;
         int32 cap;
     };
-    max_align_t alignment;
+    CbaseMaxAlign alignment;
 } GenericArrayHeader;
+#if CBASE_CRT_MSVC
+#pragma warning(pop)
+#endif
 
 CBASE_API_DECL void *generic_array_init(int32, int64);
 CBASE_API_DECL void *generic_array_grow(void *, int64);
@@ -551,6 +560,7 @@ CBASE_API_DECL void generic_array_set_count(void *, int32);
 
 #include "arena.c"
 #include "memory.c"
+#include "assertions.c"
 #include "array.c"
 #include "utf8.c"
 #include "util.c"

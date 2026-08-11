@@ -27,3 +27,4 @@ tags
 valgrind_output*
 vgcore.*
 .welcome.h
+*.obj
