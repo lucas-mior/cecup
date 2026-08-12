@@ -3,8 +3,10 @@
 # shellcheck disable=SC2086,SC2089,SC2090
 
 dir=$(dirname "$(readlink -f "$0")")
-# shellcheck source=/dev/null
-. "$dir/cbase/common.sh"
+cd "$dir" || exit
+
+# shellcheck source=./cbase/common.sh
+. "./cbase/common.sh"
 
 # gtk might not work correctly if you have stuff here
 export XDG_DATA_DIRS=""
