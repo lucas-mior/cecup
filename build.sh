@@ -48,27 +48,11 @@ cross x86_64-windows-gnu
 EOF_TARGETS
 )
 fi
-target="${1:-debug}"
-cross="${2:-}"
+build_parse_args "$@"
+build_validate_mode "$script" "$targets"
+cross="$target"
 
-target_line=$target
-if [ "$target" = "cross" ]; then
-    target_line="$target $cross"
-fi
-if ! printf '%s\n' "$targets" | awk -v wanted="$target_line" '
-    {
-        line = $0
-        sub(/^# /, "", line)
-    }
-    line == wanted { found = 1 }
-    END { exit !found }
-'; then
-    echo "usage: $script <targets>"
-    cat targets
-    exit 1
-fi
-
-printf "\n${script} ${RED}${1:-} ${2:-}$RES\n"
+build_print_invocation "$script"
 
 PREFIX="${PREFIX:-/usr/local}"
 DESTDIR="${DESTDIR:-}"
@@ -81,11 +65,11 @@ APPDIR="${APPDIR:-}"
 exe="bin/$program"
 mkdir -p "$(dirname "$exe")"
 
-CC=$(get_compiler "$target")
+CC=$(get_compiler "$mode")
 
 host_os=$(uname -s 2> /dev/null || printf unknown)
 target_os=$host_os
-if [ "$target" = "cross" ]; then
+if [ "$mode" = "cross" ]; then
     case "$cross" in
     *macos*)
         target_os=Darwin
@@ -200,7 +184,7 @@ generate_welcome_h() {
     fi
 }
 
-case "$target" in
+case "$mode" in
 debug)
     CFLAGS="$CFLAGS -g3 -fsanitize=undefined"
     CPPFLAGS="$CPPFLAGS -DDEBUGGING=1"
@@ -263,7 +247,7 @@ po)
     ;;
 esac
 
-if [ "$target" = "cross" ]; then
+if [ "$mode" = "cross" ]; then
     if ! command_exists zig; then
         error "zig not found"
         exit 1
@@ -278,7 +262,7 @@ if [ "$target" = "cross" ]; then
     esac
 fi
 
-case "$target" in
+case "$mode" in
 fast_feedback)
     generate_welcome_h
     trace_on
@@ -305,7 +289,7 @@ build|debug|run|release|callgrind|profile|cross)
     build_tags
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
 
-    if [ "$target" = "run" ]; then
+    if [ "$mode" = "run" ]; then
         "$exe"
     fi
 
@@ -353,7 +337,7 @@ test)
     mkdir -p "$CECUP_TEST_TMPDIR"
     export CECUP_TEST_TMPDIR
 
-    TEST_TMPDIR="$CECUP_TEST_TMPDIR" test "$2"
+    TEST_TMPDIR="$CECUP_TEST_TMPDIR" test "$target"
     exit
     ;;
 uninstall)
@@ -368,7 +352,7 @@ uninstall)
     ;;
 esac
 
-case "$target" in
+case "$mode" in
 callgrind)
     out="callgrind_$(date +%s).callgrind"
     trace_on
@@ -402,15 +386,15 @@ check)
 esac
 
 trace_off
-if [ "$target" = "test_all" ]; then
-    printf '%s\n' "$targets" | while IFS= read -r target; do
-        echo "$target" | grep -Eq "^(# |$)" && continue
-        if echo "$target" | grep "cross"; then
-            $0 $target
+if [ "$mode" = "test_all" ]; then
+    printf '%s\n' "$targets" | while IFS= read -r build_target; do
+        echo "$build_target" | grep -Eq "^(# |$)" && continue
+        if echo "$build_target" | grep "cross"; then
+            $0 $build_target
             continue
         fi
         for compiler in gcc tcc clang "zig cc" ; do
-            CC=$compiler $0 $target || exit
+            CC=$compiler $0 $build_target || exit
         done
     done
 fi
