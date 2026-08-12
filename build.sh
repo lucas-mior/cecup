@@ -17,7 +17,7 @@ export XDG_DATA_DIRS=""
 # export LC_ALL=C
 
 cd "$dir" || exit
-program=$(get_program "$0")
+program=$(common_get_program "$0")
 script=$(basename "$0")
 
 LANGS="pt_BR"
@@ -48,11 +48,11 @@ cross x86_64-windows-gnu
 EOF_TARGETS
 )
 fi
-build_parse_args "$@"
-build_validate_mode "$script" "$targets"
+common_build_parse_args "$@"
+common_build_validate_mode "$script" "$targets"
 cross="$target"
 
-build_print_invocation "$script"
+common_build_print_invocation "$script"
 
 PREFIX="${PREFIX:-/usr/local}"
 DESTDIR="${DESTDIR:-}"
@@ -65,7 +65,7 @@ APPDIR="${APPDIR:-}"
 exe="bin/$program"
 mkdir -p "$(dirname "$exe")"
 
-CC=$(get_compiler "$mode")
+CC=$(common_get_compiler "$mode")
 
 host_os=$(uname -s 2> /dev/null || printf unknown)
 target_os=$host_os
@@ -152,7 +152,7 @@ if [ -z "$NOCOLORS" ]; then
 fi
 
 PKG_CONFIG="${PKG_CONFIG:-pkg-config}"
-if ! command_exists "$PKG_CONFIG"; then
+if ! common_command_exists "$PKG_CONFIG"; then
     error "$PKG_CONFIG not found"
     exit 1
 fi
@@ -248,7 +248,7 @@ po)
 esac
 
 if [ "$mode" = "cross" ]; then
-    if ! command_exists zig; then
+    if ! common_command_exists zig; then
         error "zig not found"
         exit 1
     fi
@@ -274,7 +274,7 @@ build|debug|run|release|callgrind|profile|cross)
     trace_on
 
     if [ -d "po" ]; then
-        if command_exists msgfmt; then
+        if common_command_exists msgfmt; then
             for lang in $LANGS; do
                 if [ -f "po/$lang.po" ]; then
                     mkdir -p "po/$lang/LC_MESSAGES"
@@ -286,7 +286,7 @@ build|debug|run|release|callgrind|profile|cross)
         fi
     fi
 
-    build_tags
+    common_build_tags
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
 
     if [ "$mode" = "run" ]; then
@@ -298,12 +298,12 @@ build|debug|run|release|callgrind|profile|cross)
 install)
     trace_on
     $0 release
-    install_file 755 "bin/${program}" "${DESTDIR}${BINDIR}/${program}"
-    install_file 644 "${program}.1" "${DESTDIR}${MANDIR}/man1/${program}.1"
+    common_install_file 755 "bin/${program}" "${DESTDIR}${BINDIR}/${program}"
+    common_install_file 644 "${program}.1" "${DESTDIR}${MANDIR}/man1/${program}.1"
 
     for lang in $LANGS; do
         if [ -f "po/$lang/LC_MESSAGES/$program.mo" ]; then
-            install_file \
+            common_install_file \
                 644 \
                 "po/$lang/LC_MESSAGES/$program.mo" \
                 "${DESTDIR}${DATADIR}/locale/$lang/LC_MESSAGES/$program.mo"
@@ -315,7 +315,7 @@ install)
         chmod 755 "$DESTDIR$SYSCONFDIR/$program"
         for file in etc/*; do
             if [ -f "$file" ]; then
-                install_file \
+                common_install_file \
                     644 \
                     "$file" \
                     "$DESTDIR$SYSCONFDIR/$program/$(basename "$file")"
@@ -323,7 +323,7 @@ install)
         done
     fi
     if [ "$target_os" != "Darwin" ] && [ -f "$program.desktop" ]; then
-        install_file \
+        common_install_file \
             644 \
             "$program.desktop" \
             "$DESTDIR$APPDIR/$program.desktop"
@@ -337,7 +337,7 @@ test)
     mkdir -p "$CECUP_TEST_TMPDIR"
     export CECUP_TEST_TMPDIR
 
-    TEST_TMPDIR="$CECUP_TEST_TMPDIR" test "$target"
+    TEST_TMPDIR="$CECUP_TEST_TMPDIR" common_test "$target"
     exit
     ;;
 uninstall)
