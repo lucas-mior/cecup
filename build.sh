@@ -183,7 +183,7 @@ generate_welcome_h() {
 
 case "$mode" in
 debug)
-    CFLAGS="$CFLAGS -g3 -fsanitize=undefined"
+    CFLAGS="$CFLAGS -g3"
     CPPFLAGS="$CPPFLAGS -DDEBUGGING=1"
     exe="bin/${program}_debug"
     ;;
@@ -194,7 +194,7 @@ callgrind)
     fi
     ;;
 test)
-    CFLAGS="$CFLAGS -g3 -DDEBUGGING=1 -fsanitize=undefined"
+    CFLAGS="$CFLAGS -g3 -DDEBUGGING=1"
     ;;
 check)
     CFLAGS="$CFLAGS -DDEBUGGING=1 -fanalyzer -fdiagnostics-color=never"
