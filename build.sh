@@ -6,11 +6,6 @@ dir=$(dirname "$(readlink -f "$0")")
 # shellcheck source=/dev/null
 . "$dir/cbase/common.sh"
 
-error () {
-    >&2 printf '%s\n' "$*"
-    return
-}
-
 # gtk might not work correctly if you have stuff here
 export XDG_DATA_DIRS=""
 
