@@ -158,7 +158,7 @@ case "$mode" in
 debug)
     CFLAGS="$CFLAGS -g3"
     CPPFLAGS="$CPPFLAGS -DDEBUGGING=1"
-    exe="bin/${program}_debug"
+    exe="bin/$program"
     ;;
 callgrind)
     CFLAGS="$CFLAGS -g3 -O2"
