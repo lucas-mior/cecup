@@ -268,7 +268,6 @@ fast_feedback)
     ;;
 build|debug|run|release|callgrind|profile|cross)
     generate_welcome_h
-    trace_on
 
     if [ -d "po" ]; then
         if common_command_exists msgfmt; then
@@ -284,6 +283,8 @@ build|debug|run|release|callgrind|profile|cross)
     fi
 
     common_build_tags
+
+    trace_on
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS
 
     if [ "$mode" = "run" ]; then
