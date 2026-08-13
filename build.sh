@@ -20,6 +20,14 @@ script=$(basename "$0")
 LANGS="pt_BR"
 
 common_build_parse_args "$@"
+
+case "$mode" in
+build|cachegrind|callgrind|check|cross|debug|fast_feedback|install|po|profile|release|run|test|test_all|uninstall)
+    ;;
+*)
+    common_build_unknown_mode
+    ;;
+esac
 cross="$target"
 
 common_build_print_invocation "$script"
@@ -212,10 +220,17 @@ po)
     trace_off
     exit
     ;;
-cross|profile)
+cross)
+    common_build_cross_all
     CFLAGS="$CFLAGS -O2"
     ;;
+profile)
+    CFLAGS="$CFLAGS -O2"
+    ;;
+build|cachegrind|callgrind|check|cross|debug|fast_feedback|install|po|profile|release|run|test|test_all|uninstall)
+    ;;
 *)
+    common_build_unknown_mode
     ;;
 esac
 
@@ -360,29 +375,5 @@ esac
 
 trace_off
 if [ "$mode" = "test_all" ]; then
-    for build_target in debug build test; do
-        echo "target=$build_target"
-
-        for compiler in gcc tcc clang "zig cc"; do
-            printf '\nCC=%s%s%s\n' "$RED" "$compiler" "$RES"
-            CC="$compiler" $0 "$build_target" || exit 3
-        done
-    done
-
-    for cross_target in $cross_targets; do
-        echo "target=cross $cross_target"
-        $0 cross "$cross_target" || exit 3
-    done
-
-    exit
+    common_build_test_all "debug build test" gcc tcc clang "zig cc"
 fi
-
-
-case "$mode" in
-build|cachegrind|callgrind|check|cross|debug|fast_feedback|install|po|profile|release|run|test|test_all|uninstall)
-    ;;
-*)
-    echo "Unknown mode $mode"
-    exit 1
-    ;;
-esac
