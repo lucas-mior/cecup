@@ -6,7 +6,7 @@
 
 #include "cbase.h"
 #include "cecup.h"
-#include "rapidhash.c"
+#include "rapidhash.h"
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_item 1
