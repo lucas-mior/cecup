@@ -253,6 +253,9 @@ extern double timediff(struct timespec, struct timespec);
 extern void time_monotonic_coarse(struct timespec *);
 extern void time_monotonic_precise(struct timespec *);
 extern void timezone_init(void);
+extern char *cbase_getcwd(char *, int64);
+extern int32 cbase_mkdir(char *);
+extern int32 cbase_rmdir(char *);
 extern int32 util_copy_file_sync(char *, char *);
 extern void util_die_notify(char *, char *, ...);
 extern bool util_equal_files(char *, char *);
@@ -325,6 +328,7 @@ extern void xpthread_mutex_lock(pthread_mutex_t *);
 extern void xpthread_mutex_unlock(pthread_mutex_t *);
 #endif
 extern int xunlink(char *);
+extern bool xregular_file_exists(char *);
 extern void test_make_temp_dir(char *, int32, char *);
 extern void test_remove_tree(char *);
 extern void test_join_path(char *, int64, char *, char *);

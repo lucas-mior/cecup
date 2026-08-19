@@ -29,6 +29,101 @@ cbase_mkdtemp(char *template) {
 }
 #endif
 
+int32
+cbase_mkdir(char *path) {
+#if OS_WINDOWS
+    if (CreateDirectoryA(path, NULL)) {
+        return 0;
+    }
+    windows_set_errno(GetLastError());
+    return -1;
+#elif HAS_POSIX_WIN_SUBSET
+    return mkdir(path, 0777);
+#else
+    (void)path;
+    errno = ENOSYS;
+    return -1;
+#endif
+}
+
+int32
+cbase_rmdir(char *path) {
+#if OS_WINDOWS
+    if (RemoveDirectoryA(path)) {
+        return 0;
+    }
+    windows_set_errno(GetLastError());
+    return -1;
+#elif HAS_POSIX_WIN_SUBSET
+    return rmdir(path);
+#else
+    (void)path;
+    errno = ENOSYS;
+    return -1;
+#endif
+}
+
+char *
+cbase_getcwd(char *buffer, int64 size) {
+    if (size <= 0) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+#if OS_WINDOWS
+    {
+        DWORD len;
+
+        if (size > MAXOF((DWORD)0)) {
+            errno = EINVAL;
+            return NULL;
+        }
+
+        len = GetCurrentDirectoryA((DWORD)size, buffer);
+        if (len == 0) {
+            windows_set_errno(GetLastError());
+            return NULL;
+        }
+        if (len >= (DWORD)size) {
+            errno = ERANGE;
+            return NULL;
+        }
+        return buffer;
+    }
+#elif HAS_POSIX_WIN_SUBSET
+    return getcwd(buffer, (size_t)size);
+#else
+    (void)buffer;
+    errno = ENOSYS;
+    return NULL;
+#endif
+}
+
+bool
+xregular_file_exists(char *path) {
+#if HAS_POSIX_WIN_SUBSET || CBASE_CRT_MSVC
+    struct stat st;
+
+    if (stat(path, &st) < 0) {
+        if (errno == ENOENT) {
+            return false;
+        }
+        error("stat(%s) failed: %s", path, strerror(errno));
+        fatal(EXIT_FAILURE);
+    }
+    if (!S_ISREG(st.st_mode)) {
+        error("expected regular file: %s", path);
+        fatal(EXIT_FAILURE);
+    }
+    return true;
+#else
+    (void)path;
+    errno = ENOSYS;
+    error("regular-file checks are unsupported on this platform");
+    fatal(EXIT_FAILURE);
+#endif
+}
+
 void
 write_all(int fd, char *buffer, int64 left) {
     int64 written = 0;
