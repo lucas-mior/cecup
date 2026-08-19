@@ -801,7 +801,7 @@ on_work_thread_wait_done(void) {
     int64 step_usec = 100*1000;
 
     while (!work_thread_is_done() && (waited_usec < timeout_usec)) {
-        g_usleep((ulong)step_usec);
+        sleep_us(step_usec);
         waited_usec += step_usec;
     }
 

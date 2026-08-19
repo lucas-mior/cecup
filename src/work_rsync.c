@@ -239,7 +239,7 @@ work_rsync_wait_child(Command *command) {
             waited_usec += step_usec;
         }
 
-        g_usleep((ulong)step_usec);
+        sleep_us(step_usec);
     }
 }
 
