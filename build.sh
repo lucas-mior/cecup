@@ -22,7 +22,7 @@ LANGS="pt_BR"
 common_build_parse_args "$@"
 
 case "$mode" in
-build|cachegrind|callgrind|check|cross|debug|fast_feedback|install|po|profile|release|run|test|test_all|uninstall)
+build|cachegrind|callgrind|check|cross|debug|fast_feedback|install|po|profile|run|test|test_all|uninstall)
     ;;
 *)
     common_build_unknown_mode
@@ -186,12 +186,6 @@ build|run)
         CFLAGS="$CFLAGS -flto -march=native -ftree-vectorize"
     fi
     ;;
-release)
-    CFLAGS="$CFLAGS -O2"
-    if [ "$target_os" = "Linux" ]; then
-        CFLAGS="$CFLAGS -flto -march=native -ftree-vectorize"
-    fi
-    ;;
 fast_feedback)
     ;;
 po)
@@ -227,7 +221,7 @@ cross)
 profile)
     CFLAGS="$CFLAGS -O2"
     ;;
-build|cachegrind|callgrind|check|cross|debug|fast_feedback|install|po|profile|release|run|test|test_all|uninstall)
+build|cachegrind|callgrind|check|cross|debug|fast_feedback|install|po|profile|run|test|test_all|uninstall)
     ;;
 *)
     common_build_unknown_mode
@@ -256,7 +250,7 @@ fast_feedback)
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && "$exe"
     trace_off
     ;;
-build|debug|run|release|callgrind|profile|cross)
+build|debug|run|callgrind|profile|cross)
     generate_welcome_h
 
     if [ -d "po" ]; then
@@ -285,7 +279,7 @@ build|debug|run|release|callgrind|profile|cross)
     ;;
 install)
     trace_on
-    $0 release
+    $0 build
     common_install_file 755 "bin/${program}" "${DESTDIR}${BINDIR}/${program}"
     common_install_file 644 "${program}.1" "${DESTDIR}${MANDIR}/man1/${program}.1"
 
