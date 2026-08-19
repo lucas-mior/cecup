@@ -191,6 +191,62 @@ jobs:
           prepare: |
             export PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
 
+            install_netbsd_x_sets() {
+              if [ -r /usr/X11R7/lib/libX11.so.7 ] && [ -x /usr/X11R7/bin/Xvfb ]; then
+                echo "NetBSD X sets are already installed"
+                return 0
+              fi
+
+              release=$(uname -r)
+              machine=$(uname -m)
+
+              case "$machine" in
+                x86_64)
+                  machine=amd64
+                  ;;
+              esac
+
+              sets_url="https://cdn.netbsd.org/pub/NetBSD/NetBSD-${release}/${machine}/binary/sets"
+              workdir=$(mktemp -d /tmp/cecup-xsets.XXXXXX)
+
+              echo "Installing NetBSD X sets from $sets_url"
+
+              for set_name in xbase xcomp xfont xetc xserver; do
+                archive=
+
+                for suffix in tar.xz tgz; do
+                  candidate="$workdir/$set_name.$suffix"
+
+                  if ftp -o "$candidate" "$sets_url/$set_name.$suffix"; then
+                    archive=$candidate
+                    break
+                  fi
+
+                  rm -f "$candidate"
+                done
+
+                if [ -z "$archive" ]; then
+                  echo "Could not download NetBSD X set: $set_name" >&2
+                  exit 1
+                fi
+
+                case "$archive" in
+                  *.tar.xz)
+                    tar -C / -xJpf "$archive"
+                    ;;
+                  *.tgz)
+                    tar -C / -xzpf "$archive"
+                    ;;
+                  *)
+                    echo "Unknown NetBSD X set archive format: $archive" >&2
+                    exit 1
+                    ;;
+                esac
+              done
+
+              rm -rf "$workdir"
+            }
+
             install_pkg() {
               package=$1
 
@@ -202,6 +258,7 @@ jobs:
               pkg_add -v "$package"
             }
 
+            install_netbsd_x_sets
             install_pkg pkgconf
             install_pkg gettext-tools
             install_pkg gtk4
