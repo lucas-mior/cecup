@@ -46,7 +46,7 @@ jobs:
       - name: Install Ubuntu build inputs
         run: |
           sudo apt-get update
-          sudo apt-get install -y gettext libgtk-4-dev pkg-config rsync
+          sudo apt-get install -y gettext libgtk-4-dev pkg-config rsync xvfb
 
       - name: Print tool versions
         run: |
@@ -60,7 +60,10 @@ jobs:
         run: ./build.sh build
 
       - name: Run tests
-        run: ./build.sh test
+        run: |
+          GDK_BACKEND=x11 xvfb-run -a \
+            --server-args='-screen 0 1280x1024x24' \
+            ./build.sh test
 
   macos:
     name: Native macOS build and tests
@@ -146,7 +149,7 @@ jobs:
         with:
           usesh: true
           prepare: |
-            pkg install -y gettext-tools gtk4 pkgconf python3
+            pkg install -y gettext-tools gtk4 pkgconf python3 xorg-vfbserver
           run: |
             export CECUP_TRANSFER_BACKEND=manual
             export NOCOLORS=1
@@ -155,5 +158,19 @@ jobs:
             cc --version
             pkgconf --modversion gtk4
             msgfmt --version | head -n 1
+            command -v Xvfb
             ./build.sh build
-            ./build.sh test
+
+            Xvfb :99 -screen 0 1280x1024x24 >/tmp/cecup-xvfb.log 2>&1 &
+            xvfb_pid=$!
+            export DISPLAY=:99
+            export GDK_BACKEND=x11
+            sleep 2
+
+            if ! ./build.sh test; then
+              cat /tmp/cecup-xvfb.log
+              kill "$xvfb_pid" || true
+              exit 1
+            fi
+
+            kill "$xvfb_pid" || true
