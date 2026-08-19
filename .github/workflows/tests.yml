@@ -2,36 +2,144 @@ name: Test on various platforms CI
 
 on:
   push:
-    branches:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  build-script-check:
+    name: Build script syntax checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install shell used by local validation
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dash
+
+      - name: Check build script syntax
+        run: |
+          sh -n build.sh
+          bash -n build.sh
+          dash -n build.sh
+
   ubuntu:
     runs-on: ubuntu-latest
+    needs: build-script-check
+
     env:
       NOCOLORS: 1
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Install build deps
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Ubuntu build inputs
         run: |
           sudo apt-get update
           sudo apt-get install -y gettext libgtk-4-dev pkg-config rsync
+
+      - name: Print tool versions
+        run: |
+          uname -a
           cc --version
           pkg-config --modversion gtk4
           msgfmt --version | head -n 1
           rsync --version | head -n 1
 
-      - name: Build and Test
+      - name: Build app
+        run: ./build.sh build
+
+      - name: Run tests
+        run: ./build.sh test
+
+  macos:
+    name: Native macOS build and tests
+    runs-on: macos-latest
+    needs: build-script-check
+
+    env:
+      CC: clang
+      CECUP_TRANSFER_BACKEND: manual
+      NOCOLORS: 1
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install macOS build inputs
         run: |
-          ./build.sh build
-          ./build.sh test
+          brew install gettext gtk4 pkg-config
+
+      - name: Configure Homebrew environment
+        run: |
+          brew_prefix=$(brew --prefix)
+          gettext_prefix=$(brew --prefix gettext)
+
+          echo "$gettext_prefix/bin" >> "$GITHUB_PATH"
+          echo "CECUP_TEST_TMPDIR=$RUNNER_TEMP/cecup-tests" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=$gettext_prefix/lib/pkgconfig:$brew_prefix/lib/pkgconfig:$brew_prefix/share/pkgconfig:${PKG_CONFIG_PATH:-}" >> "$GITHUB_ENV"
+
+      - name: Print tool versions
+        run: |
+          uname -a
+          clang --version
+          pkg-config --modversion gtk4
+          msgfmt --version | head -n 1
+
+      - name: Build app
+        run: ./build.sh build
+
+      - name: Verify built executable
+        run: |
+          test -x bin/cecup
+          file bin/cecup
+          otool -L bin/cecup
+
+      - name: Run portable tests with manual backend
+        run: ./build.sh test
+
+      - name: Verify staged install layout
+        run: |
+          DESTDIR="$RUNNER_TEMP/stage" \
+          PREFIX="/usr/local" \
+          ./build.sh install
+
+          test -x "$RUNNER_TEMP/stage/usr/local/bin/cecup"
+          test -f "$RUNNER_TEMP/stage/usr/local/man/man1/cecup.1"
+          test -f "$RUNNER_TEMP/stage/usr/local/etc/cecup/cecup.conf"
+          test -f "$RUNNER_TEMP/stage/usr/local/etc/cecup/ignore.conf"
+          test ! -f "$RUNNER_TEMP/stage/usr/local/share/applications/cecup.desktop"
+
+      - name: Upload macOS build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cecup-macos-${{ runner.os }}-${{ runner.arch }}
+          if-no-files-found: ignore
+          path: |
+            bin/cecup
+            po/*/LC_MESSAGES/*.mo
+            ${{ runner.temp }}/stage/usr/local/bin/cecup
+            ${{ runner.temp }}/stage/usr/local/etc/cecup/*
 
   freebsd:
     runs-on: ubuntu-latest
     name: FreeBSD VM
+    needs: build-script-check
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
 
       - name: Build and Test
         uses: vmactions/freebsd-vm@v1
