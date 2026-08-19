@@ -174,3 +174,58 @@ jobs:
             fi
 
             kill "$xvfb_pid" || true
+
+  netbsd:
+    runs-on: ubuntu-latest
+    name: NetBSD VM
+    needs: build-script-check
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build and Test
+        uses: vmactions/netbsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            export PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
+            pkg_add -v pkgconf gettext-tools gtk4 rsync python313
+          run: |
+            export PATH="/usr/pkg/sbin:/usr/pkg/bin:/usr/X11R7/bin:$PATH"
+            export CECUP_TRANSFER_BACKEND=manual
+            export NOCOLORS=1
+            export PKG_CONFIG=pkgconf
+            export PKG_CONFIG_PATH="/usr/pkg/lib/pkgconfig:/usr/X11R7/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+
+            if ! command -v python3 >/dev/null 2>&1; then
+              for python_candidate in python3.14 python3.13 python3.12 python3.11 python3.10; do
+                if command -v "$python_candidate" >/dev/null 2>&1; then
+                  ln -sf "$(command -v "$python_candidate")" /usr/pkg/bin/python3
+                  break
+                fi
+              done
+            fi
+
+            uname -a
+            cc --version
+            python3 --version
+            pkgconf --modversion gtk4
+            msgfmt --version | head -n 1
+            rsync --version | head -n 1
+            command -v Xvfb
+            ./build.sh build
+
+            Xvfb :99 -screen 0 1280x1024x24 >/tmp/cecup-xvfb.log 2>&1 &
+            xvfb_pid=$!
+            export DISPLAY=:99
+            export GDK_BACKEND=x11
+            sleep 2
+
+            if ! ./build.sh test; then
+              cat /tmp/cecup-xvfb.log
+              kill "$xvfb_pid" || true
+              exit 1
+            fi
+
+            kill "$xvfb_pid" || true
