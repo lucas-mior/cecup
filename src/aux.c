@@ -673,6 +673,8 @@ int main(void) {
     ASSERT_EQUAL(child_pid_get(), (pid_t)0);
 
     if (!gtk_init_check()) {
+        error("gtk_init_check() failed while running aux.c tests. "
+              "The test needs a graphical GTK backend.\n");
         exit(EXIT_FAILURE);
     }
 
