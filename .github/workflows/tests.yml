@@ -190,7 +190,21 @@ jobs:
           usesh: true
           prepare: |
             export PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
-            pkg_add -v pkgconf gettext-tools gtk4 rsync
+
+            install_pkg() {
+              package=$1
+
+              if pkg_info -qe "$package"                 || pkg_info -qe "$package-[0-9]*"; then
+                echo "$package is already installed"
+                return 0
+              fi
+
+              pkg_add -v "$package"
+            }
+
+            install_pkg pkgconf
+            install_pkg gettext-tools
+            install_pkg gtk4
           run: |
             export PATH="/usr/pkg/sbin:/usr/pkg/bin:/usr/X11R7/bin:$PATH"
             export CECUP_TRANSFER_BACKEND=manual
@@ -201,7 +215,6 @@ jobs:
             cc --version
             pkgconf --modversion gtk4
             msgfmt --version | head -n 1
-            rsync --version | head -n 1
             command -v Xvfb
             ./build.sh build
 
