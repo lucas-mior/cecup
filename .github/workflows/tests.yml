@@ -1,0 +1,51 @@
+name: Test on various platforms CI
+
+on:
+  push:
+    branches:
+  pull_request:
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    env:
+      NOCOLORS: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext libgtk-4-dev pkg-config rsync
+          cc --version
+          pkg-config --modversion gtk4
+          msgfmt --version | head -n 1
+          rsync --version | head -n 1
+
+      - name: Build and Test
+        run: |
+          ./build.sh build
+          ./build.sh test
+
+  freebsd:
+    runs-on: ubuntu-latest
+    name: FreeBSD VM
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and Test
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg install -y gettext-tools gtk4 pkgconf python3
+          run: |
+            export CECUP_TRANSFER_BACKEND=manual
+            export NOCOLORS=1
+            export PKG_CONFIG=pkgconf
+
+            cc --version
+            pkgconf --modversion gtk4
+            msgfmt --version | head -n 1
+            ./build.sh build
+            ./build.sh test
