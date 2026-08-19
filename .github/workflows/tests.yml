@@ -43,10 +43,24 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Restore Ubuntu apt package cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/apt-archives
+          key: ubuntu-apt-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/tests.yml') }}
+          restore-keys: |
+            ubuntu-apt-${{ runner.os }}-${{ runner.arch }}-
+
       - name: Install Ubuntu build inputs
         run: |
+          apt_archives=$RUNNER_TEMP/apt-archives
+          mkdir -p "$apt_archives/partial"
+          chmod -R 777 "$apt_archives"
+
           sudo apt-get update
-          sudo apt-get install -y gettext libgtk-4-dev pkg-config rsync xvfb
+          sudo apt-get \
+            -o Dir::Cache::archives="$apt_archives" \
+            install -y gettext libgtk-4-dev pkg-config rsync xvfb
 
       - name: Print tool versions
         run: |
@@ -78,6 +92,14 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Restore Homebrew download cache
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: macos-brew-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/tests.yml') }}
+          restore-keys: |
+            macos-brew-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install macOS build inputs
         run: |
@@ -148,6 +170,7 @@ jobs:
         uses: vmactions/freebsd-vm@v1
         with:
           usesh: true
+          cache-after-prepare: true
           prepare: |
             pkg install -y gettext-tools gtk4 pkgconf xorg-vfbserver
           run: |
@@ -188,6 +211,7 @@ jobs:
         uses: vmactions/netbsd-vm@v1
         with:
           usesh: true
+          cache-after-prepare: true
           prepare: |
             export PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
 
@@ -250,7 +274,8 @@ jobs:
             install_pkg() {
               package=$1
 
-              if pkg_info -qe "$package"                 || pkg_info -qe "$package-[0-9]*"; then
+              if pkg_info -qe "$package" \
+                  || pkg_info -qe "$package-[0-9]*"; then
                 echo "$package is already installed"
                 return 0
               fi
