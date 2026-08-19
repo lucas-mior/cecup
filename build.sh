@@ -157,7 +157,7 @@ LDFLAGS="$LDFLAGS -lm"
 generate_welcome_h() {
     if [ -f "README.md" ]; then
         trace_on
-        python3 build_welcome.py README.md src/.welcome.h
+        sh build_welcome.sh README.md src/.welcome.h
         trace_off
     fi
 }
