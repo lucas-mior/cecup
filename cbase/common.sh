@@ -824,6 +824,7 @@ common_test_compile_and_run_source () {
         test_cmdline="$test_cc $test_cmd_flags"
         test_cmdline=$(common_option_remove "$test_cmdline" "-D_GNU_SOURCE")
         test_cmdline="$test_cmdline -target x86_64-windows-gnu"
+        test_tail_ldflags=${TEST_WINDOWS_LDFLAGS:-}
         test_run_after_compile=${TEST_WINDOWS_RUN:-1}
     else
         case "$test_cc" in
