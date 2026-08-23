@@ -126,10 +126,6 @@ if [ "$CC" = "clang" ] || [ "$CC" = "zig cc" ]; then
     CFLAGS="$CFLAGS -Wno-undefined-internal"
 fi
 
-if [ -z "$NOCOLORS" ]; then
-    CFLAGS="$CFLAGS -fdiagnostics-color=always"
-fi
-
 PKG_CONFIG="${PKG_CONFIG:-pkg-config}"
 if ! common_command_exists "$PKG_CONFIG"; then
     error "$PKG_CONFIG not found"
@@ -355,14 +351,14 @@ cachegrind)
 check)
     set +e
 
-    NOCOLORS=1 CC=gcc CFLAGS="-fanalyzer -fdiagnostics-color=never" ./build.sh
+    CC=gcc CFLAGS="-fanalyzer -fdiagnostics-color=never" ./build.sh
 
     CFLAGS="--analyze -Xanalyzer -analyzer-output=text"
     CFLAGS="$CFLAGS -Xanalyzer -analyzer-werror"
     CFLAGS="$CFLAGS -Xanalyzer -analyzer-opt-analyze-headers"
     CFLAGS="$CFLAGS -Wno-unused-command-line-argument"
     CFLAGS="$CFLAGS -fno-color-diagnostics"
-    NOCOLORS=1 CC=clang CFLAGS="$CFLAGS" ./build.sh
+    CC=clang CFLAGS="$CFLAGS" ./build.sh
 
     exit
     ;;
