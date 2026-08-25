@@ -1529,7 +1529,7 @@ test_rsync_backend_supported(void) {
 
     COMMAND_PUSH(&command,
                  "rsync", "--info=progress2", "--iconv=.,.", "--version");
-    supported = command_run_capture(&command, COMMAND_CAPTURE_STDOUT)
+    supported = (command_run_capture(&command, COMMAND_CAPTURE_STDOUT) == 0)
                 && (command.result.status == 0);
     command_free(&command);
     return supported;
