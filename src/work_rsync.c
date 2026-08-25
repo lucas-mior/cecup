@@ -233,7 +233,7 @@ work_rsync_wait_child(Command *command) {
             } else if (waited_usec >= timeout_usec) {
                 LOG_ERROR(_("Killing the child process with SIGKILL...\n"));
                 child_pid_signal(SIGKILL);
-                return command_wait(command);
+                return command_wait(command) == 0;
             }
 
             waited_usec += step_usec;
