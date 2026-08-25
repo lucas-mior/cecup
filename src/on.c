@@ -584,7 +584,7 @@ on_ignore_response(GtkDialog *dialog, int32 response_id, void *data) {
         content = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
         content_len = strlen32(content);
 
-        if (write_entire_file(cecup.ignore_path, content, content_len)) {
+        if (write_entire_file(cecup.ignore_path, content, content_len) < 0) {
             LOG_ERROR("Error writing ignore file.\n");
         }
 
