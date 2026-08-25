@@ -353,10 +353,10 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         free2(cmd, cmd_len + 1);
     }
 
-    if (!command_run_async(&command,
-                           COMMAND_CAPTURE_STDOUT
-                           |COMMAND_CAPTURE_STDERR
-                           |COMMAND_NEW_PROCESS_GROUP)) {
+    if (command_run_async(&command,
+                          COMMAND_CAPTURE_STDOUT
+                          |COMMAND_CAPTURE_STDERR
+                          |COMMAND_NEW_PROCESS_GROUP) < 0) {
         command_free(&command);
         return false;
     }
