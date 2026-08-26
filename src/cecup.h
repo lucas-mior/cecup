@@ -45,14 +45,14 @@ _Static_assert(SIZEOF(pid_t) <= SIZEOF(atomic_int),
 #define ENUM_NAME Action
 #define ENUM_PREFIX_ ACTION_
 #define ENUM_FIELDS     \
-    X(ACTION_NEW)              \
-    X(ACTION_UPDATE)           \
-    X(ACTION_HARDLINK)         \
-    X(ACTION_SYMLINK)          \
-    X(ACTION_EQUAL)            \
-    X(ACTION_DELETED)          \
-    X(ACTION_DELETE)           \
-    X(ACTION_IGNORE)
+    XX(ACTION_NEW)              \
+    XX(ACTION_UPDATE)           \
+    XX(ACTION_HARDLINK)         \
+    XX(ACTION_SYMLINK)          \
+    XX(ACTION_EQUAL)            \
+    XX(ACTION_DELETED)          \
+    XX(ACTION_DELETE)           \
+    XX(ACTION_IGNORE)
 #include "xenums.c"
 
 enum TraversalState {
@@ -65,67 +65,67 @@ enum TraversalState {
 #define ENUM_NAME Reason
 #define ENUM_PREFIX_ REASON_
 #define ENUM_FIELDS     \
-    X(REASON_NEW)              \
-    X(REASON_SIZE)             \
-    X(REASON_MTIME_NEWER)      \
-    X(REASON_MTIME_OLDER)      \
-    X(REASON_CTIME)            \
-    X(REASON_OWNER)            \
-    X(REASON_GROUP)            \
-    X(REASON_PERM)             \
-    X(REASON_TYPE)             \
-    X(REASON_HARDLINK)         \
-    X(REASON_SYMLINK)          \
-    X(REASON_SYMLINK_NOT)       \
-    X(REASON_SYMLINK_NO_TARGET) \
-    X(REASON_SYMLINK_NOT_MATCH) \
-    X(REASON_HARDLINK_NOT_REGULAR) \
-    X(REASON_HARDLINK_MISSING_LINK) \
-    X(REASON_HARDLINK_NOT_MATCH) \
-    X(REASON_EQUAL)            \
-    X(REASON_IGNORED)          \
-    X(REASON_MISSING)
+    XX(REASON_NEW)              \
+    XX(REASON_SIZE)             \
+    XX(REASON_MTIME_NEWER)      \
+    XX(REASON_MTIME_OLDER)      \
+    XX(REASON_CTIME)            \
+    XX(REASON_OWNER)            \
+    XX(REASON_GROUP)            \
+    XX(REASON_PERM)             \
+    XX(REASON_TYPE)             \
+    XX(REASON_HARDLINK)         \
+    XX(REASON_SYMLINK)          \
+    XX(REASON_SYMLINK_NOT)       \
+    XX(REASON_SYMLINK_NO_TARGET) \
+    XX(REASON_SYMLINK_NOT_MATCH) \
+    XX(REASON_HARDLINK_NOT_REGULAR) \
+    XX(REASON_HARDLINK_MISSING_LINK) \
+    XX(REASON_HARDLINK_NOT_MATCH) \
+    XX(REASON_EQUAL)            \
+    XX(REASON_IGNORED)          \
+    XX(REASON_MISSING)
 #include "xenums.c"
 
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME ColumnType
 #define ENUM_PREFIX_ COLUMN_
 #define ENUM_FIELDS     \
-    X(COLUMN_ACTION)           \
-    X(COLUMN_PATH)             \
-    X(COLUMN_SIZE)             \
-    X(COLUMN_MTIME)
+    XX(COLUMN_ACTION)           \
+    XX(COLUMN_PATH)             \
+    XX(COLUMN_SIZE)             \
+    XX(COLUMN_MTIME)
 #include "xenums.c"
 
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME CecupColumn
 #define ENUM_PREFIX_ COL_
 #define ENUM_FIELDS \
-    X(COL_SELECTED)     \
-    X(COL_SRC_ACTION)   \
-    X(COL_DST_ACTION)   \
-    X(COL_SRC_PATH)     \
-    X(COL_DST_PATH)     \
-    X(COL_SRC_SIZE)     \
-    X(COL_DST_SIZE)     \
-    X(COL_SRC_MTIME)    \
-    X(COL_DST_MTIME)
+    XX(COL_SELECTED)     \
+    XX(COL_SRC_ACTION)   \
+    XX(COL_DST_ACTION)   \
+    XX(COL_SRC_PATH)     \
+    XX(COL_DST_PATH)     \
+    XX(COL_SRC_SIZE)     \
+    XX(COL_DST_SIZE)     \
+    XX(COL_SRC_MTIME)    \
+    XX(COL_DST_MTIME)
 #include "xenums.c"
 
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME MsgType
 #define ENUM_PREFIX_ MSG_
 #define ENUM_FIELDS \
-    X(MSG_LOG)                \
-    X(MSG_LOG_ERROR)          \
-    X(MSG_LOG_CMD)            \
-    X(MSG_BATCH_ROW_TRANSFER) \
-    X(MSG_BATCH_ROW_REMOVE)   \
-    X(MSG_BATCH_ROW_RENAME)   \
-    X(MSG_IGNORE_PATTERN)     \
-    X(MSG_WORK_FINISHED)      \
-    X(MSG_CLEAR_TREES)        \
-    X(MSG_PROGRESS)
+    XX(MSG_LOG)                \
+    XX(MSG_LOG_ERROR)          \
+    XX(MSG_LOG_CMD)            \
+    XX(MSG_BATCH_ROW_TRANSFER) \
+    XX(MSG_BATCH_ROW_REMOVE)   \
+    XX(MSG_BATCH_ROW_RENAME)   \
+    XX(MSG_IGNORE_PATTERN)     \
+    XX(MSG_WORK_FINISHED)      \
+    XX(MSG_CLEAR_TREES)        \
+    XX(MSG_PROGRESS)
 #include "xenums.c"
 
 #if !defined(error2)
