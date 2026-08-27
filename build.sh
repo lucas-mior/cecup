@@ -22,7 +22,7 @@ LANGS="pt_BR"
 common_build_parse_args "$@"
 
 case "$mode" in
-build|cachegrind|callgrind|check|cross|debug|fast_feedback|install|po|profile|run|test|test_all|uninstall)
+build|cachegrind|callgrind|check|cross|debug|debug-fast|fast_feedback|install|po|profile|run|test|test_all|uninstall)
     ;;
 *)
     common_build_unknown_mode
@@ -165,6 +165,13 @@ debug)
     CPPFLAGS="$CPPFLAGS -DDEBUGGING=1"
     exe="bin/$program"
     ;;
+debug-fast)
+    CFLAGS="$CFLAGS -g2 -O2"
+    if [ "$target_os" = "Linux" ]; then
+        CFLAGS="$CFLAGS -flto -march=native -ftree-vectorize"
+    fi
+    CPPFLAGS="$CPPFLAGS -DDEBUGGING=1"
+    ;;
 callgrind)
     CFLAGS="$CFLAGS -g3 -O2"
     if [ "$target_os" = "Linux" ]; then
@@ -218,7 +225,7 @@ cross)
 profile)
     CFLAGS="$CFLAGS -O2"
     ;;
-build|cachegrind|callgrind|check|cross|debug|fast_feedback|install|po|profile|run|test|test_all|uninstall)
+build|cachegrind|callgrind|check|cross|debug|debug-fast|fast_feedback|install|po|profile|run|test|test_all|uninstall)
     ;;
 *)
     common_build_unknown_mode
@@ -247,7 +254,7 @@ fast_feedback)
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && "$exe"
     trace_off
     ;;
-build|debug|run|callgrind|profile|cross)
+build|debug|debug-fast|run|callgrind|profile|cross)
     generate_welcome_h
 
     if [ -d "po" ]; then
