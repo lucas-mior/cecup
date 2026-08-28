@@ -53,7 +53,7 @@ update_message_is_batch(enum MsgType type) {
     case MSG_WORK_FINISHED:
     case MSG_CLEAR_TREES:
     case MSG_PROGRESS:
-    case MSG_LAST:
+    case MSG_COUNT:
     default:
         return false;
     }
@@ -250,7 +250,7 @@ update_ui_handler(void *data) {
         gtk_progress_bar_set_text(GTK_PROGRESS_BAR(cecup.progress_bar), "");
         gtk_widget_set_tooltip_text(cecup.progress_bar, "");
         break;
-    case MSG_LAST:
+    case MSG_COUNT:
     default:
         LOG("Ignoring %s.\n", MSG_str(message->type));
         break;
@@ -792,7 +792,7 @@ update_list_from_rows(enum UpdateRowsType change) {
                 is_visible = show_ignore;
             }
             break;
-        case ACTION_LAST:
+        case ACTION_COUNT:
         default:
             break;
         }
@@ -850,7 +850,7 @@ update_list_from_rows(enum UpdateRowsType change) {
             case COL_DST_ACTION:
                 cache_rows[v_idx].key.i64 = (int64)dst_action;
                 break;
-            case COL_LAST:
+            case COL_COUNT:
             default:
                 cache_rows[v_idx].key.i64 = 0;
                 break;

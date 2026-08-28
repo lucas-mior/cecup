@@ -168,7 +168,7 @@ work_transfer_action_is_transfer(enum Action action) {
     case ACTION_DELETED:
     case ACTION_DELETE:
     case ACTION_IGNORE:
-    case ACTION_LAST:
+    case ACTION_COUNT:
     default:
         return false;
     }
