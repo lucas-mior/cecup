@@ -150,7 +150,7 @@
   #pragma GCC diagnostic error "-Wcpp"
   #pragma GCC diagnostic error "-Wdeclaration-missing-parameter-type"
   #pragma GCC diagnostic error "-Wdeprecated"
-  #pragma GCC diagnostic error "-Wdeprecated-declarations"
+  #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   #pragma GCC diagnostic error "-Wdeprecated-openmp"
   #pragma GCC diagnostic error "-Wdesignated-init"
   #pragma GCC diagnostic error "-Wdiscarded-array-qualifiers"
