@@ -20,6 +20,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#if defined __clang__ && !defined __cplusplus
+  #pragma clang diagnostic push
+#elif defined __GNUC__ && !defined __cplusplus
+  #pragma GCC diagnostic push
+#endif
+
 #undef STC_API
 #undef STC_DEF
 
