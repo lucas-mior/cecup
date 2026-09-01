@@ -21,6 +21,7 @@
 static void
 column_setup_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, void *data) {
     GtkWidget *check;
+    gulong toggled_id;
 
     (void)factory;
     (void)data;
@@ -28,7 +29,8 @@ column_setup_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item,
     check = gtk_check_button_new();
     gtk_widget_set_halign(check, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(check, GTK_ALIGN_CENTER);
-    g_signal_connect(check, "toggled", G_CALLBACK(on_cell_toggled), data);
+    toggled_id = g_signal_connect(check, "toggled", G_CALLBACK(on_cell_toggled), data);
+    g_object_set_data(G_OBJECT(check), CECUP_TOGGLED_HANDLER_ID, GSIZE_TO_POINTER(toggled_id));
     gtk_list_item_set_child(list_item, check);
 
     return;
@@ -42,15 +44,14 @@ column_bind_checkbox(GtkSignalListItemFactory *factory, GtkListItem *list_item, 
     uint32 position;
 
     (void)factory;
+    (void)data;
 
     check = gtk_list_item_get_child(list_item);
     proxy = CECUP_ITEM_PROXY(gtk_list_item_get_item(list_item));
     row_id = cecup_item_proxy_get_index(proxy);
     position = gtk_list_item_get_position(list_item);
 
-    g_signal_handlers_block_by_func(check, on_cell_toggled, data);
-    gtk_check_button_set_active(GTK_CHECK_BUTTON(check), (bool)cecup.rows_selected[row_id]);
-    g_signal_handlers_unblock_by_func(check, on_cell_toggled, data);
+    checkbox_set_active(check, (bool)cecup.rows_selected[row_id]);
 
     g_object_set_data(G_OBJECT(check), "cecup-row-id", GINT_TO_POINTER(row_id + 1));
     g_object_set_data(G_OBJECT(check), "cecup-pos", GUINT_TO_POINTER(position + 1));

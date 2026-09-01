@@ -389,6 +389,26 @@ on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
 
 static void on_cell_toggled(GtkCheckButton *renderer, void *user_data);
 
+#define CECUP_TOGGLED_HANDLER_ID "cecup-toggled-handler-id"
+
+static void
+checkbox_set_active(GtkWidget *widget, bool is_active) {
+    void *handler_id_ptr;
+    gulong handler_id;
+
+    handler_id_ptr = g_object_get_data(G_OBJECT(widget), CECUP_TOGGLED_HANDLER_ID);
+    if (handler_id_ptr == NULL) {
+        gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), is_active);
+        return;
+    }
+
+    handler_id = (gulong)GPOINTER_TO_SIZE(handler_id_ptr);
+    g_signal_handler_block(widget, handler_id);
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), is_active);
+    g_signal_handler_unblock(widget, handler_id);
+    return;
+}
+
 static void
 update_visible_checkboxes(GtkWidget *widget, int8 side) {
     GtkWidget *child;
@@ -403,9 +423,7 @@ update_visible_checkboxes(GtkWidget *widget, int8 side) {
             int32 row_id;
 
             row_id = GPOINTER_TO_INT(row_id_ptr) - 1;
-            g_signal_handlers_block_by_func(widget, on_cell_toggled, GINT_TO_POINTER(side));
-            gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), (bool)cecup.rows_selected[row_id]);
-            g_signal_handlers_unblock_by_func(widget, on_cell_toggled, GINT_TO_POINTER(side));
+            checkbox_set_active(widget, (bool)cecup.rows_selected[row_id]);
         }
     }
 
