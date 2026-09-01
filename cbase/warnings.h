@@ -15,7 +15,7 @@
   #pragma warning(push, 4)
 #endif
 
-#if CC_GCC || CC_CLANG
+#if CC_GCC
   // -Wall
   #pragma GCC diagnostic error "-Waddress"
   #pragma GCC diagnostic error "-Warray-bounds"
