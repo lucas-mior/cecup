@@ -22,12 +22,22 @@
 #define FILL_TRUE true
 #define EXPAND_TRUE true
 
+#if DEBUGGING
+
 #pragma clang diagnostic ignored "-Wvariadic-macro-arguments-omitted"
 
-#define NEW_WITH_NAME(VARIABLE, FUNCTION, ...) do { \
-    VARIABLE = FUNCTION(__VA_ARGS__); \
-    gtk_widget_set_name(VARIABLE, #VARIABLE); \
+#define NEW_WITH_NAME(VARIABLE, FUNCTION, ...) do {      \
+    VARIABLE = FUNCTION(__VA_ARGS__);                    \
+    gtk_widget_set_name(VARIABLE, #VARIABLE);            \
 } while (0)
+
+#else
+
+#define NEW_WITH_NAME(VARIABLE, FUNCTION, ...) do {      \
+    VARIABLE = FUNCTION(__VA_ARGS__);                    \
+} while (0)
+
+#endif
 
 static bool is_first_run = false;
 
