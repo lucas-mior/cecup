@@ -78,10 +78,11 @@
   #pragma GCC diagnostic error "-Wunused-parameter"
   #pragma GCC diagnostic error "-Wunused-but-set-parameter"
 
-  // Enabled by default, not -Wall or -Wextra
+  // Enabled by default or not enabled -Wall or -Wextra
   #pragma GCC diagnostic error "-WNSObject-attribute"
   #pragma GCC diagnostic error "-Waddress-of-packed-member"
   #pragma GCC diagnostic error "-Waggressive-loop-optimizations"
+
   #pragma GCC diagnostic error "-Wanalyzer-allocation-size"
   #pragma GCC diagnostic error "-Wanalyzer-deref-before-check"
   #pragma GCC diagnostic error "-Wanalyzer-double-fclose"
@@ -132,6 +133,7 @@
   #pragma GCC diagnostic error "-Wanalyzer-va-list-use-after-va-end"
   #pragma GCC diagnostic error "-Wanalyzer-write-to-const"
   #pragma GCC diagnostic error "-Wanalyzer-write-to-string-literal"
+
   #pragma GCC diagnostic error "-Wattribute-alias"
   #pragma GCC diagnostic error "-Wattribute-warning"
   #pragma GCC diagnostic error "-Wattributes"
