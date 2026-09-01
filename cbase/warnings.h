@@ -16,12 +16,12 @@
 #endif
 
 #if CC_GCC || CC_CLANG
-  #pragma GCC diagnostic warning "-Wall"
-  #pragma GCC diagnostic warning "-Wextra"
+  #pragma GCC diagnostic error "-Wall"
+  #pragma GCC diagnostic error "-Wextra"
 #endif
 
 #if CC_CLANG
-  #pragma clang diagnostic warning "-Weverything"
+  #pragma clang diagnostic error "-Weverything"
 
   #pragma clang diagnostic ignored "-Wassign-enum"
   #pragma clang diagnostic ignored "-Wc++-keyword"

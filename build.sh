@@ -89,8 +89,7 @@ CPPFLAGS="$CPPFLAGS -DLOCALEDIR=\"$DATADIR/locale\""
 CPPFLAGS="$CPPFLAGS -DCECUP_SYSTEM_CONFIG_DIR=\"$SYSCONFDIR/$program\""
 
 CFLAGS="$CFLAGS -std=c11"
-CFLAGS="$CFLAGS -Wfatal-errors"
-CFLAGS="$CFLAGS -Werror"  # Only uncomment occasionally, keep this line
+CFLAGS="$CFLAGS -ferror-limit=1"
 
 PKG_CONFIG="${PKG_CONFIG:-pkg-config}"
 if ! common_command_exists "$PKG_CONFIG"; then
