@@ -24,7 +24,9 @@
 
 #if DEBUGGING
 
+#if CC_CLANG
 #pragma clang diagnostic ignored "-Wvariadic-macro-arguments-omitted"
+#endif
 
 #define NEW_WITH_NAME(VARIABLE, FUNCTION, ...) do {      \
     VARIABLE = FUNCTION(__VA_ARGS__);                    \
