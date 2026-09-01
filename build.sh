@@ -89,7 +89,11 @@ CPPFLAGS="$CPPFLAGS -DLOCALEDIR=\"$DATADIR/locale\""
 CPPFLAGS="$CPPFLAGS -DCECUP_SYSTEM_CONFIG_DIR=\"$SYSCONFDIR/$program\""
 
 CFLAGS="$CFLAGS -std=c11"
-CFLAGS="$CFLAGS -ferror-limit=1"
+if [ "$CC" = "clang" ]; then
+    CFLAGS="$CFLAGS -ferror-limit=1"
+else
+    CFLAGS="$CFLAGS -fmax-errors=1"
+fi
 
 PKG_CONFIG="${PKG_CONFIG:-pkg-config}"
 if ! common_command_exists "$PKG_CONFIG"; then
