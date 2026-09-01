@@ -90,23 +90,7 @@ CPPFLAGS="$CPPFLAGS -DCECUP_SYSTEM_CONFIG_DIR=\"$SYSCONFDIR/$program\""
 
 CFLAGS="$CFLAGS -std=c11"
 CFLAGS="$CFLAGS -Wfatal-errors"
-# CFLAGS="$CFLAGS -Werror"  # Only uncomment occasionally, keep this line
-CFLAGS="$CFLAGS -Wno-deprecated-declarations"
-CFLAGS="$CFLAGS -Wno-unused-function"
-CFLAGS="$CFLAGS -Wno-char-subscripts"
-
-if [ "$CC" = "clang" ] || [ "$CC" = "zig cc" ]; then
-    CFLAGS="$CFLAGS -Wno-cast-align"
-    CFLAGS="$CFLAGS -Wno-cast-function-type-strict"
-    CFLAGS="$CFLAGS -Wno-comma"
-    CFLAGS="$CFLAGS -Wno-pedantic"  # because of gpointer casting
-    CFLAGS="$CFLAGS -Wno-poison-system-directories"
-
-    # only for the LSP and unity-test builds. They include helper functions
-    # that are intentionally unused in some translation units.
-    CFLAGS="$CFLAGS -Wno-unneeded-internal-declaration"
-    CFLAGS="$CFLAGS -Wno-undefined-internal"
-fi
+CFLAGS="$CFLAGS -Werror"  # Only uncomment occasionally, keep this line
 
 PKG_CONFIG="${PKG_CONFIG:-pkg-config}"
 if ! common_command_exists "$PKG_CONFIG"; then
