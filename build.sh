@@ -136,6 +136,7 @@ debug)
     ;;
 debug-fast)
     CFLAGS="$CFLAGS -g2 -O2"
+    CFLAGS="$CFLAGS -fsanitize=undefined"
     if [ "$target_os" = "Linux" ]; then
         CFLAGS="$CFLAGS -flto -march=native -ftree-vectorize"
     fi
