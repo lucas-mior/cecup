@@ -22,7 +22,7 @@ LANGS="pt_BR"
 common_build_parse_args "$@"
 
 case "$mode" in
-build|cachegrind|callgrind|check|cross|debug|debug-fast|fast_feedback|install|po|profile|run|test|test_all|uninstall)
+build|cachegrind|callgrind|check|cross|debug|debug-fast|fast_feedback|install|po|profile|run|test|test_all|uninstall|valgrind)
     ;;
 *)
     common_build_unknown_mode
@@ -148,6 +148,13 @@ callgrind)
         CFLAGS="$CFLAGS -ftree-vectorize"
     fi
     ;;
+valgrind)
+    CFLAGS="$CFLAGS -g3 -O2"
+    if [ "$target_os" = "Linux" ]; then
+        CFLAGS="$CFLAGS -ftree-vectorize"
+    fi
+    CPPFLAGS="$CPPFLAGS -DDEBUGGING=1"
+    ;;
 test)
     CFLAGS="$CFLAGS -g3 -DDEBUGGING=1"
     ;;
@@ -195,7 +202,7 @@ cross)
 profile)
     CFLAGS="$CFLAGS -O2"
     ;;
-build|cachegrind|callgrind|check|cross|debug|debug-fast|fast_feedback|install|po|profile|run|test|test_all|uninstall)
+build|cachegrind|callgrind|check|cross|debug|debug-fast|fast_feedback|install|po|profile|run|test|test_all|uninstall|valgrind)
     ;;
 *)
     common_build_unknown_mode
@@ -224,7 +231,7 @@ fast_feedback)
     $CC $CPPFLAGS $CFLAGS src/main.c -o "$exe" $LDFLAGS && "$exe"
     trace_off
     ;;
-build|debug|debug-fast|run|callgrind|profile|cross)
+build|debug|debug-fast|run|callgrind|profile|cross|valgrind)
     generate_welcome_h
 
     if [ -d "po" ]; then
@@ -322,6 +329,12 @@ cachegrind)
     trace_on
     valgrind --tool=cachegrind --cachegrind-out-file="$out" bin/$program
     kcachegrind "$out"
+    trace_off
+    exit
+    ;;
+valgrind)
+    trace_on
+    valgrind --tool=memcheck bin/$program
     trace_off
     exit
     ;;
