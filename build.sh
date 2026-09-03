@@ -22,7 +22,7 @@ LANGS="pt_BR"
 common_build_parse_args "$@"
 
 case "$mode" in
-build|cachegrind|callgrind|check|cross|debug|debug-fast|fast_feedback|install|po|profile|run|test|test_all|uninstall|valgrind)
+build|callgrind|check|cross|debug|debug-fast|fast_feedback|install|po|profile|run|test|test_all|uninstall|valgrind)
     ;;
 *)
     common_build_unknown_mode
@@ -202,7 +202,7 @@ cross)
 profile)
     CFLAGS="$CFLAGS -O2"
     ;;
-build|cachegrind|callgrind|check|cross|debug|debug-fast|fast_feedback|install|po|profile|run|test|test_all|uninstall|valgrind)
+build|callgrind|check|cross|debug|debug-fast|fast_feedback|install|po|profile|run|test|test_all|uninstall|valgrind)
     ;;
 *)
     common_build_unknown_mode
@@ -320,14 +320,6 @@ callgrind)
     out="callgrind_$(date +%s).callgrind"
     trace_on
     valgrind --tool=callgrind --callgrind-out-file="$out" bin/$program
-    kcachegrind "$out"
-    trace_off
-    exit
-    ;;
-cachegrind)
-    out="cachegrind_$(date +%s).callgrind"
-    trace_on
-    valgrind --tool=cachegrind --cachegrind-out-file="$out" bin/$program
     kcachegrind "$out"
     trace_off
     exit
