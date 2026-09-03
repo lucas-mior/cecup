@@ -337,6 +337,7 @@ check)
     CFLAGS="$CFLAGS -fno-color-diagnostics"
     CC=clang CFLAGS="$CFLAGS" ./build.sh
 
+    echo "static analysis finished."
     exit
     ;;
 esac
