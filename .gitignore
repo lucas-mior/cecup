@@ -28,3 +28,4 @@ valgrind_output*
 vgcore.*
 .welcome.h
 *.obj
+static-analyzers-warnings.txt
