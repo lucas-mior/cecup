@@ -128,10 +128,6 @@ enum TraversalState {
     XX(MSG_PROGRESS)
 #include "xenums.c"
 
-#if !defined(error2)
-#define error2(...) fprintf(stderr, __VA_ARGS__)
-#endif
-
 #define HASH_KEY_TYPE char
 #define HASH_VALUE_TYPE int32
 #define HASH_VALUE_FORMATTER "%d"
