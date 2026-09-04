@@ -90,7 +90,7 @@ enum TraversalState {
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME ColumnType
 #define ENUM_PREFIX_ COLUMN_
-#define ENUM_FIELDS     \
+#define ENUM_FIELDS             \
     XX(COLUMN_ACTION)           \
     XX(COLUMN_PATH)             \
     XX(COLUMN_SIZE)             \
@@ -100,7 +100,7 @@ enum TraversalState {
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME CecupColumn
 #define ENUM_PREFIX_ COL_
-#define ENUM_FIELDS \
+#define ENUM_FIELDS      \
     XX(COL_SELECTED)     \
     XX(COL_SRC_ACTION)   \
     XX(COL_DST_ACTION)   \
