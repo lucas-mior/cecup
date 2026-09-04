@@ -115,7 +115,7 @@ enum TraversalState {
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME MsgType
 #define ENUM_PREFIX_ MSG_
-#define ENUM_FIELDS \
+#define ENUM_FIELDS            \
     XX(MSG_LOG)                \
     XX(MSG_LOG_ERROR)          \
     XX(MSG_LOG_CMD)            \
