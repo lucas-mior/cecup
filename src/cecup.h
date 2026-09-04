@@ -44,14 +44,14 @@ _Static_assert(SIZEOF(pid_t) <= SIZEOF(atomic_int),
 #define ENUM_BITFLAGS 0
 #define ENUM_NAME Action
 #define ENUM_PREFIX_ ACTION_
-#define ENUM_FIELDS     \
-    XX(ACTION_NEW)              \
-    XX(ACTION_UPDATE)           \
-    XX(ACTION_HARDLINK)         \
-    XX(ACTION_SYMLINK)          \
-    XX(ACTION_EQUAL)            \
-    XX(ACTION_DELETED)          \
-    XX(ACTION_DELETE)           \
+#define ENUM_FIELDS      \
+    XX(ACTION_NEW)       \
+    XX(ACTION_UPDATE)    \
+    XX(ACTION_HARDLINK)  \
+    XX(ACTION_SYMLINK)   \
+    XX(ACTION_EQUAL)     \
+    XX(ACTION_DELETED)   \
+    XX(ACTION_DELETE)    \
     XX(ACTION_IGNORE)
 #include "xenums.c"
 
@@ -64,26 +64,26 @@ enum TraversalState {
 #define ENUM_BITFLAGS 1
 #define ENUM_NAME Reason
 #define ENUM_PREFIX_ REASON_
-#define ENUM_FIELDS     \
-    XX(REASON_NEW)              \
-    XX(REASON_SIZE)             \
-    XX(REASON_MTIME_NEWER)      \
-    XX(REASON_MTIME_OLDER)      \
-    XX(REASON_CTIME)            \
-    XX(REASON_OWNER)            \
-    XX(REASON_GROUP)            \
-    XX(REASON_PERM)             \
-    XX(REASON_TYPE)             \
-    XX(REASON_HARDLINK)         \
-    XX(REASON_SYMLINK)          \
-    XX(REASON_SYMLINK_NOT)       \
-    XX(REASON_SYMLINK_NO_TARGET) \
-    XX(REASON_SYMLINK_NOT_MATCH) \
-    XX(REASON_HARDLINK_NOT_REGULAR) \
+#define ENUM_FIELDS                  \
+    XX(REASON_NEW)                   \
+    XX(REASON_SIZE)                  \
+    XX(REASON_MTIME_NEWER)           \
+    XX(REASON_MTIME_OLDER)           \
+    XX(REASON_CTIME)                 \
+    XX(REASON_OWNER)                 \
+    XX(REASON_GROUP)                 \
+    XX(REASON_PERM)                  \
+    XX(REASON_TYPE)                  \
+    XX(REASON_HARDLINK)              \
+    XX(REASON_SYMLINK)               \
+    XX(REASON_SYMLINK_NOT)           \
+    XX(REASON_SYMLINK_NO_TARGET)     \
+    XX(REASON_SYMLINK_NOT_MATCH)     \
+    XX(REASON_HARDLINK_NOT_REGULAR)  \
     XX(REASON_HARDLINK_MISSING_LINK) \
-    XX(REASON_HARDLINK_NOT_MATCH) \
-    XX(REASON_EQUAL)            \
-    XX(REASON_IGNORED)          \
+    XX(REASON_HARDLINK_NOT_MATCH)    \
+    XX(REASON_EQUAL)                 \
+    XX(REASON_IGNORED)               \
     XX(REASON_MISSING)
 #include "xenums.c"
 
