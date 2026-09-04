@@ -490,23 +490,22 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
-        StrBuilder path_src = {0};
-        StrBuilder path_dst = {0};
+        int32 size_src = strlen32(cecup.base[L]) + strlen32(task->path) + 2;
+        int32 size_dst = strlen32(cecup.base[R]) + strlen32(task->path) + 2;
+        char *path_src = malloc2(size_src);
+        char *path_dst = malloc2(size_dst);
         Command command;
 
-        sb_printf(&path_src, "%s/%s",
-                             cecup.base[L], task->path, task->path_len);
-        sb_printf(&path_dst, "%s/%s",
-                             cecup.base[R], task->path, task->path_len);
+        snprintf2(path_src, size_src, "%s/%s", cecup.base[L], task->path);
+        snprintf2(path_dst, size_dst, "%s/%s", cecup.base[R], task->path);
 
         command = on_menu_diff_command(term_command, diff_tool);
-        command_push_length(&command, path_dst.data, path_dst.len);
-        command_push_length(&command, path_src.data, path_src.len);
+        COMMAND_PUSH(&command, path_dst, path_src);
 
         (void)command_run_async(&command, COMMAND_NEW_SESSION);
         command_free(&command);
-        sb_free(&path_src);
-        sb_free(&path_dst);
+        free2(path_src, size_src);
+        free2(path_dst, size_dst);
     }
 
     task_list_free(tasks);
