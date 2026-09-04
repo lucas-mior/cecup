@@ -638,11 +638,11 @@ static int32 item_add(int32 src_idx, int32 dst_idx);
 #endif
 
 #define LOG(...)        \
-    log_internal(__FILE__, __LINE__, (char *)__func__, MSG_LOG, __VA_ARGS__)
+  log_internal(__FILE__, __LINE__, (char *)__func__, MSG_LOG, __VA_ARGS__)
 #define LOG_ERROR(...)  \
-    log_internal(__FILE__, __LINE__, (char *)__func__, MSG_LOG_ERROR, __VA_ARGS__)
+  log_internal(__FILE__, __LINE__, (char *)__func__, MSG_LOG_ERROR, __VA_ARGS__)
 #define LOG_CMD(...)    \
-    log_internal(__FILE__, __LINE__, (char *)__func__, MSG_LOG_CMD, __VA_ARGS__)
+  log_internal(__FILE__, __LINE__, (char *)__func__, MSG_LOG_CMD, __VA_ARGS__)
 
 enum RsyncCharAction {
     RSYNC_CHAR0_ACTION_SEND = '<',
