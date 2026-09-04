@@ -494,13 +494,10 @@ on_menu_diff(GtkWidget *widget, void *data) {
         StrBuilder path_dst = {0};
         Command command;
 
-        SB_APPEND(&path_src, cecup.base[L], cecup.base_len[L]);
-        SB_APPEND(&path_src, "/");
-        SB_APPEND(&path_src, task->path, task->path_len);
-
-        SB_APPEND(&path_dst, cecup.base[R], cecup.base_len[R]);
-        SB_APPEND(&path_dst, "/");
-        SB_APPEND(&path_dst, task->path, task->path_len);
+        sb_printf(&path_src, "%s/%s",
+                             cecup.base[L], task->path, task->path_len);
+        sb_printf(&path_dst, "%s/%s",
+                             cecup.base[R], task->path, task->path_len);
 
         command = on_menu_diff_command(term_command, diff_tool);
         command_push_length(&command, path_dst.data, path_dst.len);
