@@ -18,14 +18,17 @@
 
 static void
 ignore_patterns_load(void) {
-    FILE *file;
-    char line_buffer[MAX_PATH_LENGTH];
+    char *file_bytes;
+    char *line;
+    int32 file_len;
+    int32 left;
     int32 count;
     int32 *capacity = &cecup.ignore_capacity;
 
     if (cecup.ignore_patterns == NULL) {
         *capacity = 16;
-        cecup.ignore_patterns = malloc2(*capacity*SIZEOF(*cecup.ignore_patterns));
+        cecup.ignore_patterns = malloc2(*capacity
+                                         *SIZEOF(*cecup.ignore_patterns));
         cecup.ignore_count = 0;
     }
 
@@ -37,44 +40,60 @@ ignore_patterns_load(void) {
     count = 0;
     cecup.ignore_count = 0;
 
-    if ((file = fopen(cecup.ignore_path, "r")) == NULL) {
-        LOG_ERROR(_("Error opening %s: %s.\n"), cecup.ignore_path, strerror(errno));
+    if ((file_len = read_entire_file(cecup.ignore_path, &file_bytes)) < 0) {
+        LOG_ERROR(_("Error reading %s: %s.\n"),
+                  cecup.ignore_path, strerror(-file_len));
         return;
     }
 
-    while (fgets(line_buffer, SIZEOF(line_buffer), file)) {
+    line = file_bytes;
+    left = file_len;
+    while (left > 0) {
+        char *newline;
         int32 line_len;
+        int32 skip_len;
         IgnorePattern *pattern;
 
-        if ((line_len = strlen32(line_buffer)) >= (SIZEOF(line_buffer) - 1)) {
-            error("Too long line on patterns file: %s.\n", line_buffer);
-            fatal(EXIT_FAILURE);
-        }
-        if (line_len > 0) {
-            line_buffer[line_len - 1] = '\0';
-            line_len -= 1;
+        if ((newline = memchr64(line, '\n', left))) {
+            line_len = (int32)(newline - line);
+            skip_len = line_len + 1;
+            *newline = '\0';
+        } else {
+            line_len = left;
+            skip_len = left;
         }
 
-        if ((line_len == 0) || (line_buffer[0] == '#')) {
+        if (line_len >= MAX_PATH_LENGTH) {
+            error("Too long line on patterns file: %s.\n", line);
+            fatal(EXIT_FAILURE);
+        }
+
+        if ((line_len == 0) || (line[0] == '#')) {
+            line += skip_len;
+            left -= skip_len;
             continue;
         }
 
-        if (memchr64(line_buffer, '[', line_len)
-             && memchr64(line_buffer, ']', line_len)) {
-            LOG_ERROR(_("Warning: advanced exclusion pattern '%s' detected.\n"), line_buffer);
-            LOG_ERROR(_("cecup currently only supports basic patterns (directories and asterisks).\n"));
+        if (memchr64(line, '[', line_len)
+             && memchr64(line, ']', line_len)) {
+            LOG_ERROR(_("Warning: advanced exclusion pattern '%s' detected.\n"),
+                      line);
+            LOG_ERROR(_("cecup currently only supports basic patterns"
+                        " (directories and asterisks).\n"));
             LOG_ERROR(_("This pattern will be interpreted literally.\n"));
         }
 
-        if (memchr64(line_buffer, '?', line_len)) {
-            LOG_ERROR(_("Warning: exclusion pattern '%s' detected.\n"), line_buffer);
-            LOG_ERROR(_("cecup currently only supports basic patterns (directories and asterisks).\n"));
+        if (memchr64(line, '?', line_len)) {
+            LOG_ERROR(_("Warning: exclusion pattern '%s' detected.\n"), line);
+            LOG_ERROR(_("cecup currently only supports basic patterns"
+                        " (directories and asterisks).\n"));
             LOG_ERROR(_("This pattern will be interpreted literally.\n"));
         }
 
-        if (memchr64(line_buffer, '\\', line_len)) {
-            LOG_ERROR(_("Warning: backslash '%s' detected.\n"), line_buffer);
-            LOG_ERROR(_("cecup currently only supports basic patterns (directories and asterisks).\n"));
+        if (memchr64(line, '\\', line_len)) {
+            LOG_ERROR(_("Warning: backslash '%s' detected.\n"), line);
+            LOG_ERROR(_("cecup currently only supports basic patterns"
+                        " (directories and asterisks).\n"));
             LOG_ERROR(_("This pattern will be interpreted literally.\n"));
         }
 
@@ -87,7 +106,9 @@ ignore_patterns_load(void) {
         }
 
         pattern = &cecup.ignore_patterns[count];
-        pattern->str = xstrdup(line_buffer);
+        pattern->str = malloc2(line_len + 1);
+        memcpy64(pattern->str, line, line_len);
+        pattern->str[line_len] = '\0';
         pattern->len = line_len;
 
         pattern->dir_only = false;
@@ -108,15 +129,12 @@ ignore_patterns_load(void) {
         }
 
         count += 1;
+
+        line += skip_len;
+        left -= skip_len;
     }
 
-    if (ferror(file)) {
-        LOG_ERROR(_("Warning: error while reading %s.\n"), cecup.ignore_path);
-    }
-    if (fclose(file)) {
-        LOG_ERROR(_("Error closing %s: %s.\n"), cecup.ignore_path, strerror(errno));
-    }
-
+    free2(file_bytes, file_len + 1);
     cecup.ignore_count = count;
     return;
 }
@@ -324,7 +342,7 @@ main(void) {
     fputs("# this is a comment\n", file);
     fputs("\n", file);
     fputs("/src\n", file);
-    fputs("a?b\n", file);
+    fputs("a?b", file);
     fclose(file);
 
     SNPRINTF(cecup.ignore_path, "%s", "test_ignore.conf");
