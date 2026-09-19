@@ -349,46 +349,46 @@ main(void) {
 
     // 3. Test ignore_patterns_match & ignore_pattern_match_single
     test_pattern_init(&patterns[0], "*.c");
-    pattern = ignore_patterns_match("main.c", 6, false, patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("main.c"),
+                                           false, patterns, 1));
     ASSERT_EQUAL(pattern->str, "*.c");
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "build/");
-    pattern = ignore_patterns_match("build", 5, true, patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("build"),
+                                           true, patterns, 1));
     ASSERT_EQUAL(pattern->str, "build");
 
     pattern = ignore_patterns_match("build", 5, false, patterns, 1);
     ASSERT_NULL(pattern);
 
-    pattern = ignore_patterns_match("build/main.o", 12, false, patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("build/main.o"),
+                                           false, patterns, 1));
 
-    pattern = ignore_patterns_match("src/build/main.o", 16, false, patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/build/main.o"),
+                                           false, patterns, 1));
 
     pattern = ignore_patterns_match("src/build", 9, false, patterns, 1);
     ASSERT_NULL(pattern);
 
-    pattern = ignore_patterns_match("src/build/", 10, true, patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/build/"),
+                                           true, patterns, 1));
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "foo/build/");
-    pattern = ignore_patterns_match("foo/build/main.o", 16, false, patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/build/main.o"),
+                                           false, patterns, 1));
 
     pattern = ignore_patterns_match("foo/build", 9, false, patterns, 1);
     ASSERT_NULL(pattern);
 
-    pattern = ignore_patterns_match("foo/build/", 10, true, patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/build/"),
+                                           true, patterns, 1));
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "/foo/build/");
-    pattern = ignore_patterns_match("foo/build/main.o", 16, false, patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/build/main.o"),
+                                           false, patterns, 1));
 
     pattern = ignore_patterns_match("x/foo/build/main.o", 18, false,
                                     patterns, 1);
@@ -396,23 +396,22 @@ main(void) {
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "build*/");
-    pattern = ignore_patterns_match("src/build-cache/main.o", 22, false,
-                                    patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/build-cache/main.o"),
+                                           false, patterns, 1));
 
     pattern = ignore_patterns_match("src/build-cache", 15, false, patterns, 1);
     ASSERT_NULL(pattern);
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "obj");
-    pattern = ignore_patterns_match("src/obj/main.o", 14, false, patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/obj/main.o"),
+                                           false, patterns, 1));
     ASSERT_EQUAL(pattern->str, "obj");
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "/src");
-    pattern = ignore_patterns_match("src/main.c", 10, false, patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/main.c"),
+                                           false, patterns, 1));
     ASSERT_EQUAL(pattern->match_str, "src");
     free2(patterns[0].str, patterns[0].len + 1);
 
@@ -430,8 +429,8 @@ main(void) {
     test_pattern_init(&patterns[0], "*.h");
     test_pattern_init(&patterns[1], "build/");
     test_pattern_init(&patterns[2], "*.o");
-    pattern = ignore_patterns_match("src/main.o", 10, false, patterns, 3);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/main.o"),
+                                           false, patterns, 3));
     ASSERT_EQUAL(pattern->str, "*.o");
 
     free2(patterns[0].str, patterns[0].len + 1);
