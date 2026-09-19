@@ -780,7 +780,7 @@ ASSERT(pointer != NULL);
 - Do not use `ASSERT_EQUAL` for enums.
   * Use `ASSERT(enumvalue1 == enumvalue2)` instead, so that the compiler does
     not complain.
-- For checking that a function failed/returned NULL:
+- For asserting that a function failed/returned NULL:
   ```c
   // bad
   void *res = function();
