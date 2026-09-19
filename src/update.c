@@ -560,7 +560,7 @@ update_row_rename(char *old_path, int32 old_path_len,
          * the new path should not exist on this side prior to the rename.
          * of course, someone else could have renamed the file,
          * but that is true of the whole program */
-        ASSERT(cecup.rows[side][merge_row_id] == -1);
+        ASSERT_NEGATIVE(cecup.rows[side][merge_row_id]);
 
         cecup.rows[side][merge_row_id] = new_idx;
         traversal->row_ids[new_idx] = merge_row_id;
@@ -1151,16 +1151,14 @@ main(void) {
     msg.src_path_len = 6;
 
     /* Remove from one side only. Rows count shouldn't change. */
-    res = update_row_remove(msg.src_path, msg.src_path_len, msg.side);
-    ASSERT(res == true);
+    ASSERT(update_row_remove(msg.src_path, msg.src_path_len, msg.side));
     ASSERT_EQUAL(cecup.rows[L][0], -1);
     ASSERT_EQUAL(cecup.rows[R][0], 0);
     ASSERT_EQUAL(cecup.rows_len, 3);
 
     /* Remove from the other side. Arrays must shift. */
     msg.side = R;
-    res = update_row_remove(msg.src_path, msg.src_path_len, msg.side);
-    ASSERT(res == true);
+    ASSERT(update_row_remove(msg.src_path, msg.src_path_len, msg.side));
     ASSERT_EQUAL(cecup.rows_len, 2);
 
     /* Index 1 (file_b) should now be row 0 */
