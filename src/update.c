@@ -1168,8 +1168,7 @@ main(void) {
     /* --- Test update_row_rename --- */
     {
         /* Rename handles virtual state internally through traversal map */
-        res = update_row_rename("file_b", 6, "file_d", 6, L);
-        ASSERT(res == true);
+        ASSERT(update_row_rename("file_b", 6, "file_d", 6, L));
 
         /* Old idx 1 must be removed, new idx assigned */
         ASSERT(cecup.traversal[L].row_ids[1] == -1);
