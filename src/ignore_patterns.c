@@ -341,8 +341,8 @@ main(void) {
 
     ASSERT_EQUAL(cecup.ignore_count, 4);
     ASSERT_EQUAL(cecup.ignore_patterns[0].str, "*.c");
-    ASSERT(cecup.ignore_patterns[1].dir_only == true);
-    ASSERT(cecup.ignore_patterns[2].has_slash == true);
+    ASSERT(cecup.ignore_patterns[1].dir_only);
+    ASSERT(cecup.ignore_patterns[2].has_slash);
     ASSERT_EQUAL(cecup.ignore_patterns[3].str, "a?b");
 
     remove("test_ignore.conf");
