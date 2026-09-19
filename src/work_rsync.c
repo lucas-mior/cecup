@@ -1814,9 +1814,9 @@ main(void) {
     SNPRINTF(path, "%s/rm_test.txt", cecup.base[R]);
     fd = open(path, O_CREAT | O_WRONLY, 0644);
     close(fd);
-    ASSERT(access(path, F_OK) == 0);
+    ASSERT(!access(path, F_OK));
     work_remove(&batch, "rm_test.txt", 11, R);
-    ASSERT(access(path, F_OK) != 0);
+    ASSERT(!access(path, F_OK));
 
     /* Test work_remove on directory using FsWalk */
     SNPRINTF(path, "%s/rm_dir", cecup.base[R]);
@@ -1826,7 +1826,7 @@ main(void) {
     close(fd);
     work_remove(&batch, "rm_dir/", 7, R);
     SNPRINTF(path, "%s/rm_dir", cecup.base[R]);
-    ASSERT(access(path, F_OK) != 0);
+    ASSERT(!access(path, F_OK));
 
     test_manual_copy_regular_and_dir(&batch);
     test_manual_copy_symlink(&batch);
@@ -1844,7 +1844,7 @@ main(void) {
 
         ASSERT(work_rsync_run(files_from, 1, false, &batch));
         SNPRINTF(path, "%s/sync_test.txt", cecup.base[R]);
-        ASSERT(access(path, F_OK) == 0);
+        ASSERT(!access(path, F_OK));
         work_batch_flush(&batch);
     }
 
@@ -1871,7 +1871,7 @@ main(void) {
         unsetenv("CECUP_TRANSFER_BACKEND");
 
         SNPRINTF(path, "%s/thread_test.txt", cecup.base[R]);
-        ASSERT(access(path, F_OK) == 0);
+        ASSERT(!access(path, F_OK));
     }
 
     test_remove_tree(temp_dir);
