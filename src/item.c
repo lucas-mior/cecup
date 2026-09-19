@@ -588,7 +588,7 @@ main(void) {
 
     cecup.sort_order = GTK_SORT_ASCENDING;
     result = cecup_item_compare_int_key(&entry1, &entry2);
-    ASSERT_LESS(result, 0);
+    ASSERT_NEGATIVE(result);
 
     cecup.sort_order = GTK_SORT_DESCENDING;
     result = cecup_item_compare_int_key(&entry1, &entry2);
@@ -599,7 +599,7 @@ main(void) {
 
     cecup.sort_order = GTK_SORT_ASCENDING;
     result = cecup_item_compare_string_key(&entry1, &entry2);
-    ASSERT_LESS(result, 0);
+    ASSERT_NEGATIVE(result);
 
     cecup.sort_order = GTK_SORT_DESCENDING;
     result = cecup_item_compare_string_key(&entry1, &entry2);
@@ -609,7 +609,7 @@ main(void) {
     name_a_ptr = "apple";
     name_b_ptr = "banana";
     result = compare_names(&name_a_ptr, &name_b_ptr);
-    ASSERT_LESS(result, 0);
+    ASSERT_NEGATIVE(result);
 
     cecup.rows[L] = malloc2(10*SIZEOF(int32));
     cecup.rows[R] = malloc2(10*SIZEOF(int32));
