@@ -442,7 +442,7 @@ main(void) {
 
         SNPRINTF(new_file_full, "%s/%s", src_dir, new_name);
         ASSERT(!access(new_file_full, F_OK));
-        ASSERT(access(src_file_full, F_OK) == -1);
+        ASSERT(access(src_file_full, F_OK));
         ASSERT(cecup.preview_dirty == true);
     }
 
