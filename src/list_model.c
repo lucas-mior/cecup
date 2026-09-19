@@ -367,7 +367,7 @@ main(void) {
     ASSERT_EQUAL(cecup.rows[R][0], 20);
     ASSERT_EQUAL(cecup.traversal[L].row_ids[10], 0);
     ASSERT_EQUAL(cecup.traversal[R].row_ids[20], 0);
-    ASSERT(cecup.rows_selected[0] == false);
+    ASSERT(!cecup.rows_selected[0]);
 
     item_add(11, 21);
     item_add(12, 22);
