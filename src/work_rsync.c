@@ -1565,7 +1565,7 @@ test_write_file(char *path, char *contents) {
 
     len = strlen32(contents);
     fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-    ASSERT_MORE_EQUAL(fd, 0);
+    ASSERT_NON_NEGATIVE(fd);
     write64(fd, contents, len);
     XCLOSE(&fd, path);
     return;
@@ -1832,7 +1832,7 @@ main(void) {
 
         SNPRINTF(files_from, "%s/files_from", temp_dir);
         fd = open(files_from, O_CREAT | O_WRONLY, 0644);
-        ASSERT_MORE_EQUAL(fd, 0);
+        ASSERT_NON_NEGATIVE(fd);
         write64(fd, "sync_test.txt\n", 14);
         close(fd);
 

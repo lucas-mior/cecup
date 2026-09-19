@@ -929,13 +929,13 @@ main(void) {
         if (entry->src_missing) {
             ASSERT_EQUAL(src_idx, -1);
         } else {
-            ASSERT_MORE_EQUAL(src_idx, 0);
+            ASSERT_NON_NEGATIVE(src_idx);
         }
 
         if (entry->dst_missing) {
             ASSERT_EQUAL(dst_idx, -1);
         } else {
-            ASSERT_MORE_EQUAL(dst_idx, 0);
+            ASSERT_NON_NEGATIVE(dst_idx);
         }
 
         row_id = item_add(src_idx, dst_idx);
