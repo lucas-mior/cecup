@@ -746,7 +746,7 @@ main(void) {
     symlink_len = traversal_symlink_get(&test_traversal,
                                         "non_existent_symlink",
                                         &symlink_target);
-    ASSERT_EQUAL(symlink_len, 0);
+    ASSERT_ZERO(symlink_len);
     ASSERT_NULL(symlink_target);
 
     /* 3. Test HardLink 128-bit Logic */
