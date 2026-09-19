@@ -1171,7 +1171,8 @@ main(void) {
 
         /* Old idx 1 must be removed, new idx assigned */
         ASSERT_NEGATIVE(cecup.traversal[L].row_ids[1]);
-        ASSERT(cecup.rows[L][0] > 1); /* it pushes a new item to traversal array */
+        /* it pushes a new item to traversal array */
+        ASSERT_MORE(cecup.rows[L][0], 1);
     }
 
     /* --- Test update_row_ignore --- */
