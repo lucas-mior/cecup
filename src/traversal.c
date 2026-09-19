@@ -733,7 +733,7 @@ main(void) {
         char link_path[PATH_MAX];
 
         SNPRINTF(link_path, "%s/test_symlink", temp_dir);
-        ASSERT(symlink("dummy_target.txt", link_path) == 0);
+        ASSERT(!symlink("dummy_target.txt", link_path));
         symlink_len = traversal_symlink_get(&test_traversal,
                                             link_path, &symlink_target);
         ASSERT(symlink_len > 0);
