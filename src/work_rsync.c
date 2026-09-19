@@ -1816,7 +1816,7 @@ main(void) {
     close(fd);
     ASSERT(!access(path, F_OK));
     work_remove(&batch, "rm_test.txt", 11, R);
-    ASSERT(!access(path, F_OK));
+    ASSERT(access(path, F_OK));
 
     /* Test work_remove on directory using FsWalk */
     SNPRINTF(path, "%s/rm_dir", cecup.base[R]);
