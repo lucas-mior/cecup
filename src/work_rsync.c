@@ -1800,13 +1800,13 @@ main(void) {
     SNPRINTF(path, "%s/root_guard.txt", cecup.base[R]);
     fd = open(path, O_CREAT | O_WRONLY, 0644);
     close(fd);
-    ASSERT(access(path, F_OK) == 0);
+    ASSERT(!access(path, F_OK));
     work_remove(&batch, ".", 1, R);
-    ASSERT(access(path, F_OK) == 0);
+    ASSERT(!access(path, F_OK));
     ASSERT(batch == NULL);
     work_remove(&batch, "./", 2, R);
-    ASSERT(access(path, F_OK) == 0);
-    ASSERT(access(cecup.base[R], F_OK) == 0);
+    ASSERT(!access(path, F_OK));
+    ASSERT(!access(cecup.base[R], F_OK));
     ASSERT(batch == NULL);
     unlink(path);
 
