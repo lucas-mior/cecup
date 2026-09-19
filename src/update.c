@@ -1170,7 +1170,7 @@ main(void) {
         ASSERT(update_row_rename("file_b", 6, "file_d", 6, L));
 
         /* Old idx 1 must be removed, new idx assigned */
-        ASSERT(cecup.traversal[L].row_ids[1] == -1);
+        ASSERT_NEGATIVE(cecup.traversal[L].row_ids[1]);
         ASSERT(cecup.rows[L][0] > 1); /* it pushes a new item to traversal array */
     }
 
