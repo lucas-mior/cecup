@@ -950,7 +950,7 @@ main(void) {
 
         xpthread_create(&pt_traverse, NULL, work_traverse_fs_thread, &cecup.traversal[L]);
         xpthread_join(&pt_traverse, NULL);
-        ASSERT_MORE(cecup.traversal[L].file_count, 0);
+        ASSERT_POSITIVE(cecup.traversal[L].file_count);
     }
 
     {
@@ -966,8 +966,8 @@ main(void) {
         xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
         xpthread_join(&cecup.work_thread, NULL);
 
-        ASSERT_MORE(cecup.traversal[L].file_count, 0);
-        ASSERT_MORE(cecup.traversal[R].file_count, 0);
+        ASSERT_POSITIVE(cecup.traversal[L].file_count);
+        ASSERT_POSITIVE(cecup.traversal[R].file_count);
     }
 
     {

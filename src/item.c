@@ -592,7 +592,7 @@ main(void) {
 
     cecup.sort_order = GTK_SORT_DESCENDING;
     result = cecup_item_compare_int_key(&entry1, &entry2);
-    ASSERT_MORE(result, 0);
+    ASSERT_POSITIVE(result);
 
     entry1.key.ptr = "apple";
     entry2.key.ptr = "banana";
@@ -603,7 +603,7 @@ main(void) {
 
     cecup.sort_order = GTK_SORT_DESCENDING;
     result = cecup_item_compare_string_key(&entry1, &entry2);
-    ASSERT_MORE(result, 0);
+    ASSERT_POSITIVE(result);
 
     /* 4. Test Remaining Utility/Action Functions */
     name_a_ptr = "apple";

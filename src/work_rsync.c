@@ -571,7 +571,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     char full_path[MAX_PATH_LENGTH];
     int32 base_path_len;
 
-    ASSERT_MORE(path_len, 0);
+    ASSERT_POSITIVE(path_len);
 
     if (aux_is_root(path)) {
         LOG_ERROR(_("Refusing to remove configured root path %s.\n"), path);
@@ -1632,7 +1632,7 @@ test_manual_copy_symlink(MessageBatch **batch) {
     target_len_api = readlink(dst_link, target, SIZEOF(target) - 1);
     ASSERT_LESS(target_len_api, MAXOF(target_len));
     target_len = (int32)target_len_api;
-    ASSERT_MORE(target_len, 0);
+    ASSERT_POSITIVE(target_len);
 
     target[target_len] = '\0';
     ASSERT_EQUAL(target, "manual_target.txt");

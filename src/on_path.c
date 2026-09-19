@@ -86,7 +86,7 @@ on_path_editing_started(GtkEditable *editable, void *data) {
 
         start_pos = path_len - name_len;
 
-        ASSERT_MORE(path_len, 0);
+        ASSERT_POSITIVE(path_len);
 
         if (last_dot) {
             if (last_dot != name) {
