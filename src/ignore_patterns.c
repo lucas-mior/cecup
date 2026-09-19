@@ -305,34 +305,25 @@ main(void) {
     IgnorePattern *pattern;
     IgnorePattern patterns[3];
     FILE *file;
-    bool res;
 
     // 1. Test work_match_pattern (rsync asterisk matching rules)
-    res = work_match_pattern("*.c", "main.c", 6, false);
-    ASSERT(res == true);
+    ASSERT(work_match_pattern("*.c", "main.c", 6, false));
 
-    res = work_match_pattern("*.c", "main.h", 6, false);
-    ASSERT(res == false);
+    ASSERT(!work_match_pattern("*.c", "main.h", 6, false));
 
-    res = work_match_pattern("a*b", "axxxb", 5, false);
-    ASSERT(res == true);
+    ASSERT(work_match_pattern("a*b", "axxxb", 5, false));
 
     // Test asterisk and slash restriction
-    res = work_match_pattern("a*b", "a/b", 3, true);
-    ASSERT(res == false);
+    ASSERT(!work_match_pattern("a*b", "a/b", 3, true));
 
-    res = work_match_pattern("a*b", "a/b", 3, false);
-    ASSERT(res == true);
+    ASSERT(work_match_pattern("a*b", "a/b", 3, false));
 
     // Test literals matching (should NOT act as wildcards)
-    res = work_match_pattern("a?b", "axb", 3, false);
-    ASSERT(res == false);
+    ASSERT(!work_match_pattern("a?b", "axb", 3, false));
 
-    res = work_match_pattern("a?b", "a?b", 3, false);
-    ASSERT(res == true);
+    ASSERT(work_match_pattern("a?b", "a?b", 3, false));
 
-    res = work_match_pattern("a[b]c", "a[b]c", 5, false);
-    ASSERT(res == true);
+    ASSERT(work_match_pattern("a[b]c", "a[b]c", 5, false));
 
     // 2. Test ignore_patterns_load
     file = fopen("test_ignore.conf", "w");
