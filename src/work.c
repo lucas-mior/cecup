@@ -942,7 +942,7 @@ main(void) {
         item_get_actions_reasons(row_id, &action_src, &action_dst, &reason);
 
         ASSERT(action_src == entry->expected_src_action);
-        ASSERT((reason & entry->expected_reason_mask) == entry->expected_reason_mask);
+        ASSERT(reason & entry->expected_reason_mask);
     }
 
     {
