@@ -991,7 +991,7 @@ main(void) {
     on_unselect_all_clicked(NULL, NULL);
 
     for (int32 i = 0; i < num_test_rows; i += 1) {
-        ASSERT(cecup.rows_selected[i] == false);
+        ASSERT(!cecup.rows_selected[i]);
     }
 
     {
