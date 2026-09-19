@@ -736,7 +736,7 @@ main(void) {
         ASSERT(!symlink("dummy_target.txt", link_path));
         symlink_len = traversal_symlink_get(&test_traversal,
                                             link_path, &symlink_target);
-        ASSERT(symlink_len > 0);
+        ASSERT_POSITIVE(symlink_len);
         ASSERT_EQUAL(symlink_len, strlen32("dummy_target.txt"));
         ASSERT(symlink_target != NULL);
         ASSERT_EQUAL(symlink_target, "dummy_target.txt");
