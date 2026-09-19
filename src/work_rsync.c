@@ -185,7 +185,7 @@ work_rsync_wait_nohang(Command *command, bool *done) {
     pid_t pid;
     pid_t result;
 
-    ASSERT_MORE(command->result.pid);
+    ASSERT_POSITIVE(command->result.pid);
 
     pid = (pid_t)command->result.pid;
     *done = false;
