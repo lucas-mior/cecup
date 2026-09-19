@@ -185,7 +185,7 @@ work_rsync_wait_nohang(Command *command, bool *done) {
     pid_t pid;
     pid_t result;
 
-    ASSERT(command->result.pid > 0);
+    ASSERT_MORE(command->result.pid);
 
     pid = (pid_t)command->result.pid;
     *done = false;
@@ -1598,7 +1598,7 @@ test_manual_copy_regular_and_dir(MessageBatch **batch) {
     tasks->items[2] = test_task_create(ACTION_NEW, "manual_dir/nested.txt");
 
     ASSERT(work_manual_backend_run(tasks, tasks->count, batch));
-    ASSERT(access(dst_dir, F_OK) == 0);
+    ASSERT(!access(dst_dir, F_OK));
     ASSERT(util_equal_files(src_file, dst_file));
     ASSERT(util_equal_files(src_nested, dst_nested));
 
@@ -1622,7 +1622,7 @@ test_manual_copy_symlink(MessageBatch **batch) {
 
     SNPRINTF(src_link, "%s/manual_link", cecup.base[L]);
     SNPRINTF(dst_link, "%s/manual_link", cecup.base[R]);
-    ASSERT(symlink("manual_target.txt", src_link) == 0);
+    ASSERT(!symlink("manual_target.txt", src_link));
 
     tasks = test_task_list_create(1);
     tasks->items[0] = test_task_create(ACTION_SYMLINK, "manual_link");
@@ -1662,15 +1662,15 @@ test_manual_copy_hardlinks(MessageBatch **batch) {
     SNPRINTF(dst_b, "%s/manual_hard_b", cecup.base[R]);
 
     test_write_file(src_a, "hardlink-data");
-    ASSERT(link(src_a, src_b) == 0);
+    ASSERT(!link(src_a, src_b));
 
     tasks = test_task_list_create(2);
     tasks->items[0] = test_task_create(ACTION_NEW, "manual_hard_a");
     tasks->items[1] = test_task_create(ACTION_NEW, "manual_hard_b");
 
     ASSERT(work_manual_backend_run(tasks, tasks->count, batch));
-    ASSERT(lstat(dst_a, &stat_a) == 0);
-    ASSERT(lstat(dst_b, &stat_b) == 0);
+    ASSERT(!lstat(dst_a, &stat_a));
+    ASSERT(!lstat(dst_b, &stat_b));
     ASSERT_EQUAL(stat_a.st_ino, stat_b.st_ino);
     ASSERT_EQUAL(stat_a.st_dev, stat_b.st_dev);
 
@@ -1696,8 +1696,7 @@ main(void) {
     /* Test valid file itemization: standard rsync flags + space + path */
     {
         char *line = ">f.st...... some/file.txt";
-        result = work_rsync_itemize_skip(line, strlen32(line));
-        ASSERT(result != NULL);
+        ASSERT(result = work_rsync_itemize_skip(line, strlen32(line)));
         ASSERT_EQUAL(result, line + 12);
         ASSERT_EQUAL(result, "some/file.txt");
     }
@@ -1705,8 +1704,7 @@ main(void) {
     /* Test valid directory itemization */
     {
         char *line = ".d..t...... some/dir/";
-        result = work_rsync_itemize_skip(line, strlen32(line));
-        ASSERT(result != NULL);
+        ASSERT(result = work_rsync_itemize_skip(line, strlen32(line)));
         ASSERT_EQUAL(result, line + 12);
         ASSERT_EQUAL(result, "some/dir/");
     }
@@ -1714,29 +1712,25 @@ main(void) {
     /* Test invalid first character (unknown action) */
     {
         char *line = "?f.st...... some/file.txt";
-        result = work_rsync_itemize_skip(line, strlen32(line));
-        ASSERT(result == NULL);
+        ASSERT(work_rsync_itemize_skip(line, strlen32(line)) == NULL);
     }
 
     /* Test invalid second character (unknown type) */
     {
         char *line = ">?.st...... some/file.txt";
-        result = work_rsync_itemize_skip(line, strlen32(line));
-        ASSERT(result == NULL);
+        ASSERT(work_rsync_itemize_skip(line, strlen32(line)) == NULL);
     }
 
     /* Test missing space separator between flags and path */
     {
         char *line = ">f.st......Xsome/file.txt";
-        result = work_rsync_itemize_skip(line, strlen32(line));
-        ASSERT(result == NULL);
+        ASSERT(work_rsync_itemize_skip(line, strlen32(line)) == NULL);
     }
 
     /* Test line too short to contain flags and separator */
     {
         char *line = ">f.st";
-        result = work_rsync_itemize_skip(line, strlen32(line));
-        ASSERT(result == NULL);
+        ASSERT(work_rsync_itemize_skip(line, strlen32(line)) == NULL);
     }
 
     test_make_temp_dir(temp_dir, SIZEOF(temp_dir), "work_rsync");
