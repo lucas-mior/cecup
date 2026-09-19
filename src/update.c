@@ -1020,7 +1020,6 @@ int
 main(void) {
     int32 n = 3;
     Message msg = {0};
-    bool res;
 
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
