@@ -717,8 +717,8 @@ main(void) {
     item_get_actions_reasons(0, &action_src, &action_dst, &rsn);
     ASSERT(action_src == ACTION_UPDATE);
     ASSERT(action_dst == ACTION_UPDATE);
-    ASSERT((rsn & REASON_EQUAL) == 0);
-    ASSERT((rsn & REASON_TYPE) != 0);
+    ASSERT_ZERO(rsn & REASON_EQUAL);
+    ASSERT(rsn & REASON_TYPE);
 
     cecup.traversal[L].stats[0].st_mode = S_IFDIR | 0644;
     cecup.traversal[R].stats[0].st_mode = S_IFREG | 0644;
