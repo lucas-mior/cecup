@@ -422,8 +422,8 @@ main(void) {
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "foo/bar");
-    pattern = ignore_patterns_match("foo/bar/baz.c", 13, false, patterns, 1);
-    ASSERT(pattern != NULL);
+    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/bar/baz.c"),
+                                           false, patterns, 1));
     ASSERT_EQUAL(pattern->str, "foo/bar");
     free2(patterns[0].str, patterns[0].len + 1);
 
