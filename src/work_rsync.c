@@ -1826,7 +1826,7 @@ main(void) {
     close(fd);
     work_remove(&batch, "rm_dir/", 7, R);
     SNPRINTF(path, "%s/rm_dir", cecup.base[R]);
-    ASSERT(!access(path, F_OK));
+    ASSERT(access(path, F_OK));
 
     test_manual_copy_regular_and_dir(&batch);
     test_manual_copy_symlink(&batch);
