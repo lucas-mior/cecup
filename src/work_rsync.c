@@ -1859,7 +1859,7 @@ main(void) {
         *thread_data = (ThreadData){0};
         thread_data->tasks = task_list;
 
-        ASSERT(setenv("CECUP_TRANSFER_BACKEND", "manual", true) == 0);
+        ASSERT(!setenv("CECUP_TRANSFER_BACKEND", "manual", true));
         xpthread_create(&thread, NULL, work_rsync, thread_data);
         xpthread_join(&thread, NULL);
         unsetenv("CECUP_TRANSFER_BACKEND");
