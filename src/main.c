@@ -491,7 +491,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
             "progressbar text { font-size: 11pt; font-weight: bold; }"
         };
         GtkCssProvider *css_provider;
-        StrBuilder css = {0};
+        String css = {0};
 
         css_provider = gtk_css_provider_new();
 

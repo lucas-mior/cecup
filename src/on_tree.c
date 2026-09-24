@@ -275,7 +275,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     enum ColumnType column_type = COLUMN_COUNT;
     int32 side;
     char *tip_text = NULL;
-    StrBuilder tip_builder = {0};
+    String tip_builder = {0};
     char text_buf[64] = "";
 
     char *filepath;
@@ -335,7 +335,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         break;
     case COLUMN_PATH:
     {
-        StrBuilder reason_builder = {0};
+        String reason_builder = {0};
         char *reason_text;
         char *symlink_target;
         char *ignore_pattern;
