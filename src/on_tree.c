@@ -367,34 +367,34 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
             if (reason_builder.len > 0) {
                 STR_APPEND(&reason_builder, "\n");
             }
-            sb_printf(&reason_builder, "%s", base_msg);
+            str_printf(&reason_builder, "%s", base_msg);
         }
 
         symlink_target = item_symlink_target_side(row_id, side);
         ignore_pattern = item_ignore_pattern_side(row_id, side);
         item_hardlink_side(row_id, side, &hard_links);
-        reason_text = sb_opt_cstr(&reason_builder);
+        reason_text = str_opt_cstr(&reason_builder);
 
         if (symlink_target) {
-            sb_printf(&tip_builder,
+            str_printf(&tip_builder,
                       "%s\n%s%s:\n%s", filepath, RSYNC_SYMLINK, symlink_target, reason_text);
         } else if (hard_links.count > 0) {
-            sb_printf(&tip_builder, "%s:\n%s", filepath, reason_text);
-            sb_printf(&tip_builder,
+            str_printf(&tip_builder, "%s:\n%s", filepath, reason_text);
+            str_printf(&tip_builder,
                       _("\n\nThere are %d names for this file:\n"), hard_links.count);
 
             for (int32 j = 0; j < hard_links.count; j += 1) {
                 ASSERT_LESS(hard_links.names_lens[j], MAX_PATH_LENGTH/2);
-                sb_printf(&tip_builder, "\n%s%s", RSYNC_HARDLINK, hard_links.names[j]);
+                str_printf(&tip_builder, "\n%s%s", RSYNC_HARDLINK, hard_links.names[j]);
             }
         } else if (ignore_pattern) {
-            sb_printf(&tip_builder,
+            str_printf(&tip_builder,
                       "%s:\n%s (" N_("pattern") ": %s)", filepath, reason_text, ignore_pattern);
         } else {
-            sb_printf(&tip_builder, "%s:\n%s", filepath, reason_text);
+            str_printf(&tip_builder, "%s:\n%s", filepath, reason_text);
         }
         tip_text = tip_builder.data;
-        sb_free(&reason_builder);
+        str_free(&reason_builder);
         break;
     }
     case COLUMN_SIZE:
@@ -404,7 +404,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         if ((size_raw = item_size_side(row_id, side)) < 0) {
             size_raw = 0;
         }
-        sb_printf(&tip_builder, "%s: %lld bytes", filepath, size_raw);
+        str_printf(&tip_builder, "%s: %lld bytes", filepath, size_raw);
         tip_text = tip_builder.data;
         break;
     }
@@ -420,7 +420,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
             gmtime_r(&unix_timestamp, &time_information);
             STRFTIME(text_buf, "%Y-%m-%d %H:%M:%S", &time_information);
         }
-        sb_printf(&tip_builder, "%s: %s", filepath, text_buf);
+        str_printf(&tip_builder, "%s: %s", filepath, text_buf);
         tip_text = tip_builder.data;
         break;
     }
@@ -439,11 +439,11 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         gtk_label_set_max_width_chars(GTK_LABEL(label), 120);
 
         gtk_tooltip_set_custom(t, label);
-        sb_free(&tip_builder);
+        str_free(&tip_builder);
         return TRUE;
     }
 
-    sb_free(&tip_builder);
+    str_free(&tip_builder);
     return FALSE;
 }
 

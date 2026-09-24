@@ -496,7 +496,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         css_provider = gtk_css_provider_new();
 
         for (int32 i = 0; i < LENGTH(base_css); i += 1) {
-            sb_printf(&css, "%s\n", base_css[i]);
+            str_printf(&css, "%s\n", base_css[i]);
         }
 
         for (int32 i = 0; i < LENGTH(colors); i += 1) {
@@ -504,14 +504,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
                 continue;
             }
 
-            sb_printf(&css,
+            str_printf(&css,
                       "row:not(:selected)"
                       " .cell-color-%d { background-color: %s; }\n",
                       i, colors[i]);
         }
 
         gtk_css_provider_load_from_string(css_provider, css.data);
-        sb_free(&css);
+        str_free(&css);
         gtk_style_context_add_provider_for_display(gdk_display_get_default(),
                                                    GTK_STYLE_PROVIDER(css_provider),
                                                    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
