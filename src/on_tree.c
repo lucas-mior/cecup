@@ -365,7 +365,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                 continue;
             }
             if (reason_builder.len > 0) {
-                SB_APPEND(&reason_builder, "\n");
+                STR_APPEND(&reason_builder, "\n");
             }
             sb_printf(&reason_builder, "%s", base_msg);
         }
