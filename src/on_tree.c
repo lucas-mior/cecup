@@ -135,7 +135,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                     bool is_dir = false;
 
                     path_len = item_path_len_side(row_id, side);
-                    ASSERT_LESS(path_len, SIZEOF(path_copy));
+                    ASSERT_LT(path_len, SIZEOF(path_copy));
                     memcpy64(path_copy, filepath, path_len + 1);
 
                     if (path_len > 0 && path_copy[path_len - 1] == '/') {
@@ -384,7 +384,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                       _("\n\nThere are %d names for this file:\n"), hard_links.count);
 
             for (int32 j = 0; j < hard_links.count; j += 1) {
-                ASSERT_LESS(hard_links.names_lens[j], MAX_PATH_LENGTH/2);
+                ASSERT_LT(hard_links.names_lens[j], MAX_PATH_LENGTH/2);
                 str_printf(&tip_builder, "\n%s%s", RSYNC_HARDLINK, hard_links.names[j]);
             }
         } else if (ignore_pattern) {

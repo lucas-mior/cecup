@@ -650,7 +650,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
                 rel_path_len = 1;
             }
 
-            ASSERT_LESS(entry->path_len, MAX_PATH_LENGTH);
+            ASSERT_LT(entry->path_len, MAX_PATH_LENGTH);
             memcpy64(rel_path, path_tmp, rel_path_len + 1);
             normalize(rel_path, &rel_path_len);
 
@@ -1630,7 +1630,7 @@ test_manual_copy_symlink(MessageBatch **batch) {
     ASSERT(work_manual_backend_run(tasks, tasks->count, batch));
 
     target_len_api = readlink(dst_link, target, SIZEOF(target) - 1);
-    ASSERT_LESS(target_len_api, MAXOF(target_len));
+    ASSERT_LT(target_len_api, MAXOF(target_len));
     target_len = (int32)target_len_api;
     ASSERT_POSITIVE(target_len);
 

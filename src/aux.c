@@ -301,8 +301,8 @@ cecup_get_dirs(void) {
     normalize(full_src, &full_src_len);
     normalize(full_dst, &full_dst_len);
 
-    ASSERT_LESS(full_dst_len, PATH_MAX - 2);
-    ASSERT_LESS(full_src_len, PATH_MAX - 2);
+    ASSERT_LT(full_dst_len, PATH_MAX - 2);
+    ASSERT_LT(full_src_len, PATH_MAX - 2);
 
     if (full_src[full_src_len - 1] != '/') {
         full_src_len += 1;

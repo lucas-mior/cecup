@@ -162,7 +162,7 @@ cecup_list_model_get_item(GListModel *list, guint position) {
         }
     }
 
-    ASSERT_LESS_VAR(pos, cecup.rows_visible_len);
+    ASSERT_LT_VAR(pos, cecup.rows_visible_len);
 
     // IS THIS A PROBLEM? Data Race / Use-After-Free.
     // This GTK signal executes in the main UI thread.
