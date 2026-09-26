@@ -704,7 +704,7 @@ update_list_from_rows(enum UpdateRowsType change) {
 
     cache_rows = realloc2(cache_rows, cache_rows_capacity, cecup.rows_len, SIZEOF(*cache_rows));
     if (cache_rows_capacity == 0) {
-        ASSERT_EQUAL((int32)change, (int32)UPDATE_ROWS_COMPLETE);
+        ASSERT_EQ((int32)change, (int32)UPDATE_ROWS_COMPLETE);
     }
     for (int32 i = cache_rows_capacity; i < cecup.rows_len; i += 1) {
         RowCache *cache_row = &cache_rows[i];
@@ -1151,18 +1151,18 @@ main(void) {
 
     /* Remove from one side only. Rows count shouldn't change. */
     ASSERT(update_row_remove(msg.src_path, msg.src_path_len, msg.side));
-    ASSERT_EQUAL(cecup.rows[L][0], -1);
-    ASSERT_EQUAL(cecup.rows[R][0], 0);
-    ASSERT_EQUAL(cecup.rows_len, 3);
+    ASSERT_EQ(cecup.rows[L][0], -1);
+    ASSERT_EQ(cecup.rows[R][0], 0);
+    ASSERT_EQ(cecup.rows_len, 3);
 
     /* Remove from the other side. Arrays must shift. */
     msg.side = R;
     ASSERT(update_row_remove(msg.src_path, msg.src_path_len, msg.side));
-    ASSERT_EQUAL(cecup.rows_len, 2);
+    ASSERT_EQ(cecup.rows_len, 2);
 
     /* Index 1 (file_b) should now be row 0 */
-    ASSERT_EQUAL(cecup.rows[L][0], 1);
-    ASSERT_EQUAL(cecup.traversal[L].row_ids[1], 0);
+    ASSERT_EQ(cecup.rows[L][0], 1);
+    ASSERT_EQ(cecup.traversal[L].row_ids[1], 0);
 
     /* --- Test update_row_rename --- */
     {
@@ -1185,7 +1185,7 @@ main(void) {
 
         /* file_c is currently at row_id 1 after the previous shifts */
         ASSERT(cecup.traversal[L].patterns[cecup.rows[L][1]] != NULL);
-        ASSERT_EQUAL(cecup.traversal[L].patterns[cecup.rows[L][1]], "file_c");
+        ASSERT_EQ(cecup.traversal[L].patterns[cecup.rows[L][1]], "file_c");
     }
 
     /* --- Test update_list_from_rows (UI filtering logic) --- */
@@ -1241,7 +1241,7 @@ main(void) {
         *ui_msg = (Message){0};
         ui_msg->type = MSG_CLEAR_TREES;
         update_ui_handler(ui_msg);
-        ASSERT_EQUAL(cecup.rows_len, 0);
+        ASSERT_EQ(cecup.rows_len, 0);
     }
 
     /* --- Test update_rows (Batch processing) --- */

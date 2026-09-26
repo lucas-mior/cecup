@@ -193,7 +193,7 @@ main(void) {
     }
 
     ASSERT(res.text != NULL);
-    ASSERT_EQUAL(res.text, "Log message 0\nLog message 1\nLog message 2");
+    ASSERT_EQ(res.text, "Log message 0\nLog message 1\nLog message 2");
     g_free(res.text);
 
     /* Test specific line copy */
@@ -210,7 +210,7 @@ main(void) {
     }
 
     ASSERT(res.text != NULL);
-    ASSERT_EQUAL(res.text, "Log message 1");
+    ASSERT_EQ(res.text, "Log message 1");
     g_free(res.text);
 
     /* Test early exit due to null parameter on line copy */

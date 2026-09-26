@@ -179,7 +179,7 @@ main(void) {
     // 2. Test row selection loop
     tasks = get_target_tasks(L, NULL, ACTION_EQUAL);
     ASSERT(tasks != NULL);
-    ASSERT_EQUAL(tasks->count, 2);
+    ASSERT_EQ(tasks->count, 2);
     task_list_free(tasks);
 
     // 3. Test ACTION_HARDLINK logic via fallback
@@ -192,17 +192,17 @@ main(void) {
     {
         char *path_to_find = cecup.traversal[L].paths[0];
         tasks = get_target_tasks(L, path_to_find, ACTION_HARDLINK);
-        ASSERT_EQUAL(tasks->count, 1);
+        ASSERT_EQ(tasks->count, 1);
         ASSERT(tasks->items[0]->action == ACTION_HARDLINK);
-        ASSERT_EQUAL((int32)tasks->items[0]->file_id.device, L);
-        ASSERT_EQUAL((int32)tasks->items[0]->file_id.inode, 100);
+        ASSERT_EQ((int32)tasks->items[0]->file_id.device, L);
+        ASSERT_EQ((int32)tasks->items[0]->file_id.inode, 100);
         task_list_free(tasks);
     }
 
     // Test fallback with path not in map (file id remains zero)
     tasks = get_target_tasks(L, "missing.txt", ACTION_HARDLINK);
-    ASSERT_EQUAL(tasks->count, 1);
-    ASSERT_EQUAL((int32)tasks->items[0]->file_id.inode, 0);
+    ASSERT_EQ(tasks->count, 1);
+    ASSERT_EQ((int32)tasks->items[0]->file_id.inode, 0);
     task_list_free(tasks);
 
     // 4. Cleanup

@@ -668,9 +668,9 @@ int main(void) {
     ASSERT(!work_should_stop());
 
     child_pid_set((pid_t)1234);
-    ASSERT_EQUAL(child_pid_get(), (pid_t)1234);
+    ASSERT_EQ(child_pid_get(), (pid_t)1234);
     child_pid_set((pid_t)0);
-    ASSERT_EQUAL(child_pid_get(), (pid_t)0);
+    ASSERT_EQ(child_pid_get(), (pid_t)0);
 
     if (!gtk_init_check()) {
         error("gtk_init_check() failed while running aux.c tests. "

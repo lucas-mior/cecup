@@ -712,9 +712,9 @@ main(void) {
 
     idx = traversal_push(&test_traversal, &dummy_stat,
                          "file_1", 6, NULL, 0, NULL, 0);
-    ASSERT_EQUAL(idx, 0);
-    ASSERT_EQUAL(test_traversal.nfiles, 1);
-    ASSERT_EQUAL((int32)test_traversal.stats[0].st_ino, 100);
+    ASSERT_EQ(idx, 0);
+    ASSERT_EQ(test_traversal.nfiles, 1);
+    ASSERT_EQ((int32)test_traversal.stats[0].st_ino, 100);
 
     for (int32 i = 1; i < (INITIAL_CAPACITY + 5); i += 1) {
         char *name = xarena_push(test_traversal.arena, 16);
@@ -723,7 +723,7 @@ main(void) {
                        strlen32(name), NULL, 0, NULL, 0);
     }
     ASSERT(test_traversal.capacity > INITIAL_CAPACITY);
-    ASSERT_EQUAL(test_traversal.nfiles, INITIAL_CAPACITY + 5);
+    ASSERT_EQ(test_traversal.nfiles, INITIAL_CAPACITY + 5);
 
     /* 2.5 Test traversal_symlink_get */
     symlink_target = NULL;
@@ -736,7 +736,7 @@ main(void) {
         ASSERT(!symlink("dummy_target.txt", link_path));
         symlink_len = traversal_symlink_get(&test_traversal,
                                             link_path, &symlink_target);
-        ASSERT_EQUAL(symlink_target, symlink_len, "dummy_target.txt");
+        ASSERT_EQ(symlink_target, symlink_len, "dummy_target.txt");
         remove(link_path);
     }
 
@@ -756,7 +756,7 @@ main(void) {
     /* Add first link */
     traversal_add_link(&test_traversal, link_stat, "link_a", 6);
     ASSERT(hash_lookup_inode_map(test_traversal.inode_map, &link_file_id, &hl));
-    ASSERT_EQUAL(hl.count, 1);
+    ASSERT_EQ(hl.count, 1);
 
     first_lo = hl.aggregate_hash_lo;
     first_hi = hl.aggregate_hash_hi;
@@ -764,7 +764,7 @@ main(void) {
     /* Add second link and verify XOR sum changed */
     traversal_add_link(&test_traversal, link_stat, "link_b", 6);
     hash_lookup_inode_map(test_traversal.inode_map, &link_file_id, &hl);
-    ASSERT_EQUAL(hl.count, 2);
+    ASSERT_EQ(hl.count, 2);
     ASSERT(hl.aggregate_hash_lo != first_lo);
     ASSERT(hl.aggregate_hash_hi != first_hi);
 
@@ -778,9 +778,9 @@ main(void) {
 
         ASSERT(hash_lookup_inode_map(test_traversal.inode_map,
                                      &other_file_id, &other_hl));
-        ASSERT_EQUAL(other_hl.count, 1);
+        ASSERT_EQ(other_hl.count, 1);
         hash_lookup_inode_map(test_traversal.inode_map, &link_file_id, &hl);
-        ASSERT_EQUAL(hl.count, 2);
+        ASSERT_EQ(hl.count, 2);
     }
 
     /* 4. Test traversal_unlink 128-bit restoration */
@@ -793,15 +793,15 @@ main(void) {
     /* After unlinking 'link_a', the hash should return to its state after */
     /* 'link_b' alone, because A ^ B ^ A = B. */
     hash_lookup_inode_map(test_traversal.inode_map, &link_file_id, &hl);
-    ASSERT_EQUAL(hl.count, 1);
+    ASSERT_EQ(hl.count, 1);
 
     hash_b = rapidhash128("link_b", 6);
-    ASSERT_EQUAL_VAR(hl.aggregate_hash_lo, hash_b.lo);
-    ASSERT_EQUAL_VAR(hl.aggregate_hash_hi, hash_b.hi);
+    ASSERT_EQ_VAR(hl.aggregate_hash_lo, hash_b.lo);
+    ASSERT_EQ_VAR(hl.aggregate_hash_hi, hash_b.hi);
 
     /* 5. Clean and Free */
     traversal_clean(&test_traversal);
-    ASSERT_EQUAL(test_traversal.nfiles, 0);
+    ASSERT_EQ(test_traversal.nfiles, 0);
 
     traversal_free(&test_traversal);
     test_remove_tree(temp_dir);

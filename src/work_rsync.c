@@ -1635,7 +1635,7 @@ test_manual_copy_symlink(MessageBatch **batch) {
     ASSERT_POSITIVE(target_len);
 
     target[target_len] = '\0';
-    ASSERT_EQUAL(target, "manual_target.txt");
+    ASSERT_EQ(target, "manual_target.txt");
 
     work_batch_flush(batch);
     task_list_free(tasks);
@@ -1671,8 +1671,8 @@ test_manual_copy_hardlinks(MessageBatch **batch) {
     ASSERT(work_manual_backend_run(tasks, tasks->count, batch));
     ASSERT(!lstat(dst_a, &stat_a));
     ASSERT(!lstat(dst_b, &stat_b));
-    ASSERT_EQUAL_VAR(stat_a.st_ino, stat_b.st_ino);
-    ASSERT_EQUAL_VAR(stat_a.st_dev, stat_b.st_dev);
+    ASSERT_EQ_VAR(stat_a.st_ino, stat_b.st_ino);
+    ASSERT_EQ_VAR(stat_a.st_dev, stat_b.st_dev);
 
     work_batch_flush(batch);
     task_list_free(tasks);
@@ -1697,16 +1697,16 @@ main(void) {
     {
         char *line = ">f.st...... some/file.txt";
         ASSERT(result = work_rsync_itemize_skip(line, strlen32(line)));
-        ASSERT_EQUAL_VAR(result, line + 12);
-        ASSERT_EQUAL(result, "some/file.txt");
+        ASSERT_EQ_VAR(result, line + 12);
+        ASSERT_EQ(result, "some/file.txt");
     }
 
     /* Test valid directory itemization */
     {
         char *line = ".d..t...... some/dir/";
         ASSERT(result = work_rsync_itemize_skip(line, strlen32(line)));
-        ASSERT_EQUAL_VAR(result, line + 12);
-        ASSERT_EQUAL(result, "some/dir/");
+        ASSERT_EQ_VAR(result, line + 12);
+        ASSERT_EQ(result, "some/dir/");
     }
 
     /* Test invalid first character (unknown action) */
@@ -1764,15 +1764,15 @@ main(void) {
     batch = NULL;
     work_batch_push(&batch, MSG_BATCH_ROW_TRANSFER, L, "file.txt", 8);
     ASSERT(batch != NULL);
-    ASSERT_EQUAL(batch->count, 1);
-    ASSERT_EQUAL(batch->paths[0], "file.txt");
+    ASSERT_EQ(batch->count, 1);
+    ASSERT_EQ(batch->paths[0], "file.txt");
 
     /* Push different type to force a flush */
     work_batch_push(&batch, MSG_BATCH_ROW_REMOVE, L, "other.txt", 9);
     ASSERT(batch != NULL);
-    ASSERT_EQUAL(batch->count, 1);
-    ASSERT_EQUAL((uint32)batch->type, (uint32)MSG_BATCH_ROW_REMOVE);
-    ASSERT_EQUAL(batch->paths[0], "other.txt");
+    ASSERT_EQ(batch->count, 1);
+    ASSERT_EQ((uint32)batch->type, (uint32)MSG_BATCH_ROW_REMOVE);
+    ASSERT_EQ(batch->paths[0], "other.txt");
 
     work_batch_flush(&batch);
     ASSERT(batch == NULL);
@@ -1784,9 +1784,9 @@ main(void) {
                            "old.txt", 7,
                            "new.txt", 7);
     ASSERT(batch != NULL);
-    ASSERT_EQUAL(batch->count, 1);
-    ASSERT_EQUAL(batch->paths[0], "old.txt");
-    ASSERT_EQUAL(batch->dst_paths[0], "new.txt");
+    ASSERT_EQ(batch->count, 1);
+    ASSERT_EQ(batch->paths[0], "old.txt");
+    ASSERT_EQ(batch->dst_paths[0], "new.txt");
     work_batch_flush(&batch);
     ASSERT(batch == NULL);
 

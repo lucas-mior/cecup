@@ -581,15 +581,15 @@ main(void) {
 
         COMMAND_PUSH(&command, "/destination", "/source");
 
-        ASSERT_EQUAL(command.argc, 7);
-        ASSERT_EQUAL(command.argv[0], "xterm");
-        ASSERT_EQUAL(command.argv[1], "--hold");
-        ASSERT_EQUAL(command.argv[2], "-e");
-        ASSERT_EQUAL(command.argv[3], "diff");
-        ASSERT_EQUAL(command.argv[4], "--color=always");
-        ASSERT_EQUAL(command.argv[5], "/destination");
-        ASSERT_EQUAL(command.argv[6], "/source");
-        ASSERT_EQUAL(command.argv[command.argc], NULL);
+        ASSERT_EQ(command.argc, 7);
+        ASSERT_EQ(command.argv[0], "xterm");
+        ASSERT_EQ(command.argv[1], "--hold");
+        ASSERT_EQ(command.argv[2], "-e");
+        ASSERT_EQ(command.argv[3], "diff");
+        ASSERT_EQ(command.argv[4], "--color=always");
+        ASSERT_EQ(command.argv[5], "/destination");
+        ASSERT_EQ(command.argv[6], "/source");
+        ASSERT_EQ(command.argv[command.argc], NULL);
 
         command_free(&command);
     }
@@ -620,8 +620,8 @@ main(void) {
     read_bytes = fread64(buffer, 1, SIZEOF(buffer) - 1, file);
     fclose(file);
 
-    ASSERT_EQUAL(read_bytes, STRLIT_LEN("*.test_ext\n"));
-    ASSERT_EQUAL(buffer, "*.test_ext\n");
+    ASSERT_EQ(read_bytes, STRLIT_LEN("*.test_ext\n"));
+    ASSERT_EQ(buffer, "*.test_ext\n");
 
     remove(cecup.ignore_path);
 
@@ -679,7 +679,7 @@ main(void) {
         }
 
         ASSERT(clipboard_result.text != NULL);
-        ASSERT_EQUAL_VAR(clipboard_result.text, expected);
+        ASSERT_EQ_VAR(clipboard_result.text, expected);
         g_free(clipboard_result.text);
     }
 

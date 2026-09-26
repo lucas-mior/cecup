@@ -556,14 +556,14 @@ main(void) {
 
         ASSERT(lookup_row_id != NULL);
         row_id = GPOINTER_TO_INT(lookup_row_id) - 1;
-        ASSERT_EQUAL(row_id, 100);
+        ASSERT_EQ(row_id, 100);
 
         col = (enum ColumnType)GPOINTER_TO_INT(lookup_col);
-        ASSERT_EQUAL((int32)col, (int32)COLUMN_PATH);
+        ASSERT_EQ((int32)col, (int32)COLUMN_PATH);
 
         target = gdk_keyval_to_lower(GDK_KEY_Delete);
         pressed = gdk_keyval_to_lower(GDK_KEY_Delete);
-        ASSERT_EQUAL_VAR((int32)target, (int32)pressed);
+        ASSERT_EQ_VAR((int32)target, (int32)pressed);
 
         gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(gesture));
         gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(key_controller));
@@ -571,11 +571,11 @@ main(void) {
         on_tree_button_press(GTK_GESTURE_CLICK(gesture), 1, 0.0, 0.0, NULL);
 
         handled = on_tree_tooltip(tree, 0, 0, FALSE, NULL, NULL);
-        ASSERT_EQUAL(handled, FALSE);
+        ASSERT_EQ(handled, FALSE);
 
         handled = on_tree_key_press(GTK_EVENT_CONTROLLER_KEY(key_controller),
                                     GDK_KEY_Delete, 0, 0, NULL);
-        ASSERT_EQUAL(handled, FALSE);
+        ASSERT_EQ(handled, FALSE);
 
         gtk_window_destroy(GTK_WINDOW(window));
         g_object_unref(cecup.application);

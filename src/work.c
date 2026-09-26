@@ -927,13 +927,13 @@ main(void) {
         }
 
         if (entry->src_missing) {
-            ASSERT_EQUAL(src_idx, -1);
+            ASSERT_EQ(src_idx, -1);
         } else {
             ASSERT_NON_NEGATIVE(src_idx);
         }
 
         if (entry->dst_missing) {
-            ASSERT_EQUAL(dst_idx, -1);
+            ASSERT_EQ(dst_idx, -1);
         } else {
             ASSERT_NON_NEGATIVE(dst_idx);
         }
@@ -981,7 +981,7 @@ main(void) {
         xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
         xpthread_join(&cecup.work_thread, NULL);
 
-        ASSERT_EQUAL(cecup.ntransfers, 0);
+        ASSERT_EQ(cecup.ntransfers, 0);
     }
 
     if (cecup.transfers_capacity > 0) {

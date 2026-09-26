@@ -1068,8 +1068,8 @@ main(int32 argc, char **argv) {
     program = argv[0];
     timezone_init();
 
-    ASSERT_EQUAL(!L, R);
-    ASSERT_EQUAL(!R, L);
+    ASSERT_EQ(!L, R);
+    ASSERT_EQ(!R, L);
 
     disable_dbus_warning();
 

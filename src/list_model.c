@@ -347,7 +347,7 @@ main(void) {
     ASSERT(proxy != NULL);
 
     index_val = cecup_item_proxy_get_index(proxy);
-    ASSERT_EQUAL(index_val, 42);
+    ASSERT_EQ(index_val, 42);
 
     g_object_unref(proxy);
 
@@ -360,13 +360,13 @@ main(void) {
 
     new_item_idx = item_add(10, 20);
 
-    ASSERT_EQUAL(new_item_idx, 0);
-    ASSERT_EQUAL(cecup.rows_len, 1);
-    ASSERT_EQUAL(cecup.rows_capacity, 1024);
-    ASSERT_EQUAL(cecup.rows[L][0], 10);
-    ASSERT_EQUAL(cecup.rows[R][0], 20);
-    ASSERT_EQUAL(cecup.traversal[L].row_ids[10], 0);
-    ASSERT_EQUAL(cecup.traversal[R].row_ids[20], 0);
+    ASSERT_EQ(new_item_idx, 0);
+    ASSERT_EQ(cecup.rows_len, 1);
+    ASSERT_EQ(cecup.rows_capacity, 1024);
+    ASSERT_EQ(cecup.rows[L][0], 10);
+    ASSERT_EQ(cecup.rows[R][0], 20);
+    ASSERT_EQ(cecup.traversal[L].row_ids[10], 0);
+    ASSERT_EQ(cecup.traversal[R].row_ids[20], 0);
     ASSERT(!cecup.rows_selected[0]);
 
     item_add(11, 21);
@@ -392,11 +392,11 @@ main(void) {
     }
 
     n_items = g_list_model_get_n_items(G_LIST_MODEL(model));
-    ASSERT_EQUAL(n_items, 3);
+    ASSERT_EQ(n_items, 3);
 
     item = g_list_model_get_item(G_LIST_MODEL(model), 1);
     ASSERT(item != NULL);
-    ASSERT_EQUAL(cecup_item_proxy_get_index(CECUP_ITEM_PROXY(item)), 1);
+    ASSERT_EQ(cecup_item_proxy_get_index(CECUP_ITEM_PROXY(item)), 1);
     g_object_unref(item);
 
     item = g_list_model_get_item(G_LIST_MODEL(model), 10);

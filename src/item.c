@@ -571,13 +571,13 @@ main(void) {
     h_new = rapidhash128("new_file.txt", 12);
     hard_link_replace_node(&hl3, "file2.txt", names_lens[1], "new_file.txt", 12);
 
-    ASSERT_EQUAL(hl3.count, 3);
-    ASSERT_EQUAL(hl3.names[1], "new_file.txt");
-    ASSERT_EQUAL(hl3.names_lens[1], 12);
+    ASSERT_EQ(hl3.count, 3);
+    ASSERT_EQ(hl3.names[1], "new_file.txt");
+    ASSERT_EQ(hl3.names_lens[1], 12);
 
     /* Verify 128-bit hash consistency after replacement */
-    ASSERT_EQUAL_VAR(hl3.aggregate_hash_lo, (h0.lo ^ h2.lo ^ h_new.lo));
-    ASSERT_EQUAL_VAR(hl3.aggregate_hash_hi, (h0.hi ^ h2.hi ^ h_new.hi));
+    ASSERT_EQ_VAR(hl3.aggregate_hash_lo, (h0.lo ^ h2.lo ^ h_new.lo));
+    ASSERT_EQ_VAR(hl3.aggregate_hash_hi, (h0.hi ^ h2.hi ^ h_new.hi));
 
     /* 3. Test Sorting Comparisons */
     memset64(&entry1, 0, SIZEOF(entry1));
@@ -670,18 +670,18 @@ main(void) {
     cecup.traversal[R].patterns[2] = NULL;
 
     /* Assert Basic Getters */
-    ASSERT_EQUAL(item_path_get(0), "left0");
-    ASSERT_EQUAL(item_path_len_get(0), 5);
-    ASSERT_EQUAL(item_path_side(0, L), "left0");
-    ASSERT_EQUAL(item_path_side(0, R), "right0");
-    ASSERT_EQUAL(item_size_side(0, L), 100);
-    ASSERT_EQUAL(item_size_side(0, R), 100);
-    ASSERT_EQUAL(item_size_side(1, R), -1);
-    ASSERT_EQUAL(item_mtime_side(0, L), 1000);
-    ASSERT_EQUAL(item_mtime_side(1, R), 0);
+    ASSERT_EQ(item_path_get(0), "left0");
+    ASSERT_EQ(item_path_len_get(0), 5);
+    ASSERT_EQ(item_path_side(0, L), "left0");
+    ASSERT_EQ(item_path_side(0, R), "right0");
+    ASSERT_EQ(item_size_side(0, L), 100);
+    ASSERT_EQ(item_size_side(0, R), 100);
+    ASSERT_EQ(item_size_side(1, R), -1);
+    ASSERT_EQ(item_mtime_side(0, L), 1000);
+    ASSERT_EQ(item_mtime_side(1, R), 0);
     ASSERT_NULL(item_ignore_pattern_side(0, L));
-    ASSERT_EQUAL(item_path_len_side(0, R), 6);
-    ASSERT_EQUAL(item_symlink_target_side(0, L), "tgtL");
+    ASSERT_EQ(item_path_len_side(0, R), 6);
+    ASSERT_EQ(item_symlink_target_side(0, L), "tgtL");
 
     memset64(&dump_hl, 0, SIZEOF(dump_hl));
     ASSERT(!item_hardlink_side(0, L, &dump_hl));
