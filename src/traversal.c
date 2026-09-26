@@ -796,8 +796,8 @@ main(void) {
     ASSERT_EQ(hl.count, 1);
 
     hash_b = rapidhash128("link_b", 6);
-    ASSERT_EQ(hl.aggregate_hash_lo, hash_b.lo);
-    ASSERT_EQ(hl.aggregate_hash_hi, hash_b.hi);
+    ASSERT(hl.aggregate_hash_lo == hash_b.lo);
+    ASSERT(hl.aggregate_hash_hi == hash_b.hi);
 
     /* 5. Clean and Free */
     traversal_clean(&test_traversal);
