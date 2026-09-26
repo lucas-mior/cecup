@@ -735,7 +735,7 @@ update_list_from_rows(enum UpdateRowsType change) {
             row_id = cache_rows[i].row_id;
             src_action = cache_rows[i].src_action;
             dst_action = cache_rows[i].dst_action;
-            ASSERT_MORE(row_id, -1);
+            ASSERT_GT(row_id, -1);
         }
 
         idx_src = cecup.rows[L][row_id];
@@ -1172,7 +1172,7 @@ main(void) {
         /* Old idx 1 must be removed, new idx assigned */
         ASSERT_NEGATIVE(cecup.traversal[L].row_ids[1]);
         /* it pushes a new item to traversal array */
-        ASSERT_MORE(cecup.rows[L][0], 1);
+        ASSERT_GT(cecup.rows[L][0], 1);
     }
 
     /* --- Test update_row_ignore --- */
