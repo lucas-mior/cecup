@@ -414,10 +414,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
 
         if (mtime_raw > 0) {
             struct tm time_information;
-            time_t unix_timestamp;
 
-            unix_timestamp = (time_t)mtime_raw + timezone_offset;
-            gmtime_r(&unix_timestamp, &time_information);
+            time_localtime((time_t)mtime_raw, &time_information);
             STRFTIME(text_buf, "%Y-%m-%d %H:%M:%S", &time_information);
         }
         str_printf(&tip_builder, "%s: %s", filepath, text_buf);

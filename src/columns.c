@@ -236,9 +236,8 @@ column_text_bind(GtkSignalListItemFactory *factory, GtkListItem *list_item, void
     if (text_info->type == COLUMN_MTIME) {
         if (mtime > 0) {
             struct tm time_information;
-            time_t unix_timestamp = (time_t)mtime + timezone_offset;
 
-            gmtime_r(&unix_timestamp, &time_information);
+            time_localtime((time_t)mtime, &time_information);
             STRFTIME(text_buf, "%Y-%m-%d %H:%M:%S", &time_information);
         }
     } else if (text_info->type == COLUMN_SIZE) {
