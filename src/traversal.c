@@ -736,10 +736,7 @@ main(void) {
         ASSERT(!symlink("dummy_target.txt", link_path));
         symlink_len = traversal_symlink_get(&test_traversal,
                                             link_path, &symlink_target);
-        ASSERT_POSITIVE(symlink_len);
-        ASSERT_EQUAL(symlink_len, strlen32("dummy_target.txt"));
-        ASSERT(symlink_target != NULL);
-        ASSERT_EQUAL(symlink_target, "dummy_target.txt");
+        ASSERT_EQUAL(symlink_target, symlink_len, "dummy_target.txt");
         remove(link_path);
     }
 
@@ -799,8 +796,8 @@ main(void) {
     ASSERT_EQUAL(hl.count, 1);
 
     hash_b = rapidhash128("link_b", 6);
-    ASSERT_EQUAL(hl.aggregate_hash_lo, hash_b.lo);
-    ASSERT_EQUAL(hl.aggregate_hash_hi, hash_b.hi);
+    ASSERT_EQUAL_VAR(hl.aggregate_hash_lo, hash_b.lo);
+    ASSERT_EQUAL_VAR(hl.aggregate_hash_hi, hash_b.hi);
 
     /* 5. Clean and Free */
     traversal_clean(&test_traversal);

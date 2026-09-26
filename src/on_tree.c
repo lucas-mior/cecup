@@ -563,7 +563,7 @@ main(void) {
 
         target = gdk_keyval_to_lower(GDK_KEY_Delete);
         pressed = gdk_keyval_to_lower(GDK_KEY_Delete);
-        ASSERT_EQUAL((int32)target, (int32)pressed);
+        ASSERT_EQUAL_VAR((int32)target, (int32)pressed);
 
         gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(gesture));
         gtk_widget_add_controller(tree, GTK_EVENT_CONTROLLER(key_controller));

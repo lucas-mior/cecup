@@ -576,8 +576,8 @@ main(void) {
     ASSERT_EQUAL(hl3.names_lens[1], 12);
 
     /* Verify 128-bit hash consistency after replacement */
-    ASSERT_EQUAL(hl3.aggregate_hash_lo, (h0.lo ^ h2.lo ^ h_new.lo));
-    ASSERT_EQUAL(hl3.aggregate_hash_hi, (h0.hi ^ h2.hi ^ h_new.hi));
+    ASSERT_EQUAL_VAR(hl3.aggregate_hash_lo, (h0.lo ^ h2.lo ^ h_new.lo));
+    ASSERT_EQUAL_VAR(hl3.aggregate_hash_hi, (h0.hi ^ h2.hi ^ h_new.hi));
 
     /* 3. Test Sorting Comparisons */
     memset64(&entry1, 0, SIZEOF(entry1));
