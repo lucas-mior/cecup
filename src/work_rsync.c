@@ -1671,8 +1671,8 @@ test_manual_copy_hardlinks(MessageBatch **batch) {
     ASSERT(work_manual_backend_run(tasks, tasks->count, batch));
     ASSERT(!lstat(dst_a, &stat_a));
     ASSERT(!lstat(dst_b, &stat_b));
-    ASSERT_EQ_VAR(stat_a.st_ino, stat_b.st_ino);
-    ASSERT_EQ_VAR(stat_a.st_dev, stat_b.st_dev);
+    ASSERT_EQ(stat_a.st_ino, stat_b.st_ino);
+    ASSERT_EQ(stat_a.st_dev, stat_b.st_dev);
 
     work_batch_flush(batch);
     task_list_free(tasks);
@@ -1697,7 +1697,7 @@ main(void) {
     {
         char *line = ">f.st...... some/file.txt";
         ASSERT(result = work_rsync_itemize_skip(line, strlen32(line)));
-        ASSERT_EQ_VAR(result, line + 12);
+        ASSERT_EQ(result, line + 12);
         ASSERT_EQ(result, "some/file.txt");
     }
 
@@ -1705,7 +1705,7 @@ main(void) {
     {
         char *line = ".d..t...... some/dir/";
         ASSERT(result = work_rsync_itemize_skip(line, strlen32(line)));
-        ASSERT_EQ_VAR(result, line + 12);
+        ASSERT_EQ(result, line + 12);
         ASSERT_EQ(result, "some/dir/");
     }
 

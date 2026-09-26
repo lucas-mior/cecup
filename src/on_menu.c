@@ -679,7 +679,7 @@ main(void) {
         }
 
         ASSERT(clipboard_result.text != NULL);
-        ASSERT_EQ_VAR(clipboard_result.text, expected);
+        ASSERT_EQ(clipboard_result.text, expected);
         g_free(clipboard_result.text);
     }
 
