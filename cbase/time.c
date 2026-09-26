@@ -253,9 +253,9 @@ time_monotonic_coarse(struct timespec *time) {
     return;
 }
 
-#if OS_UNIX
 void
 timezone_init(void) {
+#if OS_UNIX
     time_t current_time;
     struct tm local_tm;
     struct tm gm_tm;
@@ -277,10 +277,10 @@ timezone_init(void) {
         timezone_offset += 24*3600;
     }
 
+#endif
     timezone_initialized = true;
     return;
 }
-#endif
 
 void
 time_localtime(time_t unix_timestamp, struct tm *time_info) {
@@ -289,8 +289,21 @@ time_localtime(time_t unix_timestamp, struct tm *time_info) {
     if (!timezone_initialized) {
         timezone_init();
     }
+#if OS_UNIX
     unix_timestamp += timezone_offset;
     gmtime_r(&unix_timestamp, time_info);
+#else
+    {
+        struct tm *local_time_info;
+
+        local_time_info = localtime(&unix_timestamp);
+        if (local_time_info == NULL) {
+            error("Error converting timestamp to local time.\n");
+            fatal(EXIT_FAILURE);
+        }
+        *time_info = *local_time_info;
+    }
+#endif
     return;
 }
 
@@ -310,9 +323,7 @@ time_functions_sink(void) {
     (void)time_monotonic_coarse;
     (void)time_monotonic_now;
     (void)time_monotonic_precise;
-#if OS_UNIX
     (void)timezone_init;
-#endif
     return;
 }
 #endif
