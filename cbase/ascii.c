@@ -16,51 +16,60 @@
 
 bool32
 is_ascii(int32 c) {
-    return (c >= 0) && (c <= 0x7f);
+    return (c >= 0) && (c < 128);
 }
 
 bool32
 is_cntrl(int32 c) {
+    ASSERT(is_ascii(c));
     return (c <= 0x1f) || (c == 0x7f);
 }
 
 bool32
 is_blank(int32 c) {
+    ASSERT(is_ascii(c));
     return (c == ' ') || (c == '\t');
 }
 
 bool32
 is_space(int32 c) {
+    ASSERT(is_ascii(c));
     return ((c >= '\t') && (c <= '\r')) || (c == ' ');
 }
 
 bool32
 is_digit(int32 c) {
+    ASSERT(is_ascii(c));
     return (c >= '0') && (c <= '9');
 }
 
 bool32
 is_upper(int32 c) {
+    ASSERT(is_ascii(c));
     return (c >= 'A') && (c <= 'Z');
 }
 
 bool32
 is_lower(int32 c) {
+    ASSERT(is_ascii(c));
     return (c >= 'a') && (c <= 'z');
 }
 
 bool32
 is_alpha(int32 c) {
+    ASSERT(is_ascii(c));
     return is_upper(c) || is_lower(c);
 }
 
 bool32
 is_alnum(int32 c) {
+    ASSERT(is_ascii(c));
     return is_alpha(c) || is_digit(c);
 }
 
 bool32
 is_xdigit(int32 c) {
+    ASSERT(is_ascii(c));
     return is_digit(c)
            || ((c >= 'A') && (c <= 'F'))
            || ((c >= 'a') && (c <= 'f'));
@@ -68,16 +77,19 @@ is_xdigit(int32 c) {
 
 bool32
 is_print(int32 c) {
+    ASSERT(is_ascii(c));
     return (c >= 0x20) && (c <= 0x7e);
 }
 
 bool32
 is_graph(int32 c) {
+    ASSERT(is_ascii(c));
     return (c >= 0x21) && (c <= 0x7e);
 }
 
 bool32
 is_punct(int32 c) {
+    ASSERT(is_ascii(c));
     return is_graph(c) && !is_alnum(c);
 }
 
@@ -88,7 +100,7 @@ is_punct(int32 c) {
 
 static void
 test_ascii_classifiers(void) {
-    for (int32 i = 0; i < 256; i += 1) {
+    for (int32 i = 0; i < 128; i += 1) {
         int32 c = (int32)i;
 
         ASSERT(is_ascii(c) == (i <= 0x7f));
