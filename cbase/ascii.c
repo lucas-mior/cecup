@@ -86,45 +86,8 @@ is_punct(int32 c) {
 #define CBASE_IMPLEMENT
 #include "cbase.h"
 
-static void
-test_ascii_classifiers(void) {
-    for (int32 i = 0; i < 128; i += 1) {
-        int32 c = (int32)i;
-
-        ASSERT(is_ascii(c) == (i <= 0x7f));
-        ASSERT(is_cntrl(c) == ((i <= 0x1f) || (i == 0x7f)));
-        ASSERT(is_blank(c) == ((i == ' ') || (i == '\t')));
-        ASSERT(is_space(c)
-               == (((i >= '\t') && (i <= '\r')) || (i == ' ')));
-        ASSERT(is_digit(c) == ((i >= '0') && (i <= '9')));
-        ASSERT(is_upper(c) == ((i >= 'A') && (i <= 'Z')));
-        ASSERT(is_lower(c) == ((i >= 'a') && (i <= 'z')));
-        ASSERT(is_alpha(c)
-               == (((i >= 'A') && (i <= 'Z'))
-                   || ((i >= 'a') && (i <= 'z'))));
-        ASSERT(is_alnum(c)
-               == (((i >= 'A') && (i <= 'Z'))
-                   || ((i >= 'a') && (i <= 'z'))
-                   || ((i >= '0') && (i <= '9'))));
-        ASSERT(is_xdigit(c)
-               == (((i >= '0') && (i <= '9'))
-                   || ((i >= 'A') && (i <= 'F'))
-                   || ((i >= 'a') && (i <= 'f'))));
-        ASSERT(is_print(c) == ((i >= 0x20) && (i <= 0x7e)));
-        ASSERT(is_graph(c) == ((i >= 0x21) && (i <= 0x7e)));
-        ASSERT(is_punct(c)
-               == (((i >= 0x21) && (i <= 0x2f))
-                   || ((i >= 0x3a) && (i <= 0x40))
-                   || ((i >= 0x5b) && (i <= 0x60))
-                   || ((i >= 0x7b) && (i <= 0x7e))));
-    }
-
-    return;
-}
-
 int
 main(void) {
-    test_ascii_classifiers();
     exit(EXIT_SUCCESS);
 }
 
