@@ -702,10 +702,13 @@ update_list_from_rows(enum UpdateRowsType change) {
 
     time_monotonic_precise(&t0_rows_loop);
 
-    cache_rows = realloc2(cache_rows, cache_rows_capacity, cecup.rows_len, SIZEOF(*cache_rows));
-    if (cache_rows_capacity == 0) {
+    if ((cache_rows_capacity == 0) && (change != UPDATE_ROWS_COMPLETE)) {
         ASSERT_EQ((int32)change, (int32)UPDATE_ROWS_COMPLETE);
+        return;
     }
+    cache_rows = realloc2(cache_rows,
+                          cache_rows_capacity, cecup.rows_len,
+                          SIZEOF(*cache_rows));
     for (int32 i = cache_rows_capacity; i < cecup.rows_len; i += 1) {
         RowCache *cache_row = &cache_rows[i];
         cache_row->row_id = -1;
