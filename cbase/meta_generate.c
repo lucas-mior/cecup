@@ -86,7 +86,7 @@ c_identifier(char *value, int32 value_len) {
 
     for (int32 i = 0; i < value_len; i += 1) {
         char c;
-        if (is_alnum((uint8)value[i]) || value[i] == '_') {
+        if (is_alnum(value[i]) || value[i] == '_') {
             c = value[i];
         } else {
             c = '_';
