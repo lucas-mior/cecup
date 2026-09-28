@@ -467,6 +467,7 @@ typedef int(*CompareFunction)(void *a, void *b);
 #include "stc/sort.h"
 
 static SortFunction sort_item_functions[] = {
+    [0]              = row_compare_int_sort,
     [COL_SELECTED]   = row_compare_int_sort,
     [COL_SRC_ACTION] = row_compare_int_sort,
     [COL_DST_ACTION] = row_compare_int_sort,
@@ -480,6 +481,7 @@ static SortFunction sort_item_functions[] = {
 };
 
 static CompareFunction compare_item_functions[] = {
+    [0]              = cecup_item_compare_int_key,
     [COL_SELECTED]   = cecup_item_compare_int_key,
     [COL_SRC_ACTION] = cecup_item_compare_int_key,
     [COL_DST_ACTION] = cecup_item_compare_int_key,

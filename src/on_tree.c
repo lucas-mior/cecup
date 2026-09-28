@@ -272,7 +272,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     GtkWidget *child;
     int32 row_id = 0;
     void *row_id_ptr = NULL;
-    enum ColumnType column_type = COLUMN_COUNT;
+    enum ColumnType column_type = 0;
     int32 side;
     char *tip_text = NULL;
     String tip_builder = {0};

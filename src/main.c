@@ -499,14 +499,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
             str_printf(&css, "%s\n", base_css[i]);
         }
 
-        for (int32 i = 0; i < LENGTH(colors); i += 1) {
+        for (uint32 i = ACTION_NEW; i < ACTION_COUNT; i += 1) {
             if (colors[i] == NULL) {
                 continue;
             }
 
             str_printf(&css,
                       "row:not(:selected)"
-                      " .cell-color-%d { background-color: %s; }\n",
+                      " .cell-color-%u { background-color: %s; }\n",
                       i, colors[i]);
         }
 
