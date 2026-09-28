@@ -489,7 +489,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
 
                 if (!checksum && (percentage = memmem64(buf_output + 1, line_len - 1, "% ", 2))) {
                     while (((percentage - 1) > buf_output)
-                            && isdigit(*(percentage - 1))) {
+                            && is_digit(*(percentage - 1))) {
                         percentage -= 1;
                     }
                     if (*(percentage - 1) == ' ') {

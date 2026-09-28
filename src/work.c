@@ -186,7 +186,7 @@ work_traverse_fs(Traversal *traversal) {
         }
 
         if (name_len > 0) {
-            if (isspace((uchar)d_name[0])) {
+            if (is_space((uchar)d_name[0])) {
                 LOG_ERROR(_("Error: there is a space in the start of the filename:\n"));
                 LOG_ERROR("'%s'\n", entry->path);
                 LOG_ERROR(_("Please fix your file system.\n"));
@@ -194,7 +194,7 @@ work_traverse_fs(Traversal *traversal) {
                 break;
             }
 
-            if (isspace((uchar)d_name[name_len - 1])) {
+            if (is_space((uchar)d_name[name_len - 1])) {
                 LOG_ERROR(_("Error: there is space in the end of the filename:\n"));
                 LOG_ERROR("'%s'\n", entry->path);
                 LOG_ERROR(_("Please fix your file system.\n"));
