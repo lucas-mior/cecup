@@ -99,7 +99,7 @@ c_identifier(char *value, int32 value_len) {
 
         if (!out.len) {
             needs_prefix = true;
-        } else if (is_digit((uint8)out.data[0])) {
+        } else if (is_digit(out.data[0])) {
             needs_prefix = true;
         } else if (out.data[0] == '_') {
             needs_prefix = true;
