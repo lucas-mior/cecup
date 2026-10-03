@@ -198,12 +198,12 @@ work_rsync_wait_nohang(Command *command, bool *done) {
         return true;
     }
     if (result == pid) {
-        command_status_from_wait(status, &command->result);
+        cmd_status_from_wait(status, &command->result);
         *done = true;
         return true;
     }
 
-    command_error_set(command, errno);
+    cmd_error_set(command, errno);
     error("Error waiting for child: %s.\n", strerror(errno));
     return false;
 }
@@ -233,7 +233,7 @@ work_rsync_wait_child(Command *command) {
             } else if (waited_usec >= timeout_usec) {
                 LOG_ERROR(_("Killing the child process with SIGKILL...\n"));
                 child_pid_signal(SIGKILL);
-                return command_wait(command) == 0;
+                return cmd_wait(command) == 0;
             }
 
             waited_usec += step_usec;
@@ -321,43 +321,43 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     SNPRINTF(src_base_with_slash, "%s/", cecup.base[L]);
     SNPRINTF(dst_base_with_slash, "%s/", cecup.base[R]);
 
-    COMMAND_PUSH(&command, "rsync", "--verbose", "--verbose");
+    CMD_PUSH(&command, "rsync", "--verbose", "--verbose");
 
     if (!delete_after) {
-        COMMAND_PUSH(&command, "--update");
+        CMD_PUSH(&command, "--update");
     }
 
     // these 2 options are implied by --files-from
-    COMMAND_PUSH(&command, "--dirs", "--relative");
+    CMD_PUSH(&command, "--dirs", "--relative");
 
-    COMMAND_PUSH(&command, "--partial", "--progress", "--info=progress2");
-    COMMAND_PUSH(&command, "--links", "--hard-links");
+    CMD_PUSH(&command, "--partial", "--progress", "--info=progress2");
+    CMD_PUSH(&command, "--links", "--hard-links");
     if (checksum) {
-        COMMAND_PUSH(&command, "--checksum");
+        CMD_PUSH(&command, "--checksum");
     }
-    COMMAND_PUSH(&command, "--perms", "--times", "--owner", "--group");
-    COMMAND_PUSH(&command, "--itemize-changes");
-    COMMAND_PUSH(&command, "--files-from", files_from_filename);
-    COMMAND_PUSH(&command, "--iconv=.,.");
+    CMD_PUSH(&command, "--perms", "--times", "--owner", "--group");
+    CMD_PUSH(&command, "--itemize-changes");
+    CMD_PUSH(&command, "--files-from", files_from_filename);
+    CMD_PUSH(&command, "--iconv=.,.");
 
-    COMMAND_PUSH(&command, src_base_with_slash, dst_base_with_slash);
-    command_env_push(&command, "LC_ALL=C.UTF-8");
+    CMD_PUSH(&command, src_base_with_slash, dst_base_with_slash);
+    cmd_env_push(&command, "LC_ALL=C.UTF-8");
 
     LOG(_("Running sync...\n"));
     {
         char *cmd;
         int32 cmd_len;
 
-        cmd = command_str(&command, &cmd_len);
+        cmd = cmd_str(&command, &cmd_len);
         LOG_CMD("%s\n", cmd);
         free2(cmd, cmd_len + 1);
     }
 
-    if (command_run_async(&command,
-                          COMMAND_CAPTURE_STDOUT
-                          |COMMAND_CAPTURE_STDERR
-                          |COMMAND_NEW_PROCESS_GROUP) < 0) {
-        command_free(&command);
+    if (cmd_run_async(&command,
+                          CMD_CAPTURE_STDOUT
+                          |CMD_CAPTURE_STDERR
+                          |CMD_NEW_PROCESS_GROUP) < 0) {
+        cmd_free(&command);
         return false;
     }
 
@@ -538,7 +538,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         LOG_ERROR(_("Error waiting for child process: %s.\n"),
                   strerror(command.error_status));
         child_pid_set((pid_t)0);
-        command_free(&command);
+        cmd_free(&command);
         return false;
     }
 
@@ -557,12 +557,12 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         }
 
         child_pid_set((pid_t)0);
-        command_free(&command);
+        cmd_free(&command);
         return false;
     }
 
     child_pid_set((pid_t)0);
-    command_free(&command);
+    cmd_free(&command);
     return true;
 }
 
@@ -1523,15 +1523,15 @@ test_rsync_backend_supported(void) {
     Command command = {0};
     bool supported;
 
-    if (!test_command_exists("rsync")) {
+    if (!test_cmd_exists("rsync")) {
         return false;
     }
 
-    COMMAND_PUSH(&command,
+    CMD_PUSH(&command,
                  "rsync", "--info=progress2", "--iconv=.,.", "--version");
-    supported = (command_run_capture(&command, COMMAND_CAPTURE_STDOUT) == 0)
+    supported = (cmd_run_capture(&command, CMD_CAPTURE_STDOUT) == 0)
                 && (command.result.status == 0);
-    command_free(&command);
+    cmd_free(&command);
     return supported;
 }
 

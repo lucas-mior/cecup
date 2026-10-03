@@ -467,9 +467,9 @@ static Command
 on_menu_diff_command(char *term_command, char *diff_tool) {
     Command command = {0};
 
-    command_push_split(&command, term_command, " ");
-    COMMAND_PUSH(&command, "-e");
-    command_push_split(&command, diff_tool, " ");
+    cmd_push_split(&command, term_command, " ");
+    CMD_PUSH(&command, "-e");
+    cmd_push_split(&command, diff_tool, " ");
 
     return command;
 }
@@ -500,10 +500,10 @@ on_menu_diff(GtkWidget *widget, void *data) {
         fmt_sprintf(path_dst, size_dst, "%s/%s", cecup.base[R], task->path);
 
         command = on_menu_diff_command(term_command, diff_tool);
-        COMMAND_PUSH(&command, path_dst, path_src);
+        CMD_PUSH(&command, path_dst, path_src);
 
-        (void)command_run_async(&command, COMMAND_NEW_SESSION);
-        command_free(&command);
+        (void)cmd_run_async(&command, CMD_NEW_SESSION);
+        cmd_free(&command);
         free2(path_src, size_src);
         free2(path_dst, size_dst);
     }
@@ -579,7 +579,7 @@ main(void) {
         Command command = on_menu_diff_command("xterm --hold",
                                                "diff --color=always");
 
-        COMMAND_PUSH(&command, "/destination", "/source");
+        CMD_PUSH(&command, "/destination", "/source");
 
         ASSERT_EQ(command.argc, 7);
         ASSERT_EQ(command.argv[0], "xterm");
@@ -591,7 +591,7 @@ main(void) {
         ASSERT_EQ(command.argv[6], "/source");
         ASSERT_EQ(command.argv[command.argc], NULL);
 
-        command_free(&command);
+        cmd_free(&command);
     }
 
     cecup.base[L] = xstrdup(temp_dir);
@@ -620,8 +620,7 @@ main(void) {
     read_bytes = fread64(buffer, 1, SIZEOF(buffer) - 1, file);
     fclose(file);
 
-    ASSERT_EQ(read_bytes, STRLIT_LEN("*.test_ext\n"));
-    ASSERT_EQ(buffer, "*.test_ext\n");
+    ASSERT_EQ(buffer, read_bytes, "*.test_ext\n");
 
     remove(cecup.ignore_path);
 
