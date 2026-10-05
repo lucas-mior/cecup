@@ -50,8 +50,8 @@ work_traverse_unknown_record(
     char path[MAX_PATH_LENGTH];
 
     if (entry->path_len >= MAX_PATH_LENGTH) {
-        LOG_ERROR(_("Traversal error path is too long: %s.\n"),
-                  entry->path);
+        LOG_ERROR(_("Traversal error path is too long: %.*s.\n"),
+                  entry->path_len, entry->path);
         traversal_root_unknown_record(traversal);
         return;
     }
@@ -74,8 +74,8 @@ work_traverse_unknown_record(
 
     if (known_dir && (path[path_len - 1] != '/')) {
         if ((path_len + 1) >= MAX_PATH_LENGTH) {
-            LOG_ERROR(_("Traversal error path is too long: %s.\n"),
-                      entry->path);
+            LOG_ERROR(_("Traversal error path is too long: %.*s.\n"),
+                      entry->path_len, entry->path);
             traversal_root_unknown_record(traversal);
             return;
         }
@@ -145,14 +145,15 @@ work_traverse_fs(Traversal *traversal) {
                                          false);
             continue;
         case FS_WALK_DIR_UNREADABLE:
-            LOG_ERROR(_("Directory '%s' is unreadable.\n"), entry->path);
+            LOG_ERROR(_("Directory '%.*s' is unreadable.\n"),
+                      entry->path_len, entry->path);
             work_traverse_unknown_record(traversal, entry,
                                          TRAVERSAL_STATE_UNKNOWN_SUBTREE,
                                          true);
             continue;
         case FS_WALK_STAT_ERROR:
-            LOG_ERROR(_("Failed to get file information for %s: %s.\n"),
-                      entry->path, strerror(entry->error));
+            LOG_ERROR(_("Failed to get file information for %.*s: %s.\n"),
+                      entry->path_len, entry->path, strerror(entry->error));
             work_traverse_unknown_record(traversal, entry,
                                          TRAVERSAL_STATE_UNKNOWN_SUBTREE,
                                          false);
@@ -179,7 +180,7 @@ work_traverse_fs(Traversal *traversal) {
 
         if (old_full_len >= (MAX_PATH_LENGTH / 2)) {
             LOG_ERROR(_("Error: file path is too long:\n"));
-            LOG_ERROR("%s\n", entry->path);
+            LOG_ERROR("%.*s\n", entry->path_len, entry->path);
             LOG_ERROR(_("Please fix your file system.\n"));
             stop_working(true);
             break;
@@ -188,7 +189,7 @@ work_traverse_fs(Traversal *traversal) {
         if (name_len > 0) {
             if (is_space((uchar)d_name[0])) {
                 LOG_ERROR(_("Error: there is a space in the start of the filename:\n"));
-                LOG_ERROR("'%s'\n", entry->path);
+                LOG_ERROR("'%.*s'\n", entry->path_len, entry->path);
                 LOG_ERROR(_("Please fix your file system.\n"));
                 stop_working(true);
                 break;
@@ -196,7 +197,7 @@ work_traverse_fs(Traversal *traversal) {
 
             if (is_space((uchar)d_name[name_len - 1])) {
                 LOG_ERROR(_("Error: there is space in the end of the filename:\n"));
-                LOG_ERROR("'%s'\n", entry->path);
+                LOG_ERROR("'%.*s'\n", entry->path_len, entry->path);
                 LOG_ERROR(_("Please fix your file system.\n"));
                 stop_working(true);
                 break;
@@ -212,7 +213,7 @@ work_traverse_fs(Traversal *traversal) {
 
             if (memmem64(d_name, name_len, problem, problem_len)) {
                 LOG_ERROR(_("Error: filename contains problematic characters/patterns:\n"));
-                LOG_ERROR("'%s'\n", entry->path);
+                LOG_ERROR("'%.*s'\n", entry->path_len, entry->path);
                 LOG_ERROR(_("Please fix your file system.\n"));
                 stop_working(true);
                 break;
@@ -300,7 +301,8 @@ work_traverse_fs(Traversal *traversal) {
             nanos = time_now.tv_nsec - time_last_report.tv_nsec;
 
             if ((seconds >= 1) || (nanos > MILLIS_AS_NANOS(100))) {
-                LOG("Found %lld files... %s\r", file_count, entry->path);
+                LOG("Found %lld files... %.*s\r",
+                    file_count, entry->path_len, entry->path);
                 time_monotonic_coarse(&time_last_report);
             }
         }

@@ -122,7 +122,8 @@ main_store_path(char *destination, char *path, char *description) {
 
     path_len = strlen32(path);
     if (path_len >= MAX_PATH_LENGTH) {
-        error("Error: %s path is too long: %s.\n", description, path);
+        error("Error: %s path is too long: %.*s.\n",
+              description, path_len, path);
         fatal(EXIT_FAILURE);
     }
 

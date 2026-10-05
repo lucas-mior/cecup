@@ -124,9 +124,10 @@ on_menu_append_ignore_pattern(char *pattern, int32 pattern_len) {
                   cecup.ignore_path, strerror(errno));
         goto close_file;
     }
-    if (fprintf(ignore_file, "%s\n", pattern) != (pattern_len + 1)) {
-        LOG_ERROR(_("Error appending ignore pattern \"%s\" to %s: %s.\n"),
-                  pattern, cecup.ignore_path, strerror(errno));
+    if (fprintf(ignore_file, "%.*s\n", pattern_len, pattern)
+        != (pattern_len + 1)) {
+        LOG_ERROR(_("Error appending ignore pattern \"%.*s\" to %s: %s.\n"),
+                  pattern_len, pattern, cecup.ignore_path, strerror(errno));
         goto close_file;
     }
 
@@ -311,7 +312,8 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         int fd;
 
         base_path = cecup.base[message->side];
-        n = SNPRINTF(full_path, "%s/%s", base_path, task->path);
+        n = SNPRINTF(full_path, "%s/%.*s",
+                     base_path, task->path_len, task->path);
 
         if (folder) {
             int32 path_len = n;
@@ -376,7 +378,8 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
         if (absolute) {
             char path_relative[MAX_PATH_LENGTH];
 
-            SNPRINTF(path_relative, "%s/%s", base_path, task->path);
+            SNPRINTF(path_relative, "%s/%.*s",
+                     base_path, task->path_len, task->path);
 
             if (realpath(path_relative, path_full) == NULL) {
                 LOG_ERROR(_("Error resolving full path of %s:%s. Copying relative path instead.\n"), 
@@ -491,14 +494,16 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
-        int32 size_src = strlen32(cecup.base[L]) + strlen32(task->path) + 2;
-        int32 size_dst = strlen32(cecup.base[R]) + strlen32(task->path) + 2;
+        int32 size_src = strlen32(cecup.base[L]) + task->path_len + 2;
+        int32 size_dst = strlen32(cecup.base[R]) + task->path_len + 2;
         char *path_src = malloc2(size_src);
         char *path_dst = malloc2(size_dst);
         Command command;
 
-        fmt_sprintf(path_src, size_src, "%s/%s", cecup.base[L], task->path);
-        fmt_sprintf(path_dst, size_dst, "%s/%s", cecup.base[R], task->path);
+        fmt_sprintf(path_src, size_src, "%s/%.*s",
+                    cecup.base[L], task->path_len, task->path);
+        fmt_sprintf(path_dst, size_dst, "%s/%.*s",
+                    cecup.base[R], task->path_len, task->path);
 
         command = on_menu_diff_command(term_command, diff_tool);
         CMD_PUSH(&command, path_dst, path_src);

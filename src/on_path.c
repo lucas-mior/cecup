@@ -187,22 +187,25 @@ on_path_edited(GtkEditable *editable, void *data) {
         return;
     }
 
-    SNPRINTF(old_full, "%s/%s", base_path, relative_old);
+    old_length = item_path_len_side(row_id, side);
+    SNPRINTF(old_full, "%s/%.*s", base_path, old_length, relative_old);
 
-    old_length = strlen32(relative_old);
     memcpy64(relative_new, new_text, new_length + 1);
     normalize(relative_new, &new_length);
 
     if (BEGINS_WITH(relative_new, new_length, "/")) {
-        LOG_ERROR(_("Invalid rename: %s starts with a slash.\n"), relative_new);
+        LOG_ERROR(_("Invalid rename: %.*s starts with a slash.\n"),
+                  new_length, relative_new);
         return;
     }
     if (BEGINS_WITH(relative_new, new_length, "..")) {
-        LOG_ERROR(_("Invalid rename: %s starts with ..\n"), relative_new);
+        LOG_ERROR(_("Invalid rename: %.*s starts with ..\n"),
+                  new_length, relative_new);
         return;
     }
 
-    new_full_length = SNPRINTF(new_full, "%s/%s", base_path, relative_new);
+    new_full_length = SNPRINTF(new_full, "%s/%.*s",
+                               base_path, new_length, relative_new);
     normalize(new_full, &new_full_length);
 
     if (on_path_rename_no_replace(old_full, new_full) < 0) {
@@ -211,7 +214,8 @@ on_path_edited(GtkEditable *editable, void *data) {
         return;
     }
 
-    LOG(_("Renamed: %s -> %s\n"), relative_old, relative_new);
+    LOG(_("Renamed: %.*s -> %.*s\n"),
+        old_length, relative_old, new_length, relative_new);
 
     if ((relative_old[old_length - 1] == '/') && (relative_new[new_length - 1] != '/')) {
         relative_new[new_length] = '/';
@@ -249,8 +253,8 @@ on_path_edited(GtkEditable *editable, void *data) {
                 continue;
             case FS_WALK_ERROR:
             case FS_WALK_STAT_ERROR:
-                error("FsWalk error on %s: %s.\n",
-                      entry->path, strerror(entry->error));
+                error("FsWalk error on %.*s: %s.\n",
+                      entry->path_len, entry->path, strerror(entry->error));
                 continue;
             case FS_WALK_POST_DIR:
             case FS_WALK_FILE:

@@ -64,7 +64,8 @@ ignore_patterns_load(void) {
         }
 
         if (line_len >= MAX_PATH_LENGTH) {
-            error("Too long line on patterns file: %s.\n", line);
+            error("Too long line on patterns file: %.*s.\n",
+                  line_len, line);
             fatal(EXIT_FAILURE);
         }
 
@@ -76,22 +77,24 @@ ignore_patterns_load(void) {
 
         if (memchr64(line, '[', line_len)
              && memchr64(line, ']', line_len)) {
-            LOG_ERROR(_("Warning: advanced exclusion pattern '%s' detected.\n"),
-                      line);
+            LOG_ERROR(_("Warning: advanced exclusion pattern '%.*s' detected.\n"),
+                      line_len, line);
             LOG_ERROR(_("cecup currently only supports basic patterns"
                         " (directories and asterisks).\n"));
             LOG_ERROR(_("This pattern will be interpreted literally.\n"));
         }
 
         if (memchr64(line, '?', line_len)) {
-            LOG_ERROR(_("Warning: exclusion pattern '%s' detected.\n"), line);
+            LOG_ERROR(_("Warning: exclusion pattern '%.*s' detected.\n"),
+                      line_len, line);
             LOG_ERROR(_("cecup currently only supports basic patterns"
                         " (directories and asterisks).\n"));
             LOG_ERROR(_("This pattern will be interpreted literally.\n"));
         }
 
         if (memchr64(line, '\\', line_len)) {
-            LOG_ERROR(_("Warning: backslash '%s' detected.\n"), line);
+            LOG_ERROR(_("Warning: backslash '%.*s' detected.\n"),
+                      line_len, line);
             LOG_ERROR(_("cecup currently only supports basic patterns"
                         " (directories and asterisks).\n"));
             LOG_ERROR(_("This pattern will be interpreted literally.\n"));

@@ -485,21 +485,21 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
 
             if (!lookup) {
                 error("Consistency error:"
-                      " %s index %d (path %s) is mapped to row but missing in hash map.\n",
-                      which_traversal, idx, path);
+                      " %s index %d (path %.*s) is mapped to row but missing in hash map.\n",
+                      which_traversal, idx, path_len, path);
                 fatal(EXIT_FAILURE);
             } else if (idx_lookup != idx) {
                 error("Consistency error:"
-                      " %s index %d (path %s) is mapped to row but mismatched in hash map.\n",
-                      which_traversal, idx, path);
+                      " %s index %d (path %.*s) is mapped to row but mismatched in hash map.\n",
+                      which_traversal, idx, path_len, path);
                 fatal(EXIT_FAILURE);
             }
         } else {
             if (lookup) {
                 if (idx_lookup == idx) {
                     error("Consistency error:"
-                          " %s index %d (path %s) has no row but exists in hash.\n",
-                          which_traversal, idx, path);
+                          " %s index %d (path %.*s) has no row but exists in hash.\n",
+                          which_traversal, idx, path_len, path);
                     fatal(EXIT_FAILURE);
                 }
             }

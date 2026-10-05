@@ -349,7 +349,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         int32 cmd_len;
 
         cmd = cmd_str(&command, &cmd_len);
-        LOG_CMD("%s\n", cmd);
+        LOG_CMD("%.*s\n", cmd_len, cmd);
         free2(cmd, cmd_len + 1);
     }
 
@@ -453,7 +453,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             *eol = '\0';
 
             if (!BEGINS_WITH(buf_output, line_len, RSYNC_DUPLICATE)) {
-                LOG("%s%c", buf_output, end);
+                LOG("%.*s%c", line_len, buf_output, end);
             }
 
             if ((path = work_rsync_itemize_skip(buf_output, line_len))) {
@@ -530,7 +530,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
             continue;
         }
         buf_error[r] = '\0';
-        LOG_ERROR("%s", buf_error);
+        LOG_ERROR("%.*s", (int32)r, buf_error);
 
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
@@ -574,11 +574,12 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     ASSERT_POSITIVE(path_len);
 
     if (aux_is_root(path)) {
-        LOG_ERROR(_("Refusing to remove configured root path %s.\n"), path);
+        LOG_ERROR(_("Refusing to remove configured root path %.*s.\n"),
+                  path_len, path);
         return;
     }
 
-    SNPRINTF(full_path, "%s/%s", cecup.base[side], path);
+    SNPRINTF(full_path, "%s/%.*s", cecup.base[side], path_len, path);
     base_path_len = cecup.base_len[side];
 
     if (path[path_len - 1] != '/') {
@@ -1185,14 +1186,15 @@ work_manual_copy_regular(
             return false;
         }
         if (link(hardlink->dst_path, dst_path) == 0) {
-            LOG(_("Created hardlink %s -> %s.\n"),
-                dst_path, hardlink->dst_path);
+            LOG(_("Created hardlink %s -> %.*s.\n"),
+                dst_path, hardlink->dst_path_len, hardlink->dst_path);
             work_manual_item_done(state, path, path_len);
             return true;
         }
 
-        LOG_ERROR(_("Error creating hardlink %s -> %s: %s. Copying instead.\n"),
-                  dst_path, hardlink->dst_path, strerror(errno));
+        LOG_ERROR(_("Error creating hardlink %s -> %.*s: %s. Copying instead.\n"),
+                  dst_path, hardlink->dst_path_len, hardlink->dst_path,
+                  strerror(errno));
     }
 
     if (!work_manual_copy_regular_contents(dst_path, src_path,
@@ -1241,13 +1243,14 @@ work_manual_copy_symlink(
     }
 
     if (symlink(target, dst_path) < 0) {
-        LOG_ERROR(_("Error creating symlink %s -> %s: %s.\n"),
-                  dst_path, target, strerror(errno));
+        LOG_ERROR(_("Error creating symlink %s -> %.*s: %s.\n"),
+                  dst_path, (int32)target_len, target, strerror(errno));
         state->had_errors = true;
         return false;
     }
 
-    LOG(_("Created symlink %s -> %s.\n"), dst_path, target);
+    LOG(_("Created symlink %s -> %.*s.\n"),
+        dst_path, (int32)target_len, target);
     work_manual_item_done(state, path, path_len);
     return true;
 }

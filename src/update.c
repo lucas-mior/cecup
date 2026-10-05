@@ -399,7 +399,8 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
         return false;
     }
 
-    SNPRINTF(full_path, "%s/%s", cecup.base[R], path_transfered);
+    SNPRINTF(full_path, "%s/%.*s",
+             cecup.base[R], path_transfered_len, path_transfered);
     if (lstat(full_path, &stat) < 0) {
         error("Error in stat('%s'): %s.\n", full_path, strerror(errno));
         if (DEBUGGING) {
@@ -477,7 +478,8 @@ update_row_rename(char *old_path, int32 old_path_len,
     int32 is_dir = 0;
 
     if (!hash_lookup_fs_map(traversal->map, old_path, old_path_len, &idx)) {
-        error("Didnt found %s on traversal hash map.\n", old_path);
+        error("Didnt found %.*s on traversal hash map.\n",
+              old_path_len, old_path);
         if (DEBUGGING) {
             fatal(EXIT_FAILURE);
         }
@@ -485,7 +487,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     }
 
     if ((row_id = traversal->row_ids[idx]) < 0) {
-        error("No row id for path %s.\n", old_path);
+        error("No row id for path %.*s.\n", old_path_len, old_path);
         if (DEBUGGING) {
             fatal(EXIT_FAILURE);
         }
