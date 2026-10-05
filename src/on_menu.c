@@ -308,12 +308,15 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         Task *task = tasks->items[i];
         char full_path[MAX_PATH_LENGTH];
         char *base_path;
+        int32 base_path_len;
         int32 n;
         int fd;
 
         base_path = cecup.base[message->side];
-        n = SNPRINTF(full_path, "%s/%.*s",
-                     base_path, task->path_len, task->path);
+        base_path_len = cecup.base_len[message->side];
+        n = SNPRINTF(full_path,
+                     "%.*s/%.*s",
+                     base_path_len, base_path, task->path_len, task->path);
 
         if (folder) {
             int32 path_len = n;
