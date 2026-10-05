@@ -344,6 +344,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     char *buf_pointer;
     int32 space;
     char *base_path;
+    int32 base_path_len;
     GdkClipboard *clipboard;
     bool absolute;
 
@@ -367,6 +368,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     }
 
     base_path = cecup.base[message->side];
+    base_path_len = cecup.base_len[message->side];
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
     for (int32 i = 0; i < tasks->count; i += 1) {
@@ -378,8 +380,9 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
         if (absolute) {
             char path_relative[MAX_PATH_LENGTH];
 
-            SNPRINTF(path_relative, "%s/%.*s",
-                                    base_path, task->path_len, task->path);
+            SNPRINTF(path_relative,
+                     "%.*s/%.*s",
+                     base_path_len, base_path, task->path_len, task->path);
 
             if (realpath(path_relative, path_full) == NULL) {
                 LOG_ERROR(_("Error resolving full path of %s:%s. Copying relative path instead.\n"), 
