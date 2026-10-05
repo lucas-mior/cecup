@@ -318,8 +318,8 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
                              _("Transferring data and updating metadata..."));
     }
 
-    SNPRINTF(src_base_with_slash, "%s/", cecup.base[L]);
-    SNPRINTF(dst_base_with_slash, "%s/", cecup.base[R]);
+    SNPRINTF(src_base_with_slash, "%.*s/", cecup.base_len[L], cecup.base[L]);
+    SNPRINTF(dst_base_with_slash, "%.*s/", cecup.base_len[R], cecup.base[R]);
 
     CMD_PUSH(&command, "rsync", "--verbose", "--verbose");
 
@@ -570,6 +570,7 @@ static void
 work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     char full_path[MAX_PATH_LENGTH];
     int32 base_path_len;
+    int32 full_path_len;
 
     ASSERT_POSITIVE(path_len);
 
@@ -579,15 +580,18 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         return;
     }
 
-    SNPRINTF(full_path, "%s/%.*s", cecup.base[side], path_len, path);
     base_path_len = cecup.base_len[side];
+    full_path_len = SNPRINTF(full_path, "%.*s/%.*s",
+                             base_path_len, cecup.base[side],
+                             path_len, path);
 
     if (path[path_len - 1] != '/') {
         if (unlink(full_path) < 0) {
-            error("Error in unlink(%s): %s.\n", full_path, strerror(errno));
+            error("Error in unlink(%.*s): %s.\n",
+                  full_path_len, full_path, strerror(errno));
         } else {
             work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, path, path_len);
-            LOG("Removed %s...\n", full_path);
+            LOG("Removed %.*s...\n", full_path_len, full_path);
         }
     } else {
         FsWalk fs_walk;
@@ -595,8 +599,8 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         bool had_errors = false;
 
         if (!fs_walk_open(&fs_walk, full_path)) {
-            error("Error in fs_walk_open(%s): %s.\n",
-                  full_path, strerror(errno));
+            error("Error in fs_walk_open(%.*s): %s.\n",
+                  full_path_len, full_path, strerror(errno));
             return;
         }
 
@@ -623,8 +627,8 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             case FS_WALK_DIR_UNREADABLE:
             case FS_WALK_ERROR:
             case FS_WALK_STAT_ERROR:
-                error("FsWalk error on %s: %s.\n",
-                      entry->path, strerror(entry->error));
+                error("FsWalk error on %.*s: %s.\n",
+                      entry->path_len, entry->path, strerror(entry->error));
                 had_errors = true;
                 continue;
             case FS_WALK_PRE_DIR:
@@ -684,8 +688,8 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         }
 
         if (errno) {
-            LOG_ERROR(_("Error in fs_walk_read(%s): %s.\n"),
-                      full_path, strerror(errno));
+            LOG_ERROR(_("Error in fs_walk_read(%.*s): %s.\n"),
+                      full_path_len, full_path, strerror(errno));
             had_errors = true;
         }
         if (fs_walk_close(&fs_walk) < 0) {
@@ -696,10 +700,11 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         if (work_should_stop()) {
             LOG_ERROR("Stop requested. Cancelled recursive removal.\n");
         } else if (had_errors) {
-            LOG_ERROR(_("Partially removed directory tree %s. "
-                        "Some entries could not be removed.\n"), full_path);
+            LOG_ERROR(_("Partially removed directory tree %.*s. "
+                        "Some entries could not be removed.\n"),
+                      full_path_len, full_path);
         } else {
-            LOG("Removed directory tree %s...\n", full_path);
+            LOG("Removed directory tree %.*s...\n", full_path_len, full_path);
         }
     }
 
@@ -898,7 +903,8 @@ work_transfer_full_path(
     if (aux_is_root(path) || ((path_len == 1) && (path[0] == '.'))) {
         full_path_len = base_len;
         if (full_path_len >= full_path_size) {
-            LOG_ERROR(_("Transfer path is too long: %s.\n"), cecup.base[side]);
+            LOG_ERROR(_("Transfer path is too long: %.*s.\n"),
+                      base_len, cecup.base[side]);
             return false;
         }
 
@@ -909,8 +915,8 @@ work_transfer_full_path(
 
     full_path_len = base_len + 1 + path_len;
     if (full_path_len >= full_path_size) {
-        LOG_ERROR(_("Transfer path is too long: %s/%.*s.\n"),
-                  cecup.base[side], path_len, path);
+        LOG_ERROR(_("Transfer path is too long: %.*s/%.*s.\n"),
+                  base_len, cecup.base[side], path_len, path);
         return false;
     }
 
@@ -1584,12 +1590,16 @@ test_manual_copy_regular_and_dir(MessageBatch **batch) {
     char dst_dir[MAX_PATH_LENGTH];
     char dst_nested[MAX_PATH_LENGTH];
 
-    SNPRINTF(src_file, "%s/manual_file.txt", cecup.base[L]);
-    SNPRINTF(dst_file, "%s/manual_file.txt", cecup.base[R]);
-    SNPRINTF(src_dir, "%s/manual_dir", cecup.base[L]);
-    SNPRINTF(src_nested, "%s/manual_dir/nested.txt", cecup.base[L]);
-    SNPRINTF(dst_dir, "%s/manual_dir", cecup.base[R]);
-    SNPRINTF(dst_nested, "%s/manual_dir/nested.txt", cecup.base[R]);
+    SNPRINTF(src_file, "%.*s/manual_file.txt",
+             cecup.base_len[L], cecup.base[L]);
+    SNPRINTF(dst_file, "%.*s/manual_file.txt",
+             cecup.base_len[R], cecup.base[R]);
+    SNPRINTF(src_dir, "%.*s/manual_dir", cecup.base_len[L], cecup.base[L]);
+    SNPRINTF(src_nested, "%.*s/manual_dir/nested.txt",
+             cecup.base_len[L], cecup.base[L]);
+    SNPRINTF(dst_dir, "%.*s/manual_dir", cecup.base_len[R], cecup.base[R]);
+    SNPRINTF(dst_nested, "%.*s/manual_dir/nested.txt",
+             cecup.base_len[R], cecup.base[R]);
 
     test_write_file(src_file, "file-data");
     mkdir(src_dir, 0755);
@@ -1623,8 +1633,8 @@ test_manual_copy_symlink(MessageBatch **batch) {
         return;
     }
 
-    SNPRINTF(src_link, "%s/manual_link", cecup.base[L]);
-    SNPRINTF(dst_link, "%s/manual_link", cecup.base[R]);
+    SNPRINTF(src_link, "%.*s/manual_link", cecup.base_len[L], cecup.base[L]);
+    SNPRINTF(dst_link, "%.*s/manual_link", cecup.base_len[R], cecup.base[R]);
     ASSERT(!symlink("manual_target.txt", src_link));
 
     tasks = test_task_list_create(1);
@@ -1659,10 +1669,10 @@ test_manual_copy_hardlinks(MessageBatch **batch) {
         return;
     }
 
-    SNPRINTF(src_a, "%s/manual_hard_a", cecup.base[L]);
-    SNPRINTF(src_b, "%s/manual_hard_b", cecup.base[L]);
-    SNPRINTF(dst_a, "%s/manual_hard_a", cecup.base[R]);
-    SNPRINTF(dst_b, "%s/manual_hard_b", cecup.base[R]);
+    SNPRINTF(src_a, "%.*s/manual_hard_a", cecup.base_len[L], cecup.base[L]);
+    SNPRINTF(src_b, "%.*s/manual_hard_b", cecup.base_len[L], cecup.base[L]);
+    SNPRINTF(dst_a, "%.*s/manual_hard_a", cecup.base_len[R], cecup.base[R]);
+    SNPRINTF(dst_b, "%.*s/manual_hard_b", cecup.base_len[R], cecup.base[R]);
 
     test_write_file(src_a, "hardlink-data");
     ASSERT(!link(src_a, src_b));
@@ -1794,7 +1804,7 @@ main(void) {
     ASSERT(batch == NULL);
 
     /* Test work_remove refuses to remove configured root */
-    SNPRINTF(path, "%s/root_guard.txt", cecup.base[R]);
+    SNPRINTF(path, "%.*s/root_guard.txt", cecup.base_len[R], cecup.base[R]);
     fd = open(path, O_CREAT | O_WRONLY, 0644);
     close(fd);
     ASSERT(!access(path, F_OK));
@@ -1808,7 +1818,7 @@ main(void) {
     unlink(path);
 
     /* Test work_remove on file */
-    SNPRINTF(path, "%s/rm_test.txt", cecup.base[R]);
+    SNPRINTF(path, "%.*s/rm_test.txt", cecup.base_len[R], cecup.base[R]);
     fd = open(path, O_CREAT | O_WRONLY, 0644);
     close(fd);
     ASSERT(!access(path, F_OK));
@@ -1816,13 +1826,13 @@ main(void) {
     ASSERT(access(path, F_OK));
 
     /* Test work_remove on directory using FsWalk */
-    SNPRINTF(path, "%s/rm_dir", cecup.base[R]);
+    SNPRINTF(path, "%.*s/rm_dir", cecup.base_len[R], cecup.base[R]);
     mkdir(path, 0755);
-    SNPRINTF(path, "%s/rm_dir/file.txt", cecup.base[R]);
+    SNPRINTF(path, "%.*s/rm_dir/file.txt", cecup.base_len[R], cecup.base[R]);
     fd = open(path, O_CREAT | O_WRONLY, 0644);
     close(fd);
     work_remove(&batch, "rm_dir/", 7, R);
-    SNPRINTF(path, "%s/rm_dir", cecup.base[R]);
+    SNPRINTF(path, "%.*s/rm_dir", cecup.base_len[R], cecup.base[R]);
     ASSERT(access(path, F_OK));
 
     test_manual_copy_regular_and_dir(&batch);
@@ -1830,7 +1840,7 @@ main(void) {
     test_manual_copy_hardlinks(&batch);
 
     if (test_rsync_backend_supported()) {
-        SNPRINTF(path, "%s/sync_test.txt", cecup.base[L]);
+        SNPRINTF(path, "%.*s/sync_test.txt", cecup.base_len[L], cecup.base[L]);
         test_write_file(path, "data");
 
         SNPRINTF(files_from, "%s/files_from", temp_dir);
@@ -1840,7 +1850,7 @@ main(void) {
         close(fd);
 
         ASSERT(work_rsync_run(files_from, 1, false, &batch));
-        SNPRINTF(path, "%s/sync_test.txt", cecup.base[R]);
+        SNPRINTF(path, "%.*s/sync_test.txt", cecup.base_len[R], cecup.base[R]);
         ASSERT(!access(path, F_OK));
         work_batch_flush(&batch);
     }
@@ -1851,7 +1861,8 @@ main(void) {
         TaskList *task_list;
         Task *task;
 
-        SNPRINTF(path, "%s/thread_test.txt", cecup.base[L]);
+        SNPRINTF(path, "%.*s/thread_test.txt",
+                 cecup.base_len[L], cecup.base[L]);
         test_write_file(path, "thread-data");
 
         thread_data = malloc2(SIZEOF(*thread_data));
@@ -1867,7 +1878,8 @@ main(void) {
         xpthread_join(&thread, NULL);
         unsetenv("CECUP_TRANSFER_BACKEND");
 
-        SNPRINTF(path, "%s/thread_test.txt", cecup.base[R]);
+        SNPRINTF(path, "%.*s/thread_test.txt",
+                 cecup.base_len[R], cecup.base[R]);
         ASSERT(!access(path, F_OK));
     }
 

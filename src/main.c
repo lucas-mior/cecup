@@ -750,19 +750,21 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     {
         char cwd[MAX_PATH_LENGTH];
+        int32 cwd_len;
 
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
             error("Error getting current working directory: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
 
-        if (strlen32(cwd) > (SIZEOF(src_path_buffer) / 2)) {
+        cwd_len = strlen32(cwd);
+        if (cwd_len > (SIZEOF(src_path_buffer) / 2)) {
             error("Error: current working directory path is too long.\n");
             fatal(EXIT_FAILURE);
         }
 
-        SNPRINTF(src_path_buffer, "%s/a/", cwd);
-        SNPRINTF(dst_path_buffer, "%s/b/", cwd);
+        SNPRINTF(src_path_buffer, "%.*s/a/", cwd_len, cwd);
+        SNPRINTF(dst_path_buffer, "%.*s/b/", cwd_len, cwd);
     }
 
     NEW_WITH_NAME(paths_hbox, gtk_box_new, GTK_ORIENTATION_HORIZONTAL, 10);

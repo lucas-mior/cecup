@@ -372,6 +372,7 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
     int32 idx_src;
     int32 row_id;
     char full_path[MAX_PATH_LENGTH];
+    int32 full_path_len;
     struct stat stat;
     char *symlink_target = NULL;
     int32 symlink_target_len = 0;
@@ -399,10 +400,12 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
         return false;
     }
 
-    SNPRINTF(full_path, "%s/%.*s",
-             cecup.base[R], path_transfered_len, path_transfered);
+    full_path_len = SNPRINTF(full_path, "%.*s/%.*s",
+                             cecup.base_len[R], cecup.base[R],
+                             path_transfered_len, path_transfered);
     if (lstat(full_path, &stat) < 0) {
-        error("Error in stat('%s'): %s.\n", full_path, strerror(errno));
+        error("Error in stat('%.*s'): %s.\n",
+              full_path_len, full_path, strerror(errno));
         if (DEBUGGING) {
             fatal(EXIT_FAILURE);
         }

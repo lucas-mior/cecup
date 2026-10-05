@@ -102,8 +102,9 @@ work_traverse_fs(Traversal *traversal) {
     }
 
     if (!fs_walk_open(&fs_walk, traversal->base_path)) {
-        LOG_ERROR(_("Error walking directory %s: %s.\n"),
-                  traversal->base_path, strerror(errno));
+        LOG_ERROR(_("Error walking directory %.*s: %s.\n"),
+                  traversal->base_path_len, traversal->base_path,
+                  strerror(errno));
         traversal_root_unknown_record(traversal);
         return 0;
     }
@@ -311,8 +312,9 @@ work_traverse_fs(Traversal *traversal) {
     }
 
     if (errno) {
-        LOG_ERROR(_("Error in fs_walk_read(%s): %s.\n"),
-                  traversal->base_path, strerror(errno));
+        LOG_ERROR(_("Error in fs_walk_read(%.*s): %s.\n"),
+                  traversal->base_path_len, traversal->base_path,
+                  strerror(errno));
         traversal_root_unknown_record(traversal);
     }
     if (fs_walk_close(&fs_walk) < 0) {
@@ -392,13 +394,13 @@ work_preview(void *user_data) {
         struct stat stat_dst;
 
         if (stat(cecup.base[L], &stat_src) < 0) {
-            LOG_ERROR(_("Error getting directory info from %s: %s.\n"),
-                      cecup.base[L], strerror(errno));
+            LOG_ERROR(_("Error getting directory info from %.*s: %s.\n"),
+                      cecup.base_len[L], cecup.base[L], strerror(errno));
             work_preview_cancel_and_reset(thread_data);
         }
         if (stat(cecup.base[R], &stat_dst) < 0) {
-            LOG_ERROR(_("Error getting directory info from %s: %s.\n"),
-                      cecup.base[R], strerror(errno));
+            LOG_ERROR(_("Error getting directory info from %.*s: %s.\n"),
+                      cecup.base_len[R], cecup.base[R], strerror(errno));
             work_preview_cancel_and_reset(thread_data);
         }
 

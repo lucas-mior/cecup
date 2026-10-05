@@ -258,22 +258,22 @@ on_menu_rename(GtkWidget *tree, void *data) {
 }
 
 static bool
-on_menu_open_path(char *path) {
+on_menu_open_path(char *path, int32 path_len) {
     GError *launch_error = NULL;
     char *uri;
 
     uri = g_filename_to_uri(path, NULL, &launch_error);
     if (uri == NULL) {
-        LOG_ERROR(_("Error preparing %s for opening: %s.\n"),
-                  path, launch_error->message);
+        LOG_ERROR(_("Error preparing %.*s for opening: %s.\n"),
+                  path_len, path, launch_error->message);
         g_clear_error(&launch_error);
         return false;
     }
 
-    LOG(_("Launching %s...\n"), path);
+    LOG(_("Launching %.*s...\n"), path_len, path);
     if (!g_app_info_launch_default_for_uri(uri, NULL, &launch_error)) {
-        LOG_ERROR(_("Error opening %s: %s.\n"),
-                  path, launch_error->message);
+        LOG_ERROR(_("Error opening %.*s: %s.\n"),
+                  path_len, path, launch_error->message);
         g_clear_error(&launch_error);
         g_free(uri);
         return false;
@@ -310,6 +310,7 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         char *base_path;
         int32 base_path_len;
         int32 n;
+        int32 full_path_len;
         int fd;
 
         base_path = cecup.base[message->side];
@@ -321,15 +322,19 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         if (folder) {
             int32 path_len = n;
             dirname2(full_path, full_path, &path_len);
+            full_path_len = path_len;
+        } else {
+            full_path_len = n;
         }
 
         if ((fd = open(full_path, O_RDONLY)) < 0) {
-            LOG_ERROR(_("Error opening %s: %s.\n"), full_path, strerror(errno));
+            LOG_ERROR(_("Error opening %.*s: %s.\n"),
+                      full_path_len, full_path, strerror(errno));
             continue;
         }
         XCLOSE(&fd);
 
-        (void)on_menu_open_path(full_path);
+        (void)on_menu_open_path(full_path, full_path_len);
     }
 
     task_list_free(tasks);
@@ -382,15 +387,17 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
 
         if (absolute) {
             char path_relative[MAX_PATH_LENGTH];
+            int32 path_relative_len;
 
-            SNPRINTF(path_relative,
-                     "%.*s/%.*s",
-                     base_path_len, base_path, task->path_len, task->path);
+            path_relative_len = SNPRINTF(path_relative,
+                                         "%.*s/%.*s",
+                                         base_path_len, base_path,
+                                         task->path_len, task->path);
 
             if (realpath(path_relative, path_full) == NULL) {
-                LOG_ERROR(_("Error resolving full path of %s:%s. Copying relative path instead.\n"), 
-                          path_relative, strerror(errno));
-                SNPRINTF(path_full, "%s", path_relative);
+                LOG_ERROR(_("Error resolving full path of %.*s:%s. Copying relative path instead.\n"),
+                          path_relative_len, path_relative, strerror(errno));
+                SNPRINTF(path_full, "%.*s", path_relative_len, path_relative);
             }
             path = path_full;
             path_len = strlen32(path_full);
@@ -500,16 +507,18 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
     for (int32 i = 0; i < tasks->count; i += 1) {
         Task *task = tasks->items[i];
-        int32 size_src = strlen32(cecup.base[L]) + task->path_len + 2;
-        int32 size_dst = strlen32(cecup.base[R]) + task->path_len + 2;
+        int32 size_src = cecup.base_len[L] + task->path_len + 2;
+        int32 size_dst = cecup.base_len[R] + task->path_len + 2;
         char *path_src = malloc2(size_src);
         char *path_dst = malloc2(size_dst);
         Command command;
 
-        fmt_sprintf(path_src, size_src, "%s/%.*s",
-                    cecup.base[L], task->path_len, task->path);
-        fmt_sprintf(path_dst, size_dst, "%s/%.*s",
-                    cecup.base[R], task->path_len, task->path);
+        fmt_sprintf(path_src, size_src, "%.*s/%.*s",
+                    cecup.base_len[L], cecup.base[L],
+                    task->path_len, task->path);
+        fmt_sprintf(path_dst, size_dst, "%.*s/%.*s",
+                    cecup.base_len[R], cecup.base[R],
+                    task->path_len, task->path);
 
         command = on_menu_diff_command(term_command, diff_tool);
         CMD_PUSH(&command, path_dst, path_src);
