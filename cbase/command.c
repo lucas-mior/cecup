@@ -1163,9 +1163,9 @@ cmd_run_capture_combined(Command *command) {
 
 void
 cmd_print(Command *command) {
-    printf(RED("%.*s"), command->argv_lens[0], command->argv[0]);
+    printf(RED("%.*s"), SP(command->argv, 0));
     for (int32 i = 1; i < command->argc; i += 1) {
-        printf(" %.*s", command->argv_lens[i], command->argv[i]);
+        printf(" %.*s", SP(command->argv, i));
     }
     printf("\n");
     return;
