@@ -1165,7 +1165,7 @@ void
 cmd_print(Command *command) {
     printf(RED("%s"), command->argv[0]);
     for (int32 i = 1; i < command->argc; i += 1) {
-        printf(" %s", command->argv[i]);
+        printf(" %.*s", command->argv_lens[i], command->argv[i]);
     }
     printf("\n");
     return;
