@@ -565,7 +565,7 @@ update_row_rename(char *old_path, int32 old_path_len,
          * the new path should not exist on this side prior to the rename.
          * of course, someone else could have renamed the file,
          * but that is true of the whole program */
-        ASSERT_NEGATIVE(cecup.rows[side][merge_row_id]);
+        ASSERT_LT(cecup.rows[side][merge_row_id], 0);
 
         cecup.rows[side][merge_row_id] = new_idx;
         traversal->row_ids[new_idx] = merge_row_id;
@@ -1178,7 +1178,7 @@ main(void) {
         ASSERT(update_row_rename("file_b", 6, "file_d", 6, L));
 
         /* Old idx 1 must be removed, new idx assigned */
-        ASSERT_NEGATIVE(cecup.traversal[L].row_ids[1]);
+        ASSERT_LT(cecup.traversal[L].row_ids[1], 0);
         /* it pushes a new item to traversal array */
         ASSERT_GT(cecup.rows[L][0], 1);
     }

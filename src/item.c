@@ -590,28 +590,28 @@ main(void) {
 
     cecup.sort_order = GTK_SORT_ASCENDING;
     result = cecup_item_compare_int_key(&entry1, &entry2);
-    ASSERT_NEGATIVE(result);
+    ASSERT_LT(result, 0);
 
     cecup.sort_order = GTK_SORT_DESCENDING;
     result = cecup_item_compare_int_key(&entry1, &entry2);
-    ASSERT_POSITIVE(result);
+    ASSERT_GT(result, 0);
 
     entry1.key.ptr = "apple";
     entry2.key.ptr = "banana";
 
     cecup.sort_order = GTK_SORT_ASCENDING;
     result = cecup_item_compare_string_key(&entry1, &entry2);
-    ASSERT_NEGATIVE(result);
+    ASSERT_LT(result, 0);
 
     cecup.sort_order = GTK_SORT_DESCENDING;
     result = cecup_item_compare_string_key(&entry1, &entry2);
-    ASSERT_POSITIVE(result);
+    ASSERT_GT(result, 0);
 
     /* 4. Test Remaining Utility/Action Functions */
     name_a_ptr = "apple";
     name_b_ptr = "banana";
     result = compare_names(&name_a_ptr, &name_b_ptr);
-    ASSERT_NEGATIVE(result);
+    ASSERT_LT(result, 0);
 
     cecup.rows[L] = malloc2(10*SIZEOF(int32));
     cecup.rows[R] = malloc2(10*SIZEOF(int32));

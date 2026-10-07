@@ -185,7 +185,7 @@ work_rsync_wait_nohang(Command *command, bool *done) {
     pid_t pid;
     pid_t result;
 
-    ASSERT_POSITIVE(command->result.pid);
+    ASSERT_GT(command->result.pid, 0);
 
     pid = (pid_t)command->result.pid;
     *done = false;
@@ -572,7 +572,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     int32 base_path_len;
     int32 full_path_len;
 
-    ASSERT_POSITIVE(path_len);
+    ASSERT_GT(path_len, 0);
 
     if (aux_is_root(path)) {
         LOG_ERROR(_("Refusing to remove configured root path %.*s.\n"),
@@ -1574,7 +1574,7 @@ test_write_file(char *path, char *contents) {
 
     len = strlen32(contents);
     fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-    ASSERT_NON_NEGATIVE(fd);
+    ASSERT_GE(fd, 0);
     write64(fd, contents, len);
     XCLOSE(&fd, path);
     return;
@@ -1645,7 +1645,7 @@ test_manual_copy_symlink(MessageBatch **batch) {
     target_len_api = readlink(dst_link, target, SIZEOF(target) - 1);
     ASSERT_LT(target_len_api, MAXOF(target_len));
     target_len = (int32)target_len_api;
-    ASSERT_POSITIVE(target_len);
+    ASSERT_GT(target_len, 0);
 
     target[target_len] = '\0';
     ASSERT_EQ(target, "manual_target.txt");
@@ -1845,7 +1845,7 @@ main(void) {
 
         SNPRINTF(files_from, "%s/files_from", temp_dir);
         fd = open(files_from, O_CREAT | O_WRONLY, 0644);
-        ASSERT_NON_NEGATIVE(fd);
+        ASSERT_GE(fd, 0);
         write64(fd, "sync_test.txt\n", 14);
         close(fd);
 

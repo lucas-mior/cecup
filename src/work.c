@@ -933,13 +933,13 @@ main(void) {
         if (entry->src_missing) {
             ASSERT_EQ(src_idx, -1);
         } else {
-            ASSERT_NON_NEGATIVE(src_idx);
+            ASSERT_GE(src_idx, 0);
         }
 
         if (entry->dst_missing) {
             ASSERT_EQ(dst_idx, -1);
         } else {
-            ASSERT_NON_NEGATIVE(dst_idx);
+            ASSERT_GE(dst_idx, 0);
         }
 
         row_id = item_add(src_idx, dst_idx);
@@ -954,7 +954,7 @@ main(void) {
 
         xpthread_create(&pt_traverse, NULL, work_traverse_fs_thread, &cecup.traversal[L]);
         xpthread_join(&pt_traverse, NULL);
-        ASSERT_POSITIVE(cecup.traversal[L].file_count);
+        ASSERT_GT(cecup.traversal[L].file_count, 0);
     }
 
     {
@@ -970,8 +970,8 @@ main(void) {
         xpthread_create(&cecup.work_thread, NULL, work_preview, thread_data);
         xpthread_join(&cecup.work_thread, NULL);
 
-        ASSERT_POSITIVE(cecup.traversal[L].file_count);
-        ASSERT_POSITIVE(cecup.traversal[R].file_count);
+        ASSERT_GT(cecup.traversal[L].file_count, 0);
+        ASSERT_GT(cecup.traversal[R].file_count, 0);
     }
 
     {
