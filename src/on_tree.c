@@ -380,7 +380,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
             if (reason_builder.len > 0) {
                 STR_APPEND(&reason_builder, "\n");
             }
-            str_printf(&reason_builder, "%s", base_msg);
+            STR_APPEND(&reason_builder, base_msg, strlen32(base_msg));
         }
 
         symlink_target = item_symlink_target_side(row_id, side);
