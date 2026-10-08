@@ -500,8 +500,8 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
     (void)widget;
 
-    term_command = (char *)gtk_editable_get_text(
-        GTK_EDITABLE(cecup.term_entry));
+    term_command =
+        (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry));
     diff_tool = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry));
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
@@ -562,8 +562,8 @@ clipboard_read_callback(GObject *source, GAsyncResult *result, void *data) {
     ClipboardResult *clipboard_result;
 
     clipboard_result = data;
-    clipboard_result->text = gdk_clipboard_read_text_finish(
-        GDK_CLIPBOARD(source), result, NULL);
+    clipboard_result->text =
+        gdk_clipboard_read_text_finish(GDK_CLIPBOARD(source), result, NULL);
     clipboard_result->done = true;
     return;
 }
@@ -672,6 +672,7 @@ main(void) {
     on_menu_open_item(tree, msg);
 
     {
+        GdkClipboard *clipboard;
         char expected[MAX_PATH_LENGTH];
         char missing_full[MAX_PATH_LENGTH];
         char missing_path[MAX_PATH_LENGTH];
@@ -691,9 +692,9 @@ main(void) {
 
         clipboard_result.done = false;
         clipboard_result.text = NULL;
-        gdk_clipboard_read_text_async(
-            gdk_display_get_clipboard(gdk_display_get_default()),
-            NULL, clipboard_read_callback, &clipboard_result);
+        clipboard = gdk_display_get_clipboard(gdk_display_get_default());
+        gdk_clipboard_read_text_async(clipboard, NULL, clipboard_read_callback,
+                                     &clipboard_result);
         while (!clipboard_result.done) {
             g_main_context_iteration(NULL, true);
         }

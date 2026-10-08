@@ -174,15 +174,17 @@ update_ui_handler(void *data) {
             if (gtk_text_tag_table_lookup(table, "err_red") == NULL) {
                 gtk_text_buffer_create_tag(cecup.log_buffer, "err_red", "foreground", "red", NULL);
             }
-            gtk_text_buffer_insert_with_tags_by_name(
-                cecup.log_buffer, &end, message->text, -1, "err_red", NULL);
+            gtk_text_buffer_insert_with_tags_by_name(cecup.log_buffer, &end,
+                                                     message->text, -1,
+                                                     "err_red", NULL);
             break;
         case MSG_LOG_CMD:
             if (gtk_text_tag_table_lookup(table, "err_blue") == NULL) {
                 gtk_text_buffer_create_tag(cecup.log_buffer, "err_blue", "foreground", "blue", NULL);
             }
-            gtk_text_buffer_insert_with_tags_by_name(
-                cecup.log_buffer, &end, message->text, -1, "err_blue", NULL);
+            gtk_text_buffer_insert_with_tags_by_name(cecup.log_buffer, &end,
+                                                     message->text, -1,
+                                                     "err_blue", NULL);
             break;
         default:
             gtk_text_buffer_insert(cecup.log_buffer, &end, message->text, -1);

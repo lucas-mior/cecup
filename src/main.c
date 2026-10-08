@@ -947,50 +947,54 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
         if (main_key_file_get_boolean(key, "Filters", "new",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(
-                GTK_TOGGLE_BUTTON(cecup.filter_new), boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_new),
+                                         boolean_value);
         }
         if (main_key_file_get_boolean(key, "Filters", "hard",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(
-                GTK_TOGGLE_BUTTON(cecup.filter_link), boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_link),
+                                         boolean_value);
         }
         if (main_key_file_get_boolean(key, "Filters", "update",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(
-                GTK_TOGGLE_BUTTON(cecup.filter_update), boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_update),
+                                         boolean_value);
         }
         if (main_key_file_get_boolean(key, "Filters", "equal",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(
-                GTK_TOGGLE_BUTTON(cecup.filter_equal), boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal),
+                                         boolean_value);
         }
         if (main_key_file_get_boolean(key, "Filters", "delete",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(
-                GTK_TOGGLE_BUTTON(cecup.filter_delete), boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete),
+                                         boolean_value);
         }
         if (main_key_file_get_boolean(key, "Filters", "ignore",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(
-                GTK_TOGGLE_BUTTON(cecup.filter_ignore), boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore),
+                                         boolean_value);
         }
         if (main_key_file_get_boolean(key, "Options", "check_fs",
                                       &boolean_value)) {
-            gtk_check_button_set_active(
-                GTK_CHECK_BUTTON(cecup.check_fs_button), boolean_value);
+            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.check_fs_button),
+                                        boolean_value);
         }
         if (main_key_file_get_boolean(key, "Options", "delete_ignored",
                                       &boolean_value)) {
+            GtkCheckButton *button =
+                GTK_CHECK_BUTTON(cecup.delete_ignored_button);
+
             cecup.delete_ignored = boolean_value;
-            gtk_check_button_set_active(
-                GTK_CHECK_BUTTON(cecup.delete_ignored_button), boolean_value);
+            gtk_check_button_set_active(button, boolean_value);
         }
         if (main_key_file_get_boolean(key, "Options", "delete_after",
                                       &boolean_value)) {
+            GtkCheckButton *button =
+                GTK_CHECK_BUTTON(cecup.delete_after_button);
+
             cecup.delete_after = boolean_value;
-            gtk_check_button_set_active(
-                GTK_CHECK_BUTTON(cecup.delete_after_button), boolean_value);
+            gtk_check_button_set_active(button, boolean_value);
         }
 
         g_key_file_free(key);

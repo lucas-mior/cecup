@@ -707,10 +707,10 @@ on_browse_src(GtkWidget *button, void *data) {
 
     (void)data;
     (void)button;
-    dialog = gtk_file_chooser_dialog_new(
-        _("Src"), GTK_WINDOW(cecup.gtk_window),
-        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel",
-        GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
+    dialog = gtk_file_chooser_dialog_new(_("Src"), GTK_WINDOW(cecup.gtk_window),
+                                         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                         "_Cancel", GTK_RESPONSE_CANCEL,
+                                         "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
     g_signal_connect(dialog, "response", G_CALLBACK(on_browse_response_src), NULL);
     gtk_widget_show(dialog);
@@ -741,10 +741,10 @@ on_browse_dst(GtkWidget *button, void *data) {
 
     (void)data;
     (void)button;
-    dialog = gtk_file_chooser_dialog_new(
-        _("Dst"), GTK_WINDOW(cecup.gtk_window),
-        GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, "_Cancel",
-        GTK_RESPONSE_CANCEL, "_Select", GTK_RESPONSE_ACCEPT, NULL);
+    dialog = gtk_file_chooser_dialog_new(_("Dst"), GTK_WINDOW(cecup.gtk_window),
+                                         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                         "_Cancel", GTK_RESPONSE_CANCEL,
+                                         "_Select", GTK_RESPONSE_ACCEPT, NULL);
 
     g_signal_connect(dialog, "response", G_CALLBACK(on_browse_response_dst), NULL);
     gtk_widget_show(dialog);

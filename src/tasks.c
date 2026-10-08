@@ -76,8 +76,8 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
 
         if (action == ACTION_HARDLINK) {
             idx = cecup.rows[side][row_id];
-            task->file_id = file_id_from_stat(
-                &cecup.traversal[side].stats[idx]);
+            task->file_id =
+                file_id_from_stat(&cecup.traversal[side].stats[idx]);
         }
 
         task->action = action;
@@ -105,8 +105,8 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         if (clicked_action == ACTION_HARDLINK) {
             if (hash_lookup_fs_map(cecup.traversal[side].map, task->path,
                                    task->path_len, &idx)) {
-                task->file_id = file_id_from_stat(
-                    &cecup.traversal[side].stats[idx]);
+                task->file_id =
+                    file_id_from_stat(&cecup.traversal[side].stats[idx]);
             }
         }
 

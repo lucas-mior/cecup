@@ -1370,10 +1370,9 @@ work_manual_backend_run(
     state.batch = batch;
     state.nfiles_total = nfiles_total;
 
-    update_progress_info(
-        _("Copying files"),
-        _("Copying files with the manual recursive copier...")
-    );
+    update_progress_info(_("Copying files"),
+                         _("Copying files with the manual recursive "
+                           "copier..."));
     LOG(_("Running manual transfer backend...\n"));
 
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
