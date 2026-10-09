@@ -695,8 +695,9 @@ main(void) {
         clipboard_result.done = false;
         clipboard_result.text = NULL;
         clipboard = gdk_display_get_clipboard(gdk_display_get_default());
-        gdk_clipboard_read_text_async(clipboard, NULL, clipboard_read_callback,
-                                     &clipboard_result);
+        gdk_clipboard_read_text_async(clipboard, NULL,
+                                      clipboard_read_callback,
+                                      &clipboard_result);
         while (!clipboard_result.done) {
             g_main_context_iteration(NULL, true);
         }
