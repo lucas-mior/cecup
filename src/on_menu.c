@@ -513,10 +513,12 @@ on_menu_diff(GtkWidget *widget, void *data) {
         char *path_dst = malloc2(size_dst);
         Command command;
 
-        fmt_sprintf(path_src, size_src, "%.*s/%.*s",
+        fmt_sprintf(path_src, size_src,
+                    "%.*s/%.*s",
                     cecup.base_len[L], cecup.base[L],
                     task->path_len, task->path);
-        fmt_sprintf(path_dst, size_dst, "%.*s/%.*s",
+        fmt_sprintf(path_dst, size_dst,
+                    "%.*s/%.*s",
                     cecup.base_len[R], cecup.base[R],
                     task->path_len, task->path);
 
