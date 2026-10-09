@@ -73,8 +73,7 @@ update_message_batch_free(MessageBatch *batch, bool paths_owned) {
     free2(batch->paths, batch->capacity*SIZEOF(*(batch->paths)));
     free2(batch->paths_lens, batch->capacity*SIZEOF(*(batch->paths_lens)));
     free2(batch->dst_paths, batch->capacity*SIZEOF(*(batch->dst_paths)));
-    free2(batch->dst_paths_lens,
-          batch->capacity*SIZEOF(*(batch->dst_paths_lens)));
+    free2(batch->dst_paths_lens, batch->capacity*SIZEOF(*(batch->dst_paths_lens)));
     free2(batch, SIZEOF(*batch));
     return;
 }
@@ -407,8 +406,7 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
                              cecup.base_len[R], cecup.base[R],
                              path_transfered_len, path_transfered);
     if (lstat(full_path, &stat) < 0) {
-        error("Error in stat('%.*s'): %s.\n",
-              full_path_len, full_path, strerror(errno));
+        error("Error in stat('%.*s'): %s.\n", full_path_len, full_path, strerror(errno));
         if (DEBUGGING) {
             fatal(EXIT_FAILURE);
         }
@@ -484,8 +482,7 @@ update_row_rename(char *old_path, int32 old_path_len,
     int32 is_dir = 0;
 
     if (!hash_lookup_fs_map(traversal->map, old_path, old_path_len, &idx)) {
-        error("Didnt found %.*s on traversal hash map.\n",
-              old_path_len, old_path);
+        error("Didnt found %.*s on traversal hash map.\n", old_path_len, old_path);
         if (DEBUGGING) {
             fatal(EXIT_FAILURE);
         }
@@ -714,9 +711,7 @@ update_list_from_rows(enum UpdateRowsType change) {
         ASSERT_EQ((int32)change, (int32)UPDATE_ROWS_COMPLETE);
         return;
     }
-    cache_rows = realloc2(cache_rows,
-                          cache_rows_capacity, cecup.rows_len,
-                          SIZEOF(*cache_rows));
+    cache_rows = realloc2(cache_rows, cache_rows_capacity, cecup.rows_len, SIZEOF(*cache_rows));
     for (int32 i = cache_rows_capacity; i < cecup.rows_len; i += 1) {
         RowCache *cache_row = &cache_rows[i];
         cache_row->row_id = -1;

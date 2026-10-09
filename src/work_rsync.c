@@ -314,8 +314,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         update_progress_info(_("Verifying checksums"),
                              _("Performing verification of the new files..."));
     } else {
-        update_progress_info(_("Syncing files"),
-                             _("Transferring data and updating metadata..."));
+        update_progress_info(_("Syncing files"), _("Transferring data and updating metadata..."));
     }
 
     SNPRINTF(src_base_with_slash, "%.*s/", cecup.base_len[L], cecup.base[L]);
@@ -354,9 +353,9 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     }
 
     if (cmd_run_async(&command,
-                          CMD_CAPTURE_STDOUT
-                          |CMD_CAPTURE_STDERR
-                          |CMD_NEW_PROCESS_GROUP) < 0) {
+                      CMD_CAPTURE_STDOUT
+                      |CMD_CAPTURE_STDERR
+                      |CMD_NEW_PROCESS_GROUP) < 0) {
         cmd_free(&command);
         return false;
     }
@@ -535,8 +534,7 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
     } while ((pipes[0].fd >= 0) || (pipes[1].fd >= 0));
 
     if (!work_rsync_wait_child(&command)) {
-        LOG_ERROR(_("Error waiting for child process: %s.\n"),
-                  strerror(command.error_status));
+        LOG_ERROR(_("Error waiting for child process: %s.\n"), strerror(command.error_status));
         child_pid_set((pid_t)0);
         cmd_free(&command);
         return false;
@@ -546,14 +544,11 @@ work_rsync_run(char *files_from_filename, int32 nfiles_total,
         if (work_should_stop()) {
             LOG_ERROR(_("Stop requested. Cancelled sync.\n"));
         } else if (command.result.signaled) {
-            LOG_ERROR(_("rsync terminated by signal %d.\n"),
-                      command.result.term_signal);
+            LOG_ERROR(_("rsync terminated by signal %d.\n"), command.result.term_signal);
         } else if (command.result.exited) {
-            LOG_ERROR(_("rsync exited with status %d.\n"),
-                      command.result.exit_status);
+            LOG_ERROR(_("rsync exited with status %d.\n"), command.result.exit_status);
         } else {
-            LOG_ERROR(_("rsync returned status %d.\n"),
-                      command.result.status);
+            LOG_ERROR(_("rsync returned status %d.\n"), command.result.status);
         }
 
         child_pid_set((pid_t)0);
@@ -575,20 +570,18 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
     ASSERT_GT(path_len, 0);
 
     if (aux_is_root(path)) {
-        LOG_ERROR(_("Refusing to remove configured root path %.*s.\n"),
-                  path_len, path);
+        LOG_ERROR(_("Refusing to remove configured root path %.*s.\n"), path_len, path);
         return;
     }
 
     base_path_len = cecup.base_len[side];
     full_path_len = SNPRINTF(full_path, "%.*s/%.*s",
-                             base_path_len, cecup.base[side],
-                             path_len, path);
+                                        base_path_len, cecup.base[side],
+                                        path_len, path);
 
     if (path[path_len - 1] != '/') {
         if (unlink(full_path) < 0) {
-            error("Error in unlink(%.*s): %s.\n",
-                  full_path_len, full_path, strerror(errno));
+            error("Error in unlink(%.*s): %s.\n", full_path_len, full_path, strerror(errno));
         } else {
             work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, path, path_len);
             LOG("Removed %.*s...\n", full_path_len, full_path);
@@ -599,8 +592,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
         bool had_errors = false;
 
         if (!fs_walk_open(&fs_walk, full_path)) {
-            error("Error in fs_walk_open(%.*s): %s.\n",
-                  full_path_len, full_path, strerror(errno));
+            error("Error in fs_walk_open(%.*s): %s.\n", full_path_len, full_path, strerror(errno));
             return;
         }
 
@@ -667,21 +659,17 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
 
             if (is_dir) {
                 if (rmdir(entry->access_path) < 0) {
-                    error("Error in rmdir(%s): %s.\n",
-                          entry->access_path, strerror(errno));
+                    error("Error in rmdir(%s): %s.\n", entry->access_path, strerror(errno));
                     had_errors = true;
                 } else {
-                    work_batch_push(batch, MSG_BATCH_ROW_REMOVE,
-                                    side, rel_path, rel_path_len);
+                    work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, rel_path, rel_path_len);
                 }
             } else {
                 if (unlink(entry->access_path) < 0) {
-                    error("Error in unlink(%s): %s.\n",
-                          entry->access_path, strerror(errno));
+                    error("Error in unlink(%s): %s.\n", entry->access_path, strerror(errno));
                     had_errors = true;
                 } else {
-                    work_batch_push(batch, MSG_BATCH_ROW_REMOVE,
-                                    side, rel_path, rel_path_len);
+                    work_batch_push(batch, MSG_BATCH_ROW_REMOVE, side, rel_path, rel_path_len);
                 }
             }
             errno = 0;
@@ -790,8 +778,7 @@ work_transfer_log_metadata_policy(enum TransferBackend backend) {
     }
 
     if (!policy.preserve_special) {
-        LOG(_("Metadata policy: special files are not copied by this "
-              "backend.\n"));
+        LOG(_("Metadata policy: special files are not copied by this " "backend.\n"));
     }
 
     return;
@@ -837,8 +824,7 @@ work_rsync_backend_run(
     }
 
     for (int32 i = 0; (tasks->count == 0) && (i < cecup.ntransfers); i += 1) {
-        work_rsync_write_path(files_from_fd,
-                              cecup.transfers[i], cecup.transfers_lens[i]);
+        work_rsync_write_path(files_from_fd, cecup.transfers[i], cecup.transfers_lens[i]);
     }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
@@ -872,8 +858,7 @@ work_rsync_backend_run(
                 LOG_ERROR(_("Stop requested.\n"));
                 break;
             }
-            success = work_rsync_run(files_from_filename,
-                                     nfiles_total, true, batch);
+            success = work_rsync_run(files_from_filename, nfiles_total, true, batch);
         }
     } while (0);
 
@@ -903,8 +888,7 @@ work_transfer_full_path(
     if (aux_is_root(path) || ((path_len == 1) && (path[0] == '.'))) {
         full_path_len = base_len;
         if (full_path_len >= full_path_size) {
-            LOG_ERROR(_("Transfer path is too long: %.*s.\n"),
-                      base_len, cecup.base[side]);
+            LOG_ERROR(_("Transfer path is too long: %.*s.\n"), base_len, cecup.base[side]);
             return false;
         }
 
@@ -938,8 +922,7 @@ work_manual_make_parent_dirs(char *path) {
 
         path[i] = '\0';
         if ((mkdir(path, 0777) < 0) && (errno != EEXIST)) {
-            LOG_ERROR(_("Error creating parent directory %s: %s.\n"),
-                      path, strerror(errno));
+            LOG_ERROR(_("Error creating parent directory %s: %s.\n"), path, strerror(errno));
             path[i] = '/';
             return false;
         }
@@ -962,8 +945,7 @@ work_manual_remove_destination(
         if (errno == ENOENT) {
             return true;
         }
-        LOG_ERROR(_("Error checking destination %s: %s.\n"),
-                  dst_path, strerror(errno));
+        LOG_ERROR(_("Error checking destination %s: %s.\n"), dst_path, strerror(errno));
         state->had_errors = true;
         return false;
     }
@@ -986,8 +968,7 @@ work_manual_remove_type_conflict(
         if (errno == ENOENT) {
             return true;
         }
-        LOG_ERROR(_("Error checking destination %s: %s.\n"),
-                  dst_path, strerror(errno));
+        LOG_ERROR(_("Error checking destination %s: %s.\n"), dst_path, strerror(errno));
         state->had_errors = true;
         return false;
     }
@@ -1006,15 +987,13 @@ work_manual_preserve_metadata(char *dst_path, struct stat *src_stat) {
     struct utimbuf times;
 
     if (chmod(dst_path, src_stat->st_mode & 07777) < 0) {
-        LOG_ERROR(_("Error setting permissions on %s: %s.\n"),
-                  dst_path, strerror(errno));
+        LOG_ERROR(_("Error setting permissions on %s: %s.\n"), dst_path, strerror(errno));
     }
 
     times.actime = src_stat->st_atime;
     times.modtime = src_stat->st_mtime;
     if (utime(dst_path, &times) < 0) {
-        LOG_ERROR(_("Error setting timestamps on %s: %s.\n"),
-                  dst_path, strerror(errno));
+        LOG_ERROR(_("Error setting timestamps on %s: %s.\n"), dst_path, strerror(errno));
     }
 
     return;
@@ -1082,8 +1061,7 @@ work_manual_hardlinks_free(ManualTransferState *state) {
         free2(hardlink->dst_path, hardlink->dst_path_len + 1);
     }
 
-    free2(state->hardlinks,
-          state->hardlinks_capacity * SIZEOF(*(state->hardlinks)));
+    free2(state->hardlinks, state->hardlinks_capacity * SIZEOF(*(state->hardlinks)));
     return;
 }
 
@@ -1097,8 +1075,7 @@ work_manual_item_done(
     work_batch_push(state->batch, MSG_BATCH_ROW_TRANSFER, R, path, path_len);
 
     if (state->nfiles_total > 0) {
-        update_progress_bar((double)state->nfiles_done
-                            / (double)state->nfiles_total);
+        update_progress_bar((double)state->nfiles_done / (double)state->nfiles_total);
     }
 
     return;
@@ -1113,15 +1090,13 @@ work_manual_copy_regular_contents(char *dst_path, char *src_path, mode_t mode) {
 
     src_fd = open(src_path, O_RDONLY);
     if (src_fd < 0) {
-        LOG_ERROR(_("Error opening %s for reading: %s.\n"),
-                  src_path, strerror(errno));
+        LOG_ERROR(_("Error opening %s for reading: %s.\n"), src_path, strerror(errno));
         return false;
     }
 
     dst_fd = open(dst_path, O_WRONLY | O_CREAT | O_TRUNC, mode & 07777);
     if (dst_fd < 0) {
-        LOG_ERROR(_("Error opening %s for writing: %s.\n"),
-                  dst_path, strerror(errno));
+        LOG_ERROR(_("Error opening %s for writing: %s.\n"), dst_path, strerror(errno));
         XCLOSE(&src_fd, src_path);
         return false;
     }
@@ -1131,8 +1106,7 @@ work_manual_copy_regular_contents(char *dst_path, char *src_path, mode_t mode) {
 
         bytes_written = write64(dst_fd, buffer, bytes_read);
         if (bytes_written != bytes_read) {
-            LOG_ERROR(_("Error writing %s: %s.\n"),
-                      dst_path, strerror(errno));
+            LOG_ERROR(_("Error writing %s: %s.\n"), dst_path, strerror(errno));
             XCLOSE(&src_fd, src_path);
             XCLOSE(&dst_fd, dst_path);
             return false;
@@ -1232,8 +1206,7 @@ work_manual_copy_symlink(
 
     target_len = readlink(src_path, target, SIZEOF(target) - 1);
     if (target_len < 0) {
-        LOG_ERROR(_("Error reading symlink %s: %s.\n"),
-                  src_path, strerror(errno));
+        LOG_ERROR(_("Error reading symlink %s: %s.\n"), src_path, strerror(errno));
         state->had_errors = true;
         return false;
     }
@@ -1255,8 +1228,7 @@ work_manual_copy_symlink(
         return false;
     }
 
-    LOG(_("Created symlink %s -> %.*s.\n"),
-        dst_path, (int32)target_len, target);
+    LOG(_("Created symlink %s -> %.*s.\n"), dst_path, (int32)target_len, target);
     work_manual_item_done(state, path, path_len);
     return true;
 }
@@ -1280,8 +1252,7 @@ work_manual_copy_dir(
     }
 
     if ((mkdir(dst_path, src_stat->st_mode & 07777) < 0) && (errno != EEXIST)) {
-        LOG_ERROR(_("Error creating directory %s: %s.\n"),
-                  dst_path, strerror(errno));
+        LOG_ERROR(_("Error creating directory %s: %s.\n"), dst_path, strerror(errno));
         state->had_errors = true;
         return false;
     }
@@ -1310,23 +1281,19 @@ work_manual_copy_path(ManualTransferState *state, char *path, int32 path_len) {
     }
 
     if (lstat(src_path, &src_stat) < 0) {
-        LOG_ERROR(_("Error checking source %s: %s.\n"),
-                  src_path, strerror(errno));
+        LOG_ERROR(_("Error checking source %s: %s.\n"), src_path, strerror(errno));
         state->had_errors = true;
         return false;
     }
 
     if (S_ISDIR(src_stat.st_mode)) {
-        return work_manual_copy_dir(state, dst_path,
-                                    path, path_len, &src_stat);
+        return work_manual_copy_dir(state, dst_path, path, path_len, &src_stat);
     }
     if (S_ISLNK(src_stat.st_mode)) {
-        return work_manual_copy_symlink(state, src_path, dst_path,
-                                        path, path_len);
+        return work_manual_copy_symlink(state, src_path, dst_path, path, path_len);
     }
     if (S_ISREG(src_stat.st_mode)) {
-        return work_manual_copy_regular(state, src_path, dst_path,
-                                        path, path_len, &src_stat);
+        return work_manual_copy_regular(state, src_path, dst_path, path, path_len, &src_stat);
     }
 
     LOG_ERROR(_("Manual copier does not support special file %s.\n"), src_path);
@@ -1345,9 +1312,7 @@ work_manual_copy_hardlink_task(ManualTransferState *state, Task *task) {
             if (work_should_stop()) {
                 return;
             }
-            work_manual_copy_path(state,
-                                  hardlinks.names[j],
-                                  hardlinks.names_lens[j]);
+            work_manual_copy_path(state, hardlinks.names[j], hardlinks.names_lens[j]);
         }
     }
 
@@ -1374,8 +1339,7 @@ work_manual_backend_run(
         if (work_should_stop()) {
             break;
         }
-        work_manual_copy_path(&state,
-                              cecup.transfers[i], cecup.transfers_lens[i]);
+        work_manual_copy_path(&state, cecup.transfers[i], cecup.transfers_lens[i]);
     }
 
     for (int32 i = 0; i < tasks->count; i += 1) {
@@ -1530,8 +1494,7 @@ test_rsync_backend_supported(void) {
         return false;
     }
 
-    CMD_PUSH(&command,
-                 "rsync", "--info=progress2", "--iconv=.,.", "--version");
+    CMD_PUSH(&command, "rsync", "--info=progress2", "--iconv=.,.", "--version");
     supported = (cmd_run_capture(&command, CMD_CAPTURE_STDOUT) == 0)
                 && (command.result.status == 0);
     cmd_free(&command);
@@ -1584,16 +1547,12 @@ test_manual_copy_regular_and_dir(MessageBatch **batch) {
     char dst_dir[MAX_PATH_LENGTH];
     char dst_nested[MAX_PATH_LENGTH];
 
-    SNPRINTF(src_file, "%.*s/manual_file.txt",
-             cecup.base_len[L], cecup.base[L]);
-    SNPRINTF(dst_file, "%.*s/manual_file.txt",
-             cecup.base_len[R], cecup.base[R]);
+    SNPRINTF(src_file, "%.*s/manual_file.txt", cecup.base_len[L], cecup.base[L]);
+    SNPRINTF(dst_file, "%.*s/manual_file.txt", cecup.base_len[R], cecup.base[R]);
     SNPRINTF(src_dir, "%.*s/manual_dir", cecup.base_len[L], cecup.base[L]);
-    SNPRINTF(src_nested, "%.*s/manual_dir/nested.txt",
-             cecup.base_len[L], cecup.base[L]);
+    SNPRINTF(src_nested, "%.*s/manual_dir/nested.txt", cecup.base_len[L], cecup.base[L]);
     SNPRINTF(dst_dir, "%.*s/manual_dir", cecup.base_len[R], cecup.base[R]);
-    SNPRINTF(dst_nested, "%.*s/manual_dir/nested.txt",
-             cecup.base_len[R], cecup.base[R]);
+    SNPRINTF(dst_nested, "%.*s/manual_dir/nested.txt", cecup.base_len[R], cecup.base[R]);
 
     test_write_file(src_file, "file-data");
     mkdir(src_dir, 0755);
@@ -1785,11 +1744,7 @@ main(void) {
     ASSERT(batch == NULL);
 
     /* Test work_batch_push_rename */
-    work_batch_push_rename(&batch,
-                           MSG_BATCH_ROW_RENAME,
-                           L,
-                           "old.txt", 7,
-                           "new.txt", 7);
+    work_batch_push_rename(&batch, MSG_BATCH_ROW_RENAME, L, "old.txt", 7, "new.txt", 7);
     ASSERT(batch != NULL);
     ASSERT_EQ(batch->count, 1);
     ASSERT_EQ(batch->paths[0], "old.txt");
@@ -1855,8 +1810,7 @@ main(void) {
         TaskList *task_list;
         Task *task;
 
-        SNPRINTF(path, "%.*s/thread_test.txt",
-                 cecup.base_len[L], cecup.base[L]);
+        SNPRINTF(path, "%.*s/thread_test.txt", cecup.base_len[L], cecup.base[L]);
         test_write_file(path, "thread-data");
 
         thread_data = malloc2(SIZEOF(*thread_data));
@@ -1872,8 +1826,7 @@ main(void) {
         xpthread_join(&thread, NULL);
         unsetenv("CECUP_TRANSFER_BACKEND");
 
-        SNPRINTF(path, "%.*s/thread_test.txt",
-                 cecup.base_len[R], cecup.base[R]);
+        SNPRINTF(path, "%.*s/thread_test.txt", cecup.base_len[R], cecup.base[R]);
         ASSERT(!access(path, F_OK));
     }
 

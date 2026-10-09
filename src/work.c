@@ -50,8 +50,7 @@ work_traverse_unknown_record(
     char path[MAX_PATH_LENGTH];
 
     if (entry->path_len >= MAX_PATH_LENGTH) {
-        LOG_ERROR(_("Traversal error path is too long: %.*s.\n"),
-                  entry->path_len, entry->path);
+        LOG_ERROR(_("Traversal error path is too long: %.*s.\n"), entry->path_len, entry->path);
         traversal_root_unknown_record(traversal);
         return;
     }
@@ -74,8 +73,7 @@ work_traverse_unknown_record(
 
     if (known_dir && (path[path_len - 1] != '/')) {
         if ((path_len + 1) >= MAX_PATH_LENGTH) {
-            LOG_ERROR(_("Traversal error path is too long: %.*s.\n"),
-                      entry->path_len, entry->path);
+            LOG_ERROR(_("Traversal error path is too long: %.*s.\n"), entry->path_len, entry->path);
             traversal_root_unknown_record(traversal);
             return;
         }
@@ -141,23 +139,17 @@ work_traverse_fs(Traversal *traversal) {
         case FS_WALK_ERROR:
             LOG_ERROR(_("Error while traversing file system: %s.\n"),
                       strerror(entry->error));
-            work_traverse_unknown_record(traversal, entry,
-                                         TRAVERSAL_STATE_UNKNOWN_SUBTREE,
-                                         false);
+            work_traverse_unknown_record(traversal, entry, TRAVERSAL_STATE_UNKNOWN_SUBTREE, false);
             continue;
         case FS_WALK_DIR_UNREADABLE:
             LOG_ERROR(_("Directory '%.*s' is unreadable.\n"),
                       entry->path_len, entry->path);
-            work_traverse_unknown_record(traversal, entry,
-                                         TRAVERSAL_STATE_UNKNOWN_SUBTREE,
-                                         true);
+            work_traverse_unknown_record(traversal, entry, TRAVERSAL_STATE_UNKNOWN_SUBTREE, true);
             continue;
         case FS_WALK_STAT_ERROR:
             LOG_ERROR(_("Failed to get file information for %.*s: %s.\n"),
                       entry->path_len, entry->path, strerror(entry->error));
-            work_traverse_unknown_record(traversal, entry,
-                                         TRAVERSAL_STATE_UNKNOWN_SUBTREE,
-                                         false);
+            work_traverse_unknown_record(traversal, entry, TRAVERSAL_STATE_UNKNOWN_SUBTREE, false);
             continue;
         case FS_WALK_FILE:
             break;
@@ -277,8 +269,7 @@ work_traverse_fs(Traversal *traversal) {
         }
 
         if (entry->info == FS_WALK_SYMLINK) {
-            symlink_target_len = traversal_symlink_get(traversal, entry->path,
-                                                        &symlink_target);
+            symlink_target_len = traversal_symlink_get(traversal, entry->path, &symlink_target);
         }
 
         if ((entry->info == FS_WALK_FILE)
@@ -302,8 +293,7 @@ work_traverse_fs(Traversal *traversal) {
             nanos = time_now.tv_nsec - time_last_report.tv_nsec;
 
             if ((seconds >= 1) || (nanos > MILLIS_AS_NANOS(100))) {
-                LOG("Found %lld files... %.*s\r",
-                    file_count, entry->path_len, entry->path);
+                LOG("Found %lld files... %.*s\r", file_count, entry->path_len, entry->path);
                 time_monotonic_coarse(&time_last_report);
             }
         }
@@ -383,8 +373,7 @@ work_preview(void *user_data) {
     struct timespec t1_work;
     ThreadData *thread_data = user_data;
 
-    update_progress_info(_("Analyzing changes"),
-                         _("Traversing file systems for differences..."));
+    update_progress_info(_("Analyzing changes"), _("Traversing file systems for differences..."));
 
     time_monotonic_precise(&t0_work);
     work_cleanup();
@@ -508,7 +497,7 @@ work_preview(void *user_data) {
             if ((action_src == ACTION_HARDLINK) && (hard_links.count > 1)) {
                 for (int32 j = 0; j < hard_links.count; j += 1) {
                     if (hash_insert_actions_set(cecup.actions_set,
-                                                 hard_links.names[j], hard_links.names_lens[j])) {
+                                                hard_links.names[j], hard_links.names_lens[j])) {
                         cecup.transfers[cecup.ntransfers] = hard_links.names[j];
                         cecup.transfers_lens[cecup.ntransfers] = hard_links.names_lens[j];
                         cecup.ntransfers += 1;
@@ -770,8 +759,7 @@ main(void) {
 
                 SNPRINTF(target_path, "%s/%s", src_dir, entry->target);
                 if (link(target_path, path_src) < 0) {
-                    error("Error linking %s to %s: %s.\n",
-                          target_path, path_src, strerror(errno));
+                    error("Error linking %s to %s: %s.\n", target_path, path_src, strerror(errno));
                 }
             } else {
                 create_test_file(path_src, "content");
@@ -803,8 +791,7 @@ main(void) {
 
                 SNPRINTF(target_path, "%s/%s", dst_dir, target);
                 if (link(target_path, path_dst) < 0) {
-                    error("Error linking %s to %s: %s.\n",
-                          target_path, path_dst, strerror(errno));
+                    error("Error linking %s to %s: %s.\n", target_path, path_dst, strerror(errno));
                 }
             } else {
                 if (entry->diff_size) {
@@ -1007,8 +994,7 @@ main(void) {
         free2(cecup.rows[L], cecup.rows_capacity * SIZEOF(*(cecup.rows[L])));
         free2(cecup.rows[R], cecup.rows_capacity * SIZEOF(*(cecup.rows[R])));
         free2(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
-        free2(cecup.rows_visible,
-              cecup.rows_capacity * SIZEOF(*(cecup.rows_visible)));
+        free2(cecup.rows_visible, cecup.rows_capacity * SIZEOF(*(cecup.rows_visible)));
     }
 
     arena_destroy(cecup.arena);

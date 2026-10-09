@@ -30,8 +30,7 @@ on_menu_dispatch(GSimpleAction *action, GVariant *parameter, void *data) {
     (void)data;
 
     if (work_thread_is_active()) {
-        message = g_object_steal_data(G_OBJECT(cecup.application),
-                                      "active_message");
+        message = g_object_steal_data(G_OBJECT(cecup.application), "active_message");
         free_message(message);
         return;
     }
@@ -79,49 +78,41 @@ on_menu_append_ignore_pattern(char *pattern, int32 pattern_len) {
     bool appended = false;
 
     if (pattern_len >= MAX_PATH_LENGTH) {
-        LOG_ERROR(_("Error appending pattern %.*s ... Pattern is too long.\n"),
-                  50, pattern);
+        LOG_ERROR(_("Error appending pattern %.*s ... Pattern is too long.\n"), 50, pattern);
         return false;
     }
 
     if ((ignore_file = fopen(cecup.ignore_path, "a+")) == NULL) {
-        LOG_ERROR(_("Error opening %s: %s.\n"),
-                  cecup.ignore_path, strerror(errno));
+        LOG_ERROR(_("Error opening %s: %s.\n"), cecup.ignore_path, strerror(errno));
         return false;
     }
 
     if (fseek(ignore_file, 0, SEEK_END) != 0) {
-        LOG_ERROR(_("Error seeking %s: %s.\n"),
-                  cecup.ignore_path, strerror(errno));
+        LOG_ERROR(_("Error seeking %s: %s.\n"), cecup.ignore_path, strerror(errno));
         goto close_file;
     }
     if ((ignore_file_len = ftell(ignore_file)) < 0) {
-        LOG_ERROR(_("Error getting the size of %s: %s.\n"),
-                  cecup.ignore_path, strerror(errno));
+        LOG_ERROR(_("Error getting the size of %s: %s.\n"), cecup.ignore_path, strerror(errno));
         goto close_file;
     }
 
     if (ignore_file_len > 0) {
         if (fseek(ignore_file, -1, SEEK_END) != 0) {
-            LOG_ERROR(_("Error seeking %s: %s.\n"),
-                      cecup.ignore_path, strerror(errno));
+            LOG_ERROR(_("Error seeking %s: %s.\n"), cecup.ignore_path, strerror(errno));
             goto close_file;
         }
         if ((last_byte = fgetc(ignore_file)) == EOF) {
-            LOG_ERROR(_("Error reading %s: %s.\n"),
-                      cecup.ignore_path, strerror(errno));
+            LOG_ERROR(_("Error reading %s: %s.\n"), cecup.ignore_path, strerror(errno));
             goto close_file;
         }
         if (fseek(ignore_file, 0, SEEK_END) != 0) {
-            LOG_ERROR(_("Error seeking %s: %s.\n"),
-                      cecup.ignore_path, strerror(errno));
+            LOG_ERROR(_("Error seeking %s: %s.\n"), cecup.ignore_path, strerror(errno));
             goto close_file;
         }
     }
 
     if ((last_byte != '\n') && (fputc('\n', ignore_file) == EOF)) {
-        LOG_ERROR(_("Error appending a newline to %s: %s.\n"),
-                  cecup.ignore_path, strerror(errno));
+        LOG_ERROR(_("Error appending a newline to %s: %s.\n"), cecup.ignore_path, strerror(errno));
         goto close_file;
     }
     if (fprintf(ignore_file, "%.*s\n", pattern_len, pattern)
@@ -135,8 +126,7 @@ on_menu_append_ignore_pattern(char *pattern, int32 pattern_len) {
 
 close_file:
     if (fclose(ignore_file)) {
-        LOG_ERROR(_("Error closing %s: %s.\n"),
-                  cecup.ignore_path, strerror(errno));
+        LOG_ERROR(_("Error closing %s: %s.\n"), cecup.ignore_path, strerror(errno));
         appended = false;
     }
     return appended;
@@ -272,8 +262,7 @@ on_menu_open_path(char *path, int32 path_len) {
 
     LOG(_("Launching %.*s...\n"), path_len, path);
     if (!g_app_info_launch_default_for_uri(uri, NULL, &launch_error)) {
-        LOG_ERROR(_("Error opening %.*s: %s.\n"),
-                  path_len, path, launch_error->message);
+        LOG_ERROR(_("Error opening %.*s: %s.\n"), path_len, path, launch_error->message);
         g_clear_error(&launch_error);
         g_free(uri);
         return false;
@@ -315,9 +304,7 @@ on_menu_open_item(GtkWidget *widget, void *data) {
 
         base_path = cecup.base[message->side];
         base_path_len = cecup.base_len[message->side];
-        n = SNPRINTF(full_path,
-                     "%.*s/%.*s",
-                     base_path_len, base_path, task->path_len, task->path);
+        n = SNPRINTF(full_path, "%.*s/%.*s", base_path_len, base_path, task->path_len, task->path);
 
         if (folder) {
             int32 path_len = n;
@@ -328,8 +315,7 @@ on_menu_open_item(GtkWidget *widget, void *data) {
         }
 
         if ((fd = open(full_path, O_RDONLY)) < 0) {
-            LOG_ERROR(_("Error opening %.*s: %s.\n"),
-                      full_path_len, full_path, strerror(errno));
+            LOG_ERROR(_("Error opening %.*s: %s.\n"), full_path_len, full_path, strerror(errno));
             continue;
         }
         XCLOSE(&fd);
@@ -586,8 +572,7 @@ main(void) {
         exit(EXIT_SUCCESS);
     }
 
-    cecup.application = gtk_application_new("com.cecup.test.on_menu",
-                                            G_APPLICATION_NON_UNIQUE);
+    cecup.application = gtk_application_new("com.cecup.test.on_menu", G_APPLICATION_NON_UNIQUE);
     test_make_temp_dir(temp_dir, SIZEOF(temp_dir), "on_menu");
     cecup.gtk_window = gtk_window_new();
 
@@ -599,8 +584,7 @@ main(void) {
     gtk_editable_set_text(GTK_EDITABLE(cecup.term_entry), "true");
 
     {
-        Command command = on_menu_diff_command("xterm --hold",
-                                               "diff --color=always");
+        Command command = on_menu_diff_command("xterm --hold", "diff --color=always");
 
         CMD_PUSH(&command, "/destination", "/source");
 
@@ -695,9 +679,7 @@ main(void) {
         clipboard_result.done = false;
         clipboard_result.text = NULL;
         clipboard = gdk_display_get_clipboard(gdk_display_get_default());
-        gdk_clipboard_read_text_async(clipboard, NULL,
-                                      clipboard_read_callback,
-                                      &clipboard_result);
+        gdk_clipboard_read_text_async(clipboard, NULL, clipboard_read_callback, &clipboard_result);
         while (!clipboard_result.done) {
             g_main_context_iteration(NULL, true);
         }
@@ -740,8 +722,7 @@ main(void) {
         msg->action = ACTION_NEW;
         msg->src_path = xstrdup("test.txt");
         msg->src_path_len = 8;
-        g_object_set_data_full(G_OBJECT(cecup.application),
-                               "active_message", msg, free_message);
+        g_object_set_data_full(G_OBJECT(cecup.application), "active_message", msg, free_message);
 
         idx_param = g_variant_new_int32(0);
         g_variant_ref_sink(idx_param);

@@ -190,26 +190,24 @@ on_path_edited(GtkEditable *editable, void *data) {
 
     old_length = item_path_len_side(row_id, side);
     old_full_length = SNPRINTF(old_full, "%.*s/%.*s",
-                               base_path_len, base_path,
-                               old_length, relative_old);
+                                         base_path_len, base_path,
+                                         old_length, relative_old);
 
     memcpy64(relative_new, new_text, new_length + 1);
     normalize(relative_new, &new_length);
 
     if (BEGINS_WITH(relative_new, new_length, "/")) {
-        LOG_ERROR(_("Invalid rename: %.*s starts with a slash.\n"),
-                  new_length, relative_new);
+        LOG_ERROR(_("Invalid rename: %.*s starts with a slash.\n"), new_length, relative_new);
         return;
     }
     if (BEGINS_WITH(relative_new, new_length, "..")) {
-        LOG_ERROR(_("Invalid rename: %.*s starts with ..\n"),
-                  new_length, relative_new);
+        LOG_ERROR(_("Invalid rename: %.*s starts with ..\n"), new_length, relative_new);
         return;
     }
 
     new_full_length = SNPRINTF(new_full, "%.*s/%.*s",
-                               base_path_len, base_path,
-                               new_length, relative_new);
+                                         base_path_len, base_path,
+                                         new_length, relative_new);
     normalize(new_full, &new_full_length);
 
     if (on_path_rename_no_replace(old_full, new_full) < 0) {
@@ -219,8 +217,7 @@ on_path_edited(GtkEditable *editable, void *data) {
         return;
     }
 
-    LOG(_("Renamed: %.*s -> %.*s\n"),
-        old_length, relative_old, new_length, relative_new);
+    LOG(_("Renamed: %.*s -> %.*s\n"), old_length, relative_old, new_length, relative_new);
 
     if ((relative_old[old_length - 1] == '/') && (relative_new[new_length - 1] != '/')) {
         relative_new[new_length] = '/';
@@ -233,8 +230,7 @@ on_path_edited(GtkEditable *editable, void *data) {
         FsWalkEntry *entry;
 
         if (!fs_walk_open(&fs_walk, new_full)) {
-            error("Error in fs_walk_open(%.*s): %s.\n",
-                  new_full_length, new_full, strerror(errno));
+            error("Error in fs_walk_open(%.*s): %s.\n", new_full_length, new_full, strerror(errno));
             aux_invalidate_preview();
             work_batch_flush(&batch);
             return;
@@ -289,8 +285,7 @@ on_path_edited(GtkEditable *editable, void *data) {
             suffix_len = child_rel_new_len - new_length;
             child_rel_old_len = old_length + suffix_len;
             memcpy64(child_rel_old, relative_old, old_length);
-            memcpy64(child_rel_old + old_length,
-                     child_rel_new + new_length, suffix_len + 1);
+            memcpy64(child_rel_old + old_length, child_rel_new + new_length, suffix_len + 1);
 
             normalize(child_rel_old, &child_rel_old_len);
 
@@ -449,8 +444,7 @@ main(void) {
         cecup.preview_dirty = false;
         on_path_edited(GTK_EDITABLE(label), tree);
 
-        SNPRINTF(new_file_full, "%.*s/%s",
-                 cecup.base_len[L], src_dir, new_name);
+        SNPRINTF(new_file_full, "%.*s/%s", cecup.base_len[L], src_dir, new_name);
         ASSERT(!access(new_file_full, F_OK));
         ASSERT(access(src_file_full, F_OK));
         ASSERT(cecup.preview_dirty);

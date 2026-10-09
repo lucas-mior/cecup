@@ -151,8 +151,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                     if (extension && (extension != name)) {
                         int32 extension_len = length - (int32)(extension - name);
 
-                        SNPRINTF(label, _("by extension (*%.*s)"),
-                                 extension_len, extension);
+                        SNPRINTF(label, _("by extension (*%.*s)"), extension_len, extension);
                         SNPRINTF(pattern, "*%.*s", extension_len, extension);
 
                         m_item = g_menu_item_new(label, NULL);
@@ -162,8 +161,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                     }
 
                     if (!aux_is_root(directory)) {
-                        SNPRINTF(label, _("📁 Dir (/%.*s/)"),
-                                 path_len, directory);
+                        SNPRINTF(label, _("📁 Dir (/%.*s/)"), path_len, directory);
                         SNPRINTF(pattern, "/%.*s/", path_len, directory);
 
                         m_item = g_menu_item_new(label, NULL);
@@ -173,11 +171,9 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                     }
 
                     if (is_dir) {
-                        SNPRINTF(label, _("This folder only (/%.*s)"),
-                                 filepath_len, filepath);
+                        SNPRINTF(label, _("This folder only (/%.*s)"), filepath_len, filepath);
                     } else {
-                        SNPRINTF(label, _("This file only (/%.*s)"),
-                                 filepath_len, filepath);
+                        SNPRINTF(label, _("This file only (/%.*s)"), filepath_len, filepath);
                     }
 
                     SNPRINTF(pattern, "/%.*s", filepath_len, filepath);
@@ -187,8 +183,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                     g_menu_append_item(submenu, m_item);
                     g_object_unref(m_item);
 
-                    SNPRINTF(label, _("This filename on any folder (*/%.*s)"),
-                             length, name);
+                    SNPRINTF(label, _("This filename on any folder (*/%.*s)"), length, name);
                     SNPRINTF(pattern, "*/%.*s", length, name);
 
                     m_item = g_menu_item_new(label, NULL);
@@ -395,20 +390,21 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
 
         if (symlink_target) {
             str_printf(&tip_builder,
-                      "%.*s\n%s%.*s:\n%.*s", path_len, filepath,
-                      RSYNC_SYMLINK, symlink_target_len, symlink_target,
-                      reason_len, reason_text);
+                      "%.*s\n%s%.*s:\n%.*s",
+                      path_len, filepath, RSYNC_SYMLINK, symlink_target_len,
+                      symlink_target, reason_len, reason_text);
         } else if (hard_links.count > 0) {
             str_printf(&tip_builder, "%.*s:\n%.*s",
-                       path_len, filepath, reason_len, reason_text);
+                                     path_len, filepath, reason_len, reason_text);
             str_printf(&tip_builder,
-                      _("\n\nThere are %d names for this file:\n"), hard_links.count);
+                      _("\n\nThere are %d names for this file:\n"),
+                      hard_links.count);
 
             for (int32 j = 0; j < hard_links.count; j += 1) {
                 ASSERT_LT(hard_links.names_lens[j], MAX_PATH_LENGTH/2);
                 str_printf(&tip_builder, "\n%s%.*s",
-                           RSYNC_HARDLINK,
-                           hard_links.names_lens[j], hard_links.names[j]);
+                                         RSYNC_HARDLINK, hard_links.names_lens[j],
+                                         hard_links.names[j]);
             }
         } else if (ignore_pattern) {
             str_printf(&tip_builder,
@@ -416,8 +412,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
                       path_len, filepath, reason_len, reason_text,
                       ignore_pattern_len, ignore_pattern);
         } else {
-            str_printf(&tip_builder, "%.*s:\n%.*s",
-                       path_len, filepath, reason_len, reason_text);
+            str_printf(&tip_builder, "%.*s:\n%.*s", path_len, filepath, reason_len, reason_text);
         }
         tip_text = tip_builder.data;
         str_free(&reason_builder);
@@ -430,8 +425,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
         if ((size_raw = item_size_side(row_id, side)) < 0) {
             size_raw = 0;
         }
-        str_printf(&tip_builder, "%.*s: %lld bytes",
-                   path_len, filepath, size_raw);
+        str_printf(&tip_builder, "%.*s: %lld bytes", path_len, filepath, size_raw);
         tip_text = tip_builder.data;
         break;
     }

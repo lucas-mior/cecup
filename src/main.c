@@ -122,8 +122,7 @@ main_store_path(char *destination, char *path, char *description) {
 
     path_len = strlen32(path);
     if (path_len >= MAX_PATH_LENGTH) {
-        error("Error: %s path is too long: %.*s.\n",
-              description, path_len, path);
+        error("Error: %s path is too long: %.*s.\n", description, path_len, path);
         fatal(EXIT_FAILURE);
     }
 
@@ -214,8 +213,7 @@ main_copy_default_config_file(
 
     if (!g_file_set_contents(dst_path, contents, (gssize)contents_len,
                              &file_error)) {
-        error("Error writing user configuration file %s: %s.\n",
-              dst_path, file_error->message);
+        error("Error writing user configuration file %s: %s.\n", dst_path, file_error->message);
         g_clear_error(&file_error);
     }
 
@@ -235,10 +233,8 @@ main_seed_config_dir(char *config_base) {
               " Starting with built-in defaults.\n");
     }
 
-    main_copy_default_config_file(config_base, default_config_dir,
-                                  "ignore.conf");
-    main_copy_default_config_file(config_base, default_config_dir,
-                                  "cecup.conf");
+    main_copy_default_config_file(config_base, default_config_dir, "ignore.conf");
+    main_copy_default_config_file(config_base, default_config_dir, "cecup.conf");
 
     g_free(default_config_dir);
     return;
@@ -255,8 +251,7 @@ main_setup_config_paths(void) {
     config_dir_missing = !g_file_test(config_base, G_FILE_TEST_IS_DIR);
 
     if (g_mkdir_with_parents(config_base, 0755) < 0) {
-        error("Error creating configuration directory %s: %s.\n",
-              config_base, strerror(errno));
+        error("Error creating configuration directory %s: %s.\n", config_base, strerror(errno));
         g_free(config_base);
         fatal(EXIT_FAILURE);
     }
@@ -947,38 +942,31 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
         if (main_key_file_get_boolean(key, "Filters", "new",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_new),
-                                         boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_new), boolean_value);
         }
         if (main_key_file_get_boolean(key, "Filters", "hard",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_link),
-                                         boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_link), boolean_value);
         }
         if (main_key_file_get_boolean(key, "Filters", "update",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_update),
-                                         boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_update), boolean_value);
         }
         if (main_key_file_get_boolean(key, "Filters", "equal",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal),
-                                         boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal), boolean_value);
         }
         if (main_key_file_get_boolean(key, "Filters", "delete",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete),
-                                         boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete), boolean_value);
         }
         if (main_key_file_get_boolean(key, "Filters", "ignore",
                                       &boolean_value)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore),
-                                         boolean_value);
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore), boolean_value);
         }
         if (main_key_file_get_boolean(key, "Options", "check_fs",
                                       &boolean_value)) {
-            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.check_fs_button),
-                                        boolean_value);
+            gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.check_fs_button), boolean_value);
         }
         if (main_key_file_get_boolean(key, "Options", "delete_ignored",
                                       &boolean_value)) {

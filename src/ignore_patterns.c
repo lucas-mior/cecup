@@ -27,8 +27,7 @@ ignore_patterns_load(void) {
 
     if (cecup.ignore_patterns == NULL) {
         *capacity = 16;
-        cecup.ignore_patterns = malloc2(*capacity
-                                         *SIZEOF(*cecup.ignore_patterns));
+        cecup.ignore_patterns = malloc2(*capacity *SIZEOF(*cecup.ignore_patterns));
         cecup.ignore_count = 0;
     }
 
@@ -41,8 +40,7 @@ ignore_patterns_load(void) {
     cecup.ignore_count = 0;
 
     if ((file_len = read_entire_file(cecup.ignore_path, &file_bytes)) < 0) {
-        LOG_ERROR(_("Error reading %s: %s.\n"),
-                  cecup.ignore_path, strerror(-file_len));
+        LOG_ERROR(_("Error reading %s: %s.\n"), cecup.ignore_path, strerror(-file_len));
         return;
     }
 
@@ -351,8 +349,7 @@ main(void) {
 
     // 3. Test ignore_patterns_match & ignore_pattern_match_single
     test_pattern_init(&patterns[0], "*.c");
-    ASSERT(pattern = ignore_patterns_match(STRLIT("main.c"),
-                                           false, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("main.c"), false, patterns, 1));
     ASSERT_EQ(pattern->str, "*.c");
     free2(patterns[0].str, patterns[0].len + 1);
 
@@ -363,56 +360,46 @@ main(void) {
     pattern = ignore_patterns_match("build", 5, false, patterns, 1);
     ASSERT_NULL(pattern);
 
-    ASSERT(pattern = ignore_patterns_match(STRLIT("build/main.o"),
-                                           false, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("build/main.o"), false, patterns, 1));
 
-    ASSERT(pattern = ignore_patterns_match(STRLIT("src/build/main.o"),
-                                           false, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/build/main.o"), false, patterns, 1));
 
     pattern = ignore_patterns_match("src/build", 9, false, patterns, 1);
     ASSERT_NULL(pattern);
 
-    ASSERT(pattern = ignore_patterns_match(STRLIT("src/build/"),
-                                           true, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/build/"), true, patterns, 1));
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "foo/build/");
-    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/build/main.o"),
-                                           false, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/build/main.o"), false, patterns, 1));
 
     pattern = ignore_patterns_match("foo/build", 9, false, patterns, 1);
     ASSERT_NULL(pattern);
 
-    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/build/"),
-                                           true, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/build/"), true, patterns, 1));
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "/foo/build/");
-    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/build/main.o"),
-                                           false, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/build/main.o"), false, patterns, 1));
 
-    pattern = ignore_patterns_match("x/foo/build/main.o", 18, false,
-                                    patterns, 1);
+    pattern = ignore_patterns_match("x/foo/build/main.o", 18, false, patterns, 1);
     ASSERT_NULL(pattern);
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "build*/");
-    ASSERT(pattern = ignore_patterns_match(STRLIT("src/build-cache/main.o"),
-                                           false, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/build-cache/main.o"), false, patterns, 1));
 
     pattern = ignore_patterns_match("src/build-cache", 15, false, patterns, 1);
     ASSERT_NULL(pattern);
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "obj");
-    ASSERT(pattern = ignore_patterns_match(STRLIT("src/obj/main.o"),
-                                           false, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/obj/main.o"), false, patterns, 1));
     ASSERT_EQ(pattern->str, "obj");
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "/src");
-    ASSERT(pattern = ignore_patterns_match(STRLIT("src/main.c"),
-                                           false, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/main.c"), false, patterns, 1));
     ASSERT_EQ(pattern->match_str, "src");
     free2(patterns[0].str, patterns[0].len + 1);
 
@@ -422,16 +409,14 @@ main(void) {
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "foo/bar");
-    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/bar/baz.c"),
-                                           false, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("foo/bar/baz.c"), false, patterns, 1));
     ASSERT_EQ(pattern->str, "foo/bar");
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "*.h");
     test_pattern_init(&patterns[1], "build/");
     test_pattern_init(&patterns[2], "*.o");
-    ASSERT(pattern = ignore_patterns_match(STRLIT("src/main.o"),
-                                           false, patterns, 3));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("src/main.o"), false, patterns, 3));
     ASSERT_EQ(pattern->str, "*.o");
 
     free2(patterns[0].str, patterns[0].len + 1);

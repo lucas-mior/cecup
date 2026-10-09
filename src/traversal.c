@@ -215,10 +215,8 @@ traversal_allocate(Traversal *traversal, int32 side) {
 
 static void
 hard_links_free(HardLinks *hard_links) {
-    free2(hard_links->names,
-          hard_links->capacity*SIZEOF(*(hard_links->names)));
-    free2(hard_links->names_lens,
-          hard_links->capacity*SIZEOF(*(hard_links->names_lens)));
+    free2(hard_links->names, hard_links->capacity*SIZEOF(*(hard_links->names)));
+    free2(hard_links->names_lens, hard_links->capacity*SIZEOF(*(hard_links->names_lens)));
     return;
 }
 
@@ -429,8 +427,8 @@ traversal_path_is_unknown(Traversal *traversal, char *path, int32 path_len) {
             continue;
         }
         if (traversal_unknown_path_covers(traversal->paths[i],
-                                         traversal->paths_lens[i],
-                                         path, path_len)) {
+                                          traversal->paths_lens[i],
+                                          path, path_len)) {
             return true;
         }
     }
@@ -473,11 +471,7 @@ traversal_unknown_record(
         path_alloc = xarena_push(traversal->arena, path_len + 1);
         memcpy64(path_alloc, path, path_len + 1);
 
-        traversal_push_with_state(traversal, NULL,
-                                  path_alloc, path_len,
-                                  NULL, 0,
-                                  NULL, 0,
-                                  state);
+        traversal_push_with_state(traversal, NULL, path_alloc, path_len, NULL, 0, NULL, 0, state);
     }
     return;
 }
@@ -549,8 +543,7 @@ traversal_add_link(
         hard_links.names[0] = path;
         hard_links.names_lens[0] = path_len;
 
-        ASSERT(hash_insert_inode_map(traversal->inode_map,
-                                     &file_id, hard_links));
+        ASSERT(hash_insert_inode_map(traversal->inode_map, &file_id, hard_links));
     }
 
     return;
@@ -592,8 +585,7 @@ traversal_unlink(Traversal *traversal, int32 idx) {
                 ASSERT(hash_remove_inode_map(traversal->inode_map, &file_id));
                 hard_links_free(&hard_links);
             } else {
-                hash_overwrite_inode_map(traversal->inode_map,
-                                         &file_id, hard_links);
+                hash_overwrite_inode_map(traversal->inode_map, &file_id, hard_links);
             }
         }
     }
@@ -681,37 +673,26 @@ main(void) {
     traversal_allocate(&test_traversal, L);
     ASSERT(test_traversal.capacity == INITIAL_CAPACITY);
 
-    traversal_unknown_record(&test_traversal,
-                             STRLIT("private"),
-                             TRAVERSAL_STATE_UNKNOWN_SUBTREE);
-    ASSERT(traversal_path_is_unknown(&test_traversal,
-                                     STRLIT("private")));
-    ASSERT(traversal_path_is_unknown(&test_traversal,
-                                     STRLIT("private/file.txt")));
-    ASSERT(!traversal_path_is_unknown(&test_traversal,
-                                      STRLIT("private2/file.txt")));
+    traversal_unknown_record(&test_traversal, STRLIT("private"), TRAVERSAL_STATE_UNKNOWN_SUBTREE);
+    ASSERT(traversal_path_is_unknown(&test_traversal, STRLIT("private")));
+    ASSERT(traversal_path_is_unknown(&test_traversal, STRLIT("private/file.txt")));
+    ASSERT(!traversal_path_is_unknown(&test_traversal, STRLIT("private2/file.txt")));
 
-    traversal_unknown_record(&test_traversal,
-                             STRLIT("sealed/"),
-                             TRAVERSAL_STATE_UNKNOWN_SUBTREE);
+    traversal_unknown_record(&test_traversal, STRLIT("sealed/"), TRAVERSAL_STATE_UNKNOWN_SUBTREE);
     ASSERT(traversal_path_is_unknown(&test_traversal, STRLIT("sealed")));
 
-    traversal_unknown_record(&test_traversal,
-                             STRLIT("leaf"),
-                             TRAVERSAL_STATE_UNKNOWN);
+    traversal_unknown_record(&test_traversal, STRLIT("leaf"), TRAVERSAL_STATE_UNKNOWN);
     ASSERT(traversal_path_is_unknown(&test_traversal, STRLIT("leaf")));
     ASSERT(!traversal_path_is_unknown(&test_traversal, STRLIT("leaf/file")));
 
     traversal_clean(&test_traversal);
-    ASSERT(!traversal_path_is_unknown(&test_traversal,
-                                      STRLIT("private/file.txt")));
+    ASSERT(!traversal_path_is_unknown(&test_traversal, STRLIT("private/file.txt")));
 
     dummy_stat.st_ino = 100;
     dummy_stat.st_mode = S_IFREG | 0644;
     dummy_stat.st_size = 1024;
 
-    idx = traversal_push(&test_traversal, &dummy_stat,
-                         "file_1", 6, NULL, 0, NULL, 0);
+    idx = traversal_push(&test_traversal, &dummy_stat, "file_1", 6, NULL, 0, NULL, 0);
     ASSERT_EQ(idx, 0);
     ASSERT_EQ(test_traversal.nfiles, 1);
     ASSERT_EQ((int32)test_traversal.stats[0].st_ino, 100);
@@ -719,8 +700,7 @@ main(void) {
     for (int32 i = 1; i < (INITIAL_CAPACITY + 5); i += 1) {
         char *name = xarena_push(test_traversal.arena, 16);
         snprintf(name, 16, "file_%d", i);
-        traversal_push(&test_traversal, &dummy_stat, name,
-                       strlen32(name), NULL, 0, NULL, 0);
+        traversal_push(&test_traversal, &dummy_stat, name, strlen32(name), NULL, 0, NULL, 0);
     }
     ASSERT(test_traversal.capacity > INITIAL_CAPACITY);
     ASSERT_EQ(test_traversal.nfiles, INITIAL_CAPACITY + 5);
@@ -734,15 +714,12 @@ main(void) {
 
         SNPRINTF(link_path, "%s/test_symlink", temp_dir);
         ASSERT(!symlink("dummy_target.txt", link_path));
-        symlink_len = traversal_symlink_get(&test_traversal,
-                                            link_path, &symlink_target);
+        symlink_len = traversal_symlink_get(&test_traversal, link_path, &symlink_target);
         ASSERT_EQ(symlink_target, symlink_len, "dummy_target.txt");
         remove(link_path);
     }
 
-    symlink_len = traversal_symlink_get(&test_traversal,
-                                        "non_existent_symlink",
-                                        &symlink_target);
+    symlink_len = traversal_symlink_get(&test_traversal, "non_existent_symlink", &symlink_target);
     ASSERT_ZERO(symlink_len);
     ASSERT_NULL(symlink_target);
 
@@ -776,8 +753,7 @@ main(void) {
         other_file_id = file_id_from_stat(&other_stat);
         traversal_add_link(&test_traversal, other_stat, "link_other", 10);
 
-        ASSERT(hash_lookup_inode_map(test_traversal.inode_map,
-                                     &other_file_id, &other_hl));
+        ASSERT(hash_lookup_inode_map(test_traversal.inode_map, &other_file_id, &other_hl));
         ASSERT_EQ(other_hl.count, 1);
         hash_lookup_inode_map(test_traversal.inode_map, &link_file_id, &hl);
         ASSERT_EQ(hl.count, 2);
@@ -785,8 +761,7 @@ main(void) {
 
     /* 4. Test traversal_unlink 128-bit restoration */
     /* Manually push link_a to the traversal arrays so unlink can find it */
-    link_idx = traversal_push(&test_traversal, &link_stat,
-                              "link_a", 6, NULL, 0, NULL, 0);
+    link_idx = traversal_push(&test_traversal, &link_stat, "link_a", 6, NULL, 0, NULL, 0);
 
     traversal_unlink(&test_traversal, link_idx);
 

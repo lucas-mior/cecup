@@ -77,8 +77,7 @@ work_thread_join_once(void) {
 static void
 work_thread_start(void *(*function)(void *), void *data) {
     if (cecup.window_destroying) {
-        error("Internal error: cannot start work while window is "
-              "destroying.\n");
+        error("Internal error: cannot start work while window is " "destroying.\n");
         fatal(EXIT_FAILURE);
     }
     if (cecup.work_thread_started && !cecup.work_thread_joined) {
@@ -322,15 +321,13 @@ cecup_get_dirs(void) {
 
     if ((full_src_len > full_dst_len)
         && !memcmp64(full_src, full_dst, full_dst_len)) {
-        LOG_ERROR(_("Error: source directory is contained in the "
-                    "destination directory\n"));
+        LOG_ERROR(_("Error: source directory is contained in the " "destination directory\n"));
         cecup_reset_dir(L);
         return false;
     }
     if ((full_dst_len > full_src_len)
         && !memcmp64(full_dst, full_src, full_src_len)) {
-        LOG_ERROR(_("Error: destination directory is contained in the "
-                    "source directory\n"));
+        LOG_ERROR(_("Error: destination directory is contained in the " "source directory\n"));
         cecup_reset_dir(R);
         return false;
     }
