@@ -402,7 +402,8 @@ update_row_transfer(char *path_transfered, int32 path_transfered_len) {
         return false;
     }
 
-    full_path_len = SNPRINTF(full_path, "%.*s/%.*s",
+    full_path_len = SNPRINTF(full_path,
+                             "%.*s/%.*s",
                              cecup.base_len[R], cecup.base[R],
                              path_transfered_len, path_transfered);
     if (lstat(full_path, &stat) < 0) {
