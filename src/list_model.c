@@ -67,7 +67,7 @@ static void cecup_list_model_list_model_init(GListModelInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(CecupListModel, cecup_list_model, G_TYPE_OBJECT,
                         G_IMPLEMENT_INTERFACE(G_TYPE_LIST_MODEL,
-                        cecup_list_model_list_model_init))
+                                              cecup_list_model_list_model_init))
 
 static void
 cecup_list_model_init(CecupListModel *self) {
