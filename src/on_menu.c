@@ -585,7 +585,7 @@ main(void) {
     }
 
     cecup.application = gtk_application_new("com.cecup.test.on_menu",
-                                             G_APPLICATION_NON_UNIQUE);
+                                            G_APPLICATION_NON_UNIQUE);
     test_make_temp_dir(temp_dir, SIZEOF(temp_dir), "on_menu");
     cecup.gtk_window = gtk_window_new();
 
