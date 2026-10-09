@@ -1,0 +1,10 @@
+
+build.sh [01;38;2;255;000;000mdebug[0m
++ sh build_welcome.sh README.md src/.welcome.h
+xxx
++ find . -type f -iname tags -delete
++ find . -iname *.[ch] -print0
++ xargs -0 ctags --kinds-C=+l+d
++ vtags.sed tags
++ sort
++ uniq
