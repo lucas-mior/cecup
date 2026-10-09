@@ -700,9 +700,9 @@ int main(void) {
     SNPRINTF(other_path, "%s/other", temp_dir);
 
     cecup.entry_id[L] = g_signal_connect(cecup.dir_entry[L], "changed",
-                                          G_CALLBACK(gtk_widget_show), NULL);
+                                         G_CALLBACK(gtk_widget_show), NULL);
     cecup.entry_id[R] = g_signal_connect(cecup.dir_entry[R], "changed",
-                                          G_CALLBACK(gtk_widget_show), NULL);
+                                         G_CALLBACK(gtk_widget_show), NULL);
 
     cecup.filter_new = gtk_check_button_new();
     cecup.filter_link = gtk_check_button_new();
