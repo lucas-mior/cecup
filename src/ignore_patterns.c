@@ -64,8 +64,7 @@ ignore_patterns_load(void) {
         }
 
         if (line_len >= MAX_PATH_LENGTH) {
-            error("Too long line on patterns file: %.*s.\n",
-                  line_len, line);
+            error("Too long line on patterns file: %.*s.\n", line_len, line);
             fatal(EXIT_FAILURE);
         }
 
@@ -358,8 +357,7 @@ main(void) {
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "build/");
-    ASSERT(pattern = ignore_patterns_match(STRLIT("build"),
-                                           true, patterns, 1));
+    ASSERT(pattern = ignore_patterns_match(STRLIT("build"), true, patterns, 1));
     ASSERT_EQ(pattern->str, "build");
 
     pattern = ignore_patterns_match("build", 5, false, patterns, 1);
