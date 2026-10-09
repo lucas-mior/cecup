@@ -551,7 +551,7 @@ sub report_unnecessary_call_wraps {
 
 for my $path (@paths) {
     my $absolute_path = abs_path($path) // $path;
-    my $column_limit = $absolute_path =~ m{(?:\A|/)cecup(?:/|\z)}
+    my $column_limit = $absolute_path =~ m{(?:\A|/)cecup/src/}
                        ? 100 : 80;
 
     # The displayed path is part of the diagnostic, so distinguish spellings
