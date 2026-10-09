@@ -1293,11 +1293,7 @@ work_manual_copy_dir(
 }
 
 static bool
-work_manual_copy_path(
-    ManualTransferState *state,
-    char *path,
-    int32 path_len
-) {
+work_manual_copy_path(ManualTransferState *state, char *path, int32 path_len) {
     char src_path[MAX_PATH_LENGTH];
     char dst_path[MAX_PATH_LENGTH];
     struct stat src_stat;
