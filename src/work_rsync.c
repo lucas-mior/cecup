@@ -1333,8 +1333,7 @@ work_manual_copy_path(
                                         path, path_len, &src_stat);
     }
 
-    LOG_ERROR(_("Manual copier does not support special file %s.\n"),
-              src_path);
+    LOG_ERROR(_("Manual copier does not support special file %s.\n"), src_path);
     state->had_errors = true;
     return false;
 }
