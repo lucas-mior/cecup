@@ -1117,6 +1117,8 @@ static struct TestCase tests[] = {
       int32 x;
   }
   ```
+  * Note: don't create artificial blocks if the nest level is already 3 or more.
+    (3 * 4 spaces = 12 spaces).
 - Prefer to declare variable at the top of blocks
   * Exception: for loop counters (`for (int32 i = 0; i < N; i += 1)`)
   * Don't mix declarations and code (`-Wdeclaration-after-statement`)
