@@ -747,7 +747,7 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         char cwd[MAX_PATH_LENGTH];
         int32 cwd_len;
 
-        if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        if (getcwd(cwd, SIZEOF(cwd)) == NULL) {
             error("Error getting current working directory: %s.\n", strerror(errno));
             fatal(EXIT_FAILURE);
         }
