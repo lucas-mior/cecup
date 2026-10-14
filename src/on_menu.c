@@ -182,8 +182,8 @@ on_menu_apply(GtkWidget *widget, void *data) {
 
         aux_protect_interface_from_user(true);
         thread_data->tasks = tasks;
-        thread_data->check_different_fs
-            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
+        thread_data->check_different_fs =
+            gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
 
         work_thread_start(work_transfer, thread_data);
     } else {
@@ -424,8 +424,8 @@ on_delete_response(GtkDialog *dialog, int32 response_id, void *data) {
 
         aux_protect_interface_from_user(true);
         thread_data->tasks = tasks;
-        thread_data->check_different_fs
-            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
+        thread_data->check_different_fs =
+            gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
 
         work_thread_start(work_transfer, thread_data);
     } else {

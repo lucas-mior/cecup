@@ -269,8 +269,8 @@ on_preview_clicked(GtkWidget *button, void *data) {
         ThreadData *thread_data = malloc2(SIZEOF(*thread_data));
         *thread_data = (ThreadData){0};
 
-        thread_data->check_different_fs
-            = gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
+        thread_data->check_different_fs =
+            gtk_check_button_get_active(GTK_CHECK_BUTTON(cecup.check_fs_button));
 
         work_thread_start(work_preview, thread_data);
     }

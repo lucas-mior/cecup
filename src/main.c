@@ -970,16 +970,14 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         }
         if (main_key_file_get_boolean(key, "Options", "delete_ignored",
                                       &boolean_value)) {
-            GtkCheckButton *button =
-                GTK_CHECK_BUTTON(cecup.delete_ignored_button);
+            GtkCheckButton *button = GTK_CHECK_BUTTON(cecup.delete_ignored_button);
 
             cecup.delete_ignored = boolean_value;
             gtk_check_button_set_active(button, boolean_value);
         }
         if (main_key_file_get_boolean(key, "Options", "delete_after",
                                       &boolean_value)) {
-            GtkCheckButton *button =
-                GTK_CHECK_BUTTON(cecup.delete_after_button);
+            GtkCheckButton *button = GTK_CHECK_BUTTON(cecup.delete_after_button);
 
             cecup.delete_after = boolean_value;
             gtk_check_button_set_active(button, boolean_value);
