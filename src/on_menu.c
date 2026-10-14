@@ -486,8 +486,7 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
     (void)widget;
 
-    term_command =
-        (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry));
+    term_command = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.term_entry));
     diff_tool = (char *)gtk_editable_get_text(GTK_EDITABLE(cecup.diff_entry));
     tasks = get_target_tasks(message->side, message->src_path, message->action);
 
@@ -550,8 +549,7 @@ clipboard_read_callback(GObject *source, GAsyncResult *result, void *data) {
     ClipboardResult *clipboard_result;
 
     clipboard_result = data;
-    clipboard_result->text =
-        gdk_clipboard_read_text_finish(GDK_CLIPBOARD(source), result, NULL);
+    clipboard_result->text = gdk_clipboard_read_text_finish(GDK_CLIPBOARD(source), result, NULL);
     clipboard_result->done = true;
     return;
 }
