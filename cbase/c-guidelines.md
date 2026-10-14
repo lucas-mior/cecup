@@ -576,8 +576,8 @@ STR_APPEND(&str, string, string_len);
 str_itoa(&str, number);
 ```
 
-## Avoid printf
-Use `fmt_printf` from `fmt.c` which has almost the same semantics.
+## Avoid printf from libc.
+Instead, use `fmt_printf` from `fmt.c` which has almost the same semantics.
 
 ## Comparing strings:
 In general, avoid `strcmp()`, use the alternatives below instead:
