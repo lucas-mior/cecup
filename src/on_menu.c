@@ -381,7 +381,8 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
                                          task->path_len, task->path);
 
             if (realpath(path_relative, path_full) == NULL) {
-                LOG_ERROR(_("Error resolving full path of %.*s:%s. Copying relative path instead.\n"),
+                LOG_ERROR(_("Error resolving full path of %.*s:%s. "
+                            "Copying relative path instead.\n"),
                           path_relative_len, path_relative, strerror(errno));
                 SNPRINTF(path_full, "%.*s", path_relative_len, path_relative);
             }

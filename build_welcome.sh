@@ -63,12 +63,7 @@ function replace_list_marker(text,    bullet, indent) {
     return indent bullet substr(text, RLENGTH + 1)
 }
 
-function c_string(text) {
-    gsub(/"/, "\\\"", text)
-    return "\"" text "\\n\""
-}
-
-function print_processed(text) {
+function print_processed(text,    split_at) {
     text = escape_pango(text)
 
     if (text ~ /^## /) {
@@ -86,7 +81,19 @@ function print_processed(text) {
     text = replace_pair(text, "_", "<i>", "</i>")
     text = replace_pair(text, "`", "<tt>", "</tt>")
 
-    print c_string(text)
+    gsub(/"/, "\\\"", text)
+    while (length(text) > 76) {
+        split_at = 76
+        while ((split_at > 0) && (substr(text, split_at, 1) != " ")) {
+            split_at -= 1
+        }
+        if (split_at == 0) {
+            split_at = 76
+        }
+        print "\"" substr(text, 1, split_at) "\""
+        text = substr(text, split_at + 1)
+    }
+    print "\"" text "\\n\""
 }
 
 function flush_block(    i, text) {

@@ -324,7 +324,8 @@ main_setup_tree_columns(GtkWidget *tree) {
         GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
         GtkColumnViewColumn *column = gtk_column_view_column_new(NULL, factory);
 
-        g_signal_connect(factory, "setup", G_CALLBACK(column_setup_checkbox), GINT_TO_POINTER(side));
+        g_signal_connect(factory, "setup", G_CALLBACK(column_setup_checkbox),
+                         GINT_TO_POINTER(side));
         g_signal_connect(factory, "bind", G_CALLBACK(column_bind_checkbox), GINT_TO_POINTER(side));
         gtk_column_view_append_column(GTK_COLUMN_VIEW(tree), column);
         g_object_unref(column);
@@ -551,7 +552,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_widget_set_tooltip_text(cecup.check_fs_button,
                                 _("Prevent copying if original and backup are on the same disk"));
     gtk_widget_set_tooltip_text(cecup.delete_ignored_button,
-                                _("Remove files from backup if they were added to the ignore list"));
+                                _("Remove files from backup if they were added "
+                                  "to the ignore list"));
     gtk_widget_set_tooltip_text(cecup.delete_after_button,
                                 _("Delete files in backup that do not exist in the original"));
 
@@ -798,8 +800,9 @@ main_application_run(GtkApplication *application, gpointer user_data) {
 
     gtk_button_set_label(GTK_BUTTON(cecup.browse_button[R]), _("Select Folder"));
     gtk_widget_set_tooltip_text(cecup.dir_entry[R], _("Folder where the backup will be stored"));
-    gtk_widget_set_tooltip_text(cecup.browse_button[R], _("Open browser to select"
-                                                          " the folder where the backup will be stored"));
+    gtk_widget_set_tooltip_text(cecup.browse_button[R],
+                                _("Open browser to select the folder where "
+                                  "the backup will be stored"));
 
     gtk_widget_set_hexpand(cecup.dir_entry[R], TRUE);
     gtk_box_append(GTK_BOX(entry_hbox[R]), cecup.dir_entry[R]);
@@ -999,7 +1002,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     g_signal_connect(cecup.sync_button,      "clicked", G_CALLBACK(on_sync_clicked),    NULL);
     g_signal_connect(cecup.ignore_button,    "clicked", G_CALLBACK(on_ignore_clicked),  NULL);
     g_signal_connect(cecup.unselect_button,  "clicked", G_CALLBACK(on_unselect_all_clicked), NULL);
-    g_signal_connect(cecup.select_visible_button, "clicked", G_CALLBACK(on_select_all_visible_clicked), NULL);
+    g_signal_connect(cecup.select_visible_button, "clicked",
+                     G_CALLBACK(on_select_all_visible_clicked), NULL);
     g_signal_connect(reset_button,           "clicked", G_CALLBACK(on_reset_clicked),   NULL);
 
     g_signal_connect(cecup.search_entry, "changed", G_CALLBACK(on_search_changed), NULL);
@@ -1014,17 +1018,22 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     g_signal_connect(cecup.diff_entry, "changed", G_CALLBACK(on_config_changed), NULL);
     g_signal_connect(cecup.term_entry, "changed", G_CALLBACK(on_config_changed), NULL);
 
-    g_signal_connect(cecup.check_fs_button, "toggled", G_CALLBACK(on_preview_setting_toggled), NULL);
-    g_signal_connect(cecup.delete_ignored_button, "toggled", G_CALLBACK(on_delete_ignored_toggled), NULL);
-    g_signal_connect(cecup.delete_after_button, "toggled", G_CALLBACK(on_delete_after_toggled), NULL);
+    g_signal_connect(cecup.check_fs_button, "toggled",
+                     G_CALLBACK(on_preview_setting_toggled), NULL);
+    g_signal_connect(cecup.delete_ignored_button, "toggled",
+                     G_CALLBACK(on_delete_ignored_toggled), NULL);
+    g_signal_connect(cecup.delete_after_button, "toggled",
+                     G_CALLBACK(on_delete_after_toggled), NULL);
 
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
 
     if (is_first_run || DEBUGGING) {
-        GtkWidget *dialog = gtk_dialog_new_with_buttons(_("Welcome to cecup"), GTK_WINDOW(cecup.gtk_window),
-                                                        GTK_DIALOG_MODAL,
-                                                        _("_OK"), GTK_RESPONSE_OK,
-                                                        NULL);
+        GtkWidget *dialog =
+            gtk_dialog_new_with_buttons(_("Welcome to cecup"),
+                                        GTK_WINDOW(cecup.gtk_window),
+                                        GTK_DIALOG_MODAL,
+                                        _("_OK"), GTK_RESPONSE_OK,
+                                        NULL);
         GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
         GtkWidget *scroll_welcome = gtk_scrolled_window_new();
         GtkWidget *label = gtk_label_new(NULL);
@@ -1032,7 +1041,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 480);
 
         gtk_widget_set_vexpand(scroll_welcome, TRUE);
-        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll_welcome), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll_welcome),
+                                       GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 
         gtk_label_set_markup(GTK_LABEL(label), _(cecup_welcome_text));
         gtk_label_set_wrap(GTK_LABEL(label), TRUE);

@@ -40,7 +40,8 @@ work_batch_flush(MessageBatch **batch_ptr) {
 }
 
 static void
-work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side, char *path, int32 path_len) {
+work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side,
+                char *path, int32 path_len) {
     MessageBatch *batch = *batch_ptr;
 
     if (batch && (batch->type != type)) {
@@ -136,7 +137,8 @@ work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
         batch->dst_paths = realloc2(batch->dst_paths,
                                     old_capacity, batch->capacity, SIZEOF(*(batch->dst_paths)));
         batch->dst_paths_lens = realloc2(batch->dst_paths_lens,
-                                         old_capacity, batch->capacity, SIZEOF(*(batch->dst_paths_lens)));
+                                         old_capacity, batch->capacity,
+                                         SIZEOF(*(batch->dst_paths_lens)));
     }
 
     batch->paths[batch->count] = malloc2(old_len + 1);

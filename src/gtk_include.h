@@ -8,7 +8,7 @@
 
 #if CC_CLANG
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreserved-identifier" 
+#pragma clang diagnostic ignored "-Wreserved-identifier"
 #endif
 
 #if defined(CLAMP)

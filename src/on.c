@@ -921,8 +921,12 @@ main(void) {
     MOCK_WIDGET(cecup.search_entry, gtk_entry_new());
     MOCK_WIDGET(cecup.dir_entry[L], gtk_entry_new());
     MOCK_WIDGET(cecup.dir_entry[R], gtk_entry_new());
-    cecup.entry_id[L] = g_signal_connect(cecup.dir_entry[L], "changed", G_CALLBACK(gtk_widget_show), NULL);
-    cecup.entry_id[R] = g_signal_connect(cecup.dir_entry[R], "changed", G_CALLBACK(gtk_widget_show), NULL);
+    cecup.entry_id[L] =
+        g_signal_connect(cecup.dir_entry[L], "changed",
+                         G_CALLBACK(gtk_widget_show), NULL);
+    cecup.entry_id[R] =
+        g_signal_connect(cecup.dir_entry[R], "changed",
+                         G_CALLBACK(gtk_widget_show), NULL);
 
     MOCK_WIDGET(cecup.stats_label, gtk_label_new(""));
     MOCK_WIDGET(cecup.tree[L], gtk_column_view_new(NULL));

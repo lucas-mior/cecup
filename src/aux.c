@@ -135,7 +135,9 @@ aux_invalidate_preview(void) {
     }
 
     if (warning_banner == NULL) {
-        GtkWidget *label = gtk_label_new(_("Alterations were made. File list may not be entirely consistent"));
+        GtkWidget *label =
+            gtk_label_new(_("Alterations were made. File list may not be "
+                            "entirely consistent"));
         GtkWidget *parent = gtk_widget_get_parent(cecup.tree[L]);
 
         warning_banner = gtk_info_bar_new();
