@@ -308,49 +308,49 @@ main(void) {
     }
 
     cecup.rows_capacity = 10;
-    cecup.rows_selected = malloc2(10 * SIZEOF(uint8));
+    cecup.rows_selected = malloc2(10*SIZEOF(uint8));
     cecup.rows_selected[0] = true;
-    cecup.rows[L] = malloc2(10 * SIZEOF(int32));
-    cecup.rows[R] = malloc2(10 * SIZEOF(int32));
+    cecup.rows[L] = malloc2(10*SIZEOF(int32));
+    cecup.rows[R] = malloc2(10*SIZEOF(int32));
     cecup.rows[L][0] = 0;
     cecup.rows[R][0] = 0;
 
-    cecup.rows_visible = malloc2(10 * SIZEOF(int32));
+    cecup.rows_visible = malloc2(10*SIZEOF(int32));
     cecup.rows_visible[0] = 0;
     cecup.rows_visible_len = 1;
 
-    cecup.traversal[L].stats = malloc2(10 * SIZEOF(struct stat));
-    cecup.traversal[R].stats = malloc2(10 * SIZEOF(struct stat));
-    memset64(cecup.traversal[L].stats, 0, 10 * SIZEOF(struct stat));
-    memset64(cecup.traversal[R].stats, 0, 10 * SIZEOF(struct stat));
+    cecup.traversal[L].stats = malloc2(10*SIZEOF(struct stat));
+    cecup.traversal[R].stats = malloc2(10*SIZEOF(struct stat));
+    memset64(cecup.traversal[L].stats, 0, 10*SIZEOF(struct stat));
+    memset64(cecup.traversal[R].stats, 0, 10*SIZEOF(struct stat));
 
     cecup.traversal[L].stats[0].st_size = 2048;
     cecup.traversal[R].stats[0].st_size = 2048;
     cecup.traversal[L].stats[0].st_mtime = 1600000000;
     cecup.traversal[R].stats[0].st_mtime = 1600000000;
 
-    cecup.traversal[L].paths = malloc2(10 * SIZEOF(char*));
-    cecup.traversal[R].paths = malloc2(10 * SIZEOF(char*));
+    cecup.traversal[L].paths = malloc2(10*SIZEOF(char*));
+    cecup.traversal[R].paths = malloc2(10*SIZEOF(char*));
     cecup.traversal[L].paths[0] = "test_l";
     cecup.traversal[R].paths[0] = "test_r";
 
-    cecup.traversal[L].patterns = malloc2(10 * SIZEOF(char*));
-    cecup.traversal[R].patterns = malloc2(10 * SIZEOF(char*));
-    memset64(cecup.traversal[L].patterns, 0, 10 * SIZEOF(char*));
-    memset64(cecup.traversal[R].patterns, 0, 10 * SIZEOF(char*));
+    cecup.traversal[L].patterns = malloc2(10*SIZEOF(char*));
+    cecup.traversal[R].patterns = malloc2(10*SIZEOF(char*));
+    memset64(cecup.traversal[L].patterns, 0, 10*SIZEOF(char*));
+    memset64(cecup.traversal[R].patterns, 0, 10*SIZEOF(char*));
 
-    cecup.traversal[L].symlink_targets = malloc2(10 * SIZEOF(char*));
-    cecup.traversal[R].symlink_targets = malloc2(10 * SIZEOF(char*));
-    memset64(cecup.traversal[L].symlink_targets, 0, 10 * SIZEOF(char*));
-    memset64(cecup.traversal[R].symlink_targets, 0, 10 * SIZEOF(char*));
+    cecup.traversal[L].symlink_targets = malloc2(10*SIZEOF(char*));
+    cecup.traversal[R].symlink_targets = malloc2(10*SIZEOF(char*));
+    memset64(cecup.traversal[L].symlink_targets, 0, 10*SIZEOF(char*));
+    memset64(cecup.traversal[R].symlink_targets, 0, 10*SIZEOF(char*));
 
-    cecup.traversal[L].paths_lens = malloc2(10 * SIZEOF(int16));
-    cecup.traversal[R].paths_lens = malloc2(10 * SIZEOF(int16));
-    memset64(cecup.traversal[L].paths_lens, 0, 10 * SIZEOF(int16));
-    memset64(cecup.traversal[R].paths_lens, 0, 10 * SIZEOF(int16));
+    cecup.traversal[L].paths_lens = malloc2(10*SIZEOF(int16));
+    cecup.traversal[R].paths_lens = malloc2(10*SIZEOF(int16));
+    memset64(cecup.traversal[L].paths_lens, 0, 10*SIZEOF(int16));
+    memset64(cecup.traversal[R].paths_lens, 0, 10*SIZEOF(int16));
 
-    cecup.traversal[L].row_ids = malloc2(10 * SIZEOF(int32));
-    cecup.traversal[R].row_ids = malloc2(10 * SIZEOF(int32));
+    cecup.traversal[L].row_ids = malloc2(10*SIZEOF(int32));
+    cecup.traversal[R].row_ids = malloc2(10*SIZEOF(int32));
     cecup.traversal[L].row_ids[0] = 0;
     cecup.traversal[R].row_ids[0] = 0;
 
@@ -419,22 +419,22 @@ main(void) {
 
     free2(ti_size, SIZEOF(TextInfo));
     free2(ti_mtime, SIZEOF(TextInfo));
-    free2(cecup.rows_selected, 10 * SIZEOF(uint8));
-    free2(cecup.rows_visible, 10 * SIZEOF(int32));
-    free2(cecup.rows[L], 10 * SIZEOF(int32));
-    free2(cecup.rows[R], 10 * SIZEOF(int32));
-    free2(cecup.traversal[L].stats, 10 * SIZEOF(struct stat));
-    free2(cecup.traversal[R].stats, 10 * SIZEOF(struct stat));
-    free2(cecup.traversal[L].paths, 10 * SIZEOF(char*));
-    free2(cecup.traversal[R].paths, 10 * SIZEOF(char*));
-    free2(cecup.traversal[L].patterns, 10 * SIZEOF(char*));
-    free2(cecup.traversal[R].patterns, 10 * SIZEOF(char*));
-    free2(cecup.traversal[L].symlink_targets, 10 * SIZEOF(char*));
-    free2(cecup.traversal[R].symlink_targets, 10 * SIZEOF(char*));
-    free2(cecup.traversal[L].paths_lens, 10 * SIZEOF(int16));
-    free2(cecup.traversal[R].paths_lens, 10 * SIZEOF(int16));
-    free2(cecup.traversal[L].row_ids, 10 * SIZEOF(int32));
-    free2(cecup.traversal[R].row_ids, 10 * SIZEOF(int32));
+    free2(cecup.rows_selected, 10*SIZEOF(uint8));
+    free2(cecup.rows_visible, 10*SIZEOF(int32));
+    free2(cecup.rows[L], 10*SIZEOF(int32));
+    free2(cecup.rows[R], 10*SIZEOF(int32));
+    free2(cecup.traversal[L].stats, 10*SIZEOF(struct stat));
+    free2(cecup.traversal[R].stats, 10*SIZEOF(struct stat));
+    free2(cecup.traversal[L].paths, 10*SIZEOF(char*));
+    free2(cecup.traversal[R].paths, 10*SIZEOF(char*));
+    free2(cecup.traversal[L].patterns, 10*SIZEOF(char*));
+    free2(cecup.traversal[R].patterns, 10*SIZEOF(char*));
+    free2(cecup.traversal[L].symlink_targets, 10*SIZEOF(char*));
+    free2(cecup.traversal[R].symlink_targets, 10*SIZEOF(char*));
+    free2(cecup.traversal[L].paths_lens, 10*SIZEOF(int16));
+    free2(cecup.traversal[R].paths_lens, 10*SIZEOF(int16));
+    free2(cecup.traversal[L].row_ids, 10*SIZEOF(int32));
+    free2(cecup.traversal[R].row_ids, 10*SIZEOF(int32));
 
     ASSERT(true);
     exit(EXIT_SUCCESS);

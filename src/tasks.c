@@ -140,22 +140,22 @@ main(void) {
 
     // 1. Setup Mock Environment
     cecup.rows_len = n;
-    cecup.rows_selected = malloc2(n * SIZEOF(uint8));
-    cecup.rows[L] = malloc2(n * SIZEOF(int32));
-    cecup.rows[R] = malloc2(n * SIZEOF(int32));
+    cecup.rows_selected = malloc2(n*SIZEOF(uint8));
+    cecup.rows[L] = malloc2(n*SIZEOF(int32));
+    cecup.rows[R] = malloc2(n*SIZEOF(int32));
 
     for (int32 side = 0; side < 2; side += 1) {
         Traversal *t = &cecup.traversal[side];
-        t->stats = malloc2(n * SIZEOF(struct stat));
-        t->paths = malloc2(n * SIZEOF(char *));
-        t->paths_lens = malloc2(n * SIZEOF(int32));
-        t->patterns = malloc2(n * SIZEOF(char *));
-        t->symlink_targets = malloc2(n * SIZEOF(char *));
+        t->stats = malloc2(n*SIZEOF(struct stat));
+        t->paths = malloc2(n*SIZEOF(char *));
+        t->paths_lens = malloc2(n*SIZEOF(int32));
+        t->patterns = malloc2(n*SIZEOF(char *));
+        t->symlink_targets = malloc2(n*SIZEOF(char *));
         t->map = hash_create_fs_map(INITIAL_CAPACITY, "t->map");
 
-        memset64(t->stats, 0, n * SIZEOF(struct stat));
-        memset64(t->patterns, 0, n * SIZEOF(char *));
-        memset64(t->symlink_targets, 0, n * SIZEOF(char *));
+        memset64(t->stats, 0, n*SIZEOF(struct stat));
+        memset64(t->patterns, 0, n*SIZEOF(char *));
+        memset64(t->symlink_targets, 0, n*SIZEOF(char *));
 
         for (int32 i = 0; i < n; i += 1) {
             t->paths[i] = malloc2(20);
@@ -210,16 +210,16 @@ main(void) {
         for (int32 i = 0; i < n; i += 1) {
             free2(t->paths[i], 20);
         }
-        free2(t->stats, n * SIZEOF(struct stat));
-        free2(t->paths, n * SIZEOF(char *));
-        free2(t->paths_lens, n * SIZEOF(int32));
-        free2(t->patterns, n * SIZEOF(char *));
-        free2(t->symlink_targets, n * SIZEOF(char *));
+        free2(t->stats, n*SIZEOF(struct stat));
+        free2(t->paths, n*SIZEOF(char *));
+        free2(t->paths_lens, n*SIZEOF(int32));
+        free2(t->patterns, n*SIZEOF(char *));
+        free2(t->symlink_targets, n*SIZEOF(char *));
         hash_destroy_fs_map(t->map);
     }
-    free2(cecup.rows_selected, n * SIZEOF(uint8));
-    free2(cecup.rows[L], n * SIZEOF(int32));
-    free2(cecup.rows[R], n * SIZEOF(int32));
+    free2(cecup.rows_selected, n*SIZEOF(uint8));
+    free2(cecup.rows[L], n*SIZEOF(int32));
+    free2(cecup.rows[R], n*SIZEOF(int32));
 
     exit(EXIT_SUCCESS);
 }

@@ -631,7 +631,7 @@ main(void) {
     remove(cecup.ignore_path);
 
     cecup.rows_visible_len = 0;
-    cecup.rows_selected = malloc2(10 * SIZEOF(uint8));
+    cecup.rows_selected = malloc2(10*SIZEOF(uint8));
     cecup.rows_selected[0] = false;
 
     msg = malloc2(SIZEOF(*msg));
@@ -731,7 +731,7 @@ main(void) {
 
     free2(cecup.base[L], cecup.base_len[L] + 1);
     free2(cecup.base[R], cecup.base_len[R] + 1);
-    free2(cecup.rows_selected, 10 * SIZEOF(uint8));
+    free2(cecup.rows_selected, 10*SIZEOF(uint8));
 
     g_object_unref(tree);
     g_object_unref(cecup.application);
