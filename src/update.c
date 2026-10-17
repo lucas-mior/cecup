@@ -1096,10 +1096,10 @@ main(void) {
     cecup.rows_len = n;
     cecup.rows_visible_len = n;
     cecup.rows_capacity = n;
-    cecup.rows[L] = malloc2(cecup.rows_capacity * SIZEOF(int32));
-    cecup.rows[R] = malloc2(cecup.rows_capacity * SIZEOF(int32));
-    cecup.rows_visible = malloc2(cecup.rows_capacity * SIZEOF(int32));
-    cecup.rows_selected = malloc2(cecup.rows_capacity * SIZEOF(uint8));
+    cecup.rows[L] = malloc2(cecup.rows_capacity*SIZEOF(int32));
+    cecup.rows[R] = malloc2(cecup.rows_capacity*SIZEOF(int32));
+    cecup.rows_visible = malloc2(cecup.rows_capacity*SIZEOF(int32));
+    cecup.rows_selected = malloc2(cecup.rows_capacity*SIZEOF(uint8));
 
     for (int32 side = 0; side < 2; side += 1) {
         Traversal *t = &cecup.traversal[side];
@@ -1110,20 +1110,20 @@ main(void) {
         t->inode_map = hash_create_inode_map(16, "t->inode_map");
         t->arena = arena_create(SIZEMB(1), "t->arena");
 
-        t->paths = malloc2(t->capacity * SIZEOF(char *));
-        t->paths_lens = malloc2(t->capacity * SIZEOF(int16));
-        t->row_ids = malloc2(t->capacity * SIZEOF(int32));
-        t->stats = malloc2(t->capacity * SIZEOF(struct stat));
-        t->patterns = malloc2(t->capacity * SIZEOF(char *));
-        t->patterns_lens = malloc2(t->capacity * SIZEOF(int16));
-        t->symlink_targets = malloc2(t->capacity * SIZEOF(char *));
-        t->symlink_targets_lens = malloc2(t->capacity * SIZEOF(int16));
+        t->paths = malloc2(t->capacity*SIZEOF(char *));
+        t->paths_lens = malloc2(t->capacity*SIZEOF(int16));
+        t->row_ids = malloc2(t->capacity*SIZEOF(int32));
+        t->stats = malloc2(t->capacity*SIZEOF(struct stat));
+        t->patterns = malloc2(t->capacity*SIZEOF(char *));
+        t->patterns_lens = malloc2(t->capacity*SIZEOF(int16));
+        t->symlink_targets = malloc2(t->capacity*SIZEOF(char *));
+        t->symlink_targets_lens = malloc2(t->capacity*SIZEOF(int16));
 
-        memset64(t->stats, 0, t->capacity * SIZEOF(struct stat));
-        memset64(t->patterns, 0, t->capacity * SIZEOF(char *));
-        memset64(t->patterns_lens, 0, t->capacity * SIZEOF(int16));
-        memset64(t->symlink_targets, 0, t->capacity * SIZEOF(char *));
-        memset64(t->symlink_targets_lens, 0, t->capacity * SIZEOF(int16));
+        memset64(t->stats, 0, t->capacity*SIZEOF(struct stat));
+        memset64(t->patterns, 0, t->capacity*SIZEOF(char *));
+        memset64(t->patterns_lens, 0, t->capacity*SIZEOF(int16));
+        memset64(t->symlink_targets, 0, t->capacity*SIZEOF(char *));
+        memset64(t->symlink_targets_lens, 0, t->capacity*SIZEOF(int16));
 
         t->paths[0] = xarena_push(t->arena, 7); memcpy64(t->paths[0], "file_a", 7);
         t->paths_lens[0] = 6;
@@ -1139,7 +1139,7 @@ main(void) {
             cecup.rows_visible[i] = i;
             cecup.rows_selected[i] = 0;
             t->stats[i].st_mode = S_IFREG | 0644;
-            t->stats[i].st_ino = (ino_t)(i + side * 100);
+            t->stats[i].st_ino = (ino_t)(i + side*100);
             t->stats[i].st_size = 1024;
             t->stats[i].st_nlink = 1;
         }
@@ -1293,7 +1293,7 @@ main(void) {
         for(int32 i=0; i<cecup.ignore_count; i+=1) {
             free2(cecup.ignore_patterns[i].str, cecup.ignore_patterns[i].len + 1);
         }
-        free2(cecup.ignore_patterns, cecup.ignore_capacity * SIZEOF(IgnorePattern));
+        free2(cecup.ignore_patterns, cecup.ignore_capacity*SIZEOF(IgnorePattern));
     }
 
     for (int32 side = 0; side < 2; side += 1) {
@@ -1303,20 +1303,20 @@ main(void) {
         hash_destroy_inode_map(t->inode_map);
         arena_destroy(t->arena);
 
-        free2(t->paths, t->capacity * SIZEOF(char *));
-        free2(t->paths_lens, t->capacity * SIZEOF(int16));
-        free2(t->row_ids, t->capacity * SIZEOF(int32));
-        free2(t->stats, t->capacity * SIZEOF(struct stat));
-        free2(t->patterns, t->capacity * SIZEOF(char *));
-        free2(t->patterns_lens, t->capacity * SIZEOF(int16));
-        free2(t->symlink_targets, t->capacity * SIZEOF(char *));
-        free2(t->symlink_targets_lens, t->capacity * SIZEOF(int16));
+        free2(t->paths, t->capacity*SIZEOF(char *));
+        free2(t->paths_lens, t->capacity*SIZEOF(int16));
+        free2(t->row_ids, t->capacity*SIZEOF(int32));
+        free2(t->stats, t->capacity*SIZEOF(struct stat));
+        free2(t->patterns, t->capacity*SIZEOF(char *));
+        free2(t->patterns_lens, t->capacity*SIZEOF(int16));
+        free2(t->symlink_targets, t->capacity*SIZEOF(char *));
+        free2(t->symlink_targets_lens, t->capacity*SIZEOF(int16));
     }
 
-    free2(cecup.rows[L], cecup.rows_capacity * SIZEOF(int32));
-    free2(cecup.rows[R], cecup.rows_capacity * SIZEOF(int32));
-    free2(cecup.rows_visible, cecup.rows_capacity * SIZEOF(int32));
-    free2(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
+    free2(cecup.rows[L], cecup.rows_capacity*SIZEOF(int32));
+    free2(cecup.rows[R], cecup.rows_capacity*SIZEOF(int32));
+    free2(cecup.rows_visible, cecup.rows_capacity*SIZEOF(int32));
+    free2(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
 
     free2(cecup.base[L], 6);
     free2(cecup.base[R], 6);

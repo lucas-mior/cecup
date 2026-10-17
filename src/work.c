@@ -845,10 +845,10 @@ main(void) {
     cecup.actions_set = hash_create_actions_set(1024, "cecup.actions_set");
 
     cecup.rows_capacity = INITIAL_CAPACITY;
-    cecup.rows[L] = malloc2(cecup.rows_capacity * SIZEOF(*(cecup.rows[L])));
-    cecup.rows[R] = malloc2(cecup.rows_capacity * SIZEOF(*(cecup.rows[R])));
-    cecup.rows_selected = malloc2(cecup.rows_capacity * SIZEOF(*(cecup.rows_selected)));
-    cecup.rows_visible = malloc2(cecup.rows_capacity * SIZEOF(*(cecup.rows_visible)));
+    cecup.rows[L] = malloc2(cecup.rows_capacity*SIZEOF(*(cecup.rows[L])));
+    cecup.rows[R] = malloc2(cecup.rows_capacity*SIZEOF(*(cecup.rows[R])));
+    cecup.rows_selected = malloc2(cecup.rows_capacity*SIZEOF(*(cecup.rows_selected)));
+    cecup.rows_visible = malloc2(cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
 
     pattern.str = "ignored_file.txt";
     pattern.len = strlen32(pattern.str);
@@ -976,12 +976,12 @@ main(void) {
     }
 
     if (cecup.transfers_capacity > 0) {
-        free2(cecup.transfers, cecup.transfers_capacity * SIZEOF(*(cecup.transfers)));
-        free2(cecup.transfers_lens, cecup.transfers_capacity * SIZEOF(*(cecup.transfers_lens)));
+        free2(cecup.transfers, cecup.transfers_capacity*SIZEOF(*(cecup.transfers)));
+        free2(cecup.transfers_lens, cecup.transfers_capacity*SIZEOF(*(cecup.transfers_lens)));
     }
     if (cecup.deletions_capacity > 0) {
-        free2(cecup.deletions, cecup.deletions_capacity * SIZEOF(*(cecup.deletions)));
-        free2(cecup.deletions_lens, cecup.deletions_capacity * SIZEOF(*(cecup.deletions_lens)));
+        free2(cecup.deletions, cecup.deletions_capacity*SIZEOF(*(cecup.deletions)));
+        free2(cecup.deletions_lens, cecup.deletions_capacity*SIZEOF(*(cecup.deletions_lens)));
     }
     if (cecup.actions_set != NULL) {
         hash_destroy_actions_set(cecup.actions_set);
@@ -991,10 +991,10 @@ main(void) {
     traversal_free(&cecup.traversal[R]);
 
     if (cecup.rows_capacity > 0) {
-        free2(cecup.rows[L], cecup.rows_capacity * SIZEOF(*(cecup.rows[L])));
-        free2(cecup.rows[R], cecup.rows_capacity * SIZEOF(*(cecup.rows[R])));
-        free2(cecup.rows_selected, cecup.rows_capacity * SIZEOF(uint8));
-        free2(cecup.rows_visible, cecup.rows_capacity * SIZEOF(*(cecup.rows_visible)));
+        free2(cecup.rows[L], cecup.rows_capacity*SIZEOF(*(cecup.rows[L])));
+        free2(cecup.rows[R], cecup.rows_capacity*SIZEOF(*(cecup.rows[R])));
+        free2(cecup.rows_selected, cecup.rows_capacity*SIZEOF(uint8));
+        free2(cecup.rows_visible, cecup.rows_capacity*SIZEOF(*(cecup.rows_visible)));
     }
 
     arena_destroy(cecup.arena);
