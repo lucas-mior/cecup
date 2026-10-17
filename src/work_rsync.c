@@ -30,8 +30,8 @@ work_batch_flush(MessageBatch **batch_ptr) {
         g_idle_add(update_ui_handler, batch);
     } else {
         error("Called work_batch_flush without count!\n");
-        free2(batch->paths, batch->capacity * SIZEOF(*(batch->paths)));
-        free2(batch->paths_lens, batch->capacity * SIZEOF(*(batch->paths_lens)));
+        free2(batch->paths, batch->capacity*SIZEOF(*(batch->paths)));
+        free2(batch->paths_lens, batch->capacity*SIZEOF(*(batch->paths_lens)));
         free2(batch, SIZEOF(*batch));
     }
 
@@ -56,8 +56,8 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side,
         batch->type = type;
         batch->side = (int8)side;
         batch->capacity = INITIAL_CAPACITY;
-        batch->paths = malloc2(batch->capacity * SIZEOF(*(batch->paths)));
-        batch->paths_lens = malloc2(batch->capacity * SIZEOF(*(batch->paths_lens)));
+        batch->paths = malloc2(batch->capacity*SIZEOF(*(batch->paths)));
+        batch->paths_lens = malloc2(batch->capacity*SIZEOF(*(batch->paths_lens)));
 
         time_monotonic_coarse(&batch->time_last_flush);
         *batch_ptr = batch;
@@ -116,10 +116,10 @@ work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
         batch->type = type;
         batch->side = side;
         batch->capacity = INITIAL_CAPACITY;
-        batch->paths = malloc2(batch->capacity * SIZEOF(*(batch->paths)));
-        batch->paths_lens = malloc2(batch->capacity * SIZEOF(*(batch->paths_lens)));
-        batch->dst_paths = malloc2(batch->capacity * SIZEOF(*(batch->dst_paths)));
-        batch->dst_paths_lens = malloc2(batch->capacity * SIZEOF(*(batch->dst_paths_lens)));
+        batch->paths = malloc2(batch->capacity*SIZEOF(*(batch->paths)));
+        batch->paths_lens = malloc2(batch->capacity*SIZEOF(*(batch->paths_lens)));
+        batch->dst_paths = malloc2(batch->capacity*SIZEOF(*(batch->dst_paths)));
+        batch->dst_paths_lens = malloc2(batch->capacity*SIZEOF(*(batch->dst_paths_lens)));
 
         time_monotonic_coarse(&batch->time_last_flush);
         *batch_ptr = batch;
@@ -1063,7 +1063,7 @@ work_manual_hardlinks_free(ManualTransferState *state) {
         free2(hardlink->dst_path, hardlink->dst_path_len + 1);
     }
 
-    free2(state->hardlinks, state->hardlinks_capacity * SIZEOF(*(state->hardlinks)));
+    free2(state->hardlinks, state->hardlinks_capacity*SIZEOF(*(state->hardlinks)));
     return;
 }
 
