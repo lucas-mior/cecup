@@ -137,8 +137,7 @@ work_traverse_fs(Traversal *traversal) {
         case FS_WALK_POST_DIR:
             continue;
         case FS_WALK_ERROR:
-            LOG_ERROR(_("Error while traversing file system: %s.\n"),
-                      strerror(entry->error));
+            LOG_ERROR(_("Error while traversing file system: %s.\n"), strerror(entry->error));
             work_traverse_unknown_record(traversal, entry, TRAVERSAL_STATE_UNKNOWN_SUBTREE, false);
             continue;
         case FS_WALK_DIR_UNREADABLE:
