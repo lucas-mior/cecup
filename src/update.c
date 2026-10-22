@@ -1290,7 +1290,7 @@ main(void) {
 
     unlink(cecup.ignore_path);
     if (cecup.ignore_patterns) {
-        for(int32 i=0; i<cecup.ignore_count; i+=1) {
+        for(int32 i = 0; i < cecup.ignore_count; i += 1) {
             free2(cecup.ignore_patterns[i].str, cecup.ignore_patterns[i].len + 1);
         }
         free2(cecup.ignore_patterns, cecup.ignore_capacity*SIZEOF(IgnorePattern));

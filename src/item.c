@@ -615,16 +615,16 @@ main(void) {
 
     cecup.rows[L] = malloc2(10*SIZEOF(int32));
     cecup.rows[R] = malloc2(10*SIZEOF(int32));
-    cecup.traversal[L].paths = malloc2(10*SIZEOF(char*));
-    cecup.traversal[R].paths = malloc2(10*SIZEOF(char*));
+    cecup.traversal[L].paths = malloc2(10*SIZEOF(char *));
+    cecup.traversal[R].paths = malloc2(10*SIZEOF(char *));
     cecup.traversal[L].paths_lens = malloc2(10*SIZEOF(int16));
     cecup.traversal[R].paths_lens = malloc2(10*SIZEOF(int16));
     cecup.traversal[L].stats = malloc2(10*SIZEOF(struct stat));
     cecup.traversal[R].stats = malloc2(10*SIZEOF(struct stat));
-    cecup.traversal[L].patterns = malloc2(10*SIZEOF(char*));
-    cecup.traversal[R].patterns = malloc2(10*SIZEOF(char*));
-    cecup.traversal[L].symlink_targets = malloc2(10*SIZEOF(char*));
-    cecup.traversal[R].symlink_targets = malloc2(10*SIZEOF(char*));
+    cecup.traversal[L].patterns = malloc2(10*SIZEOF(char *));
+    cecup.traversal[R].patterns = malloc2(10*SIZEOF(char *));
+    cecup.traversal[L].symlink_targets = malloc2(10*SIZEOF(char *));
+    cecup.traversal[R].symlink_targets = malloc2(10*SIZEOF(char *));
     cecup.traversal[L].symlink_targets_lens = malloc2(10*SIZEOF(int16));
     cecup.traversal[R].symlink_targets_lens = malloc2(10*SIZEOF(int16));
 
