@@ -59,7 +59,7 @@ static CecupMenuItem tree_menu_items[] = {
 };
 
 static char *
-get_variant(GtkWidget *widget, const char *function) {
+get_variant(GtkWidget *widget, char *function) {
     char *variant;
 
     if ((variant = g_object_get_data(G_OBJECT(widget), "variant")) == NULL) {
