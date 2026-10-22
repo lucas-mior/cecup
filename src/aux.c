@@ -775,7 +775,7 @@ int main(void) {
     cecup.traversal[L].nfiles = 1;
     cecup.traversal[L].row_ids = malloc2(10*SIZEOF(int32));
     cecup.traversal[L].row_ids[0] = 0;
-    cecup.traversal[L].paths = malloc2(10*SIZEOF(char*));
+    cecup.traversal[L].paths = malloc2(10*SIZEOF(char *));
     cecup.traversal[L].paths[0] = "test1";
     cecup.traversal[L].paths_lens = malloc2(10*SIZEOF(int16));
     cecup.traversal[L].paths_lens[0] = 5;
@@ -785,7 +785,7 @@ int main(void) {
     cecup.traversal[R].nfiles = 1;
     cecup.traversal[R].row_ids = malloc2(10*SIZEOF(int32));
     cecup.traversal[R].row_ids[0] = 0;
-    cecup.traversal[R].paths = malloc2(10*SIZEOF(char*));
+    cecup.traversal[R].paths = malloc2(10*SIZEOF(char *));
     cecup.traversal[R].paths[0] = "test2";
     cecup.traversal[R].paths_lens = malloc2(10*SIZEOF(int16));
     cecup.traversal[R].paths_lens[0] = 5;
@@ -801,10 +801,10 @@ int main(void) {
     free2(cecup.rows[L], 10*SIZEOF(int32));
     free2(cecup.rows[R], 10*SIZEOF(int32));
     free2(cecup.traversal[L].row_ids, 10*SIZEOF(int32));
-    free2(cecup.traversal[L].paths, 10*SIZEOF(char*));
+    free2(cecup.traversal[L].paths, 10*SIZEOF(char *));
     free2(cecup.traversal[L].paths_lens, 10*SIZEOF(int16));
     free2(cecup.traversal[R].row_ids, 10*SIZEOF(int32));
-    free2(cecup.traversal[R].paths, 10*SIZEOF(char*));
+    free2(cecup.traversal[R].paths, 10*SIZEOF(char *));
     free2(cecup.traversal[R].paths_lens, 10*SIZEOF(int16));
 
     hash_destroy_fs_map(cecup.traversal[L].map);
