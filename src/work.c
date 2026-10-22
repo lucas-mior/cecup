@@ -141,8 +141,7 @@ work_traverse_fs(Traversal *traversal) {
             work_traverse_unknown_record(traversal, entry, TRAVERSAL_STATE_UNKNOWN_SUBTREE, false);
             continue;
         case FS_WALK_DIR_UNREADABLE:
-            LOG_ERROR(_("Directory '%.*s' is unreadable.\n"),
-                      entry->path_len, entry->path);
+            LOG_ERROR(_("Directory '%.*s' is unreadable.\n"), entry->path_len, entry->path);
             work_traverse_unknown_record(traversal, entry, TRAVERSAL_STATE_UNKNOWN_SUBTREE, true);
             continue;
         case FS_WALK_STAT_ERROR:
