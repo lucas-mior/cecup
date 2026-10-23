@@ -348,7 +348,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
 
     clipboard = gdk_display_get_clipboard(gdk_display_get_default());
     space = buffer_size - 1;
-    variant = get_variant(widget, __func__);
+    variant = get_variant(widget, FUNC__);
 
     if (strequal(variant, "absolute")) {
         absolute = true;
