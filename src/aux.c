@@ -401,7 +401,9 @@ save_config(void) {
 static void
 log_internal(char *file, int line, char *func,
              enum MsgType type, char *format, ...) {
+    FmtPlan plan;
     Message *message;
+    int32 estimate;
     int32 n;
     int32 m;
     va_list va_args;
@@ -410,13 +412,13 @@ log_internal(char *file, int line, char *func,
 
     va_start(va_args, format);
     va_copy(va_args_copy, va_args);
-    n = fmt_vsnprintf(NULL, 0, format, va_args);
+    estimate = fmt_vsnprintf_estimate_plan(&plan, format, va_args);
     va_end(va_args);
 
-    if (n < 0) {
+    if (estimate < 0) {
         va_end(va_args_copy);
         error_impl(file, line, func,
-                   "Error in fmt_vsnprintf(\"%s\") (n = %d)\n", format, n);
+                   "Error formatting \"%s\" (n = %d)\n", format, estimate);
         fatal(EXIT_FAILURE);
     }
 
@@ -425,18 +427,22 @@ log_internal(char *file, int line, char *func,
 
     m = SNPRINTF(fileline, "%s:%d:%s ", file, line, func);
 
-    message->text_len = n + m;
-    message->text = malloc2(n + m + 1);
+    message->text = malloc2(estimate + m + 1);
 
     memcpy64(message->text, fileline, m);
-    if (fmt_vsnprintf(message->text + m, n + 1,
-                      format, va_args_copy) != n) {
-        va_end(va_args_copy);
+    n = fmt_vsnprintf_planned(&plan, message->text + m,
+                              estimate + 1, va_args_copy);
+    va_end(va_args_copy);
+    if ((n < 0) || (n > estimate)) {
         error_impl(file, line, func,
-                   "Error in fmt_vsnprintf(\"%s\")\n", format);
+                   "Error formatting \"%s\" (n = %d)\n", format, n);
         fatal(EXIT_FAILURE);
     }
-    va_end(va_args_copy);
+    if (n < estimate) {
+        message->text = realloc2(message->text, estimate + m + 1,
+                                 n + m + 1, 1);
+    }
+    message->text_len = n + m;
 
     message->type = type;
     g_idle_add(update_ui_handler, message);
