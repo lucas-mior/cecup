@@ -399,23 +399,26 @@ save_config(void) {
 }
 
 static void
-log_internal(char *file, int line, char *func, enum MsgType type, char *format, ...) {
+log_internal(char *file, int line, char *func,
+             enum MsgType type, char *format, ...) {
     Message *message;
-    char buffer[MAX_PATH_LENGTH*2];
     int32 n;
     int32 m;
     va_list va_args;
+    va_list va_args_copy;
     char fileline[64];
 
     va_start(va_args, format);
-    n = vsnprintf(buffer, SIZEOF(buffer), format, va_args);
+    va_copy(va_args_copy, va_args);
+    n = fmt_vsnprintf(NULL, 0, format, va_args);
+    va_end(va_args);
 
-    if ((n < 0) || (n >= SIZEOF(buffer))) {
+    if (n < 0) {
+        va_end(va_args_copy);
         error_impl(file, line, func,
-                   "Error in vsnprintf(\"%s\") (n = %d)\n", format, n);
+                   "Error in fmt_vsnprintf(\"%s\") (n = %d)\n", format, n);
         fatal(EXIT_FAILURE);
     }
-    va_end(va_args);
 
     message = malloc2(SIZEOF(*message));
     *message = (Message){0};
@@ -426,7 +429,14 @@ log_internal(char *file, int line, char *func, enum MsgType type, char *format, 
     message->text = malloc2(n + m + 1);
 
     memcpy64(message->text, fileline, m);
-    memcpy64(message->text + m, buffer, n + 1);
+    if (fmt_vsnprintf(message->text + m, n + 1,
+                      format, va_args_copy) != n) {
+        va_end(va_args_copy);
+        error_impl(file, line, func,
+                   "Error in fmt_vsnprintf(\"%s\")\n", format);
+        fatal(EXIT_FAILURE);
+    }
+    va_end(va_args_copy);
 
     message->type = type;
     g_idle_add(update_ui_handler, message);
