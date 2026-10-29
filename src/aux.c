@@ -406,17 +406,17 @@ log_internal(char *file, int line, char *func,
     int32 estimate;
     int32 n;
     int32 m;
-    va_list va_args;
-    va_list va_args_copy;
+    va_list args;
+    va_list args2;
     char fileline[64];
 
-    va_start(va_args, format);
-    va_copy(va_args_copy, va_args);
-    estimate = fmt_vsnprintf_estimate_plan(&plan, format, va_args);
-    va_end(va_args);
+    va_start(args, format);
+    va_copy(args2, args);
+    estimate = fmt_vsnprintf_estimate_plan(&plan, format, args);
+    va_end(args);
 
     if (estimate < 0) {
-        va_end(va_args_copy);
+        va_end(args2);
         error_impl(file, line, func,
                    "Error formatting \"%s\" (n = %d)\n", format, estimate);
         fatal(EXIT_FAILURE);
@@ -430,17 +430,15 @@ log_internal(char *file, int line, char *func,
     message->text = malloc2(estimate + m + 1);
 
     memcpy64(message->text, fileline, m);
-    n = fmt_vsnprintf_planned(&plan, message->text + m,
-                              estimate + 1, va_args_copy);
-    va_end(va_args_copy);
+    n = fmt_vsnprintf_planned(&plan, message->text + m, estimate + 1, args2);
+    va_end(args2);
     if ((n < 0) || (n > estimate)) {
         error_impl(file, line, func,
                    "Error formatting \"%s\" (n = %d)\n", format, n);
         fatal(EXIT_FAILURE);
     }
     if (n < estimate) {
-        message->text = realloc2(message->text, estimate + m + 1,
-                                 n + m + 1, 1);
+        message->text = realloc2(message->text, estimate + m + 1, n + m + 1, 1);
     }
     message->text_len = n + m;
 
