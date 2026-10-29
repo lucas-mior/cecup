@@ -697,7 +697,7 @@ main(void) {
 
     for (int32 i = 1; i < (INITIAL_CAPACITY + 5); i += 1) {
         char *name = xarena_push(test_traversal.arena, 16);
-        snprintf(name, 16, "file_%d", i);
+        fmt_sprintf(name, 16, "file_%d", i);
         traversal_push(&test_traversal, &dummy_stat, name, strlen32(name), NULL, 0, NULL, 0);
     }
     ASSERT(test_traversal.capacity > INITIAL_CAPACITY);

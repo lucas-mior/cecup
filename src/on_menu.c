@@ -115,7 +115,7 @@ on_menu_append_ignore_pattern(char *pattern, int32 pattern_len) {
         LOG_ERROR(_("Error appending a newline to %s: %s.\n"), cecup.ignore_path, strerror(errno));
         goto close_file;
     }
-    if (fprintf(ignore_file, "%.*s\n", pattern_len, pattern)
+    if (fmt_fprintf(ignore_file, "%.*s\n", pattern_len, pattern)
         != (pattern_len + 1)) {
         LOG_ERROR(_("Error appending ignore pattern \"%.*s\" to %s: %s.\n"),
                   pattern_len, pattern, cecup.ignore_path, strerror(errno));

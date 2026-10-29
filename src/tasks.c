@@ -159,7 +159,7 @@ main(void) {
 
         for (int32 i = 0; i < n; i += 1) {
             t->paths[i] = malloc2(20);
-            snprintf(t->paths[i], 20, "file_%d.txt", i);
+            fmt_sprintf(t->paths[i], 20, "file_%d.txt", i);
             t->paths_lens[i] = (int16)strlen32(t->paths[i]);
             t->stats[i].st_dev = (dev_t)side;
             t->stats[i].st_ino = (ino_t)(100 + i);
