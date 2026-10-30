@@ -491,8 +491,7 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
                 error("Consistency error:"
                       " %s.row_ids["RED("%d")"] -> row_id="YELLOW("%d")","
                       " but %s["YELLOW("%d")"] -> idx="RED("%d")".\n",
-                      which_traversal, idx, row_id,
-                      which_rows, row_id, rows[row_id]);
+                      which_traversal, idx, row_id, which_rows, row_id, rows[row_id]);
                 fatal(EXIT_FAILURE);
             }
 
@@ -584,8 +583,7 @@ check_consistent_state(void) {
                 error("Consistency error:"
                       " rows_dst["RED("%d")"] -> dst_idx="GREEN("%d")","
                       " but dst.row_ids["GREEN("%d")"] -> row_id="RED("%d")".\n",
-                      row_id, dst_idx,
-                      dst_idx, cecup.traversal[R].row_ids[dst_idx]);
+                      row_id, dst_idx, dst_idx, cecup.traversal[R].row_ids[dst_idx]);
                 fatal(EXIT_FAILURE);
             }
         }
