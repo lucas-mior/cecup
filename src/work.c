@@ -101,8 +101,7 @@ work_traverse_fs(Traversal *traversal) {
 
     if (!fs_walk_open(&fs_walk, traversal->base_path)) {
         LOG_ERROR(_("Error walking directory %.*s: %s.\n"),
-                  traversal->base_path_len, traversal->base_path,
-                  strerror(errno));
+                  traversal->base_path_len, traversal->base_path, strerror(errno));
         traversal_root_unknown_record(traversal);
         return 0;
     }
