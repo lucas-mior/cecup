@@ -154,8 +154,8 @@ on_path_edited(GtkEditable *editable, void *data) {
     char new_full[MAX_PATH_LENGTH];
     char relative_new[MAX_PATH_LENGTH];
     int32 old_length;
-    int32 old_full_length;
-    int32 new_full_length;
+    int32 old_full_len;
+    int32 new_full_len;
 
     if (work_thread_is_active()) {
         return;
@@ -189,8 +189,8 @@ on_path_edited(GtkEditable *editable, void *data) {
     }
 
     old_length = item_path_len_side(row_id, side);
-    old_full_length = SNPRINTF(old_full, "%.*s/%.*s",
-                                         base_path_len, base_path, old_length, relative_old);
+    old_full_len = SNPRINTF(old_full, "%.*s/%.*s",
+                                      base_path_len, base_path, old_length, relative_old);
 
     memcpy64(relative_new, new_text, new_length + 1);
     normalize(relative_new, &new_length);
@@ -204,14 +204,13 @@ on_path_edited(GtkEditable *editable, void *data) {
         return;
     }
 
-    new_full_length = SNPRINTF(new_full, "%.*s/%.*s",
-                                         base_path_len, base_path, new_length, relative_new);
-    normalize(new_full, &new_full_length);
+    new_full_len = SNPRINTF(new_full, "%.*s/%.*s",
+                                      base_path_len, base_path, new_length, relative_new);
+    normalize(new_full, &new_full_len);
 
     if (on_path_rename_no_replace(old_full, new_full) < 0) {
         LOG_ERROR(_("Error renaming %.*s to %.*s: %s\n"),
-                  old_full_length, old_full,
-                  new_full_length, new_full, strerror(errno));
+                  old_full_len, old_full, new_full_len, new_full, strerror(errno));
         return;
     }
 
@@ -228,7 +227,7 @@ on_path_edited(GtkEditable *editable, void *data) {
         FsWalkEntry *entry;
 
         if (!fs_walk_open(&fs_walk, new_full)) {
-            error("Error in fs_walk_open(%.*s): %s.\n", new_full_length, new_full, strerror(errno));
+            error("Error in fs_walk_open(%.*s): %s.\n", new_full_len, new_full, strerror(errno));
             aux_invalidate_preview();
             work_batch_flush(&batch);
             return;
@@ -300,11 +299,11 @@ on_path_edited(GtkEditable *editable, void *data) {
         }
         if (errno) {
             LOG_ERROR(_("Error in fs_walk_read(%.*s): %s.\n"),
-                      new_full_length, new_full, strerror(errno));
+                      new_full_len, new_full, strerror(errno));
         }
         if (fs_walk_close(&fs_walk) < 0) {
             LOG_ERROR(_("Error in fs_walk_close(%.*s): %s.\n"),
-                      new_full_length, new_full, strerror(errno));
+                      new_full_len, new_full, strerror(errno));
         }
     }
 
