@@ -300,8 +300,7 @@ work_traverse_fs(Traversal *traversal) {
 
     if (errno) {
         LOG_ERROR(_("Error in fs_walk_read(%.*s): %s.\n"),
-                  traversal->base_path_len, traversal->base_path,
-                  strerror(errno));
+                  traversal->base_path_len, traversal->base_path, strerror(errno));
         traversal_root_unknown_record(traversal);
     }
     if (fs_walk_close(&fs_walk) < 0) {

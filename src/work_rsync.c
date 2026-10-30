@@ -578,8 +578,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
 
     base_path_len = cecup.base_len[side];
     full_path_len = SNPRINTF(full_path, "%.*s/%.*s",
-                                        base_path_len, cecup.base[side],
-                                        path_len, path);
+                                        base_path_len, cecup.base[side], path_len, path);
 
     if (path[path_len - 1] != '/') {
         if (unlink(full_path) < 0) {
@@ -1175,8 +1174,7 @@ work_manual_copy_regular(
         }
 
         LOG_ERROR(_("Error creating hardlink %s -> %.*s: %s. Copying instead.\n"),
-                  dst_path, hardlink->dst_path_len, hardlink->dst_path,
-                  strerror(errno));
+                  dst_path, hardlink->dst_path_len, hardlink->dst_path, strerror(errno));
     }
 
     if (!work_manual_copy_regular_contents(dst_path, src_path,
