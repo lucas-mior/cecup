@@ -190,8 +190,7 @@ on_path_edited(GtkEditable *editable, void *data) {
 
     old_length = item_path_len_side(row_id, side);
     old_full_length = SNPRINTF(old_full, "%.*s/%.*s",
-                                         base_path_len, base_path,
-                                         old_length, relative_old);
+                                         base_path_len, base_path, old_length, relative_old);
 
     memcpy64(relative_new, new_text, new_length + 1);
     normalize(relative_new, &new_length);
