@@ -568,8 +568,7 @@ check_consistent_state(void) {
                 error("Consistency error:"
                       " rows_src["RED("%d")"] -> src_idx="GREEN("%d")","
                       " but src.row_ids["GREEN("%d")"] -> row_id="RED("%d")".\n",
-                      row_id, src_idx,
-                      src_idx, cecup.traversal[L].row_ids[src_idx]);
+                      row_id, src_idx, src_idx, cecup.traversal[L].row_ids[src_idx]);
                 fatal(EXIT_FAILURE);
             }
         }
