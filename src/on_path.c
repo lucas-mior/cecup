@@ -205,8 +205,7 @@ on_path_edited(GtkEditable *editable, void *data) {
     }
 
     new_full_length = SNPRINTF(new_full, "%.*s/%.*s",
-                                         base_path_len, base_path,
-                                         new_length, relative_new);
+                                         base_path_len, base_path, new_length, relative_new);
     normalize(new_full, &new_full_length);
 
     if (on_path_rename_no_replace(old_full, new_full) < 0) {
