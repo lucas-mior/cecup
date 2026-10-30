@@ -377,8 +377,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
 
             path_relative_len = SNPRINTF(path_relative,
                                          "%.*s/%.*s",
-                                         base_path_len, base_path,
-                                         task->path_len, task->path);
+                                         base_path_len, base_path, task->path_len, task->path);
 
             if (realpath(path_relative, path_full) == NULL) {
                 LOG_ERROR(_("Error resolving full path of %.*s:%s. "
@@ -501,12 +500,10 @@ on_menu_diff(GtkWidget *widget, void *data) {
 
         fmt_sprintf(path_src, size_src,
                     "%.*s/%.*s",
-                    cecup.base_len[L], cecup.base[L],
-                    task->path_len, task->path);
+                    cecup.base_len[L], cecup.base[L], task->path_len, task->path);
         fmt_sprintf(path_dst, size_dst,
                     "%.*s/%.*s",
-                    cecup.base_len[R], cecup.base[R],
-                    task->path_len, task->path);
+                    cecup.base_len[R], cecup.base[R], task->path_len, task->path);
 
         command = on_menu_diff_command(term_command, diff_tool);
         CMD_PUSH(&command, path_dst, path_src);
