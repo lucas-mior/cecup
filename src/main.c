@@ -74,12 +74,7 @@ main_key_file_get_string(GKeyFile *key, char *group, char *name) {
 }
 
 static bool
-main_key_file_get_boolean(
-    GKeyFile *key,
-    char *group,
-    char *name,
-    bool *value
-) {
+main_key_file_get_boolean(GKeyFile *key, char *group, char *name, bool *value) {
     GError *key_error = NULL;
     gboolean result;
 
@@ -173,11 +168,7 @@ main_default_config_dir(void) {
 }
 
 static void
-main_copy_default_config_file(
-    char *config_base,
-    char *default_config_dir,
-    char *filename
-) {
+main_copy_default_config_file(char *config_base, char *default_config_dir, char *filename) {
     GError *file_error = NULL;
     char *src_path;
     char *dst_path;

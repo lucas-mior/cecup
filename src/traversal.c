@@ -376,8 +376,7 @@ traversal_push(Traversal *traversal, struct stat *stat,
 }
 
 static bool
-traversal_unknown_path_covers(char *unknown, int32 unknown_len,
-                              char *path, int32 path_len) {
+traversal_unknown_path_covers(char *unknown, int32 unknown_len, char *path, int32 path_len) {
     if (path_len < unknown_len) {
         if ((unknown_len > 1)
             && (unknown[unknown_len - 1] == '/')
@@ -499,12 +498,7 @@ traversal_symlink_get(Traversal *traversal, char *path, char **symlink_target) {
 }
 
 static void
-traversal_add_link(
-    Traversal *traversal,
-    struct stat stat,
-    char *path,
-    int32 path_len
-) {
+traversal_add_link(Traversal *traversal, struct stat stat, char *path, int32 path_len) {
     FileID file_id = file_id_from_stat(&stat);
     HardLinks hard_links;
     rapidhash128_t name_hash = rapidhash128(path, (size_t)path_len);

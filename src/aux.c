@@ -399,8 +399,7 @@ save_config(void) {
 }
 
 static void
-log_internal(char *file, int line, char *func,
-             enum MsgType type, char *format, ...) {
+log_internal(char *file, int line, char *func, enum MsgType type, char *format, ...) {
     FmtPlan plan;
     Message *message;
     int32 estimate;

@@ -763,9 +763,7 @@ on_scroll_sync(GtkAdjustment *s, void *d) {
 }
 
 static void
-on_path_click_pressed(GtkGestureClick *gesture,
-                      int32 npress, double x, double y,
-                      void *data) {
+on_path_click_pressed(GtkGestureClick *gesture, int32 npress, double x, double y, void *data) {
     GtkWidget *editable;
     GtkWidget *tree;
     uint32 button;

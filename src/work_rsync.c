@@ -810,11 +810,7 @@ work_rsync_write_path(int32 fd, char *path, int32 path_len) {
 }
 
 static bool
-work_rsync_backend_run(
-    TaskList *tasks,
-    int32 nfiles_total,
-    MessageBatch **batch
-) {
+work_rsync_backend_run(TaskList *tasks, int32 nfiles_total, MessageBatch **batch) {
     char files_from_filename[] = "/tmp/cecup_XXXXXX";
     int files_from_fd;
     bool success = false;
@@ -1015,11 +1011,7 @@ work_manual_hardlink_find(ManualTransferState *state, FileID *file_id) {
 }
 
 static void
-work_manual_hardlink_remember(
-    ManualTransferState *state,
-    FileID *file_id,
-    char *dst_path
-) {
+work_manual_hardlink_remember(ManualTransferState *state, FileID *file_id, char *dst_path) {
     ManualHardLink *hardlink;
     int32 dst_path_len;
 
@@ -1067,11 +1059,7 @@ work_manual_hardlinks_free(ManualTransferState *state) {
 }
 
 static void
-work_manual_item_done(
-    ManualTransferState *state,
-    char *path,
-    int32 path_len
-) {
+work_manual_item_done(ManualTransferState *state, char *path, int32 path_len) {
     state->nfiles_done += 1;
     work_batch_push(state->batch, MSG_BATCH_ROW_TRANSFER, R, path, path_len);
 
@@ -1320,11 +1308,7 @@ work_manual_copy_hardlink_task(ManualTransferState *state, Task *task) {
 }
 
 static bool
-work_manual_backend_run(
-    TaskList *tasks,
-    int32 nfiles_total,
-    MessageBatch **batch
-) {
+work_manual_backend_run(TaskList *tasks, int32 nfiles_total, MessageBatch **batch) {
     ManualTransferState state = {0};
 
     state.batch = batch;
