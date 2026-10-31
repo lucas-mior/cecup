@@ -547,8 +547,7 @@ update_row_rename(char *old_path, int32 old_path_len,
             hard_link_replace_node(&hard_links,
                                    old_path, old_path_len,
                                    new_path_alloc, new_path_len);
-            hash_overwrite_inode_map(traversal->inode_map,
-                                     &file_id, hard_links);
+            hash_overwrite_inode_map(traversal->inode_map, &file_id, hard_links);
         }
     }
 
