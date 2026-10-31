@@ -180,8 +180,7 @@ item_hardlink_side(int32 row_id, int32 side, HardLinks *hard_links) {
     }
 
     file_id = file_id_from_stat(&cecup.traversal[side].stats[idx]);
-    if (!hash_lookup_inode_map(cecup.traversal[side].inode_map,
-                               &file_id, hard_links)) {
+    if (!hash_lookup_inode_map(cecup.traversal[side].inode_map, &file_id, hard_links)) {
         return false;
     }
 

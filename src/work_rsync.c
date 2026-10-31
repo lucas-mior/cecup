@@ -834,8 +834,7 @@ work_rsync_backend_run(TaskList *tasks, int32 nfiles_total, MessageBatch **batch
         }
 
         if (task->action == ACTION_HARDLINK) {
-            if ((hash_lookup_inode_map(traversal->inode_map,
-                                       &task->file_id, &hardlinks))) {
+            if ((hash_lookup_inode_map(traversal->inode_map, &task->file_id, &hardlinks))) {
                 for (int32 j = 0; j < hardlinks.count; j += 1) {
                     work_rsync_write_path(files_from_fd,
                                           hardlinks.names[j],
@@ -1130,8 +1129,7 @@ work_manual_copy_regular(
         state->had_errors = true;
         return false;
     }
-    if (!work_manual_remove_type_conflict(state, path, path_len,
-                                          dst_path, src_stat)) {
+    if (!work_manual_remove_type_conflict(state, path, path_len, dst_path, src_stat)) {
         state->had_errors = true;
         return false;
     }
@@ -1145,8 +1143,7 @@ work_manual_copy_regular(
     if (hardlink_idx >= 0) {
         ManualHardLink *hardlink = &state->hardlinks[hardlink_idx];
 
-        if (STREQUAL(hardlink->dst_path, hardlink->dst_path_len,
-                     dst_path, strlen32(dst_path))) {
+        if (STREQUAL(hardlink->dst_path, hardlink->dst_path_len, dst_path, strlen32(dst_path))) {
             return true;
         }
 
@@ -1165,8 +1162,7 @@ work_manual_copy_regular(
                   dst_path, hardlink->dst_path_len, hardlink->dst_path, strerror(errno));
     }
 
-    if (!work_manual_copy_regular_contents(dst_path, src_path,
-                                           src_stat->st_mode)) {
+    if (!work_manual_copy_regular_contents(dst_path, src_path, src_stat->st_mode)) {
         state->had_errors = true;
         return false;
     }
@@ -1233,8 +1229,7 @@ work_manual_copy_dir(
         state->had_errors = true;
         return false;
     }
-    if (!work_manual_remove_type_conflict(state, path, path_len,
-                                          dst_path, src_stat)) {
+    if (!work_manual_remove_type_conflict(state, path, path_len, dst_path, src_stat)) {
         state->had_errors = true;
         return false;
     }
@@ -1257,13 +1252,11 @@ work_manual_copy_path(ManualTransferState *state, char *path, int32 path_len) {
     char dst_path[MAX_PATH_LENGTH];
     struct stat src_stat;
 
-    if (!work_transfer_full_path(src_path, SIZEOF(src_path),
-                                 L, path, path_len)) {
+    if (!work_transfer_full_path(src_path, SIZEOF(src_path), L, path, path_len)) {
         state->had_errors = true;
         return false;
     }
-    if (!work_transfer_full_path(dst_path, SIZEOF(dst_path),
-                                 R, path, path_len)) {
+    if (!work_transfer_full_path(dst_path, SIZEOF(dst_path), R, path, path_len)) {
         state->had_errors = true;
         return false;
     }
@@ -1294,8 +1287,7 @@ work_manual_copy_hardlink_task(ManualTransferState *state, Task *task) {
     Traversal *traversal = &cecup.traversal[task->side];
     HardLinks hardlinks;
 
-    if ((hash_lookup_inode_map(traversal->inode_map,
-                               &task->file_id, &hardlinks))) {
+    if ((hash_lookup_inode_map(traversal->inode_map, &task->file_id, &hardlinks))) {
         for (int32 j = 0; j < hardlinks.count; j += 1) {
             if (work_should_stop()) {
                 return;

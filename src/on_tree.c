@@ -242,9 +242,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
 
         parent = gtk_widget_get_parent(widget);
 
-        if (gtk_widget_translate_coordinates(widget, parent,
-                                             x, y,
-                                             &translated_x, &translated_y)) {
+        if (gtk_widget_translate_coordinates(widget, parent, x, y, &translated_x, &translated_y)) {
             GdkRectangle rect;
 
             popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));

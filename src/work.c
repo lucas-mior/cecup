@@ -533,8 +533,7 @@ work_preview(void *user_data) {
         dst_idx = bucket_dst->value;
         path_len = cecup.traversal[R].paths_lens[dst_idx];
 
-        if (!hash_lookup_fs_map(cecup.traversal[L].map,
-                                bucket_dst->key, path_len, &src_idx)) {
+        if (!hash_lookup_fs_map(cecup.traversal[L].map, bucket_dst->key, path_len, &src_idx)) {
             if (!traversal_path_is_unknown(&cecup.traversal[L], bucket_dst->key, path_len)) {
                 item_add(-1, dst_idx);
                 if (cecup.delete_after) {
@@ -552,8 +551,7 @@ work_preview(void *user_data) {
                                                         SIZEOF(*cecup.deletions_lens));
                     }
 
-                    if (hash_insert_actions_set(cecup.actions_set,
-                                                bucket_dst->key, path_len)) {
+                    if (hash_insert_actions_set(cecup.actions_set, bucket_dst->key, path_len)) {
                         cecup.deletions[cecup.ndeletions] = bucket_dst->key;
                         cecup.deletions_lens[cecup.ndeletions] = path_len;
                         cecup.ndeletions += 1;

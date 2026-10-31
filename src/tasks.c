@@ -102,8 +102,7 @@ get_target_tasks(int8 side, char *clicked_path, enum Action clicked_action) {
         memcpy64(task->path, clicked_path, task->path_len + 1);
 
         if (clicked_action == ACTION_HARDLINK) {
-            if (hash_lookup_fs_map(cecup.traversal[side].map, task->path,
-                                   task->path_len, &idx)) {
+            if (hash_lookup_fs_map(cecup.traversal[side].map, task->path, task->path_len, &idx)) {
                 task->file_id = file_id_from_stat(&cecup.traversal[side].stats[idx]);
             }
         }

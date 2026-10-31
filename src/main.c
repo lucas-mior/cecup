@@ -202,8 +202,7 @@ main_copy_default_config_file(char *config_base, char *default_config_dir, char 
         return;
     }
 
-    if (!g_file_set_contents(dst_path, contents, (gssize)contents_len,
-                             &file_error)) {
+    if (!g_file_set_contents(dst_path, contents, (gssize)contents_len, &file_error)) {
         error("Error writing user configuration file %s: %s.\n", dst_path, file_error->message);
         g_clear_error(&file_error);
     }
@@ -898,10 +897,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
         bool boolean_value;
 
         key = g_key_file_new();
-        if (!g_key_file_load_from_file(key, cecup.config_path,
-                                       G_KEY_FILE_NONE, &key_error)) {
-            if (!g_error_matches(key_error, G_FILE_ERROR,
-                                 G_FILE_ERROR_NOENT)) {
+        if (!g_key_file_load_from_file(key, cecup.config_path, G_KEY_FILE_NONE, &key_error)) {
+            if (!g_error_matches(key_error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
                 error("Error loading configuration file %s: %s.\n",
                       cecup.config_path, key_error->message);
             }
@@ -934,43 +931,34 @@ main_application_run(GtkApplication *application, gpointer user_data) {
             g_free(value);
         }
 
-        if (main_key_file_get_boolean(key, "Filters", "new",
-                                      &boolean_value)) {
+        if (main_key_file_get_boolean(key, "Filters", "new", &boolean_value)) {
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_new), boolean_value);
         }
-        if (main_key_file_get_boolean(key, "Filters", "hard",
-                                      &boolean_value)) {
+        if (main_key_file_get_boolean(key, "Filters", "hard", &boolean_value)) {
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_link), boolean_value);
         }
-        if (main_key_file_get_boolean(key, "Filters", "update",
-                                      &boolean_value)) {
+        if (main_key_file_get_boolean(key, "Filters", "update", &boolean_value)) {
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_update), boolean_value);
         }
-        if (main_key_file_get_boolean(key, "Filters", "equal",
-                                      &boolean_value)) {
+        if (main_key_file_get_boolean(key, "Filters", "equal", &boolean_value)) {
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_equal), boolean_value);
         }
-        if (main_key_file_get_boolean(key, "Filters", "delete",
-                                      &boolean_value)) {
+        if (main_key_file_get_boolean(key, "Filters", "delete", &boolean_value)) {
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_delete), boolean_value);
         }
-        if (main_key_file_get_boolean(key, "Filters", "ignore",
-                                      &boolean_value)) {
+        if (main_key_file_get_boolean(key, "Filters", "ignore", &boolean_value)) {
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cecup.filter_ignore), boolean_value);
         }
-        if (main_key_file_get_boolean(key, "Options", "check_fs",
-                                      &boolean_value)) {
+        if (main_key_file_get_boolean(key, "Options", "check_fs", &boolean_value)) {
             gtk_check_button_set_active(GTK_CHECK_BUTTON(cecup.check_fs_button), boolean_value);
         }
-        if (main_key_file_get_boolean(key, "Options", "delete_ignored",
-                                      &boolean_value)) {
+        if (main_key_file_get_boolean(key, "Options", "delete_ignored", &boolean_value)) {
             GtkCheckButton *button = GTK_CHECK_BUTTON(cecup.delete_ignored_button);
 
             cecup.delete_ignored = boolean_value;
             gtk_check_button_set_active(button, boolean_value);
         }
-        if (main_key_file_get_boolean(key, "Options", "delete_after",
-                                      &boolean_value)) {
+        if (main_key_file_get_boolean(key, "Options", "delete_after", &boolean_value)) {
             GtkCheckButton *button = GTK_CHECK_BUTTON(cecup.delete_after_button);
 
             cecup.delete_after = boolean_value;
