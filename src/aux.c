@@ -518,12 +518,10 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
     }
 
     for (uint32 bucket_idx = 0; bucket_idx < traversal->map->capacity; bucket_idx += 1) {
-        Bucket_fs_map *bucket;
-        int32 v;
+        Bucket_fs_map *bucket = &traversal->map->array[bucket_idx];
 
-        bucket = &traversal->map->array[bucket_idx];
         if ((int64)bucket->key > 0) {
-            v = bucket->value;
+            int32 v = bucket->value;
             if (v < 0 || v >= traversal->nfiles) {
                 error("Consistency error: %s hash map contains invalid index %d.\n",
                       which_traversal, v);
