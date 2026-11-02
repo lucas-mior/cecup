@@ -522,11 +522,13 @@ check_consistent_traversal_rows(Traversal *traversal, int32 *rows,
 
         if ((int64)bucket->key > 0) {
             int32 v = bucket->value;
-            if (v < 0 || v >= traversal->nfiles) {
+
+            if ((v < 0) || (v >= traversal->nfiles)) {
                 error("Consistency error: %s hash map contains invalid index %d.\n",
                       which_traversal, v);
                 fatal(EXIT_FAILURE);
             }
+
             if (traversal->row_ids[v] == -1) {
                 error("Consistency error: %s hash map contains index %d with no row_id.\n",
                       which_traversal, v);
