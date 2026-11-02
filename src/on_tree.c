@@ -400,8 +400,7 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
 
             for (int32 j = 0; j < hard_links.count; j += 1) {
                 ASSERT_LT(hard_links.names_lens[j], MAX_PATH_LENGTH/2);
-                str_printf(&tip_builder, "\n%s%.*s",
-                                         RSYNC_HARDLINK, SP(hard_links.names, j));
+                str_printf(&tip_builder, "\n%s%.*s", RSYNC_HARDLINK, SP(hard_links.names, j));
             }
         } else if (ignore_pattern) {
             str_printf(&tip_builder,
