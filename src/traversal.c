@@ -694,7 +694,7 @@ main(void) {
         fmt_sprintf(name, 16, "file_%d", i);
         traversal_push(&test_traversal, &dummy_stat, name, strlen32(name), NULL, 0, NULL, 0);
     }
-    ASSERT(test_traversal.capacity > INITIAL_CAPACITY);
+    ASSERT_GT(test_traversal.capacity, INITIAL_CAPACITY);
     ASSERT_EQ(test_traversal.nfiles, INITIAL_CAPACITY + 5);
 
     /* 2.5 Test traversal_symlink_get */
