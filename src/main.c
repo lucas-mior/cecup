@@ -278,7 +278,7 @@ main_setup_locale(void) {
         locale_dir = LOCALEDIR;
     }
 
-    if (locale_dir != NULL) {
+    if (locale_dir) {
         bindtextdomain(QUOTE(GETTEXT_PACKAGE), locale_dir);
     } else {
         error("Could not find locale directory. Using untranslated strings.\n");
