@@ -237,7 +237,7 @@ on_menu_rename(GtkWidget *tree, void *data) {
             break;
         }
 
-        if (current != NULL) {
+        if (current) {
             current = gtk_widget_get_next_sibling(current);
         }
     }
