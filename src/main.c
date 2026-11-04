@@ -157,8 +157,7 @@ main_default_config_dir(void) {
         g_free(candidate);
     }
 
-    candidate = main_strdup_existing_dir("etc");
-    if (candidate != NULL) {
+    if ((candidate = main_strdup_existing_dir("etc"))) {
         return candidate;
     }
 
