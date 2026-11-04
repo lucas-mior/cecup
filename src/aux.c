@@ -149,7 +149,7 @@ aux_invalidate_preview(void) {
         while (parent != NULL) {
             if (GTK_IS_PANED(parent)) {
                 GtkWidget *paned_parent = gtk_widget_get_parent(parent);
-                if (paned_parent != NULL && GTK_IS_BOX(paned_parent)) {
+                if (paned_parent && GTK_IS_BOX(paned_parent)) {
                     gtk_box_append(GTK_BOX(paned_parent), warning_banner);
                     break;
                 }
