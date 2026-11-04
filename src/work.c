@@ -271,7 +271,7 @@ work_traverse_fs(Traversal *traversal) {
 
         if ((entry->info == FS_WALK_FILE)
              && (entry->stat->st_nlink > 1)
-             && !matched_pattern) {
+             && (matched_pattern == NULL)) {
             traversal_add_link(traversal, *(entry->stat), path, path_len);
         }
 
