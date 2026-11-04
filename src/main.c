@@ -144,8 +144,7 @@ main_default_config_dir(void) {
         return candidate;
     }
 
-    candidate = main_strdup_existing_dir(CECUP_SYSTEM_CONFIG_DIR);
-    if (candidate != NULL) {
+    if ((candidate = main_strdup_existing_dir(CECUP_SYSTEM_CONFIG_DIR))) {
         return candidate;
     }
 
