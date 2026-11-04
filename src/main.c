@@ -187,8 +187,7 @@ main_copy_default_config_file(char *config_base, char *default_config_dir, char 
     contents_len = 0;
 
     if (!g_file_get_contents(src_path, &contents, &contents_len, &file_error)) {
-        if (file_error && !g_error_matches(file_error,
-                                           G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+        if (file_error && !g_error_matches(file_error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
             error("Error reading default configuration file %s: %s.\n",
                   src_path, file_error->message);
         }
