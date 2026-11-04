@@ -746,7 +746,7 @@ work_transfer_backend_current(void) {
     }
 
     selected_backend = work_transfer_backend_default();
-    if (backend != NULL) {
+    if (backend) {
         LOG_ERROR(_("Unknown transfer backend '%s'. Using %s instead.\n"),
                   backend, work_transfer_backend_name(selected_backend));
     }
