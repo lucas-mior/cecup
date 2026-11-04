@@ -140,8 +140,7 @@ main_default_config_dir(void) {
     char **system_dirs;
 
     env_dir = getenv("CECUP_DEFAULT_CONFIG_DIR");
-    candidate = main_strdup_existing_dir(env_dir);
-    if (candidate != NULL) {
+    if ((candidate = main_strdup_existing_dir(env_dir))) {
         return candidate;
     }
 
