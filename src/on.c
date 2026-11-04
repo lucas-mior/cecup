@@ -27,7 +27,7 @@ static gboolean
 unparent_popover_idle(void *data) {
     GtkWidget *widget = data;
 
-    if (gtk_widget_get_parent(widget) != NULL) {
+    if (gtk_widget_get_parent(widget)) {
         gtk_widget_unparent(widget);
     }
     g_object_unref(widget);
