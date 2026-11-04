@@ -451,7 +451,7 @@ main(void) {
     {
         Traversal *t = &cecup.traversal[L];
 
-        free2(t->paths[0], strlen32(t->paths[0]) + 1);
+        free2(t->paths[0], opt_strlen32(t->paths[0]) + 1);
         free2(t->paths, n*SIZEOF(char *));
         free2(t->paths_lens, n*SIZEOF(int16));
         free2(t->stats, n*SIZEOF(struct stat));
