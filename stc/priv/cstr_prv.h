@@ -315,7 +315,6 @@ STC_INLINE bool cstr_contains(const cstr* self, const char* search)
 STC_INLINE bool cstr_contains_sv(const cstr* self, csview search)
     { return cstr_find_sv(self, search) != c_NPOS; }
 
-
 STC_INLINE bool cstr_starts_with_sv(const cstr* self, csview sub) {
     if (sub.size > cstr_size(self)) return false;
     return !c_memcmp(cstr_str(self), sub.buf, sub.size);
@@ -346,7 +345,6 @@ STC_INLINE char* cstr_copy(cstr* self, cstr s) {
     csview sv = cstr_sv(&s);
     return cstr_assign_n(self, sv.buf, sv.size);
 }
-
 
 STC_INLINE char* cstr_push(cstr* self, const char* chr)
     { return cstr_append_n(self, chr, cutf8_chr_size(chr)); }
@@ -386,7 +384,6 @@ STC_INLINE void cstr_join_sn(cstr* self, const char* sep, const cstr arr[], isiz
     while (n--) { cstr_append(self, _sep); cstr_append_s(self, *arr++); _sep = sep; }
 }
 
-
 STC_INLINE void cstr_replace_sv(cstr* self, csview search, csview repl, int32_t count)
     { cstr_take(self, cstr_from_replace(cstr_sv(self), search, repl, count)); }
 
@@ -395,7 +392,6 @@ STC_INLINE void cstr_replace_nfirst(cstr* self, const char* search, const char* 
 
 STC_INLINE void cstr_replace(cstr* self, const char* search, const char* repl)
     { cstr_replace_nfirst(self, search, repl, INT32_MAX); }
-
 
 STC_INLINE void cstr_replace_at_sv(cstr* self, isize_t pos, isize_t len, const csview repl) {
     char* d = _cstr_internal_move(self, pos + len, pos + repl.size);
@@ -408,7 +404,6 @@ STC_INLINE void cstr_u8_replace(cstr* self, isize_t u8pos, isize_t u8len, const 
     const char* s = cstr_str(self); csview span = cutf8_subview(s, u8pos, u8len);
     cstr_replace_at(self, span.buf - s, span.size, repl);
 }
-
 
 STC_INLINE void cstr_insert_sv(cstr* self, isize_t pos, csview sv)
     { cstr_replace_at_sv(self, pos, 0, sv); }

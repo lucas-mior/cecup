@@ -84,7 +84,6 @@ manual recursive copier backend. The manual backend should be tested in CI and
 should make its metadata preservation limits visible instead of pretending to be
 identical to rsync.
 
-
 ## Build-script portability baseline
 
 The build script now avoids the first layer of Linux/GNU-userland assumptions
@@ -348,6 +347,5 @@ The standalone `update.c` test now initializes and destroys `cecup.arena_mutex`
 explicitly. Linux pthread implementations can make a zeroed static mutex appear
 to work accidentally, but macOS requires a valid initialized mutex before it is
 locked.
-
 
 The Darwin cross check now generates its probe inside the repository work tree and embeds `cbase/platform_detection.h` directly, avoiding `/tmp` source paths and quoted-include lookup ambiguity with Zig.

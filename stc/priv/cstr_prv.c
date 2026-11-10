@@ -126,7 +126,6 @@ void cstr_erase(cstr* self, const isize_t pos, isize_t len) {
 }
 #endif // STC_CSTR_CORE_C_INCLUDED
 
-
 // ------------------- STC_CSTR_MISC --------------------
 #if !defined STC_CSTR_MISC_C_INCLUDED && \
     (defined i_implement || defined STC_CSTR_MISC)
@@ -173,7 +172,6 @@ cstr cstr_from_replace(csview in, csview search, csview repl, int32_t count) {
     return out;
 }
 #endif // STC_CSTR_MISC_C_INCLUDED
-
 
 // ------------------- STC_CSTR_IO --------------------
 #if !defined STC_CSTR_IO_C_INCLUDED && \

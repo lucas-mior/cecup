@@ -483,7 +483,6 @@ _popator(_Parser *par)
     return *--par->atorp;
 }
 
-
 static void
 _evaluntil(_Parser *par, _Token pri)
 {
@@ -549,7 +548,6 @@ _evaluntil(_Parser *par, _Token pri)
     }
 }
 
-
 static _Reprog*
 _optimize(_Parser *par, _Reprog *pp)
 {
@@ -606,7 +604,6 @@ _optimize(_Parser *par, _Reprog *pp)
     return npp;
 }
 
-
 static _Reclass*
 _newclass(_Parser *par)
 {
@@ -614,7 +611,6 @@ _newclass(_Parser *par)
         _rcerror(par, CREG_TOOMANYCHARACTERCLASSES);
     return &(par->classp[par->nclass++]);
 }
-
 
 static int /* quoted */
 _nextc(_Parser *par, _Rune *rp)
@@ -650,7 +646,6 @@ _nextc(_Parser *par, _Rune *rp)
     return ret;
 }
 
-
 static void
 _lexasciiclass(_Parser *par, _Rune *rp) /* assume *rp == '[' and *par->exprp == ':' */
 {
@@ -673,7 +668,6 @@ _lexasciiclass(_Parser *par, _Rune *rp) /* assume *rp == '[' and *par->exprp == 
     if (inv && *rp != '[')
         *rp += 1;
 }
-
 
 static void
 _lexutfclass(_Parser *par, _Rune *rp)
@@ -736,7 +730,6 @@ _lexutfclass(_Parser *par, _Rune *rp)
     case 'w': rune = UTF_wr; break; \
     case 'W': rune = UTF_WR; break
 
-
 static _Token
 _lex(_Parser *par)
 {
@@ -790,7 +783,6 @@ _lex(_Parser *par)
     }
     return par->rune_type;
 }
-
 
 static _Token
 _bldcclass(_Parser *par)
@@ -878,7 +870,6 @@ _bldcclass(_Parser *par)
 
     return type;
 }
-
 
 static _Reprog*
 _regcomp1(_Reprog *pp, _Parser *par, const char *s, int cflags)
@@ -1180,7 +1171,6 @@ _regexec1(const _Reprog *progp,  /* program to run */
     return match;
 }
 
-
 static int
 _regexec2(const _Reprog *progp,    /* program to run */
     const char *bol,    /* string to run machine on */
@@ -1255,7 +1245,6 @@ _regexec(const _Reprog *progp,    /* program to run */
     return rv;
 }
 
-
 static void
 _build_substitution(const char* replace, int nmatch, const csview match[],
                     bool(*transform)(int, csview, cstr*), cstr* subst) {
@@ -1292,7 +1281,6 @@ _build_substitution(const char* replace, int nmatch, const csview match[],
     cstr_drop(&tr_str);
     _cstr_set_size(subst, len);
 }
-
 
 /* ---------------------------------------------------------------
  * API functions

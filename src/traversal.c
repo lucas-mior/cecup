@@ -184,7 +184,6 @@ traversal_allocate(Traversal *traversal, int32 side) {
     int32 capacity = INITIAL_CAPACITY;
     char name[256];
 
-
     SNPRINTF(name, "traversal[%s]->arena", side_name(side));
     traversal->arena = arena_create(SIZEMB(64), name);
 
