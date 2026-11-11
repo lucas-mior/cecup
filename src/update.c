@@ -1170,15 +1170,14 @@ main(void) {
     ASSERT_EQ(cecup.traversal[L].row_ids[1], 0);
 
     /* --- Test update_row_rename --- */
-    {
-        /* Rename handles virtual state internally through traversal map */
-        ASSERT(update_row_rename("file_b", 6, "file_d", 6, L));
 
-        /* Old idx 1 must be removed, new idx assigned */
-        ASSERT_LT(cecup.traversal[L].row_ids[1], 0);
-        /* it pushes a new item to traversal array */
-        ASSERT_GT(cecup.rows[L][0], 1);
-    }
+    /* Rename handles virtual state internally through traversal map */
+    ASSERT(update_row_rename("file_b", 6, "file_d", 6, L));
+
+    /* Old idx 1 must be removed, new idx assigned */
+    ASSERT_LT(cecup.traversal[L].row_ids[1], 0);
+    /* it pushes a new item to traversal array */
+    ASSERT_GT(cecup.rows[L][0], 1);
 
     /* --- Test update_row_ignore --- */
     memcpy64(cecup.ignore_path, STRLIT("test_ignore.conf") + 1);
