@@ -40,7 +40,7 @@ typedef struct FsWalkEntry {
     int32 path_len;
     int32 name_len;
     int32 level;
-    int32 error;
+    int32 err;
     enum FsWalkInfo info;
     struct stat *stat;
     void *native_entry;
@@ -140,7 +140,7 @@ fs_walk_read(FsWalk *walk) {
     walk->entry.path_len = fs_walk_len_cast((int64)entry->fts_pathlen);
     walk->entry.name_len = fs_walk_len_cast((int64)entry->fts_namelen);
     walk->entry.level = fs_walk_len_cast((int64)entry->fts_level);
-    walk->entry.error = entry->fts_errno;
+    walk->entry.err = entry->fts_errno;
     walk->entry.info = fs_walk_info_from_fts(entry->fts_info);
     walk->entry.stat = entry->fts_statp;
     walk->entry.native_entry = entry;

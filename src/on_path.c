@@ -252,7 +252,7 @@ on_path_edited(GtkEditable *editable, void *data) {
             case FS_WALK_ERROR:
             case FS_WALK_STAT_ERROR:
                 error("FsWalk error on %.*s: %s.\n",
-                      entry->path_len, entry->path, strerror(entry->error));
+                      entry->path_len, entry->path, strerror(entry->err));
                 continue;
             case FS_WALK_POST_DIR:
             case FS_WALK_FILE:

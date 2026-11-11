@@ -621,7 +621,7 @@ work_remove(MessageBatch **batch, char *path, int32 path_len, int32 side) {
             case FS_WALK_ERROR:
             case FS_WALK_STAT_ERROR:
                 error("FsWalk error on %.*s: %s.\n",
-                      entry->path_len, entry->path, strerror(entry->error));
+                      entry->path_len, entry->path, strerror(entry->err));
                 had_errors = true;
                 continue;
             case FS_WALK_PRE_DIR:
