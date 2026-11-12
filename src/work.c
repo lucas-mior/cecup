@@ -87,6 +87,62 @@ work_traverse_unknown_record(
     return;
 }
 
+static void
+hard_links_heap_sift(HardLinks *hard_links, int32 root, int32 count) {
+    while ((2*root + 1) < count) {
+        int32 child = 2*root + 1;
+        int32 largest = root;
+        int32 comparison;
+        char *name;
+        int32 name_len;
+
+        comparison = strcmp(hard_links->names[largest], hard_links->names[child]);
+        if (comparison < 0) {
+            largest = child;
+        }
+
+        if ((child + 1) < count) {
+            comparison = strcmp(hard_links->names[largest],
+                                hard_links->names[child + 1]);
+            if (comparison < 0) {
+                largest = child + 1;
+            }
+        }
+
+        if (largest == root) {
+            break;
+        }
+
+        name = hard_links->names[root];
+        name_len = hard_links->names_lens[root];
+        hard_links->names[root] = hard_links->names[largest];
+        hard_links->names_lens[root] = hard_links->names_lens[largest];
+        hard_links->names[largest] = name;
+        hard_links->names_lens[largest] = name_len;
+        root = largest;
+    }
+    return;
+}
+
+static void
+hard_links_sort(HardLinks *hard_links) {
+    for (int32 i = hard_links->count / 2; i > 0; i -= 1) {
+        hard_links_heap_sift(hard_links, i - 1, hard_links->count);
+    }
+
+    for (int32 i = hard_links->count - 1; i > 0; i -= 1) {
+        char *name = hard_links->names[0];
+        int32 name_len = hard_links->names_lens[0];
+
+        hard_links->names[0] = hard_links->names[i];
+        hard_links->names_lens[0] = hard_links->names_lens[i];
+        hard_links->names[i] = name;
+        hard_links->names_lens[i] = name_len;
+        hard_links_heap_sift(hard_links, 0, i);
+    }
+    return;
+}
+
 static int32
 work_traverse_fs(Traversal *traversal) {
     int64 file_count = 0;
@@ -317,13 +373,7 @@ work_traverse_fs(Traversal *traversal) {
             continue;
         }
 
-        qsort64(hard_links.names, hard_links.count, SIZEOF(char *), compare_names);
-        for (int32 k = 0; k < hard_links.count; k += 1) {
-            // TODO: use smarter sorting mechanism so that we don't have to call strlen32
-            // on every link (we already know the lengths, but they are out of sync after
-            // qsort64 with compare_names().
-            hard_links.names_lens[k] = strlen32(hard_links.names[k]);
-        }
+        hard_links_sort(&hard_links);
     }
 
     file_count_return = (int32)file_count;
@@ -716,6 +766,24 @@ main(void) {
             .expected_reason_mask = REASON_IGNORED,
         },
     };
+
+    {
+        char *names[] = {"bbb", "a", "cc", "aa", "dddd"};
+        int32 names_lens[] = {3, 1, 2, 2, 4};
+        char *expected_names[] = {"a", "aa", "bbb", "cc", "dddd"};
+        int32 expected_names_lens[] = {1, 2, 3, 2, 4};
+        HardLinks hard_links = {
+            .count = LENGTH(names),
+            .names = names,
+            .names_lens = names_lens,
+        };
+
+        hard_links_sort(&hard_links);
+        for (int32 i = 0; i < hard_links.count; i += 1) {
+            ASSERT(strequal(hard_links.names[i], expected_names[i]));
+            ASSERT_EQ(hard_links.names_lens[i], expected_names_lens[i]);
+        }
+    }
 
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);

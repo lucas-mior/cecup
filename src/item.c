@@ -400,14 +400,6 @@ item_get_actions_reasons(int32 row_id,
     return;
 }
 
-static int
-compare_names(void *a, void *b) {
-    char *name_a = *(char **)a;
-    char *name_b = *(char **)b;
-
-    return strcmp(name_a, name_b);
-}
-
 INLINE int32
 cecup_item_compare_string_key(void *a, void *b) {
     RowCache *entry_a = (RowCache *)a;
@@ -524,8 +516,6 @@ main(void) {
     RowCache entry1;
     RowCache entry2;
     int32 result;
-    char *name_a_ptr;
-    char *name_b_ptr;
     HardLinks dump_hl;
     enum Action action_src;
     enum Action action_dst;
@@ -607,11 +597,6 @@ main(void) {
     ASSERT_GT(result, 0);
 
     /* 4. Test Remaining Utility/Action Functions */
-    name_a_ptr = "apple";
-    name_b_ptr = "banana";
-    result = compare_names(&name_a_ptr, &name_b_ptr);
-    ASSERT_LT(result, 0);
-
     cecup.rows[L] = malloc2(10*SIZEOF(int32));
     cecup.rows[R] = malloc2(10*SIZEOF(int32));
     cecup.traversal[L].paths = malloc2(10*SIZEOF(char *));
