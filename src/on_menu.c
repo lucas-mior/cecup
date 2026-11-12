@@ -597,9 +597,9 @@ main(void) {
     }
 
     cecup.base[L] = xstrdup(temp_dir);
-    cecup.base_len[L] = strlen32(cecup.base[L]);
+    cecup.base_len[L] = strlen32(temp_dir);
     cecup.base[R] = xstrdup(temp_dir);
-    cecup.base_len[R] = strlen32(cecup.base[R]);
+    cecup.base_len[R] = strlen32(temp_dir);
 
     store = cecup_list_model_new();
     sel = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(store)));
