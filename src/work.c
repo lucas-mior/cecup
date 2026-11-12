@@ -102,8 +102,7 @@ hard_links_heap_sift(HardLinks *hard_links, int32 root, int32 count) {
         }
 
         if ((child + 1) < count) {
-            comparison = strcmp(hard_links->names[largest],
-                                hard_links->names[child + 1]);
+            comparison = strcmp(hard_links->names[largest], hard_links->names[child + 1]);
             if (comparison < 0) {
                 largest = child + 1;
             }
