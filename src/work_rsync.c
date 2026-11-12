@@ -1679,12 +1679,12 @@ main(void) {
     SNPRINTF(path, "%s/src", temp_dir);
     mkdir(path, 0755);
     cecup.base[L] = xstrdup(path);
-    cecup.base_len[L] = strlen32(cecup.base[L]);
+    cecup.base_len[L] = strlen32(path);
 
     SNPRINTF(path, "%s/dst", temp_dir);
     mkdir(path, 0755);
     cecup.base[R] = xstrdup(path);
-    cecup.base_len[R] = strlen32(cecup.base[R]);
+    cecup.base_len[R] = strlen32(path);
 
     cecup.delete_after = false;
     stop_working(false);
