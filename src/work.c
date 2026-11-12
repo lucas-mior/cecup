@@ -768,10 +768,10 @@ main(void) {
     };
 
     {
-        char *names[] = {"bbb", "a", "cc", "aa", "dddd"};
-        int32 names_lens[] = {3, 1, 2, 2, 4};
-        char *expected_names[] = {"a", "aa", "bbb", "cc", "dddd"};
-        int32 expected_names_lens[] = {1, 2, 3, 2, 4};
+        char *names[] = {"bbb", "a", "cc", "aa", "dddd",};
+        int32 names_lens[] = {3, 1, 2, 2, 4,};
+        char *expected_names[] = {"a", "aa", "bbb", "cc", "dddd",};
+        int32 expected_names_lens[] = {1, 2, 3, 2, 4,};
         HardLinks hard_links = {
             .count = LENGTH(names),
             .names = names,
