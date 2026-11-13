@@ -375,9 +375,8 @@ on_sort_changed(GtkSorter *sorter, GtkSorterChange change, void *data) {
         order = gtk_column_view_sorter_get_primary_sort_order(GTK_COLUMN_VIEW_SORTER(view_sorter));
 
         if (col) {
-            void *col_data;
+            void *col_data = g_object_get_data(G_OBJECT(col), "col_id");
 
-            col_data = g_object_get_data(G_OBJECT(col), "col_id");
             cecup.sort_col = (enum CecupColumn)GPOINTER_TO_INT(col_data);
             cecup.sort_order = order;
             update_list_from_rows(UPDATE_ROWS_SORT);
@@ -420,9 +419,8 @@ update_visible_checkboxes(GtkWidget *widget, int8 side) {
 
     if (GTK_IS_CHECK_BUTTON(widget)) {
         if ((row_id_ptr = g_object_get_data(G_OBJECT(widget), "cecup-row-id"))) {
-            int32 row_id;
+            int32 row_id = GPOINTER_TO_INT(row_id_ptr) - 1;
 
-            row_id = GPOINTER_TO_INT(row_id_ptr) - 1;
             checkbox_set_active(widget, (bool)cecup.rows_selected[row_id]);
         }
     }
@@ -573,9 +571,8 @@ on_select_all_visible_clicked(GtkWidget *button, void *data) {
     }
 
     for (int32 i = 0; i < cecup.rows_visible_len; i += 1) {
-        int32 row_id;
+        int32 row_id = cecup.rows_visible[i];
 
-        row_id = cecup.rows_visible[i];
         cecup.rows_selected[row_id] = true;
     }
 
@@ -684,11 +681,9 @@ static void
 on_browse_response_src(GtkDialog *dialog, int32 response_id, void *data) {
     (void)data;
     if (response_id == GTK_RESPONSE_ACCEPT) {
-        GFile *file;
-        char *path;
+        GFile *file = gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog));
+        char *path = g_file_get_path(file);
 
-        file = gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog));
-        path = g_file_get_path(file);
         gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), path);
         g_free(path);
         g_object_unref(file);
@@ -718,11 +713,9 @@ static void
 on_browse_response_dst(GtkDialog *dialog, int32 response_id, void *data) {
     (void)data;
     if (response_id == GTK_RESPONSE_ACCEPT) {
-        GFile *file;
-        char *path;
+        GFile *file = gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog));
+        char *path = g_file_get_path(file);
 
-        file = gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog));
-        path = g_file_get_path(file);
         gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), path);
         g_free(path);
         g_object_unref(file);
@@ -790,11 +783,9 @@ on_path_click_pressed(GtkGestureClick *gesture, int32 npress, double x, double y
         void *pos_ptr;
 
         if ((pos_ptr = g_object_get_data(G_OBJECT(editable), "cecup-pos"))) {
-            GtkSelectionModel *model;
-            uint32 pos;
+            GtkSelectionModel *model = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
+            uint32 pos = GPOINTER_TO_UINT(pos_ptr) - 1;
 
-            model = gtk_column_view_get_model(GTK_COLUMN_VIEW(tree));
-            pos = GPOINTER_TO_UINT(pos_ptr) - 1;
             gtk_selection_model_select_item(model, pos, TRUE);
         }
 

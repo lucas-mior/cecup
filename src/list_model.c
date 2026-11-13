@@ -145,9 +145,8 @@ cecup_list_model_get_item(GListModel *list, guint position) {
     }
 
     if (pos >= self->proxies_capacity) {
-        int32 old_capacity;
+        int32 old_capacity = self->proxies_capacity;
 
-        old_capacity = self->proxies_capacity;
         self->proxies_capacity = cecup.rows_capacity;
         if (self->proxies_capacity <= pos) {
             self->proxies_capacity = pos + 256;

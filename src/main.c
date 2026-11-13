@@ -598,9 +598,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(cecup.search_entry),
                                       GTK_ENTRY_ICON_PRIMARY, "system-search-symbolic");
     {
-        GtkWidget *search_label;
+        GtkWidget *search_label = gtk_label_new(_("🔍"));
 
-        search_label = gtk_label_new(_("🔍"));
         gtk_box_append(GTK_BOX(search_hbox), search_label);
         gtk_widget_set_margin_start(search_label, 5);
         gtk_widget_set_margin_end(search_label, 5);

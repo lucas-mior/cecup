@@ -146,9 +146,8 @@ update_ui_handler(void *data) {
 
         buffer_ends_in_lf = true;
         if (gtk_text_iter_get_offset(&end) > 0) {
-            GtkTextIter last_char;
+            GtkTextIter last_char = end;
 
-            last_char = end;
             gtk_text_iter_backward_char(&last_char);
             if (gtk_text_iter_get_char(&last_char) != '\n') {
                 buffer_ends_in_lf = false;

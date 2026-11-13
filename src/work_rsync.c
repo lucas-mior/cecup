@@ -64,9 +64,8 @@ work_batch_push(MessageBatch **batch_ptr, enum MsgType type, int32 side,
     }
 
     if (batch->count >= batch->capacity) {
-        int32 old_capacity;
+        int32 old_capacity = batch->capacity;
 
-        old_capacity = batch->capacity;
         batch->capacity *= 2;
         batch->paths = realloc2(batch->paths,
                                 old_capacity, batch->capacity,
@@ -126,9 +125,8 @@ work_batch_push_rename(MessageBatch **batch_ptr, enum MsgType type, int8 side,
     }
 
     if (batch->count >= batch->capacity) {
-        int32 old_capacity;
+        int32 old_capacity = batch->capacity;
 
-        old_capacity = batch->capacity;
         batch->capacity *= 2;
         batch->paths = realloc2(batch->paths,
                                 old_capacity, batch->capacity, SIZEOF(*(batch->paths)));
@@ -1019,9 +1017,8 @@ work_manual_hardlink_remember(ManualTransferState *state, FileID *file_id, char 
     }
 
     if (state->hardlinks_count >= state->hardlinks_capacity) {
-        int32 old_capacity;
+        int32 old_capacity = state->hardlinks_capacity;
 
-        old_capacity = state->hardlinks_capacity;
         if (state->hardlinks_capacity == 0) {
             state->hardlinks_capacity = INITIAL_CAPACITY;
         } else {
@@ -1090,9 +1087,8 @@ work_manual_copy_regular_contents(char *dst_path, char *src_path, mode_t mode) {
     }
 
     while ((bytes_read = read64(src_fd, buffer, SIZEOF(buffer))) > 0) {
-        int64 bytes_written;
+        int64 bytes_written = write64(dst_fd, buffer, bytes_read);
 
-        bytes_written = write64(dst_fd, buffer, bytes_read);
         if (bytes_written != bytes_read) {
             LOG_ERROR(_("Error writing %s: %s.\n"), dst_path, strerror(errno));
             XCLOSE(&src_fd, src_path);

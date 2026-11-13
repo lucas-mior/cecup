@@ -63,11 +63,10 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
             }
 
             if (child) {
-                uint32 position;
-                GtkSelectionModel *model;
+                uint32 position = GPOINTER_TO_UINT(position_pointer) - 1;
+                GtkSelectionModel *model =
+                    gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
 
-                position = GPOINTER_TO_UINT(position_pointer) - 1;
-                model = gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
                 gtk_selection_model_select_item(model, position, TRUE);
             }
         }
@@ -444,9 +443,8 @@ on_tree_tooltip(GtkWidget *w, int32 x, int32 y, gboolean k, GtkTooltip *t, void 
     }
 
     if (tip_text) {
-        GtkWidget *label;
+        GtkWidget *label = gtk_label_new(tip_text);
 
-        label = gtk_label_new(tip_text);
         /* Allow wrapping but set a high threshold for the width */
         gtk_label_set_wrap(GTK_LABEL(label), TRUE);
         gtk_label_set_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD_CHAR);

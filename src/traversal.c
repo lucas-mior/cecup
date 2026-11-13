@@ -464,9 +464,8 @@ traversal_unknown_record(
     }
 
     {
-        char *path_alloc;
+        char *path_alloc = xarena_push(traversal->arena, path_len + 1);
 
-        path_alloc = xarena_push(traversal->arena, path_len + 1);
         memcpy64(path_alloc, path, path_len + 1);
 
         traversal_push_with_state(traversal, NULL, path_alloc, path_len, NULL, 0, NULL, 0, state);
