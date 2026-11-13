@@ -64,8 +64,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
 
             if (child) {
                 uint32 position = GPOINTER_TO_UINT(position_pointer) - 1;
-                GtkSelectionModel *model =
-                    gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
+                GtkSelectionModel *model = gtk_column_view_get_model(GTK_COLUMN_VIEW(widget));
 
                 gtk_selection_model_select_item(model, position, TRUE);
             }
