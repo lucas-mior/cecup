@@ -214,8 +214,7 @@ main_seed_config_dir(char *config_base) {
 
     default_config_dir = main_default_config_dir();
     if (default_config_dir == NULL) {
-        error("Could not find default configuration directory."
-              " Starting with built-in defaults.\n");
+        error("Could not find default configuration directory. Starting with built-in defaults.\n");
     }
 
     main_copy_default_config_file(config_base, default_config_dir, "ignore.conf");
