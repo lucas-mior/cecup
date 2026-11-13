@@ -286,8 +286,7 @@ on_menu_open_item(GtkWidget *widget, void *data) {
     } else if (strequal(variant, "file")) {
         folder = false;
     } else {
-        error("Error: "
-              "\"variant\" must be \"folder\" or \"file\", but \"%s\" was passed.\n",
+        error("Error: \"variant\" must be \"folder\" or \"file\", but \"%s\" was passed.\n",
               variant);
         fatal(EXIT_FAILURE);
     }
