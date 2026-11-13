@@ -353,8 +353,7 @@ on_menu_copy_path(GtkWidget *widget, void *data) {
     } else if (strequal(variant, "relative")) {
         absolute = false;
     } else {
-        error("Error: "
-              "\"variant\" must be \"absolute\" or \"relative\", but \"%s\" was passed.\n",
+        error("Error: \"variant\" must be \"absolute\" or \"relative\", but \"%s\" was passed.\n",
               variant);
         fatal(EXIT_FAILURE);
     }
