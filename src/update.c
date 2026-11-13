@@ -1180,7 +1180,7 @@ main(void) {
     ASSERT_GT(cecup.rows[L][0], 1);
 
     /* --- Test update_row_ignore --- */
-    memcpy64(cecup.ignore_path, STRLIT("test_ignore.conf") + 1);
+    memcpy64(cecup.ignore_path, SL("test_ignore.conf") + 1);
     g_file_set_contents(cecup.ignore_path, "file_c\n", -1, NULL);
 
     {

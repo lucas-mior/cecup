@@ -613,7 +613,7 @@ main(void) {
     ASSERT(file != NULL);
     fclose(file);
 
-    ASSERT(on_menu_append_ignore_pattern(STRLIT("*.test_ext")));
+    ASSERT(on_menu_append_ignore_pattern(SL("*.test_ext")));
 
     file = fopen(cecup.ignore_path, "r");
     ASSERT(file != NULL);

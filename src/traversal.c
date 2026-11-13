@@ -664,20 +664,20 @@ main(void) {
     traversal_allocate(&test_traversal, L);
     ASSERT(test_traversal.capacity == INITIAL_CAPACITY);
 
-    traversal_unknown_record(&test_traversal, STRLIT("private"), TRAVERSAL_STATE_UNKNOWN_SUBTREE);
-    ASSERT(traversal_path_is_unknown(&test_traversal, STRLIT("private")));
-    ASSERT(traversal_path_is_unknown(&test_traversal, STRLIT("private/file.txt")));
-    ASSERT(!traversal_path_is_unknown(&test_traversal, STRLIT("private2/file.txt")));
+    traversal_unknown_record(&test_traversal, SL("private"), TRAVERSAL_STATE_UNKNOWN_SUBTREE);
+    ASSERT(traversal_path_is_unknown(&test_traversal, SL("private")));
+    ASSERT(traversal_path_is_unknown(&test_traversal, SL("private/file.txt")));
+    ASSERT(!traversal_path_is_unknown(&test_traversal, SL("private2/file.txt")));
 
-    traversal_unknown_record(&test_traversal, STRLIT("sealed/"), TRAVERSAL_STATE_UNKNOWN_SUBTREE);
-    ASSERT(traversal_path_is_unknown(&test_traversal, STRLIT("sealed")));
+    traversal_unknown_record(&test_traversal, SL("sealed/"), TRAVERSAL_STATE_UNKNOWN_SUBTREE);
+    ASSERT(traversal_path_is_unknown(&test_traversal, SL("sealed")));
 
-    traversal_unknown_record(&test_traversal, STRLIT("leaf"), TRAVERSAL_STATE_UNKNOWN);
-    ASSERT(traversal_path_is_unknown(&test_traversal, STRLIT("leaf")));
-    ASSERT(!traversal_path_is_unknown(&test_traversal, STRLIT("leaf/file")));
+    traversal_unknown_record(&test_traversal, SL("leaf"), TRAVERSAL_STATE_UNKNOWN);
+    ASSERT(traversal_path_is_unknown(&test_traversal, SL("leaf")));
+    ASSERT(!traversal_path_is_unknown(&test_traversal, SL("leaf/file")));
 
     traversal_clean(&test_traversal);
-    ASSERT(!traversal_path_is_unknown(&test_traversal, STRLIT("private/file.txt")));
+    ASSERT(!traversal_path_is_unknown(&test_traversal, SL("private/file.txt")));
 
     dummy_stat.st_ino = 100;
     dummy_stat.st_mode = S_IFREG | 0644;
