@@ -486,8 +486,8 @@ main_application_run(GtkApplication *application, gpointer user_data) {
             }
 
             str_printf(&css,
-                      "row:not(:selected) .cell-color-%u { background-color: %s; }\n",
-                      i, colors[i]);
+                       "row:not(:selected) .cell-color-%u { background-color: %s; }\n",
+                       i, colors[i]);
         }
 
         gtk_css_provider_load_from_string(css_provider, css.data);
