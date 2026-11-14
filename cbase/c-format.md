@@ -939,6 +939,31 @@ first argument fits in the first line:
 ## Preprocessor directives
 - Macro continuation line: indent using 0, 2 or 4 spaces (feel free to decide at
   each case).
+- In a multiline `#define`, align all line-continuation backslashes in the
+  same column, including the backslash on the `#define` line. Pad shorter
+  lines with spaces before the backslash, keeping the line within 80 columns.
+  `csanecheck` enforces this with `FMT-MACRO-BACKSLASH-ALIGN`:
+  ```c
+  // bad: the continuation backslashes are staggered
+  #define CY_EMIT_DEFAULT_FLAG(FIELD) \
+      if (sys->simulation_defaults[CY_META_SIM_FIELD_##FIELD].set) { \
+          if (any_default) { \
+              STR_APPEND(out, "\n        | "); \
+          } \
+          STR_APPEND(out, "CY_SIM_DEFAULT_FIELD(" #FIELD ")"); \
+          any_default = true; \
+      }
+
+  // good: every continuation backslash is in the same column
+  #define CY_EMIT_DEFAULT_FLAG(FIELD)                                  \
+      if (sys->simulation_defaults[CY_META_SIM_FIELD_##FIELD].set) {   \
+          if (any_default) {                                           \
+              STR_APPEND(out, "\n        | ");                         \
+          }                                                            \
+          STR_APPEND(out, "CY_SIM_DEFAULT_FIELD(" #FIELD ")");         \
+          any_default = true;                                          \
+      }
+  ```
 Don't use `#ifdef` and `#ifndef`, use `#if defined()` and `#if !defined()`
 instead. Prefer explicitly setting the macro to 0 or 1 and checking its value
 directly instead of checking if it is defined:

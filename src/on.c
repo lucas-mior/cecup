@@ -875,8 +875,8 @@ on_functions_sink(void) {
 #include "cbase.h"
 
 #define MOCK_WIDGET(var, constructor) do { \
-    var = constructor; \
-    g_object_ref_sink(var); \
+    var = constructor;                     \
+    g_object_ref_sink(var);                \
 } while(0)
 
 int
