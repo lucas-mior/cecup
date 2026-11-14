@@ -621,7 +621,6 @@ aux_functions_sink(void) {
 
 int main(void) {
     Message *msg;
-    bool ok;
     GtkWidget *box;
     GtkWidget *paned;
     GtkWidget *info;
@@ -742,28 +741,23 @@ int main(void) {
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), parent_path);
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), other_path);
-    ok = cecup_get_dirs();
-    ASSERT(ok);
+    ASSERT(cecup_get_dirs());
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), temp_dir);
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), temp_dir);
-    ok = cecup_get_dirs();
-    ASSERT(!ok); /* Same directory failure */
+    ASSERT(!cecup_get_dirs()); /* Same directory failure */
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), child_path);
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), parent_path);
-    ok = cecup_get_dirs();
-    ASSERT(!ok); /* Source inside destination failure */
+    ASSERT(!cecup_get_dirs()); /* Source inside destination failure */
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), parent_path);
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), child_path);
-    ok = cecup_get_dirs();
-    ASSERT(!ok); /* Destination inside source failure */
+    ASSERT(!cecup_get_dirs()); /* Destination inside source failure */
 
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[L]), parent_path);
     gtk_editable_set_text(GTK_EDITABLE(cecup.dir_entry[R]), other_path);
-    ok = cecup_get_dirs();
-    ASSERT(ok); /* Shared string prefix but not contained */
+    ASSERT(cecup_get_dirs()); /* Shared string prefix but not contained */
 
     test_remove_tree(temp_dir);
 
