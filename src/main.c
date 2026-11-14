@@ -1050,8 +1050,7 @@ main(int32 argc, char **argv) {
     main_setup_locale();
 
     xpthread_mutex_init(&cecup.arena_mutex, NULL);
-    arena = arena_create(SIZEMB(64), "cecup.arena");
-    ASSERT(arena);
+    ASSERT((arena = arena_create(SIZEMB(64), "cecup.arena")));
     cecup.arena = arena;
 
     cecup.rows_len = 0;
