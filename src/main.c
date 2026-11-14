@@ -999,12 +999,11 @@ main_application_run(GtkApplication *application, gpointer user_data) {
     gtk_window_present(GTK_WINDOW(cecup.gtk_window));
 
     if (is_first_run || DEBUGGING) {
-        GtkWidget *dialog =
-            gtk_dialog_new_with_buttons(_("Welcome to cecup"),
-                                        GTK_WINDOW(cecup.gtk_window),
-                                        GTK_DIALOG_MODAL,
-                                        _("_OK"), GTK_RESPONSE_OK,
-                                        NULL);
+        GtkWidget *dialog = gtk_dialog_new_with_buttons(_("Welcome to cecup"),
+                                                        GTK_WINDOW(cecup.gtk_window),
+                                                        GTK_DIALOG_MODAL,
+                                                        _("_OK"), GTK_RESPONSE_OK,
+                                                        NULL);
         GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
         GtkWidget *scroll_welcome = gtk_scrolled_window_new();
         GtkWidget *label = gtk_label_new(NULL);
