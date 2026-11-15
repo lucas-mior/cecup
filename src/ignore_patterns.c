@@ -425,8 +425,7 @@ main(void) {
 
     test_pattern_init(&patterns[0], "/*.extension");
     ASSERT(ignore_patterns_match(SL("name.extension"), false, patterns, 1));
-    ASSERT_NULL(ignore_patterns_match(SL("nested/name.extension"),
-                                      false, patterns, 1));
+    ASSERT_NULL(ignore_patterns_match(SL("nested/name.extension"), false, patterns, 1));
     free2(patterns[0].str, patterns[0].len + 1);
 
     test_pattern_init(&patterns[0], "*.h");

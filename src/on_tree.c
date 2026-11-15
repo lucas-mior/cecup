@@ -579,8 +579,7 @@ main(void) {
     char *ignore_target;
 
     ignore_menu = g_menu_new();
-    on_tree_append_dir_extension(ignore_menu, "full/path", 9,
-                                 ".extension", 10, false);
+    on_tree_append_dir_extension(ignore_menu, "full/path", 9, ".extension", 10, false);
     ASSERT_EQ(g_menu_model_get_n_items(G_MENU_MODEL(ignore_menu)), 1);
     ASSERT(g_menu_model_get_item_attribute(G_MENU_MODEL(ignore_menu),
                                            0, G_MENU_ATTRIBUTE_TARGET,
