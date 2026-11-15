@@ -56,8 +56,9 @@ manual validation limits.
     + you must choose an external diff tool and terminal
   * Rename
   * Delete
-  * Ignore. This opens a submenu with 4 ways to ignore a file:
-    + by extension (if any)
+  * Ignore. This opens a submenu with up to 5 ways to ignore a file:
+    + by extension (if any) in any directory
+    + by extension in this directory only (if any, excluding subdirectories)
     + by its folder
     + by its complete path (matches only this file)
     + by its name (matches any file with the same basename)

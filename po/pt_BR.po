@@ -426,6 +426,11 @@ msgstr "Erro em fts_close: %s.\n"
 msgid "by extension (*%s)"
 msgstr "por extensão (*%s)"
 
+#: src/on_tree.c
+#, c-format
+msgid "This extension on this dir only (%s)"
+msgstr "Esta extensão somente nesta pasta (%s)"
+
 #: src/on_tree.c:156
 #, c-format
 msgid "📁 Dir (/%s/)"

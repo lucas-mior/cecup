@@ -413,6 +413,28 @@ main(void) {
     ASSERT_EQ(pattern->str, "foo/bar");
     free2(patterns[0].str, patterns[0].len + 1);
 
+    // Directory-scoped extensions exclude neither neighbors nor descendants.
+    test_pattern_init(&patterns[0], "/full/path/*.extension");
+    ASSERT(ignore_patterns_match(SL("full/path/name.extension"),
+                                 false, patterns, 1));
+    ASSERT(ignore_patterns_match(SL("full/path/other.extension"),
+                                 false, patterns, 1));
+    ASSERT_NULL(ignore_patterns_match(SL("full/path/name.txt"),
+                                      false, patterns, 1));
+    ASSERT_NULL(ignore_patterns_match(SL("full/other/name.extension"),
+                                      false, patterns, 1));
+    ASSERT_NULL(ignore_patterns_match(SL("full/path/nested/name.extension"),
+                                      false, patterns, 1));
+    ASSERT_NULL(ignore_patterns_match(SL("prefix/full/path/name.extension"),
+                                      false, patterns, 1));
+    free2(patterns[0].str, patterns[0].len + 1);
+
+    test_pattern_init(&patterns[0], "/*.extension");
+    ASSERT(ignore_patterns_match(SL("name.extension"), false, patterns, 1));
+    ASSERT_NULL(ignore_patterns_match(SL("nested/name.extension"),
+                                      false, patterns, 1));
+    free2(patterns[0].str, patterns[0].len + 1);
+
     test_pattern_init(&patterns[0], "*.h");
     test_pattern_init(&patterns[1], "build/");
     test_pattern_init(&patterns[2], "*.o");

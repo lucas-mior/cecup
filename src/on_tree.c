@@ -21,6 +21,37 @@
 #endif
 
 static void
+on_tree_append_dir_extension(GMenu *submenu, char *dir, int32 dir_len,
+                             char *ext, int32 ext_len, bool is_dir) {
+    GMenuItem *item;
+    char label[MAX_PATH_LENGTH];
+    char pattern[MAX_PATH_LENGTH];
+
+    if (is_dir) {
+        return;
+    }
+
+    if (aux_is_root(dir)) {
+        if (ext_len + 2 >= SIZEOF(pattern)) {
+            return;
+        }
+        SNPRINTF(pattern, "/*%.*s", ext_len, ext);
+    } else {
+        if (dir_len + ext_len + 3 >= SIZEOF(pattern)) {
+            return;
+        }
+        SNPRINTF(pattern, "/%.*s/*%.*s", dir_len, dir, ext_len, ext);
+    }
+
+    SNPRINTF(label, _("This extension on this dir only (%s)"), pattern);
+    item = g_menu_item_new(label, NULL);
+    g_menu_item_set_action_and_target(item, "app.ignore", "s", pattern);
+    g_menu_append_item(submenu, item);
+    g_object_unref(item);
+    return;
+}
+
+static void
 on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y, void *data) {
     GMenu *menu;
     GtkWidget *popover;
@@ -122,6 +153,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                 GMenuItem *m_item;
                 char *name;
                 int32 path_len;
+                int32 directory_len;
                 int32 length;
 
                 if (filepath) {
@@ -144,7 +176,7 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
 
                     name = basename2(path_copy, &path_len, &length);
                     extension = memrchr64(name, '.', length);
-                    dirname2(directory, path_copy, &path_len);
+                    directory_len = dirname2(directory, path_copy, &path_len);
 
                     if (extension && (extension != name)) {
                         int32 extension_len = length - (int32)(extension - name);
@@ -156,6 +188,11 @@ on_tree_button_press(GtkGestureClick *gesture, int32 npress, double x, double y,
                         g_menu_item_set_action_and_target(m_item, "app.ignore", "s", pattern);
                         g_menu_append_item(submenu, m_item);
                         g_object_unref(m_item);
+
+                        on_tree_append_dir_extension(submenu,
+                                                     directory, directory_len,
+                                                     extension, extension_len,
+                                                     is_dir);
                     }
 
                     if (!aux_is_root(directory)) {
@@ -538,6 +575,32 @@ main(void) {
     uint32 target;
     uint32 pressed;
     gboolean handled;
+    GMenu *ignore_menu;
+    char *ignore_target;
+
+    ignore_menu = g_menu_new();
+    on_tree_append_dir_extension(ignore_menu, "full/path", 9,
+                                 ".extension", 10, false);
+    ASSERT_EQ(g_menu_model_get_n_items(G_MENU_MODEL(ignore_menu)), 1);
+    ASSERT(g_menu_model_get_item_attribute(G_MENU_MODEL(ignore_menu),
+                                           0, G_MENU_ATTRIBUTE_TARGET,
+                                           "s", &ignore_target));
+    ASSERT_EQ(ignore_target, "/full/path/*.extension");
+    g_free(ignore_target);
+
+    g_menu_remove_all(ignore_menu);
+    on_tree_append_dir_extension(ignore_menu, ".", 1, ".extension", 10, false);
+    ASSERT(g_menu_model_get_item_attribute(G_MENU_MODEL(ignore_menu),
+                                           0, G_MENU_ATTRIBUTE_TARGET,
+                                           "s", &ignore_target));
+    ASSERT_EQ(ignore_target, "/*.extension");
+    g_free(ignore_target);
+
+    g_menu_remove_all(ignore_menu);
+    on_tree_append_dir_extension(ignore_menu, "full/path", 9,
+                                 ".extension", 10, true);
+    ASSERT_EQ(g_menu_model_get_n_items(G_MENU_MODEL(ignore_menu)), 0);
+    g_object_unref(ignore_menu);
 
     if (!gtk_init_check()) {
         exit(EXIT_SUCCESS);
