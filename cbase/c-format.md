@@ -14,6 +14,19 @@ For non-formatting coding guidelines, see `c-guidelines.md`.
 - Trim trailing whitespace.
 - Use at most two consecutive newline characters (one blank line).
 - Keep line length at maximum 80 characters.
+- Do not nest code more than seven indentation levels deep (the function body
+  is level one). `csanecheck` reports `FMT-INDENT-DEPTH` at the block or
+  unbraced control body that would introduce an eighth level. Wrapped
+  expressions, aggregate initializers, and preprocessor macro continuation
+  lines do not add indentation levels.
+  To reduce nesting, use these techniques in order of preference:
+  1. Prefer early `return`, `break`, or `continue` to nested conditionals.
+  2. When multiple exits share cleanup, combine an early `break` with
+     `do { ... } while (0);` and perform cleanup after the loop.
+  3. Use `goto` to exit multiple nested loops when needed.
+  4. Extract a deeply nested block into a separate function. A `static`
+     helper called only once is permitted at a call site indented five
+     levels or more (see `STYLE-STATIC-ONCE` in `c-guidelines.md`).
 
 ## Operators
 - Space or newline (if at end of line) is mandatory after comma.
