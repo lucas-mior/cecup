@@ -596,8 +596,7 @@ main(void) {
     g_free(ignore_target);
 
     g_menu_remove_all(ignore_menu);
-    on_tree_append_dir_extension(ignore_menu, "full/path", 9,
-                                 ".extension", 10, true);
+    on_tree_append_dir_extension(ignore_menu, "full/path", 9, ".extension", 10, true);
     ASSERT_EQ(g_menu_model_get_n_items(G_MENU_MODEL(ignore_menu)), 0);
     g_object_unref(ignore_menu);
 
